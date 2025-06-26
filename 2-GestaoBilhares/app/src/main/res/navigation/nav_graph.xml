@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.gestaobilhares.ui.auth.LoginFragment"
+        android:label="LoginFragment">
+        <action
+            android:id="@+id/action_loginFragment_to_routesFragment"
+            app:destination="@id/routesFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/routesFragment"
+        android:name="com.example.gestaobilhares.ui.routes.RoutesFragment"
+        android:label="RoutesFragment">
+        <action
+            android:id="@+id/action_routesFragment_to_routeManagementFragment"
+            app:destination="@id/routeManagementFragment" />
+        <!-- FASE 3: Navegação para lista de clientes da rota -->
+        <action
+            android:id="@+id/action_routesFragment_to_clientListFragment"
+            app:destination="@id/clientListFragment" />
+        <!-- Navegação para histórico de despesas -->
+        <action
+            android:id="@+id/action_routesFragment_to_expenseHistoryFragment"
+            app:destination="@id/expenseHistoryFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/routeManagementFragment"
+        android:name="com.example.gestaobilhares.ui.routes.management.RouteManagementFragment"
+        android:label="Gerenciar Rotas">
+        <!-- Navegação de volta para rotas já está implícita com o botão voltar -->
+    </fragment>
+
+    <!-- Tela de histórico de despesas -->
+    <fragment
+        android:id="@+id/expenseHistoryFragment"
+        android:name="com.example.gestaobilhares.ui.expenses.ExpenseHistoryFragment"
+        android:label="Histórico de Despesas">
+        <!-- Navegação de volta para rotas já está implícita com o botão voltar -->
+    </fragment>
+
+    <!-- FASE 3: Tela de lista de clientes da rota -->
+    <fragment
+        android:id="@+id/clientListFragment"
+        android:name="com.example.gestaobilhares.ui.clients.ClientListFragment"
+        android:label="Clientes da Rota">
+        <argument
+            android:name="rotaId"
+            app:argType="long"
+            android:defaultValue="0L" />
+        <!-- FASE 4A: Navegação para detalhes do cliente -->
+        <action
+            android:id="@+id/action_clientListFragment_to_clientDetailFragment"
+            app:destination="@id/clientDetailFragment" />
+        <!-- FASE 4B: Navegação para cadastro de cliente -->
+        <action
+            android:id="@+id/action_clientListFragment_to_clientRegisterFragment"
+            app:destination="@id/clientRegisterFragment" />
+    </fragment>
+
+    <!-- FASE 4A: Tela de detalhes do cliente -->
+    <fragment
+        android:id="@+id/clientDetailFragment"
+        android:name="com.example.gestaobilhares.ui.clients.ClientDetailFragment"
+        android:label="Detalhes do Cliente">
+        <argument
+            android:name="clienteId"
+            app:argType="long"
+            android:defaultValue="0L" />
+        <!-- FASE 4A: Navegação para novo acerto -->
+        <action
+            android:id="@+id/action_clientDetailFragment_to_settlementFragment"
+            app:destination="@id/settlementFragment" />
+        <!-- FASE 4B+: Navegação para detalhes do acerto -->
+        <action
+            android:id="@+id/action_clientDetailFragment_to_settlementDetailFragment"
+            app:destination="@id/settlementDetailFragment" />
+    </fragment>
+
+    <!-- FASE 4A: Tela de registro de acerto -->
+    <fragment
+        android:id="@+id/settlementFragment"
+        android:name="com.example.gestaobilhares.ui.settlement.SettlementFragment"
+        android:label="Novo Acerto">
+        <argument
+            android:name="clienteId"
+            app:argType="long"
+            android:defaultValue="0L" />
+    </fragment>
+
+    <!-- FASE 4B: Tela de cadastro de cliente -->
+    <fragment
+        android:id="@+id/clientRegisterFragment"
+        android:name="com.example.gestaobilhares.ui.clients.ClientRegisterFragment"
+        android:label="Cadastrar Cliente">
+        <argument
+            android:name="rotaId"
+            app:argType="long"
+            android:defaultValue="0L" />
+    </fragment>
+
+    <!-- FASE 4B+: Tela de detalhes do acerto -->
+    <fragment
+        android:id="@+id/settlementDetailFragment"
+        android:name="com.example.gestaobilhares.ui.settlement.SettlementDetailFragment"
+        android:label="Detalhes do Acerto">
+        <argument
+            android:name="acertoId"
+            app:argType="long"
+            android:defaultValue="0L" />
+    </fragment>
+
+    <!-- MainFragment mantido para compatibilidade, será removido futuramente -->
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="com.example.gestaobilhares.ui.main.MainFragment"
+        android:label="MainFragment" />
+
+</navigation> 

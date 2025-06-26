@@ -1,0 +1,28 @@
+{
+  "cursor.autoApprove": {
+    "commands": [
+      "gradlew*",
+      "dir",
+      "ls", 
+      "Get-ChildItem*",
+      "tasklist*",
+      "Select-String*",
+      "cd*",
+      "Remove-Item*",
+      "New-Item*"
+    ],
+    "filePatterns": [
+      "app/src/**/*.kt",
+      "app/src/**/*.xml", 
+      "*.gradle*",
+      ".cursor/rules/*"
+    ],
+    "developmentMode": true,
+    "autoApproveInProject": true
+  },
+  "terminal.autoApprove": {
+    "buildCommands": true,
+    "diagnosticCommands": true,
+    "cleanCommands": true
+  }
+} 

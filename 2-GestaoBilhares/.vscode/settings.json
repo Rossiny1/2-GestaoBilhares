@@ -1,0 +1,59 @@
+{
+    "// 🚀 CONFIGURAÇÕES PARA ACEITE AUTOMÁTICO": "GestaoBilhares Development",
+    "// ✅ AUTO-SAVE E APLICAÇÃO AUTOMÁTICA": true,
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 500,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit",
+        "source.fixAll": "explicit"
+    },
+    "// ✅ ACEITE AUTOMÁTICO DE SUGESTÕES": true,
+    "editor.acceptSuggestionOnEnter": "on",
+    "editor.acceptSuggestionOnCommitCharacter": true,
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": true,
+        "strings": true
+    },
+    "// ✅ CONFIGURAÇÕES ANDROID/KOTLIN": true,
+    "kotlin.languageServer.enabled": true,
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "gradle.nestedProjects": true,
+    "// ✅ REDUZIR CONFIRMAÇÕES": true,
+    "security.workspace.trust.enabled": false,
+    "extensions.ignoreRecommendations": true,
+    "workbench.enableExperiments": false,
+    "telemetry.telemetryLevel": "off",
+    "// ✅ CONFIGURAÇÕES DE AI": true,
+    "github.copilot.enable": {
+        "*": true,
+        "kotlin": true,
+        "xml": true,
+        "gradle": true
+    },
+    "// ✅ CONFIGURAÇÕES ESPECÍFICAS PARA ARQUIVOS": true,
+    "[kotlin]": {
+        "editor.defaultFormatter": "mathiasfrohlich.Kotlin",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+    "[xml]": {
+        "editor.formatOnSave": true,
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4
+    },
+    "[gradle]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4
+    },
+    "cursor.autoAccept": true,
+    "cursor.autoApplyEdits": true,
+    "cursor.autoAcceptChanges": true,
+    "diffEditor.autoAccept": true,
+    "editor.autoAcceptSuggestions": "on",
+    "workbench.editor.autoAcceptChanges": true,
+    "git.autoStash": true
+}

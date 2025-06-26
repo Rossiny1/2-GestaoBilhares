@@ -1,0 +1,182 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 🧪 POLÍTICA DE TESTES E VALIDAÇÃO - GestaoBilhares
+
+## 📋 **PROTOCOLO OBRIGATÓRIO PARA CADA EVOLUÇÃO**
+
+### ⚡ **QUANDO APLICAR**
+- ✅ Após implementação de nova tela/fragment
+- ✅ Após mudanças significativas em ViewModels
+- ✅ Após alterações em navigation
+- ✅ Após modificações em dependências (Hilt/Room/Firebase)
+- ✅ Antes de finalizar qualquer fase do projeto
+- ✅ Após correções de bugs críticos
+
+### 💾 **BACKUP OBRIGATÓRIO**
+- 🔄 **ANTES** de cada teste: `.\backup-rapido.ps1 -mensagem "Antes teste [Feature]"`
+- 🔄 **APÓS** teste bem-sucedido: `.\backup-rapido.ps1 -mensagem "Teste OK - [Feature] funcional"`
+- 🔄 **Política:** Ver `.cursor/rules/politica-backup-commits.mdc`
+
+### 🔍 **CHECKLIST DE VALIDAÇÃO OBRIGATÓRIO**
+
+#### **0. ANÁLISE DE SIMPLIFICAÇÃO (OPCIONAL)**
+```bash
+# Verificar se há código complexo para simplificar
+# Critérios: +50 linhas/método, +300 linhas/classe, duplicação
+# Política: .cursor/rules/politica-simplificacao-codigo.mdc
+```
+
+#### **1. TESTE DE BUILD (CRÍTICO)**
+```bash
+# Limpeza completa
+./gradlew clean
+
+# Build de debug
+./gradlew assembleDebug
+
+# Verificar se gerou APK sem erros
+ls -la app/build/outputs/apk/debug/
+```
+
+#### **2. TESTE DE INSTALAÇÃO**
+```bash
+# Instalar no dispositivo/emulador
+./gradlew installDebug
+
+# Verificar se instalou corretamente
+adb shell pm list packages | findstr gestaobilhares
+```
+
+#### **3. ANÁLISE DE LOGS (CRÍTICA)**
+```bash
+# Limpar logs anteriores
+adb logcat -c
+
+# Executar app e capturar logs críticos
+adb logcat | findstr /i "FATAL\|ERROR\|gestaobilhares\|hilt\|dagger"
+
+# Logs específicos para crashes
+adb logcat -s AndroidRuntime:E
+
+# Logs de fragmentos (navegação)
+adb logcat -s FragmentManager:D
+```
+
+#### **4. VALIDAÇÃO DE FUNCIONALIDADES**
+- ✅ Login funciona
+- ✅ Navegação entre telas não trava
+- ✅ Dados mock são exibidos corretamente
+- ✅ Botões respondem adequadamente
+- ✅ Não há crashes ao navegar
+- ✅ Hilt injeta dependências sem erro
+
+### 🚨 **CRITÉRIOS DE BLOQUEIO**
+
+#### **ERROS QUE IMPEDEM PROSSEGUIR:**
+- ❌ Build falha
+- ❌ App não instala
+- ❌ Crash na inicialização
+- ❌ Erro de Hilt/Dagger
+- ❌ Navigation não funciona
+- ❌ FATAL ou ERROR críticos no logcat
+
+#### **WARNINGS ACEITÁVEIS:**
+- ⚠️ Warnings de lint menores
+- ⚠️ Deprecations não críticas
+- ⚠️ Logs informativos (DEBUG/INFO)
+
+### 📝 **DOCUMENTAÇÃO OBRIGATÓRIA**
+
+#### **REGISTRO DE CADA TESTE:**
+```markdown
+## TESTE - [Data] - [Fase/Feature]
+- **Build:** ✅/❌
+- **Instalação:** ✅/❌  
+- **Funcionalidade:** ✅/❌
+- **Logs:** ✅ Limpos / ❌ Erros encontrados
+- **Notas:** [Observações específicas]
+```
+
+### 🛠️ **COMANDOS RÁPIDOS PARA TESTES**
+
+#### **Teste Completo (PowerShell):**
+```powershell
+# Script de teste completo
+Write-Host "🧪 Iniciando teste completo..." -ForegroundColor Green
+
+# 1. Limpeza
+./gradlew clean
+if ($LASTEXITCODE -ne 0) { Write-Host "❌ Falha na limpeza"; exit }
+
+# 2. Build
+./gradlew assembleDebug
+if ($LASTEXITCODE -ne 0) { Write-Host "❌ Falha no build"; exit }
+
+# 3. Instalação
+./gradlew installDebug
+if ($LASTEXITCODE -ne 0) { Write-Host "❌ Falha na instalação"; exit }
+
+# 4. Verificar logs
+Write-Host "📱 App instalado! Teste manualmente e verifique logs..." -ForegroundColor Yellow
+C:\Users\Rossiny\AppData\Local\Android\Sdk\platform-tools\adb.exe logcat -c
+```
+
+### 🔄 **PROCESSO DE RECUPERAÇÃO**
+
+#### **SE BUILD FALHAR:**
+1. Verificar imports e dependências
+2. Clean + rebuild
+3. Invalidate caches (Android Studio)
+4. Verificar conflitos de versão
+
+#### **SE APP CRASHAR:**
+1. Capturar stack trace completo
+2. Identificar classe/método do crash
+3. Verificar inicialização do Hilt
+4. Confirmar annotations (@AndroidEntryPoint)
+
+#### **SE NAVEGAÇÃO FALHAR:**
+1. Verificar nav_graph.xml
+2. Confirmar arguments/actions
+3. Testar fragments individualmente
+4. Verificar Safe Args
+
+### 📊 **MÉTRICAS DE QUALIDADE**
+
+#### **METAS POR FASE:**
+- **Fase 4A:** 0 crashes, navegação 100% funcional
+- **Fase 4B:** Formulários validam corretamente
+- **Fase 5:** Performance adequada, sem memory leaks
+- **Fase 6:** Sincronização estável
+- **Fase 7:** App production-ready
+
+### 🎯 **RESPONSABILIDADES**
+
+#### **ANTES DE CADA COMMIT:**
+- [ ] Build limpo
+- [ ] Testes básicos executados
+- [ ] Logs verificados
+
+#### **ANTES DE CADA PUSH:**
+- [ ] Funcionalidade completa testada
+- [ ] Regressão verificada
+- [ ] Performance aceitável
+
+#### **ANTES DE CADA RELEASE:**
+- [ ] Teste completo em múltiplos dispositivos
+- [ ] Validação de todos os fluxos
+- [ ] Logs de produção limpos
+
+---
+
+## 🚀 **IMPLEMENTAÇÃO IMEDIATA**
+
+Esta política entra em vigor **AGORA** e será aplicada antes de:
+- Finalizar Fase 4A (ClientDetail + Settlement)
+- Iniciar Fase 4B (Cadastros básicos)
+- Qualquer push significativo
+
+**Próximo teste será executado após finalizar implementação atual da Fase 4A.**

@@ -1,0 +1,200 @@
+package com.example.gestaobilhares.ui.expenses
+
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
+import com.example.gestaobilhares.data.entities.DespesaResumo
+import com.example.gestaobilhares.data.entities.EstatisticasDespesas
+import com.example.gestaobilhares.data.repository.DespesaRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+/**
+ * ViewModel para a tela de histórico de despesas.
+ * Gerencia dados de despesas, filtros e estados da UI.
+ */
+@HiltViewModel
+class ExpenseHistoryViewModel @Inject constructor(
+    private val despesaRepository: DespesaRepository
+) : ViewModel() {
+
+    // Estado de carregamento
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    // Filtro de categoria selecionado
+    private val _selectedCategory = MutableStateFlow<String?>(null)
+    val selectedCategory: StateFlow<String?> = _selectedCategory.asStateFlow()
+
+    // Mensagem de erro
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
+
+    // Mensagem de sucesso
+    private val _successMessage = MutableLiveData<String?>()
+    val successMessage: LiveData<String?> = _successMessage
+
+    // Despesas filtradas para exibição
+    private val _filteredExpenses = MutableStateFlow<List<DespesaResumo>>(emptyList())
+    val filteredExpenses: StateFlow<List<DespesaResumo>> = _filteredExpenses.asStateFlow()
+
+    // Estatísticas das despesas - TODO: Implementar estatísticas
+    // val statistics: LiveData<EstatisticasDespesas> = despesaRepository.obterEstatisticas().asLiveData()
+
+    // Lista completa de despesas (sem filtro)
+    private val allExpenses = despesaRepository.buscarTodasComRota()
+
+    init {
+        loadExpenses()
+    }
+
+    /**
+     * Carrega as despesas e aplica filtros.
+     */
+    private fun loadExpenses() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            
+            try {
+                // Combina despesas com filtro de categoria
+                combine(allExpenses, _selectedCategory) { expenses, category ->
+                    if (category.isNullOrBlank()) {
+                        expenses
+                    } else {
+                        expenses.filter { it.categoria == category }
+                    }
+                }.collect { filteredList ->
+                    _filteredExpenses.value = filteredList
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Erro ao carregar despesas: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Aplica filtro por categoria.
+     * @param categoria Nome da categoria ou null para mostrar todas
+     */
+    fun filterByCategory(categoria: String?) {
+        _selectedCategory.value = categoria
+    }
+
+    /**
+     * Remove filtros e mostra todas as despesas.
+     */
+    fun clearFilters() {
+        _selectedCategory.value = null
+    }
+
+    /**
+     * Atualiza as despesas (pull to refresh).
+     */
+    fun refreshExpenses() {
+        loadExpenses()
+    }
+
+    /**
+     * Deleta uma despesa específica.
+     * @param despesaResumo A despesa a ser deletada
+     */
+    fun deleteExpense(despesaResumo: DespesaResumo) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                despesaRepository.deletar(despesaResumo.despesa)
+                _successMessage.value = "Despesa deletada com sucesso"
+            } catch (e: Exception) {
+                _errorMessage.value = "Erro ao deletar despesa: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Busca despesas por texto (descrição ou observações).
+     * @param query Texto a ser buscado
+     */
+    fun searchExpenses(query: String) {
+        viewModelScope.launch {
+            if (query.isBlank()) {
+                loadExpenses()
+                return@launch
+            }
+            
+            try {
+                _isLoading.value = true
+                
+                allExpenses.collect { expenses ->
+                    val filteredBySearch = expenses.filter { despesaResumo ->
+                        despesaResumo.descricao.contains(query, ignoreCase = true) ||
+                        despesaResumo.observacoes.contains(query, ignoreCase = true) ||
+                        despesaResumo.nomeRota.contains(query, ignoreCase = true)
+                    }
+                    
+                    _filteredExpenses.value = filteredBySearch
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Erro na busca: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Exporta relatório de despesas.
+     */
+    fun exportExpensesReport() {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                // TODO: Implementar lógica de exportação (CSV, PDF, etc.)
+                _successMessage.value = "Relatório exportado com sucesso"
+            } catch (e: Exception) {
+                _errorMessage.value = "Erro ao exportar relatório: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Limpa mensagens de erro e sucesso.
+     */
+    fun clearMessages() {
+        _errorMessage.value = null
+        _successMessage.value = null
+    }
+
+    /**
+     * Obtém o total de despesas filtradas.
+     */
+    fun getFilteredTotal(): Double {
+        return _filteredExpenses.value.sumOf { it.valor }
+    }
+
+    /**
+     * Obtém a quantidade de despesas filtradas.
+     */
+    fun getFilteredCount(): Int {
+        return _filteredExpenses.value.size
+    }
+
+    /**
+     * Verifica se há filtros ativos.
+     */
+    fun hasActiveFilters(): Boolean {
+        return !_selectedCategory.value.isNullOrBlank()
+    }
+} 

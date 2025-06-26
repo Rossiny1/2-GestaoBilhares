@@ -1,0 +1,39 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# REGRAS DE SEGURANÇA PARA COMANDOS AUTÔNOMOS
+
+## 🔒 GARANTIAS DE SEGURANÇA DO WINDOWS
+
+### ✅ COMANDOS PERMITIDOS (SEGUROS)
+- `gradlew*` - Build do projeto Android
+- `dir`, `ls`, `Get-ChildItem` - Listagem de arquivos
+- `tasklist | findstr gradle` - Verificar processos gradle apenas
+- `cd` - Apenas dentro da pasta do projeto
+- Edição de arquivos `.kt`, `.xml`, `.gradle` do projeto
+- `Remove-Item` - Apenas arquivos/pastas do projeto
+- `New-Item` - Apenas dentro do projeto
+
+### ❌ COMANDOS PROIBIDOS (INSEGUROS)
+- Instalação de software (`winget`, `choco`, `msi`)
+- Alteração de registro (`regedit`, `reg add`)
+- Configurações do sistema (`netsh`, `sc config`)
+- Acesso à rede externa (`curl`, `wget`, `ping` externo)
+- Operações fora de `C:\Users\Rossiny\Desktop\GestaoBilhares`
+- Execução de arquivos `.exe`, `.bat`, `.ps1` externos
+
+### 🛡️ VALIDAÇÃO AUTOMÁTICA
+**ANTES DE CADA COMANDO:**
+1. ✅ Verificar se comando está na lista permitida
+2. ✅ Verificar se operação é dentro da pasta do projeto
+3. ✅ Confirmar que não afeta configurações do Windows
+
+### 📁 ESCOPO RESTRITO
+**PASTA PERMITIDA:** `C:\Users\Rossiny\Desktop\GestaoBilhares`
+**SUBPASTAS PERMITIDAS:** `app/`, `.gradle/`, `.cursor/`, `build/`
+
+---
+**APROVAÇÃO:** ✅ Usuário autorizado em 2025-01-06 15:30
+**ESCOPO:** Desenvolvimento Android com segurança total do Windows

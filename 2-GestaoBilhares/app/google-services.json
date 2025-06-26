@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1089459035145",
+    "project_id": "gestaobilhares",
+    "storage_bucket": "gestaobilhares.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1089459035145:android:2d3b94222b1506a844acd8",
+        "android_client_info": {
+          "package_name": "com.example.gestaobilhares"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1089459035145-d55o1h307gaedp4v03cuchr6s6nn2lhg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDb2s1PsqfZMQCswQMj2tmcV_e6DMSv0i4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1089459035145-d55o1h307gaedp4v03cuchr6s6nn2lhg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

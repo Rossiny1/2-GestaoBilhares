@@ -1,0 +1,119 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# CONTEXTO DO PROJETO 
+
+Deverá usar o tema: "Added Deep Space" em todas as telas do projeto.
+Usar como referencia do tema o projeto do site: https://fenado.ai/preview/app/mesaacerto-7XdqeU
+
+## Visão Geral do Projeto
+- Nome do aplicativo: GestaoBilhares (Mesa Acerto)
+- Finalidade: Gestão de mesas de sinuca, controle de acertos e geração de recibos para locadores.
+- Público: Desenvolvedor iniciante em Android/Kotlin.
+- Funcionamento: Offline-first com sincronização na nuvem (Firebase Firestore).
+
+- Arquitetura: MVVM (Model-View-ViewModel) com Room Database para persistência local.
+- Linguagem: Kotlin.
+- UI: Material Design Components, Navigation Component.
+
+## Estrutura do Aplicativo (16 Telas Principais + Extras)
+1. ✅ Onboarding/Login - Tela de boas-vindas com campos de login para colaboradores
+2. ✅ Tela Rotas - Inicial - Exibição de todas as rotas disponíveis
+2.1. ✅ Gerenciar Rotas - Cadastrar, editar e excluir rotas (Admin apenas)
+3. ✅ Lista de Clientes da Rota - Exibe clientes da rota com indicadores visuais
+4. ❌ **FALTA: Tela do Cliente** - Mostra histórico de acerto do cliente + botão "Novo Acerto"
+5. ❌ **FALTA: Acerto** - Registro de acerto com campos para múltiplas mesas
+6. ❌ **FALTA: Histórico Acerto Detalhado** - Exibe dados detalhados de um acerto
+7. ❌ **FALTA: Recibo** - Tela para impressão e envio via WhatsApp
+8. ❌ **FALTA: Relatórios** - Geração e análise de relatórios
+9. ❌ **FALTA: Histórico Relatórios Gerados** - Exibe relatórios finalizados
+10. ❌ **FALTA: Relatório Detalhado** - Detalhes completos de um relatório específico
+11. ❌ **FALTA: Cadastros** - Tela principal de cadastros
+12. ❌ **FALTA: Cadastro Cliente** - Formulário para cadastro de clientes
+13. ❌ **FALTA: Cadastro Colaboradores** - Formulário para cadastro de colaboradores
+14. ❌ **FALTA: Cadastro Despesa** - Formulário para cadastro de despesas
+15. ❌ **FALTA: Cadastro Mesa** - Formulário para cadastro de mesas
+16. ❌ **FALTA: Tela Mesas** - Gerenciamento de todas as mesas da empresa
+Extra: ✅ Histórico de Despesas - Implementada funcionalmente
+
+## Entidades Principais
+- Rotas: Agrupamento lógico de clientes.
+- Clientes: Estabelecimentos com mesas alugadas.
+- Mesas: Mesas de sinuca com contadores (fichas inicial/final).
+- Acertos: Registros financeiros periódicos por cliente, detalhando mesas.
+- Colaboradores: Usuários do app (Admin/User).
+- Despesas: Registros de despesas operacionais.
+- Relatórios: Registros de análises financeiras e operacionais.
+
+## Regras de Negócio Essenciais
+1. Cálculos de Acerto:
+   - Fichas Jogadas = Fichas Final - Fichas Inicial (por mesa)
+   - Subtotal Mesa = Fichas Jogadas * Valor Ficha Cliente
+   - Total Mesas = Soma Subtotais das Mesas no Acerto
+   - Valor Total = Total Mesas + Débito Anterior Cliente
+   - Valor c/ Desconto = Valor Total - Desconto Aplicado
+   - Débito Atual = Valor c/ Desconto - Valor Recebido
+2. Transferência de Mesas: Ficha Final do último acerto vira Ficha Inicial no novo cliente.
+3. Níveis de Acesso: Admin (total), User (limitado - não cadastra rotas, mesas, colaboradores).
+4. Sincronização: Prioridade local em conflitos. Sincronizar quando online.
+5. Relatórios: Finalizados não podem ser editados. Cálculos de totais, médias, % pagantes.
+6. Recibos: Impressora térmica 58mm (Bluetooth), opção de envio WhatsApp, QR Code.
+7. Validações: Alerta quando Fichas Final < Fichas Inicial, solicitando justificativa.
+
+## Padrões de Código e Boas Práticas
+- Usar ViewModel, LiveData/Flow, Repository Pattern, Room, Coroutines.
+- Usar ViewBinding.
+- Seguir princípios SOLID (especialmente SRP).
+- Tratamento de erros consistente (try-catch, Result class).
+- Testes unitários para lógica crítica.
+- Código limpo, legível e bem comentado.
+- Evitar lógica na UI (Activities/Fragments).
+
+## Prevenção de Erros Comuns
+- Checar nulos (safe calls `?.`, elvis operator `?:`).
+- Não bloquear thread principal.
+- Liberar recursos (observadores, coroutines) no ciclo de vida correto.
+- Validar entrada do usuário.
+- Testar em diferentes cenários e dispositivos.
+
+## Instruções Gerais para o Cursor AI
+1. **Foco no Iniciante:** Explique conceitos complexos de forma simples. Forneça código comentado extensivamente.
+2. **Linguagem:** Use Kotlin exclusivamente.
+3. **Arquitetura:** Siga estritamente MVVM.
+4. **Boas Práticas:** Aplique as melhores práticas Android modernas.
+5. **Consistência:** Mantenha o estilo e padrões do código já existente.
+6. **Segurança:** Não gere código com vulnerabilidades óbvias.
+7. **Testes:** Sugira ou gere testes unitários para lógica complexa.
+8. **Clareza:** Priorize código legível e manutenível.
+9. **Respeitar Fases:** Não introduza conceitos de fases futuras prematuramente.
+10. **Não Modificar Estrutura:** Preserve a estrutura de pacotes e arquivos definida.
+
+## Status Atual (ATUALIZADO - Dezembro 2024)
+- **Fase Atual:** 4A - Crítica (Detalhes do Cliente + Início de Acertos)
+- **Componentes Concluídos:** 
+  - ✅ Login e Autenticação (Firebase)
+  - ✅ Estrutura MVVM com Hilt
+  - ✅ Tela Rotas + Navegação
+  - ✅ Gerenciamento de Rotas (Admin)
+  - ✅ Lista de Clientes por Rota
+  - ✅ Histórico de Despesas
+  - ✅ Theme "Added Deep Space"
+- **Próximos Passos CRÍTICOS:** 
+  - ❌ **ClientDetailFragment** (bloqueando fluxo principal)
+  - ❌ **SettlementFragment** básico (core business)
+  - ❌ Navegação completa Cliente → Detalhes → Acerto
+- **Lacunas Identificadas:**
+  - 🚨 **CRÍTICA:** Sem fluxo de acertos (core business)
+  - 🚨 **ALTA:** Sem cadastros básicos (dependência de mocks)
+  - 🚨 **MÉDIA:** Sem relatórios e gestão de mesas
+
+## 🎯 **PRÓXIMA AÇÃO OBRIGATÓRIA**
+**IMPLEMENTAR FASE 4A IMEDIATAMENTE** - Desbloqueará todo o fluxo do aplicativo
+
+Sempre usar o JDK  jbr21 jetBrains conforme caminho C:/Program Files/Android/Android Studio1/jbr  e  
+SDK Android 15.0 API level 35 conforme caminho C:\Users\Rossiny\AppData\Local\Android\Sdk
+
+
+

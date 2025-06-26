@@ -1,0 +1,149 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Atue como expert em programação e design, desenvolvedor android senior. Análise as novas orientações abaixo, compare com nosso projeto atual. Pense profundamente e faça as adaptações . Quero que todas as alterações não prejudique o progresso já obtido no projeto e que ao final consigamos  gerar o apk para visualização do progresso.
+
+
+Fluxo principal
+
+
+Login -Rotas - Clientes da Rota - Detalhes do Cliente - Acerto- Impressão
+
+
+As telas abaixo estão numeradas na ordem do fluxo principal das telas, sendo que os itens com numeração tipo: 3.1 são consideradas tela de suporte para as telas principais.
+
+
+1- Tela "Rotas"
+### Card 1: Filtro de Acertos (Horizontal)
+- **Filtro Principal:** Um card com rolagem horizontal para selecionar o ciclo de acerto (Ex: "1º Acerto", "2º Acerto", etc.).
+- **Lógica de Geração:**
+  - Os acertos são **por rota**. Ex: "1º Acerto da Rota Zona Sul", "1º Acerto da Rota Zona Norte".
+  - Um novo ciclo de acerto é criado para uma rota específica ao se clicar em "Iniciar Rota" na tela "Clientes da Rota".
+  - A numeração é anual e por rota (o primeiro "Iniciar Rota" do ano para a Rota Sul cria o "1º Acerto", o segundo cria o "2º Acerto", e assim por diante até 12).
+- **Estado Padrão:** Ao abrir a tela, o filtro deve mostrar o primeiro acerto do ano ("1º Acerto") como padrão.
+
+
+### Card 2: Listagem e Consolidados das Rotas (Vertical)
+- **Conteúdo Dinâmico:** A lista de rotas abaixo é **filtrada** pelo ciclo de acerto selecionado no Card 1.
+- **Estrutura do Card de Rota:** Para cada rota, um card deve exibir o consolidado daquele período de acerto.
+  - **Exemplo de Card:**
+    - **Título:** 1º Acerto Rota Zona Sul
+    - **Status:** Em Andamento / Finalizada
+    - **Faturamento:** R$ 12.000
+    - **Clientes:** 80 ativos
+    - **Mesas:** 96
+    - **Débitos:** R$ 8.360 (soma dos débitos pendentes da rota no período)
+    - **Pendências:** 40 (clientes com débito > R$400 OU que não acertam há mais de 4 meses)
+- **Visibilidade:** Usuários comuns (representantes) veem apenas as rotas pelas quais são responsáveis.
+
+
+2-Tela "Clientes Rota"
+### Card 1: Informações da Rota e Ações
+- **Conteúdo:** Nome da rota, campo de pesquisa por nome do cliente.
+- **Filtros Rápidos:**
+  - Quantidade de clientes ativos e total de mesas na rota.
+  - Caixa de filtro: "Clientes com débito alto (> R$300)".
+  - Caixa de filtro: "Clientes sem acerto há mais de 4 meses".
+- **Botões de Ação:**
+  - **"Iniciar Rota":** Permite que os acertos para esta rota sejam feitos. Cria o próximo ciclo de acerto para a rota (Ex: "3º Acerto").
+  - **"Finalizar Rota":** Finaliza o ciclo de acerto atual, impedindo novos acertos até que "Iniciar Rota" seja clicado novamente.
+  - **"Novo Cliente":** Leva para a tela "Cadastro de Clientes".
+
+
+### Card 2: Listagem de Clientes
+- **Conteúdo do Sub-card:** Nome do cliente, endereço, valor do débito, tempo desde o último acerto.
+- **Destaque Visual:**
+  - **Linha Vermelha:** Débito > R$300.
+  - **Linha Amarela:** Não acerta há mais de 4 meses.
+  - **Linha Verde:** Demais casos.
+- **Regra de Exibição:** Por padrão, mostrar clientes com mesas locadas OU com débitos pendentes. Clientes inativos e sem débitos só aparecem via filtro.
+
+
+2.1 -Tela "Cadastro do Cliente"
+- **Campos Adicionais:** CPF, Identidade, Endereço detalhado, "Cliente Desde" (data da primeira locação), Valor da Ficha, Comissão, Número do Contrato.
+- **Regra de Negócio:**
+  - O campo **"Valor do débito" é apenas para leitura**, atualizado somente via acertos.
+  - A tela deve permitir a edição de dados existentes do cliente.
+
+
+2.2 Tela "Mesas Depósito" (Acessada ao "Adicionar Mesa")
+- **Função:** Tela para selecionar uma mesa do depósito para vincular a um cliente.
+- **Lógica:**
+  - Ao selecionar uma mesa, um pop-up/dialog deve perguntar o tipo de acerto: "Fichas Jogadas" ou "Valor Fixo".
+  - Se "Valor Fixo", um campo aparece para inserir o valor do aluguel mensal.
+
+
+3- Tela "Detalhes do Cliente"
+### Card 1: Informações e Ações Rápidas
+- **Conteúdo:** Número de mesas locadas.
+- **Ações:** Botão para **WhatsApp** e ícone de **Telefone** para ligar.
+
+
+### Card 2: Ações de Gerenciamento
+- **Botões:** "Novo Acerto", "Adicionar Mesa" (leva à tela "Mesas Depósito"), "Retirar Mesa".
+- **Lógica para Retirar Mesa:**
+  - Abre um pop-up/dialog solicitando o **relógio final** e o **valor recebido** no momento da retirada. A mesa retirada volta automaticamente para o depósito. Não permitir retirada se houver acerto em andamento para a mesa.
+
+
+### Card 3: Histórico de Acertos
+- **Conteúdo:** Lista de sub-cards, cada um representando um acerto passado. Clicar em um leva para "Detalhes do Acerto".
+- **Observação do Cliente:** O campo de observação é puxado do último acerto, mas pode ser editado por administradores.
+
+
+3.1- Tela "Detalhes do Acerto" (Nova Tela)
+- **Conteúdo:** Exibe todas as informações salvas de um acerto selecionado no histórico.
+
+
+4-Tela "Acerto"
+### Card 2 - Mesas
+- **Lógica "Relógio com Defeito":** Se o checkbox for marcado, o cálculo do subtotal deve ser feito com base na média de fichas dos últimos acertos válidos.
+
+
+### Card 3 - Totais
+- **Lógica Múltiplos Pagamentos:** Se mais de um método de pagamento for selecionado, **abrir um pop-up (dialog)** para o usuário discriminar o valor recebido em cada método.
+
+
+### Card 4 - Diversos
+- **Novos Campos:**
+  - Checkbox "Pano trocado" (se marcado, mostrar campo para número do pano).
+  - Caixa de seleção "Tipo de acerto" ("Presencial" ou "por WhatsApp").
+  - Campo "Representante" (preenchido automaticamente com o nome do usuário logado).
+  - Campo "Observação".
+
+
+5- Tela Impressão
+- **Fluxo:** Aparece após salvar um acerto.
+- **Ações:** Botão para compartilhar recibo via WhatsApp ou imprimir em impressora térmica 58mm.
+
+
+6- Gerenciamento de Mesas
+- **Função:** Tela de alto nível para gerenciar **todas as mesas da empresa**.
+- **Conteúdo:** Cards com a quantidade de mesas em cada rota e a quantidade de mesas no depósito. Exibe o total de mesas da empresa.
+- **Lógica de Movimentação:**
+  - Todas as mesas criadas/editadas são feitas no **depósito**.
+  - Ao vincular a um cliente ("Adicionar Mesa"), a mesa sai do depósito e é associada à rota do cliente.
+  - Ao retirar de um cliente ("Retirar Mesa"), a mesa retorna ao depósito.
+- **Ações (Admin):** Botão para "Adicionar Mesa" (ao depósito) e "Excluir Mesa" (do depósito).
+
+
+6.1- Tela "Mesas Rota"
+- **Função:** Ao clicar em uma rota na tela "Gerenciamento de Mesas", exibe a lista de todas as mesas atualmente naquela rota.
+
+
+7- Tela "Metas de Desempenho" (Nova Tela)
+- **Função:** Cadastrar e editar metas de desempenho.
+- **Estrutura da Meta:**
+  - **Vínculo:** Associada a um ciclo de acerto e rota (Ex: "1º Acerto da Rota Zona Sul").
+  - **Alvo:** Vinculada a um colaborador específico (Ex: "José").
+  - **Métricas:**
+    - Ex: % de clientes cobrados (meta: 50%).
+    - Ex: Faturamento total (meta: > R$ 15.000).
+    - Ex: Novas mesas locadas (meta: 6).
+    - Ex: Média de faturamento por mesa (meta: > R$ 100).
+
+
+
+
+

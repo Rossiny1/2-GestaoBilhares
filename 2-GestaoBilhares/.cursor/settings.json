@@ -1,0 +1,31 @@
+{
+    "cursor.cpp.enableIntelliSense": true,
+    "cursor.general.enableCodeActions": true,
+    // ✅ ACEITE AUTOMÁTICO DE MUDANÇAS
+    "cursor.general.enableAutoAccept": true,
+    "cursor.general.autoAcceptDelay": 1000,
+    "cursor.general.autoAcceptOnSave": true,
+    // ✅ APLICAÇÃO AUTOMÁTICA DE EDITS
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+        "source.fixAll": true
+    },
+    // ✅ CONFIGURAÇÕES PARA DESENVOLVIMENTO ANDROID
+    "kotlin.languageServer.enabled": true,
+    "android.enableGradleWrapper": true,
+    // ✅ AUTO-SAVE PARA ACELERAR DESENVOLVIMENTO
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    // ✅ CONFIRMAÇÕESAUTOMÁTICAS
+    "security.workspace.trust.enabled": false,
+    "extensions.ignoreRecommendations": true,
+    // ✅ CONFIGURAÇÕES DE AI/COPILOT
+    "github.copilot.enable": {
+        "*": true,
+        "yaml": true,
+        "plaintext": true,
+        "markdown": true,
+        "kotlin": true,
+        "xml": true
+    }
+}
