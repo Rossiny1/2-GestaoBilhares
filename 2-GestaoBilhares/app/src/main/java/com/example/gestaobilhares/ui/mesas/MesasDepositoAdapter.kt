@@ -30,6 +30,7 @@ class MesasDepositoAdapter(
             binding.tvTipoMesa.text = mesa.tipoMesa.name
             binding.btnRetirarMesa.visibility = ViewGroup.GONE // Não exibe botão de retirar no depósito
             binding.root.setOnClickListener { onMesaClick(mesa) }
+            // Exibir estado de conservação, tamanho, etc, se desejar
         }
     }
 

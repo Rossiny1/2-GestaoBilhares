@@ -50,7 +50,7 @@ class CadastroMesaFragment : Fragment() {
             }
             val mesa = Mesa(
                 numero = numero,
-                clienteId = 0L,
+                clienteId = null,
                 fichasInicial = 0,
                 fichasFinal = 0,
                 tipoMesa = tipo,

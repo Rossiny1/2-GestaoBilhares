@@ -32,7 +32,7 @@ data class Mesa(
     val numero: String,
     
     @ColumnInfo(name = "cliente_id")
-    val clienteId: Long,
+    val clienteId: Long? = null,
     
     @ColumnInfo(name = "fichas_inicial")
     val fichasInicial: Int = 0,
