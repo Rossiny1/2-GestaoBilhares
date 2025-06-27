@@ -220,15 +220,31 @@
         </com.google.android.material.card.MaterialCardView>
 
         <!-- Seção Mesas do Cliente -->
-        <TextView
-            android:id="@+id/tvMesasTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Mesas do Cliente"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="16dp">
+
+            <TextView
+                android:id="@+id/tvMesasTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mesas do Cliente"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAdicionarMesa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Adicionar Mesa"
+                android:icon="@drawable/ic_add"
+                android:textSize="14sp" />
+        </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvMesasCliente"
@@ -240,16 +256,6 @@
             app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
             app:spanCount="2"
             tools:listitem="@layout/item_mesa_cliente" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAdicionarMesa"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginTop="8dp"
-            android:text="Adicionar Mesa"
-            android:icon="@drawable/ic_add"
-            android:textSize="14sp" />
 
         <!-- Seção Histórico de Acertos -->
         <LinearLayout
