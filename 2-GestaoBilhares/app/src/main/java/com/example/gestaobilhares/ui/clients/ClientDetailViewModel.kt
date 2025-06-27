@@ -9,6 +9,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.gestaobilhares.data.entities.Mesa
+import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repositories.ClienteRepository
+import kotlinx.coroutines.flow.collect
 
 /**
  * ViewModel para ClientDetailFragment
@@ -16,9 +20,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class ClientDetailViewModel @Inject constructor(
-    // TODO: Injetar repositórios quando implementarmos
-    // private val clienteRepository: ClienteRepository,
-    // private val acertoRepository: AcertoRepository
+    private val clienteRepository: ClienteRepository,
+    private val mesaRepository: MesaRepository
 ) : ViewModel() {
 
     private val _clientDetails = MutableStateFlow<ClienteResumo?>(null)
@@ -30,75 +33,58 @@ class ClientDetailViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _mesasCliente = MutableStateFlow<List<Mesa>>(emptyList())
+    val mesasCliente: StateFlow<List<Mesa>> = _mesasCliente.asStateFlow()
+
+    private val _mesasDisponiveis = MutableStateFlow<List<Mesa>>(emptyList())
+    val mesasDisponiveis: StateFlow<List<Mesa>> = _mesasDisponiveis.asStateFlow()
+
     fun loadClientDetails(clienteId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
-            
             try {
-                // MOCK DATA - Dados de exemplo para funcionamento imediato
-                val mockClient = when (clienteId) {
-                    1L -> ClienteResumo(
-                        id = 1L,
-                        nome = "Bar do João",
-                        endereco = "Rua das Flores, 123 - Centro",
-                        telefone = "(11) 99999-9999",
-                        mesasAtivas = 2,
-                        ultimaVisita = "15/12/2024",
-                        observacoes = "Cliente pontual no pagamento. Prefere acertos às quintas-feiras."
+                val cliente = clienteRepository.obterPorId(clienteId)
+                cliente?.let {
+                    _clientDetails.value = ClienteResumo(
+                        id = it.id,
+                        nome = it.nome,
+                        endereco = it.endereco ?: "",
+                        telefone = it.telefone ?: "",
+                        mesasAtivas = 0, // Atualizado abaixo
+                        ultimaVisita = "-", // TODO: Buscar última visita real
+                        observacoes = it.observacoes ?: ""
                     )
-                    2L -> ClienteResumo(
-                        id = 2L,
-                        nome = "Boteco da Maria",
-                        endereco = "Av. Principal, 456 - Vila Nova",
-                        telefone = "(11) 88888-8888",
-                        mesasAtivas = 1,
-                        ultimaVisita = "14/12/2024",
-                        observacoes = "Estabelecimento familiar. Movimento maior nos finais de semana."
-                    )
-                    else -> ClienteResumo(
-                        id = clienteId,
-                        nome = "Cliente $clienteId",
-                        endereco = "Endereço do Cliente $clienteId",
-                        telefone = "(11) 77777-7777",
-                        mesasAtivas = 1,
-                        ultimaVisita = "13/12/2024",
-                        observacoes = "Observações do cliente $clienteId"
-                    )
+                    mesaRepository.obterMesasPorCliente(clienteId).collect { mesas ->
+                        _mesasCliente.value = mesas
+                        _clientDetails.value = _clientDetails.value?.copy(mesasAtivas = mesas.size)
+                    }
                 }
-                
-                // MOCK - Histórico de acertos
-                val mockSettlements = listOf(
-                    AcertoResumo(
-                        id = 1L,
-                        data = "10/12/2024",
-                        valor = 250.00,
-                        status = "Pago",
-                        mesasAcertadas = 2
-                    ),
-                    AcertoResumo(
-                        id = 2L,
-                        data = "03/12/2024",
-                        valor = 180.50,
-                        status = "Pendente",
-                        mesasAcertadas = 1
-                    ),
-                    AcertoResumo(
-                        id = 3L,
-                        data = "26/11/2024",
-                        valor = 320.00,
-                        status = "Pago",
-                        mesasAcertadas = 2
-                    )
-                )
-                
-                _clientDetails.value = mockClient
-                _settlementHistory.value = mockSettlements
-                
             } catch (e: Exception) {
-                // TODO: Implementar tratamento de erro
                 e.printStackTrace()
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    fun adicionarMesaAoCliente(mesaId: Long, clienteId: Long) {
+        viewModelScope.launch {
+            mesaRepository.vincularMesa(mesaId, clienteId)
+            loadClientDetails(clienteId)
+        }
+    }
+
+    fun retirarMesaDoCliente(mesaId: Long, clienteId: Long) {
+        viewModelScope.launch {
+            mesaRepository.desvincularMesa(mesaId)
+            loadClientDetails(clienteId)
+        }
+    }
+
+    fun loadMesasDisponiveis() {
+        viewModelScope.launch {
+            mesaRepository.obterMesasDisponiveis().collect { mesas ->
+                _mesasDisponiveis.value = mesas
             }
         }
     }

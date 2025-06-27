@@ -41,9 +41,8 @@ abstract class AppDatabase : RoomDatabase() {
     
     /**
      * DAO para operações with mesas.
-     * TODO: Implementar MesaDao na próxima fase  
      */
-    // abstract fun mesaDao(): MesaDao
+    abstract fun mesaDao(): com.example.gestaobilhares.data.dao.MesaDao
     
     /**
      * DAO para operações com colaboradores.

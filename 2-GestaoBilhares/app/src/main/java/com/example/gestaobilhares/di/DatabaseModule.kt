@@ -6,6 +6,8 @@ import com.example.gestaobilhares.data.dao.ClienteDao
 import com.example.gestaobilhares.data.dao.DespesaDao
 import com.example.gestaobilhares.data.dao.RotaDao
 import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.dao.MesaDao
+import com.example.gestaobilhares.data.repository.MesaRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -59,4 +61,10 @@ object DatabaseModule {
     fun provideDespesaDao(database: AppDatabase): DespesaDao {
         return database.despesaDao()
     }
+
+    @Provides
+    fun provideMesaDao(appDatabase: AppDatabase): MesaDao = appDatabase.mesaDao()
+
+    @Provides
+    fun provideMesaRepository(mesaDao: MesaDao): MesaRepository = MesaRepository(mesaDao)
 } 

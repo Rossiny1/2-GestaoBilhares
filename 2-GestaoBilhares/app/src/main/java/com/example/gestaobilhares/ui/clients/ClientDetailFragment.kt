@@ -11,6 +11,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentClientDetailBinding
+import com.example.gestaobilhares.data.entities.Mesa
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -28,6 +30,7 @@ class ClientDetailFragment : Fragment() {
     private val args: ClientDetailFragmentArgs by navArgs()
     
     private lateinit var settlementHistoryAdapter: SettlementHistoryAdapter
+    private lateinit var mesasAdapter: MesasAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,6 +50,7 @@ class ClientDetailFragment : Fragment() {
         
         // Carregar dados do cliente
         viewModel.loadClientDetails(args.clienteId)
+        setupMesasSection()
     }
 
     private fun setupUI() {
@@ -83,6 +87,52 @@ class ClientDetailFragment : Fragment() {
         binding.rvSettlementHistory.apply {
             adapter = settlementHistoryAdapter
             layoutManager = LinearLayoutManager(requireContext())
+        }
+    }
+
+    private fun setupMesasSection() {
+        mesasAdapter = MesasAdapter(
+            onRetirarMesa = { mesa ->
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Retirar Mesa")
+                    .setMessage("Deseja realmente retirar a mesa ${mesa.numero} deste cliente?")
+                    .setPositiveButton("Sim") { _, _ ->
+                        viewModel.retirarMesaDoCliente(mesa.id, args.clienteId)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+        )
+        binding.rvMesasCliente.adapter = mesasAdapter
+        binding.rvMesasCliente.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        binding.btnAdicionarMesa.setOnClickListener {
+            viewModel.loadMesasDisponiveis()
+            lifecycleScope.launch {
+                viewModel.mesasDisponiveis.collect { mesasDisponiveis ->
+                    if (mesasDisponiveis.isNotEmpty()) {
+                        val nomes = mesasDisponiveis.map { "Mesa ${it.numero} (${it.tipoMesa.name})" }.toTypedArray()
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Selecionar Mesa Disponível")
+                            .setItems(nomes) { _, which ->
+                                val mesaSelecionada = mesasDisponiveis[which]
+                                viewModel.adicionarMesaAoCliente(mesaSelecionada.id, args.clienteId)
+                            }
+                            .setNegativeButton("Cancelar", null)
+                            .show()
+                    } else {
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Nenhuma mesa disponível")
+                            .setMessage("Não há mesas disponíveis no depósito para vincular.")
+                            .setPositiveButton("OK", null)
+                            .show()
+                    }
+                }
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.mesasCliente.collect { mesas ->
+                mesasAdapter.submitList(mesas)
+            }
         }
     }
 

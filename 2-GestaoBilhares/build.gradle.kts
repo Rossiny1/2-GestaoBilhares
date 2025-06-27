@@ -5,4 +5,10 @@ plugins {
     id("com.google.gms.google-services") version "4.4.0" apply false
     id("com.google.dagger.hilt.android") version "2.48" apply false
     id("androidx.navigation.safeargs.kotlin") version "2.7.7" apply false
+}
+
+buildscript {
+    dependencies {
+        classpath("androidx.navigation:navigation-safe-args-gradle-plugin:2.7.7")
+    }
 } 

@@ -5,10 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.databinding.FragmentClientRegisterBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 /**
  * Fragment para cadastro de novos clientes
@@ -21,6 +24,7 @@ class ClientRegisterFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val args: ClientRegisterFragmentArgs by navArgs()
+    private val viewModel: ClientRegisterViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -33,8 +37,8 @@ class ClientRegisterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
         setupUI()
+        observeViewModel()
     }
 
     private fun setupUI() {
@@ -51,6 +55,33 @@ class ClientRegisterFragment : Fragment() {
         // Botão salvar
         binding.btnSave.setOnClickListener {
             saveClient()
+        }
+    }
+
+    private fun observeViewModel() {
+        lifecycleScope.launch {
+            viewModel.novoClienteId.collect { id ->
+                id?.let {
+                    binding.progressBar.visibility = View.GONE
+                    binding.btnSave.isEnabled = true
+                    androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("\u2705 Cliente Cadastrado!")
+                        .setMessage("Cliente cadastrado com sucesso!\n\nPróximo passo: Vincular mesas ao cliente.")
+                        .setPositiveButton("Adicionar Mesa") { _, _ ->
+                            val action = ClientRegisterFragmentDirections.actionClientRegisterFragmentToClientDetailFragment(it)
+                            findNavController().navigate(action)
+                            viewModel.resetNovoClienteId()
+                        }
+                        .setNegativeButton("Concluir", null)
+                        .show()
+                }
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.isLoading.collect { isLoading ->
+                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+                binding.btnSave.isEnabled = !isLoading
+            }
         }
     }
 
@@ -108,39 +139,17 @@ class ClientRegisterFragment : Fragment() {
         binding.progressBar.visibility = View.VISIBLE
         binding.btnSave.isEnabled = false
         
-        // Simular salvamento (TODO: Implementar com ViewModel e Repository)
-        saveClientData(name, address, phone, email, observations)
-    }
-    
-    @Suppress("UNUSED_PARAMETER")
-    private fun saveClientData(name: String, address: String, phone: String, email: String, observations: String) {
-        // TODO: Salvar observations no banco de dados
-        // TODO: Implementar salvamento completo incluindo observations
-        // Simular delay de rede
-        binding.root.postDelayed({
-            binding.progressBar.visibility = View.GONE
-            binding.btnSave.isEnabled = true
-            
-            // Mostrar sucesso
-            androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("✅ Cliente Cadastrado!")
-                .setMessage("""
-                    Cliente cadastrado com sucesso!
-                    
-                    📝 Nome: $name
-                    📍 Endereço: $address
-                    ${if (phone.isNotEmpty()) "📞 Telefone: $phone\n" else ""}
-                    ${if (email.isNotEmpty()) "📧 E-mail: $email\n" else ""}
-                    ${if (observations.isNotEmpty()) "📋 Observações: $observations\n" else ""}
-                    
-                    🚀 Próximo passo: Vincular mesas ao cliente
-                """.trimIndent())
-                .setPositiveButton("Concluir") { _, _ ->
-                    findNavController().popBackStack()
-                }
-                .setNegativeButton("Cadastrar Outro", null)
-                .show()
-        }, 1500)
+        // Criar entidade Cliente
+        val cliente = com.example.gestaobilhares.data.entities.Cliente(
+            nome = name,
+            endereco = address,
+            telefone = phone,
+            email = email,
+            observacoes = observations,
+            rotaId = args.rotaId,
+            valorFicha = 0.0 // ou valor padrão
+        )
+        viewModel.cadastrarCliente(cliente)
     }
     
     private fun clearErrors() {

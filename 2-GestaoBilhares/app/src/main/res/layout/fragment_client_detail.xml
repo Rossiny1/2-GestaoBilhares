@@ -275,6 +275,35 @@
 
         </LinearLayout>
 
+        <!-- Seção Mesas do Cliente -->
+        <TextView
+            android:id="@+id/tvMesasTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Mesas do Cliente"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMesasCliente"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            tools:listitem="@layout/item_mesa_cliente" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAdicionarMesa"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"
+            android:text="Adicionar Mesa"
+            android:icon="@drawable/ic_add"
+            android:textSize="14sp" />
+
         <!-- Bottom Navigation -->
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigation"

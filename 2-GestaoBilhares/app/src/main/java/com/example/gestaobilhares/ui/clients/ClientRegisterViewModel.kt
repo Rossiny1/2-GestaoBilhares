@@ -11,38 +11,28 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel temporário para lista de clientes - usando dados mock
- */
 @HiltViewModel
-class ClientListViewModel @Inject constructor(
+class ClientRegisterViewModel @Inject constructor(
     private val clienteRepository: ClienteRepository
 ) : ViewModel() {
-
-    private val _clientes = MutableStateFlow<List<Cliente>>(emptyList())
-    val clientes: StateFlow<List<Cliente>> = _clientes.asStateFlow()
-
+    private val _novoClienteId = MutableStateFlow<Long?>(null)
+    val novoClienteId: StateFlow<Long?> = _novoClienteId.asStateFlow()
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
-
-    /**
-     * Carrega clientes por rota - versão temporária com dados mock
-     */
-    fun carregarClientes(rotaId: Long) {
+    fun cadastrarCliente(cliente: Cliente) {
         viewModelScope.launch {
-            clienteRepository.obterClientesPorRota(rotaId).collect { clientes ->
-                _clientes.value = clientes
+            _isLoading.value = true
+            try {
+                val id = clienteRepository.inserir(cliente)
+                _novoClienteId.value = id
+            } catch (e: Exception) {
+                _novoClienteId.value = null
+            } finally {
+                _isLoading.value = false
             }
         }
     }
-
-    /**
-     * Limpa mensagens de erro
-     */
-    fun limparErro() {
-        _errorMessage.value = null
+    fun resetNovoClienteId() {
+        _novoClienteId.value = null
     }
 } 
