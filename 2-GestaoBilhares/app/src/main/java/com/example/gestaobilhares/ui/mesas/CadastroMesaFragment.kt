@@ -44,15 +44,19 @@ class CadastroMesaFragment : Fragment() {
             val tamanho = binding.etTamanhoMesa.text.toString().trim()
             val tipo = TipoMesa.valueOf(binding.spTipoMesa.selectedItem.toString())
             val estado = binding.etEstadoConservacao.text.toString().trim()
-            if (numero.isEmpty() || tamanho.isEmpty() || estado.isEmpty()) {
+            val relogioStr = binding.etRelogio.text?.toString()?.trim()
+            if (numero.isEmpty() || tamanho.isEmpty() || estado.isEmpty() || relogioStr.isNullOrEmpty()) {
                 Toast.makeText(requireContext(), "Preencha todos os campos", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
+            } else {
+                binding.tilRelogio.error = null
             }
+            val relogio = relogioStr.toInt()
             val mesa = Mesa(
                 numero = numero,
                 clienteId = null,
-                fichasInicial = 0,
-                fichasFinal = 0,
+                fichasInicial = relogio,
+                fichasFinal = relogio,
                 tipoMesa = tipo,
                 ativa = false,
                 observacoes = "Estado: $estado",

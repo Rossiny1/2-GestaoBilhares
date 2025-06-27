@@ -14,6 +14,9 @@ class MesasDepositoAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MesaViewHolder {
         val binding = ItemMesaClienteBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val params = binding.root.layoutParams
+        params.width = (parent.measuredWidth * 0.48).toInt()
+        binding.root.layoutParams = params
         return MesaViewHolder(binding, onMesaClick)
     }
 

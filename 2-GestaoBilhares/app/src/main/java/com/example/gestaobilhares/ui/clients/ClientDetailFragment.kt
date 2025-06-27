@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentClientDetailBinding
 import com.example.gestaobilhares.data.entities.Mesa
@@ -103,8 +104,9 @@ class ClientDetailFragment : Fragment() {
                     .show()
             }
         )
+        val gridLayoutManager = GridLayoutManager(requireContext(), 2)
+        binding.rvMesasCliente.layoutManager = gridLayoutManager
         binding.rvMesasCliente.adapter = mesasAdapter
-        binding.rvMesasCliente.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.btnAdicionarMesa.setOnClickListener {
             val action = ClientDetailFragmentDirections.actionClientDetailFragmentToMesasDepositoFragment(args.clienteId)
             findNavController().navigate(action)

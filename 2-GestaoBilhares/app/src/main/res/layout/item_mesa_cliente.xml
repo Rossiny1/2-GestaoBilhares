@@ -9,30 +9,41 @@
     android:layout_marginEnd="8dp"
     android:gravity="center_vertical">
 
-    <LinearLayout
-        android:layout_width="wrap_content"
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_gravity="center_vertical">
+        android:layout_margin="4dp"
+        app:cardElevation="2dp"
+        app:cardCornerRadius="12dp"
+        app:layout_constraintWidth_percent="0.48"
+        app:cardUseCompatPadding="true">
 
-        <TextView
-            android:id="@+id/tvNumeroMesa"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Mesa 1"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/tvTipoMesa"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="SINUCA"
-            android:textColor="@color/white"
-            android:textSize="12sp"
-            android:layout_marginTop="2dp" />
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tvNumeroMesa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mesa 1"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvTipoMesa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SINUCA"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
     <ImageButton
         android:id="@+id/btnRetirarMesa"
