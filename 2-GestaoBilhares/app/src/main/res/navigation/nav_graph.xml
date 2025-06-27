@@ -105,6 +105,9 @@
             android:name="rotaId"
             app:argType="long"
             android:defaultValue="0L" />
+        <action
+            android:id="@+id/action_clientRegisterFragment_to_clientDetailFragment"
+            app:destination="@id/clientDetailFragment" />
     </fragment>
 
     <!-- FASE 4B+: Tela de detalhes do acerto -->
