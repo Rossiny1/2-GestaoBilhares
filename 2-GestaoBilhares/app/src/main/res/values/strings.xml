@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">GestaoBilhares</string>
     <string name="voltar">Voltar</string>
+    <string-array name="tipos_acerto">
+        <item>Presencial</item>
+        <item>por WhatsApp</item>
+    </string-array>
 </resources>

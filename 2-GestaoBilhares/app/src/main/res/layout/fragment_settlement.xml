@@ -145,6 +145,81 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- RecyclerView para mesas do cliente -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvMesasAcerto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                tools:listitem="@layout/item_mesa_acerto" />
+
+            <!-- Campo Representante (apenas leitura) -->
+            <TextView
+                android:id="@+id/tvRepresentanteLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Representante"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tvRepresentante"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Usuário Logado"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp"
+                android:background="@drawable/rounded_tag_gray"
+                android:padding="8dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Checkbox Pano trocado -->
+            <CheckBox
+                android:id="@+id/cbPanoTrocado"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pano trocado"
+                android:layout_marginBottom="4dp" />
+            <EditText
+                android:id="@+id/etNumeroPano"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Número do pano"
+                android:inputType="text"
+                android:visibility="gone"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Caixa de seleção Tipo de Acerto -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tipo de acerto"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="14sp" />
+            <Spinner
+                android:id="@+id/spTipoAcerto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/tipos_acerto"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Campo Observação -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Observação"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="14sp" />
+            <EditText
+                android:id="@+id/etObservacao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Observações do acerto"
+                android:inputType="textMultiLine"
+                android:minLines="2"
+                android:maxLines="4"
+                android:background="@drawable/rounded_tag_gray"
+                android:layout_marginBottom="16dp" />
+
             <!-- Mesa 1 -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -280,15 +355,7 @@
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Botão Adicionar Mesa -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAddTable"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:text="+ Adicionar Mesa"
-                android:textColor="@color/purple_600"
-                app:strokeColor="@color/purple_600" />
+            <!-- Remover qualquer referência ao botão btnAddTable ou similar -->
 
             <!-- Card Totais -->
             <com.google.android.material.card.MaterialCardView

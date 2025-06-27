@@ -1,5 +1,6 @@
 package com.example.gestaobilhares.ui.settlement
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -8,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.gestaobilhares.data.entities.Mesa
+import com.example.gestaobilhares.data.repository.MesaRepository
 
 /**
  * ViewModel para SettlementFragment
@@ -15,7 +18,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class SettlementViewModel @Inject constructor(
-    // TODO: Injetar repositórios quando implementarmos
+    private val mesaRepository: MesaRepository
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -26,6 +29,20 @@ class SettlementViewModel @Inject constructor(
 
     private val _clientAddress = MutableStateFlow("")
     val clientAddress: StateFlow<String> = _clientAddress.asStateFlow()
+
+    private val _mesasCliente = MutableStateFlow<List<Mesa>>(emptyList())
+    val mesasCliente: StateFlow<List<Mesa>> = _mesasCliente.asStateFlow()
+
+    data class DadosAcerto(
+        val mesas: List<Mesa>,
+        val representante: String,
+        val panoTrocado: Boolean,
+        val numeroPano: String?,
+        val tipoAcerto: String,
+        val observacao: String,
+        val justificativa: String?,
+        val metodosPagamento: Map<String, Double>
+    )
 
     fun loadClientForSettlement(clienteId: Long) {
         viewModelScope.launch {
@@ -75,5 +92,26 @@ class SettlementViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun loadMesasCliente(clienteId: Long) {
+        viewModelScope.launch {
+            mesaRepository.obterMesasPorCliente(clienteId).collect { mesas ->
+                _mesasCliente.value = mesas
+            }
+        }
+    }
+
+    /**
+     * Salva o acerto, agora recebendo os valores discriminados por método de pagamento.
+     * @param dadosAcerto Dados principais do acerto
+     * @param metodosPagamento Mapa de método para valor recebido
+     */
+    fun salvarAcerto(dadosAcerto: DadosAcerto, metodosPagamento: Map<String, Double>) {
+        // TODO: Integrar persistência real
+        // Exemplo de log para debug
+        Log.d("SettlementViewModel", "Salvando acerto: $dadosAcerto, pagamentos: $metodosPagamento")
+        // Simular persistência
+        // ... lógica de persistência ...
     }
 } 

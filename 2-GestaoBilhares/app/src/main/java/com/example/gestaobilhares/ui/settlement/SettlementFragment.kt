@@ -22,6 +22,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
+import com.example.gestaobilhares.ui.settlement.MesasAcertoAdapter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import android.widget.LinearLayout
+import android.widget.Toast
 
 /**
  * Fragment para registrar novos acertos
@@ -47,6 +51,7 @@ class SettlementFragment : Fragment() {
     
     private val mesas = mutableListOf<MesaAcerto>()
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+    private lateinit var mesasAcertoAdapter: MesasAcertoAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -65,6 +70,18 @@ class SettlementFragment : Fragment() {
         
         // Carregar dados do cliente para o acerto
         viewModel.loadClientForSettlement(args.clienteId)
+        mesasAcertoAdapter = MesasAcertoAdapter()
+        binding.rvMesasAcerto.adapter = mesasAcertoAdapter
+        viewModel.loadMesasCliente(args.clienteId)
+        setupMesasSection()
+
+        // Preencher campo Representante (mock)
+        binding.tvRepresentante.text = "Administrador" // Trocar para nome real do usuário logado
+
+        // Lógica do checkbox Pano trocado
+        binding.cbPanoTrocado.setOnCheckedChangeListener { _, isChecked ->
+            binding.etNumeroPano.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
     }
 
     private fun setupUI() {
@@ -75,7 +92,7 @@ class SettlementFragment : Fragment() {
         
         // Botão salvar acerto
         binding.btnSaveSettlement.setOnClickListener {
-            saveSettlement()
+            salvarAcertoComCamposExtras()
         }
         
         // Configurar método de pagamento
@@ -86,12 +103,6 @@ class SettlementFragment : Fragment() {
         
         // Adicionar primeira mesa
         addMesa()
-        
-        // Botão adicionar mesa
-        binding.btnAddTable.setOnClickListener {
-            addMesa()
-            updateCalculations()
-        }
     }
     
     private fun setupCalculationListeners() {
@@ -172,123 +183,72 @@ class SettlementFragment : Fragment() {
 
     }
 
-    private fun saveSettlement() {
-        // Limpar erros anteriores
-        binding.etFichasInicial.error = null
-        binding.etFichasFinal.error = null
-        binding.etValorFicha.error = null
-        
-        // Validações básicas
-        val fichasInicialText = binding.etFichasInicial.text.toString().trim()
-        val fichasFinalText = binding.etFichasFinal.text.toString().trim()
-        val valorFichaText = binding.etValorFicha.text.toString().trim()
-        val descontoText = binding.etDesconto.text.toString().trim()
-        val valorRecebidoText = binding.etAmountReceived.text.toString().trim()
-        
-        // Validar campos obrigatórios
-        if (fichasInicialText.isEmpty()) {
-            binding.etFichasInicial.error = "Campo obrigatório"
-            binding.etFichasInicial.requestFocus()
-            return
-        }
-        
-        if (fichasFinalText.isEmpty()) {
-            binding.etFichasFinal.error = "Campo obrigatório"
-            binding.etFichasFinal.requestFocus()
-            return
-        }
-        
-        if (valorFichaText.isEmpty()) {
-            binding.etValorFicha.error = "Campo obrigatório"
-            binding.etValorFicha.requestFocus()
-            return
-        }
-        
-        // Converter valores
-        val fichasInicial = fichasInicialText.toIntOrNull()
-        val fichasFinal = fichasFinalText.toIntOrNull()
-        val valorFicha = valorFichaText.toDoubleOrNull()
-        val desconto = if (descontoText.isEmpty()) 0.0 else descontoText.toDoubleOrNull() ?: 0.0
-        val valorRecebido = if (valorRecebidoText.isEmpty()) 0.0 else valorRecebidoText.toDoubleOrNull() ?: 0.0
-        
-        // Validar conversões
-        if (fichasInicial == null || fichasInicial < 0) {
-            binding.etFichasInicial.error = "Valor inválido"
-            binding.etFichasInicial.requestFocus()
-            return
-        }
-        
-        if (fichasFinal == null || fichasFinal < 0) {
-            binding.etFichasFinal.error = "Valor inválido"
-            binding.etFichasFinal.requestFocus()
-            return
-        }
-        
-        if (valorFicha == null || valorFicha <= 0) {
-            binding.etValorFicha.error = "Valor deve ser maior que zero"
-            binding.etValorFicha.requestFocus()
-            return
-        }
-        
-        if (desconto < 0) {
-            binding.etDesconto.error = "Desconto não pode ser negativo"
-            binding.etDesconto.requestFocus()
-            return
-        }
-        
-        if (valorRecebido < 0) {
-            binding.etAmountReceived.error = "Valor recebido não pode ser negativo"
-            binding.etAmountReceived.requestFocus()
-            return
-        }
-        
-        // Validar lógica de negócio
-        if (fichasFinal < fichasInicial) {
-            binding.etFichasFinal.error = "Fichas final não pode ser menor que inicial"
-            binding.etFichasFinal.requestFocus()
-            return
-        }
-        
-        // Cálculos do acerto
-        val fichasJogadas = fichasFinal - fichasInicial
-        val subtotalMesas = fichasJogadas * valorFicha
-        val debitoAnterior = 0.0 // TODO: Implementar busca do débito anterior
-        val totalComDebito = subtotalMesas + debitoAnterior
-        val totalComDesconto = totalComDebito - desconto
-        val debitoAtual = totalComDesconto - valorRecebido
-        
-        // Atualizar displays dos totais
-        binding.tvTableTotal.text = formatter.format(subtotalMesas)
-        binding.tvTotalWithDebt.text = formatter.format(totalComDebito)
-        binding.tvCurrentDebt.text = formatter.format(debitoAtual)
-        
-        // Mostrar resultado detalhado
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("✅ Acerto Registrado com Sucesso!")
-            .setMessage("""
-                📊 RESUMO DO ACERTO:
-                
-                🎯 Fichas inicial: $fichasInicial
-                🎯 Fichas final: $fichasFinal
-                🎮 Fichas jogadas: $fichasJogadas
-                💰 Valor por ficha: ${formatter.format(valorFicha)}
-                💵 Subtotal mesas: ${formatter.format(subtotalMesas)}
-                💰 Débito anterior: ${formatter.format(debitoAnterior)}
-                💵 Total c/ débito: ${formatter.format(totalComDebito)}
-                🏷️ Desconto: ${formatter.format(desconto)}
-                💸 Valor recebido: ${formatter.format(valorRecebido)}
-                📋 Débito atual: ${formatter.format(debitoAtual)}
-                💳 Pagamento: ${binding.actvPaymentMethod.text}
-                
-                🚀 Core Business Funcional!
-                ✅ Validações implementadas
-                ✅ Cálculos corretos
-                ✅ Desconto na seção Totais
-            """.trimIndent())
-            .setPositiveButton("Finalizar") { _, _ ->
-                findNavController().popBackStack()
+    private fun salvarAcertoComCamposExtras() {
+        val representante = binding.tvRepresentante.text.toString()
+        val panoTrocado = binding.cbPanoTrocado.isChecked
+        val numeroPano = binding.etNumeroPano.text.toString().takeIf { panoTrocado }
+        val tipoAcerto = binding.spTipoAcerto.selectedItem.toString()
+        val observacao = binding.etObservacao.text.toString()
+        val justificativa = null // Pode ser passado do dialog se necessário
+        val mesas = mesasAcertoAdapter.currentList
+        // Mock métodos de pagamento
+        val metodosSelecionados = listOf("Dinheiro") // Substituir por seleção real
+        val totalRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
+        if (metodosSelecionados.size > 1) {
+            // Dialog para discriminar valores
+            showDialogMetodosPagamento(metodosSelecionados, totalRecebido) { valores ->
+                val dados = SettlementViewModel.DadosAcerto(
+                    mesas = mesas,
+                    representante = representante,
+                    panoTrocado = panoTrocado,
+                    numeroPano = numeroPano,
+                    tipoAcerto = tipoAcerto,
+                    observacao = observacao,
+                    justificativa = justificativa,
+                    metodosPagamento = valores
+                )
+                viewModel.salvarAcerto(dados, valores)
             }
-            .setNegativeButton("Novo Acerto", null)
+        } else {
+            val valores = mapOf(metodosSelecionados.first() to totalRecebido)
+            val dados = SettlementViewModel.DadosAcerto(
+                mesas = mesas,
+                representante = representante,
+                panoTrocado = panoTrocado,
+                numeroPano = numeroPano,
+                tipoAcerto = tipoAcerto,
+                observacao = observacao,
+                justificativa = justificativa,
+                metodosPagamento = valores
+            )
+            viewModel.salvarAcerto(dados, valores)
+        }
+    }
+
+    private fun showDialogMetodosPagamento(metodos: List<String>, totalRecebido: Double, onConfirm: (Map<String, Double>) -> Unit) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_metodos_pagamento, null)
+        val container = dialogView.findViewById<LinearLayout>(R.id.containerMetodos)
+        val editTexts = mutableMapOf<String, EditText>()
+        metodos.forEach { metodo ->
+            val et = EditText(requireContext())
+            et.hint = "Valor em $metodo"
+            et.inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+            container.addView(et)
+            editTexts[metodo] = et
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Discriminar Pagamento")
+            .setView(dialogView)
+            .setPositiveButton("Confirmar") { _, _ ->
+                val valores = editTexts.mapValues { it.value.text.toString().toDoubleOrNull() ?: 0.0 }
+                val soma = valores.values.sum()
+                if (kotlin.math.abs(soma - totalRecebido) > 0.01) {
+                    Toast.makeText(requireContext(), "A soma dos valores não confere com o total recebido!", Toast.LENGTH_LONG).show()
+                } else {
+                    onConfirm(valores)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
             .show()
     }
 
@@ -297,6 +257,14 @@ class SettlementFragment : Fragment() {
         // Por enquanto, não implementamos múltiplas mesas dinamicamente
         // A interface já tem uma mesa fixa (Mesa 1)
         // TODO: Implementar adição dinâmica de mesas em versão futura
+    }
+
+    private fun setupMesasSection() {
+        lifecycleScope.launch {
+            viewModel.mesasCliente.collect { mesas ->
+                mesasAcertoAdapter.submitList(mesas)
+            }
+        }
     }
 
     override fun onDestroyView() {

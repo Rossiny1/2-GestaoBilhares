@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/rounded_background"
+    android:padding="12dp"
+    android:layout_marginBottom="8dp">
+
+    <TextView
+        android:id="@+id/tvNumeroMesa"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mesa 1"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="?attr/colorOnSurface" />
+
+    <TextView
+        android:id="@+id/tvTipoMesa"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sinuca"
+        android:textSize="14sp"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Layout para tipo Fichas -->
+    <LinearLayout
+        android:id="@+id/layoutFichas"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/etRelogioInicial"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Relógio Inicial"
+            android:inputType="number"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etRelogioFinal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Relógio Final"
+            android:inputType="number"
+            android:layout_marginBottom="4dp" />
+
+        <CheckBox
+            android:id="@+id/cbRelogioDefeito"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Relógio com Defeito (usar média)" />
+    </LinearLayout>
+
+    <!-- Layout para tipo Valor Fixo -->
+    <LinearLayout
+        android:id="@+id/layoutValorFixo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvValorFixo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Valor Mensal: R$ 0,00"
+            android:textSize="14sp"
+            android:textColor="?attr/colorOnSurface" />
+
+        <TextView
+            android:id="@+id/tvSubtotal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Subtotal: R$ 0,00"
+            android:textSize="14sp"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+    </LinearLayout>
+
+</LinearLayout> 
