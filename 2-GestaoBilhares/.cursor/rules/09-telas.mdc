@@ -71,8 +71,24 @@ As telas abaixo estão numeradas na ordem do fluxo principal das telas, sendo qu
 2.2 Tela "Mesas Depósito" (Acessada ao "Adicionar Mesa")
 - **Função:** Tela para selecionar uma mesa do depósito para vincular a um cliente.
 - **Lógica:**
-  - Ao selecionar uma mesa, um pop-up/dialog deve perguntar o tipo de acerto: "Fichas Jogadas" ou "Valor Fixo".
+  - Exibe todas as mesas disponíveis para locação (apenas uma pode ser selecionada por vez).
+  - Ao clicar em uma mesa, abrir um pop-up/dialog perguntando o tipo de acerto: "Fichas Jogadas" ou "Valor Fixo".
   - Se "Valor Fixo", um campo aparece para inserir o valor do aluguel mensal.
+  - Após vincular a mesa, retorna automaticamente para a tela anterior.
+  - Se o usuário clicar em "Voltar" sem vincular mesa, retorna para a tela de clientes da rota.
+  - Tela acessível também pelo menu principal para gestão geral de mesas.
+  - Seguir padrão visual Deep Space/Material Design.
+  - Deve ter botão para cadastrar nova mesa, levando à tela de Cadastro de Mesa.
+
+
+2.3 Tela "Cadastro de Mesa"
+- **Função:** Permitir o cadastro de uma nova mesa no depósito.
+- **Campos obrigatórios:**
+  - Número da mesa
+  - Tamanho
+  - Tipo (Sinuca, Snooker, Pool, Bilhar)
+  - Estado de conservação
+- **Ações:** Salvar mesa no depósito e retornar para tela de depósito de mesas.
 
 
 3- Tela "Detalhes do Cliente"

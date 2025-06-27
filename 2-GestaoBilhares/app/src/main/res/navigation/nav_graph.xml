@@ -83,6 +83,10 @@
         <action
             android:id="@+id/action_clientDetailFragment_to_settlementDetailFragment"
             app:destination="@id/settlementDetailFragment" />
+        <!-- Adicionar ações de navegação para Depósito de Mesas -->
+        <action
+            android:id="@+id/action_clientDetailFragment_to_mesasDepositoFragment"
+            app:destination="@id/mesasDepositoFragment" />
     </fragment>
 
     <!-- FASE 4A: Tela de registro de acerto -->
@@ -108,6 +112,10 @@
         <action
             android:id="@+id/action_clientRegisterFragment_to_clientDetailFragment"
             app:destination="@id/clientDetailFragment" />
+        <!-- Adicionar ações de navegação para Depósito de Mesas -->
+        <action
+            android:id="@+id/action_clientRegisterFragment_to_mesasDepositoFragment"
+            app:destination="@id/mesasDepositoFragment" />
     </fragment>
 
     <!-- FASE 4B+: Tela de detalhes do acerto -->
@@ -120,6 +128,26 @@
             app:argType="long"
             android:defaultValue="0L" />
     </fragment>
+
+    <!-- Tela de Depósito de Mesas -->
+    <fragment
+        android:id="@+id/mesasDepositoFragment"
+        android:name="com.example.gestaobilhares.ui.mesas.MesasDepositoFragment"
+        android:label="Depósito de Mesas">
+        <argument
+            android:name="clienteId"
+            app:argType="long"
+            android:defaultValue="0L" />
+        <action
+            android:id="@+id/action_mesasDepositoFragment_to_cadastroMesaFragment"
+            app:destination="@id/cadastroMesaFragment" />
+    </fragment>
+
+    <!-- Tela de Cadastro de Mesa -->
+    <fragment
+        android:id="@+id/cadastroMesaFragment"
+        android:name="com.example.gestaobilhares.ui.mesas.CadastroMesaFragment"
+        android:label="Cadastro de Mesa" />
 
     <!-- MainFragment mantido para compatibilidade, será removido futuramente -->
     <fragment

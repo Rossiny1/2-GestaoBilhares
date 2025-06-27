@@ -68,11 +68,14 @@ class ClientRegisterFragment : Fragment() {
                         .setTitle("\u2705 Cliente Cadastrado!")
                         .setMessage("Cliente cadastrado com sucesso!\n\nPróximo passo: Vincular mesas ao cliente.")
                         .setPositiveButton("Adicionar Mesa") { _, _ ->
-                            val action = ClientRegisterFragmentDirections.actionClientRegisterFragmentToClientDetailFragment(it)
+                            val action = ClientRegisterFragmentDirections.actionClientRegisterFragmentToMesasDepositoFragment(it)
                             findNavController().navigate(action)
                             viewModel.resetNovoClienteId()
                         }
-                        .setNegativeButton("Concluir", null)
+                        .setNegativeButton("Voltar") { _, _ ->
+                            findNavController().popBackStack()
+                            viewModel.resetNovoClienteId()
+                        }
                         .show()
                 }
             }

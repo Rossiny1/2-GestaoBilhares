@@ -106,28 +106,8 @@ class ClientDetailFragment : Fragment() {
         binding.rvMesasCliente.adapter = mesasAdapter
         binding.rvMesasCliente.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.btnAdicionarMesa.setOnClickListener {
-            viewModel.loadMesasDisponiveis()
-            lifecycleScope.launch {
-                viewModel.mesasDisponiveis.collect { mesasDisponiveis ->
-                    if (mesasDisponiveis.isNotEmpty()) {
-                        val nomes = mesasDisponiveis.map { "Mesa ${it.numero} (${it.tipoMesa.name})" }.toTypedArray()
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Selecionar Mesa Disponível")
-                            .setItems(nomes) { _, which ->
-                                val mesaSelecionada = mesasDisponiveis[which]
-                                viewModel.adicionarMesaAoCliente(mesaSelecionada.id, args.clienteId)
-                            }
-                            .setNegativeButton("Cancelar", null)
-                            .show()
-                    } else {
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Nenhuma mesa disponível")
-                            .setMessage("Não há mesas disponíveis no depósito para vincular.")
-                            .setPositiveButton("OK", null)
-                            .show()
-                    }
-                }
-            }
+            val action = ClientDetailFragmentDirections.actionClientDetailFragmentToMesasDepositoFragment(args.clienteId)
+            findNavController().navigate(action)
         }
         lifecycleScope.launch {
             viewModel.mesasCliente.collect { mesas ->
