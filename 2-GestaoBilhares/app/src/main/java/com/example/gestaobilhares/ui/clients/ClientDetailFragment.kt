@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +17,7 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.example.gestaobilhares.R
 
 /**
  * Fragment para exibir detalhes do cliente e histórico de acertos
@@ -94,11 +96,17 @@ class ClientDetailFragment : Fragment() {
     private fun setupMesasSection() {
         mesasAdapter = MesasAdapter(
             onRetirarMesa = { mesa ->
+                val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_retirar_mesa, null)
+                val etRelogioFinal = dialogView.findViewById<EditText>(R.id.etRelogioFinal)
+                val etValorRecebido = dialogView.findViewById<EditText>(R.id.etValorRecebido)
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Retirar Mesa")
-                    .setMessage("Deseja realmente retirar a mesa ${mesa.numero} deste cliente?")
-                    .setPositiveButton("Sim") { _, _ ->
-                        viewModel.retirarMesaDoCliente(mesa.id, args.clienteId)
+                    .setView(dialogView)
+                    .setMessage("Informe o relógio final e o valor recebido para retirar a mesa ${mesa.numero}.")
+                    .setPositiveButton("Confirmar") { _, _ ->
+                        val relogioFinal = etRelogioFinal.text.toString().toIntOrNull() ?: 0
+                        val valorRecebido = etValorRecebido.text.toString().toDoubleOrNull() ?: 0.0
+                        viewModel.retirarMesaDoCliente(mesa.id, args.clienteId, relogioFinal, valorRecebido)
                     }
                     .setNegativeButton("Cancelar", null)
                     .show()
@@ -145,9 +153,24 @@ class ClientDetailFragment : Fragment() {
             tvClientAddress.text = client.endereco
             tvLastVisit.text = "Última visita: ${client.ultimaVisita}"
             tvActiveTables.text = "${client.mesasAtivas} Mesas ativas"
-            
-            // Observações do cliente
-            tvObservations.text = client.observacoes
+            // Observação do cliente
+            if (viewModel.isAdminUser()) {
+                etObservations.visibility = View.VISIBLE
+                tvObservations.visibility = View.GONE
+                etObservations.setText(client.observacoes)
+                etObservations.setOnFocusChangeListener { _, hasFocus ->
+                    if (!hasFocus) {
+                        val novaObs = etObservations.text.toString()
+                        if (novaObs != client.observacoes) {
+                            viewModel.salvarObservacaoCliente(client.id, novaObs)
+                        }
+                    }
+                }
+            } else {
+                etObservations.visibility = View.GONE
+                tvObservations.visibility = View.VISIBLE
+                tvObservations.text = client.observacoes
+            }
         }
     }
 

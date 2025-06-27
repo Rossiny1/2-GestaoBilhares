@@ -58,4 +58,12 @@ class ClienteRepository @Inject constructor(
     fun obterTodos(): Flow<List<Cliente>> {
         return clienteDao.obterTodos()
     }
+
+    suspend fun atualizarObservacao(clienteId: Long, observacao: String) {
+        val cliente = obterPorId(clienteId)
+        if (cliente != null) {
+            val atualizado = cliente.copy(observacoes = observacao)
+            atualizar(atualizado)
+        }
+    }
 } 

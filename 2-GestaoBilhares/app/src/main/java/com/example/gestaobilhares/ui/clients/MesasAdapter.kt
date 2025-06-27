@@ -28,15 +28,18 @@ class MesasAdapter(
         holder.bind(getItem(position))
     }
 
-    class MesaViewHolder(
+    inner class MesaViewHolder(
         private val binding: ItemMesaClienteBinding,
         private val onRetirarMesa: (Mesa) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(mesa: Mesa) {
             binding.tvNumeroMesa.text = "Mesa ${mesa.numero}"
             binding.tvTipoMesa.text = mesa.tipoMesa.name
-            binding.btnRetirarMesa.setOnClickListener {
-                onRetirarMesa(mesa)
+            if (mesa.clienteId != null) {
+                binding.btnRetirarMesa.visibility = View.VISIBLE
+                binding.btnRetirarMesa.setOnClickListener { onRetirarMesa(mesa) }
+            } else {
+                binding.btnRetirarMesa.visibility = View.GONE
             }
         }
     }

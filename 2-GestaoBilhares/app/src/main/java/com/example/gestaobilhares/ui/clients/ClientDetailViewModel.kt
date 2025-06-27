@@ -74,9 +74,10 @@ class ClientDetailViewModel @Inject constructor(
         }
     }
 
-    fun retirarMesaDoCliente(mesaId: Long, clienteId: Long) {
+    fun retirarMesaDoCliente(mesaId: Long, clienteId: Long, relogioFinal: Int, valorRecebido: Double) {
         viewModelScope.launch {
             mesaRepository.desvincularMesa(mesaId)
+            // TODO: Salvar relogioFinal e valorRecebido no histórico de retirada, se necessário
             loadClientDetails(clienteId)
         }
     }
@@ -85,6 +86,23 @@ class ClientDetailViewModel @Inject constructor(
         viewModelScope.launch {
             mesaRepository.obterMesasDisponiveis().collect { mesas ->
                 _mesasDisponiveis.value = mesas
+            }
+        }
+    }
+
+    fun isAdminUser(): Boolean {
+        // TODO: Implementar checagem real de permissão do usuário logado
+        // Exemplo mock: return true para admin, false para user comum
+        return true // Trocar para lógica real
+    }
+
+    fun salvarObservacaoCliente(clienteId: Long, observacao: String) {
+        viewModelScope.launch {
+            try {
+                clienteRepository.atualizarObservacao(clienteId, observacao)
+                loadClientDetails(clienteId)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
