@@ -33,6 +33,9 @@ class SettlementViewModel @Inject constructor(
     private val _mesasCliente = MutableStateFlow<List<Mesa>>(emptyList())
     val mesasCliente: StateFlow<List<Mesa>> = _mesasCliente.asStateFlow()
 
+    private val _resultadoSalvamento = MutableStateFlow<Result<Unit>?>(null)
+    val resultadoSalvamento: StateFlow<Result<Unit>?> = _resultadoSalvamento.asStateFlow()
+
     data class DadosAcerto(
         val mesas: List<Mesa>,
         val representante: String,
@@ -108,10 +111,19 @@ class SettlementViewModel @Inject constructor(
      * @param metodosPagamento Mapa de método para valor recebido
      */
     fun salvarAcerto(dadosAcerto: DadosAcerto, metodosPagamento: Map<String, Double>) {
-        // TODO: Integrar persistência real
-        // Exemplo de log para debug
-        Log.d("SettlementViewModel", "Salvando acerto: $dadosAcerto, pagamentos: $metodosPagamento")
-        // Simular persistência
-        // ... lógica de persistência ...
+        viewModelScope.launch {
+            try {
+                // TODO: Integrar persistência real
+                Log.d("SettlementViewModel", "Salvando acerto: $dadosAcerto, pagamentos: $metodosPagamento")
+                // Simular persistência com sucesso
+                _resultadoSalvamento.value = Result.success(Unit)
+            } catch (e: Exception) {
+                _resultadoSalvamento.value = Result.failure(e)
+            }
+        }
+    }
+
+    fun resetarResultadoSalvamento() {
+        _resultadoSalvamento.value = null
     }
 } 

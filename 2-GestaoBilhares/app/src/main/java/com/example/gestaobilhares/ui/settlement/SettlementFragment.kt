@@ -179,8 +179,48 @@ class SettlementFragment : Fragment() {
                 }
             }
         }
-        
+        // Observar resultado do salvamento do acerto
+        lifecycleScope.launch {
+            viewModel.resultadoSalvamento.collect { resultado ->
+                resultado?.let {
+                    if (it.isSuccess) {
+                        com.google.android.material.snackbar.Snackbar.make(
+                            binding.root,
+                            "Acerto salvo com sucesso!",
+                            com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                        ).show()
+                        limparCamposAcerto()
+                    } else {
+                        com.google.android.material.snackbar.Snackbar.make(
+                            binding.root,
+                            "Erro ao salvar acerto: ${it.exceptionOrNull()?.localizedMessage}",
+                            com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+                    // Resetar resultado para não exibir múltiplas vezes
+                    viewModel.resetarResultadoSalvamento()
+                }
+            }
+        }
+    }
 
+    private fun limparCamposAcerto() {
+        // Limpar seleção dos métodos de pagamento
+        binding.chipDinheiro.isChecked = false
+        binding.chipPix.isChecked = false
+        binding.chipDebito.isChecked = false
+        binding.chipCredito.isChecked = false
+        binding.chipTransferencia.isChecked = false
+        // Limpar campos principais
+        binding.etFichasInicial.text?.clear()
+        binding.etFichasFinal.text?.clear()
+        binding.etValorFicha.text?.clear()
+        binding.etDesconto.text?.clear()
+        binding.etAmountReceived.text?.clear()
+        binding.etObservacao.text?.clear()
+        binding.cbPanoTrocado.isChecked = false
+        binding.etNumeroPano.text?.clear()
+        // Outros campos se necessário
     }
 
     private fun salvarAcertoComCamposExtras() {
@@ -191,8 +231,13 @@ class SettlementFragment : Fragment() {
         val observacao = binding.etObservacao.text.toString()
         val justificativa = null // Pode ser passado do dialog se necessário
         val mesas = mesasAcertoAdapter.currentList
-        // Mock métodos de pagamento
-        val metodosSelecionados = listOf("Dinheiro") // Substituir por seleção real
+        // Coletar métodos de pagamento selecionados do ChipGroup
+        val metodosSelecionados = mutableListOf<String>()
+        if (binding.chipDinheiro.isChecked) metodosSelecionados.add("Dinheiro")
+        if (binding.chipPix.isChecked) metodosSelecionados.add("PIX")
+        if (binding.chipDebito.isChecked) metodosSelecionados.add("Cartão Débito")
+        if (binding.chipCredito.isChecked) metodosSelecionados.add("Cartão Crédito")
+        if (binding.chipTransferencia.isChecked) metodosSelecionados.add("Transferência")
         val totalRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
         if (metodosSelecionados.size > 1) {
             // Dialog para discriminar valores
@@ -209,7 +254,7 @@ class SettlementFragment : Fragment() {
                 )
                 viewModel.salvarAcerto(dados, valores)
             }
-        } else {
+        } else if (metodosSelecionados.size == 1) {
             val valores = mapOf(metodosSelecionados.first() to totalRecebido)
             val dados = SettlementViewModel.DadosAcerto(
                 mesas = mesas,
@@ -222,6 +267,8 @@ class SettlementFragment : Fragment() {
                 metodosPagamento = valores
             )
             viewModel.salvarAcerto(dados, valores)
+        } else {
+            Toast.makeText(requireContext(), "Selecione pelo menos um método de pagamento!", Toast.LENGTH_SHORT).show()
         }
     }
 

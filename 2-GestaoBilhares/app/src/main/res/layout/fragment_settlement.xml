@@ -220,6 +220,57 @@
                 android:background="@drawable/rounded_tag_gray"
                 android:layout_marginBottom="16dp" />
 
+            <!-- Métodos de Pagamento -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Métodos de Pagamento"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp" />
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupMetodosPagamento"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checkableBehavior="none"
+                android:layout_marginBottom="12dp">
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipDinheiro"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Dinheiro"
+                    android:checkable="true" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPix"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PIX"
+                    android:checkable="true" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipDebito"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cartão Débito"
+                    android:checkable="true" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipCredito"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cartão Crédito"
+                    android:checkable="true" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipTransferencia"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Transferência"
+                    android:checkable="true" />
+            </com.google.android.material.chip.ChipGroup>
+
             <!-- Mesa 1 -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
