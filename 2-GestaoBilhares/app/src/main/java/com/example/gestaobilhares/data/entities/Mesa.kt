@@ -5,11 +5,14 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import java.util.Date
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
 /**
  * Entidade que representa uma Mesa de sinuca no banco de dados.
  * Mesas pertencem a clientes e têm contadores de fichas.
  */
+@Parcelize
 @Entity(
     tableName = "mesas",
     foreignKeys = [
@@ -54,12 +57,13 @@ data class Mesa(
     
     @ColumnInfo(name = "data_ultima_leitura")
     val dataUltimaLeitura: Date = Date()
-)
+) : Parcelable
 
 /**
  * Enum para tipos de mesa
  */
-enum class TipoMesa {
+@Parcelize
+enum class TipoMesa : Parcelable {
     SINUCA,
     SNOOKER,
     POOL,

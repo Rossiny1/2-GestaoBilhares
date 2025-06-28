@@ -64,19 +64,24 @@ class ClientRegisterFragment : Fragment() {
                 id?.let {
                     binding.progressBar.visibility = View.GONE
                     binding.btnSave.isEnabled = true
-                    androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                        .setTitle("\u2705 Cliente Cadastrado!")
-                        .setMessage("Cliente cadastrado com sucesso!\n\nPróximo passo: Vincular mesas ao cliente.")
-                        .setPositiveButton("Adicionar Mesa") { _, _ ->
-                            val action = ClientRegisterFragmentDirections.actionClientRegisterFragmentToMesasDepositoFragment(it)
-                            findNavController().navigate(action)
-                            viewModel.resetNovoClienteId()
-                        }
-                        .setNegativeButton("Voltar") { _, _ ->
-                            findNavController().popBackStack()
-                            viewModel.resetNovoClienteId()
-                        }
-                        .show()
+                    try {
+                        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                            .setTitle("\u2705 Cliente Cadastrado!")
+                            .setMessage("Cliente cadastrado com sucesso!\n\nPróximo passo: Vincular mesas ao cliente.")
+                            .setPositiveButton("Adicionar Mesa") { _, _ ->
+                                val action = ClientRegisterFragmentDirections.actionClientRegisterFragmentToMesasDepositoFragment(it)
+                                findNavController().navigate(action)
+                                viewModel.resetNovoClienteId()
+                            }
+                            .setNegativeButton("Voltar") { _, _ ->
+                                findNavController().popBackStack()
+                                viewModel.resetNovoClienteId()
+                            }
+                            .show()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        showErrorDialog("Erro ao exibir confirmação: ${e.localizedMessage}")
+                    }
                 }
             }
         }
@@ -86,6 +91,14 @@ class ClientRegisterFragment : Fragment() {
                 binding.btnSave.isEnabled = !isLoading
             }
         }
+    }
+
+    private fun showErrorDialog(message: String) {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Erro")
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
     }
 
     private fun saveClient() {

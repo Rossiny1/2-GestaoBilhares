@@ -414,3 +414,33 @@ grep -r "@color/" app/src/main/res/layout/ | grep -v "//.*@color"
 # Clean build resolve problemas de cache de recursos:
 ./gradlew clean assembleDebug
 ```
+
+### 29. APRENDIZADOS PRÁTICOS - SPRINT DE CORREÇÃO E BUILD
+**❌ PROBLEMA:** Erros de build em cascata (referências a views inexistentes, entidades não implementando Parcelable, nomes de classes inconsistentes) travam o progresso e geram retrabalho.
+**✅ SOLUÇÃO:** Adotar abordagem sistemática de correção em lote: mapear todos os erros de build de uma vez (via logs), corrigir todos os arquivos afetados em paralelo (adapters, viewmodels, layouts), só tentar novo build após revisar todos os pontos críticos.
+**⚡ IMPACTO:** Reduz drasticamente o ciclo de tentativa/erro, evita build parcial e garante progresso contínuo.
+
+### 30. BACKUP ANTES E DEPOIS DE TESTES CRÍTICOS
+**❌ PROBLEMA:** Risco de perder progresso após grandes refatorações ou builds bem-sucedidos.
+**✅ SOLUÇÃO:** Executar o script de backup rápido (`./backup-rapido.ps1`) **antes** de grandes mudanças e **após** cada build/teste bem-sucedido, documentando a mensagem do commit/backup.
+**⚡ IMPACTO:** Zero perda de código, fácil rollback, histórico claro de evolução.
+
+### 31. CONSOLIDAÇÃO DE DOCUMENTAÇÃO EM 6 ARQUIVOS
+**❌ PROBLEMA:** Documentação dispersa dificulta consulta rápida e pode gerar inconsistências.
+**✅ SOLUÇÃO:** Consolidar toda a documentação em 6 arquivos principais, eliminando redundâncias e facilitando a navegação e atualização.
+**⚡ IMPACTO:** Consulta mais rápida, onboarding facilitado, menos risco de seguir instruções desatualizadas.
+
+### 32. RECUPERAÇÃO DE BUILD TRAVADO
+**❌ PROBLEMA:** Builds podem travar por processos pendentes do Gradle/Java, especialmente após várias tentativas seguidas.
+**✅ SOLUÇÃO:** Se o build travar, reiniciar o terminal e rodar novamente o comando. Se persistir, matar processos Java/Gradle com `taskkill /f /im java.exe` antes de novo build.
+**⚡ IMPACTO:** Recuperação rápida de ambiente, menos tempo perdido com travamentos.
+
+### 33. VALIDAÇÃO DE FLUXO COMPLETO ANTES DE AVANÇAR DE FASE
+**❌ PROBLEMA:** Avançar para novas features sem garantir que o fluxo principal está 100% funcional pode gerar dívidas técnicas e retrabalho.
+**✅ SOLUÇÃO:** Sempre validar o fluxo completo (Login → Rotas → Clientes → Detalhes → Acerto) antes de iniciar a próxima fase. Só avançar após checklist de navegação, UI, dados e logs limpos.
+**⚡ IMPACTO:** Menos bugs em produção, evolução mais previsível e sustentável.
+
+### 34. CONSULTA CONTÍNUA À DOCUMENTAÇÃO OFICIAL ANDROID
+**❌ PROBLEMA:** Dúvidas sobre padrões, permissões, links, integração web, etc.
+**✅ SOLUÇÃO:** Sempre consultar a documentação oficial do Android Studio para decisões de arquitetura, navegação, integração web, App Links, etc. Usar fontes externas confiáveis apenas como complemento.
+**⚡ IMPACTO:** Evita decisões técnicas erradas, garante aderência a padrões modernos e facilita manutenção futura.

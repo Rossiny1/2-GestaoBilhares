@@ -1,84 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/rounded_background"
-    android:padding="12dp"
-    android:layout_marginBottom="8dp">
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:strokeColor="@color/card_stroke"
+    app:strokeWidth="1dp"
+    android:background="@drawable/card_background">
 
-    <TextView
-        android:id="@+id/tvNumeroMesa"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Mesa 1"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:textColor="?attr/colorOnSurface" />
-
-    <TextView
-        android:id="@+id/tvTipoMesa"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sinuca"
-        android:textSize="14sp"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:layout_marginBottom="8dp" />
-
-    <!-- Layout para tipo Fichas -->
     <LinearLayout
-        android:id="@+id/layoutFichas"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:visibility="gone">
-
-        <EditText
-            android:id="@+id/etRelogioInicial"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Relógio Inicial"
-            android:inputType="number"
-            android:layout_marginBottom="4dp" />
-
-        <EditText
-            android:id="@+id/etRelogioFinal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Relógio Final"
-            android:inputType="number"
-            android:layout_marginBottom="4dp" />
-
-        <CheckBox
-            android:id="@+id/cbRelogioDefeito"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Relógio com Defeito (usar média)" />
-    </LinearLayout>
-
-    <!-- Layout para tipo Valor Fixo -->
-    <LinearLayout
-        android:id="@+id/layoutValorFixo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="gone">
+        android:padding="12dp">
 
         <TextView
-            android:id="@+id/tvValorFixo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Valor Mensal: R$ 0,00"
-            android:textSize="14sp"
-            android:textColor="?attr/colorOnSurface" />
+            android:id="@+id/tvNumeroMesa"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:gravity="center"
+            android:text="Mesa 1"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            android:background="@drawable/circle_purple_bg"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="8dp" />
 
         <TextView
-            android:id="@+id/tvSubtotal"
+            android:id="@+id/tvTipoMesa"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Subtotal: R$ 0,00"
+            android:text="Sinuca"
             android:textSize="14sp"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Layout para tipo Fichas -->
+        <LinearLayout
+            android:id="@+id/layoutFichas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/etRelogioInicial"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Relógio Inicial"
+                android:inputType="number"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/etRelogioFinal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Relógio Final"
+                android:inputType="number"
+                android:layout_marginBottom="4dp" />
+
+            <CheckBox
+                android:id="@+id/cbRelogioDefeito"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Relógio com Defeito (usar média)" />
+        </LinearLayout>
+
+        <!-- Layout para tipo Valor Fixo -->
+        <LinearLayout
+            android:id="@+id/layoutValorFixo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvValorFixo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Valor Mensal: R$ 0,00"
+                android:textSize="14sp"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:id="@+id/tvSubtotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Subtotal: R$ 0,00"
+                android:textSize="14sp"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
     </LinearLayout>
 
-</LinearLayout> 
+</com.google.android.material.card.MaterialCardView> 

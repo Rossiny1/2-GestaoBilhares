@@ -31,26 +31,6 @@
                 android:src="@drawable/ic_arrow_back"
                 app:tint="?attr/colorOnPrimary" />
 
-            <TextView
-                android:id="@+id/tvClientName"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:textColor="?attr/colorOnPrimary"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                tools:text="Bar do João" />
-
-            <TextView
-                android:id="@+id/tvClientId"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="?attr/colorOnPrimary"
-                android:textSize="16sp"
-                tools:text="ID: #12345" />
-
         </LinearLayout>
 
         <!-- Seção com imagem de fundo -->
@@ -81,6 +61,26 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
+                <!-- Nome e endereço do cliente -->
+                <TextView
+                    android:id="@+id/tvClientName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="2dp"
+                    tools:text="Bar do João" />
+                <TextView
+                    android:id="@+id/tvClientAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="normal"
+                    android:layout_marginBottom="8dp"
+                    tools:text="Rua das Flores, 123 - Centro" />
+
                 <!-- Linha com endereço e botões -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -94,16 +94,6 @@
                         android:layout_marginEnd="8dp"
                         android:src="@drawable/ic_location"
                         app:tint="@color/white" />
-
-                    <TextView
-                        android:id="@+id/tvClientAddress"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textColor="@color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        tools:text="Rua das Flores, 123 - Centro" />
 
                     <!-- Botão WhatsApp -->
                     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -165,8 +155,8 @@
                     <!-- Botão Novo Acerto -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnNewSettlement"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
                         android:text="⊕ Novo Acerto"
                         android:textColor="@color/white"
                         android:textSize="16sp"
@@ -174,7 +164,9 @@
                         app:backgroundTint="@color/purple_600"
                         app:cornerRadius="12dp"
                         app:icon="@drawable/ic_add"
-                        app:iconTint="@color/white" />
+                        app:iconTint="@color/white"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp" />
 
                 </LinearLayout>
 
@@ -242,7 +234,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="16dp">
+            android:layout_marginTop="24dp">
 
             <TextView
                 android:id="@+id/tvMesasTitle"
@@ -251,7 +243,8 @@
                 android:text="Mesas do Cliente"
                 android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAdicionarMesa"

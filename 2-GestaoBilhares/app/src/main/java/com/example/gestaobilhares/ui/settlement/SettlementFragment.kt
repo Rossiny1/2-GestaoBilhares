@@ -1,5 +1,7 @@
 package com.example.gestaobilhares.ui.settlement
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -26,6 +28,7 @@ import com.example.gestaobilhares.ui.settlement.MesasAcertoAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.LinearLayout
 import android.widget.Toast
+import com.example.gestaobilhares.data.entities.Mesa
 
 /**
  * Fragment para registrar novos acertos
@@ -52,6 +55,8 @@ class SettlementFragment : Fragment() {
     private val mesas = mutableListOf<MesaAcerto>()
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
     private lateinit var mesasAcertoAdapter: MesasAcertoAdapter
+    private var selectedPaymentMethods: List<String> = emptyList()
+    private var paymentValues: MutableMap<String, Double> = mutableMapOf()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -81,6 +86,12 @@ class SettlementFragment : Fragment() {
         // Lógica do checkbox Pano trocado
         binding.cbPanoTrocado.setOnCheckedChangeListener { _, isChecked ->
             binding.etNumeroPano.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
+
+        // Importar mesas do cliente ao iniciar
+        val mesasCliente = arguments?.getParcelableArrayList<Mesa>("mesasCliente")
+        if (mesasCliente != null) {
+            mesasAcertoAdapter.submitList(mesasCliente)
         }
     }
 
@@ -158,59 +169,119 @@ class SettlementFragment : Fragment() {
     
     private fun setupPaymentMethod() {
         val paymentMethods = arrayOf("Dinheiro", "PIX", "Cartão Débito", "Cartão Crédito", "Transferência")
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, paymentMethods)
-        binding.actvPaymentMethod.setAdapter(adapter)
+        binding.actvPaymentMethod.keyListener = null // Impede digitação manual
+        binding.actvPaymentMethod.setOnClickListener {
+            showPaymentMethodsDialog(paymentMethods)
+        }
+    }
+
+    private fun showPaymentMethodsDialog(paymentMethods: Array<String>) {
+        val checkedItems = BooleanArray(paymentMethods.size) { false }
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Selecione os métodos de pagamento")
+            .setMultiChoiceItems(paymentMethods, checkedItems) { _, which, isChecked ->
+                checkedItems[which] = isChecked
+            }
+            .setPositiveButton("OK") { _, _ ->
+                val selected = paymentMethods.filterIndexed { idx, _ -> checkedItems[idx] }
+                selectedPaymentMethods = selected
+                if (selected.size > 1) {
+                    showPaymentValuesDialog(selected)
+                } else if (selected.size == 1) {
+                    paymentValues.clear()
+                    val valorTotal = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
+                    paymentValues[selected[0]] = valorTotal
+                    binding.actvPaymentMethod.setText(selected[0], false)
+                } else {
+                    paymentValues.clear()
+                    binding.actvPaymentMethod.setText("", false)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun showPaymentValuesDialog(selected: List<String>) {
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 16, 32, 16)
+        }
+        val editTexts = selected.associateWith { metodo ->
+            EditText(requireContext()).apply {
+                hint = "Valor para $metodo"
+                inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+                layout.addView(this)
+            }
+        }
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Informe o valor de cada método")
+            .setView(layout)
+            .setPositiveButton("OK") { _, _ ->
+                paymentValues.clear()
+                var totalInformado = 0.0
+                selected.forEach { metodo ->
+                    val valor = editTexts[metodo]?.text.toString().toDoubleOrNull() ?: 0.0
+                    paymentValues[metodo] = valor
+                    totalInformado += valor
+                }
+                val resumo = paymentValues.entries.joinToString(", ") { "${it.key}: R$ %.2f".format(it.value) }
+                binding.actvPaymentMethod.setText(resumo, false)
+                // Atualiza o campo Valor Recebido com a soma
+                binding.etAmountReceived.setText(totalInformado.toString())
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun observeViewModel() {
         // Observar dados do cliente
         lifecycleScope.launch {
             viewModel.clientName.collect { name ->
-                if (name.isNotBlank()) {
-                    binding.tvClientName.text = name
+                _binding?.let { binding ->
+                    if (name.isNotBlank()) {
+                        binding.tvClientName.text = name
+                    }
                 }
             }
         }
         
         lifecycleScope.launch {
             viewModel.clientAddress.collect { address ->
-                if (address.isNotBlank()) {
-                    binding.tvClientAddress.text = address
+                _binding?.let { binding ->
+                    if (address.isNotBlank()) {
+                        binding.tvClientAddress.text = address
+                    }
                 }
             }
         }
         // Observar resultado do salvamento do acerto
         lifecycleScope.launch {
             viewModel.resultadoSalvamento.collect { resultado ->
-                resultado?.let {
-                    if (it.isSuccess) {
-                        com.google.android.material.snackbar.Snackbar.make(
-                            binding.root,
-                            "Acerto salvo com sucesso!",
-                            com.google.android.material.snackbar.Snackbar.LENGTH_LONG
-                        ).show()
-                        limparCamposAcerto()
-                    } else {
-                        com.google.android.material.snackbar.Snackbar.make(
-                            binding.root,
-                            "Erro ao salvar acerto: ${it.exceptionOrNull()?.localizedMessage}",
-                            com.google.android.material.snackbar.Snackbar.LENGTH_LONG
-                        ).show()
+                _binding?.let { binding ->
+                    resultado?.let {
+                        if (it.isSuccess) {
+                            com.google.android.material.snackbar.Snackbar.make(
+                                binding.root,
+                                "Acerto salvo com sucesso!",
+                                com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                            ).show()
+                            limparCamposAcerto()
+                        } else {
+                            com.google.android.material.snackbar.Snackbar.make(
+                                binding.root,
+                                "Erro ao salvar acerto: ${it.exceptionOrNull()?.localizedMessage}",
+                                com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                        // Resetar resultado para não exibir múltiplas vezes
+                        viewModel.resetarResultadoSalvamento()
                     }
-                    // Resetar resultado para não exibir múltiplas vezes
-                    viewModel.resetarResultadoSalvamento()
                 }
             }
         }
     }
 
     private fun limparCamposAcerto() {
-        // Limpar seleção dos métodos de pagamento
-        binding.chipDinheiro.isChecked = false
-        binding.chipPix.isChecked = false
-        binding.chipDebito.isChecked = false
-        binding.chipCredito.isChecked = false
-        binding.chipTransferencia.isChecked = false
         // Limpar campos principais
         binding.etFichasInicial.text?.clear()
         binding.etFichasFinal.text?.clear()
@@ -231,31 +302,9 @@ class SettlementFragment : Fragment() {
         val observacao = binding.etObservacao.text.toString()
         val justificativa = null // Pode ser passado do dialog se necessário
         val mesas = mesasAcertoAdapter.currentList
-        // Coletar métodos de pagamento selecionados do ChipGroup
-        val metodosSelecionados = mutableListOf<String>()
-        if (binding.chipDinheiro.isChecked) metodosSelecionados.add("Dinheiro")
-        if (binding.chipPix.isChecked) metodosSelecionados.add("PIX")
-        if (binding.chipDebito.isChecked) metodosSelecionados.add("Cartão Débito")
-        if (binding.chipCredito.isChecked) metodosSelecionados.add("Cartão Crédito")
-        if (binding.chipTransferencia.isChecked) metodosSelecionados.add("Transferência")
-        val totalRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
-        if (metodosSelecionados.size > 1) {
-            // Dialog para discriminar valores
-            showDialogMetodosPagamento(metodosSelecionados, totalRecebido) { valores ->
-                val dados = SettlementViewModel.DadosAcerto(
-                    mesas = mesas,
-                    representante = representante,
-                    panoTrocado = panoTrocado,
-                    numeroPano = numeroPano,
-                    tipoAcerto = tipoAcerto,
-                    observacao = observacao,
-                    justificativa = justificativa,
-                    metodosPagamento = valores
-                )
-                viewModel.salvarAcerto(dados, valores)
-            }
-        } else if (metodosSelecionados.size == 1) {
-            val valores = mapOf(metodosSelecionados.first() to totalRecebido)
+        if (paymentValues.isNotEmpty()) {
+            val valores = paymentValues.toMap()
+            val totalRecebido = valores.values.sum()
             val dados = SettlementViewModel.DadosAcerto(
                 mesas = mesas,
                 representante = representante,
@@ -267,36 +316,21 @@ class SettlementFragment : Fragment() {
                 metodosPagamento = valores
             )
             viewModel.salvarAcerto(dados, valores)
-        } else {
-            Toast.makeText(requireContext(), "Selecione pelo menos um método de pagamento!", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun showDialogMetodosPagamento(metodos: List<String>, totalRecebido: Double, onConfirm: (Map<String, Double>) -> Unit) {
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_metodos_pagamento, null)
-        val container = dialogView.findViewById<LinearLayout>(R.id.containerMetodos)
-        val editTexts = mutableMapOf<String, EditText>()
-        metodos.forEach { metodo ->
-            val et = EditText(requireContext())
-            et.hint = "Valor em $metodo"
-            et.inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-            container.addView(et)
-            editTexts[metodo] = et
-        }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Discriminar Pagamento")
-            .setView(dialogView)
-            .setPositiveButton("Confirmar") { _, _ ->
-                val valores = editTexts.mapValues { it.value.text.toString().toDoubleOrNull() ?: 0.0 }
-                val soma = valores.values.sum()
-                if (kotlin.math.abs(soma - totalRecebido) > 0.01) {
-                    Toast.makeText(requireContext(), "A soma dos valores não confere com o total recebido!", Toast.LENGTH_LONG).show()
-                } else {
-                    onConfirm(valores)
-                }
+            // Retornar resumo para o fragment anterior
+            val resumo = com.example.gestaobilhares.ui.clients.AcertoResumo(
+                id = System.currentTimeMillis(),
+                data = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(java.util.Date()),
+                valor = totalRecebido,
+                status = "Pago",
+                mesasAcertadas = mesas.size
+            )
+            val intent = Intent().apply {
+                putExtra("resumoAcerto", resumo)
             }
-            .setNegativeButton("Cancelar", null)
-            .show()
+            requireActivity().setResult(Activity.RESULT_OK, intent)
+        } else {
+            Toast.makeText(requireContext(), "Selecione o(s) método(s) de pagamento!", Toast.LENGTH_SHORT).show()
+        }
     }
 
     // Função para adicionar nova mesa (implementação básica)

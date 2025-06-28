@@ -61,8 +61,10 @@ class MesasDepositoFragment : Fragment() {
     private fun observeViewModel() {
         lifecycleScope.launch {
             viewModel.mesasDisponiveis.collect { mesas ->
-                adapter.submitList(mesas)
-                binding.tvEmptyState.visibility = if (mesas.isEmpty()) View.VISIBLE else View.GONE
+                _binding?.let { binding ->
+                    adapter.submitList(mesas)
+                    binding.tvEmptyState.visibility = if (mesas.isEmpty()) View.VISIBLE else View.GONE
+                }
             }
         }
     }

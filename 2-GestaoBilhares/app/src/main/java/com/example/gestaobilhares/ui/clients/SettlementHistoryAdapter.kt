@@ -50,14 +50,12 @@ class SettlementHistoryAdapter(
                 // Status com cores
                 tvSettlementStatus.text = settlement.status
                 val statusColor = when (settlement.status.lowercase()) {
-                    "pago" -> android.R.color.holo_green_dark
-                    "pendente" -> android.R.color.holo_orange_dark
-                    "atrasado" -> android.R.color.holo_red_dark
-                    else -> android.R.color.darker_gray
+                    "pago" -> R.color.green_600
+                    "pendente" -> R.color.orange_600
+                    "atrasado" -> R.color.red_600
+                    else -> R.color.gray_600
                 }
-                tvSettlementStatus.setTextColor(
-                    ContextCompat.getColor(binding.root.context, statusColor)
-                )
+                tvSettlementStatus.setTextColor(ContextCompat.getColor(binding.root.context, statusColor))
                 
                 // Mesas acertadas
                 tvTablesCount.text = "${settlement.mesasAcertadas} mesa${if (settlement.mesasAcertadas != 1) "s" else ""}"

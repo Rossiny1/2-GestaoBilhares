@@ -1,5 +1,7 @@
 package com.example.gestaobilhares.ui.clients
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -35,6 +37,8 @@ class ClientDetailFragment : Fragment() {
     private lateinit var settlementHistoryAdapter: SettlementHistoryAdapter
     private lateinit var mesasAdapter: MesasAdapter
 
+    private val REQUEST_CODE_NOVO_ACERTO = 1001
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -64,9 +68,15 @@ class ClientDetailFragment : Fragment() {
         
         // Botão Novo Acerto - FASE 4A: Navegar para SettlementFragment ✅
         binding.btnNewSettlement.setOnClickListener {
+            // Recupera as mesas ativas do cliente
+            val mesasAtivas = viewModel.mesasCliente.value
             val action = ClientDetailFragmentDirections
                 .actionClientDetailFragmentToSettlementFragment(args.clienteId)
-            findNavController().navigate(action)
+            // Passa as mesas como argumento usando Bundle
+            val bundle = Bundle().apply {
+                putParcelableArrayList("mesasCliente", ArrayList(mesasAtivas))
+            }
+            findNavController().navigate(action.actionId, bundle)
         }
         
         // Botões de contato
@@ -149,7 +159,6 @@ class ClientDetailFragment : Fragment() {
     private fun updateClientUI(client: ClienteResumo) {
         binding.apply {
             tvClientName.text = client.nome
-            tvClientId.text = "ID: #${client.id}"
             tvClientAddress.text = client.endereco
             tvLastVisit.text = "Última visita: ${client.ultimaVisita}"
             tvActiveTables.text = "${client.mesasAtivas} Mesas ativas"
@@ -177,5 +186,15 @@ class ClientDetailFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_NOVO_ACERTO && resultCode == Activity.RESULT_OK) {
+            val resumo = data?.getParcelableExtra<AcertoResumo>("resumoAcerto")
+            resumo?.let {
+                viewModel.adicionarAcertoNoHistorico(it)
+            }
+        }
     }
 } 

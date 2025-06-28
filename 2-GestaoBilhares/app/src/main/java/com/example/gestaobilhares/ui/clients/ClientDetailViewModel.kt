@@ -13,6 +13,8 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repositories.ClienteRepository
 import kotlinx.coroutines.flow.collect
+import kotlinx.parcelize.Parcelize
+import android.os.Parcelable
 
 /**
  * ViewModel para ClientDetailFragment
@@ -106,6 +108,15 @@ class ClientDetailViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * Adiciona um novo acerto ao histórico do cliente e reordena do mais recente para o mais antigo.
+     */
+    fun adicionarAcertoNoHistorico(novoAcerto: AcertoResumo) {
+        val listaAtual = _settlementHistory.value.toMutableList()
+        listaAtual.add(0, novoAcerto) // Adiciona no topo (mais recente)
+        _settlementHistory.value = listaAtual
+    }
 }
 
 // Data classes auxiliares - FASE 4A
@@ -119,10 +130,11 @@ data class ClienteResumo(
     val observacoes: String
 )
 
+@Parcelize
 data class AcertoResumo(
     val id: Long,
     val data: String,
     val valor: Double,
     val status: String,
     val mesasAcertadas: Int
-) 
+) : Parcelable 

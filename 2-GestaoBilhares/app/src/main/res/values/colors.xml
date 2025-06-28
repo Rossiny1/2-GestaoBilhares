@@ -66,4 +66,5 @@
     <color name="blue_700">#0056B3</color>
     <color name="green_700">#1E7E34</color>
     <color name="primary_600">#5300D4</color>
+    <color name="card_stroke">#22000000</color>
 </resources>

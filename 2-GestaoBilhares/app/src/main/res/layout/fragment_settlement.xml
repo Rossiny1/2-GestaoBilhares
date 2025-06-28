@@ -153,124 +153,6 @@
                 android:layout_marginBottom="16dp"
                 tools:listitem="@layout/item_mesa_acerto" />
 
-            <!-- Campo Representante (apenas leitura) -->
-            <TextView
-                android:id="@+id/tvRepresentanteLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Representante"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="14sp" />
-            <TextView
-                android:id="@+id/tvRepresentante"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Usuário Logado"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="16sp"
-                android:background="@drawable/rounded_tag_gray"
-                android:padding="8dp"
-                android:layout_marginBottom="8dp" />
-
-            <!-- Checkbox Pano trocado -->
-            <CheckBox
-                android:id="@+id/cbPanoTrocado"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Pano trocado"
-                android:layout_marginBottom="4dp" />
-            <EditText
-                android:id="@+id/etNumeroPano"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Número do pano"
-                android:inputType="text"
-                android:visibility="gone"
-                android:layout_marginBottom="8dp" />
-
-            <!-- Caixa de seleção Tipo de Acerto -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Tipo de acerto"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="14sp" />
-            <Spinner
-                android:id="@+id/spTipoAcerto"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:entries="@array/tipos_acerto"
-                android:layout_marginBottom="8dp" />
-
-            <!-- Campo Observação -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Observação"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="14sp" />
-            <EditText
-                android:id="@+id/etObservacao"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Observações do acerto"
-                android:inputType="textMultiLine"
-                android:minLines="2"
-                android:maxLines="4"
-                android:background="@drawable/rounded_tag_gray"
-                android:layout_marginBottom="16dp" />
-
-            <!-- Métodos de Pagamento -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Métodos de Pagamento"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="14sp"
-                android:layout_marginTop="8dp" />
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroupMetodosPagamento"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:checkableBehavior="none"
-                android:layout_marginBottom="12dp">
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipDinheiro"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Dinheiro"
-                    android:checkable="true" />
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipPix"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="PIX"
-                    android:checkable="true" />
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipDebito"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Cartão Débito"
-                    android:checkable="true" />
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipCredito"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Cartão Crédito"
-                    android:checkable="true" />
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipTransferencia"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Transferência"
-                    android:checkable="true" />
-            </com.google.android.material.chip.ChipGroup>
-
             <!-- Mesa 1 -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -530,6 +412,22 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- Método de Pagamento (agora dentro do Card Totais) -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Método de Pagamento"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="14sp"
+                        android:layout_marginTop="8dp" />
+                    <AutoCompleteTextView
+                        android:id="@+id/actvPaymentMethod"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Selecione o método de pagamento"
+                        android:inputType="none"
+                        android:layout_marginBottom="16dp" />
+
                     <!-- Débito Atual -->
                     <TextView
                         android:layout_width="wrap_content"
@@ -552,26 +450,92 @@
                         android:textStyle="bold"
                         tools:text="R$ 0,00" />
 
-                    <!-- Método de Pagamento -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Método de Pagamento"
-                        app:boxStrokeColor="?attr/colorPrimary"
-                        app:hintTextColor="?attr/colorPrimary">
-
-                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                            android:id="@+id/actvPaymentMethod"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="none"
-                            android:text="Dinheiro" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
                 </LinearLayout>
 
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Novo Card: Campos Extras -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="1dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Campo Representante (apenas leitura) -->
+                    <TextView
+                        android:id="@+id/tvRepresentanteLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Representante"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/tvRepresentante"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Usuário Logado"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp"
+                        android:background="@drawable/rounded_tag_gray"
+                        android:padding="8dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Checkbox Pano trocado -->
+                    <CheckBox
+                        android:id="@+id/cbPanoTrocado"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Pano trocado"
+                        android:layout_marginBottom="4dp" />
+                    <EditText
+                        android:id="@+id/etNumeroPano"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Número do pano"
+                        android:inputType="text"
+                        android:visibility="gone"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Caixa de seleção Tipo de Acerto -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tipo de acerto"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="14sp" />
+                    <Spinner
+                        android:id="@+id/spTipoAcerto"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:entries="@array/tipos_acerto"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Campo Observação -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Observação"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="14sp" />
+                    <EditText
+                        android:id="@+id/etObservacao"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Observações do acerto"
+                        android:inputType="textMultiLine"
+                        android:minLines="2"
+                        android:maxLines="4"
+                        android:background="@drawable/rounded_tag_gray"
+                        android:layout_marginBottom="8dp" />
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Botão Salvar -->

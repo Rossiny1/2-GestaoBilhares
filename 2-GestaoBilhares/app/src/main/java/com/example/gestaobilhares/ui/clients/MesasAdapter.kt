@@ -34,7 +34,6 @@ class MesasAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(mesa: Mesa) {
             binding.tvNumeroMesa.text = "Mesa ${mesa.numero}"
-            binding.tvTipoMesa.text = mesa.tipoMesa.name
             if (mesa.clienteId != null) {
                 binding.btnRetirarMesa.visibility = View.VISIBLE
                 binding.btnRetirarMesa.setOnClickListener { onRetirarMesa(mesa) }
