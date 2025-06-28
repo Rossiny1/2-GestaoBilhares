@@ -29,6 +29,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.LinearLayout
 import android.widget.Toast
 import com.example.gestaobilhares.data.entities.Mesa
+import android.util.Log
 
 /**
  * Fragment para registrar novos acertos
@@ -70,14 +71,16 @@ class SettlementFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        Log.d("SettlementFragment", "Recebido clienteId=${args.clienteId}, mesas=${args.mesasCliente?.map { it.numero }}")
         setupUI()
         observeViewModel()
         
-        // Carregar dados do cliente para o acerto
+        // Buscar apenas nome/endereço do cliente
         viewModel.loadClientForSettlement(args.clienteId)
         mesasAcertoAdapter = MesasAcertoAdapter()
         binding.rvMesasAcerto.adapter = mesasAcertoAdapter
-        viewModel.loadMesasCliente(args.clienteId)
+        // NÃO sobrescrever as mesas recebidas via argumento
+        // viewModel.loadMesasCliente(args.clienteId) // REMOVIDO
         setupMesasSection()
 
         // Preencher campo Representante (mock)
@@ -88,11 +91,9 @@ class SettlementFragment : Fragment() {
             binding.etNumeroPano.visibility = if (isChecked) View.VISIBLE else View.GONE
         }
 
-        // Importar mesas do cliente ao iniciar
-        val mesasCliente = arguments?.getParcelableArrayList<Mesa>("mesasCliente")
-        if (mesasCliente != null) {
-            mesasAcertoAdapter.submitList(mesasCliente)
-        }
+        // Importar mesas do cliente via SafeArgs
+        val mesasCliente = args.mesasCliente?.toList() ?: emptyList()
+        mesasAcertoAdapter.submitList(mesasCliente)
     }
 
     private fun setupUI() {
@@ -316,18 +317,16 @@ class SettlementFragment : Fragment() {
                 metodosPagamento = valores
             )
             viewModel.salvarAcerto(dados, valores)
-            // Retornar resumo para o fragment anterior
-            val resumo = com.example.gestaobilhares.ui.clients.AcertoResumo(
-                id = System.currentTimeMillis(),
-                data = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(java.util.Date()),
-                valor = totalRecebido,
-                status = "Pago",
-                mesasAcertadas = mesas.size
+            // Exibir resumo do acerto em dialog
+            val clienteNome = binding.tvClientName.text.toString()
+            val dialog = com.example.gestaobilhares.ui.settlement.SettlementSummaryDialog.newInstance(
+                clienteNome = clienteNome,
+                mesas = mesas,
+                total = totalRecebido,
+                metodosPagamento = valores,
+                observacao = observacao
             )
-            val intent = Intent().apply {
-                putExtra("resumoAcerto", resumo)
-            }
-            requireActivity().setResult(Activity.RESULT_OK, intent)
+            dialog.show(parentFragmentManager, "SettlementSummaryDialog")
         } else {
             Toast.makeText(requireContext(), "Selecione o(s) método(s) de pagamento!", Toast.LENGTH_SHORT).show()
         }

@@ -41,6 +41,26 @@ class ClientDetailViewModel @Inject constructor(
     private val _mesasDisponiveis = MutableStateFlow<List<Mesa>>(emptyList())
     val mesasDisponiveis: StateFlow<List<Mesa>> = _mesasDisponiveis.asStateFlow()
 
+    init {
+        // MOCK: Adiciona acertos fictícios ao histórico para teste visual
+        _settlementHistory.value = listOf(
+            AcertoResumo(
+                id = 1L,
+                data = "28/06/2025 10:00",
+                valor = 150.0,
+                status = "Pago",
+                mesasAcertadas = 2
+            ),
+            AcertoResumo(
+                id = 2L,
+                data = "21/06/2025 09:30",
+                valor = 120.0,
+                status = "Pago",
+                mesasAcertadas = 1
+            )
+        )
+    }
+
     fun loadClientDetails(clienteId: Long) {
         viewModelScope.launch {
             _isLoading.value = true

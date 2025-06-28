@@ -98,6 +98,10 @@
             android:name="clienteId"
             app:argType="long"
             android:defaultValue="0L" />
+        <argument
+            android:name="mesasCliente"
+            app:argType="com.example.gestaobilhares.data.entities.Mesa[]"
+            app:nullable="true" />
     </fragment>
 
     <!-- FASE 4B: Tela de cadastro de cliente -->

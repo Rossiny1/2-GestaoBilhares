@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repositories.ClienteRepository
 
 /**
  * ViewModel para SettlementFragment
@@ -18,7 +19,8 @@ import com.example.gestaobilhares.data.repository.MesaRepository
  */
 @HiltViewModel
 class SettlementViewModel @Inject constructor(
-    private val mesaRepository: MesaRepository
+    private val mesaRepository: MesaRepository,
+    private val clienteRepository: ClienteRepository
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -50,24 +52,21 @@ class SettlementViewModel @Inject constructor(
     fun loadClientForSettlement(clienteId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
-            
             try {
-                // MOCK DATA - Simular carregamento de dados do cliente
-                kotlinx.coroutines.delay(500) // Simular latência
-                
-                val mockData = when (clienteId) {
-                    1L -> Pair("Bar do João", "Rua das Flores, 123 - Centro")
-                    2L -> Pair("Boteco da Maria", "Av. Principal, 456 - Vila Nova") 
-                    3L -> Pair("Clube da Maria", "Rua do Comércio, 789")
-                    else -> Pair("Cliente $clienteId", "Endereço do Cliente $clienteId")
+                val cliente = clienteRepository.obterPorId(clienteId)
+                if (cliente != null) {
+                    _clientName.value = cliente.nome
+                    _clientAddress.value = cliente.endereco ?: "---"
+                    Log.d("SettlementViewModel", "Nome do cliente carregado: ${cliente.nome}, endereço: ${cliente.endereco}")
+                } else {
+                    _clientName.value = "Cliente não encontrado"
+                    _clientAddress.value = "---"
+                    Log.d("SettlementViewModel", "Cliente não encontrado para ID: $clienteId")
                 }
-                
-                _clientName.value = mockData.first
-                _clientAddress.value = mockData.second
-                
             } catch (e: Exception) {
-                // TODO: Implementar tratamento de erro
                 e.printStackTrace()
+                _clientName.value = "Erro ao carregar cliente"
+                _clientAddress.value = "---"
             } finally {
                 _isLoading.value = false
             }

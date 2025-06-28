@@ -20,6 +20,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.R
+import android.util.Log
 
 /**
  * Fragment para exibir detalhes do cliente e histórico de acertos
@@ -58,6 +59,13 @@ class ClientDetailFragment : Fragment() {
         // Carregar dados do cliente
         viewModel.loadClientDetails(args.clienteId)
         setupMesasSection()
+        // Desabilitar botão até mesas carregarem
+        binding.btnNewSettlement.isEnabled = false
+        lifecycleScope.launch {
+            viewModel.mesasCliente.collect { mesas ->
+                binding.btnNewSettlement.isEnabled = mesas.isNotEmpty()
+            }
+        }
     }
 
     private fun setupUI() {
@@ -68,15 +76,15 @@ class ClientDetailFragment : Fragment() {
         
         // Botão Novo Acerto - FASE 4A: Navegar para SettlementFragment ✅
         binding.btnNewSettlement.setOnClickListener {
-            // Recupera as mesas ativas do cliente
+            // Sempre pega as mesas mais recentes do StateFlow
             val mesasAtivas = viewModel.mesasCliente.value
+            Log.d("NovoAcerto", "Abrindo acerto para clienteId=${args.clienteId}, mesas=${mesasAtivas.map { it.numero }}")
             val action = ClientDetailFragmentDirections
-                .actionClientDetailFragmentToSettlementFragment(args.clienteId)
-            // Passa as mesas como argumento usando Bundle
-            val bundle = Bundle().apply {
-                putParcelableArrayList("mesasCliente", ArrayList(mesasAtivas))
-            }
-            findNavController().navigate(action.actionId, bundle)
+                .actionClientDetailFragmentToSettlementFragment(
+                    mesasAtivas.toTypedArray(), // primeiro mesasCliente
+                    args.clienteId // depois clienteId
+                )
+            findNavController().navigate(action)
         }
         
         // Botões de contato
