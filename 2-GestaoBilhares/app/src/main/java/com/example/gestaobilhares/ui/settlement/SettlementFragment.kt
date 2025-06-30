@@ -105,7 +105,12 @@ class SettlementFragment : Fragment() {
             updateCalculations()
         }
         
-        binding.rvMesasAcerto.adapter = mesasAcertoAdapter
+        // Configurar RecyclerView com LinearLayoutManager
+        binding.rvMesasAcerto.apply {
+            layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
+            adapter = mesasAcertoAdapter
+            setHasFixedSize(false) // Permite altura dinâmica
+        }
         
         if (mesasDTO.isNotEmpty()) {
             Log.d("SettlementFragment", "Populando adapter com ${mesasDTO.size} mesas")

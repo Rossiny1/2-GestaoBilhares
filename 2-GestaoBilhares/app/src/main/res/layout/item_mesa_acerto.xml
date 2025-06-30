@@ -1,42 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="2dp"
-    app:strokeColor="@color/card_stroke"
-    app:strokeWidth="1dp"
-    android:background="@drawable/card_background">
+    app:cardElevation="4dp"
+    app:strokeColor="?attr/colorOutline"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvNumeroMesa"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:gravity="center"
-            android:text="Mesa 1"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="@color/white"
-            android:background="@drawable/circle_purple_bg"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:id="@+id/tvTipoMesa"
-            android:layout_width="wrap_content"
+        <!-- Título da Mesa -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Sinuca"
-            android:textSize="14sp"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:layout_marginBottom="8dp" />
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_table"
+                app:tint="@color/purple_600" />
+
+            <TextView
+                android:id="@+id/tvNumeroMesa"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Mesa 1"
+                android:textColor="@color/purple_600"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:text="Mesa M1A" />
+
+            <TextView
+                android:id="@+id/tvTipoMesa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sinuca"
+                android:textSize="14sp"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="SINUCA" />
+
+        </LinearLayout>
 
         <!-- Layout para tipo Fichas -->
         <LinearLayout
@@ -44,29 +59,63 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:visibility="visible">
 
-            <EditText
-                android:id="@+id/etRelogioInicial"
+            <!-- Fichas Inicial e Final -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Relógio Inicial"
-                android:inputType="number"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="12dp"
+                android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/etRelogioFinal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Relógio Final"
-                android:inputType="number"
-                android:layout_marginBottom="4dp" />
+                <!-- Relógio Inicial -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:hint="Relógio Inicial"
+                    app:boxStrokeColor="?attr/colorPrimary"
+                    app:hintTextColor="?attr/colorPrimary">
 
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etRelogioInicial"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:maxLines="1" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Relógio Final -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:hint="Relógio Final"
+                    app:boxStrokeColor="?attr/colorPrimary"
+                    app:hintTextColor="?attr/colorPrimary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etRelogioFinal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:maxLines="1" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+            <!-- Checkbox Relógio com Defeito -->
             <CheckBox
                 android:id="@+id/cbRelogioDefeito"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
                 android:text="Relógio com Defeito (usar média)" />
+
         </LinearLayout>
 
         <!-- Layout para tipo Valor Fixo -->
@@ -81,18 +130,34 @@
                 android:id="@+id/tvValorFixo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
                 android:text="Valor Mensal: R$ 0,00"
                 android:textSize="14sp"
                 android:textColor="?attr/colorOnSurface" />
 
-            <TextView
-                android:id="@+id/tvSubtotal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Subtotal: R$ 0,00"
-                android:textSize="14sp"
-                android:textColor="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
+
+        <!-- Subtotal da Mesa -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:text="Subtotal da Mesa"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tvSubtotal"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/rounded_background"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/green_600"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:text="R$ 0,00"
+            tools:text="R$ 25,00" />
 
     </LinearLayout>
 
