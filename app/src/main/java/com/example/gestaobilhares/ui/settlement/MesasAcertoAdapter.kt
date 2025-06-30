@@ -160,8 +160,18 @@ class MesasAcertoAdapter(
     }
 
     fun isDataValid(): Boolean {
-        // Verifica se para todas as mesas o relógio final é maior ou igual ao inicial
-        return mesaStates.values.all { it.relogioFinal >= it.relogioInicial }
+        // Para mesas de valor fixo, não precisa validar relógios
+        // Para mesas de fichas jogadas, verifica se o relógio final é maior ou igual ao inicial
+        return mesaStates.values.all { state ->
+            val mesa = currentList.find { it.id == state.mesaId }
+            if (mesa?.valorFixo ?: 0.0 > 0) {
+                // Mesa de valor fixo - sempre válida
+                true
+            } else {
+                // Mesa de fichas jogadas - valida relógios
+                state.relogioFinal >= state.relogioInicial
+            }
+        }
     }
 
     fun getMesasAcerto(): List<MesaAcertoState> {
