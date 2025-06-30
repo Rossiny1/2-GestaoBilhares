@@ -21,6 +21,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.R
 import android.util.Log
+import com.example.gestaobilhares.ui.settlement.MesaDTO
+import android.widget.Toast
 
 /**
  * Fragment para exibir detalhes do cliente e histórico de acertos
@@ -76,13 +78,33 @@ class ClientDetailFragment : Fragment() {
         
         // Botão Novo Acerto - FASE 4A: Navegar para SettlementFragment ✅
         binding.btnNewSettlement.setOnClickListener {
-            // Sempre pega as mesas mais recentes do StateFlow
             val mesasAtivas = viewModel.mesasCliente.value
-            Log.d("NovoAcerto", "Abrindo acerto para clienteId=${args.clienteId}, mesas=${mesasAtivas.map { it.numero }}")
+            Log.d("NovoAcerto", "Mesas ativas encontradas: ${mesasAtivas.size}")
+            
+            if (mesasAtivas.isEmpty()) {
+                Toast.makeText(requireContext(), "Este cliente não possui mesas ativas para acerto.", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+            
+            val mesasDTO = mesasAtivas.map { mesa ->
+                Log.d("NovoAcerto", "Convertendo mesa ${mesa.numero} - ID: ${mesa.id}")
+                MesaDTO(
+                    id = mesa.id,
+                    numero = mesa.numero,
+                    fichasInicial = mesa.fichasInicial ?: 0,
+                    fichasFinal = mesa.fichasFinal ?: 0,
+                    tipoMesa = mesa.tipoMesa.name,
+                    ativa = mesa.ativa
+                )
+            }.toTypedArray()
+            
+            Log.d("NovoAcerto", "Enviando ${mesasDTO.size} mesas para SettlementFragment")
+            Log.d("NovoAcerto", "Mesas: ${mesasDTO.joinToString { "Mesa ${it.numero} (ID: ${it.id})" }}")
+            
             val action = ClientDetailFragmentDirections
                 .actionClientDetailFragmentToSettlementFragment(
-                    mesasAtivas.toTypedArray(), // primeiro mesasCliente
-                    args.clienteId // depois clienteId
+                    mesasDTO,
+                    args.clienteId
                 )
             findNavController().navigate(action)
         }

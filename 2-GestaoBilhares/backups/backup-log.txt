@@ -1,1 +1,3 @@
 20250628-114913 | -mensagem Backup teste após refatoração do script | Arquivo: C:\Users\Rossiny\Desktop\2-GestaoBilhares\2-GestaoBilhares\backups\backup-20250628-114913.zip
+20250629-224524 | -mensagem Backup pos-commit e geracao de APK | Arquivo: C:\Users\Rossiny\Desktop\2-GestaoBilhares\2-GestaoBilhares\backups\backup-20250629-224524.zip
+20250629-224557 | -mensagem Backup rapido do estado atual do projeto | Arquivo: C:\Users\Rossiny\Desktop\2-GestaoBilhares\2-GestaoBilhares\backups\backup-20250629-224557.zip

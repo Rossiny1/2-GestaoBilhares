@@ -100,7 +100,7 @@
             android:defaultValue="0L" />
         <argument
             android:name="mesasCliente"
-            app:argType="com.example.gestaobilhares.data.entities.Mesa[]"
+            app:argType="com.example.gestaobilhares.ui.settlement.MesaDTO[]"
             app:nullable="true" />
     </fragment>
 

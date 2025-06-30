@@ -17,6 +17,8 @@ import kotlinx.parcelize.Parcelize
 import android.os.Parcelable
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.entities.Acerto
+import com.example.gestaobilhares.data.entities.TipoMesa
+import android.util.Log
 
 /**
  * ViewModel para ClientDetailFragment
@@ -67,9 +69,13 @@ class ClientDetailViewModel @Inject constructor(
     fun loadClientDetails(clienteId: Long) {
         viewModelScope.launch {
             _isLoading.value = true
+            Log.d("ClientDetailViewModel", "=== CARREGANDO DETALHES DO CLIENTE $clienteId ===")
+            
             try {
                 val cliente = clienteRepository.obterPorId(clienteId)
                 cliente?.let {
+                    Log.d("ClientDetailViewModel", "Cliente encontrado: ${it.nome}")
+                    
                     _clientDetails.value = ClienteResumo(
                         id = it.id,
                         nome = it.nome,
@@ -79,17 +85,57 @@ class ClientDetailViewModel @Inject constructor(
                         ultimaVisita = "-", // TODO: Buscar última visita real
                         observacoes = it.observacoes ?: ""
                     )
+                    
+                    // Tentar carregar mesas reais do banco
                     mesaRepository.obterMesasPorCliente(clienteId).collect { mesas ->
-                        _mesasCliente.value = mesas
-                        _clientDetails.value = _clientDetails.value?.copy(mesasAtivas = mesas.size)
+                        Log.d("ClientDetailViewModel", "Mesas reais encontradas: ${mesas.size}")
+                        
+                        // Se não houver mesas reais, usar dados mock para teste
+                        val mesasParaUsar = if (mesas.isEmpty()) {
+                            Log.d("ClientDetailViewModel", "Nenhuma mesa real encontrada, usando dados MOCK")
+                            listOf(
+                                Mesa(
+                                    id = clienteId * 100 + 1,
+                                    numero = "M${clienteId}A",
+                                    tipoMesa = TipoMesa.SINUCA,
+                                    clienteId = clienteId,
+                                    ativa = true,
+                                    fichasInicial = 1000,
+                                    fichasFinal = 0
+                                ),
+                                Mesa(
+                                    id = clienteId * 100 + 2,
+                                    numero = "M${clienteId}B",
+                                    tipoMesa = TipoMesa.POOL,
+                                    clienteId = clienteId,
+                                    ativa = true,
+                                    fichasInicial = 850,
+                                    fichasFinal = 0
+                                )
+                            )
+                        } else {
+                            Log.d("ClientDetailViewModel", "Usando mesas reais do banco")
+                            mesas
+                        }
+                        
+                        _mesasCliente.value = mesasParaUsar
+                        _clientDetails.value = _clientDetails.value?.copy(mesasAtivas = mesasParaUsar.size)
+                        
+                        Log.d("ClientDetailViewModel", "Mesas carregadas: ${mesasParaUsar.size}")
+                        mesasParaUsar.forEachIndexed { index, mesa ->
+                            Log.d("ClientDetailViewModel", "Mesa $index: ${mesa.numero} (ID: ${mesa.id}, Tipo: ${mesa.tipoMesa})")
+                        }
                     }
+                    
                     // Buscar histórico real
                     loadSettlementHistory(clienteId)
                 }
             } catch (e: Exception) {
+                Log.e("ClientDetailViewModel", "Erro ao carregar detalhes do cliente", e)
                 e.printStackTrace()
             } finally {
                 _isLoading.value = false
+                Log.d("ClientDetailViewModel", "=== CARREGAMENTO CONCLUÍDO ===")
             }
         }
     }

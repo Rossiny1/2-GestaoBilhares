@@ -30,6 +30,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import com.example.gestaobilhares.data.entities.Mesa
 import android.util.Log
+import com.example.gestaobilhares.ui.settlement.MesaDTO
 
 /**
  * Fragment para registrar novos acertos
@@ -44,19 +45,8 @@ class SettlementFragment : Fragment() {
     private val viewModel: SettlementViewModel by viewModels()
     private val args: SettlementFragmentArgs by navArgs()
     
-    // Data class para representar uma mesa no acerto
-    data class MesaAcerto(
-        val id: Int,
-        val nome: String,
-        var fichasInicial: Int = 0,
-        var fichasFinal: Int = 0,
-        var valorFicha: Double = 0.0
-    )
-    
-    private val mesas = mutableListOf<MesaAcerto>()
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
     private lateinit var mesasAcertoAdapter: MesasAcertoAdapter
-    private var selectedPaymentMethods: List<String> = emptyList()
     private var paymentValues: MutableMap<String, Double> = mutableMapOf()
 
     override fun onCreateView(
@@ -71,50 +61,67 @@ class SettlementFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        Log.d("SettlementFragment", "Recebido clienteId=${args.clienteId}, mesas=${args.mesasCliente?.map { it.numero }}")
-        setupUI()
-        observeViewModel()
+        // Receber as mesas do cliente via SafeArgs
+        val mesasDTO = args.mesasCliente?.toList() ?: emptyList()
+        Log.d("SettlementFragment", "=== INÍCIO CARREGAMENTO MESAS ===")
+        Log.d("SettlementFragment", "Args recebidos - ClienteId: ${args.clienteId}")
+        Log.d("SettlementFragment", "Mesas recebidas: ${mesasDTO.size}")
         
-        // Buscar apenas nome/endereço do cliente
-        viewModel.loadClientForSettlement(args.clienteId)
-        mesasAcertoAdapter = MesasAcertoAdapter()
-        binding.rvMesasAcerto.adapter = mesasAcertoAdapter
-        // NÃO sobrescrever as mesas recebidas via argumento
-        // viewModel.loadMesasCliente(args.clienteId) // REMOVIDO
-        setupMesasSection()
-
-        // Preencher campo Representante (mock)
-        binding.tvRepresentante.text = "Administrador" // Trocar para nome real do usuário logado
-
-        // Lógica do checkbox Pano trocado
-        binding.cbPanoTrocado.setOnCheckedChangeListener { _, isChecked ->
-            binding.etNumeroPano.visibility = if (isChecked) View.VISIBLE else View.GONE
+        if (mesasDTO.isEmpty()) {
+            Log.w("SettlementFragment", "ATENÇÃO: Nenhuma mesa foi recebida via argumentos!")
+            Toast.makeText(requireContext(), "Erro: Nenhuma mesa encontrada para acerto.", Toast.LENGTH_LONG).show()
+        } else {
+            mesasDTO.forEachIndexed { index, mesa ->
+                Log.d("SettlementFragment", "Mesa $index: ${mesa.numero} (ID: ${mesa.id}, Tipo: ${mesa.tipoMesa})")
+            }
         }
-
-        // Importar mesas do cliente via SafeArgs
-        val mesasCliente = args.mesasCliente?.toList() ?: emptyList()
-        mesasAcertoAdapter.submitList(mesasCliente)
+        
+        setupUI(mesasDTO)
+        observeViewModel()
+        viewModel.loadClientForSettlement(args.clienteId)
     }
 
-    private fun setupUI() {
-        // Botão voltar
+    private fun setupUI(mesasDTO: List<MesaDTO>) {
         binding.btnBack.setOnClickListener {
             findNavController().popBackStack()
         }
-        
-        // Botão salvar acerto
         binding.btnSaveSettlement.setOnClickListener {
             salvarAcertoComCamposExtras()
         }
-        
-        // Configurar método de pagamento
+        setupRecyclerView(mesasDTO)
         setupPaymentMethod()
-        
-        // Configurar listeners para cálculos em tempo real
         setupCalculationListeners()
+        binding.tvRepresentante.text = "Administrador"
+        binding.cbPanoTrocado.setOnCheckedChangeListener { _, isChecked ->
+            binding.etNumeroPano.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun setupRecyclerView(mesasDTO: List<MesaDTO>) {
+        Log.d("SettlementFragment", "=== CONFIGURANDO RECYCLERVIEW ===")
         
-        // Adicionar primeira mesa
-        addMesa()
+        mesasAcertoAdapter = MesasAcertoAdapter {
+            Log.d("SettlementFragment", "Callback onDataChanged acionado - recalculando totais")
+            updateCalculations()
+        }
+        
+        binding.rvMesasAcerto.adapter = mesasAcertoAdapter
+        
+        if (mesasDTO.isNotEmpty()) {
+            Log.d("SettlementFragment", "Populando adapter com ${mesasDTO.size} mesas")
+            mesasAcertoAdapter.submitList(mesasDTO)
+            
+            // Forçar atualização inicial dos cálculos após popular o adapter
+            binding.rvMesasAcerto.post {
+                updateCalculations()
+                Log.d("SettlementFragment", "Cálculos iniciais executados")
+            }
+        } else {
+            Log.e("SettlementFragment", "ERRO: Lista de mesas vazia - adapter não será populado")
+            Toast.makeText(requireContext(), "Erro: Nenhuma mesa disponível para acerto.", Toast.LENGTH_LONG).show()
+        }
+        
+        Log.d("SettlementFragment", "=== RECYCLERVIEW CONFIGURADO ===")
     }
     
     private fun setupCalculationListeners() {
@@ -126,33 +133,22 @@ class SettlementFragment : Fragment() {
             }
         }
         
-        // Adicionar listeners nos campos que afetam os cálculos
-        binding.etFichasInicial.addTextChangedListener(watcher)
-        binding.etFichasFinal.addTextChangedListener(watcher)
-        binding.etValorFicha.addTextChangedListener(watcher)
         binding.etDesconto.addTextChangedListener(watcher)
         binding.etAmountReceived.addTextChangedListener(watcher)
     }
     
     private fun updateCalculations() {
         try {
-            // Obter valores dos campos
-            val fichasInicial = binding.etFichasInicial.text.toString().toIntOrNull() ?: 0
-            val fichasFinal = binding.etFichasFinal.text.toString().toIntOrNull() ?: 0
-            val valorFicha = binding.etValorFicha.text.toString().toDoubleOrNull() ?: 0.0
             val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
             val valorRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
+
+            // O subtotal agora vem diretamente do adapter, que soma os subtotais de todas as mesas
+            val subtotalMesas = mesasAcertoAdapter.getSubtotal()
             
-            // Calcular valores
-            val fichasJogadas = maxOf(0, fichasFinal - fichasInicial)
-            val subtotalMesas = fichasJogadas * valorFicha
             val debitoAnterior = 0.0 // TODO: Implementar busca do débito anterior
             val totalComDebito = subtotalMesas + debitoAnterior
             val totalComDesconto = maxOf(0.0, totalComDebito - desconto)
             val debitoAtual = totalComDesconto - valorRecebido
-            
-            // Atualizar subtotal da mesa
-            binding.tvSubtotalMesa1.text = formatter.format(subtotalMesas)
             
             // Atualizar displays dos totais
             binding.tvTableTotal.text = formatter.format(subtotalMesas)
@@ -160,8 +156,7 @@ class SettlementFragment : Fragment() {
             binding.tvCurrentDebt.text = formatter.format(debitoAtual)
             
         } catch (e: Exception) {
-            // Em caso de erro, manter valores zerados
-            binding.tvSubtotalMesa1.text = formatter.format(0.0)
+            Log.e("UpdateCalculations", "Erro ao calcular totais", e)
             binding.tvTableTotal.text = formatter.format(0.0)
             binding.tvTotalWithDebt.text = formatter.format(0.0)
             binding.tvCurrentDebt.text = formatter.format(0.0)
@@ -185,7 +180,6 @@ class SettlementFragment : Fragment() {
             }
             .setPositiveButton("OK") { _, _ ->
                 val selected = paymentMethods.filterIndexed { idx, _ -> checkedItems[idx] }
-                selectedPaymentMethods = selected
                 if (selected.size > 1) {
                     showPaymentValuesDialog(selected)
                 } else if (selected.size == 1) {
@@ -235,7 +229,6 @@ class SettlementFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        // Observar dados do cliente
         lifecycleScope.launch {
             viewModel.clientName.collect { name ->
                 _binding?.let { binding ->
@@ -255,97 +248,64 @@ class SettlementFragment : Fragment() {
                 }
             }
         }
-        // Observar resultado do salvamento do acerto
+        
         lifecycleScope.launch {
             viewModel.resultadoSalvamento.collect { resultado ->
-                _binding?.let { binding ->
-                    resultado?.let {
-                        if (it.isSuccess) {
-                            com.google.android.material.snackbar.Snackbar.make(
-                                binding.root,
-                                "Acerto salvo com sucesso!",
-                                com.google.android.material.snackbar.Snackbar.LENGTH_LONG
-                            ).show()
-                            limparCamposAcerto()
-                        } else {
-                            com.google.android.material.snackbar.Snackbar.make(
-                                binding.root,
-                                "Erro ao salvar acerto: ${it.exceptionOrNull()?.localizedMessage}",
-                                com.google.android.material.snackbar.Snackbar.LENGTH_LONG
-                            ).show()
-                        }
-                        // Resetar resultado para não exibir múltiplas vezes
-                        viewModel.resetarResultadoSalvamento()
+                resultado?.let {
+                    if (it.isSuccess) {
+                        Toast.makeText(requireContext(), "Acerto salvo com sucesso!", Toast.LENGTH_SHORT).show()
+                        findNavController().popBackStack(R.id.clientListFragment, false)
+                    } else {
+                        val errorMessage = it.exceptionOrNull()?.message ?: "Erro desconhecido"
+                        Log.e("SettlementFragment", "Falha ao salvar acerto: $errorMessage")
+                        Toast.makeText(requireContext(), "Erro ao salvar: $errorMessage", Toast.LENGTH_LONG).show()
                     }
+                    viewModel.resetarResultadoSalvamento()
                 }
             }
         }
     }
 
-    private fun limparCamposAcerto() {
-        // Limpar campos principais
-        binding.etFichasInicial.text?.clear()
-        binding.etFichasFinal.text?.clear()
-        binding.etValorFicha.text?.clear()
-        binding.etDesconto.text?.clear()
-        binding.etAmountReceived.text?.clear()
-        binding.etObservacao.text?.clear()
-        binding.cbPanoTrocado.isChecked = false
-        binding.etNumeroPano.text?.clear()
-        // Outros campos se necessário
-    }
-
     private fun salvarAcertoComCamposExtras() {
-        val representante = binding.tvRepresentante.text.toString()
+        if (!mesasAcertoAdapter.isDataValid()) {
+            Toast.makeText(requireContext(), "Verifique os valores das mesas. O relógio final deve ser maior ou igual ao inicial.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val valorRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
+        val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
+        val observacao = "" // Ajuste: campo removido do layout
         val panoTrocado = binding.cbPanoTrocado.isChecked
-        val numeroPano = binding.etNumeroPano.text.toString().takeIf { panoTrocado }
-        val tipoAcerto = binding.spTipoAcerto.selectedItem.toString()
-        val observacao = binding.etObservacao.text.toString()
-        val justificativa = null // Pode ser passado do dialog se necessário
-        val mesas = mesasAcertoAdapter.currentList
-        if (paymentValues.isNotEmpty()) {
-            val valores = paymentValues.toMap()
-            val totalRecebido = valores.values.sum()
-            val dados = SettlementViewModel.DadosAcerto(
-                mesas = mesas,
-                representante = representante,
-                panoTrocado = panoTrocado,
-                numeroPano = numeroPano,
-                tipoAcerto = tipoAcerto,
-                observacao = observacao,
-                justificativa = justificativa,
-                metodosPagamento = valores
-            )
-            Log.d("SettlementFragment", "Salvando acerto para clienteId=${args.clienteId}, mesas=${mesas.map { it.numero }}")
-            viewModel.salvarAcerto(args.clienteId, dados, valores)
-            // Exibir resumo do acerto em dialog
-            val clienteNome = binding.tvClientName.text.toString()
-            val dialog = com.example.gestaobilhares.ui.settlement.SettlementSummaryDialog.newInstance(
-                clienteNome = clienteNome,
-                mesas = mesas,
-                total = totalRecebido,
-                metodosPagamento = valores,
-                observacao = observacao
-            )
-            dialog.show(parentFragmentManager, "SettlementSummaryDialog")
-        } else {
-            Toast.makeText(requireContext(), "Selecione o(s) método(s) de pagamento!", Toast.LENGTH_SHORT).show()
-        }
-    }
+        val numeroPano = if (panoTrocado) binding.etNumeroPano.text.toString() else null
+        val tipoAcerto = "Presencial" // Ajuste: campo removido do layout
+        val representante = binding.tvRepresentante.text.toString()
 
-    // Função para adicionar nova mesa (implementação básica)
-    private fun addMesa() {
-        // Por enquanto, não implementamos múltiplas mesas dinamicamente
-        // A interface já tem uma mesa fixa (Mesa 1)
-        // TODO: Implementar adição dinâmica de mesas em versão futura
-    }
-
-    private fun setupMesasSection() {
-        lifecycleScope.launch {
-            viewModel.mesasCliente.collect { mesas ->
-                mesasAcertoAdapter.submitList(mesas)
-            }
+        val mesasDoAcerto = mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
+            Mesa(
+                id = mesaState.mesaId,
+                numero = (idx + 1).toString(),
+                fichasInicial = mesaState.relogioInicial,
+                fichasFinal = mesaState.relogioFinal,
+                tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA
+            )
         }
+
+        val dadosAcerto = SettlementViewModel.DadosAcerto(
+            mesas = mesasDoAcerto,
+            representante = representante,
+            panoTrocado = panoTrocado,
+            numeroPano = numeroPano,
+            tipoAcerto = tipoAcerto,
+            observacao = observacao,
+            justificativa = null,
+            metodosPagamento = paymentValues
+        )
+
+        viewModel.salvarAcerto(
+            clienteId = args.clienteId,
+            dadosAcerto = dadosAcerto,
+            metodosPagamento = paymentValues
+        )
     }
 
     override fun onDestroyView() {
