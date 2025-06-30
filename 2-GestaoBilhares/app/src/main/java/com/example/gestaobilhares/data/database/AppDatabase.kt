@@ -52,9 +52,8 @@ abstract class AppDatabase : RoomDatabase() {
     
     /**
      * DAO para operações com acertos.
-     * TODO: Implementar AcertoDao na próxima fase
      */
-    // abstract fun acertoDao(): AcertoDao
+    abstract fun acertoDao(): com.example.gestaobilhares.data.dao.AcertoDao
     
     /**
      * DAO para operações com despesas.

@@ -12,6 +12,9 @@ import javax.inject.Inject
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repositories.ClienteRepository
+import com.example.gestaobilhares.data.repository.AcertoRepository
+import com.example.gestaobilhares.data.entities.Acerto
+import kotlinx.coroutines.flow.Flow
 
 /**
  * ViewModel para SettlementFragment
@@ -20,7 +23,8 @@ import com.example.gestaobilhares.data.repositories.ClienteRepository
 @HiltViewModel
 class SettlementViewModel @Inject constructor(
     private val mesaRepository: MesaRepository,
-    private val clienteRepository: ClienteRepository
+    private val clienteRepository: ClienteRepository,
+    private val acertoRepository: AcertoRepository
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -37,6 +41,9 @@ class SettlementViewModel @Inject constructor(
 
     private val _resultadoSalvamento = MutableStateFlow<Result<Unit>?>(null)
     val resultadoSalvamento: StateFlow<Result<Unit>?> = _resultadoSalvamento.asStateFlow()
+
+    private val _historicoAcertos = MutableStateFlow<List<Acerto>>(emptyList())
+    val historicoAcertos: StateFlow<List<Acerto>> = _historicoAcertos.asStateFlow()
 
     data class DadosAcerto(
         val mesas: List<Mesa>,
@@ -104,19 +111,43 @@ class SettlementViewModel @Inject constructor(
         }
     }
 
+    fun carregarHistoricoAcertos(clienteId: Long) {
+        viewModelScope.launch {
+            acertoRepository.buscarPorCliente(clienteId).collect { acertos ->
+                _historicoAcertos.value = acertos
+            }
+        }
+    }
+
     /**
      * Salva o acerto, agora recebendo os valores discriminados por método de pagamento.
+     * @param clienteId ID do cliente
      * @param dadosAcerto Dados principais do acerto
      * @param metodosPagamento Mapa de método para valor recebido
      */
-    fun salvarAcerto(dadosAcerto: DadosAcerto, metodosPagamento: Map<String, Double>) {
+    fun salvarAcerto(clienteId: Long, dadosAcerto: DadosAcerto, metodosPagamento: Map<String, Double>) {
         viewModelScope.launch {
             try {
-                // TODO: Integrar persistência real
-                Log.d("SettlementViewModel", "Salvando acerto: $dadosAcerto, pagamentos: $metodosPagamento")
-                // Simular persistência com sucesso
+                Log.d("SettlementViewModel", "Salvando acerto com clienteId=$clienteId, mesas=${dadosAcerto.mesas.map { it.numero }}")
+                val acerto = Acerto(
+                    clienteId = clienteId,
+                    colaboradorId = null, // TODO: preencher com usuário logado
+                    periodoInicio = java.util.Date(), // TODO: ajustar datas reais
+                    periodoFim = java.util.Date(),
+                    totalMesas = dadosAcerto.mesas.size.toDouble(),
+                    debitoAnterior = 0.0, // TODO: buscar débito real
+                    valorTotal = 0.0, // TODO: calcular valor total
+                    desconto = 0.0, // TODO: pegar desconto
+                    valorComDesconto = 0.0, // TODO: calcular
+                    valorRecebido = metodosPagamento.values.sum(),
+                    debitoAtual = 0.0, // TODO: calcular
+                    status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
+                    observacoes = dadosAcerto.observacao
+                )
+                acertoRepository.inserir(acerto)
                 _resultadoSalvamento.value = Result.success(Unit)
             } catch (e: Exception) {
+                Log.e("SettlementViewModel", "Erro ao salvar acerto: ${e.localizedMessage}", e)
                 _resultadoSalvamento.value = Result.failure(e)
             }
         }

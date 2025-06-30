@@ -8,6 +8,8 @@ import com.example.gestaobilhares.data.dao.RotaDao
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.dao.MesaDao
 import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.dao.AcertoDao
+import com.example.gestaobilhares.data.repository.AcertoRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -67,4 +69,10 @@ object DatabaseModule {
 
     @Provides
     fun provideMesaRepository(mesaDao: MesaDao): MesaRepository = MesaRepository(mesaDao)
+
+    @Provides
+    fun provideAcertoDao(appDatabase: AppDatabase): AcertoDao = appDatabase.acertoDao()
+
+    @Provides
+    fun provideAcertoRepository(acertoDao: AcertoDao): AcertoRepository = AcertoRepository(acertoDao)
 } 

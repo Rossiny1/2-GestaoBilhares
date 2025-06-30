@@ -15,6 +15,8 @@ import com.example.gestaobilhares.data.repositories.ClienteRepository
 import kotlinx.coroutines.flow.collect
 import kotlinx.parcelize.Parcelize
 import android.os.Parcelable
+import com.example.gestaobilhares.data.repository.AcertoRepository
+import com.example.gestaobilhares.data.entities.Acerto
 
 /**
  * ViewModel para ClientDetailFragment
@@ -23,7 +25,8 @@ import android.os.Parcelable
 @HiltViewModel
 class ClientDetailViewModel @Inject constructor(
     private val clienteRepository: ClienteRepository,
-    private val mesaRepository: MesaRepository
+    private val mesaRepository: MesaRepository,
+    private val acertoRepository: AcertoRepository
 ) : ViewModel() {
 
     private val _clientDetails = MutableStateFlow<ClienteResumo?>(null)
@@ -80,6 +83,8 @@ class ClientDetailViewModel @Inject constructor(
                         _mesasCliente.value = mesas
                         _clientDetails.value = _clientDetails.value?.copy(mesasAtivas = mesas.size)
                     }
+                    // Buscar histórico real
+                    loadSettlementHistory(clienteId)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -136,6 +141,22 @@ class ClientDetailViewModel @Inject constructor(
         val listaAtual = _settlementHistory.value.toMutableList()
         listaAtual.add(0, novoAcerto) // Adiciona no topo (mais recente)
         _settlementHistory.value = listaAtual
+    }
+
+    fun loadSettlementHistory(clienteId: Long) {
+        viewModelScope.launch {
+            acertoRepository.buscarPorCliente(clienteId).collect { acertos ->
+                _settlementHistory.value = acertos.map { acerto ->
+                    AcertoResumo(
+                        id = acerto.id,
+                        data = android.text.format.DateFormat.format("dd/MM/yyyy HH:mm", acerto.dataAcerto).toString(),
+                        valor = acerto.valorRecebido,
+                        status = acerto.status.name,
+                        mesasAcertadas = acerto.totalMesas.toInt()
+                    )
+                }
+            }
+        }
     }
 }
 

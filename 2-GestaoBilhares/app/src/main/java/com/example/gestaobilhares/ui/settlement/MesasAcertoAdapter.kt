@@ -12,8 +12,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.databinding.ItemMesaAcertoBinding
+import android.util.Log
 
 class MesasAcertoAdapter : ListAdapter<Mesa, MesasAcertoAdapter.MesaViewHolder>(MesaDiffCallback()) {
+    override fun submitList(list: List<Mesa>?) {
+        Log.d("MesasAcertoAdapter", "submitList: ${list?.map { it.numero }}")
+        super.submitList(list)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MesaViewHolder {
         val binding = ItemMesaAcertoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return MesaViewHolder(binding)
@@ -25,12 +31,13 @@ class MesasAcertoAdapter : ListAdapter<Mesa, MesasAcertoAdapter.MesaViewHolder>(
 
     inner class MesaViewHolder(private val binding: ItemMesaAcertoBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(mesa: Mesa) {
+            Log.d("MesasAcertoAdapter", "bind: mesa.numero=${mesa.numero}, mesa.id=${mesa.id}")
             binding.tvNumeroMesa.text = "Mesa ${mesa.numero}"
             binding.tvTipoMesa.text = mesa.tipoMesa.name
-            // Por enquanto, não há tipo de acerto ou valor fixo na entidade Mesa
-            // Esconder ambos os layouts até integração futura
-            binding.layoutFichas.visibility = View.GONE
-            binding.layoutValorFixo.visibility = View.GONE
+            // Exibir layout de fichas
+            binding.layoutFichas.visibility = View.VISIBLE
+            binding.etRelogioInicial.setText(mesa.fichasInicial.toString())
+            // O campo final e o checkbox continuam editáveis pelo usuário
         }
     }
 

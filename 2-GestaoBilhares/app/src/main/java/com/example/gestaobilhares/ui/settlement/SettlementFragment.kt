@@ -316,7 +316,8 @@ class SettlementFragment : Fragment() {
                 justificativa = justificativa,
                 metodosPagamento = valores
             )
-            viewModel.salvarAcerto(dados, valores)
+            Log.d("SettlementFragment", "Salvando acerto para clienteId=${args.clienteId}, mesas=${mesas.map { it.numero }}")
+            viewModel.salvarAcerto(args.clienteId, dados, valores)
             // Exibir resumo do acerto em dialog
             val clienteNome = binding.tvClientName.text.toString()
             val dialog = com.example.gestaobilhares.ui.settlement.SettlementSummaryDialog.newInstance(
