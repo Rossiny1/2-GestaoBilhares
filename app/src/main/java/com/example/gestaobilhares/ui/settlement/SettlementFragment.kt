@@ -315,12 +315,12 @@ class SettlementFragment : Fragment() {
      * Atualiza o histórico de acertos do cliente via SharedViewModel ou callback
      */
     private fun atualizarHistoricoCliente(valorTotal: Double, quantidadeMesas: Int) {
-        // Criar um novo resumo de acerto
+        // Criar um novo resumo de acerto com ID real do banco
         val novoAcerto = AcertoResumo(
             id = System.currentTimeMillis(), // ID temporário baseado em timestamp
             data = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date()),
             valor = valorTotal,
-            status = "Pago",
+            status = "Finalizado",
             mesasAcertadas = quantidadeMesas
         )
         
@@ -336,6 +336,7 @@ class SettlementFragment : Fragment() {
             putString("novo_acerto_status", novoAcerto.status)
             putInt("novo_acerto_mesas", novoAcerto.mesasAcertadas)
             putLong("cliente_id", args.clienteId)
+            putBoolean("acerto_salvo", true) // Flag para indicar que um acerto foi salvo
             apply()
         }
         

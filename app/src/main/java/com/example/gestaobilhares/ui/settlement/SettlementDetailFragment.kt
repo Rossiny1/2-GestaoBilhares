@@ -6,12 +6,16 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.databinding.FragmentSettlementDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
 import java.text.NumberFormat
 import java.util.*
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import android.util.Log
 
 /**
  * Fragment para exibir detalhes completos de um acerto
@@ -24,6 +28,7 @@ class SettlementDetailFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val args: SettlementDetailFragmentArgs by navArgs()
+    private val viewModel: SettlementDetailViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,6 +43,7 @@ class SettlementDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         setupUI()
+        observeViewModel()
         loadSettlementDetails()
     }
 
@@ -58,30 +64,32 @@ class SettlementDetailFragment : Fragment() {
     }
 
     private fun loadSettlementDetails() {
-        // Simular carregamento de dados (TODO: Implementar com ViewModel real)
-        val settlementId = args.acertoId
+        Log.d("SettlementDetailFragment", "Carregando detalhes do acerto ID: ${args.acertoId}")
+        viewModel.loadSettlementDetails(args.acertoId)
+    }
+
+    private fun observeViewModel() {
+        lifecycleScope.launch {
+            viewModel.settlementDetails.collect { settlement ->
+                settlement?.let {
+                    Log.d("SettlementDetailFragment", "Detalhes carregados: $it")
+                    updateUI(it)
+                }
+            }
+        }
         
-        // Dados mockados para demonstração
-        val mockData = generateMockSettlementDetail(settlementId)
-        updateUI(mockData)
+        lifecycleScope.launch {
+            viewModel.isLoading.collect { isLoading ->
+                // TODO: Mostrar loading se necessário
+                if (isLoading) {
+                    Log.d("SettlementDetailFragment", "Carregando detalhes...")
+                }
+            }
+        }
     }
 
-    private fun generateMockSettlementDetail(id: Long): SettlementDetail {
-        return SettlementDetail(
-            id = id,
-            date = "15/12/2024 14:30",
-            status = "Pago",
-            initialChips = 1250,
-            finalChips = 1890,
-            chipValue = 0.50,
-            observations = "Cliente pagou em dinheiro. Mesa estava funcionando perfeitamente durante todo o período."
-        )
-    }
-
-    private fun updateUI(settlement: SettlementDetail) {
+    private fun updateUI(settlement: SettlementDetailViewModel.SettlementDetail) {
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
-        val playedChips = settlement.finalChips - settlement.initialChips
-        val totalValue = playedChips * settlement.chipValue
 
         binding.apply {
             // Informações básicas
@@ -91,7 +99,7 @@ class SettlementDetailFragment : Fragment() {
             // Status com cor
             tvSettlementStatus.text = settlement.status.uppercase()
             val statusColor = when (settlement.status.lowercase()) {
-                "pago" -> android.R.color.holo_green_dark
+                "finalizado" -> android.R.color.holo_green_dark
                 "pendente" -> android.R.color.holo_orange_dark
                 "atrasado" -> android.R.color.holo_red_dark
                 else -> android.R.color.darker_gray
@@ -100,18 +108,15 @@ class SettlementDetailFragment : Fragment() {
                 ContextCompat.getColor(requireContext(), statusColor)
             )
             
-            // Valores
-            tvInitialChips.text = NumberFormat.getNumberInstance(Locale("pt", "BR"))
-                .format(settlement.initialChips)
-            tvFinalChips.text = NumberFormat.getNumberInstance(Locale("pt", "BR"))
-                .format(settlement.finalChips)
-            tvPlayedChips.text = NumberFormat.getNumberInstance(Locale("pt", "BR"))
-                .format(playedChips)
-            tvChipValue.text = formatter.format(settlement.chipValue)
-            tvTotalValue.text = formatter.format(totalValue)
+            // Valores reais do acerto
+            tvInitialChips.text = formatter.format(settlement.debitoAnterior)
+            tvFinalChips.text = formatter.format(settlement.valorTotal)
+            tvPlayedChips.text = formatter.format(settlement.valorRecebido)
+            tvChipValue.text = formatter.format(settlement.desconto)
+            tvTotalValue.text = formatter.format(settlement.debitoAtual)
             
             // Observações
-            tvObservations.text = settlement.observations.ifEmpty { "Nenhuma observação registrada." }
+            tvObservations.text = settlement.observacoes
         }
     }
 
@@ -119,15 +124,4 @@ class SettlementDetailFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
-
-    // Data class para representar os detalhes do acerto
-    data class SettlementDetail(
-        val id: Long,
-        val date: String,
-        val status: String,
-        val initialChips: Int,
-        val finalChips: Int,
-        val chipValue: Double,
-        val observations: String
-    )
 } 

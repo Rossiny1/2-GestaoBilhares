@@ -77,26 +77,19 @@ class ClientDetailFragment : Fragment() {
     }
     
     /**
-     * Verifica se há um novo acerto salvo no cache temporário e adiciona ao histórico
+     * Verifica se há um novo acerto salvo no cache temporário e recarrega o histórico
      */
     private fun verificarNovoAcerto() {
         val sharedPref = requireActivity().getSharedPreferences("acerto_temp", android.content.Context.MODE_PRIVATE)
         val clienteIdSalvo = sharedPref.getLong("cliente_id", -1L)
+        val acertoSalvo = sharedPref.getBoolean("acerto_salvo", false)
         
         // Verificar se há um acerto salvo para este cliente
-        if (clienteIdSalvo == args.clienteId && sharedPref.contains("novo_acerto_id")) {
-            val novoAcerto = AcertoResumo(
-                id = sharedPref.getLong("novo_acerto_id", 0L),
-                data = sharedPref.getString("novo_acerto_data", "") ?: "",
-                valor = sharedPref.getFloat("novo_acerto_valor", 0f).toDouble(),
-                status = sharedPref.getString("novo_acerto_status", "Pago") ?: "Pago",
-                mesasAcertadas = sharedPref.getInt("novo_acerto_mesas", 0)
-            )
+        if (clienteIdSalvo == args.clienteId && acertoSalvo) {
+            Log.d("ClientDetailFragment", "Acerto salvo detectado para cliente: $clienteIdSalvo")
             
-            Log.d("ClientDetailFragment", "Novo acerto encontrado no cache: $novoAcerto")
-            
-            // Adicionar ao histórico
-            viewModel.adicionarAcertoNoHistorico(novoAcerto)
+            // Recarregar histórico do banco de dados
+            viewModel.loadSettlementHistory(args.clienteId)
             
             // Limpar cache
             with(sharedPref.edit()) {

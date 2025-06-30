@@ -179,9 +179,18 @@ class ClientDetailViewModel @Inject constructor(
     }
 
     /**
-     * Adiciona um novo acerto ao histórico do cliente e reordena do mais recente para o mais antigo.
+     * Adiciona um novo acerto ao histórico do cliente e recarrega do banco de dados.
      */
     fun adicionarAcertoNoHistorico(novoAcerto: AcertoResumo) {
+        Log.d("ClientDetailViewModel", "Adicionando acerto ao histórico: $novoAcerto")
+        
+        // Recarregar histórico do banco de dados para garantir sincronização
+        // Usar o clienteId atual do _clientDetails
+        _clientDetails.value?.let { cliente ->
+            loadSettlementHistory(cliente.id)
+        }
+        
+        // Também adicionar à lista atual para feedback imediato
         val listaAtual = _settlementHistory.value.toMutableList()
         listaAtual.add(0, novoAcerto) // Adiciona no topo (mais recente)
         _settlementHistory.value = listaAtual
@@ -189,7 +198,9 @@ class ClientDetailViewModel @Inject constructor(
 
     fun loadSettlementHistory(clienteId: Long) {
         viewModelScope.launch {
+            Log.d("ClientDetailViewModel", "Carregando histórico de acertos para cliente: $clienteId")
             acertoRepository.buscarPorCliente(clienteId).collect { acertos ->
+                Log.d("ClientDetailViewModel", "Acertos encontrados no banco: ${acertos.size}")
                 _settlementHistory.value = acertos.map { acerto ->
                     AcertoResumo(
                         id = acerto.id,
@@ -199,6 +210,7 @@ class ClientDetailViewModel @Inject constructor(
                         mesasAcertadas = acerto.totalMesas.toInt()
                     )
                 }
+                Log.d("ClientDetailViewModel", "Histórico atualizado: ${_settlementHistory.value.size} acertos")
             }
         }
     }
