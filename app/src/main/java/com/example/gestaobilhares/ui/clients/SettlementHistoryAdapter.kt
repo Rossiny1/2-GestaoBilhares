@@ -30,7 +30,9 @@ class SettlementHistoryAdapter(
     }
 
     override fun onBindViewHolder(holder: SettlementViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val item = getItem(position)
+        android.util.Log.d("SettlementHistoryAdapter", "Binding item $position: ID=${item.id}, Data=${item.data}, Valor=${item.valor}")
+        holder.bind(item)
     }
 
     class SettlementViewHolder(
@@ -48,9 +50,9 @@ class SettlementHistoryAdapter(
                 tvSettlementValue.text = formatter.format(settlement.valor)
                 
                 // Status com cores
-                tvSettlementStatus.text = settlement.status
+                tvSettlementStatus.text = settlement.status.uppercase()
                 val statusColor = when (settlement.status.lowercase()) {
-                    "pago" -> R.color.green_600
+                    "finalizado", "pago" -> R.color.green_600
                     "pendente" -> R.color.orange_600
                     "atrasado" -> R.color.red_600
                     else -> R.color.gray_600

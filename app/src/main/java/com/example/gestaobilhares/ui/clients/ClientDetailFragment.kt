@@ -216,7 +216,13 @@ class ClientDetailFragment : Fragment() {
         
         lifecycleScope.launch {
             viewModel.settlementHistory.collect { settlements ->
+                Log.d("ClientDetailFragment", "=== HISTÓRICO ATUALIZADO ===")
+                Log.d("ClientDetailFragment", "Quantidade de acertos: ${settlements.size}")
+                settlements.forEachIndexed { index, acerto ->
+                    Log.d("ClientDetailFragment", "Acerto $index: ID=${acerto.id}, Data=${acerto.data}, Valor=${acerto.valor}, Status=${acerto.status}")
+                }
                 settlementHistoryAdapter.submitList(settlements)
+                Log.d("ClientDetailFragment", "Lista enviada para adapter: ${settlements.size} itens")
             }
         }
         
