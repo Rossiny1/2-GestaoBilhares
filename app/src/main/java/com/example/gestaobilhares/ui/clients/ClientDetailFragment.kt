@@ -172,6 +172,16 @@ class ClientDetailFragment : Fragment() {
         binding.fabPhone.setOnClickListener {
             // TODO: Implementar chamada telefônica
         }
+        
+        // Botão editar cliente
+        /*
+        binding.fabEdit.setOnClickListener {
+            // Navegar para tela de edição do cliente
+            val action = ClientDetailFragmentDirections
+                .actionClientDetailFragmentToClientRegisterFragment(args.clienteId)
+            findNavController().navigate(action)
+        }
+        */
     }
 
     private fun setupRecyclerView() {

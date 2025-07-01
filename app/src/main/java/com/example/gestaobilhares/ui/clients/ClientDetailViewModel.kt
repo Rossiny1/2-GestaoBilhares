@@ -60,6 +60,15 @@ class ClientDetailViewModel @Inject constructor(
                 cliente?.let {
                     Log.d("ClientDetailViewModel", "Cliente encontrado: ${it.nome}")
                     
+                    // Buscar data do último acerto para "última visita"
+                    val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
+                    val ultimaVisita = if (ultimoAcerto != null) {
+                        val formatter = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
+                        formatter.format(ultimoAcerto.dataAcerto)
+                    } else {
+                        "Nunca"
+                    }
+                    
                     _clientDetails.value = ClienteResumo(
                         id = it.id,
                         nome = it.nome,
@@ -68,7 +77,7 @@ class ClientDetailViewModel @Inject constructor(
                         valorFicha = it.valorFicha,
                         comissaoFicha = it.comissaoFicha,
                         mesasAtivas = 0, // Atualizado abaixo
-                        ultimaVisita = "-", // TODO: Buscar última visita real
+                        ultimaVisita = ultimaVisita,
                         observacoes = it.observacoes ?: ""
                     )
                     
@@ -206,9 +215,10 @@ class ClientDetailViewModel @Inject constructor(
                         AcertoResumo(
                             id = acerto.id,
                             data = android.text.format.DateFormat.format("dd/MM/yyyy HH:mm", acerto.dataAcerto).toString(),
-                            valor = acerto.valorRecebido,
+                            valorTotal = acerto.valorRecebido,
                             status = acerto.status.name,
-                            mesasAcertadas = acerto.totalMesas.toInt()
+                            mesasAcertadas = acerto.totalMesas.toInt(),
+                            debitoAtual = 0.0
                         )
                     }
                     _settlementHistory.value = acertosResumo
@@ -220,6 +230,27 @@ class ClientDetailViewModel @Inject constructor(
                 if (_settlementHistory.value.isEmpty()) {
                     Log.d("ClientDetailViewModel", "Mantendo dados existentes devido a erro")
                 }
+            }
+        }
+    }
+
+    /**
+     * Busca a data do último acerto do cliente para exibir como "última visita"
+     */
+    fun buscarDataUltimoAcerto(clienteId: Long, callback: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
+                if (ultimoAcerto != null) {
+                    val formatter = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
+                    val dataFormatada = formatter.format(ultimoAcerto.dataAcerto)
+                    callback(dataFormatada)
+                } else {
+                    callback("Nunca")
+                }
+            } catch (e: Exception) {
+                Log.e("ClientDetailViewModel", "Erro ao buscar último acerto: ${e.message}")
+                callback("Nunca")
             }
         }
     }
@@ -242,7 +273,8 @@ data class ClienteResumo(
 data class AcertoResumo(
     val id: Long,
     val data: String,
-    val valor: Double,
+    val valorTotal: Double,
     val status: String,
-    val mesasAcertadas: Int
+    val mesasAcertadas: Int,
+    val debitoAtual: Double = 0.0
 ) : Parcelable 

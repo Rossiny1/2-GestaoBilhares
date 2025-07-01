@@ -48,6 +48,9 @@ class SettlementViewModel @Inject constructor(
     private val _historicoAcertos = MutableStateFlow<List<Acerto>>(emptyList())
     val historicoAcertos: StateFlow<List<Acerto>> = _historicoAcertos.asStateFlow()
 
+    private val _debitoAnterior = MutableStateFlow(0.0)
+    val debitoAnterior: StateFlow<Double> = _debitoAnterior.asStateFlow()
+
     data class DadosAcerto(
         val mesas: List<Mesa>,
         val representante: String,
@@ -135,6 +138,27 @@ class SettlementViewModel @Inject constructor(
     }
 
     /**
+     * Busca o débito atual do último acerto do cliente para usar como débito anterior
+     */
+    fun buscarDebitoAnterior(clienteId: Long) {
+        viewModelScope.launch {
+            try {
+                val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
+                if (ultimoAcerto != null) {
+                    _debitoAnterior.value = ultimoAcerto.debitoAtual
+                    Log.d("SettlementViewModel", "Débito anterior carregado: R$ ${ultimoAcerto.debitoAtual}")
+                } else {
+                    _debitoAnterior.value = 0.0
+                    Log.d("SettlementViewModel", "Nenhum acerto anterior encontrado, débito anterior: R$ 0,00")
+                }
+            } catch (e: Exception) {
+                Log.e("SettlementViewModel", "Erro ao buscar débito anterior: ${e.message}")
+                _debitoAnterior.value = 0.0
+            }
+        }
+    }
+
+    /**
      * Salva o acerto, agora recebendo os valores discriminados por método de pagamento.
      * @param clienteId ID do cliente
      * @param dadosAcerto Dados principais do acerto
@@ -147,7 +171,7 @@ class SettlementViewModel @Inject constructor(
                 
                 // Calcular valores do acerto
                 val valorRecebido = metodosPagamento.values.sum()
-                val debitoAnterior = 0.0 // TODO: buscar débito real do cliente
+                val debitoAnterior = _debitoAnterior.value
                 val valorTotal = dadosAcerto.mesas.sumOf { mesa ->
                     if (mesa.valorFixo > 0) {
                         mesa.valorFixo // Mesa de valor fixo

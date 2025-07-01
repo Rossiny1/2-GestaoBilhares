@@ -21,6 +21,9 @@ interface AcertoDao {
     @Query("SELECT * FROM acertos WHERE id = :id")
     suspend fun buscarPorId(id: Long): Acerto?
 
+    @Query("SELECT * FROM acertos WHERE cliente_id = :clienteId ORDER BY data_acerto DESC LIMIT 1")
+    suspend fun buscarUltimoAcertoPorCliente(clienteId: Long): Acerto?
+
     @Update
     suspend fun atualizar(acerto: Acerto)
 

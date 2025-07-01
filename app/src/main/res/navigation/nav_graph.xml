@@ -87,6 +87,10 @@
         <action
             android:id="@+id/action_clientDetailFragment_to_mesasDepositoFragment"
             app:destination="@id/mesasDepositoFragment" />
+        <!-- Navegação para editar cliente -->
+        <action
+            android:id="@+id/action_clientDetailFragment_to_clientRegisterFragment"
+            app:destination="@id/clientRegisterFragment" />
     </fragment>
 
     <!-- FASE 4A: Tela de registro de acerto -->
@@ -111,6 +115,10 @@
         android:label="Cadastrar Cliente">
         <argument
             android:name="rotaId"
+            app:argType="long"
+            android:defaultValue="0L" />
+        <argument
+            android:name="clienteId"
             app:argType="long"
             android:defaultValue="0L" />
         <action

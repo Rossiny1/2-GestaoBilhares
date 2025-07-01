@@ -84,6 +84,36 @@ class SettlementFragment : Fragment() {
         
         // Carregar dados do cliente para obter valorFicha e comissaoFicha
         carregarDadosCliente(args.clienteId)
+        
+        // Carregar mesas do cliente
+        viewModel.loadMesasCliente(args.clienteId)
+        
+        // Buscar débito anterior do último acerto
+        viewModel.buscarDebitoAnterior(args.clienteId)
+        
+        // Preparar mesas para acerto (com relógios iniciais)
+        lifecycleScope.launch {
+            viewModel.mesasCliente.collect { mesas ->
+                if (mesas.isNotEmpty()) {
+                    val mesasPreparadas = viewModel.prepararMesasParaAcerto(mesas)
+                    // Converter Mesa para MesaDTO
+                    val mesasDTO = mesasPreparadas.map { mesa ->
+                        MesaDTO(
+                            id = mesa.id,
+                            numero = mesa.numero,
+                            fichasInicial = mesa.fichasInicial ?: 0,
+                            fichasFinal = mesa.fichasFinal ?: 0,
+                            tipoMesa = mesa.tipoMesa.name,
+                            ativa = mesa.ativa,
+                            valorFixo = mesa.valorFixo ?: 0.0,
+                            valorFicha = 0.0, // Será preenchido pelo adapter
+                            comissaoFicha = 0.0 // Será preenchido pelo adapter
+                        )
+                    }
+                    mesasAcertoAdapter.updateMesas(mesasDTO)
+                }
+            }
+        }
     }
 
     private fun setupUI(mesasDTO: List<MesaDTO>) {
@@ -289,38 +319,36 @@ class SettlementFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        lifecycleScope.launch {
-            viewModel.clientName.collect { name ->
-                _binding?.let { binding ->
-                    if (name.isNotBlank()) {
-                        binding.tvClientName.text = name
-                    }
-                }
+        // Observer para dados do cliente
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.clientName.collect { nome ->
+                binding.tvClientName.text = nome
             }
         }
         
-        lifecycleScope.launch {
-            viewModel.clientAddress.collect { address ->
-                _binding?.let { binding ->
-                    if (address.isNotBlank()) {
-                        binding.tvClientAddress.text = address
-                    }
-                }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.clientAddress.collect { endereco ->
+                binding.tvClientAddress.text = endereco
             }
         }
         
-        lifecycleScope.launch {
+        // Observer para débito anterior
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.debitoAnterior.collect { debito ->
+                val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+                binding.tvPreviousDebt.text = formatter.format(debito)
+            }
+        }
+        
+        // Observer para resultado do salvamento
+        viewLifecycleOwner.lifecycleScope.launch {
             viewModel.resultadoSalvamento.collect { resultado ->
                 resultado?.let {
                     if (it.isSuccess) {
-                        // Sucesso: Mostrar diálogo de resumo
                         mostrarDialogoResumo()
                     } else {
-                        val errorMessage = it.exceptionOrNull()?.message ?: "Erro desconhecido"
-                        Log.e("SettlementFragment", "Falha ao salvar acerto: $errorMessage")
-                        Toast.makeText(requireContext(), "Erro ao salvar: $errorMessage", Toast.LENGTH_LONG).show()
+                        Toast.makeText(requireContext(), "Erro ao salvar acerto: ${it.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
                     }
-                    viewModel.resetarResultadoSalvamento()
                 }
             }
         }
@@ -379,9 +407,10 @@ class SettlementFragment : Fragment() {
         val novoAcerto = AcertoResumo(
             id = System.currentTimeMillis(), // ID temporário baseado em timestamp
             data = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date()),
-            valor = valorTotal,
+            valorTotal = valorTotal,
             status = "Finalizado",
-            mesasAcertadas = quantidadeMesas
+            mesasAcertadas = quantidadeMesas,
+            debitoAtual = 0.0
         )
         
         Log.d("SettlementFragment", "Novo acerto criado: $novoAcerto")
@@ -392,7 +421,7 @@ class SettlementFragment : Fragment() {
         with(sharedPref.edit()) {
             putLong("novo_acerto_id", novoAcerto.id)
             putString("novo_acerto_data", novoAcerto.data)
-            putFloat("novo_acerto_valor", novoAcerto.valor.toFloat())
+            putFloat("novo_acerto_valor", novoAcerto.valorTotal.toFloat())
             putString("novo_acerto_status", novoAcerto.status)
             putInt("novo_acerto_mesas", novoAcerto.mesasAcertadas)
             putLong("cliente_id", args.clienteId)

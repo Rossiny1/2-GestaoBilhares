@@ -59,6 +59,16 @@
                     app:fabSize="mini"
                     app:tint="@color/white" />
 
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabEdit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_edit"
+                    app:backgroundTint="@color/orange_500"
+                    app:fabSize="mini"
+                    app:tint="@color/white" />
+
         </LinearLayout>
 
         </com.google.android.material.appbar.AppBarLayout>

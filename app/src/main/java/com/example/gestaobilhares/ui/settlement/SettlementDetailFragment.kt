@@ -16,6 +16,7 @@ import java.util.*
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import android.util.Log
+import androidx.recyclerview.widget.LinearLayoutManager
 
 /**
  * Fragment para exibir detalhes completos de um acerto
@@ -123,6 +124,20 @@ class SettlementDetailFragment : Fragment() {
             // Configurar RecyclerView das mesas do acerto
             mesaDetailAdapter = AcertoMesaDetailAdapter(settlement.acertoMesas)
             rvMesasDetalhe.adapter = mesaDetailAdapter
+        }
+    }
+
+    private fun setupRecyclerView() {
+        adapter = AcertoMesaDetailAdapter(
+            mesas = emptyList(),
+            tipoAcerto = "Presencial", // TODO: Buscar do acerto
+            panoTrocado = false, // TODO: Buscar do acerto
+            numeroPano = null // TODO: Buscar do acerto
+        )
+        
+        binding.rvAcertoMesas.apply {
+            this.adapter = this@SettlementDetailFragment.adapter
+            layoutManager = LinearLayoutManager(requireContext())
         }
     }
 

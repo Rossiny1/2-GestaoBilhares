@@ -32,7 +32,7 @@ class SettlementHistoryAdapter(
 
     override fun onBindViewHolder(holder: SettlementViewHolder, position: Int) {
         val item = getItem(position)
-        android.util.Log.d("SettlementHistoryAdapter", "Binding item $position: ID=${item.id}, Data=${item.data}, Valor=${item.valor}")
+        android.util.Log.d("SettlementHistoryAdapter", "Binding item $position: ID=${item.id}, Data=${item.data}, Valor=${item.valorTotal}")
         holder.bind(item)
     }
 
@@ -42,41 +42,44 @@ class SettlementHistoryAdapter(
         return count
     }
 
-    class SettlementViewHolder(
+    inner class SettlementViewHolder(
         private val binding: ItemSettlementHistoryBinding,
         private val onItemClick: (AcertoResumo) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(settlement: AcertoResumo) {
-            android.util.Log.d("SettlementHistoryAdapter", "ViewHolder.bind() - Aplicando dados: ID=${settlement.id}, Data=${settlement.data}, Valor=${settlement.valor}")
+        fun bind(acerto: AcertoResumo) {
+            android.util.Log.d("SettlementHistoryAdapter", "ViewHolder.bind() - Aplicando dados: ID=${acerto.id}, Data=${acerto.data}, Valor=${acerto.valorTotal}")
             
             binding.apply {
                 // Data do acerto
-                tvSettlementDate.text = settlement.data
+                tvSettlementDate.text = acerto.data
                 
                 // Valor formatado em Real
                 val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
-                tvSettlementValue.text = formatter.format(settlement.valor)
+                tvSettlementValue.text = formatter.format(acerto.valorTotal)
                 
                 // Status com cores
-                tvSettlementStatus.text = settlement.status.uppercase()
-                val statusColor = when (settlement.status.lowercase()) {
+                tvSettlementStatus.text = acerto.status.uppercase()
+                val statusColor = when (acerto.status.lowercase()) {
                     "finalizado", "pago" -> R.color.green_600
                     "pendente" -> R.color.orange_600
                     "atrasado" -> R.color.red_600
                     else -> R.color.gray_600
                 }
-                tvSettlementStatus.setTextColor(ContextCompat.getColor(binding.root.context, statusColor))
+                tvSettlementStatus.setTextColor(ContextCompat.getColor(root.context, statusColor))
                 
                 // Mesas acertadas
-                tvTablesCount.text = "${settlement.mesasAcertadas} mesa${if (settlement.mesasAcertadas != 1) "s" else ""}"
+                tvTablesCount.text = "${acerto.mesasAcertadas} mesa${if (acerto.mesasAcertadas != 1) "s" else ""}"
                 
                 // ID do acerto
-                tvSettlementId.text = "#${settlement.id.toString().padStart(4, '0')}"
+                tvSettlementId.text = "#${acerto.id.toString().padStart(4, '0')}"
+                
+                // Débito atual
+                tvDebitoAtual.text = formatter.format(acerto.debitoAtual)
                 
                 // Click listener
                 root.setOnClickListener {
-                    onItemClick(settlement)
+                    onItemClick(acerto)
                 }
             }
             

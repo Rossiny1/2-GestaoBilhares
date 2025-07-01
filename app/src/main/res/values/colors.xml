@@ -43,7 +43,8 @@
     <color name="colorPrimaryDark">@color/primary_purple_dark</color>
     <color name="colorAccent">@color/accent_purple</color>
     
-    <color name="orange_600">#FB8500</color>
+    <color name="orange_500">#FF9800</color>
+    <color name="orange_600">#FB8C00</color>
     <color name="yellow_600">#FFC107</color>
     <color name="red_600">#DC3545</color>
     <color name="gray_600">#6C757D</color>
