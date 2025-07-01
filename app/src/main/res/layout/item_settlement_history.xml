@@ -7,6 +7,9 @@
     android:layout_margin="8dp"
     android:clickable="true"
     android:focusable="true"
+    android:minHeight="120dp"
+    android:visibility="visible"
+    android:layout_marginBottom="12dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
     app:strokeColor="@color/purple_600"
@@ -16,7 +19,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:visibility="visible"
+        android:minHeight="100dp">
 
         <!-- Header do acerto -->
         <LinearLayout

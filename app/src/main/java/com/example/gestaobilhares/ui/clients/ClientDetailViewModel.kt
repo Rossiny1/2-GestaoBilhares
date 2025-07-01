@@ -199,18 +199,27 @@ class ClientDetailViewModel @Inject constructor(
     fun loadSettlementHistory(clienteId: Long) {
         viewModelScope.launch {
             Log.d("ClientDetailViewModel", "Carregando histórico de acertos para cliente: $clienteId")
-            acertoRepository.buscarPorCliente(clienteId).collect { acertos ->
-                Log.d("ClientDetailViewModel", "Acertos encontrados no banco: ${acertos.size}")
-                _settlementHistory.value = acertos.map { acerto ->
-                    AcertoResumo(
-                        id = acerto.id,
-                        data = android.text.format.DateFormat.format("dd/MM/yyyy HH:mm", acerto.dataAcerto).toString(),
-                        valor = acerto.valorRecebido,
-                        status = acerto.status.name,
-                        mesasAcertadas = acerto.totalMesas.toInt()
-                    )
+            try {
+                acertoRepository.buscarPorCliente(clienteId).collect { acertos ->
+                    Log.d("ClientDetailViewModel", "Acertos encontrados no banco: ${acertos.size}")
+                    val acertosResumo = acertos.map { acerto ->
+                        AcertoResumo(
+                            id = acerto.id,
+                            data = android.text.format.DateFormat.format("dd/MM/yyyy HH:mm", acerto.dataAcerto).toString(),
+                            valor = acerto.valorRecebido,
+                            status = acerto.status.name,
+                            mesasAcertadas = acerto.totalMesas.toInt()
+                        )
+                    }
+                    _settlementHistory.value = acertosResumo
+                    Log.d("ClientDetailViewModel", "Histórico atualizado: ${_settlementHistory.value.size} acertos")
                 }
-                Log.d("ClientDetailViewModel", "Histórico atualizado: ${_settlementHistory.value.size} acertos")
+            } catch (e: Exception) {
+                Log.e("ClientDetailViewModel", "Erro ao carregar histórico de acertos", e)
+                // Manter dados existentes em caso de erro
+                if (_settlementHistory.value.isEmpty()) {
+                    Log.d("ClientDetailViewModel", "Mantendo dados existentes devido a erro")
+                }
             }
         }
     }

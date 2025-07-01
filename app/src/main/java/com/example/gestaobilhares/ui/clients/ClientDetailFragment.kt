@@ -58,8 +58,11 @@ class ClientDetailFragment : Fragment() {
         setupRecyclerView()
         observeViewModel()
         
-        // Carregar dados do cliente
-        viewModel.loadClientDetails(args.clienteId)
+        // Carregar dados do cliente apenas se não estiverem carregados
+        if (viewModel.clientDetails.value == null) {
+            viewModel.loadClientDetails(args.clienteId)
+        }
+        
         setupMesasSection()
         // Desabilitar botão até mesas carregarem
         binding.btnNewSettlement.isEnabled = false
@@ -74,6 +77,11 @@ class ClientDetailFragment : Fragment() {
         super.onResume()
         // Verificar se há um novo acerto salvo para adicionar ao histórico
         verificarNovoAcerto()
+        
+        // Recarregar histórico apenas se estiver vazio
+        if (viewModel.settlementHistory.value.isEmpty()) {
+            viewModel.loadSettlementHistory(args.clienteId)
+        }
     }
     
     /**
@@ -99,6 +107,12 @@ class ClientDetailFragment : Fragment() {
             
             // Mostrar toast de confirmação
             Toast.makeText(requireContext(), "✅ Acerto salvo com sucesso!", Toast.LENGTH_SHORT).show()
+        } else {
+            // Se não há novo acerto, verificar se o histórico está vazio
+            if (viewModel.settlementHistory.value.isEmpty()) {
+                Log.d("ClientDetailFragment", "Histórico vazio, recarregando dados...")
+                viewModel.loadSettlementHistory(args.clienteId)
+            }
         }
     }
 

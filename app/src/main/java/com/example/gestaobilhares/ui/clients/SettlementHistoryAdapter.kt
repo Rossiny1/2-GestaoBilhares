@@ -26,6 +26,7 @@ class SettlementHistoryAdapter(
             parent,
             false
         )
+        android.util.Log.d("SettlementHistoryAdapter", "Criando ViewHolder para posição $viewType")
         return SettlementViewHolder(binding, onItemClick)
     }
 
@@ -35,12 +36,20 @@ class SettlementHistoryAdapter(
         holder.bind(item)
     }
 
+    override fun getItemCount(): Int {
+        val count = super.getItemCount()
+        android.util.Log.d("SettlementHistoryAdapter", "getItemCount() retornou: $count")
+        return count
+    }
+
     class SettlementViewHolder(
         private val binding: ItemSettlementHistoryBinding,
         private val onItemClick: (AcertoResumo) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(settlement: AcertoResumo) {
+            android.util.Log.d("SettlementHistoryAdapter", "ViewHolder.bind() - Aplicando dados: ID=${settlement.id}, Data=${settlement.data}, Valor=${settlement.valor}")
+            
             binding.apply {
                 // Data do acerto
                 tvSettlementDate.text = settlement.data
@@ -70,6 +79,8 @@ class SettlementHistoryAdapter(
                     onItemClick(settlement)
                 }
             }
+            
+            android.util.Log.d("SettlementHistoryAdapter", "ViewHolder.bind() - Dados aplicados com sucesso")
         }
     }
 
