@@ -10,9 +10,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.entities.Acerto
+import com.example.gestaobilhares.data.entities.AcertoMesa
 import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 
 /**
  * ViewModel para SettlementDetailFragment
@@ -20,7 +22,8 @@ import java.util.*
  */
 @HiltViewModel
 class SettlementDetailViewModel @Inject constructor(
-    private val acertoRepository: AcertoRepository
+    private val acertoRepository: AcertoRepository,
+    private val acertoMesaRepository: AcertoMesaRepository
 ) : ViewModel() {
 
     private val _settlementDetails = MutableStateFlow<SettlementDetail?>(null)
@@ -39,6 +42,10 @@ class SettlementDetailViewModel @Inject constructor(
                 if (acerto != null) {
                     Log.d("SettlementDetailViewModel", "Acerto encontrado: $acerto")
                     
+                    // Buscar dados detalhados por mesa
+                    val acertoMesas = acertoMesaRepository.buscarPorAcertoId(acertoId)
+                    Log.d("SettlementDetailViewModel", "Encontradas ${acertoMesas.size} mesas para o acerto")
+                    
                     val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
                     val dataFormatada = formatter.format(acerto.dataAcerto)
                     
@@ -52,7 +59,8 @@ class SettlementDetailViewModel @Inject constructor(
                         debitoAnterior = acerto.debitoAnterior,
                         debitoAtual = acerto.debitoAtual,
                         totalMesas = acerto.totalMesas.toInt(),
-                        observacoes = acerto.observacoes ?: "Nenhuma observação registrada."
+                        observacoes = acerto.observacoes ?: "Nenhuma observação registrada.",
+                        acertoMesas = acertoMesas // Adicionar dados detalhados por mesa
                     )
                     
                     _settlementDetails.value = settlementDetail
@@ -81,6 +89,7 @@ class SettlementDetailViewModel @Inject constructor(
         val debitoAnterior: Double,
         val debitoAtual: Double,
         val totalMesas: Int,
-        val observacoes: String
+        val observacoes: String,
+        val acertoMesas: List<AcertoMesa>
     )
 } 

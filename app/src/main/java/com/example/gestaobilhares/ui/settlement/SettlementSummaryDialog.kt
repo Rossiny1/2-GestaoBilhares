@@ -20,7 +20,8 @@ class SettlementSummaryDialog : DialogFragment() {
             mesas: List<Mesa>,
             total: Double,
             metodosPagamento: Map<String, Double>,
-            observacao: String?
+            observacao: String?,
+            debitoAtual: Double = 0.0
         ): SettlementSummaryDialog {
             val args = Bundle().apply {
                 putString("clienteNome", clienteNome)
@@ -28,6 +29,7 @@ class SettlementSummaryDialog : DialogFragment() {
                 putDouble("total", total)
                 putSerializable("metodosPagamento", HashMap(metodosPagamento))
                 putString("observacao", observacao)
+                putDouble("debitoAtual", debitoAtual)
             }
             val fragment = SettlementSummaryDialog()
             fragment.arguments = args
@@ -42,6 +44,7 @@ class SettlementSummaryDialog : DialogFragment() {
         val total = arguments?.getDouble("total") ?: 0.0
         val metodosPagamento = arguments?.getSerializable("metodosPagamento") as? HashMap<String, Double> ?: hashMapOf()
         val observacao = arguments?.getString("observacao") ?: ""
+        val debitoAtual = arguments?.getDouble("debitoAtual") ?: 0.0
 
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
         
@@ -82,7 +85,7 @@ class SettlementSummaryDialog : DialogFragment() {
         
         // Botão WhatsApp
         view.findViewById<MaterialButton>(R.id.btnWhatsapp).setOnClickListener {
-            val textoCompleto = gerarTextoResumo(clienteNome, mesas, total, metodosPagamento, observacao)
+            val textoCompleto = gerarTextoResumo(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual)
             enviarViaWhatsApp(textoCompleto)
             dismiss()
         }
@@ -102,7 +105,8 @@ class SettlementSummaryDialog : DialogFragment() {
         mesas: List<Mesa>,
         total: Double,
         metodosPagamento: Map<String, Double>,
-        observacao: String
+        observacao: String,
+        debitoAtual: Double
     ): String {
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
         val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
@@ -123,7 +127,11 @@ class SettlementSummaryDialog : DialogFragment() {
         
         texto.append("\n💰 *RESUMO FINANCEIRO:*\n")
         texto.append("• Total de fichas jogadas: $totalFichasJogadas\n")
-        texto.append("• *Valor total: ${formatter.format(total)}*\n\n")
+        texto.append("• *Valor total: ${formatter.format(total)}*\n")
+        if (debitoAtual > 0) {
+            texto.append("• Débito atual: ${formatter.format(debitoAtual)}\n")
+        }
+        texto.append("\n")
         
         if (metodosPagamento.isNotEmpty()) {
             texto.append("💳 *FORMA DE PAGAMENTO:*\n")

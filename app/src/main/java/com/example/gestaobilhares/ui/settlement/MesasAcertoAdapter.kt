@@ -56,14 +56,51 @@ class MesasAcertoAdapter(
                     if (position != RecyclerView.NO_POSITION) {
                         val mesa = getItem(position)
                         val state = mesaStates.getOrPut(mesa.id) { MesaAcertoState(mesaId = mesa.id) }
-                        state.relogioFinal = binding.etRelogioFinal.text.toString().toIntOrNull() ?: state.relogioInicial
+                        
+                        // Atualizar relógio inicial
+                        state.relogioInicial = binding.etRelogioInicial.text.toString().toIntOrNull() ?: 0
+                        // Atualizar relógio final
+                        state.relogioFinal = binding.etRelogioFinal.text.toString().toIntOrNull() ?: 0
+                        
+                        // Recalcular subtotal
                         updateSubtotal(state)
                         onDataChanged()
                     }
                 }
             }
-            binding.etRelogioInicial.addTextChangedListener(textWatcher)
-            binding.etRelogioFinal.addTextChangedListener(textWatcher)
+            
+            // TextWatcher específico para relógio inicial
+            binding.etRelogioInicial.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: Editable?) {
+                    val position = adapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val mesa = getItem(position)
+                        val state = mesaStates.getOrPut(mesa.id) { MesaAcertoState(mesaId = mesa.id) }
+                        state.relogioInicial = s.toString().toIntOrNull() ?: 0
+                        updateSubtotal(state)
+                        onDataChanged()
+                    }
+                }
+            })
+            
+            // TextWatcher específico para relógio final
+            binding.etRelogioFinal.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: Editable?) {
+                    val position = adapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val mesa = getItem(position)
+                        val state = mesaStates.getOrPut(mesa.id) { MesaAcertoState(mesaId = mesa.id) }
+                        state.relogioFinal = s.toString().toIntOrNull() ?: 0
+                        updateSubtotal(state)
+                        onDataChanged()
+                    }
+                }
+            })
+            
             binding.cbRelogioDefeito.setOnCheckedChangeListener { _, isChecked ->
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
@@ -139,6 +176,7 @@ class MesasAcertoAdapter(
             if (mesa.valorFixo > 0) {
                 // Mesa de valor fixo
                 state.subtotal = mesa.valorFixo
+                binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(state.subtotal)
             } else {
                 // Mesa de fichas jogadas
                 val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
@@ -148,8 +186,8 @@ class MesasAcertoAdapter(
                 
                 // Atualizar exibição das fichas jogadas
                 binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(subtotal)
             }
-            binding.tvSubtotal.text = formatter.format(state.subtotal)
         }
     }
     

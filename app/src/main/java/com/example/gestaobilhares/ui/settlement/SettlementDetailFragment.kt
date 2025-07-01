@@ -30,6 +30,8 @@ class SettlementDetailFragment : Fragment() {
     private val args: SettlementDetailFragmentArgs by navArgs()
     private val viewModel: SettlementDetailViewModel by viewModels()
 
+    private var mesaDetailAdapter: AcertoMesaDetailAdapter? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -108,15 +110,19 @@ class SettlementDetailFragment : Fragment() {
                 ContextCompat.getColor(requireContext(), statusColor)
             )
             
-            // Valores reais do acerto
-            tvInitialChips.text = formatter.format(settlement.debitoAnterior)
-            tvFinalChips.text = formatter.format(settlement.valorTotal)
-            tvPlayedChips.text = formatter.format(settlement.valorRecebido)
-            tvChipValue.text = formatter.format(settlement.desconto)
-            tvTotalValue.text = formatter.format(settlement.debitoAtual)
+            // Valores financeiros corretos
+            tvInitialChips.text = formatter.format(settlement.debitoAnterior) // Débito anterior
+            tvFinalChips.text = formatter.format(settlement.valorTotal) // Valor total do acerto
+            tvPlayedChips.text = formatter.format(settlement.valorRecebido) // Valor recebido
+            tvChipValue.text = formatter.format(settlement.desconto) // Desconto aplicado
+            tvTotalValue.text = formatter.format(settlement.debitoAtual) // Débito atual após acerto
             
             // Observações
             tvObservations.text = settlement.observacoes
+
+            // Configurar RecyclerView das mesas do acerto
+            mesaDetailAdapter = AcertoMesaDetailAdapter(settlement.acertoMesas)
+            rvMesasDetalhe.adapter = mesaDetailAdapter
         }
     }
 

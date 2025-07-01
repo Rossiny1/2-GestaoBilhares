@@ -228,7 +228,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Fichas Inicial"
+                                android:text="Débito Anterior"
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textSize="12sp" />
 
@@ -239,7 +239,7 @@
                                 android:textColor="?attr/colorOnSurface"
                                 android:textSize="16sp"
                                 android:textStyle="bold"
-                                tools:text="1.250" />
+                                tools:text="R$ 1.250,00" />
 
                         </LinearLayout>
 
@@ -252,7 +252,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Fichas Final"
+                                android:text="Valor Total"
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textSize="12sp" />
 
@@ -263,13 +263,13 @@
                                 android:textColor="?attr/colorOnSurface"
                                 android:textSize="16sp"
                                 android:textStyle="bold"
-                                tools:text="1.890" />
+                                tools:text="R$ 1.890,00" />
 
                         </LinearLayout>
 
                     </LinearLayout>
 
-                    <!-- Fichas Jogadas e Valor por Ficha -->
+                    <!-- Valores Recebido e Desconto -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -285,7 +285,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Fichas Jogadas"
+                                android:text="Valor Recebido"
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textSize="12sp" />
 
@@ -296,7 +296,7 @@
                                 android:textColor="?attr/colorPrimary"
                                 android:textSize="18sp"
                                 android:textStyle="bold"
-                                tools:text="640" />
+                                tools:text="R$ 640,00" />
 
                         </LinearLayout>
 
@@ -309,7 +309,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Valor por Ficha"
+                                android:text="Desconto"
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textSize="12sp" />
 
@@ -320,7 +320,7 @@
                                 android:textColor="?attr/colorOnSurface"
                                 android:textSize="16sp"
                                 android:textStyle="bold"
-                                tools:text="R$ 0,50" />
+                                tools:text="R$ 50,00" />
 
                         </LinearLayout>
 
@@ -333,7 +333,7 @@
                         android:layout_marginVertical="8dp"
                         android:background="?attr/colorOutline" />
 
-                    <!-- Valor Total -->
+                    <!-- Débito Atual -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -344,7 +344,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Valor Total"
+                            android:text="Débito Atual"
                             android:textColor="?attr/colorOnSurface"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -363,6 +363,25 @@
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- RecyclerView para detalhes das mesas do acerto -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Mesas do Acerto"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvMesasDetalhe"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
+                android:layout_marginBottom="16dp" />
 
             <!-- Card de Observações -->
             <com.google.android.material.card.MaterialCardView

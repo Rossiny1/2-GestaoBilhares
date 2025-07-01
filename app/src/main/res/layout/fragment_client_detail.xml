@@ -12,161 +12,194 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Header da tela -->
-        <LinearLayout
-            android:id="@+id/headerLayout"
+        <!-- Header Moderno -->
+        <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            android:gravity="center_vertical"
+            app:elevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="16dp">
+                android:padding="16dp"
+                android:gravity="center_vertical">
 
             <ImageButton
                 android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Voltar"
                 android:src="@drawable/ic_arrow_back"
                 app:tint="?attr/colorOnPrimary" />
 
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabWhatsApp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_whatsapp"
+                    app:backgroundTint="@color/green_500"
+                    app:fabSize="mini"
+                    app:tint="@color/white" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_phone"
+                    app:backgroundTint="@color/purple_600"
+                    app:fabSize="mini"
+                    app:tint="@color/white" />
+
         </LinearLayout>
 
-        <!-- Seção com imagem de fundo -->
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <!-- Hero Section com Imagem de Fundo -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="280dp">
+            android:layout_height="200dp">
 
-            <!-- Imagem de fundo do estabelecimento -->
             <ImageView
                 android:id="@+id/ivClientBackground"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:src="@drawable/default_bar_background"
-                tools:src="@drawable/default_bar_background" />
+                android:src="@drawable/default_bar_background" />
 
-            <!-- Overlay escuro -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/gradient_overlay" />
 
-            <!-- Conteúdo sobreposto -->
+            <!-- Informações do Cliente -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="bottom"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
-                <!-- Nome e endereço do cliente -->
                 <TextView
                     android:id="@+id/tvClientName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/white"
-                    android:textSize="20sp"
+                    android:textSize="24sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="2dp"
+                    android:layout_marginBottom="4dp"
                     tools:text="Bar do João" />
-                <TextView
-                    android:id="@+id/tvClientAddress"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:textStyle="normal"
-                    android:layout_marginBottom="8dp"
-                    tools:text="Rua das Flores, 123 - Centro" />
 
-                <!-- Linha com endereço e botões -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:layout_marginEnd="8dp"
                         android:src="@drawable/ic_location"
                         app:tint="@color/white" />
 
-                    <!-- Botão WhatsApp -->
-                    <com.google.android.material.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/fabWhatsApp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:src="@drawable/ic_whatsapp"
-                        app:backgroundTint="@color/green_500"
-                        app:fabSize="mini"
-                        app:tint="@color/white" />
-
-                    <!-- Botão Telefone -->
-                    <com.google.android.material.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/fabPhone"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_phone"
-                        app:backgroundTint="@color/purple_600"
-                        app:fabSize="mini"
-                        app:tint="@color/white" />
-
-                </LinearLayout>
-
-                <!-- Informações de visita e mesas -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/tvClientAddress"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        tools:text="Rua das Flores, 123 - Centro" />
 
-                        <TextView
-                            android:id="@+id/tvLastVisit"
-                            android:layout_width="wrap_content"
+                </LinearLayout>
+
+                <!-- Stats Cards -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="8dp"
+                        app:cardBackgroundColor="@color/white">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/white"
-                            android:textSize="14sp"
-                            tools:text="Última visita: 15/05/2024" />
+                            android:orientation="vertical"
+                            android:padding="12dp"
+                            android:gravity="center">
 
                         <TextView
                             android:id="@+id/tvActiveTables"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:textColor="@color/white"
-                            android:textSize="18sp"
+                                android:textColor="?attr/colorPrimary"
+                                android:textSize="20sp"
                             android:textStyle="bold"
-                            tools:text="2 Mesas ativas" />
+                                tools:text="2" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Mesas Ativas"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="12sp" />
 
                     </LinearLayout>
 
-                    <!-- Botão Novo Acerto -->
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnNewSettlement"
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="8dp"
+                        app:cardBackgroundColor="@color/white">
+
+                        <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:text="⊕ Novo Acerto"
-                        android:textColor="@color/white"
-                        android:textSize="16sp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="12dp"
+                            android:gravity="center">
+
+                            <TextView
+                                android:id="@+id/tvLastVisit"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="?attr/colorPrimary"
+                                android:textSize="14sp"
                         android:textStyle="bold"
-                        app:backgroundTint="@color/purple_600"
-                        app:cornerRadius="12dp"
-                        app:icon="@drawable/ic_add"
-                        app:iconTint="@color/white"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginBottom="8dp" />
+                                tools:text="15/05/2024" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Última Visita"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>
 
@@ -174,21 +207,38 @@
 
         </FrameLayout>
 
+        <!-- Botão Novo Acerto -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNewSettlement"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_margin="16dp"
+            android:text="⊕ NOVO ACERTO"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/purple_600"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/ic_add"
+            app:iconTint="@color/white"
+            app:elevation="8dp" />
+
         <!-- Seção Observações -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:cardCornerRadius="12dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
             app:cardElevation="4dp"
             app:strokeColor="@color/purple_600"
-            app:strokeWidth="2dp">
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -197,7 +247,7 @@
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="12dp" />
 
                 <EditText
                     android:id="@+id/etObservations"
@@ -210,7 +260,8 @@
                     android:visibility="gone"
                     android:inputType="textMultiLine"
                     android:minLines="2"
-                    android:maxLines="4" />
+                    android:maxLines="4"
+                    android:padding="12dp" />
 
                 <TextView
                     android:id="@+id/tvObservations"
@@ -222,6 +273,7 @@
                     android:visibility="gone"
                     android:minLines="2"
                     android:maxLines="4"
+                    android:padding="12dp"
                     tools:text="Cliente preferencial - Pagamento sempre em dia" />
 
             </LinearLayout>
@@ -229,50 +281,12 @@
         </com.google.android.material.card.MaterialCardView>
 
         <!-- Seção Mesas do Cliente -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="24dp">
-
-            <TextView
-                android:id="@+id/tvMesasTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Mesas do Cliente"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="16dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAdicionarMesa"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="Adicionar Mesa"
-                android:icon="@drawable/ic_add"
-                android:textSize="14sp" />
-        </LinearLayout>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvMesasCliente"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:overScrollMode="never"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-            app:spanCount="2"
-            tools:listitem="@layout/item_mesa_cliente" />
-
-        <!-- Seção Histórico de Acertos -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:cardCornerRadius="12dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
             app:cardElevation="4dp"
             app:strokeColor="@color/purple_600"
             app:strokeWidth="1dp">
@@ -281,50 +295,108 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
-                <!-- Título do histórico -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
                     android:layout_marginBottom="16dp">
 
-                    <TextView
+            <TextView
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Histórico de Acertos"
-                        android:textColor="?attr/colorOnSurface"
+                android:text="Mesas do Cliente"
+                android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
-                    <!-- Navegação do histórico -->
-                    <ImageButton
-                        android:id="@+id/btnHistoryPrevious"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:src="@drawable/ic_chevron_left"
-                        app:tint="?attr/colorOnSurfaceVariant" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAdicionarMesa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Adicionar Mesa"
+                android:icon="@drawable/ic_add"
+                        android:textSize="14sp"
+                        app:cornerRadius="12dp"
+                        style="@style/Widget.Material3.Button.OutlinedButton" />
 
-                    <ImageButton
-                        android:id="@+id/btnHistoryNext"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:src="@drawable/ic_chevron_right"
-                        app:tint="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
 
-                </LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMesasCliente"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:overScrollMode="never"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            app:spanCount="2"
+            tools:listitem="@layout/item_mesa_cliente" />
 
-                <!-- Lista de acertos -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvSettlementHistory"
-                    android:layout_width="match_parent"
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Seção Histórico de Acertos -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="@color/purple_600"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+            <!-- Título do histórico -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Histórico de Acertos"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <!-- Navegação do histórico -->
+                <ImageButton
+                    android:id="@+id/btnHistoryPrevious"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_chevron_left"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+
+                <ImageButton
+                    android:id="@+id/btnHistoryNext"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+
+            </LinearLayout>
+
+            <!-- Lista de acertos -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvSettlementHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                     android:nestedScrollingEnabled="true"
                     android:minHeight="200dp"
                     android:visibility="visible"
@@ -333,7 +405,7 @@
                     tools:listitem="@layout/item_settlement_history"
                     tools:itemCount="6" />
 
-            </LinearLayout>
+        </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 

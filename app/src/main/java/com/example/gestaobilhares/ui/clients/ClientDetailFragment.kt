@@ -60,7 +60,7 @@ class ClientDetailFragment : Fragment() {
         
         // Carregar dados do cliente apenas se não estiverem carregados
         if (viewModel.clientDetails.value == null) {
-            viewModel.loadClientDetails(args.clienteId)
+        viewModel.loadClientDetails(args.clienteId)
         }
         
         setupMesasSection()

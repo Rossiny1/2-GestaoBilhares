@@ -10,6 +10,8 @@ import com.example.gestaobilhares.data.dao.MesaDao
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.dao.AcertoDao
 import com.example.gestaobilhares.data.repository.AcertoRepository
+import com.example.gestaobilhares.data.dao.AcertoMesaDao
+import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -75,4 +77,10 @@ object DatabaseModule {
 
     @Provides
     fun provideAcertoRepository(acertoDao: AcertoDao): AcertoRepository = AcertoRepository(acertoDao)
+
+    @Provides
+    fun provideAcertoMesaDao(appDatabase: AppDatabase): AcertoMesaDao = appDatabase.acertoMesaDao()
+
+    @Provides
+    fun provideAcertoMesaRepository(acertoMesaDao: AcertoMesaDao): AcertoMesaRepository = AcertoMesaRepository(acertoMesaDao)
 } 

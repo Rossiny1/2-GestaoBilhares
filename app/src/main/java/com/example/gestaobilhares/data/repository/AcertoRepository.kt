@@ -16,4 +16,19 @@ class AcertoRepository @Inject constructor(
     suspend fun buscarPorId(id: Long): Acerto? = acertoDao.buscarPorId(id)
     suspend fun atualizar(acerto: Acerto) = acertoDao.atualizar(acerto)
     suspend fun deletar(acerto: Acerto) = acertoDao.deletar(acerto)
+    
+    /**
+     * Busca o último acerto de uma mesa específica
+     * @param mesaId ID da mesa
+     * @return Último acerto da mesa, ou null se não houver
+     */
+    suspend fun buscarUltimoAcertoMesa(mesaId: Long): Acerto? {
+        return try {
+            // TODO: Implementar busca real no DAO
+            // Por enquanto, retorna null para simular primeiro acerto
+            null
+        } catch (e: Exception) {
+            null
+        }
+    }
 } 

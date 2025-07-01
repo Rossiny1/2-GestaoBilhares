@@ -15,6 +15,8 @@ import com.example.gestaobilhares.data.repositories.ClienteRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.entities.Acerto
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 
 /**
  * ViewModel para SettlementFragment
@@ -24,7 +26,8 @@ import kotlinx.coroutines.flow.Flow
 class SettlementViewModel @Inject constructor(
     private val mesaRepository: MesaRepository,
     private val clienteRepository: ClienteRepository,
-    private val acertoRepository: AcertoRepository
+    private val acertoRepository: AcertoRepository,
+    private val acertoMesaRepository: AcertoMesaRepository
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -80,6 +83,29 @@ class SettlementViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Prepara as mesas para acerto, definindo relógios iniciais baseados no último acerto
+     */
+    suspend fun prepararMesasParaAcerto(mesasCliente: List<Mesa>): List<Mesa> {
+        return mesasCliente.map { mesa ->
+            try {
+                // Buscar o último acerto desta mesa
+                val ultimoAcertoMesa = acertoMesaRepository.buscarUltimoAcertoMesa(mesa.id)
+                
+                if (ultimoAcertoMesa != null) {
+                    // Usar o relógio final do último acerto como inicial do próximo
+                    mesa.copy(fichasInicial = ultimoAcertoMesa.relogioFinal)
+                } else {
+                    // Primeiro acerto - usar relógio inicial cadastrado ou 0
+                    mesa.copy(fichasInicial = mesa.fichasInicial ?: 0)
+                }
+            } catch (e: Exception) {
+                Log.e("SettlementViewModel", "Erro ao preparar mesa ${mesa.numero}: ${e.message}")
+                mesa.copy(fichasInicial = mesa.fichasInicial ?: 0)
+            }
+        }
+    }
+
     fun carregarDadosCliente(clienteId: Long, callback: (com.example.gestaobilhares.data.entities.Cliente?) -> Unit) {
         viewModelScope.launch {
             try {
@@ -88,29 +114,6 @@ class SettlementViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("SettlementViewModel", "Erro ao carregar dados do cliente: ${e.localizedMessage}", e)
                 callback(null)
-            }
-        }
-    }
-
-    fun saveSettlement(
-        @Suppress("UNUSED_PARAMETER") clienteId: Long,
-        @Suppress("UNUSED_PARAMETER") fichasInicial: Int,
-        @Suppress("UNUSED_PARAMETER") fichasFinal: Int,
-        @Suppress("UNUSED_PARAMETER") valorFicha: Double
-    ) {
-        // Parâmetros serão utilizados na implementação futura
-        @Suppress("UNUSED_PARAMETER")
-        viewModelScope.launch {
-            _isLoading.value = true
-            
-            try {
-                // TODO: Implementar salvamento real
-                // Por enquanto, apenas simular sucesso
-                
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                _isLoading.value = false
             }
         }
     }
@@ -177,6 +180,39 @@ class SettlementViewModel @Inject constructor(
                 
                 val acertoId = acertoRepository.inserir(acerto)
                 Log.d("SettlementViewModel", "Acerto salvo com ID: $acertoId")
+                
+                // Salvar dados detalhados de cada mesa do acerto
+                val cliente = clienteRepository.obterPorId(clienteId)
+                val acertoMesas = dadosAcerto.mesas.map { mesa ->
+                    val fichasJogadas = if (mesa.valorFixo > 0) {
+                        0 // Mesa de valor fixo não tem fichas jogadas
+                    } else {
+                        (mesa.fichasFinal - mesa.fichasInicial).coerceAtLeast(0)
+                    }
+                    
+                    val subtotal = if (mesa.valorFixo > 0) {
+                        mesa.valorFixo
+                    } else {
+                        fichasJogadas * (cliente?.comissaoFicha ?: 0.0)
+                    }
+                    
+                    com.example.gestaobilhares.data.entities.AcertoMesa(
+                        acertoId = acertoId,
+                        mesaId = mesa.id,
+                        relogioInicial = mesa.fichasInicial ?: 0,
+                        relogioFinal = mesa.fichasFinal ?: 0,
+                        fichasJogadas = fichasJogadas,
+                        valorFixo = mesa.valorFixo ?: 0.0,
+                        valorFicha = cliente?.valorFicha ?: 0.0,
+                        comissaoFicha = cliente?.comissaoFicha ?: 0.0,
+                        subtotal = subtotal,
+                        comDefeito = false, // TODO: pegar do formulário
+                        observacoes = null
+                    )
+                }
+                
+                acertoMesaRepository.inserirLista(acertoMesas)
+                Log.d("SettlementViewModel", "Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
                 
                 _resultadoSalvamento.value = Result.success(Unit)
             } catch (e: Exception) {

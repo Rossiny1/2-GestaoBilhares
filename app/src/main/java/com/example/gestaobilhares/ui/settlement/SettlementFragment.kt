@@ -32,6 +32,7 @@ import com.example.gestaobilhares.data.entities.Mesa
 import android.util.Log
 import com.example.gestaobilhares.ui.settlement.MesaDTO
 import com.example.gestaobilhares.ui.clients.AcertoResumo
+import androidx.recyclerview.widget.LinearLayoutManager
 
 /**
  * Fragment para registrar novos acertos
@@ -118,12 +119,38 @@ class SettlementFragment : Fragment() {
         
         if (mesasDTO.isNotEmpty()) {
             Log.d("SettlementFragment", "Populando adapter com ${mesasDTO.size} mesas")
-            mesasAcertoAdapter.submitList(mesasDTO)
+            
+            // Preparar mesas com relógios calculados automaticamente
+            lifecycleScope.launch {
+                val mesasPreparadas = viewModel.prepararMesasParaAcerto(mesasDTO.map { it.toMesa() })
+                
+                Log.d("SettlementFragment", "Mesas preparadas para acerto: ${mesasPreparadas.size}")
+                mesasPreparadas.forEach { mesa ->
+                    Log.d("SettlementFragment", "Mesa ${mesa.numero}: Relógio inicial=${mesa.fichasInicial}, Final=${mesa.fichasFinal}")
+                }
+                
+                // Converter de volta para MesaDTO e popular adapter
+                val mesasDTOPreparadas = mesasPreparadas.map { mesa ->
+                    MesaDTO(
+                        id = mesa.id,
+                        numero = mesa.numero,
+                        tipoMesa = mesa.tipoMesa.toString(),
+                        valorFixo = mesa.valorFixo,
+                        fichasInicial = mesa.fichasInicial ?: 0,
+                        fichasFinal = mesa.fichasFinal ?: 0,
+                        ativa = true,
+                        valorFicha = 0.0, // Será preenchido pelo carregarDadosCliente
+                        comissaoFicha = 0.0 // Será preenchido pelo carregarDadosCliente
+                    )
+                }
+                
+                mesasAcertoAdapter.submitList(mesasDTOPreparadas)
             
             // Forçar atualização inicial dos cálculos após popular o adapter
             binding.rvMesasAcerto.post {
                 updateCalculations()
                 Log.d("SettlementFragment", "Cálculos iniciais executados")
+                }
             }
         } else {
             Log.e("SettlementFragment", "ERRO: Lista de mesas vazia - adapter não será populado")
@@ -189,13 +216,9 @@ class SettlementFragment : Fragment() {
             }
             .setPositiveButton("OK") { _, _ ->
                 val selected = paymentMethods.filterIndexed { idx, _ -> checkedItems[idx] }
-                if (selected.size > 1) {
+                if (selected.isNotEmpty()) {
+                    // SEMPRE mostrar diálogo de valores, mesmo para um método
                     showPaymentValuesDialog(selected)
-                } else if (selected.size == 1) {
-                    paymentValues.clear()
-                    val valorTotal = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
-                    paymentValues[selected[0]] = valorTotal
-                    binding.actvPaymentMethod.setText(selected[0], false)
                 } else {
                     paymentValues.clear()
                     binding.actvPaymentMethod.setText("", false)
@@ -210,15 +233,34 @@ class SettlementFragment : Fragment() {
             orientation = LinearLayout.VERTICAL
             setPadding(32, 16, 32, 16)
         }
+        
+        // Adicionar título explicativo
+        val titleText = TextView(requireContext()).apply {
+            text = if (selected.size == 1) {
+                "Informe o valor recebido"
+            } else {
+                "Informe o valor de cada método"
+            }
+            textSize = 16f
+            setTextColor(resources.getColor(com.google.android.material.R.color.material_on_surface_emphasis_high_type, null))
+            setPadding(0, 0, 0, 16)
+        }
+        layout.addView(titleText)
+        
         val editTexts = selected.associateWith { metodo ->
             EditText(requireContext()).apply {
-                hint = "Valor para $metodo"
+                hint = if (selected.size == 1) {
+                    "Valor recebido"
+                } else {
+                    "Valor para $metodo"
+                }
                 inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
                 layout.addView(this)
             }
         }
+        
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Informe o valor de cada método")
+            .setTitle("Métodos de Pagamento")
             .setView(layout)
             .setPositiveButton("OK") { _, _ ->
                 paymentValues.clear()
@@ -228,10 +270,19 @@ class SettlementFragment : Fragment() {
                     paymentValues[metodo] = valor
                     totalInformado += valor
                 }
-                val resumo = paymentValues.entries.joinToString(", ") { "${it.key}: R$ %.2f".format(it.value) }
+                
+                // Atualizar texto do campo de método de pagamento
+                val resumo = if (selected.size == 1) {
+                    selected[0]
+                } else {
+                    paymentValues.entries.joinToString(", ") { "${it.key}: R$ %.2f".format(it.value) }
+                }
                 binding.actvPaymentMethod.setText(resumo, false)
+                
                 // Atualiza o campo Valor Recebido com a soma
-                binding.etAmountReceived.setText(totalInformado.toString())
+                binding.etAmountReceived.setText(String.format("%.2f", totalInformado))
+                
+                Log.d("SettlementFragment", "Métodos de pagamento configurados: $paymentValues, Total: $totalInformado")
             }
             .setNegativeButton("Cancelar", null)
             .show()
@@ -281,7 +332,15 @@ class SettlementFragment : Fragment() {
     private fun mostrarDialogoResumo() {
         val clienteNome = binding.tvClientName.text.toString()
         val valorRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
+        val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
+        val debitoAtual = binding.tvCurrentDebt.text.toString().replace("R$", "").replace(",", ".").trim().toDoubleOrNull() ?: 0.0
         val observacao = "Acerto realizado via app" // Campo de observações será implementado futuramente
+        
+        // Calcular valor total real do acerto (subtotal das mesas)
+        val subtotalMesas = mesasAcertoAdapter.getSubtotal()
+        val valorTotalAcerto = subtotalMesas - desconto
+        
+        Log.d("SettlementFragment", "Resumo do acerto - Subtotal: $subtotalMesas, Desconto: $desconto, Total: $valorTotalAcerto, Recebido: $valorRecebido, Débito: $debitoAtual")
         
         // Converter MesaAcertoState para Mesa para o diálogo
         val mesasDoAcerto = mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
@@ -300,15 +359,16 @@ class SettlementFragment : Fragment() {
         val dialog = SettlementSummaryDialog.newInstance(
             clienteNome = clienteNome,
             mesas = mesasDoAcerto,
-            total = valorRecebido,
+            total = valorTotalAcerto, // Usar valor total do acerto, não valor recebido
             metodosPagamento = paymentValues,
-            observacao = observacao
+            observacao = observacao,
+            debitoAtual = debitoAtual // Adicionar débito atual
         )
         
         dialog.show(parentFragmentManager, "SettlementSummaryDialog")
         
         // Após mostrar o diálogo, atualizar o histórico do cliente
-        atualizarHistoricoCliente(valorRecebido, mesasDoAcerto.size)
+        atualizarHistoricoCliente(valorTotalAcerto, mesasDoAcerto.size)
     }
     
     /**
@@ -397,9 +457,16 @@ class SettlementFragment : Fragment() {
                 
                 // Atualizar os MesaDTOs com os dados do cliente
                 val mesasAtualizadas = args.mesasCliente?.map { mesa ->
-                    mesa.copy(
+                    MesaDTO(
+                        id = mesa.id,
+                        numero = mesa.numero,
+                        tipoMesa = mesa.tipoMesa.toString(),
+                        fichasInicial = mesa.fichasInicial ?: 0,
+                        fichasFinal = mesa.fichasFinal ?: 0,
+                        valorFixo = mesa.valorFixo ?: 0.0,
                         valorFicha = cliente.valorFicha,
-                        comissaoFicha = cliente.comissaoFicha
+                        comissaoFicha = cliente.comissaoFicha,
+                        ativa = mesa.ativa
                     )
                 } ?: emptyList()
                 

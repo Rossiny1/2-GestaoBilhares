@@ -21,9 +21,10 @@ import com.example.gestaobilhares.data.entities.*
         Mesa::class,
         Colaborador::class,
         Acerto::class,
-        Despesa::class
+        Despesa::class,
+        AcertoMesa::class
     ],
-    version = 6, // Incrementado para incluir novos campos nas entidades Cliente e Mesa
+    version = 7, // Incrementado para incluir a nova entidade AcertoMesa
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -59,6 +60,11 @@ abstract class AppDatabase : RoomDatabase() {
      * DAO para operações com despesas.
      */
     abstract fun despesaDao(): DespesaDao
+    
+    /**
+     * DAO para operações com acerto-mesas.
+     */
+    abstract fun acertoMesaDao(): com.example.gestaobilhares.data.dao.AcertoMesaDao
 
     companion object {
         
