@@ -13,8 +13,12 @@ class AcertoRepository @Inject constructor(
     suspend fun inserir(acerto: Acerto): Long = acertoDao.inserir(acerto)
     fun buscarPorCliente(clienteId: Long): Flow<List<Acerto>> = acertoDao.buscarPorCliente(clienteId)
     fun listarTodos(): Flow<List<Acerto>> = acertoDao.listarTodos()
-    suspend fun buscarPorId(id: Long): Acerto? = acertoDao.buscarPorId(id)
-    suspend fun atualizar(acerto: Acerto) = acertoDao.atualizar(acerto)
+    suspend fun buscarPorId(id: Long): Acerto? {
+        return acertoDao.buscarPorId(id)
+    }
+    suspend fun atualizar(acerto: Acerto) {
+        acertoDao.atualizar(acerto)
+    }
     suspend fun deletar(acerto: Acerto) = acertoDao.deletar(acerto)
     
     /**
@@ -30,5 +34,9 @@ class AcertoRepository @Inject constructor(
         } catch (e: Exception) {
             null
         }
+    }
+
+    suspend fun buscarUltimoAcertoPorCliente(clienteId: Long): Acerto? {
+        return acertoDao.buscarUltimoAcertoPorCliente(clienteId)
     }
 } 

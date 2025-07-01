@@ -215,6 +215,13 @@ class MesasAcertoAdapter(
     fun getMesasAcerto(): List<MesaAcertoState> {
         return mesaStates.values.toList()
     }
+
+    /**
+     * Método para compatibilidade - atualiza a lista de mesas
+     */
+    fun updateMesas(mesas: List<MesaDTO>) {
+        submitList(mesas)
+    }
 }
 
 class MesaDTODiffCallback : DiffUtil.ItemCallback<MesaDTO>() {

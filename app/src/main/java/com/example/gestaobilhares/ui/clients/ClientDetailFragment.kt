@@ -243,7 +243,7 @@ class ClientDetailFragment : Fragment() {
                 Log.d("ClientDetailFragment", "=== HISTÓRICO ATUALIZADO ===")
                 Log.d("ClientDetailFragment", "Quantidade de acertos: ${settlements.size}")
                 settlements.forEachIndexed { index, acerto ->
-                    Log.d("ClientDetailFragment", "Acerto $index: ID=${acerto.id}, Data=${acerto.data}, Valor=${acerto.valor}, Status=${acerto.status}")
+                    Log.d("ClientDetailFragment", "Acerto $index: ID=${acerto.id}, Data=${acerto.data}, Valor=${acerto.valorTotal}, Status=${acerto.status}")
                 }
                 settlementHistoryAdapter.submitList(settlements)
                 Log.d("ClientDetailFragment", "Lista enviada para adapter: ${settlements.size} itens")

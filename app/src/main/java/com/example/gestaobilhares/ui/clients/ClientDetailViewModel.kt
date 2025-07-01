@@ -218,7 +218,7 @@ class ClientDetailViewModel @Inject constructor(
                             valorTotal = acerto.valorRecebido,
                             status = acerto.status.name,
                             mesasAcertadas = acerto.totalMesas.toInt(),
-                            debitoAtual = 0.0
+                            debitoAtual = acerto.debitoAtual
                         )
                     }
                     _settlementHistory.value = acertosResumo
