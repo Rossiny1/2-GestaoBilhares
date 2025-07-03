@@ -28,7 +28,15 @@ class ClienteRepository @Inject constructor(
      * Insere um novo cliente
      */
     suspend fun inserir(cliente: Cliente): Long {
-        return clienteDao.inserir(cliente)
+        return try {
+            android.util.Log.d("ClienteRepository", "Iniciando inserção do cliente: ${cliente.nome}")
+            val id = clienteDao.inserir(cliente)
+            android.util.Log.d("ClienteRepository", "Cliente inserido com sucesso, ID: $id")
+            id
+        } catch (e: Exception) {
+            android.util.Log.e("ClienteRepository", "Erro ao inserir cliente: ${e.message}", e)
+            throw e
+        }
     }
 
     /**
@@ -65,5 +73,26 @@ class ClienteRepository @Inject constructor(
             val atualizado = cliente.copy(observacoes = observacao)
             atualizar(atualizado)
         }
+    }
+
+    /**
+     * Obtém o débito atual do cliente
+     */
+    suspend fun obterDebitoAtual(clienteId: Long): Double {
+        return clienteDao.obterDebitoAtual(clienteId)
+    }
+    
+    /**
+     * Atualiza o débito atual do cliente
+     */
+    suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) {
+        clienteDao.atualizarDebitoAtual(clienteId, novoDebito)
+    }
+    
+    /**
+     * Obtém cliente com débito atual calculado
+     */
+    suspend fun obterClienteComDebitoAtual(clienteId: Long): Cliente? {
+        return clienteDao.obterClienteComDebitoAtual(clienteId)
     }
 } 

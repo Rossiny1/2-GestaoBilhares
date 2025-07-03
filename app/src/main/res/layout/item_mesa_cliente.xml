@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="0dp"
-    android:layout_height="90dp"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
     android:layout_margin="6dp"
     app:cardCornerRadius="10dp"
     app:cardElevation="2dp"
     app:strokeColor="@color/purple_600"
     app:strokeWidth="1dp"
-    android:background="@drawable/card_background">
+    android:background="@android:color/holo_blue_light">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="6dp">
+        android:padding="6dp"
+        android:background="@android:color/white">
 
         <!-- Ícone da lixeira no canto superior direito -->
         <ImageButton
@@ -34,7 +35,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Mesa"
-            android:textColor="@color/white"
+            android:textColor="@color/black"
             android:textSize="13sp"
             android:textStyle="bold"
             android:gravity="center"
@@ -47,8 +48,8 @@
             android:id="@+id/tvNumeroMesa"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=""
-            android:textColor="@color/white"
+            android:text="TESTE CARD"
+            android:textColor="@color/black"
             android:textSize="15sp"
             android:textStyle="normal"
             android:gravity="center"
