@@ -13,12 +13,23 @@ class MesasDepositoAdapter(
 ) : ListAdapter<Mesa, MesasDepositoAdapter.MesaViewHolder>(MesaDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MesaViewHolder {
+        android.util.Log.d("MesasDepositoAdapter", "🔄 Criando ViewHolder")
         val binding = ItemMesaClienteBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return MesaViewHolder(binding, onMesaClick)
     }
 
     override fun onBindViewHolder(holder: MesaViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val mesa = getItem(position)
+        android.util.Log.d("MesasDepositoAdapter", "📱 Bind ViewHolder posição $position - Mesa: ${mesa.numero}")
+        holder.bind(mesa)
+    }
+
+    override fun submitList(list: List<Mesa>?) {
+        android.util.Log.d("MesasDepositoAdapter", "📋 SubmitList chamado com ${list?.size ?: 0} mesas")
+        list?.forEach { mesa ->
+            android.util.Log.d("MesasDepositoAdapter", "Mesa na lista: ${mesa.numero} | ID: ${mesa.id}")
+        }
+        super.submitList(list)
     }
 
     class MesaViewHolder(
@@ -26,10 +37,11 @@ class MesasDepositoAdapter(
         private val onMesaClick: (Mesa) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(mesa: Mesa) {
+            android.util.Log.d("MesasDepositoAdapter", "🎯 Bind mesa: ${mesa.numero}")
             binding.tvNumeroMesa.text = "Mesa ${mesa.numero}"
             binding.btnRetirarMesa.visibility = ViewGroup.GONE // Não exibe botão de retirar no depósito
             binding.root.setOnClickListener { onMesaClick(mesa) }
-            // Exibir estado de conservação, tamanho, etc, se desejar
+            android.util.Log.d("MesasDepositoAdapter", "✅ Mesa ${mesa.numero} configurada no ViewHolder")
         }
     }
 

@@ -81,7 +81,10 @@ data class Acerto(
     val dataCriacao: Date = Date(),
     
     @ColumnInfo(name = "data_finalizacao")
-    val dataFinalizacao: Date? = null
+    val dataFinalizacao: Date? = null,
+    
+    @ColumnInfo(name = "metodos_pagamento_json")
+    val metodosPagamentoJson: String? = null
 )
 
 /**

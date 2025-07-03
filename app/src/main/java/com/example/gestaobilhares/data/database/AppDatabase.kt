@@ -24,7 +24,7 @@ import com.example.gestaobilhares.data.entities.*
         Despesa::class,
         AcertoMesa::class
     ],
-    version = 7, // Incrementado para incluir a nova entidade AcertoMesa
+    version = 8, // Incrementado para incluir os novos campos da Mesa (tamanho, estadoConservacao)
     exportSchema = false
 )
 @TypeConverters(Converters::class)

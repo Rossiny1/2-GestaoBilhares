@@ -19,6 +19,7 @@ import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.entities.Acerto
 import com.example.gestaobilhares.data.entities.TipoMesa
 import android.util.Log
+import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 
 /**
  * ViewModel para ClientDetailFragment
@@ -28,7 +29,8 @@ import android.util.Log
 class ClientDetailViewModel @Inject constructor(
     private val clienteRepository: ClienteRepository,
     private val mesaRepository: MesaRepository,
-    private val acertoRepository: AcertoRepository
+    private val acertoRepository: AcertoRepository,
+    private val acertoMesaRepository: AcertoMesaRepository
 ) : ViewModel() {
 
     private val _clientDetails = MutableStateFlow<ClienteResumo?>(null)
@@ -54,21 +56,31 @@ class ClientDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             Log.d("ClientDetailViewModel", "=== CARREGANDO DETALHES DO CLIENTE $clienteId ===")
-            
             try {
                 val cliente = clienteRepository.obterPorId(clienteId)
                 cliente?.let {
                     Log.d("ClientDetailViewModel", "Cliente encontrado: ${it.nome}")
-                    
-                    // Buscar data do último acerto para "última visita"
+                    Log.d("ClientDetailViewModel", "Endereço: ${it.endereco}")
+                    Log.d("ClientDetailViewModel", "Telefone: ${it.telefone}")
+                    Log.d("ClientDetailViewModel", "Email: ${it.email}")
+                    Log.d("ClientDetailViewModel", "Data última atualização: ${it.dataUltimaAtualizacao}")
+
+                    // Buscar data do último acerto REAL
                     val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
                     val ultimaVisita = if (ultimoAcerto != null) {
-                        val formatter = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
-                        formatter.format(ultimoAcerto.dataAcerto)
+                        Log.d("ClientDetailViewModel", "Último acerto encontrado em: ${ultimoAcerto.dataAcerto}")
+                        calcularTempoRelativoReal(ultimoAcerto.dataAcerto)
                     } else {
-                        "Nunca"
+                        "Nunca visitado"
                     }
-                    
+
+                    Log.d("ClientDetailViewModel", "Última visita calculada: $ultimaVisita")
+
+                    // ✅ CORREÇÃO: Buscar observação do último acerto em vez da observação do cliente
+                    val observacaoUltimoAcerto = acertoRepository.buscarObservacaoUltimoAcerto(clienteId)
+                    val observacaoExibir = observacaoUltimoAcerto ?: "Nenhuma observação registrada."
+                    Log.d("ClientDetailViewModel", "Observação do último acerto: $observacaoExibir")
+
                     _clientDetails.value = ClienteResumo(
                         id = it.id,
                         nome = it.nome,
@@ -78,62 +90,22 @@ class ClientDetailViewModel @Inject constructor(
                         comissaoFicha = it.comissaoFicha,
                         mesasAtivas = 0, // Atualizado abaixo
                         ultimaVisita = ultimaVisita,
-                        observacoes = it.observacoes ?: ""
+                        observacoes = observacaoExibir
                     )
-                    
+
+                    Log.d("ClientDetailViewModel", "ClienteResumo criado: ${_clientDetails.value?.nome}")
+
                     // Tentar carregar mesas reais do banco
                     mesaRepository.obterMesasPorCliente(clienteId).collect { mesas ->
                         Log.d("ClientDetailViewModel", "Mesas reais encontradas: ${mesas.size}")
-                        
-                        // Se não houver mesas reais, usar dados mock para teste
-                        val mesasParaUsar = if (mesas.isEmpty()) {
-                            Log.d("ClientDetailViewModel", "Nenhuma mesa real encontrada, usando dados MOCK")
-                            listOf(
-                                Mesa(
-                                    id = clienteId * 100 + 1,
-                                    numero = "M${clienteId}A",
-                                    tipoMesa = TipoMesa.SINUCA,
-                                    clienteId = clienteId,
-                                    ativa = true,
-                                    fichasInicial = 1000,
-                                    fichasFinal = 0,
-                                    valorFixo = 0.0 // Mesa de fichas jogadas
-                                ),
-                                Mesa(
-                                    id = clienteId * 100 + 2,
-                                    numero = "M${clienteId}B",
-                                    tipoMesa = TipoMesa.POOL,
-                                    clienteId = clienteId,
-                                    ativa = true,
-                                    fichasInicial = 850,
-                                    fichasFinal = 0,
-                                    valorFixo = 0.0 // Mesa de fichas jogadas
-                                ),
-                                Mesa(
-                                    id = clienteId * 100 + 3,
-                                    numero = "M${clienteId}C",
-                                    tipoMesa = TipoMesa.SINUCA,
-                                    clienteId = clienteId,
-                                    ativa = true,
-                                    fichasInicial = 0,
-                                    fichasFinal = 0,
-                                    valorFixo = 150.0 // Mesa de valor fixo - R$ 150,00
-                                )
-                            )
-                        } else {
-                            Log.d("ClientDetailViewModel", "Usando mesas reais do banco")
-                            mesas
-                        }
-                        
-                        _mesasCliente.value = mesasParaUsar
-                        _clientDetails.value = _clientDetails.value?.copy(mesasAtivas = mesasParaUsar.size)
-                        
-                        Log.d("ClientDetailViewModel", "Mesas carregadas: ${mesasParaUsar.size}")
-                        mesasParaUsar.forEachIndexed { index, mesa ->
+                        _mesasCliente.value = mesas
+                        _clientDetails.value = _clientDetails.value?.copy(mesasAtivas = mesas.size)
+                        Log.d("ClientDetailViewModel", "Mesas carregadas: ${mesas.size}")
+                        mesas.forEachIndexed { index, mesa ->
                             Log.d("ClientDetailViewModel", "Mesa $index: ${mesa.numero} (ID: ${mesa.id}, Tipo: ${mesa.tipoMesa})")
                         }
                     }
-                    
+
                     // Buscar histórico real
                     loadSettlementHistory(clienteId)
                 }
@@ -154,11 +126,58 @@ class ClientDetailViewModel @Inject constructor(
         }
     }
 
+    /**
+     * ✅ NOVO FLUXO: Verifica se mesa pode ser retirada ou precisa de acerto
+     */
+    suspend fun verificarSeRetiradaEPermitida(mesaId: Long, clienteId: Long): RetiradaStatus {
+        return try {
+            // Buscar último acerto da mesa
+            val ultimoAcertoMesa = acertoRepository.buscarUltimoAcertoMesa(mesaId)
+            val hoje = java.util.Calendar.getInstance()
+            hoje.set(java.util.Calendar.HOUR_OF_DAY, 0)
+            hoje.set(java.util.Calendar.MINUTE, 0)
+            hoje.set(java.util.Calendar.SECOND, 0)
+            hoje.set(java.util.Calendar.MILLISECOND, 0)
+            val inicioHoje = hoje.time
+            
+            if (ultimoAcertoMesa != null) {
+                // Verificar se foi acertada hoje
+                val dataAcerto = ultimoAcertoMesa.dataAcerto
+                if (dataAcerto.after(inicioHoje)) {
+                    // Mesa foi acertada hoje - pode retirar
+                    RetiradaStatus.PODE_RETIRAR
+                } else {
+                    // Mesa não foi acertada hoje - precisa acertar primeiro
+                    RetiradaStatus.PRECISA_ACERTO
+                }
+            } else {
+                // Nunca foi acertada - precisa acertar primeiro
+                RetiradaStatus.PRECISA_ACERTO
+            }
+        } catch (e: Exception) {
+            Log.e("ClientDetailViewModel", "Erro ao verificar status de retirada: ${e.message}")
+            RetiradaStatus.PRECISA_ACERTO
+        }
+    }
+
     fun retirarMesaDoCliente(mesaId: Long, clienteId: Long, relogioFinal: Int, valorRecebido: Double) {
         viewModelScope.launch {
-            mesaRepository.desvincularMesa(mesaId)
-            // TODO: Salvar relogioFinal e valorRecebido no histórico de retirada, se necessário
-            loadClientDetails(clienteId)
+            try {
+                // ✅ NOVO: Atualizar mesa com relógio final informado pelo usuário
+                mesaRepository.atualizarRelogioFinal(mesaId, relogioFinal)
+                
+                // Retirar mesa (volta para depósito com relógio final como inicial)
+                mesaRepository.retirarMesa(mesaId)
+                
+                Log.d("ClientDetailViewModel", "Mesa $mesaId retirada do cliente $clienteId")
+                Log.d("ClientDetailViewModel", "Relógio final: $relogioFinal, Valor recebido: R$ $valorRecebido")
+                Log.d("ClientDetailViewModel", "Mesa retornou ao depósito com relógio inicial = $relogioFinal")
+                
+                // Recarregar dados do cliente
+                loadClientDetails(clienteId)
+            } catch (e: Exception) {
+                Log.e("ClientDetailViewModel", "Erro ao retirar mesa", e)
+            }
         }
     }
 
@@ -254,6 +273,35 @@ class ClientDetailViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * Calcula a diferença de tempo entre a data passada e hoje, retornando string amigável
+     */
+    private fun calcularTempoRelativoReal(data: java.util.Date): String {
+        val agora = java.util.Calendar.getInstance().time
+        val diffMillis = agora.time - data.time
+        val diffDias = (diffMillis / (1000 * 60 * 60 * 24)).toInt()
+        return when {
+            diffDias < 1 -> "Hoje"
+            diffDias == 1 -> "Há 1 dia"
+            diffDias < 7 -> "Há $diffDias dias"
+            diffDias < 30 -> "Há ${diffDias / 7} semana(s)"
+            diffDias < 365 -> "Há ${diffDias / 30} mês(es)"
+            else -> "Há ${diffDias / 365} ano(s)"
+        }
+    }
+
+    /**
+     * ✅ NOVO: Busca o relógio final do último acerto de uma mesa
+     */
+    suspend fun buscarRelogioFinalUltimoAcerto(mesaId: Long): Int? {
+        return try {
+            acertoMesaRepository.buscarRelogioFinalUltimoAcerto(mesaId)
+        } catch (e: Exception) {
+            Log.e("ClientDetailViewModel", "Erro ao buscar relógio final do último acerto: ${e.message}")
+            null
+        }
+    }
 }
 
 // Data classes auxiliares - FASE 4A
@@ -277,4 +325,12 @@ data class AcertoResumo(
     val status: String,
     val mesasAcertadas: Int,
     val debitoAtual: Double = 0.0
-) : Parcelable 
+) : Parcelable
+
+/**
+ * ✅ NOVO: Status para verificação de retirada de mesa
+ */
+enum class RetiradaStatus {
+    PODE_RETIRAR,      // Mesa foi acertada hoje, pode ser retirada
+    PRECISA_ACERTO     // Mesa precisa ser acertada antes de retirar
+} 

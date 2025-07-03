@@ -29,17 +29,41 @@ object DatabaseModule {
 
     /**
      * Fornece a instância singleton do banco de dados Room.
+     * Implementa tratamento robusto de erros para primeira instalação.
      */
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        return Room.databaseBuilder(
-            context.applicationContext,
-            AppDatabase::class.java,
-            "gestao_bilhares_database"
-        )
-            .fallbackToDestructiveMigration() // Para desenvolvimento inicial
-            .build()
+        return try {
+            Room.databaseBuilder(
+                context.applicationContext,
+                AppDatabase::class.java,
+                "gestao_bilhares_database"
+            )
+                .fallbackToDestructiveMigration() // Para desenvolvimento inicial
+                .addCallback(object : androidx.room.RoomDatabase.Callback() {
+                    override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        super.onCreate(db)
+                        android.util.Log.d("DatabaseModule", "Banco de dados criado com sucesso")
+                    }
+                    
+                    override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        super.onOpen(db)
+                        android.util.Log.d("DatabaseModule", "Banco de dados aberto com sucesso")
+                    }
+                })
+                .build()
+        } catch (e: Exception) {
+            android.util.Log.e("DatabaseModule", "Erro ao criar banco de dados: ${e.message}")
+            // Em caso de erro, tentar criar com configurações mais básicas
+            Room.databaseBuilder(
+                context.applicationContext,
+                AppDatabase::class.java,
+                "gestao_bilhares_database_fallback"
+            )
+                .fallbackToDestructiveMigration()
+                .build()
+        }
     }
 
     /**

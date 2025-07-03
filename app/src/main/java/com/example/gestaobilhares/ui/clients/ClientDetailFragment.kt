@@ -75,6 +75,10 @@ class ClientDetailFragment : Fragment() {
     
     override fun onResume() {
         super.onResume()
+        // ✅ CORREÇÃO: Recarregar dados do cliente sempre que voltar para a tela
+        // Isso garante que mudanças feitas na edição sejam refletidas
+        viewModel.loadClientDetails(args.clienteId)
+        
         // Verificar se há um novo acerto salvo para adicionar ao histórico
         verificarNovoAcerto()
         
@@ -166,22 +170,28 @@ class ClientDetailFragment : Fragment() {
         
         // Botões de contato
         binding.fabWhatsApp.setOnClickListener {
-            // TODO: Implementar chamada WhatsApp
+            val cliente = viewModel.clientDetails.value
+            cliente?.let {
+                abrirWhatsApp(it.telefone)
+            }
         }
         
         binding.fabPhone.setOnClickListener {
-            // TODO: Implementar chamada telefônica
+            val cliente = viewModel.clientDetails.value
+            cliente?.let {
+                fazerLigacao(it.telefone)
+            }
         }
         
-        // Botão editar cliente
-        /*
+        // Botão editar cliente - ✅ CORRIGIDO: Passar clienteId para edição
         binding.fabEdit.setOnClickListener {
-            // Navegar para tela de edição do cliente
             val action = ClientDetailFragmentDirections
-                .actionClientDetailFragmentToClientRegisterFragment(args.clienteId)
+                .actionClientDetailFragmentToClientRegisterFragment(
+                    rotaId = 0L, // Não precisa da rota para edição
+                    clienteId = args.clienteId // ✅ Passar ID do cliente para edição
+                )
             findNavController().navigate(action)
         }
-        */
     }
 
     private fun setupRecyclerView() {
@@ -201,20 +211,8 @@ class ClientDetailFragment : Fragment() {
     private fun setupMesasSection() {
         mesasAdapter = MesasAdapter(
             onRetirarMesa = { mesa ->
-                val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_retirar_mesa, null)
-                val etRelogioFinal = dialogView.findViewById<EditText>(R.id.etRelogioFinal)
-                val etValorRecebido = dialogView.findViewById<EditText>(R.id.etValorRecebido)
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Retirar Mesa")
-                    .setView(dialogView)
-                    .setMessage("Informe o relógio final e o valor recebido para retirar a mesa ${mesa.numero}.")
-                    .setPositiveButton("Confirmar") { _, _ ->
-                        val relogioFinal = etRelogioFinal.text.toString().toIntOrNull() ?: 0
-                        val valorRecebido = etValorRecebido.text.toString().toDoubleOrNull() ?: 0.0
-                        viewModel.retirarMesaDoCliente(mesa.id, args.clienteId, relogioFinal, valorRecebido)
-                    }
-                    .setNegativeButton("Cancelar", null)
-                    .show()
+                // ✅ NOVA LÓGICA: Verificar se mesa foi acertada hoje antes de permitir retirada
+                verificarEProcessarRetiradaMesa(mesa)
             }
         )
         val gridLayoutManager = GridLayoutManager(requireContext(), 2)
@@ -227,6 +225,97 @@ class ClientDetailFragment : Fragment() {
         lifecycleScope.launch {
             viewModel.mesasCliente.collect { mesas ->
                 mesasAdapter.submitList(mesas)
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVA LÓGICA: Verifica se mesa pode ser retirada ou precisa de acerto
+     */
+    private fun verificarEProcessarRetiradaMesa(mesa: Mesa) {
+        lifecycleScope.launch {
+            try {
+                val statusRetirada = viewModel.verificarSeRetiradaEPermitida(mesa.id, args.clienteId)
+                
+                when (statusRetirada) {
+                    RetiradaStatus.PODE_RETIRAR -> {
+                        // Mesa foi acertada hoje - mostrar diálogo de retirada
+                        mostrarDialogoRetiradaComRelogioFinal(mesa)
+                    }
+                    RetiradaStatus.PRECISA_ACERTO -> {
+                        // Mesa não foi acertada hoje - mostrar mensagem de erro
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Retirada não permitida")
+                            .setMessage("Para retirar a mesa é necessário que ela tenha sido acertada hoje.")
+                            .setPositiveButton("Fazer Acerto") { _, _ ->
+                                // Navegar para tela de acerto
+                                val mesasAtivas = viewModel.mesasCliente.value
+                                val cliente = viewModel.clientDetails.value
+                                val valorFicha = cliente?.valorFicha ?: 0.0
+                                val comissaoFicha = cliente?.comissaoFicha ?: 0.0
+                                
+                                val mesasDTO = mesasAtivas.map { mesa ->
+                                    MesaDTO(
+                                        id = mesa.id,
+                                        numero = mesa.numero,
+                                        fichasInicial = mesa.fichasInicial ?: 0,
+                                        fichasFinal = mesa.fichasFinal ?: 0,
+                                        tipoMesa = mesa.tipoMesa.name,
+                                        ativa = mesa.ativa,
+                                        valorFixo = mesa.valorFixo ?: 0.0,
+                                        valorFicha = valorFicha,
+                                        comissaoFicha = comissaoFicha
+                                    )
+                                }.toTypedArray()
+                                
+                                val action = ClientDetailFragmentDirections.actionClientDetailFragmentToSettlementFragment(
+                                    clienteId = args.clienteId,
+                                    mesasCliente = mesasDTO
+                                )
+                                findNavController().navigate(action)
+                            }
+                            .setNegativeButton("Cancelar", null)
+                            .show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ClientDetailFragment", "Erro ao verificar retirada de mesa: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao verificar status da mesa", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVO: Diálogo de retirada que usa o relógio final do último acerto
+     */
+    private fun mostrarDialogoRetiradaComRelogioFinal(mesa: Mesa) {
+        lifecycleScope.launch {
+            try {
+                // Buscar o relógio final do último acerto da mesa
+                val relogioFinalUltimoAcerto = viewModel.buscarRelogioFinalUltimoAcerto(mesa.id)
+                
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_retirar_mesa, null)
+        val etRelogioFinal = dialogView.findViewById<EditText>(R.id.etRelogioFinal)
+        val etValorRecebido = dialogView.findViewById<EditText>(R.id.etValorRecebido)
+        
+                // Pré-preencher com o relógio final do último acerto
+                val relogioFinal = relogioFinalUltimoAcerto ?: mesa.relogioFinal ?: mesa.fichasFinal ?: 0
+                etRelogioFinal.setText(relogioFinal.toString())
+        
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Retirar Mesa ${mesa.numero}")
+            .setView(dialogView)
+                    .setMessage("O relógio final do último acerto será usado como relógio inicial na próxima locação.")
+            .setPositiveButton("Confirmar Retirada") { _, _ ->
+                val relogioFinal = etRelogioFinal.text.toString().toIntOrNull() ?: 0
+                val valorRecebido = etValorRecebido.text.toString().toDoubleOrNull() ?: 0.0
+                viewModel.retirarMesaDoCliente(mesa.id, args.clienteId, relogioFinal, valorRecebido)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+            } catch (e: Exception) {
+                Log.e("ClientDetailFragment", "Erro ao mostrar diálogo de retirada: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao carregar dados da mesa", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -296,6 +385,78 @@ class ClientDetailFragment : Fragment() {
             resumo?.let {
                 viewModel.adicionarAcertoNoHistorico(it)
             }
+        }
+    }
+
+    /**
+     * ✅ CORRIGIDO: Abre WhatsApp nativo com o número do cliente
+     */
+    private fun abrirWhatsApp(telefone: String) {
+        if (telefone.isEmpty()) {
+            Toast.makeText(requireContext(), "Cliente não possui telefone cadastrado", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        try {
+            // Limpar formatação do telefone
+            val numeroLimpo = telefone.replace(Regex("[^0-9]"), "")
+            
+            // Adicionar código do país se necessário (Brasil +55)
+            val numeroCompleto = if (numeroLimpo.length == 11 && numeroLimpo.startsWith("11")) {
+                "55$numeroLimpo" // Adiciona código do Brasil
+            } else if (numeroLimpo.length == 10) {
+                "55$numeroLimpo" // Adiciona código do Brasil
+            } else {
+                numeroLimpo
+            }
+            
+            // ✅ CORREÇÃO: Usar intent específico para WhatsApp nativo
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, "Olá! Entro em contato sobre suas mesas de bilhar.")
+                setPackage("com.whatsapp") // Força abertura no app nativo
+            }
+            
+            // Verificar se o WhatsApp está instalado
+            if (intent.resolveActivity(requireActivity().packageManager) != null) {
+                startActivity(intent)
+            } else {
+                // WhatsApp não instalado, tentar com WhatsApp Business
+                val intentBusiness = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, "Olá! Entro em contato sobre suas mesas de bilhar.")
+                    setPackage("com.whatsapp.w4b") // WhatsApp Business
+                }
+                
+                if (intentBusiness.resolveActivity(requireActivity().packageManager) != null) {
+                    startActivity(intentBusiness)
+                } else {
+                    // Nenhum WhatsApp instalado, mostrar mensagem
+                    Toast.makeText(requireContext(), "WhatsApp não está instalado no dispositivo", Toast.LENGTH_LONG).show()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("ClientDetailFragment", "Erro ao abrir WhatsApp: ${e.message}")
+            Toast.makeText(requireContext(), "Erro ao abrir WhatsApp", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    /**
+     * ✅ IMPLEMENTADO: Faz ligação para o cliente
+     */
+    private fun fazerLigacao(telefone: String) {
+        if (telefone.isEmpty()) {
+            Toast.makeText(requireContext(), "Cliente não possui telefone cadastrado", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        try {
+            val intent = Intent(Intent.ACTION_DIAL)
+            intent.data = android.net.Uri.parse("tel:$telefone")
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e("ClientDetailFragment", "Erro ao fazer ligação: ${e.message}")
+            Toast.makeText(requireContext(), "Erro ao fazer ligação", Toast.LENGTH_SHORT).show()
         }
     }
 } 

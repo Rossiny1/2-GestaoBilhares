@@ -5,6 +5,8 @@ import com.example.gestaobilhares.data.entities.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 /**
  * Classe com conversores de tipos para o Room Database.
@@ -36,6 +38,32 @@ class Converters {
     @TypeConverter
     fun toTipoMesa(value: String): TipoMesa {
         return TipoMesa.valueOf(value)
+    }
+    
+    /**
+     * Conversores para TamanhoMesa enum
+     */
+    @TypeConverter
+    fun fromTamanhoMesa(value: TamanhoMesa): String {
+        return value.name
+    }
+
+    @TypeConverter
+    fun toTamanhoMesa(value: String): TamanhoMesa {
+        return TamanhoMesa.valueOf(value)
+    }
+    
+    /**
+     * Conversores para EstadoConservacao enum
+     */
+    @TypeConverter
+    fun fromEstadoConservacao(value: EstadoConservacao): String {
+        return value.name
+    }
+
+    @TypeConverter
+    fun toEstadoConservacao(value: String): EstadoConservacao {
+        return EstadoConservacao.valueOf(value)
     }
     
     /**
@@ -88,5 +116,18 @@ class Converters {
     @TypeConverter
     fun toLocalDateTime(value: String?): LocalDateTime? {
         return value?.let { LocalDateTime.parse(it, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
+    }
+
+    @TypeConverter
+    fun fromPagamentoMap(value: Map<String, Double>?): String? {
+        return value?.let { Gson().toJson(it) }
+    }
+
+    @TypeConverter
+    fun toPagamentoMap(value: String?): Map<String, Double>? {
+        return value?.let {
+            val type = object : TypeToken<Map<String, Double>>() {}.type
+            Gson().fromJson<Map<String, Double>>(it, type)
+        }
     }
 } 

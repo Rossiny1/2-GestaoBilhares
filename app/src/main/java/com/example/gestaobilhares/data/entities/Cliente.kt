@@ -70,6 +70,9 @@ data class Cliente(
     @ColumnInfo(name = "debito_anterior")
     val debitoAnterior: Double = 0.0,
     
+    @ColumnInfo(name = "debito_atual")
+    val debitoAtual: Double = 0.0,
+    
     @ColumnInfo(name = "ativo")
     val ativo: Boolean = true,
     

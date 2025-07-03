@@ -1,5 +1,6 @@
 package com.example.gestaobilhares.data.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -12,14 +13,44 @@ data class Rota(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     
+    @ColumnInfo(name = "nome")
     val nome: String,
+    
+    @ColumnInfo(name = "descricao")
     val descricao: String = "",
+    
+    @ColumnInfo(name = "colaborador_responsavel")
     val colaboradorResponsavel: String = "Não definido",
+    
+    @ColumnInfo(name = "cidades")
     val cidades: String = "Não definido",
+    
+    @ColumnInfo(name = "ativa")
     val ativa: Boolean = true,
+    
+    @ColumnInfo(name = "cor")
     val cor: String = "#6200EA", // Cor padrão roxa do tema
+    
+    @ColumnInfo(name = "data_criacao")
     val dataCriacao: Long = System.currentTimeMillis(),
-    val dataAtualizacao: Long = System.currentTimeMillis()
+    
+    @ColumnInfo(name = "data_atualizacao")
+    val dataAtualizacao: Long = System.currentTimeMillis(),
+    
+    @ColumnInfo(name = "status_atual")
+    val statusAtual: StatusRota = StatusRota.PAUSADA,
+    
+    @ColumnInfo(name = "ciclo_acerto_atual")
+    val cicloAcertoAtual: Int = 1,
+    
+    @ColumnInfo(name = "ano_ciclo")
+    val anoCiclo: Int = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR),
+    
+    @ColumnInfo(name = "data_inicio_ciclo")
+    val dataInicioCiclo: Long? = null,
+    
+    @ColumnInfo(name = "data_fim_ciclo")
+    val dataFimCiclo: Long? = null
 )
 
 /**
@@ -40,8 +71,33 @@ data class RotaResumo(
  * Enum para representar o status de uma rota
  */
 enum class StatusRota {
-    EM_ANDAMENTO,
-    CONCLUIDA,
-    FINALIZADA,
-    PAUSADA
+    EM_ANDAMENTO,    // Rota iniciada, permite acertos
+    PAUSADA,         // Rota não iniciada ou pausada
+    FINALIZADA,      // Ciclo de acerto finalizado
+    CONCLUIDA        // Rota completamente concluída (não usado atualmente)
+}
+
+/**
+ * Data class para representar um ciclo de acerto
+ */
+data class CicloAcerto(
+    val numero: Int,
+    val ano: Int,
+    val rotaId: Long,
+    val rotaNome: String,
+    val status: StatusRota,
+    val dataInicio: Long? = null,
+    val dataFim: Long? = null,
+    val totalClientes: Int = 0,
+    val clientesAcertados: Int = 0,
+    val valorTotal: Double = 0.0
+) {
+    val titulo: String
+        get() = "${numero}º Acerto"
+    
+    val tituloCompleto: String
+        get() = "$titulo $rotaNome"
+    
+    val percentualConclusao: Int
+        get() = if (totalClientes > 0) (clientesAcertados * 100) / totalClientes else 0
 } 

@@ -14,6 +14,10 @@ import java.text.NumberFormat
 import java.util.*
 
 class SettlementSummaryDialog : DialogFragment() {
+    interface OnAcertoCompartilhadoListener {
+        fun onAcertoCompartilhado()
+    }
+    var acertoCompartilhadoListener: OnAcertoCompartilhadoListener? = null
     companion object {
         fun newInstance(
             clienteNome: String,
@@ -88,6 +92,7 @@ class SettlementSummaryDialog : DialogFragment() {
             val textoCompleto = gerarTextoResumo(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual)
             enviarViaWhatsApp(textoCompleto)
             dismiss()
+            acertoCompartilhadoListener?.onAcertoCompartilhado()
         }
         
         return android.app.AlertDialog.Builder(requireContext())
@@ -110,29 +115,32 @@ class SettlementSummaryDialog : DialogFragment() {
     ): String {
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
         val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
-        
         val texto = StringBuilder()
         texto.append("🎱 *ACERTO DE BILHAR*\n")
         texto.append("================================\n\n")
         texto.append("👤 *Cliente:* $clienteNome\n")
         texto.append("📅 *Data:* $dataAtual\n\n")
-        
+
         texto.append("🎯 *MESAS ACERTADAS:*\n")
         var totalFichasJogadas = 0
         mesas.forEach { mesa ->
             val fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0)
             totalFichasJogadas += fichasJogadas
-            texto.append("• ${mesa.numero}: ${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)\n")
+            texto.append("• Mesa ${mesa.numero}: ${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)\n")
         }
-        
-        texto.append("\n💰 *RESUMO FINANCEIRO:*\n")
-        texto.append("• Total de fichas jogadas: $totalFichasJogadas\n")
+        texto.append("\n*Total de fichas jogadas: $totalFichasJogadas*\n\n")
+
+        texto.append("💰 *RESUMO FINANCEIRO:*\n")
         texto.append("• *Valor total: ${formatter.format(total)}*\n")
+        if (metodosPagamento.isNotEmpty()) {
+            val valorRecebido = metodosPagamento.values.sum()
+            texto.append("• Valor recebido: ${formatter.format(valorRecebido)}\n")
+        }
         if (debitoAtual > 0) {
             texto.append("• Débito atual: ${formatter.format(debitoAtual)}\n")
         }
         texto.append("\n")
-        
+
         if (metodosPagamento.isNotEmpty()) {
             texto.append("💳 *FORMA DE PAGAMENTO:*\n")
             metodosPagamento.forEach { (metodo, valor) ->
@@ -140,39 +148,51 @@ class SettlementSummaryDialog : DialogFragment() {
             }
             texto.append("\n")
         }
-        
+
         if (observacao.isNotBlank()) {
             texto.append("📝 *Observações:* $observacao\n\n")
         }
-        
+
         texto.append("--------------------------------\n")
         texto.append("✅ Acerto realizado via GestaoBilhares")
-        
         return texto.toString()
     }
     
     /**
-     * Envia o resumo via WhatsApp
+     * ✅ CORRIGIDO: Envia o resumo via WhatsApp nativo
      */
     private fun enviarViaWhatsApp(texto: String) {
         try {
+            // ✅ CORREÇÃO: Usar intent específico para WhatsApp nativo
             val sendIntent = Intent().apply {
                 action = Intent.ACTION_SEND
                 putExtra(Intent.EXTRA_TEXT, texto)
                 type = "text/plain"
-                setPackage("com.whatsapp")
+                setPackage("com.whatsapp") // Força abertura no app nativo
             }
             
             if (sendIntent.resolveActivity(requireActivity().packageManager) != null) {
                 startActivity(sendIntent)
             } else {
-                // WhatsApp não instalado, usar compartilhamento genérico
-                val genericIntent = Intent().apply {
+                // WhatsApp não instalado, tentar com WhatsApp Business
+                val intentBusiness = Intent().apply {
                     action = Intent.ACTION_SEND
                     putExtra(Intent.EXTRA_TEXT, texto)
                     type = "text/plain"
+                    setPackage("com.whatsapp.w4b") // WhatsApp Business
                 }
-                startActivity(Intent.createChooser(genericIntent, "Compartilhar resumo do acerto"))
+                
+                if (intentBusiness.resolveActivity(requireActivity().packageManager) != null) {
+                    startActivity(intentBusiness)
+                } else {
+                    // Nenhum WhatsApp instalado, usar compartilhamento genérico
+                    val genericIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, texto)
+                        type = "text/plain"
+                    }
+                    startActivity(Intent.createChooser(genericIntent, "Compartilhar resumo do acerto"))
+                }
             }
         } catch (e: Exception) {
             android.widget.Toast.makeText(requireContext(), "Erro ao compartilhar: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()

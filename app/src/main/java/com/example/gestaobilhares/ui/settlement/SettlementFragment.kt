@@ -33,6 +33,11 @@ import android.util.Log
 import com.example.gestaobilhares.ui.settlement.MesaDTO
 import com.example.gestaobilhares.ui.clients.AcertoResumo
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.first
+import javax.inject.Inject
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 /**
  * Fragment para registrar novos acertos
@@ -63,131 +68,202 @@ class SettlementFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // Receber as mesas do cliente via SafeArgs
-        val mesasDTO = args.mesasCliente?.toList() ?: emptyList()
-        Log.d("SettlementFragment", "=== INÍCIO CARREGAMENTO MESAS ===")
-        Log.d("SettlementFragment", "Args recebidos - ClienteId: ${args.clienteId}")
-        Log.d("SettlementFragment", "Mesas recebidas: ${mesasDTO.size}")
+        Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
+        Log.d("SettlementFragment", "Cliente ID: ${args.clienteId}")
         
-        if (mesasDTO.isEmpty()) {
-            Log.w("SettlementFragment", "ATENÇÃO: Nenhuma mesa foi recebida via argumentos!")
-            Toast.makeText(requireContext(), "Erro: Nenhuma mesa encontrada para acerto.", Toast.LENGTH_LONG).show()
-        } else {
-            mesasDTO.forEachIndexed { index, mesa ->
-                Log.d("SettlementFragment", "Mesa $index: ${mesa.numero} (ID: ${mesa.id}, Tipo: ${mesa.tipoMesa})")
-            }
-        }
+        // Primeiro: verificar permissões
+        verificarPermissaoAcerto()
         
-        setupUI(mesasDTO)
+        // Segundo: configurar observers
         observeViewModel()
-        viewModel.loadClientForSettlement(args.clienteId)
         
-        // Carregar dados do cliente para obter valorFicha e comissaoFicha
-        carregarDadosCliente(args.clienteId)
+        // Terceiro: carregar dados do cliente PRIMEIRO (crítico para comissão)
+        carregarDadosClienteESincronizar()
         
-        // Carregar mesas do cliente
-        viewModel.loadMesasCliente(args.clienteId)
+        // Quarto: configurar UI básica
+        configurarUIBasica()
         
-        // Buscar débito anterior do último acerto
+        // Quinto: buscar débito anterior
         viewModel.buscarDebitoAnterior(args.clienteId)
         
-        // Preparar mesas para acerto (com relógios iniciais)
-        lifecycleScope.launch {
-            viewModel.mesasCliente.collect { mesas ->
-                if (mesas.isNotEmpty()) {
-                    val mesasPreparadas = viewModel.prepararMesasParaAcerto(mesas)
-                    // Converter Mesa para MesaDTO
-                    val mesasDTO = mesasPreparadas.map { mesa ->
-                        MesaDTO(
-                            id = mesa.id,
-                            numero = mesa.numero,
-                            fichasInicial = mesa.fichasInicial ?: 0,
-                            fichasFinal = mesa.fichasFinal ?: 0,
-                            tipoMesa = mesa.tipoMesa.name,
-                            ativa = mesa.ativa,
-                            valorFixo = mesa.valorFixo ?: 0.0,
-                            valorFicha = 0.0, // Será preenchido pelo adapter
-                            comissaoFicha = 0.0 // Será preenchido pelo adapter
-                        )
-                    }
-                    mesasAcertoAdapter.updateMesas(mesasDTO)
-                }
-            }
+        // Sexto: carregar dados básicos do cliente para header
+        viewModel.loadClientForSettlement(args.clienteId)
+    }
+
+    private fun verificarPermissaoAcerto() {
+        // TODO: Implementar verificação de status da rota
+        // Por enquanto, sempre permitir (será integrado com ClientListViewModel)
+        val podeAcertar = true // viewModel.podeRealizarAcerto()
+        
+        if (!podeAcertar) {
+            mostrarAlertaRotaNaoIniciada()
+            return
         }
     }
 
-    private fun setupUI(mesasDTO: List<MesaDTO>) {
+    private fun mostrarAlertaRotaNaoIniciada() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Acerto Não Permitido")
+            .setMessage("Para realizar acertos, a rota deve estar com status 'Em Andamento'. Inicie a rota primeiro na tela de clientes.")
+            .setPositiveButton("Entendi") { _, _ ->
+                findNavController().popBackStack()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun carregarDadosClienteESincronizar() {
+        Log.d("SettlementFragment", "Iniciando carregamento sincronizado dos dados do cliente")
+        
+        viewModel.carregarDadosCliente(args.clienteId) { cliente ->
+            if (cliente != null) {
+                Log.d("SettlementFragment", "✅ Cliente carregado: valorFicha=${cliente.valorFicha}, comissaoFicha=${cliente.comissaoFicha}")
+                
+                // Agora que temos os dados do cliente, preparar as mesas
+                lifecycleScope.launch {
+                    try {
+                        // Carregar mesas do cliente através do ViewModel
+                        viewModel.loadMesasCliente(args.clienteId)
+                        
+                        // ✅ CORREÇÃO: Usar timeout para evitar "job was canceled"
+                        val mesasCliente = withTimeoutOrNull(5000) {
+                            viewModel.mesasCliente.first { it.isNotEmpty() }
+                        }
+                        
+                        if (mesasCliente != null && mesasCliente.isNotEmpty()) {
+                            Log.d("SettlementFragment", "✅ Mesas do cliente carregadas: ${mesasCliente.size}")
+                    
+                            // Preparar mesas para acerto
+                            val mesasPreparadas = viewModel.prepararMesasParaAcerto(mesasCliente)
+                            
+                            // Converter para DTO com dados do cliente já carregados
+                            val mesasDTO = mesasPreparadas.map { mesa ->
+                                MesaDTO(
+                                    id = mesa.id,
+                                    numero = mesa.numero,
+                                    tipoMesa = mesa.tipoMesa.name,
+                                    tamanho = mesa.tamanho.name,
+                                    estadoConservacao = mesa.estadoConservacao.name,
+                                    fichasInicial = mesa.fichasInicial,
+                                    fichasFinal = mesa.fichasFinal,
+                                    valorFixo = mesa.valorFixo,
+                                    valorFicha = cliente.valorFicha,  // ✅ Dados do cliente
+                                    comissaoFicha = cliente.comissaoFicha,  // ✅ Dados do cliente
+                                    ativa = mesa.ativa
+                                )
+                            }
+                            
+                            Log.d("SettlementFragment", "MesasDTO criadas com sucesso: ${mesasDTO.size}")
+                            mesasDTO.forEach { mesa ->
+                                Log.d("SettlementFragment", "Mesa ${mesa.numero}: valorFicha=${mesa.valorFicha}, comissaoFicha=${mesa.comissaoFicha}")
+                            }
+                            
+                            // Configurar RecyclerView com dados completos
+                            setupRecyclerViewComDados(mesasDTO)
+                            
+                        } else {
+                            Log.w("SettlementFragment", "⚠️ Timeout ou nenhuma mesa encontrada, tentando carregar dados básicos...")
+                            // Fallback: tentar carregar mesas diretamente sem aguardar Flow
+                            carregarMesasFallback(cliente)
+                        }
+                        
+                    } catch (e: Exception) {
+                        Log.e("SettlementFragment", "❌ Erro ao carregar mesas: ${e.message}", e)
+                        // Fallback em caso de erro
+                        carregarMesasFallback(cliente)
+                    }
+                }
+            } else {
+                Log.e("SettlementFragment", "❌ Erro: Cliente não encontrado")
+                Toast.makeText(requireContext(), "Erro: Cliente não encontrado", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    
+    /**
+     * ✅ FUNÇÃO FALLBACK: Carrega mesas quando o Flow falha
+     */
+    private suspend fun carregarMesasFallback(cliente: com.example.gestaobilhares.data.entities.Cliente) {
+        try {
+            Log.d("SettlementFragment", "🔄 Executando fallback para carregar mesas...")
+            
+            // Usar repositório diretamente através do ViewModel
+            val mesasCliente = viewModel.carregarMesasClienteDireto(args.clienteId)
+            
+            if (mesasCliente.isNotEmpty()) {
+                Log.d("SettlementFragment", "✅ Fallback: ${mesasCliente.size} mesas carregadas")
+                
+                val mesasDTO = mesasCliente.map { mesa ->
+                    MesaDTO(
+                        id = mesa.id,
+                        numero = mesa.numero,
+                        tipoMesa = mesa.tipoMesa.name,
+                        tamanho = mesa.tamanho.name,
+                        estadoConservacao = mesa.estadoConservacao.name,
+                        fichasInicial = mesa.fichasInicial ?: 0,
+                        fichasFinal = mesa.fichasFinal ?: 0,
+                        valorFixo = mesa.valorFixo,
+                        valorFicha = cliente.valorFicha,
+                        comissaoFicha = cliente.comissaoFicha,
+                        ativa = mesa.ativa
+                    )
+                }
+                
+                setupRecyclerViewComDados(mesasDTO)
+            } else {
+                Log.e("SettlementFragment", "❌ Fallback: Nenhuma mesa encontrada")
+                Toast.makeText(requireContext(), "Cliente não possui mesas para acerto", Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            Log.e("SettlementFragment", "❌ Erro no fallback: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao carregar dados: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    private fun configurarUIBasica() {
         binding.btnBack.setOnClickListener {
             findNavController().popBackStack()
         }
         binding.btnSaveSettlement.setOnClickListener {
             salvarAcertoComCamposExtras()
         }
-        setupRecyclerView(mesasDTO)
         setupPaymentMethod()
         setupCalculationListeners()
         binding.tvRepresentante.text = "Administrador"
         binding.cbPanoTrocado.setOnCheckedChangeListener { _, isChecked ->
             binding.etNumeroPano.visibility = if (isChecked) View.VISIBLE else View.GONE
         }
+        // ✅ Bloquear edição manual do campo Valor Recebido
+        binding.etAmountReceived.isFocusable = false
+        binding.etAmountReceived.isClickable = false
+        binding.etAmountReceived.isLongClickable = false
+        binding.etAmountReceived.keyListener = null
     }
-
-    private fun setupRecyclerView(mesasDTO: List<MesaDTO>) {
-        Log.d("SettlementFragment", "=== CONFIGURANDO RECYCLERVIEW ===")
+    
+    private fun setupRecyclerViewComDados(mesasDTO: List<MesaDTO>) {
+        Log.d("SettlementFragment", "=== CONFIGURANDO RECYCLERVIEW COM DADOS COMPLETOS ===")
         
         mesasAcertoAdapter = MesasAcertoAdapter {
             Log.d("SettlementFragment", "Callback onDataChanged acionado - recalculando totais")
             updateCalculations()
         }
         
-        // Configurar RecyclerView com LinearLayoutManager
+        // Configurar RecyclerView
         binding.rvMesasAcerto.apply {
             layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
             adapter = mesasAcertoAdapter
-            setHasFixedSize(false) // Permite altura dinâmica
+            setHasFixedSize(false)
         }
         
-        if (mesasDTO.isNotEmpty()) {
-            Log.d("SettlementFragment", "Populando adapter com ${mesasDTO.size} mesas")
-            
-            // Preparar mesas com relógios calculados automaticamente
-            lifecycleScope.launch {
-                val mesasPreparadas = viewModel.prepararMesasParaAcerto(mesasDTO.map { it.toMesa() })
-                
-                Log.d("SettlementFragment", "Mesas preparadas para acerto: ${mesasPreparadas.size}")
-                mesasPreparadas.forEach { mesa ->
-                    Log.d("SettlementFragment", "Mesa ${mesa.numero}: Relógio inicial=${mesa.fichasInicial}, Final=${mesa.fichasFinal}")
-                }
-                
-                // Converter de volta para MesaDTO e popular adapter
-                val mesasDTOPreparadas = mesasPreparadas.map { mesa ->
-                    MesaDTO(
-                        id = mesa.id,
-                        numero = mesa.numero,
-                        tipoMesa = mesa.tipoMesa.toString(),
-                        valorFixo = mesa.valorFixo,
-                        fichasInicial = mesa.fichasInicial ?: 0,
-                        fichasFinal = mesa.fichasFinal ?: 0,
-                        ativa = true,
-                        valorFicha = 0.0, // Será preenchido pelo carregarDadosCliente
-                        comissaoFicha = 0.0 // Será preenchido pelo carregarDadosCliente
-                    )
-                }
-                
-                mesasAcertoAdapter.submitList(mesasDTOPreparadas)
-            
-            // Forçar atualização inicial dos cálculos após popular o adapter
+        // Popular adapter com dados completos
+        Log.d("SettlementFragment", "Populando adapter com ${mesasDTO.size} mesas com dados completos")
+        mesasAcertoAdapter.submitList(mesasDTO)
+        
+        // Forçar atualização dos cálculos após popular
             binding.rvMesasAcerto.post {
                 updateCalculations()
-                Log.d("SettlementFragment", "Cálculos iniciais executados")
-                }
-            }
-        } else {
-            Log.e("SettlementFragment", "ERRO: Lista de mesas vazia - adapter não será populado")
-            Toast.makeText(requireContext(), "Erro: Nenhuma mesa disponível para acerto.", Toast.LENGTH_LONG).show()
+            Log.d("SettlementFragment", "✅ RecyclerView configurado e cálculos atualizados")
         }
-        
-        Log.d("SettlementFragment", "=== RECYCLERVIEW CONFIGURADO ===")
     }
     
     private fun setupCalculationListeners() {
@@ -200,7 +276,7 @@ class SettlementFragment : Fragment() {
         }
         
         binding.etDesconto.addTextChangedListener(watcher)
-        binding.etAmountReceived.addTextChangedListener(watcher)
+        // binding.etAmountReceived.removeTextChangedListener(watcher) // Não adicionar watcher!
     }
     
     private fun updateCalculations() {
@@ -211,14 +287,26 @@ class SettlementFragment : Fragment() {
             // O subtotal agora vem diretamente do adapter, que soma os subtotais de todas as mesas
             val subtotalMesas = mesasAcertoAdapter.getSubtotal()
             
-            val debitoAnterior = 0.0 // TODO: Implementar busca do débito anterior
+            // Usar o débito anterior carregado do ViewModel
+            val debitoAnterior = viewModel.debitoAnterior.value
             val totalComDebito = subtotalMesas + debitoAnterior
             val totalComDesconto = maxOf(0.0, totalComDebito - desconto)
+            
+            // ✅ FÓRMULA CORRIGIDA: Débito atual = Valor total - Valor recebido
             val debitoAtual = totalComDesconto - valorRecebido
+            
+            Log.d("SettlementFragment", "=== CÁLCULOS ATUALIZADOS ===")
+            Log.d("SettlementFragment", "Subtotal mesas: R$ $subtotalMesas")
+            Log.d("SettlementFragment", "Débito anterior: R$ $debitoAnterior")
+            Log.d("SettlementFragment", "Total com débito: R$ $totalComDebito")
+            Log.d("SettlementFragment", "Desconto: R$ $desconto")
+            Log.d("SettlementFragment", "Total com desconto: R$ $totalComDesconto")
+            Log.d("SettlementFragment", "Valor recebido: R$ $valorRecebido")
+            Log.d("SettlementFragment", "✅ DÉBITO ATUAL: R$ $debitoAtual")
             
             // Atualizar displays dos totais
             binding.tvTableTotal.text = formatter.format(subtotalMesas)
-            binding.tvTotalWithDebt.text = formatter.format(totalComDebito)
+            binding.tvTotalWithDebt.text = formatter.format(totalComDesconto) // Mostrar valor total final
             binding.tvCurrentDebt.text = formatter.format(debitoAtual)
             
         } catch (e: Exception) {
@@ -312,129 +400,25 @@ class SettlementFragment : Fragment() {
                 // Atualiza o campo Valor Recebido com a soma
                 binding.etAmountReceived.setText(String.format("%.2f", totalInformado))
                 
-                Log.d("SettlementFragment", "Métodos de pagamento configurados: $paymentValues, Total: $totalInformado")
+                // ✅ CORREÇÃO: Recálculo imediato sem post{}
+                updateCalculations()
+                
+                Log.d("SettlementFragment", "Métodos de pagamento atualizados - Total: R$ $totalInformado")
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    private fun observeViewModel() {
-        // Observer para dados do cliente
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.clientName.collect { nome ->
-                binding.tvClientName.text = nome
-            }
-        }
-        
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.clientAddress.collect { endereco ->
-                binding.tvClientAddress.text = endereco
-            }
-        }
-        
-        // Observer para débito anterior
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.debitoAnterior.collect { debito ->
-                val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
-                binding.tvPreviousDebt.text = formatter.format(debito)
-            }
-        }
-        
-        // Observer para resultado do salvamento
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.resultadoSalvamento.collect { resultado ->
-                resultado?.let {
-                    if (it.isSuccess) {
-                        mostrarDialogoResumo()
-                    } else {
-                        Toast.makeText(requireContext(), "Erro ao salvar acerto: ${it.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Mostra o diálogo de resumo do acerto com opções de impressão e WhatsApp
-     */
-    private fun mostrarDialogoResumo() {
-        val clienteNome = binding.tvClientName.text.toString()
-        val valorRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
-        val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
-        val debitoAtual = binding.tvCurrentDebt.text.toString().replace("R$", "").replace(",", ".").trim().toDoubleOrNull() ?: 0.0
-        val observacao = "Acerto realizado via app" // Campo de observações será implementado futuramente
-        
-        // Calcular valor total real do acerto (subtotal das mesas)
-        val subtotalMesas = mesasAcertoAdapter.getSubtotal()
-        val valorTotalAcerto = subtotalMesas - desconto
-        
-        Log.d("SettlementFragment", "Resumo do acerto - Subtotal: $subtotalMesas, Desconto: $desconto, Total: $valorTotalAcerto, Recebido: $valorRecebido, Débito: $debitoAtual")
-        
-        // Converter MesaAcertoState para Mesa para o diálogo
-        val mesasDoAcerto = mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
-            // Buscar a mesa original para obter o valorFixo
-            val mesaOriginal = args.mesasCliente?.find { it.id == mesaState.mesaId }
-            Mesa(
-                id = mesaState.mesaId,
-                numero = (idx + 1).toString(),
-                fichasInicial = mesaState.relogioInicial,
-                fichasFinal = mesaState.relogioFinal,
-                valorFixo = mesaOriginal?.valorFixo ?: 0.0,
-                tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA
-            )
-        }
-        
-        val dialog = SettlementSummaryDialog.newInstance(
-            clienteNome = clienteNome,
-            mesas = mesasDoAcerto,
-            total = valorTotalAcerto, // Usar valor total do acerto, não valor recebido
-            metodosPagamento = paymentValues,
-            observacao = observacao,
-            debitoAtual = debitoAtual // Adicionar débito atual
-        )
-        
-        dialog.show(parentFragmentManager, "SettlementSummaryDialog")
-        
-        // Após mostrar o diálogo, atualizar o histórico do cliente
-        atualizarHistoricoCliente(valorTotalAcerto, mesasDoAcerto.size)
-    }
-    
-    /**
-     * Atualiza o histórico de acertos do cliente via SharedViewModel ou callback
-     */
-    private fun atualizarHistoricoCliente(valorTotal: Double, quantidadeMesas: Int) {
-        // Criar um novo resumo de acerto com ID real do banco
-        val novoAcerto = AcertoResumo(
-            id = System.currentTimeMillis(), // ID temporário baseado em timestamp
-            data = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date()),
-            valorTotal = valorTotal,
-            status = "Finalizado",
-            mesasAcertadas = quantidadeMesas,
-            debitoAtual = 0.0
-        )
-        
-        Log.d("SettlementFragment", "Novo acerto criado: $novoAcerto")
-        
-        // Salvar resultado para ser usado quando voltar ao ClientDetailFragment
-        // Usando SharedPreferences como cache temporário
-        val sharedPref = requireActivity().getSharedPreferences("acerto_temp", android.content.Context.MODE_PRIVATE)
-        with(sharedPref.edit()) {
-            putLong("novo_acerto_id", novoAcerto.id)
-            putString("novo_acerto_data", novoAcerto.data)
-            putFloat("novo_acerto_valor", novoAcerto.valorTotal.toFloat())
-            putString("novo_acerto_status", novoAcerto.status)
-            putInt("novo_acerto_mesas", novoAcerto.mesasAcertadas)
-            putLong("cliente_id", args.clienteId)
-            putBoolean("acerto_salvo", true) // Flag para indicar que um acerto foi salvo
-            apply()
-        }
-        
-        // Navegar de volta para ClientDetailFragment
-        // O histórico será recarregado automaticamente
-        findNavController().popBackStack()
-    }
-
     private fun salvarAcertoComCamposExtras() {
+        // Impedir múltiplos cliques
+        if (viewModel.isLoading.value) {
+            Log.d("SettlementFragment", "Já está salvando, ignorando clique adicional")
+            return
+        }
+        // Desabilitar botão imediatamente
+        binding.btnSaveSettlement.isEnabled = false
+        viewModel.setLoading(true)
+        
         if (!mesasAcertoAdapter.isDataValid()) {
             Toast.makeText(requireContext(), "Verifique os valores das mesas. O relógio final deve ser maior ou igual ao inicial.", Toast.LENGTH_LONG).show()
             return
@@ -472,6 +456,7 @@ class SettlementFragment : Fragment() {
             metodosPagamento = paymentValues
         )
 
+        Log.d("SettlementFragment", "Iniciando salvamento do acerto...")
         viewModel.salvarAcerto(
             clienteId = args.clienteId,
             dadosAcerto = dadosAcerto,
@@ -479,34 +464,176 @@ class SettlementFragment : Fragment() {
         )
     }
 
-    private fun carregarDadosCliente(clienteId: Long) {
-        viewModel.carregarDadosCliente(clienteId) { cliente ->
-            if (cliente != null) {
-                Log.d("SettlementFragment", "Dados do cliente carregados: valorFicha=${cliente.valorFicha}, comissaoFicha=${cliente.comissaoFicha}")
-                
-                // Atualizar os MesaDTOs com os dados do cliente
-                val mesasAtualizadas = args.mesasCliente?.map { mesa ->
-                    MesaDTO(
-                        id = mesa.id,
-                        numero = mesa.numero,
-                        tipoMesa = mesa.tipoMesa.toString(),
-                        fichasInicial = mesa.fichasInicial ?: 0,
-                        fichasFinal = mesa.fichasFinal ?: 0,
-                        valorFixo = mesa.valorFixo ?: 0.0,
-                        valorFicha = cliente.valorFicha,
-                        comissaoFicha = cliente.comissaoFicha,
-                        ativa = mesa.ativa
-                    )
-                } ?: emptyList()
-                
-                // Atualizar o adapter com os dados corretos
-                mesasAcertoAdapter.submitList(mesasAtualizadas)
-                
-                // Forçar recálculo dos totais
-                binding.rvMesasAcerto.post {
-                    updateCalculations()
+    private fun observeViewModel() {
+        // Observer para dados do cliente
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.clientName.collect { nome ->
+                binding.tvClientName.text = nome
+            }
+        }
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.clientAddress.collect { endereco ->
+                binding.tvClientAddress.text = endereco
+            }
+        }
+        
+        // Observer para débito anterior
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.debitoAnterior.collect { debito ->
+                val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+                binding.tvPreviousDebt.text = formatter.format(debito)
+            }
+        }
+        
+        // Observer para resultado do salvamento - CRÍTICO PARA O DIÁLOGO
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.resultadoSalvamento.collect { resultado ->
+                binding.btnSaveSettlement.isEnabled = true
+                viewModel.setLoading(false)
+                resultado?.let {
+                    val acertoId = it.getOrNull() ?: return@let
+                    mostrarDialogoResumoComAcerto(acertoId)
                 }
             }
+        }
+    }
+
+    private fun mostrarDialogoResumoComAcerto(acertoId: Long) {
+        lifecycleScope.launch {
+            val acerto = viewModel.buscarAcertoPorId(acertoId)
+            if (acerto != null) {
+                val mesas = viewModel.buscarMesasDoAcerto(acerto.id)
+                val metodosPagamento: Map<String, Double> = acerto.metodosPagamentoJson?.let {
+                    Gson().fromJson(it, object : TypeToken<Map<String, Double>>() {}.type)
+                } ?: emptyMap()
+                val dialog = SettlementSummaryDialog.newInstance(
+                    clienteNome = viewModel.clientName.value,
+                    mesas = mesas.map { mesa ->
+                        Mesa(
+                            id = mesa.mesaId,
+                            numero = mesa.mesaId.toString(),
+                            fichasInicial = mesa.relogioInicial,
+                            fichasFinal = mesa.relogioFinal,
+                            valorFixo = mesa.valorFixo,
+                            tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA
+                        )
+                    },
+                    total = acerto.valorTotal,
+                    metodosPagamento = metodosPagamento,
+                    observacao = acerto.observacoes,
+                    debitoAtual = acerto.debitoAtual
+                )
+                dialog.acertoCompartilhadoListener = object : SettlementSummaryDialog.OnAcertoCompartilhadoListener {
+                    override fun onAcertoCompartilhado() {
+                        // Voltar para tela Detalhes do Cliente
+                        findNavController().popBackStack(R.id.clientDetailFragment, false)
+                    }
+                }
+                dialog.show(parentFragmentManager, "SettlementSummaryDialog")
+            } else {
+                Toast.makeText(requireContext(), "Erro ao carregar acerto salvo", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /**
+     * 🎯 FUNÇÃO CRÍTICA: Mostra o diálogo de resumo do acerto
+     */
+    private fun mostrarDialogoResumo() {
+        try {
+            Log.d("SettlementFragment", "=== INICIANDO DIÁLOGO DE RESUMO ===")
+            
+            val clienteNome = binding.tvClientName.text.toString()
+            val valorRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
+            val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
+            val debitoAtual = binding.tvCurrentDebt.text.toString()
+                .replace("R$", "").replace(".", "").replace(",", ".")
+                .trim().toDoubleOrNull() ?: 0.0
+            val observacao = "Acerto realizado via app"
+            
+            // Calcular valor total real do acerto
+            val subtotalMesas = mesasAcertoAdapter.getSubtotal()
+            val valorTotalAcerto = subtotalMesas - desconto
+            
+            Log.d("SettlementFragment", "Dados do resumo:")
+            Log.d("SettlementFragment", "- Cliente: $clienteNome")
+            Log.d("SettlementFragment", "- Subtotal: R$ $subtotalMesas")
+            Log.d("SettlementFragment", "- Desconto: R$ $desconto")
+            Log.d("SettlementFragment", "- Total: R$ $valorTotalAcerto")
+            Log.d("SettlementFragment", "- Recebido: R$ $valorRecebido")
+            Log.d("SettlementFragment", "- Débito: R$ $debitoAtual")
+            
+            // Converter estados das mesas para o diálogo
+            val mesasDoAcerto = mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
+                Mesa(
+                    id = mesaState.mesaId,
+                    numero = "Mesa ${idx + 1}",
+                    fichasInicial = mesaState.relogioInicial,
+                    fichasFinal = mesaState.relogioFinal,
+                    valorFixo = mesaState.valorFixo,
+                    tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA
+                )
+            }
+            
+            Log.d("SettlementFragment", "Mesas do acerto: ${mesasDoAcerto.size}")
+            
+            // Criar e mostrar diálogo
+            val dialog = SettlementSummaryDialog.newInstance(
+                clienteNome = clienteNome,
+                mesas = mesasDoAcerto,
+                total = valorTotalAcerto,
+                metodosPagamento = paymentValues,
+                observacao = observacao,
+                debitoAtual = debitoAtual
+            )
+            
+            Log.d("SettlementFragment", "Mostrando diálogo...")
+            dialog.show(parentFragmentManager, "SettlementSummaryDialog")
+            
+            // Atualizar histórico do cliente
+            atualizarHistoricoCliente(valorTotalAcerto, mesasDoAcerto.size)
+            
+        } catch (e: Exception) {
+            Log.e("SettlementFragment", "❌ Erro ao mostrar diálogo: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao exibir resumo: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    /**
+     * Atualiza o histórico de acertos do cliente
+     */
+    private fun atualizarHistoricoCliente(valorTotal: Double, quantidadeMesas: Int) {
+        try {
+            val novoAcerto = AcertoResumo(
+                id = System.currentTimeMillis(),
+                data = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date()),
+                valorTotal = valorTotal,
+                status = "Finalizado",
+                mesasAcertadas = quantidadeMesas,
+                debitoAtual = 0.0
+            )
+            
+            Log.d("SettlementFragment", "Salvando acerto no histórico: $novoAcerto")
+            
+            // Salvar via SharedPreferences para comunicação com ClientDetailFragment
+            val sharedPref = requireActivity().getSharedPreferences("acerto_temp", android.content.Context.MODE_PRIVATE)
+            with(sharedPref.edit()) {
+                putLong("novo_acerto_id", novoAcerto.id)
+                putString("novo_acerto_data", novoAcerto.data)
+                putFloat("novo_acerto_valor", novoAcerto.valorTotal.toFloat())
+                putString("novo_acerto_status", novoAcerto.status)
+                putInt("novo_acerto_mesas", novoAcerto.mesasAcertadas)
+                putLong("cliente_id", args.clienteId)
+                putBoolean("acerto_salvo", true)
+                apply()
+            }
+            
+            // Navegar de volta
+            findNavController().popBackStack()
+            
+        } catch (e: Exception) {
+            Log.e("SettlementFragment", "Erro ao atualizar histórico: ${e.message}", e)
         }
     }
 

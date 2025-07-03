@@ -203,6 +203,30 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- Débito Atual (Somente Leitura) -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:hint="Débito Atual"
+                        app:boxStrokeColor="?attr/colorOnSurfaceVariant"
+                        app:hintTextColor="?attr/colorOnSurfaceVariant"
+                        app:prefixText="R$ "
+                        app:endIconDrawable="@drawable/ic_info"
+                        app:endIconTint="?attr/colorOnSurfaceVariant">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etDebitoAtual"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal"
+                            android:maxLines="1"
+                            android:enabled="false"
+                            android:text="0,00"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
                     <!-- Número do Contrato -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"

@@ -40,6 +40,12 @@ class MesasDepositoFragment : Fragment() {
         viewModel.loadMesasDisponiveis()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // ✅ CORREÇÃO: Recarregar mesas disponíveis sempre que voltar para a tela
+        viewModel.loadMesasDisponiveis()
+    }
+
     private fun setupRecyclerView() {
         adapter = MesasDepositoAdapter { mesa ->
             showTipoAcertoDialog(mesa)
@@ -61,9 +67,43 @@ class MesasDepositoFragment : Fragment() {
     private fun observeViewModel() {
         lifecycleScope.launch {
             viewModel.mesasDisponiveis.collect { mesas ->
+                android.util.Log.d("MesasDepositoFragment", "=== MESAS RECEBIDAS NO FRAGMENT ===")
+                android.util.Log.d("MesasDepositoFragment", "📱 Mesas recebidas do ViewModel: ${mesas.size}")
+                mesas.forEach { mesa ->
+                    android.util.Log.d("MesasDepositoFragment", "Mesa: ${mesa.numero} | ID: ${mesa.id} | Ativa: ${mesa.ativa} | ClienteId: ${mesa.clienteId}")
+                }
+                
                 _binding?.let { binding ->
+                    android.util.Log.d("MesasDepositoFragment", "🔄 Atualizando adapter com ${mesas.size} mesas")
                     adapter.submitList(mesas)
-                    binding.tvEmptyState.visibility = if (mesas.isEmpty()) View.VISIBLE else View.GONE
+                    
+                    val isEmpty = mesas.isEmpty()
+                    android.util.Log.d("MesasDepositoFragment", "📊 Lista vazia: $isEmpty")
+                    
+                    binding.tvEmptyState.visibility = if (isEmpty) View.VISIBLE else View.GONE
+                    binding.rvMesasDeposito.visibility = if (isEmpty) View.GONE else View.VISIBLE
+                    
+                    android.util.Log.d("MesasDepositoFragment", "✅ UI atualizada - EmptyState: ${binding.tvEmptyState.visibility}, RecyclerView: ${binding.rvMesasDeposito.visibility}")
+                }
+            }
+        }
+        
+        // Observer para estatísticas
+        lifecycleScope.launch {
+            viewModel.estatisticas.collect { stats ->
+                _binding?.let { binding ->
+                    try {
+                        // Atualizar cards de estatísticas
+                        binding.tvTotalMesas.text = stats.totalMesas.toString()
+                        // TODO: Verificar IDs corretos no layout
+                        // binding.tvTotalSinuca.text = stats.mesasSinuca.toString()
+                        // binding.tvTotalMaquinaMusica.text = stats.mesasMaquina.toString()
+                        // binding.tvTotalPequenas.text = stats.mesasPequenas.toString()
+                        // binding.tvTotalGrandes.text = stats.mesasGrandes.toString()
+                    } catch (e: Exception) {
+                        // Log do erro para debug posterior
+                        android.util.Log.e("MesasDepositoFragment", "Erro ao atualizar estatísticas", e)
+                    }
                 }
             }
         }

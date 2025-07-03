@@ -10,18 +10,20 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.gestaobilhares.R
+import com.example.gestaobilhares.data.entities.StatusRota
 import com.example.gestaobilhares.databinding.FragmentClientListBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
- * Fragment simplificado para lista de clientes
+ * Fragment modernizado para lista de clientes com controle de status da rota
  */
 @AndroidEntryPoint
 class ClientListFragment : Fragment() {
 
     private var _binding: FragmentClientListBinding? = null
-    private val binding get() = _binding!!
+    private val binding get() = _binding ?: throw IllegalStateException("Binding não está disponível")
 
     private val viewModel: ClientListViewModel by viewModels()
     private val args: ClientListFragmentArgs by navArgs()
@@ -39,139 +41,243 @@ class ClientListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        configurarRecyclerView()
-        observarViewModel()
-        configurarBotoes()
+        try {
+            // Verificar se binding está disponível
+            if (_binding == null) {
+                android.util.Log.e("ClientListFragment", "Binding é null em onViewCreated")
+                return
+            }
+            
+            configurarRecyclerView()
+            configurarBotoes()
+            observarViewModel()
+            
+            // Carregar dados da rota
+            val rotaId = args.rotaId
+            viewModel.carregarRota(rotaId)
+            viewModel.carregarClientes(rotaId)
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListFragment", "Erro na inicialização: ${e.message}")
+            // Mostrar erro para o usuário
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Erro")
+                .setMessage("Erro ao carregar dados da rota. Tente novamente.")
+                .setPositiveButton("OK") { _, _ ->
+                    findNavController().popBackStack()
+                }
+                .show()
+        }
+    }
+    
+    private fun configurarRecyclerView() {
+        clientAdapter = ClientAdapter { cliente ->
+            // Verificar se a rota está em andamento antes de permitir navegação
+            if (viewModel.podeAcessarCliente()) {
+                val action = ClientListFragmentDirections
+                    .actionClientListFragmentToClientDetailFragment(cliente.id)
+                findNavController().navigate(action)
+            } else {
+                mostrarAlertaRotaNaoIniciada()
+            }
+        }
         
-        // Obter rota ID usando Safe Args
-        val rotaId = args.rotaId
-        viewModel.carregarClientes(rotaId)
+        _binding?.rvClients?.apply {
+            adapter = clientAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+        }
     }
     
     private fun configurarBotoes() {
-        // Botão voltar
-        binding.btnBack.setOnClickListener {
-            findNavController().popBackStack()
+        _binding?.let { binding ->
+            // Botão voltar
+            binding.btnBack.setOnClickListener {
+                findNavController().popBackStack()
+            }
+            
+            // Botão buscar
+            binding.btnSearch.setOnClickListener {
+                // TODO: Implementar busca
+            }
+            
+            // Botão filtrar
+            binding.btnFilter.setOnClickListener {
+                // TODO: Implementar filtro
+            }
+            
+            // Controle de status da rota
+            binding.btnStartRoute.setOnClickListener {
+                viewModel.iniciarRota()
+            }
+            
+            binding.btnFinishRoute.setOnClickListener {
+                viewModel.finalizarRota()
+            }
+            
+            // Ações rápidas (substituindo FABs)
+            binding.btnAddClient.setOnClickListener {
+                val action = ClientListFragmentDirections
+                    .actionClientListFragmentToClientRegisterFragment(args.rotaId)
+                findNavController().navigate(action)
+            }
+            
+            binding.btnAddExpense.setOnClickListener {
+                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Cadastrar Despesa")
+                    .setMessage("Funcionalidade será implementada na próxima fase!")
+                    .setPositiveButton("OK", null)
+                    .show()
+            }
+            
+            // Filtros rápidos
+            binding.btnFilterActive.setOnClickListener {
+                viewModel.aplicarFiltro(FiltroCliente.ATIVOS)
+                atualizarEstadoFiltros(binding.btnFilterActive)
+            }
+            
+            binding.btnFilterDebtors.setOnClickListener {
+                viewModel.aplicarFiltro(FiltroCliente.DEVEDORES)
+                atualizarEstadoFiltros(binding.btnFilterDebtors)
+            }
+            
+            binding.btnFilterAll.setOnClickListener {
+                viewModel.aplicarFiltro(FiltroCliente.TODOS)
+                atualizarEstadoFiltros(binding.btnFilterAll)
+            }
         }
-        
-        // Botão buscar
-        binding.btnSearch.setOnClickListener {
-            // TODO: Implementar busca
-        }
-        
-        // Botão filtrar
-        binding.btnFilter.setOnClickListener {
-            // TODO: Implementar filtro
-        }
-        
-        // FAB Cadastrar Cliente
-        binding.fabAddClient.setOnClickListener {
-            val action = ClientListFragmentDirections
-                .actionClientListFragmentToClientRegisterFragment(args.rotaId)
-            findNavController().navigate(action)
-        }
-        
-        // FAB Cadastrar Despesa
-        binding.fabAddExpense.setOnClickListener {
-            androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("Cadastrar Despesa")
-                .setMessage("Funcionalidade será implementada na próxima fase!\n\n✅ FAB implementado com sucesso")
-                .setPositiveButton("OK", null)
-                .show()
-        }
-        
-        // Botão Iniciar Rota
-        binding.btnStartRoute.setOnClickListener {
-            androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("🚀 Iniciar Rota")
-                .setMessage("Confirma o início da rota?\n\n✅ Após iniciar você poderá:\n• Registrar acertos dos clientes\n• Cadastrar despesas\n• Controlar fichas das mesas")
-                .setPositiveButton("Iniciar") { _, _ ->
-                    startRoute()
-                }
-                .setNegativeButton("Cancelar", null)
-                .show()
-        }
-        
-        // Botão Finalizar Rota
-        binding.btnFinishRoute.setOnClickListener {
-            androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("🏁 Finalizar Rota")
-                .setMessage("Confirma a finalização da rota?\n\n⚠️ Após finalizar você NÃO poderá mais:\n• Registrar novos acertos\n• Editar acertos existentes\n• Cadastrar novas despesas")
-                .setPositiveButton("Finalizar") { _, _ ->
-                    finishRoute()
-                }
-                .setNegativeButton("Cancelar", null)
-                .show()
-        }
-    }
-
-    private fun startRoute() {
-        // Atualizar UI para mostrar rota iniciada
-        binding.tvRouteStatus.text = "Em Andamento"
-        binding.tvRouteStatus.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
-        
-        // Habilitar botão finalizar e desabilitar iniciar
-        binding.btnStartRoute.isEnabled = false
-        binding.btnFinishRoute.isEnabled = true
-        
-        // TODO: Implementar lógica de início de rota no ViewModel
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("✅ Rota Iniciada!")
-            .setMessage("Rota iniciada com sucesso!\n\n🎯 Agora você pode:\n• Registrar acertos\n• Cadastrar despesas\n• Gerenciar mesas")
-            .setPositiveButton("OK", null)
-            .show()
     }
     
-    private fun finishRoute() {
-        // Atualizar UI para mostrar rota finalizada
-        binding.tvRouteStatus.text = "Finalizada"
-        binding.tvRouteStatus.setTextColor(resources.getColor(android.R.color.holo_red_dark, null))
-        
-        // Desabilitar ambos os botões
-        binding.btnStartRoute.isEnabled = false
-        binding.btnFinishRoute.isEnabled = false
-        
-        // TODO: Implementar lógica de finalização de rota no ViewModel
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("🏁 Rota Finalizada!")
-            .setMessage("Rota finalizada com sucesso!\n\n📊 Relatório será gerado automaticamente\n📱 Dados sincronizados")
-            .setPositiveButton("Ver Relatório") { _, _ ->
-                // TODO: Navegar para relatório
+    private fun observarViewModel() {
+        // Observar dados da rota
+        lifecycleScope.launch {
+            viewModel.rotaInfo.collect { rota ->
+                try {
+                    rota?.let { atualizarInfoRota(it) }
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar info da rota: ${e.message}")
+                }
             }
-            .setNegativeButton("OK", null)
+        }
+        
+        // Observar status da rota
+        lifecycleScope.launch {
+            viewModel.statusRota.collect { status ->
+                try {
+                    atualizarStatusRota(status)
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar status da rota: ${e.message}")
+                }
+            }
+        }
+        
+        // Observar ciclo de acerto
+        lifecycleScope.launch {
+            viewModel.cicloAcerto.collect { ciclo ->
+                try {
+                    _binding?.tvCycleTitle?.text = "${ciclo}º Acerto"
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar ciclo de acerto: ${e.message}")
+                }
+            }
+        }
+        
+        // Observar clientes
+        lifecycleScope.launch {
+            viewModel.clientes.collect { clientes ->
+                try {
+                    clientAdapter.submitList(clientes)
+                    
+                    // Mostrar/esconder empty state
+                    _binding?.let { binding ->
+                        if (clientes.isEmpty()) {
+                            binding.emptyStateLayout.visibility = View.VISIBLE
+                            binding.rvClients.visibility = View.GONE
+                        } else {
+                            binding.emptyStateLayout.visibility = View.GONE
+                            binding.rvClients.visibility = View.VISIBLE
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar lista de clientes: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    private fun atualizarInfoRota(rota: com.example.gestaobilhares.data.entities.Rota) {
+        _binding?.let { binding ->
+            binding.tvTitle.text = rota.nome
+            // TODO: Carregar informações dinâmicas (clientes ativos, mesas)
+            binding.tvRouteInfo.text = "12 clientes ativos • 24 mesas"
+        }
+    }
+    
+    private fun atualizarStatusRota(status: StatusRota) {
+        _binding?.let { binding ->
+            val context = requireContext()
+            
+            when (status) {
+                StatusRota.EM_ANDAMENTO -> {
+                    binding.tvRouteStatus.text = "Em Andamento"
+                    binding.statusIndicator.backgroundTintList = 
+                        android.content.res.ColorStateList.valueOf(context.getColor(R.color.green_600))
+                    binding.btnStartRoute.isEnabled = false
+                    binding.btnFinishRoute.isEnabled = true
+                }
+                StatusRota.FINALIZADA -> {
+                    binding.tvRouteStatus.text = "Finalizada"
+                    binding.statusIndicator.backgroundTintList = 
+                        android.content.res.ColorStateList.valueOf(context.getColor(R.color.purple_600))
+                    binding.btnStartRoute.isEnabled = true
+                    binding.btnFinishRoute.isEnabled = false
+                }
+                StatusRota.PAUSADA -> {
+                    binding.tvRouteStatus.text = "Não Iniciada"
+                    binding.statusIndicator.backgroundTintList = 
+                        android.content.res.ColorStateList.valueOf(context.getColor(R.color.orange_600))
+                    binding.btnStartRoute.isEnabled = true
+                    binding.btnFinishRoute.isEnabled = false
+                }
+                else -> {
+                    binding.tvRouteStatus.text = "Não Iniciada"
+                    binding.statusIndicator.backgroundTintList = 
+                        android.content.res.ColorStateList.valueOf(context.getColor(R.color.orange_600))
+                    binding.btnStartRoute.isEnabled = true
+                    binding.btnFinishRoute.isEnabled = false
+                }
+            }
+        }
+    }
+    
+    private fun atualizarEstadoFiltros(botaoSelecionado: com.google.android.material.button.MaterialButton) {
+        _binding?.let { binding ->
+            val context = requireContext()
+            val corSelecionada = context.getColor(R.color.purple_600)
+            val corNormal = context.getColor(android.R.color.transparent)
+            val textColorSelected = context.getColor(R.color.white)
+            val textColorNormal = context.getColor(R.color.purple_600)
+            
+            // Resetar todos os botões
+            listOf(binding.btnFilterActive, binding.btnFilterDebtors, binding.btnFilterAll).forEach { btn ->
+                btn.setBackgroundColor(corNormal)
+                btn.setTextColor(textColorNormal)
+            }
+            
+            // Destacar o selecionado
+            botaoSelecionado.setBackgroundColor(corSelecionada)
+            botaoSelecionado.setTextColor(textColorSelected)
+        }
+    }
+    
+    private fun mostrarAlertaRotaNaoIniciada() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Rota Não Iniciada")
+            .setMessage("Para acessar os detalhes do cliente e fazer acertos, é necessário iniciar a rota primeiro.")
+            .setPositiveButton("Entendi", null)
             .show()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    private fun configurarRecyclerView() {
-        clientAdapter = ClientAdapter { cliente ->
-            // Navegar para detalhes do cliente - FASE 4A IMPLEMENTADA! ✅
-            val action = ClientListFragmentDirections
-                .actionClientListFragmentToClientDetailFragment(cliente.id)
-            findNavController().navigate(action)
-        }
-        
-        binding.rvClients.apply {
-            adapter = clientAdapter
-            layoutManager = LinearLayoutManager(requireContext())
-        }
-    }
-
-    private fun observarViewModel() {
-        lifecycleScope.launch {
-            viewModel.clientes.collect { clientes ->
-                clientAdapter.submitList(clientes)
-            }
-        }
-        
-        lifecycleScope.launch {
-            viewModel.isLoading.collect { isLoading ->
-                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            }
-        }
     }
 } 

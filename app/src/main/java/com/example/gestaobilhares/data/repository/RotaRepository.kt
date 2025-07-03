@@ -97,6 +97,13 @@ class RotaRepository @Inject constructor(
     }
     
     /**
+     * Obtém uma rota específica por ID como Flow.
+     */
+    fun obterRotaPorId(rotaId: Long): Flow<Rota?> {
+        return rotaDao.obterRotaPorId(rotaId)
+    }
+    
+    /**
      * Obtém uma rota por nome (útil para validação).
      */
     suspend fun getRotaByNome(nome: String): Rota? {
@@ -205,6 +212,44 @@ class RotaRepository @Inject constructor(
             } catch (e: Exception) {
                 // Ignora erro se as rotas já existirem
             }
+        }
+    }
+    
+    /**
+     * Atualiza o status da rota.
+     */
+    suspend fun atualizarStatusRota(rotaId: Long, status: StatusRota): Boolean {
+        return try {
+            rotaDao.atualizarStatus(rotaId, status.name)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+    
+    /**
+     * Inicia um novo ciclo de acerto para a rota.
+     */
+    suspend fun iniciarCicloRota(rotaId: Long, numeroCiclo: Int): Boolean {
+        return try {
+            val dataInicio = System.currentTimeMillis()
+            rotaDao.iniciarCicloRota(rotaId, numeroCiclo, dataInicio)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+    
+    /**
+     * Finaliza o ciclo atual da rota.
+     */
+    suspend fun finalizarCicloRota(rotaId: Long): Boolean {
+        return try {
+            val dataFim = System.currentTimeMillis()
+            rotaDao.finalizarCicloRota(rotaId, dataFim)
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 } 

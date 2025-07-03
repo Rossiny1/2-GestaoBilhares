@@ -28,9 +28,7 @@ class AcertoRepository @Inject constructor(
      */
     suspend fun buscarUltimoAcertoMesa(mesaId: Long): Acerto? {
         return try {
-            // TODO: Implementar busca real no DAO
-            // Por enquanto, retorna null para simular primeiro acerto
-            null
+            acertoDao.buscarUltimoAcertoPorMesa(mesaId)
         } catch (e: Exception) {
             null
         }
@@ -38,5 +36,18 @@ class AcertoRepository @Inject constructor(
 
     suspend fun buscarUltimoAcertoPorCliente(clienteId: Long): Acerto? {
         return acertoDao.buscarUltimoAcertoPorCliente(clienteId)
+    }
+
+    /**
+     * ✅ NOVO: Busca a observação do último acerto de um cliente
+     * @param clienteId ID do cliente
+     * @return Observação do último acerto, ou null se não houver
+     */
+    suspend fun buscarObservacaoUltimoAcerto(clienteId: Long): String? {
+        return try {
+            acertoDao.buscarObservacaoUltimoAcerto(clienteId)
+        } catch (e: Exception) {
+            null
+        }
     }
 } 

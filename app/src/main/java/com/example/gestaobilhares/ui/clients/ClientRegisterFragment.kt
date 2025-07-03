@@ -39,6 +39,15 @@ class ClientRegisterFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupUI()
         observeViewModel()
+        
+        // ✅ CORREÇÃO: Verificar se é modo edição
+        if (args.clienteId > 0) {
+            // Modo edição - carregar dados do cliente
+            carregarDadosClienteParaEdicao()
+        }
+        
+        // Carregar débito atual do cliente se estiver editando
+        carregarDebitoAtual()
     }
 
     private fun setupUI() {
@@ -60,27 +69,94 @@ class ClientRegisterFragment : Fragment() {
 
     private fun observeViewModel() {
         lifecycleScope.launch {
-            viewModel.novoClienteId.collect { id ->
-                id?.let {
-                    binding.progressBar.visibility = View.GONE
-                    binding.btnSave.isEnabled = true
+            viewModel.novoClienteId.collect { clienteId ->
+                if (clienteId != null && clienteId > 0) {
                     try {
-                        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                            .setTitle("\u2705 Cliente Cadastrado!")
-                            .setMessage("Cliente cadastrado com sucesso!\n\nPróximo passo: Vincular mesas ao cliente.")
-                            .setPositiveButton("Adicionar Mesa") { _, _ ->
-                                val action = ClientRegisterFragmentDirections.actionClientRegisterFragmentToMesasDepositoFragment(it)
-                                findNavController().navigate(action)
-                                viewModel.resetNovoClienteId()
-                            }
-                            .setNegativeButton("Voltar") { _, _ ->
-                                findNavController().popBackStack()
-                                viewModel.resetNovoClienteId()
-                            }
-                            .show()
+                        if (requireActivity().isFinishing || requireActivity().isDestroyed) {
+                            return@collect
+                        }
+                        
+                        if (!isAdded) {
+                            return@collect
+                        }
+                        
+                        // Ocultar loading
+                        binding.progressBar.visibility = View.GONE
+                        binding.btnSave.isEnabled = true
+                        
+                        if (parentFragmentManager.isStateSaved) {
+                            return@collect
+                        }
+                        
+                        // Mostrar dialog de sucesso para NOVO cadastro
+                        if (isAdded && !requireActivity().isFinishing) {
+                            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                                .setTitle("✅ Cliente Cadastrado!")
+                                .setMessage("Cliente cadastrado com sucesso!\n\nPróximo passo: Vincular mesas ao cliente.")
+                                .setPositiveButton("Adicionar Mesa") { _, _ ->
+                                    val action = ClientRegisterFragmentDirections.actionClientRegisterFragmentToMesasDepositoFragment(clienteId)
+                                    findNavController().navigate(action)
+                                    viewModel.resetNovoClienteId()
+                                }
+                                .setNegativeButton("Voltar") { _, _ ->
+                                    findNavController().popBackStack()
+                                    viewModel.resetNovoClienteId()
+                                }
+                                .show()
+                        }
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        showErrorDialog("Erro ao exibir confirmação: ${e.localizedMessage}")
+                        // Usar try-catch para evitar crash
+                        try {
+                            showErrorDialog("Erro ao exibir confirmação: ${e.localizedMessage}")
+                        } catch (dialogException: Exception) {
+                            // Se não conseguir mostrar o dialog, pelo menos logar o erro
+                            android.util.Log.e("ClientRegister", "Erro ao mostrar dialog: ${dialogException.message}")
+                        }
+                    }
+                }
+            }
+        }
+        
+        // ✅ NOVO: Observer para cliente atualizado (edição)
+        lifecycleScope.launch {
+            viewModel.clienteAtualizado.collect { atualizado ->
+                if (atualizado) {
+                    try {
+                        if (requireActivity().isFinishing || requireActivity().isDestroyed) {
+                            return@collect
+                        }
+                        
+                        if (!isAdded) {
+                            return@collect
+                        }
+                        
+                        // Ocultar loading
+                        binding.progressBar.visibility = View.GONE
+                        binding.btnSave.isEnabled = true
+                        
+                        if (parentFragmentManager.isStateSaved) {
+                            return@collect
+                        }
+                        
+                        // Mostrar dialog de sucesso para EDIÇÃO
+                        if (isAdded && !requireActivity().isFinishing) {
+                            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                                .setTitle("✅ Cliente Atualizado!")
+                                .setMessage("Dados do cliente foram atualizados com sucesso!")
+                                .setPositiveButton("OK") { _, _ ->
+                                    findNavController().popBackStack()
+                                    viewModel.resetNovoClienteId()
+                                }
+                                .show()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        try {
+                            showErrorDialog("Erro ao exibir confirmação: ${e.localizedMessage}")
+                        } catch (dialogException: Exception) {
+                            android.util.Log.e("ClientRegister", "Erro ao mostrar dialog: ${dialogException.message}")
+                        }
                     }
                 }
             }
@@ -89,6 +165,15 @@ class ClientRegisterFragment : Fragment() {
             viewModel.isLoading.collect { isLoading ->
                 binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
                 binding.btnSave.isEnabled = !isLoading
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.debitoAtual.collect { debito ->
+                try {
+                    binding.etDebitoAtual.setText(String.format("R$ %.2f", debito))
+                } catch (e: Exception) {
+                    // Ignorar erro se a view foi destruída
+                }
             }
         }
     }
@@ -102,75 +187,95 @@ class ClientRegisterFragment : Fragment() {
     }
 
     private fun saveClient() {
-        // Limpar erros anteriores
-        clearErrors()
-        
-        // Obter valores dos campos
-        val name = binding.etClientName.text.toString().trim()
-        val address = binding.etAddress.text.toString().trim()
-        val phone = binding.etPhone.text.toString().trim()
-        val email = binding.etEmail.text.toString().trim()
-        val valorFicha = binding.etValorFicha.text.toString().trim().toDoubleOrNull() ?: 0.0
-        val comissaoFicha = binding.etComissaoFicha.text.toString().trim().toDoubleOrNull() ?: 0.0
-        val numeroContrato = binding.etNumeroContrato.text.toString().trim()
-        val observations = binding.etObservations.text.toString().trim()
-        
-        // Validações
-        if (name.isEmpty()) {
-            binding.etClientName.error = "Nome é obrigatório"
-            binding.etClientName.requestFocus()
-            return
+        try {
+            android.util.Log.d("ClientRegister", "Iniciando salvamento do cliente")
+            
+            // Limpar erros anteriores
+            clearErrors()
+            
+            // Obter valores dos campos
+            val name = binding.etClientName.text.toString().trim()
+            val address = binding.etAddress.text.toString().trim()
+            val phone = binding.etPhone.text.toString().trim()
+            val email = binding.etEmail.text.toString().trim()
+            val valorFicha = binding.etValorFicha.text.toString().trim().toDoubleOrNull() ?: 0.0
+            val comissaoFicha = binding.etComissaoFicha.text.toString().trim().toDoubleOrNull() ?: 0.0
+            val numeroContrato = binding.etNumeroContrato.text.toString().trim()
+            val observations = binding.etObservations.text.toString().trim()
+            
+            android.util.Log.d("ClientRegister", "Valores obtidos: nome=$name, endereco=$address")
+            
+            // Validações
+            if (name.isEmpty()) {
+                binding.etClientName.error = "Nome é obrigatório"
+                binding.etClientName.requestFocus()
+                return
+            }
+            
+            if (name.length < 3) {
+                binding.etClientName.error = "Nome deve ter pelo menos 3 caracteres"
+                binding.etClientName.requestFocus()
+                return
+            }
+            
+            if (address.isEmpty()) {
+                binding.etAddress.error = "Endereço é obrigatório"
+                binding.etAddress.requestFocus()
+                return
+            }
+            
+            if (address.length < 10) {
+                binding.etAddress.error = "Endereço deve ser mais detalhado"
+                binding.etAddress.requestFocus()
+                return
+            }
+            
+            // Validação opcional de email
+            if (email.isNotEmpty() && !isValidEmail(email)) {
+                binding.etEmail.error = "E-mail inválido"
+                binding.etEmail.requestFocus()
+                return
+            }
+            
+            // Validação opcional de telefone
+            if (phone.isNotEmpty() && phone.length < 10) {
+                binding.etPhone.error = "Telefone inválido"
+                binding.etPhone.requestFocus()
+                return
+            }
+            
+            android.util.Log.d("ClientRegister", "Validações passaram, criando entidade Cliente")
+            
+            // Mostrar loading
+            binding.progressBar.visibility = View.VISIBLE
+            binding.btnSave.isEnabled = false
+            
+            // Criar entidade Cliente
+            val cliente = com.example.gestaobilhares.data.entities.Cliente(
+                nome = name,
+                endereco = address,
+                telefone = phone,
+                email = email,
+                valorFicha = valorFicha,
+                comissaoFicha = comissaoFicha,
+                numeroContrato = if (numeroContrato.isNotEmpty()) numeroContrato else null,
+                observacoes = observations,
+                rotaId = if (args.rotaId != 0L) args.rotaId else {
+                    // ✅ CORREÇÃO: Em modo edição, usar rotaId do cliente existente
+                    viewModel.clienteParaEdicao.value?.rotaId ?: 1L
+                }
+            )
+            
+            android.util.Log.d("ClientRegister", "Entidade Cliente criada, chamando viewModel.cadastrarCliente")
+            viewModel.cadastrarCliente(cliente)
+            
+        } catch (e: Exception) {
+            android.util.Log.e("ClientRegister", "Erro ao salvar cliente: ${e.message}", e)
+            // Tratar erro e restaurar UI
+            binding.progressBar.visibility = View.GONE
+            binding.btnSave.isEnabled = true
+            showErrorDialog("Erro ao salvar cliente: ${e.localizedMessage}")
         }
-        
-        if (name.length < 3) {
-            binding.etClientName.error = "Nome deve ter pelo menos 3 caracteres"
-            binding.etClientName.requestFocus()
-            return
-        }
-        
-        if (address.isEmpty()) {
-            binding.etAddress.error = "Endereço é obrigatório"
-            binding.etAddress.requestFocus()
-            return
-        }
-        
-        if (address.length < 10) {
-            binding.etAddress.error = "Endereço deve ser mais detalhado"
-            binding.etAddress.requestFocus()
-            return
-        }
-        
-        // Validação opcional de email
-        if (email.isNotEmpty() && !isValidEmail(email)) {
-            binding.etEmail.error = "E-mail inválido"
-            binding.etEmail.requestFocus()
-            return
-        }
-        
-        // Validação opcional de telefone
-        if (phone.isNotEmpty() && phone.length < 10) {
-            binding.etPhone.error = "Telefone inválido"
-            binding.etPhone.requestFocus()
-            return
-        }
-        
-        // Mostrar loading
-        binding.progressBar.visibility = View.VISIBLE
-        binding.btnSave.isEnabled = false
-        
-        // Criar entidade Cliente
-        val cliente = com.example.gestaobilhares.data.entities.Cliente(
-            nome = name,
-            endereco = address,
-            telefone = phone,
-            email = email,
-            valorFicha = valorFicha,
-            comissaoFicha = comissaoFicha,
-            numeroContrato = if (numeroContrato.isNotEmpty()) numeroContrato else null,
-            observacoes = observations,
-            rotaId = args.rotaId
-        )
-        viewModel.cadastrarCliente(cliente)
     }
     
     private fun clearErrors() {
@@ -186,6 +291,45 @@ class ClientRegisterFragment : Fragment() {
     
     private fun isValidEmail(email: String): Boolean {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    private fun carregarDebitoAtual() {
+        // TODO: Implementar busca do débito atual do último acerto
+        // Por enquanto, mostrar 0,00
+        viewModel.carregarDebitoAtual(null)
+    }
+
+    /**
+     * ✅ IMPLEMENTADO: Carrega dados do cliente para edição
+     */
+    private fun carregarDadosClienteParaEdicao() {
+        viewModel.carregarClienteParaEdicao(args.clienteId)
+        
+        // Observer para preencher campos quando dados carregarem
+        lifecycleScope.launch {
+            viewModel.clienteParaEdicao.collect { cliente ->
+                cliente?.let { preencherCamposComDadosCliente(it) }
+            }
+        }
+    }
+    
+    /**
+     * ✅ IMPLEMENTADO: Preenche campos com dados do cliente
+     */
+    private fun preencherCamposComDadosCliente(cliente: com.example.gestaobilhares.data.entities.Cliente) {
+        binding.apply {
+            etClientName.setText(cliente.nome)
+            etAddress.setText(cliente.endereco ?: "")
+            etPhone.setText(cliente.telefone ?: "")
+            etEmail.setText(cliente.email ?: "")
+            etValorFicha.setText(cliente.valorFicha.toString())
+            etComissaoFicha.setText(cliente.comissaoFicha.toString())
+            etNumeroContrato.setText(cliente.numeroContrato ?: "")
+            etObservations.setText(cliente.observacoes ?: "")
+            
+            // Alterar título para modo edição
+            // TODO: Adicionar TextView para título no layout se não existir
+        }
     }
 
     override fun onDestroyView() {

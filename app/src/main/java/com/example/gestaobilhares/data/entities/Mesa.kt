@@ -43,11 +43,23 @@ data class Mesa(
     @ColumnInfo(name = "fichas_final") 
     val fichasFinal: Int = 0,
     
+    @ColumnInfo(name = "relogio_inicial")
+    val relogioInicial: Int = 0,
+    
+    @ColumnInfo(name = "relogio_final")
+    val relogioFinal: Int = 0,
+    
     @ColumnInfo(name = "valor_fixo")
     val valorFixo: Double = 0.0,
     
     @ColumnInfo(name = "tipo_mesa")
     val tipoMesa: TipoMesa = TipoMesa.SINUCA,
+    
+    @ColumnInfo(name = "tamanho")
+    val tamanho: TamanhoMesa = TamanhoMesa.GRANDE,
+    
+    @ColumnInfo(name = "estado_conservacao")
+    val estadoConservacao: EstadoConservacao = EstadoConservacao.BOM,
     
     @ColumnInfo(name = "ativa")
     val ativa: Boolean = true,
@@ -68,7 +80,29 @@ data class Mesa(
 @Parcelize
 enum class TipoMesa : Parcelable {
     SINUCA,
+    MAQUINA_MUSICA,
+    PEMBOLIM,
     SNOOKER,
     POOL,
-    BILHAR
+    BILHAR,
+    OUTROS
+}
+
+/**
+ * Enum para tamanhos de mesa
+ */
+@Parcelize
+enum class TamanhoMesa : Parcelable {
+    PEQUENA,
+    GRANDE
+}
+
+/**
+ * Enum para estado de conservação
+ */
+@Parcelize
+enum class EstadoConservacao : Parcelable {
+    OTIMO,
+    BOM,
+    RUIM
 } 

@@ -24,6 +24,12 @@ interface AcertoDao {
     @Query("SELECT * FROM acertos WHERE cliente_id = :clienteId ORDER BY data_acerto DESC LIMIT 1")
     suspend fun buscarUltimoAcertoPorCliente(clienteId: Long): Acerto?
 
+    @Query("SELECT * FROM acertos WHERE id IN (SELECT acerto_id FROM acerto_mesas WHERE mesa_id = :mesaId) ORDER BY data_acerto DESC LIMIT 1")
+    suspend fun buscarUltimoAcertoPorMesa(mesaId: Long): Acerto?
+
+    @Query("SELECT observacoes FROM acertos WHERE cliente_id = :clienteId ORDER BY data_acerto DESC LIMIT 1")
+    suspend fun buscarObservacaoUltimoAcerto(clienteId: Long): String?
+
     @Update
     suspend fun atualizar(acerto: Acerto)
 

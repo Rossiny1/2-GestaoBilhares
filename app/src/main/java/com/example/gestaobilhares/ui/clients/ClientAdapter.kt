@@ -11,8 +11,8 @@ import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.databinding.ItemClientBinding
 
 /**
- * Adapter para lista de clientes - FASE 3 IMPLEMENTADA! ✅
- * Exibe informações dos clientes com indicadores visuais adequados
+ * Adapter modernizado para lista de clientes
+ * Exibe informações dos clientes com design atualizado
  */
 class ClientAdapter(
     private val onClientClick: (Cliente) -> Unit
@@ -51,42 +51,61 @@ class ClientAdapter(
                 binding.tvBusinessName.visibility = View.GONE
             }
             
-            // Informações das mesas (mock por enquanto)
+            // Endereço
+            binding.tvAddress.text = if (!cliente.endereco.isNullOrBlank()) {
+                "${cliente.endereco}, ${cliente.cidade ?: ""}"
+            } else {
+                "Endereço não informado"
+            }
+            
+            // Informações das mesas (mock por enquanto - será integrado com dados reais)
             binding.tvTableCount.text = "2 mesas ativas"
             
-            // Valor da ficha
-            binding.tvTokenValue.text = String.format("R$ %.2f/ficha", cliente.valorFicha)
-            
-            // Último acerto (mock por enquanto)
-            binding.tvLastSettlement.text = "Último acerto há 3 dias"
+            // Último acerto (mock por enquanto - será integrado com dados reais)
+            binding.tvLastSettlement.text = "há 3 dias"
             
             // Configurar status visual
             configurarStatusVisual(cliente)
             
-            // Configurar débito
-            configurarDebito(cliente)
+            // Configurar débito atual do último acerto
+            configurarDebitoAtual(cliente)
         }
         
         private fun configurarStatusVisual(cliente: Cliente) {
             val context = binding.root.context
             
-            // Barra de status lateral
-            val statusColor = if (cliente.ativo) {
-                context.getColor(R.color.green_600)
-            } else {
-                context.getColor(R.color.red_600)
+            // Barra de status lateral baseada no status do cliente
+            val statusColor = when {
+                !cliente.ativo -> context.getColor(R.color.red_600)
+                cliente.debitoAnterior > 300.0 -> context.getColor(R.color.red_600)
+                cliente.debitoAnterior > 100.0 -> context.getColor(R.color.orange_600)
+                else -> context.getColor(R.color.green_600)
             }
             binding.statusBar.setBackgroundColor(statusColor)
             
             // Tag de status principal
-            binding.tvStatusTag.text = if (cliente.ativo) "ATIVO" else "INATIVO"
-            binding.tvStatusTag.setBackgroundResource(
-                if (cliente.ativo) R.drawable.rounded_tag_green else R.drawable.rounded_tag_red
-            )
+            when {
+                !cliente.ativo -> {
+                    binding.tvStatusTag.text = "INATIVO"
+                    binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_red)
+                }
+                cliente.debitoAnterior > 300.0 -> {
+                    binding.tvStatusTag.text = "DEVEDOR"
+                    binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_red)
+                }
+                cliente.debitoAnterior > 100.0 -> {
+                    binding.tvStatusTag.text = "ATENÇÃO"
+                    binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_orange)
+                }
+                else -> {
+                    binding.tvStatusTag.text = "EM DIA"
+                    binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_green)
+                }
+            }
             
-            // Tag especial se há débito alto
-            if (cliente.debitoAnterior > 100.0) {
-                binding.tvSpecialTag.text = "DEVEDOR"
+            // Tag especial para débito alto
+            if (cliente.debitoAnterior > 300.0) {
+                binding.tvSpecialTag.text = "ALTO DÉBITO"
                 binding.tvSpecialTag.setBackgroundResource(R.drawable.rounded_tag_red)
                 binding.tvSpecialTag.visibility = View.VISIBLE
             } else {
@@ -94,26 +113,53 @@ class ClientAdapter(
             }
         }
         
-        private fun configurarDebito(cliente: Cliente) {
-            if (cliente.debitoAnterior > 0) {
-                binding.tvDebtAmount.text = String.format("R$ %.2f", cliente.debitoAnterior)
-                binding.layoutExtraInfo.visibility = View.VISIBLE
-                
-                // Cor baseada no valor do débito
+        private fun configurarDebitoAtual(cliente: Cliente) {
+            try {
                 val context = binding.root.context
-                val debtColor = when {
-                    cliente.debitoAnterior > 100.0 -> context.getColor(R.color.red_500)
-                    cliente.debitoAnterior > 50.0 -> context.getColor(R.color.orange_600)
-                    else -> context.getColor(R.color.yellow_600)
+                
+                // Exibir débito atual do último acerto
+                // Por enquanto usando debitoAnterior - será substituído por débito do último acerto
+                val debitoAtual = cliente.debitoAnterior ?: 0.0
+                
+                // Se não há débito, mostrar "Sem Débito"
+                if (debitoAtual <= 0) {
+                    binding.tvCurrentDebt.text = "Sem Débito"
+                } else {
+                    binding.tvCurrentDebt.text = String.format("R$ %.2f", debitoAtual)
                 }
-                binding.tvDebtAmount.setTextColor(debtColor)
+                
+                // Configurar cores baseadas no valor do débito
+                val (debtColor, backgroundTint) = when {
+                    debitoAtual > 300.0 -> Pair(
+                        context.getColor(R.color.red_600),
+                        context.getColor(R.color.red_50)
+                    )
+                    debitoAtual > 100.0 -> Pair(
+                        context.getColor(R.color.orange_600),
+                        context.getColor(R.color.orange_50)
+                    )
+                    debitoAtual > 0 -> Pair(
+                        context.getColor(R.color.yellow_600),
+                        context.getColor(R.color.yellow_50)
+                    )
+                    else -> Pair(
+                        context.getColor(R.color.green_600),
+                        context.getColor(R.color.green_50)
+                    )
+                }
+                
+                binding.tvCurrentDebt.setTextColor(debtColor)
                 binding.ivDebtIcon.setColorFilter(debtColor)
-            } else {
-                binding.layoutExtraInfo.visibility = View.GONE
+                binding.layoutDebtInfo.backgroundTintList = 
+                    android.content.res.ColorStateList.valueOf(backgroundTint)
+                
+                // O label permanece fixo como "Débito Atual" no layout
+                
+            } catch (e: Exception) {
+                android.util.Log.e("ClientAdapter", "Erro ao configurar débito: ${e.message}")
+                // Fallback básico
+                binding.tvCurrentDebt.text = "R$ 0,00"
             }
-            
-            // Valor pendente (escondido por enquanto)
-            binding.tvPendingAmount.visibility = View.GONE
         }
     }
 

@@ -22,10 +22,14 @@ interface MesaDao {
     @Query("SELECT * FROM mesas WHERE cliente_id = :clienteId AND ativa = 1 ORDER BY numero ASC")
     fun obterMesasPorCliente(clienteId: Long): Flow<List<Mesa>>
 
-    @Query("SELECT * FROM mesas WHERE ativa = 0 OR cliente_id IS NULL ORDER BY numero ASC")
+    @Query("""
+        SELECT * FROM mesas 
+        WHERE (ativa = 1 AND cliente_id IS NULL) 
+        ORDER BY numero ASC
+    """)
     fun obterMesasDisponiveis(): Flow<List<Mesa>>
 
-    @Query("UPDATE mesas SET cliente_id = NULL, ativa = 0 WHERE id = :mesaId")
+    @Query("UPDATE mesas SET cliente_id = NULL, ativa = 1 WHERE id = :mesaId")
     suspend fun desvincularMesa(mesaId: Long)
 
     @Query("UPDATE mesas SET cliente_id = :clienteId, ativa = 1 WHERE id = :mesaId")
@@ -33,4 +37,39 @@ interface MesaDao {
 
     @Query("UPDATE mesas SET cliente_id = :clienteId, ativa = 1, valor_fixo = :valorFixo WHERE id = :mesaId")
     suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double)
+
+    @Query("""
+        UPDATE mesas 
+        SET cliente_id = NULL, 
+            ativa = 1,
+            relogio_inicial = relogio_final,
+            fichas_inicial = fichas_final
+        WHERE id = :mesaId
+    """)
+    suspend fun retirarMesa(mesaId: Long)
+    
+    @Query("""
+        UPDATE mesas 
+        SET relogio_inicial = :relogioInicial,
+            relogio_final = :relogioFinal,
+            fichas_inicial = :fichasInicial,
+            fichas_final = :fichasFinal
+        WHERE id = :mesaId
+    """)
+    suspend fun atualizarRelogioMesa(
+        mesaId: Long, 
+        relogioInicial: Int, 
+        relogioFinal: Int,
+        fichasInicial: Int,
+        fichasFinal: Int
+    )
+    
+    @Query("UPDATE mesas SET relogio_final = :relogioFinal WHERE id = :mesaId")
+    suspend fun atualizarRelogioFinal(mesaId: Long, relogioFinal: Int)
+    
+    @Query("SELECT * FROM mesas WHERE id = :mesaId")
+    suspend fun obterMesaPorId(mesaId: Long): Mesa?
+
+    @Query("SELECT * FROM mesas WHERE cliente_id = :clienteId AND ativa = 1 ORDER BY numero ASC")
+    suspend fun obterMesasPorClienteDireto(clienteId: Long): List<Mesa>
 } 

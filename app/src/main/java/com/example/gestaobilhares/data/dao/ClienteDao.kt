@@ -27,4 +27,25 @@ interface ClienteDao {
 
     @Query("SELECT * FROM clientes ORDER BY nome ASC")
     fun obterTodos(): Flow<List<Cliente>>
+
+    @Query("SELECT debito_atual FROM clientes WHERE id = :clienteId")
+    suspend fun obterDebitoAtual(clienteId: Long): Double
+
+    @Query("UPDATE clientes SET debito_atual = :novoDebito WHERE id = :clienteId")
+    suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double)
+
+    @Query("""
+        SELECT c.*, 
+               COALESCE(ultimo_acerto.debito_atual, 0.0) as debito_atual_calculado
+        FROM clientes c
+        LEFT JOIN (
+            SELECT cliente_id, debito_atual, data_acerto
+            FROM acertos 
+            WHERE cliente_id = :clienteId 
+            ORDER BY data_acerto DESC 
+            LIMIT 1
+        ) ultimo_acerto ON c.id = ultimo_acerto.cliente_id
+        WHERE c.id = :clienteId
+    """)
+    suspend fun obterClienteComDebitoAtual(clienteId: Long): Cliente?
 } 

@@ -17,6 +17,8 @@ import com.example.gestaobilhares.data.entities.Acerto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import com.example.gestaobilhares.data.repository.AcertoMesaRepository
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 /**
  * ViewModel para SettlementFragment
@@ -42,8 +44,8 @@ class SettlementViewModel @Inject constructor(
     private val _mesasCliente = MutableStateFlow<List<Mesa>>(emptyList())
     val mesasCliente: StateFlow<List<Mesa>> = _mesasCliente.asStateFlow()
 
-    private val _resultadoSalvamento = MutableStateFlow<Result<Unit>?>(null)
-    val resultadoSalvamento: StateFlow<Result<Unit>?> = _resultadoSalvamento.asStateFlow()
+    private val _resultadoSalvamento = MutableStateFlow<Result<Long>?>(null)
+    val resultadoSalvamento: StateFlow<Result<Long>?> = _resultadoSalvamento.asStateFlow()
 
     private val _historicoAcertos = MutableStateFlow<List<Acerto>>(emptyList())
     val historicoAcertos: StateFlow<List<Acerto>> = _historicoAcertos.asStateFlow()
@@ -129,6 +131,19 @@ class SettlementViewModel @Inject constructor(
         }
     }
 
+    /**
+     * ✅ FUNÇÃO FALLBACK: Carrega mesas diretamente sem usar Flow
+     */
+    suspend fun carregarMesasClienteDireto(clienteId: Long): List<Mesa> {
+        return try {
+            Log.d("SettlementViewModel", "Carregando mesas diretamente para cliente $clienteId")
+            mesaRepository.obterMesasPorClienteDireto(clienteId)
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao carregar mesas direto: ${e.message}")
+            emptyList()
+        }
+    }
+
     fun carregarHistoricoAcertos(clienteId: Long) {
         viewModelScope.launch {
             acertoRepository.buscarPorCliente(clienteId).collect { acertos ->
@@ -184,8 +199,9 @@ class SettlementViewModel @Inject constructor(
                 }
                 val desconto = 0.0 // TODO: pegar desconto do formulário
                 val valorComDesconto = valorTotal - desconto
-                val debitoAtual = valorComDesconto - valorRecebido
+                val debitoAtual = debitoAnterior + valorComDesconto - valorRecebido
                 
+                val metodosPagamentoJson = Gson().toJson(metodosPagamento)
                 val acerto = Acerto(
                     clienteId = clienteId,
                     colaboradorId = null, // TODO: preencher com usuário logado
@@ -199,7 +215,8 @@ class SettlementViewModel @Inject constructor(
                     valorRecebido = valorRecebido,
                     debitoAtual = debitoAtual,
                     status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
-                    observacoes = dadosAcerto.observacao
+                    observacoes = dadosAcerto.observacao,
+                    metodosPagamentoJson = metodosPagamentoJson
                 )
                 
                 val acertoId = acertoRepository.inserir(acerto)
@@ -238,7 +255,7 @@ class SettlementViewModel @Inject constructor(
                 acertoMesaRepository.inserirLista(acertoMesas)
                 Log.d("SettlementViewModel", "Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
                 
-                _resultadoSalvamento.value = Result.success(Unit)
+                _resultadoSalvamento.value = Result.success(acertoId)
             } catch (e: Exception) {
                 Log.e("SettlementViewModel", "Erro ao salvar acerto: ${e.localizedMessage}", e)
                 _resultadoSalvamento.value = Result.failure(e)
@@ -248,5 +265,21 @@ class SettlementViewModel @Inject constructor(
 
     fun resetarResultadoSalvamento() {
         _resultadoSalvamento.value = null
+    }
+    
+    fun limparResultadoSalvamento() {
+        _resultadoSalvamento.value = null
+    }
+
+    suspend fun buscarAcertoPorId(acertoId: Long): Acerto? {
+        return acertoRepository.buscarPorId(acertoId)
+    }
+
+    suspend fun buscarMesasDoAcerto(acertoId: Long): List<com.example.gestaobilhares.data.entities.AcertoMesa> {
+        return acertoMesaRepository.buscarPorAcertoId(acertoId)
+    }
+
+    fun setLoading(isLoading: Boolean) {
+        _isLoading.value = isLoading
     }
 } 

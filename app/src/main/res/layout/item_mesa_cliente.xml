@@ -1,63 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="180dp"
-    android:layout_height="100dp"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="12dp"
+    android:layout_width="0dp"
+    android:layout_height="90dp"
+    android:layout_margin="6dp"
+    app:cardCornerRadius="10dp"
     app:cardElevation="2dp"
     app:strokeColor="@color/purple_600"
-    app:strokeWidth="2dp"
+    app:strokeWidth="1dp"
     android:background="@drawable/card_background">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="8dp">
+        android:padding="6dp">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:id="@+id/tvLabelMesa"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Mesa"
-                android:textColor="@color/white"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvNumeroMesa"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="1"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:background="@null"
-                android:layout_marginTop="2dp" />
-        </LinearLayout>
-
+        <!-- Ícone da lixeira no canto superior direito -->
         <ImageButton
             android:id="@+id/btnRetirarMesa"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="end|center_vertical"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_delete"
             android:contentDescription="Retirar Mesa"
-            android:visibility="visible"
+            android:scaleType="fitCenter"
             app:tint="@color/red_600" />
 
-    </LinearLayout>
+        <!-- Texto "Mesa" centralizado no topo -->
+        <TextView
+            android:id="@+id/tvMesaLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mesa"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="6dp"
+            android:layout_alignParentTop="true" />
+
+        <!-- Número da mesa centralizado abaixo do texto -->
+        <TextView
+            android:id="@+id/tvNumeroMesa"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="normal"
+            android:gravity="center"
+            android:layout_below="@id/tvMesaLabel"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="2dp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+    </RelativeLayout>
 
 </com.google.android.material.card.MaterialCardView> 
