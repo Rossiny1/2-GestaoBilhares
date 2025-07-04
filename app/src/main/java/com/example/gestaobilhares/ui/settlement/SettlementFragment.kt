@@ -687,9 +687,8 @@ class SettlementFragment : Fragment() {
                 val debitoAnterior = viewModel.debitoAnterior.value
                 val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
                 
-                // ✅ NOVO: Obter comissão da ficha do cliente
-                val cliente = viewModel.obterClientePorId(args.clienteId)
-                val comissaoFicha = cliente?.comissaoFicha ?: 0.0
+                // ✅ CORREÇÃO: Usar valor total das mesas do banco de dados
+                val valorTotalMesas = acerto.valorTotal
                 
                 val dialog = SettlementSummaryDialog.newInstance(
                     clienteNome = viewModel.clientName.value,
@@ -700,7 +699,7 @@ class SettlementFragment : Fragment() {
                     debitoAtual = acerto.debitoAtual,
                     debitoAnterior = debitoAnterior,
                     desconto = desconto,
-                    comissaoFicha = comissaoFicha // ✅ NOVO: Passar comissão da ficha
+                    valorTotalMesas = valorTotalMesas // ✅ CORREÇÃO: Passar valor total das mesas do banco
                 )
                 dialog.acertoCompartilhadoListener = object : SettlementSummaryDialog.OnAcertoCompartilhadoListener {
                     override fun onAcertoCompartilhado() {

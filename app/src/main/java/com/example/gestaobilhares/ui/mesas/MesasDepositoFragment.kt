@@ -145,7 +145,24 @@ class MesasDepositoFragment : Fragment() {
         val clienteId = args.clienteId.takeIf { it != 0L }
         if (clienteId != null) {
             viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)
-            findNavController().popBackStack()
+            
+            // ✅ CORREÇÃO MELHORADA: Sempre navegar para detalhes do cliente
+            // Verificar se veio do ClientRegisterFragment (cadastro de cliente)
+            val previousFragment = findNavController().previousBackStackEntry?.destination?.route
+            android.util.Log.d("MesasDepositoFragment", "Fragmento anterior: $previousFragment")
+            
+            if (previousFragment == "clientRegisterFragment") {
+                // Veio do cadastro de cliente - navegar para detalhes do cliente
+                android.util.Log.d("MesasDepositoFragment", "Vindo do cadastro - navegando para detalhes do cliente")
+                val action = MesasDepositoFragmentDirections.actionMesasDepositoFragmentToClientDetailFragment(clienteId)
+                findNavController().navigate(action)
+                // Remover o ClientRegisterFragment da pilha
+                findNavController().popBackStack("clientRegisterFragment", true)
+            } else {
+                // Veio de outro lugar (provavelmente ClientDetailFragment) - voltar normalmente
+                android.util.Log.d("MesasDepositoFragment", "Vindo de outro lugar - voltando normalmente")
+                findNavController().popBackStack()
+            }
         }
     }
 

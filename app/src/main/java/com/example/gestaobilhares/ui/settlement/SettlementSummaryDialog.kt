@@ -29,7 +29,7 @@ class SettlementSummaryDialog : DialogFragment() {
             debitoAtual: Double = 0.0,
             debitoAnterior: Double = 0.0,
             desconto: Double = 0.0,
-            comissaoFicha: Double = 0.0
+            valorTotalMesas: Double = 0.0
         ): SettlementSummaryDialog {
             val args = Bundle().apply {
                 putString("clienteNome", clienteNome)
@@ -40,7 +40,7 @@ class SettlementSummaryDialog : DialogFragment() {
                 putDouble("debitoAtual", debitoAtual)
                 putDouble("debitoAnterior", debitoAnterior)
                 putDouble("desconto", desconto)
-                putDouble("comissaoFicha", comissaoFicha)
+                putDouble("valorTotalMesas", valorTotalMesas)
             }
             val fragment = SettlementSummaryDialog()
             fragment.arguments = args
@@ -58,7 +58,7 @@ class SettlementSummaryDialog : DialogFragment() {
         val debitoAtual = arguments?.getDouble("debitoAtual") ?: 0.0
         val debitoAnterior = arguments?.getDouble("debitoAnterior") ?: 0.0
         val desconto = arguments?.getDouble("desconto") ?: 0.0
-        val comissaoFicha = arguments?.getDouble("comissaoFicha") ?: 0.0
+        val valorTotalMesas = arguments?.getDouble("valorTotalMesas") ?: 0.0
 
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
         
@@ -99,7 +99,7 @@ class SettlementSummaryDialog : DialogFragment() {
         
         // Botão WhatsApp
         view.findViewById<MaterialButton>(R.id.btnWhatsapp).setOnClickListener {
-            val textoCompleto = gerarTextoResumo(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual, debitoAnterior, desconto, comissaoFicha)
+            val textoCompleto = gerarTextoResumo(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual, debitoAnterior, desconto, valorTotalMesas)
             enviarViaWhatsApp(textoCompleto)
             dismiss()
             acertoCompartilhadoListener?.onAcertoCompartilhado()
@@ -124,7 +124,7 @@ class SettlementSummaryDialog : DialogFragment() {
         debitoAtual: Double,
         debitoAnterior: Double,
         desconto: Double,
-        comissaoFicha: Double
+        valorTotalMesas: Double
     ): String {
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
         val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
@@ -146,23 +146,13 @@ class SettlementSummaryDialog : DialogFragment() {
 
         texto.append("💰 *RESUMO FINANCEIRO:*\n")
         
-        // ✅ CORREÇÃO: Calcular total das mesas usando a mesma lógica da tela de acerto
-        val totalMesas = mesas.sumOf { mesa ->
-            if (mesa.valorFixo > 0) {
-                mesa.valorFixo // Mesa de valor fixo
-            } else {
-                val fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0)
-                // ✅ CORREÇÃO: Usar a comissão da ficha do cliente (mesma lógica do SettlementViewModel)
-                fichasJogadas * comissaoFicha
-            }
-        }
-        
-        // ✅ CORREÇÃO: Reorganizar campos conforme solicitado
-        texto.append("• Total das mesas: ${formatter.format(totalMesas)}\n")
-        
+        // ✅ CORREÇÃO: Reorganizar campos conforme solicitado - Débito anterior primeiro
         if (debitoAnterior > 0) {
             texto.append("• Débito anterior: ${formatter.format(debitoAnterior)}\n")
         }
+        
+        // ✅ CORREÇÃO: Usar valor total das mesas do banco de dados
+        texto.append("• Total das mesas: ${formatter.format(valorTotalMesas)}\n")
         
         if (desconto > 0) {
             texto.append("• Desconto: ${formatter.format(desconto)}\n")
