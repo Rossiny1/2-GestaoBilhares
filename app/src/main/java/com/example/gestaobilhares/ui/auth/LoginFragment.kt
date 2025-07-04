@@ -11,18 +11,15 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentLoginBinding
-import dagger.hilt.android.AndroidEntryPoint
-
 /**
  * Fragmento responsável pela tela de login com Firebase Authentication.
  * Utiliza ViewBinding, ViewModel e navegação segura.
  */
-@AndroidEntryPoint
 class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
-    private val authViewModel: AuthViewModel by viewModels()
+    private val authViewModel = AuthViewModel()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

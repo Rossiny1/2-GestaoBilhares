@@ -151,6 +151,19 @@
 
         </LinearLayout>
 
+        <!-- Observação do acerto -->
+        <TextView
+            android:id="@+id/tvObservacaoAcerto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gray_600"
+            android:textSize="13sp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="2dp"
+            android:maxLines="3"
+            android:ellipsize="end"
+            tools:text="Obs: Cliente pediu para trocar pano mês que vem." />
+
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView> 

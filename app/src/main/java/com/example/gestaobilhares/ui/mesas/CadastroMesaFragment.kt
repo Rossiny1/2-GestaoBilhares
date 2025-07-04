@@ -14,14 +14,15 @@ import com.example.gestaobilhares.data.entities.TipoMesa
 import com.example.gestaobilhares.data.entities.TamanhoMesa
 import com.example.gestaobilhares.data.entities.EstadoConservacao
 import com.example.gestaobilhares.databinding.FragmentCadastroMesaBinding
-import dagger.hilt.android.AndroidEntryPoint
+import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.database.AppDatabase
 import java.util.*
 
-@AndroidEntryPoint
+// Hilt removido - usando instanciação direta
 class CadastroMesaFragment : Fragment() {
     private var _binding: FragmentCadastroMesaBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: CadastroMesaViewModel by viewModels()
+    private lateinit var viewModel: CadastroMesaViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -32,6 +33,7 @@ class CadastroMesaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel = CadastroMesaViewModel(MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao()))
         setupUI()
     }
 

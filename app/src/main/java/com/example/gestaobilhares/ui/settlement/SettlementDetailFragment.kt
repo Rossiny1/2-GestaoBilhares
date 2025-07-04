@@ -10,7 +10,9 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.databinding.FragmentSettlementDetailBinding
-import dagger.hilt.android.AndroidEntryPoint
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.AcertoRepository
+import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 import java.text.NumberFormat
 import java.util.*
 import androidx.lifecycle.lifecycleScope
@@ -19,17 +21,15 @@ import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 
 /**
- * Fragment para exibir detalhes completos de um acerto
+ * Fragment para exibir detalhes de um acerto específico.
  * FASE 4B+ - Detalhes e edição de acertos
  */
-@AndroidEntryPoint
 class SettlementDetailFragment : Fragment() {
 
     private var _binding: FragmentSettlementDetailBinding? = null
     private val binding get() = _binding!!
-
+    private lateinit var viewModel: SettlementDetailViewModel
     private val args: SettlementDetailFragmentArgs by navArgs()
-    private val viewModel: SettlementDetailViewModel by viewModels()
 
     private var mesaDetailAdapter: AcertoMesaDetailAdapter? = null
 
@@ -45,9 +45,17 @@ class SettlementDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        // Inicializar ViewModel aqui onde o contexto está disponível
+        viewModel = SettlementDetailViewModel(
+            AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao()),
+            AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao())
+        )
+        
         setupUI()
         observeViewModel()
-        loadSettlementDetails()
+        
+        // Carregar detalhes do acerto
+        viewModel.loadSettlementDetails(args.acertoId)
     }
 
     private fun setupUI() {
@@ -64,11 +72,6 @@ class SettlementDetailFragment : Fragment() {
                 .setPositiveButton("OK", null)
                 .show()
         }
-    }
-
-    private fun loadSettlementDetails() {
-        Log.d("SettlementDetailFragment", "Carregando detalhes do acerto ID: ${args.acertoId}")
-        viewModel.loadSettlementDetails(args.acertoId)
     }
 
     private fun observeViewModel() {

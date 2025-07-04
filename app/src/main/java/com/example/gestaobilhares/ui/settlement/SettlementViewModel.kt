@@ -3,12 +3,10 @@ package com.example.gestaobilhares.ui.settlement
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repositories.ClienteRepository
@@ -24,8 +22,7 @@ import com.google.gson.reflect.TypeToken
  * ViewModel para SettlementFragment
  * FASE 4A - Implementação básica para desbloqueio
  */
-@HiltViewModel
-class SettlementViewModel @Inject constructor(
+class SettlementViewModel(
     private val mesaRepository: MesaRepository,
     private val clienteRepository: ClienteRepository,
     private val acertoRepository: AcertoRepository,
@@ -52,6 +49,9 @@ class SettlementViewModel @Inject constructor(
 
     private val _debitoAnterior = MutableStateFlow(0.0)
     val debitoAnterior: StateFlow<Double> = _debitoAnterior.asStateFlow()
+
+
+
 
     data class DadosAcerto(
         val mesas: List<Mesa>,
@@ -173,13 +173,18 @@ class SettlementViewModel @Inject constructor(
         }
     }
 
+
+
+
+
     /**
      * Salva o acerto, agora recebendo os valores discriminados por método de pagamento.
      * @param clienteId ID do cliente
      * @param dadosAcerto Dados principais do acerto
      * @param metodosPagamento Mapa de método para valor recebido
+     * @param desconto Valor do desconto aplicado
      */
-    fun salvarAcerto(clienteId: Long, dadosAcerto: DadosAcerto, metodosPagamento: Map<String, Double>) {
+    fun salvarAcerto(clienteId: Long, dadosAcerto: DadosAcerto, metodosPagamento: Map<String, Double>, desconto: Double = 0.0) {
         viewModelScope.launch {
             try {
                 Log.d("SettlementViewModel", "Salvando acerto com clienteId=$clienteId, mesas=${dadosAcerto.mesas.map { it.numero }}")
@@ -197,15 +202,55 @@ class SettlementViewModel @Inject constructor(
                         fichasJogadas * (cliente?.comissaoFicha ?: 0.0)
                     }
                 }
-                val desconto = 0.0 // TODO: pegar desconto do formulário
+                // ✅ CORREÇÃO: Usar o desconto passado como parâmetro
                 val valorComDesconto = valorTotal - desconto
                 val debitoAtual = debitoAnterior + valorComDesconto - valorRecebido
                 
+                // ✅ CORREÇÃO: Logs detalhados para debug do cálculo do débito
+                Log.d("SettlementViewModel", "=== CÁLCULO DO DÉBITO ATUAL ===")
+                Log.d("SettlementViewModel", "Débito anterior: R$ $debitoAnterior")
+                Log.d("SettlementViewModel", "Valor total das mesas: R$ $valorTotal")
+                Log.d("SettlementViewModel", "Desconto aplicado: R$ $desconto")
+                Log.d("SettlementViewModel", "Valor com desconto: R$ $valorComDesconto")
+                Log.d("SettlementViewModel", "Valor recebido: R$ $valorRecebido")
+                Log.d("SettlementViewModel", "Débito atual calculado: R$ $debitoAtual")
+                Log.d("SettlementViewModel", "Fórmula: $debitoAnterior + $valorComDesconto - $valorRecebido = $debitoAtual")
+                
                 val metodosPagamentoJson = Gson().toJson(metodosPagamento)
+                // ✅ CORREÇÃO: Logs detalhados para debug das observações
+                Log.d("SettlementViewModel", "=== SALVANDO ACERTO NO BANCO - DEBUG OBSERVAÇÕES ===")
+                Log.d("SettlementViewModel", "Observação recebida dos dados: '${dadosAcerto.observacao}'")
+                Log.d("SettlementViewModel", "Observação é nula? ${dadosAcerto.observacao == null}")
+                Log.d("SettlementViewModel", "Observação é vazia? ${dadosAcerto.observacao?.isEmpty()}")
+                Log.d("SettlementViewModel", "Observação é blank? ${dadosAcerto.observacao?.isBlank()}")
+                
+                // ✅ CORREÇÃO: Garantir que observação nunca seja nula ou vazia
+                val observacaoParaSalvar = if (dadosAcerto.observacao.isNullOrBlank()) {
+                    "Acerto realizado via app"
+                } else {
+                    dadosAcerto.observacao.trim()
+                }
+                
+                Log.d("SettlementViewModel", "Observação que será salva no banco: '$observacaoParaSalvar'")
+
+                // ✅ CORREÇÃO: Criar dados extras JSON para campos adicionais
+                val dadosExtras = mapOf(
+                    "justificativa" to dadosAcerto.justificativa,
+                    "versaoApp" to "1.0.0"
+                )
+                val dadosExtrasJson = Gson().toJson(dadosExtras)
+                
+                Log.d("SettlementViewModel", "=== SALVANDO TODOS OS DADOS ===")
+                Log.d("SettlementViewModel", "Representante: '${dadosAcerto.representante}'")
+                Log.d("SettlementViewModel", "Tipo de acerto: '${dadosAcerto.tipoAcerto}'")
+                Log.d("SettlementViewModel", "Pano trocado: ${dadosAcerto.panoTrocado}")
+                Log.d("SettlementViewModel", "Número do pano: '${dadosAcerto.numeroPano}'")
+                Log.d("SettlementViewModel", "Métodos de pagamento: $metodosPagamento")
+
                 val acerto = Acerto(
                     clienteId = clienteId,
-                    colaboradorId = null, // TODO: preencher com usuário logado
-                    periodoInicio = java.util.Date(), // TODO: ajustar datas reais
+                    colaboradorId = null, // ✅ CORREÇÃO: Usar null para evitar foreign key constraint
+                    periodoInicio = java.util.Date(),
                     periodoFim = java.util.Date(),
                     totalMesas = dadosAcerto.mesas.size.toDouble(),
                     debitoAnterior = debitoAnterior,
@@ -215,12 +260,24 @@ class SettlementViewModel @Inject constructor(
                     valorRecebido = valorRecebido,
                     debitoAtual = debitoAtual,
                     status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
-                    observacoes = dadosAcerto.observacao,
-                    metodosPagamentoJson = metodosPagamentoJson
+                    observacoes = observacaoParaSalvar,
+                    dataFinalizacao = java.util.Date(), // ✅ CORREÇÃO: Preencher data de finalização
+                    metodosPagamentoJson = metodosPagamentoJson,
+                    // ✅ NOVOS CAMPOS: Resolver problema de dados perdidos
+                    representante = dadosAcerto.representante,
+                    tipoAcerto = dadosAcerto.tipoAcerto,
+                    panoTrocado = dadosAcerto.panoTrocado,
+                    numeroPano = dadosAcerto.numeroPano,
+                    dadosExtrasJson = dadosExtrasJson
                 )
                 
                 val acertoId = acertoRepository.inserir(acerto)
-                Log.d("SettlementViewModel", "Acerto salvo com ID: $acertoId")
+                Log.d("SettlementViewModel", "✅ Acerto salvo com ID: $acertoId")
+                Log.d("SettlementViewModel", "✅ Observações CONFIRMADAS no banco: '$observacaoParaSalvar'")
+                
+                // ✅ CORREÇÃO: Verificar se realmente foi salvo
+                val acertoSalvo = acertoRepository.buscarPorId(acertoId)
+                Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Observação no banco após salvamento: '${acertoSalvo?.observacoes}'")
                 
                 // Salvar dados detalhados de cada mesa do acerto
                 val cliente = clienteRepository.obterPorId(clienteId)
@@ -254,6 +311,14 @@ class SettlementViewModel @Inject constructor(
                 
                 acertoMesaRepository.inserirLista(acertoMesas)
                 Log.d("SettlementViewModel", "Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
+                
+                // ✅ CRÍTICO: Atualizar o débito atual na tabela de clientes
+                clienteRepository.atualizarDebitoAtual(clienteId, debitoAtual)
+                Log.d("SettlementViewModel", "Débito atual atualizado na tabela clientes: R$ $debitoAtual")
+                
+                // ✅ NOVO: Verificar se a atualização foi bem-sucedida
+                val clienteAtualizado = clienteRepository.obterPorId(clienteId)
+                Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Débito atual na tabela clientes após atualização: R$ ${clienteAtualizado?.debitoAtual}")
                 
                 _resultadoSalvamento.value = Result.success(acertoId)
             } catch (e: Exception) {

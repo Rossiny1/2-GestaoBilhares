@@ -10,21 +10,22 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.databinding.FragmentClientRegisterBinding
-import dagger.hilt.android.AndroidEntryPoint
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repositories.ClienteRepository
 import kotlinx.coroutines.launch
+import android.util.Log
 
 /**
  * Fragment para cadastro de novos clientes
  * FASE 4B - Recursos Avançados
  */
-@AndroidEntryPoint
 class ClientRegisterFragment : Fragment() {
 
     private var _binding: FragmentClientRegisterBinding? = null
     private val binding get() = _binding!!
 
+    private lateinit var viewModel: ClientRegisterViewModel
     private val args: ClientRegisterFragmentArgs by navArgs()
-    private val viewModel: ClientRegisterViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,17 +38,20 @@ class ClientRegisterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // Inicializar ViewModel aqui onde o contexto está disponível
+        viewModel = ClientRegisterViewModel(ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()))
+        
         setupUI()
         observeViewModel()
         
-        // ✅ CORREÇÃO: Verificar se é modo edição
-        if (args.clienteId > 0) {
-            // Modo edição - carregar dados do cliente
+        // Carregar dados do cliente se estiver editando
+        if (args.clienteId != 0L) {
+            Log.d("ClientRegisterFragment", "Modo EDIÇÃO - Carregando cliente ID: ${args.clienteId}")
             carregarDadosClienteParaEdicao()
+        } else {
+            Log.d("ClientRegisterFragment", "Modo NOVO CADASTRO")
         }
-        
-        // Carregar débito atual do cliente se estiver editando
-        carregarDebitoAtual()
     }
 
     private fun setupUI() {

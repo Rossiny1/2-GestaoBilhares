@@ -24,7 +24,7 @@ import com.example.gestaobilhares.data.entities.*
         Despesa::class,
         AcertoMesa::class
     ],
-    version = 8, // Incrementado para incluir os novos campos da Mesa (tamanho, estadoConservacao)
+    version = 9, // ✅ INCREMENTADO: Novos campos no Acerto (representante, tipoAcerto, panoTrocado, numeroPano, dadosExtrasJson)
     exportSchema = false
 )
 @TypeConverters(Converters::class)

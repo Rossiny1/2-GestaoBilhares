@@ -34,6 +34,23 @@ interface ClienteDao {
     @Query("UPDATE clientes SET debito_atual = :novoDebito WHERE id = :clienteId")
     suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double)
 
+    /**
+     * ✅ CORRIGIDO: Calcula o débito atual em tempo real baseado no último acerto
+     * Esta query calcula o débito atual diretamente no banco, garantindo consistência
+     * CORREÇÃO: Buscar o debito_atual (não debito_anterior) do último acerto
+     */
+    @Query("""
+        SELECT COALESCE(
+            (SELECT debito_atual 
+             FROM acertos 
+             WHERE cliente_id = :clienteId 
+             ORDER BY data_acerto DESC 
+             LIMIT 1), 
+            0.0
+        ) as debito_atual_calculado
+    """)
+    suspend fun calcularDebitoAtualEmTempoReal(clienteId: Long): Double
+
     @Query("""
         SELECT c.*, 
                COALESCE(ultimo_acerto.debito_atual, 0.0) as debito_atual_calculado

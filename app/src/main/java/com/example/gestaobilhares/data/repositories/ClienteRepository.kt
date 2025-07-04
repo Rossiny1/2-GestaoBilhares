@@ -3,8 +3,6 @@ package com.example.gestaobilhares.data.repositories
 import com.example.gestaobilhares.data.dao.ClienteDao
 import com.example.gestaobilhares.data.entities.Cliente
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Repository para operações relacionadas a clientes
@@ -12,8 +10,7 @@ import javax.inject.Singleton
  * Implementa o padrão Repository para abstrair a camada de dados
  * e fornecer uma interface limpa para os ViewModels.
  */
-@Singleton
-class ClienteRepository @Inject constructor(
+class ClienteRepository(
     private val clienteDao: ClienteDao
 ) {
 
@@ -87,6 +84,21 @@ class ClienteRepository @Inject constructor(
      */
     suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) {
         clienteDao.atualizarDebitoAtual(clienteId, novoDebito)
+    }
+    
+    /**
+     * ✅ NOVO: Calcula o débito atual em tempo real diretamente do banco
+     * Garante consistência total com os dados salvos
+     */
+    suspend fun calcularDebitoAtualEmTempoReal(clienteId: Long): Double {
+        return try {
+            val debitoCalculado = clienteDao.calcularDebitoAtualEmTempoReal(clienteId)
+            android.util.Log.d("ClienteRepository", "Débito atual calculado no banco: R$ $debitoCalculado")
+            debitoCalculado
+        } catch (e: Exception) {
+            android.util.Log.e("ClienteRepository", "Erro ao calcular débito atual: ${e.message}", e)
+            0.0
+        }
     }
     
     /**

@@ -13,7 +13,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRoutesBinding
-import dagger.hilt.android.AndroidEntryPoint
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.RotaRepository
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -24,15 +25,14 @@ import java.util.Locale
  * 
  * FASE 3: Inclui controle de acesso admin, card de valor acertado e relatório de fechamento.
  */
-@AndroidEntryPoint
 class RoutesFragment : Fragment() {
 
     // ViewBinding para acessar as views de forma type-safe
     private var _binding: FragmentRoutesBinding? = null
     private val binding get() = _binding!!
 
-    // ViewModel injetado pelo Hilt
-    private val viewModel: RoutesViewModel by viewModels()
+    // ViewModel instanciado diretamente
+    private lateinit var viewModel: RoutesViewModel
 
     // Adapter para a lista de rotas
     private lateinit var routesAdapter: RoutesAdapter
@@ -51,6 +51,9 @@ class RoutesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // Inicializar ViewModel aqui onde o contexto está disponível
+        viewModel = RoutesViewModel(RotaRepository(AppDatabase.getDatabase(requireContext()).rotaDao()))
         
         setupRecyclerView()
         setupClickListeners()

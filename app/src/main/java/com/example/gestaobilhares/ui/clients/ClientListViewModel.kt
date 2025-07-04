@@ -7,7 +7,6 @@ import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.StatusRota
 import com.example.gestaobilhares.data.repositories.ClienteRepository
 import com.example.gestaobilhares.data.repository.RotaRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import javax.inject.Inject
 
 /**
  * Filtros disponíveis para a lista de clientes
@@ -26,10 +24,10 @@ enum class FiltroCliente {
 }
 
 /**
- * ViewModel modernizado para lista de clientes com controle de rota
+ * ViewModel para ClientListFragment
+ * FASE 3: Implementação com controle de status da rota
  */
-@HiltViewModel
-class ClientListViewModel @Inject constructor(
+class ClientListViewModel(
     private val clienteRepository: ClienteRepository,
     private val rotaRepository: RotaRepository
 ) : ViewModel() {

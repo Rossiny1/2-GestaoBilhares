@@ -15,18 +15,19 @@ import com.example.gestaobilhares.data.entities.CategoriaDespesa
 import com.example.gestaobilhares.data.entities.DespesaResumo
 import com.example.gestaobilhares.databinding.FragmentExpenseHistoryBinding
 import com.google.android.material.chip.Chip
-import dagger.hilt.android.AndroidEntryPoint
+// Hilt removido - usando instanciação direta
 import androidx.core.view.children
 import kotlinx.coroutines.launch
 import androidx.core.view.children
 import java.text.NumberFormat
 import java.util.*
+import com.example.gestaobilhares.data.repository.DespesaRepository
+import com.example.gestaobilhares.data.database.AppDatabase
 
 /**
  * Fragment para exibir o histórico de despesas.
  * Implementa funcionalidades de listagem, filtros e estatísticas.
  */
-@AndroidEntryPoint
 class ExpenseHistoryFragment : Fragment() {
 
     // ViewBinding para acessar as views
@@ -34,7 +35,7 @@ class ExpenseHistoryFragment : Fragment() {
     private val binding get() = _binding!!
 
     // ViewModel injetado pelo Hilt
-    private val viewModel: ExpenseHistoryViewModel by viewModels()
+    private lateinit var viewModel: ExpenseHistoryViewModel
 
     // Adapter para a lista de despesas
     private lateinit var expenseAdapter: ExpenseAdapter
@@ -53,6 +54,7 @@ class ExpenseHistoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel = ExpenseHistoryViewModel(DespesaRepository(AppDatabase.getDatabase(requireContext()).despesaDao()))
         
         setupRecyclerView()
         setupClickListeners()

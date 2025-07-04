@@ -8,20 +8,17 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.DespesaResumo
 import com.example.gestaobilhares.data.entities.EstatisticasDespesas
 import com.example.gestaobilhares.data.repository.DespesaRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel para a tela de histórico de despesas.
  * Gerencia dados de despesas, filtros e estados da UI.
  */
-@HiltViewModel
-class ExpenseHistoryViewModel @Inject constructor(
+class ExpenseHistoryViewModel(
     private val despesaRepository: DespesaRepository
 ) : ViewModel() {
 

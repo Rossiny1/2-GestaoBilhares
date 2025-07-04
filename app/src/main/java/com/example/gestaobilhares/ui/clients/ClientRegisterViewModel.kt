@@ -4,15 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.repositories.ClienteRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class ClientRegisterViewModel @Inject constructor(
+/**
+ * ViewModel para ClientRegisterFragment
+ */
+class ClientRegisterViewModel(
     private val clienteRepository: ClienteRepository
 ) : ViewModel() {
     private val _novoClienteId = MutableStateFlow<Long?>(null)
@@ -124,5 +124,10 @@ class ClientRegisterViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun carregarCliente(clienteId: Long) {
+        // ✅ IMPLEMENTADO: Método para compatibilidade
+        carregarClienteParaEdicao(clienteId)
     }
 } 

@@ -6,12 +6,10 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.TipoMesa
 import com.example.gestaobilhares.data.entities.TamanhoMesa
 import com.example.gestaobilhares.data.repository.MesaRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class EstatisticasDeposito(
     val totalMesas: Int = 0,
@@ -23,8 +21,7 @@ data class EstatisticasDeposito(
     val mesasGrandes: Int = 0
 )
 
-@HiltViewModel
-class MesasDepositoViewModel @Inject constructor(
+class MesasDepositoViewModel(
     private val mesaRepository: MesaRepository
 ) : ViewModel() {
     private val _mesasDisponiveis = MutableStateFlow<List<Mesa>>(emptyList())

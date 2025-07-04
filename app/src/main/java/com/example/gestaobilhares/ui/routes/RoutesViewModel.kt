@@ -8,10 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.RotaResumo
 import com.example.gestaobilhares.data.repository.RotaRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel para a tela de rotas.
@@ -20,8 +18,7 @@ import javax.inject.Inject
  * 
  * FASE 3: Inclui controle de acesso administrativo e cálculo de valores acertados.
  */
-@HiltViewModel
-class RoutesViewModel @Inject constructor(
+class RoutesViewModel(
     private val rotaRepository: RotaRepository
 ) : ViewModel() {
 

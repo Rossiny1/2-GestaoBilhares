@@ -293,7 +293,7 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Débito Atual -->
+                    <!-- Débito Atual (SOMENTE LEITURA - VEM DO BANCO) -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

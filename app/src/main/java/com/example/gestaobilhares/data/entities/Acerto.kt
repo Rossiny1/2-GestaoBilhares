@@ -84,7 +84,23 @@ data class Acerto(
     val dataFinalizacao: Date? = null,
     
     @ColumnInfo(name = "metodos_pagamento_json")
-    val metodosPagamentoJson: String? = null
+    val metodosPagamentoJson: String? = null,
+    
+    // ✅ NOVOS CAMPOS: Para resolver problema de dados perdidos
+    @ColumnInfo(name = "representante")
+    val representante: String? = null,
+    
+    @ColumnInfo(name = "tipo_acerto")
+    val tipoAcerto: String? = null,
+    
+    @ColumnInfo(name = "pano_trocado")
+    val panoTrocado: Boolean = false,
+    
+    @ColumnInfo(name = "numero_pano")
+    val numeroPano: String? = null,
+    
+    @ColumnInfo(name = "dados_extras_json")
+    val dadosExtrasJson: String? = null
 )
 
 /**

@@ -12,16 +12,16 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentMesasDepositoBinding
 import com.example.gestaobilhares.data.entities.Mesa
+import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.database.AppDatabase
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
+// Hilt removido - usando instanciação direta
 class MesasDepositoFragment : Fragment() {
     private var _binding: FragmentMesasDepositoBinding? = null
     private val binding get() = _binding!!
-
-    private val viewModel: MesasDepositoViewModel by viewModels()
+    private lateinit var viewModel: MesasDepositoViewModel
     private val args: MesasDepositoFragmentArgs by navArgs()
     private lateinit var adapter: MesasDepositoAdapter
 
@@ -34,6 +34,7 @@ class MesasDepositoFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel = MesasDepositoViewModel(MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao()))
         setupRecyclerView()
         setupListeners()
         observeViewModel()

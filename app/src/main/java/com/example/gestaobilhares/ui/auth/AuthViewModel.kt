@@ -6,17 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-// import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
 
 /**
  * ViewModel responsável pela lógica de autenticação com Firebase.
  * Implementa padrão MVVM para separar lógica de negócio da UI.
  */
-// @HiltViewModel
-class AuthViewModel constructor() : ViewModel() {
+class AuthViewModel : ViewModel() {
     
     // Instância do Firebase Auth
     private val firebaseAuth = FirebaseAuth.getInstance()
@@ -42,42 +39,64 @@ class AuthViewModel constructor() : ViewModel() {
      * Função para realizar login com email e senha
      */
     fun login(email: String, senha: String) {
+        android.util.Log.d("AuthViewModel", "=== INICIANDO LOGIN ===")
+        android.util.Log.d("AuthViewModel", "Email: $email")
+        android.util.Log.d("AuthViewModel", "Senha: ${senha.length} caracteres")
+        
         // Validação básica
         if (email.isBlank() || senha.isBlank()) {
+            android.util.Log.e("AuthViewModel", "Email ou senha em branco")
             _errorMessage.value = "Email e senha são obrigatórios"
             return
         }
         
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            android.util.Log.e("AuthViewModel", "Email inválido: $email")
             _errorMessage.value = "Email inválido"
             return
         }
         
         if (senha.length < 6) {
+            android.util.Log.e("AuthViewModel", "Senha muito curta: ${senha.length} caracteres")
             _errorMessage.value = "Senha deve ter pelo menos 6 caracteres"
             return
         }
         
         viewModelScope.launch {
             try {
+                android.util.Log.d("AuthViewModel", "Iniciando autenticação com Firebase...")
                 _isLoading.value = true
                 _errorMessage.value = ""
                 
+                // Verificar se Firebase Auth está disponível
+                android.util.Log.d("AuthViewModel", "Firebase Auth instance: $firebaseAuth")
+                android.util.Log.d("AuthViewModel", "Firebase Auth current user: ${firebaseAuth.currentUser}")
+                
                 // Realizar login com Firebase
+                android.util.Log.d("AuthViewModel", "Chamando signInWithEmailAndPassword...")
                 val result = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
                 
+                android.util.Log.d("AuthViewModel", "Resultado do login: $result")
+                android.util.Log.d("AuthViewModel", "User: ${result.user}")
+                
                 if (result.user != null) {
+                    android.util.Log.d("AuthViewModel", "✅ LOGIN SUCESSO! User ID: ${result.user!!.uid}")
+                    android.util.Log.d("AuthViewModel", "User email: ${result.user!!.email}")
                     _authState.value = AuthState.Authenticated(result.user!!)
                 } else {
+                    android.util.Log.e("AuthViewModel", "❌ Falha na autenticação - user é null")
                     _authState.value = AuthState.Unauthenticated
                     _errorMessage.value = "Falha na autenticação"
                 }
                 
             } catch (e: Exception) {
+                android.util.Log.e("AuthViewModel", "❌ ERRO NO LOGIN: ${e.message}", e)
+                android.util.Log.e("AuthViewModel", "Tipo de erro: ${e.javaClass.simpleName}")
                 _authState.value = AuthState.Unauthenticated
                 _errorMessage.value = getFirebaseErrorMessage(e)
             } finally {
                 _isLoading.value = false
+                android.util.Log.d("AuthViewModel", "=== FIM DO LOGIN ===")
             }
         }
     }

@@ -77,6 +77,24 @@ class SettlementHistoryAdapter(
                 // Débito atual
                 tvDebitoAtual.text = formatter.format(acerto.debitoAtual)
                 
+                // ✅ CORREÇÃO: Observação do acerto com logs detalhados
+                android.util.Log.d("SettlementHistoryAdapter", "=== EXIBINDO OBSERVAÇÃO NO HISTÓRICO ===")
+                android.util.Log.d("SettlementHistoryAdapter", "Acerto ID: ${acerto.id}")
+                android.util.Log.d("SettlementHistoryAdapter", "Observação recebida: '${acerto.observacao}'")
+                android.util.Log.d("SettlementHistoryAdapter", "Observação é nula? ${acerto.observacao == null}")
+                android.util.Log.d("SettlementHistoryAdapter", "Observação é vazia? ${acerto.observacao?.isEmpty()}")
+                android.util.Log.d("SettlementHistoryAdapter", "Observação é blank? ${acerto.observacao?.isBlank()}")
+                
+                if (!acerto.observacao.isNullOrBlank()) {
+                    tvObservacaoAcerto.visibility = android.view.View.VISIBLE
+                    tvObservacaoAcerto.text = "📝 ${acerto.observacao}"
+                    android.util.Log.d("SettlementHistoryAdapter", "✅ Observação EXIBIDA: '${acerto.observacao}'")
+                } else {
+                    tvObservacaoAcerto.visibility = android.view.View.VISIBLE // ✅ CORREÇÃO: Sempre mostrar
+                    tvObservacaoAcerto.text = "📝 Sem observações"
+                    android.util.Log.d("SettlementHistoryAdapter", "⚠️ Observação VAZIA - mostrando placeholder")
+                }
+                
                 // Click listener
                 root.setOnClickListener {
                     onItemClick(acerto)

@@ -4,13 +4,10 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import com.example.gestaobilhares.databinding.ActivityMainBinding
-import dagger.hilt.android.AndroidEntryPoint
-
 /**
  * MainActivity configurada para Navigation Component e ViewBinding.
  * Usando NoActionBar theme - navegação gerenciada pelos próprios fragments.
  */
-@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 

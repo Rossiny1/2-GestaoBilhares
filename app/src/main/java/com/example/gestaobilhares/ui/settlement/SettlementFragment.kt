@@ -20,11 +20,11 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentSettlementBinding
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
-import java.text.NumberFormat
-import java.util.*
-import com.example.gestaobilhares.ui.settlement.MesasAcertoAdapter
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repositories.ClienteRepository
+import com.example.gestaobilhares.data.repository.AcertoRepository
+import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -38,18 +38,19 @@ import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.text.NumberFormat
+import java.util.Locale
+import kotlinx.coroutines.launch
 
 /**
  * Fragment para registrar novos acertos
  * FASE 4A - Implementação crítica do core business
  */
-@AndroidEntryPoint
 class SettlementFragment : Fragment() {
 
     private var _binding: FragmentSettlementBinding? = null
     private val binding get() = _binding!!
-
-    private val viewModel: SettlementViewModel by viewModels()
+    private lateinit var viewModel: SettlementViewModel
     private val args: SettlementFragmentArgs by navArgs()
     
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
@@ -68,6 +69,14 @@ class SettlementFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        // Inicializar ViewModel aqui onde o contexto está disponível
+        viewModel = SettlementViewModel(
+            MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao()),
+            ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
+            AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao()),
+            AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao())
+        )
+        
         Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
         Log.d("SettlementFragment", "Cliente ID: ${args.clienteId}")
         
@@ -83,8 +92,10 @@ class SettlementFragment : Fragment() {
         // Quarto: configurar UI básica
         configurarUIBasica()
         
-        // Quinto: buscar débito anterior
+                // Quinto: buscar débito anterior (usado para cálculo do débito atual)
         viewModel.buscarDebitoAnterior(args.clienteId)
+
+        
         
         // Sexto: carregar dados básicos do cliente para header
         viewModel.loadClientForSettlement(args.clienteId)
@@ -267,22 +278,49 @@ class SettlementFragment : Fragment() {
     }
     
     private fun setupCalculationListeners() {
-        val watcher = object : TextWatcher {
+        // ✅ CORREÇÃO CRÍTICA: Listener para desconto
+        val descontoWatcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
+                Log.d("SettlementFragment", "🔄 Desconto alterado: '${s.toString()}' - recalculando débito atual...")
                 updateCalculations()
             }
         }
         
-        binding.etDesconto.addTextChangedListener(watcher)
-        // binding.etAmountReceived.removeTextChangedListener(watcher) // Não adicionar watcher!
+        binding.etDesconto.addTextChangedListener(descontoWatcher)
+        
+        // ✅ CORREÇÃO CRÍTICA: Listener específico para o campo Valor Recebido
+        val valorRecebidoWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                Log.d("SettlementFragment", "🔄 Valor recebido alterado: '${s.toString()}' - recalculando débito atual...")
+                updateCalculations()
+            }
+        }
+        
+        // Adicionar listener ao campo Valor Recebido
+        binding.etAmountReceived.addTextChangedListener(valorRecebidoWatcher)
+        
+        Log.d("SettlementFragment", "✅ Listeners de cálculo configurados - débito atual será atualizado em tempo real")
     }
     
     private fun updateCalculations() {
         try {
-            val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
-            val valorRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
+            Log.d("SettlementFragment", "=== INICIANDO CÁLCULOS ===")
+            
+            // Capturar valores dos campos
+            val descontoText = binding.etDesconto.text.toString()
+            val valorRecebidoText = binding.etAmountReceived.text.toString()
+            
+            val desconto = descontoText.toDoubleOrNull() ?: 0.0
+            val valorRecebido = valorRecebidoText.toDoubleOrNull() ?: 0.0
+
+            Log.d("SettlementFragment", "Texto desconto: '$descontoText' -> R$ $desconto")
+            Log.d("SettlementFragment", "Texto valor recebido: '$valorRecebidoText' -> R$ $valorRecebido")
+            Log.d("SettlementFragment", "PaymentValues: $paymentValues")
+            Log.d("SettlementFragment", "Soma paymentValues: R$ ${paymentValues.values.sum()}")
 
             // O subtotal agora vem diretamente do adapter, que soma os subtotais de todas as mesas
             val subtotalMesas = mesasAcertoAdapter.getSubtotal()
@@ -292,28 +330,79 @@ class SettlementFragment : Fragment() {
             val totalComDebito = subtotalMesas + debitoAnterior
             val totalComDesconto = maxOf(0.0, totalComDebito - desconto)
             
-            // ✅ FÓRMULA CORRIGIDA: Débito atual = Valor total - Valor recebido
-            val debitoAtual = totalComDesconto - valorRecebido
-            
-            Log.d("SettlementFragment", "=== CÁLCULOS ATUALIZADOS ===")
+            Log.d("SettlementFragment", "=== CÁLCULOS DETALHADOS ===")
             Log.d("SettlementFragment", "Subtotal mesas: R$ $subtotalMesas")
             Log.d("SettlementFragment", "Débito anterior: R$ $debitoAnterior")
             Log.d("SettlementFragment", "Total com débito: R$ $totalComDebito")
             Log.d("SettlementFragment", "Desconto: R$ $desconto")
             Log.d("SettlementFragment", "Total com desconto: R$ $totalComDesconto")
             Log.d("SettlementFragment", "Valor recebido: R$ $valorRecebido")
-            Log.d("SettlementFragment", "✅ DÉBITO ATUAL: R$ $debitoAtual")
+            
+            // ✅ CORREÇÃO CRÍTICA: Calcular débito atual em tempo real
+            // Usar diretamente a soma dos paymentValues em vez do campo valor recebido
+            val valorRecebidoDosMetodos = paymentValues.values.sum()
+            val debitoAtualCalculado = debitoAnterior + subtotalMesas - desconto - valorRecebidoDosMetodos
+            
+            Log.d("SettlementFragment", "✅ VALOR RECEBIDO DOS MÉTODOS: R$ $valorRecebidoDosMetodos")
+            Log.d("SettlementFragment", "✅ PaymentValues detalhado: $paymentValues")
             
             // Atualizar displays dos totais
             binding.tvTableTotal.text = formatter.format(subtotalMesas)
             binding.tvTotalWithDebt.text = formatter.format(totalComDesconto) // Mostrar valor total final
-            binding.tvCurrentDebt.text = formatter.format(debitoAtual)
+            binding.tvCurrentDebt.text = formatter.format(debitoAtualCalculado) // ✅ DÉBITO ATUAL EM TEMPO REAL
+            
+            Log.d("SettlementFragment", "✅ DÉBITO ATUAL CALCULADO EM TEMPO REAL: R$ $debitoAtualCalculado")
+            Log.d("SettlementFragment", "✅ FÓRMULA: $debitoAnterior + $subtotalMesas - $desconto - $valorRecebidoDosMetodos = $debitoAtualCalculado")
+            
+
+            
+            Log.d("SettlementFragment", "✅ DISPLAYS ATUALIZADOS")
+            Log.d("SettlementFragment", "tvTableTotal: ${binding.tvTableTotal.text}")
+            Log.d("SettlementFragment", "tvTotalWithDebt: ${binding.tvTotalWithDebt.text}")
             
         } catch (e: Exception) {
-            Log.e("UpdateCalculations", "Erro ao calcular totais", e)
+            Log.e("UpdateCalculations", "❌ Erro ao calcular totais", e)
             binding.tvTableTotal.text = formatter.format(0.0)
             binding.tvTotalWithDebt.text = formatter.format(0.0)
-            binding.tvCurrentDebt.text = formatter.format(0.0)
+        }
+    }
+
+
+
+    /**
+     * Força a atualização dos cálculos com validação extra
+     */
+    private fun forceUpdateCalculations() {
+        try {
+            Log.d("SettlementFragment", "🔄 FORÇANDO RECÁLCULO DOS TOTAIS")
+            
+            // Validar se o adapter está pronto
+            if (!::mesasAcertoAdapter.isInitialized) {
+                Log.w("SettlementFragment", "⚠️ Adapter ainda não inicializado")
+                return
+            }
+            
+            // Verificar se o valor recebido está sincronizado com paymentValues
+            val somaPaymentValues = paymentValues.values.sum()
+            val valorRecebidoAtual = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
+            
+            if (Math.abs(somaPaymentValues - valorRecebidoAtual) > 0.01) {
+                Log.w("SettlementFragment", "⚠️ INCONSISTÊNCIA DETECTADA:")
+                Log.w("SettlementFragment", "Soma paymentValues: R$ $somaPaymentValues")
+                Log.w("SettlementFragment", "Valor no campo: R$ $valorRecebidoAtual")
+                
+                // Forçar sincronização
+                binding.etAmountReceived.setText(String.format("%.2f", somaPaymentValues))
+                Log.d("SettlementFragment", "✅ Campo sincronizado com paymentValues")
+            }
+            
+            // Chamar updateCalculations normal
+            updateCalculations()
+            
+        } catch (e: Exception) {
+            Log.e("SettlementFragment", "❌ Erro ao forçar recálculo", e)
+            // Fallback para updateCalculations normal
+            updateCalculations()
         }
     }
     
@@ -373,6 +462,11 @@ class SettlementFragment : Fragment() {
                     "Valor para $metodo"
                 }
                 inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+                // Pré-preencher com valor existente se houver
+                val valorExistente = paymentValues[metodo]
+                if (valorExistente != null && valorExistente > 0) {
+                    setText(String.format("%.2f", valorExistente))
+                }
                 layout.addView(this)
             }
         }
@@ -381,13 +475,33 @@ class SettlementFragment : Fragment() {
             .setTitle("Métodos de Pagamento")
             .setView(layout)
             .setPositiveButton("OK") { _, _ ->
+                Log.d("SettlementFragment", "=== PROCESSANDO MÉTODOS DE PAGAMENTO ===")
+                
                 paymentValues.clear()
                 var totalInformado = 0.0
+                var valoresValidos = true
+                
                 selected.forEach { metodo ->
-                    val valor = editTexts[metodo]?.text.toString().toDoubleOrNull() ?: 0.0
+                    val valorTexto = editTexts[metodo]?.text.toString().trim()
+                    val valor = valorTexto.toDoubleOrNull() ?: 0.0
+                    
+                    Log.d("SettlementFragment", "Método: $metodo - Texto: '$valorTexto' -> Valor: R$ $valor")
+                    
+                    if (valor < 0) {
+                        Log.w("SettlementFragment", "⚠️ Valor negativo detectado para $metodo: R$ $valor")
+                        valoresValidos = false
+                    }
+                    
                     paymentValues[metodo] = valor
                     totalInformado += valor
                 }
+                
+                if (!valoresValidos) {
+                    Log.w("SettlementFragment", "⚠️ Alguns valores são inválidos")
+                    // Continuar mesmo assim, mas registrar no log
+                }
+                
+                Log.d("SettlementFragment", "Total informado: R$ $totalInformado")
                 
                 // Atualizar texto do campo de método de pagamento
                 val resumo = if (selected.size == 1) {
@@ -400,10 +514,19 @@ class SettlementFragment : Fragment() {
                 // Atualiza o campo Valor Recebido com a soma
                 binding.etAmountReceived.setText(String.format("%.2f", totalInformado))
                 
-                // ✅ CORREÇÃO: Recálculo imediato sem post{}
+                Log.d("SettlementFragment", "Campo Valor Recebido atualizado para: '${binding.etAmountReceived.text}'")
+                
+                // ✅ CORREÇÃO: Forçar recálculo imediato após atualizar métodos de pagamento
                 updateCalculations()
                 
-                Log.d("SettlementFragment", "Métodos de pagamento atualizados - Total: R$ $totalInformado")
+                // ✅ CORREÇÃO: Forçar recálculo com post para garantir que UI foi atualizada
+                binding.etAmountReceived.post {
+                    Log.d("SettlementFragment", "Executando recálculo após update UI")
+                    // Forçar recálculo imediato
+                    forceUpdateCalculations()
+                }
+                
+                Log.d("SettlementFragment", "✅ Métodos de pagamento processados - Total: R$ $totalInformado")
             }
             .setNegativeButton("Cancelar", null)
             .show()
@@ -415,22 +538,37 @@ class SettlementFragment : Fragment() {
             Log.d("SettlementFragment", "Já está salvando, ignorando clique adicional")
             return
         }
-        // Desabilitar botão imediatamente
-        binding.btnSaveSettlement.isEnabled = false
-        viewModel.setLoading(true)
         
+        // ✅ CORREÇÃO: Validar dados ANTES de desabilitar o botão
         if (!mesasAcertoAdapter.isDataValid()) {
             Toast.makeText(requireContext(), "Verifique os valores das mesas. O relógio final deve ser maior ou igual ao inicial.", Toast.LENGTH_LONG).show()
             return
         }
+        
+        // Desabilitar botão apenas após validação bem-sucedida
+        binding.btnSaveSettlement.isEnabled = false
+        viewModel.setLoading(true)
 
         val valorRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
         val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
-        val observacao = "" // Ajuste: campo removido do layout
+        val observacao = binding.etObservacao.text.toString().trim()
         val panoTrocado = binding.cbPanoTrocado.isChecked
         val numeroPano = if (panoTrocado) binding.etNumeroPano.text.toString() else null
-        val tipoAcerto = "Presencial" // Ajuste: campo removido do layout
+        val tipoAcerto = binding.spTipoAcerto.selectedItem.toString()
         val representante = binding.tvRepresentante.text.toString()
+
+        // ✅ CORREÇÃO: Logs detalhados para debug das observações
+        Log.d("SettlementFragment", "=== SALVANDO ACERTO - DEBUG OBSERVAÇÕES ===")
+        Log.d("SettlementFragment", "Campo observação (RAW): '${binding.etObservacao.text}'")
+        Log.d("SettlementFragment", "Campo observação (TRIM): '$observacao'")
+        Log.d("SettlementFragment", "Observação é nula? ${observacao == null}")
+        Log.d("SettlementFragment", "Observação é vazia? ${observacao.isEmpty()}")
+        Log.d("SettlementFragment", "Observação é blank? ${observacao.isBlank()}")
+        Log.d("SettlementFragment", "Tamanho da observação: ${observacao.length}")
+        
+        // ✅ CORREÇÃO: Garantir que observação não seja nula
+        val observacaoFinal = if (observacao.isBlank()) "Acerto realizado via app" else observacao
+        Log.d("SettlementFragment", "Observação final que será salva: '$observacaoFinal'")
 
         val mesasDoAcerto = mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
             // Buscar a mesa original para obter o valorFixo
@@ -451,16 +589,20 @@ class SettlementFragment : Fragment() {
             panoTrocado = panoTrocado,
             numeroPano = numeroPano,
             tipoAcerto = tipoAcerto,
-            observacao = observacao,
+            observacao = observacaoFinal, // ✅ CORREÇÃO: Usar observação final
             justificativa = null,
             metodosPagamento = paymentValues
         )
 
         Log.d("SettlementFragment", "Iniciando salvamento do acerto...")
+        Log.d("SettlementFragment", "Desconto aplicado: R$ $desconto")
+        Log.d("SettlementFragment", "Observação enviada para ViewModel: '$observacaoFinal'")
+        Log.d("SettlementFragment", "Tipo de acerto: $tipoAcerto")
         viewModel.salvarAcerto(
             clienteId = args.clienteId,
             dadosAcerto = dadosAcerto,
-            metodosPagamento = paymentValues
+            metodosPagamento = paymentValues,
+            desconto = desconto
         )
     }
 
@@ -478,22 +620,42 @@ class SettlementFragment : Fragment() {
             }
         }
         
-        // Observer para débito anterior
+                // Observer para débito anterior
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.debitoAnterior.collect { debito ->
                 val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
                 binding.tvPreviousDebt.text = formatter.format(debito)
+                
+                Log.d("SettlementFragment", "🔄 Débito anterior atualizado: R$ $debito")
             }
         }
+
+        // ✅ REMOVIDO: Observer do débito atual do banco (não é necessário)
+        // O débito atual será calculado em tempo real na função updateCalculations()
+
+        
         
         // Observer para resultado do salvamento - CRÍTICO PARA O DIÁLOGO
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.resultadoSalvamento.collect { resultado ->
+                // ✅ CORREÇÃO: Sempre reabilitar o botão, independente do resultado
                 binding.btnSaveSettlement.isEnabled = true
                 viewModel.setLoading(false)
+                
                 resultado?.let {
-                    val acertoId = it.getOrNull() ?: return@let
-                    mostrarDialogoResumoComAcerto(acertoId)
+                    if (it.isSuccess) {
+                        val acertoId = it.getOrNull() ?: return@let
+                        Log.d("SettlementFragment", "✅ Acerto salvo com sucesso! ID: $acertoId")
+                        
+
+                        
+                        mostrarDialogoResumoComAcerto(acertoId)
+                    } else {
+                        // Em caso de erro, mostrar mensagem
+                        val error = it.exceptionOrNull()
+                        Log.e("SettlementFragment", "Erro ao salvar acerto: ${error?.message}")
+                        Toast.makeText(requireContext(), "Erro ao salvar acerto: ${error?.message}", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
@@ -526,6 +688,14 @@ class SettlementFragment : Fragment() {
                 )
                 dialog.acertoCompartilhadoListener = object : SettlementSummaryDialog.OnAcertoCompartilhadoListener {
                     override fun onAcertoCompartilhado() {
+                        // ✅ CORREÇÃO: Notificar ClientDetailFragment via cache seguro
+                        val sharedPref = requireActivity().getSharedPreferences("acerto_temp", android.content.Context.MODE_PRIVATE)
+                        with(sharedPref.edit()) {
+                            putLong("cliente_id", args.clienteId)
+                            putBoolean("acerto_salvo", true)
+                            putLong("novo_acerto_id", acertoId)
+                            apply()
+                        }
                         // Voltar para tela Detalhes do Cliente
                         findNavController().popBackStack(R.id.clientDetailFragment, false)
                     }
@@ -537,105 +707,8 @@ class SettlementFragment : Fragment() {
         }
     }
 
-    /**
-     * 🎯 FUNÇÃO CRÍTICA: Mostra o diálogo de resumo do acerto
-     */
-    private fun mostrarDialogoResumo() {
-        try {
-            Log.d("SettlementFragment", "=== INICIANDO DIÁLOGO DE RESUMO ===")
-            
-            val clienteNome = binding.tvClientName.text.toString()
-            val valorRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
-            val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
-            val debitoAtual = binding.tvCurrentDebt.text.toString()
-                .replace("R$", "").replace(".", "").replace(",", ".")
-                .trim().toDoubleOrNull() ?: 0.0
-            val observacao = "Acerto realizado via app"
-            
-            // Calcular valor total real do acerto
-            val subtotalMesas = mesasAcertoAdapter.getSubtotal()
-            val valorTotalAcerto = subtotalMesas - desconto
-            
-            Log.d("SettlementFragment", "Dados do resumo:")
-            Log.d("SettlementFragment", "- Cliente: $clienteNome")
-            Log.d("SettlementFragment", "- Subtotal: R$ $subtotalMesas")
-            Log.d("SettlementFragment", "- Desconto: R$ $desconto")
-            Log.d("SettlementFragment", "- Total: R$ $valorTotalAcerto")
-            Log.d("SettlementFragment", "- Recebido: R$ $valorRecebido")
-            Log.d("SettlementFragment", "- Débito: R$ $debitoAtual")
-            
-            // Converter estados das mesas para o diálogo
-            val mesasDoAcerto = mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
-                Mesa(
-                    id = mesaState.mesaId,
-                    numero = "Mesa ${idx + 1}",
-                    fichasInicial = mesaState.relogioInicial,
-                    fichasFinal = mesaState.relogioFinal,
-                    valorFixo = mesaState.valorFixo,
-                    tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA
-                )
-            }
-            
-            Log.d("SettlementFragment", "Mesas do acerto: ${mesasDoAcerto.size}")
-            
-            // Criar e mostrar diálogo
-            val dialog = SettlementSummaryDialog.newInstance(
-                clienteNome = clienteNome,
-                mesas = mesasDoAcerto,
-                total = valorTotalAcerto,
-                metodosPagamento = paymentValues,
-                observacao = observacao,
-                debitoAtual = debitoAtual
-            )
-            
-            Log.d("SettlementFragment", "Mostrando diálogo...")
-            dialog.show(parentFragmentManager, "SettlementSummaryDialog")
-            
-            // Atualizar histórico do cliente
-            atualizarHistoricoCliente(valorTotalAcerto, mesasDoAcerto.size)
-            
-        } catch (e: Exception) {
-            Log.e("SettlementFragment", "❌ Erro ao mostrar diálogo: ${e.message}", e)
-            Toast.makeText(requireContext(), "Erro ao exibir resumo: ${e.message}", Toast.LENGTH_LONG).show()
-        }
-    }
-    
-    /**
-     * Atualiza o histórico de acertos do cliente
-     */
-    private fun atualizarHistoricoCliente(valorTotal: Double, quantidadeMesas: Int) {
-        try {
-            val novoAcerto = AcertoResumo(
-                id = System.currentTimeMillis(),
-                data = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date()),
-                valorTotal = valorTotal,
-                status = "Finalizado",
-                mesasAcertadas = quantidadeMesas,
-                debitoAtual = 0.0
-            )
-            
-            Log.d("SettlementFragment", "Salvando acerto no histórico: $novoAcerto")
-            
-            // Salvar via SharedPreferences para comunicação com ClientDetailFragment
-            val sharedPref = requireActivity().getSharedPreferences("acerto_temp", android.content.Context.MODE_PRIVATE)
-            with(sharedPref.edit()) {
-                putLong("novo_acerto_id", novoAcerto.id)
-                putString("novo_acerto_data", novoAcerto.data)
-                putFloat("novo_acerto_valor", novoAcerto.valorTotal.toFloat())
-                putString("novo_acerto_status", novoAcerto.status)
-                putInt("novo_acerto_mesas", novoAcerto.mesasAcertadas)
-                putLong("cliente_id", args.clienteId)
-                putBoolean("acerto_salvo", true)
-                apply()
-            }
-            
-            // Navegar de volta
-            findNavController().popBackStack()
-            
-        } catch (e: Exception) {
-            Log.e("SettlementFragment", "Erro ao atualizar histórico: ${e.message}", e)
-        }
-    }
+    // ✅ REMOVIDO: Função duplicada mostrarDialogoResumo() 
+    // Agora usa apenas mostrarDialogoResumoComAcerto() que pega dados reais do banco
 
     override fun onDestroyView() {
         super.onDestroyView()

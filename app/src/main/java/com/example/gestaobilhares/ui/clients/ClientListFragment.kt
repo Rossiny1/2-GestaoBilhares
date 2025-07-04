@@ -13,19 +13,20 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.StatusRota
 import com.example.gestaobilhares.databinding.FragmentClientListBinding
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repositories.ClienteRepository
+import com.example.gestaobilhares.data.repository.RotaRepository
 
 /**
  * Fragment modernizado para lista de clientes com controle de status da rota
  */
-@AndroidEntryPoint
 class ClientListFragment : Fragment() {
 
     private var _binding: FragmentClientListBinding? = null
     private val binding get() = _binding ?: throw IllegalStateException("Binding não está disponível")
 
-    private val viewModel: ClientListViewModel by viewModels()
+    private lateinit var viewModel: ClientListViewModel
     private val args: ClientListFragmentArgs by navArgs()
     private lateinit var clientAdapter: ClientAdapter
 
@@ -40,6 +41,12 @@ class ClientListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // Inicializar ViewModel aqui onde o contexto está disponível
+        viewModel = ClientListViewModel(
+            ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
+            RotaRepository(AppDatabase.getDatabase(requireContext()).rotaDao())
+        )
         
         try {
             // Verificar se binding está disponível

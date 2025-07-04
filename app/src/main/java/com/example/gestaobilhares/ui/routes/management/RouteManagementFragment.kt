@@ -15,20 +15,19 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRouteManagementBinding
 import com.example.gestaobilhares.databinding.DialogAddEditRouteBinding
 import com.example.gestaobilhares.data.entities.Rota
-import dagger.hilt.android.AndroidEntryPoint
-
+import com.example.gestaobilhares.data.repository.RotaRepository
+import com.example.gestaobilhares.data.database.AppDatabase
 /**
  * Fragment para gerenciamento de rotas (CRUD).
  * Permite criar, editar e excluir rotas.
  * Acesso restrito apenas para administradores.
  */
-@AndroidEntryPoint
 class RouteManagementFragment : Fragment() {
 
     private var _binding: FragmentRouteManagementBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: RouteManagementViewModel by viewModels()
+    private lateinit var viewModel: RouteManagementViewModel
     
     private lateinit var routeAdapter: RouteManagementAdapter
 
@@ -43,6 +42,7 @@ class RouteManagementFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel = RouteManagementViewModel(RotaRepository(AppDatabase.getDatabase(requireContext()).rotaDao()))
         
         setupRecyclerView()
         setupClickListeners()

@@ -2,12 +2,10 @@ package com.example.gestaobilhares.ui.settlement
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.entities.Acerto
 import com.example.gestaobilhares.data.entities.AcertoMesa
@@ -15,13 +13,14 @@ import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.*
 import com.example.gestaobilhares.data.repository.AcertoMesaRepository
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 /**
  * ViewModel para SettlementDetailFragment
  * Busca dados reais do acerto no banco de dados
  */
-@HiltViewModel
-class SettlementDetailViewModel @Inject constructor(
+class SettlementDetailViewModel(
     private val acertoRepository: AcertoRepository,
     private val acertoMesaRepository: AcertoMesaRepository
 ) : ViewModel() {
@@ -49,6 +48,39 @@ class SettlementDetailViewModel @Inject constructor(
                     val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
                     val dataFormatada = formatter.format(acerto.dataAcerto)
                     
+                    // ✅ CORREÇÃO: Logs detalhados para debug das observações nos detalhes
+                    Log.d("SettlementDetailViewModel", "=== CARREGANDO DETALHES - DEBUG OBSERVAÇÕES ===")
+                    Log.d("SettlementDetailViewModel", "Acerto ID: ${acerto.id}")
+                    Log.d("SettlementDetailViewModel", "Observação no banco: '${acerto.observacoes}'")
+                    Log.d("SettlementDetailViewModel", "Observação é nula? ${acerto.observacoes == null}")
+                    Log.d("SettlementDetailViewModel", "Observação é vazia? ${acerto.observacoes?.isEmpty()}")
+                    
+                    // ✅ CORREÇÃO: Garantir que observação seja exibida corretamente
+                    val observacaoParaExibir = when {
+                        acerto.observacoes.isNullOrBlank() -> "Nenhuma observação registrada."
+                        else -> acerto.observacoes.trim()
+                    }
+                    
+                    Log.d("SettlementDetailViewModel", "Observação que será exibida: '$observacaoParaExibir'")
+
+                    // ✅ CORREÇÃO: Processar métodos de pagamento
+                    val metodosPagamento: Map<String, Double> = try {
+                        acerto.metodosPagamentoJson?.let {
+                            Gson().fromJson(it, object : TypeToken<Map<String, Double>>() {}.type)
+                        } ?: emptyMap()
+                    } catch (e: Exception) {
+                        Log.e("SettlementDetailViewModel", "Erro ao parsear métodos de pagamento: ${e.message}")
+                        emptyMap()
+                    }
+                    
+                    Log.d("SettlementDetailViewModel", "=== TODOS OS DADOS CARREGADOS ===")
+                    Log.d("SettlementDetailViewModel", "Representante: '${acerto.representante}'")
+                    Log.d("SettlementDetailViewModel", "Tipo de acerto: '${acerto.tipoAcerto}'")
+                    Log.d("SettlementDetailViewModel", "Pano trocado: ${acerto.panoTrocado}")
+                    Log.d("SettlementDetailViewModel", "Número do pano: '${acerto.numeroPano}'")
+                    Log.d("SettlementDetailViewModel", "Métodos de pagamento: $metodosPagamento")
+                    Log.d("SettlementDetailViewModel", "Data finalização: ${acerto.dataFinalizacao}")
+
                     val settlementDetail = SettlementDetail(
                         id = acerto.id,
                         date = dataFormatada,
@@ -59,8 +91,15 @@ class SettlementDetailViewModel @Inject constructor(
                         debitoAnterior = acerto.debitoAnterior,
                         debitoAtual = acerto.debitoAtual,
                         totalMesas = acerto.totalMesas.toInt(),
-                        observacoes = acerto.observacoes ?: "Nenhuma observação registrada.",
-                        acertoMesas = acertoMesas // Adicionar dados detalhados por mesa
+                        observacoes = observacaoParaExibir,
+                        acertoMesas = acertoMesas,
+                        // ✅ NOVOS DADOS: Incluir todos os campos que estavam sendo perdidos
+                        representante = acerto.representante ?: "Não informado",
+                        tipoAcerto = acerto.tipoAcerto ?: "Presencial",
+                        panoTrocado = acerto.panoTrocado,
+                        numeroPano = acerto.numeroPano,
+                        metodosPagamento = metodosPagamento,
+                        dataFinalizacao = acerto.dataFinalizacao
                     )
                     
                     _settlementDetails.value = settlementDetail
@@ -78,7 +117,7 @@ class SettlementDetailViewModel @Inject constructor(
         }
     }
 
-    // Data class para representar os detalhes do acerto
+    // ✅ ATUALIZADA: Data class para representar TODOS os detalhes do acerto
     data class SettlementDetail(
         val id: Long,
         val date: String,
@@ -90,6 +129,13 @@ class SettlementDetailViewModel @Inject constructor(
         val debitoAtual: Double,
         val totalMesas: Int,
         val observacoes: String,
-        val acertoMesas: List<AcertoMesa>
+        val acertoMesas: List<AcertoMesa>,
+        // ✅ NOVOS CAMPOS: Resolver problema de dados perdidos
+        val representante: String,
+        val tipoAcerto: String,
+        val panoTrocado: Boolean,
+        val numeroPano: String?,
+        val metodosPagamento: Map<String, Double>,
+        val dataFinalizacao: Date?
     )
 } 

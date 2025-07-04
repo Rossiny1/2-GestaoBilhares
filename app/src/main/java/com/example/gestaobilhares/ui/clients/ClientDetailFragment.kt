@@ -17,24 +17,29 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentClientDetailBinding
 import com.example.gestaobilhares.data.entities.Mesa
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dagger.hilt.android.AndroidEntryPoint
+// Hilt removido - usando instanciação direta
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.R
 import android.util.Log
 import com.example.gestaobilhares.ui.settlement.MesaDTO
 import android.widget.Toast
 
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repositories.ClienteRepository
+import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repository.AcertoRepository
+import com.example.gestaobilhares.data.repository.AcertoMesaRepository
+
 /**
  * Fragment para exibir detalhes do cliente e histórico de acertos
  * FASE 4A - Implementação crítica para desbloqueio do fluxo
  */
-@AndroidEntryPoint
 class ClientDetailFragment : Fragment() {
 
     private var _binding: FragmentClientDetailBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: ClientDetailViewModel by viewModels()
+    private lateinit var viewModel: ClientDetailViewModel
     private val args: ClientDetailFragmentArgs by navArgs()
     
     private lateinit var settlementHistoryAdapter: SettlementHistoryAdapter
@@ -53,6 +58,14 @@ class ClientDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // Inicializar ViewModel aqui onde o contexto está disponível
+        viewModel = ClientDetailViewModel(
+            ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
+            MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao()),
+            AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao()),
+            AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao())
+        )
         
         setupUI()
         setupRecyclerView()
@@ -286,33 +299,25 @@ class ClientDetailFragment : Fragment() {
     }
 
     /**
-     * ✅ NOVO: Diálogo de retirada que usa o relógio final do último acerto
+     * ✅ SIMPLIFICADO: Diálogo simples de confirmação para retirada de mesa
      */
     private fun mostrarDialogoRetiradaComRelogioFinal(mesa: Mesa) {
         lifecycleScope.launch {
             try {
-                // Buscar o relógio final do último acerto da mesa
+                // Buscar o relógio final do último acerto da mesa (usado internamente)
                 val relogioFinalUltimoAcerto = viewModel.buscarRelogioFinalUltimoAcerto(mesa.id)
-                
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_retirar_mesa, null)
-        val etRelogioFinal = dialogView.findViewById<EditText>(R.id.etRelogioFinal)
-        val etValorRecebido = dialogView.findViewById<EditText>(R.id.etValorRecebido)
-        
-                // Pré-preencher com o relógio final do último acerto
                 val relogioFinal = relogioFinalUltimoAcerto ?: mesa.relogioFinal ?: mesa.fichasFinal ?: 0
-                etRelogioFinal.setText(relogioFinal.toString())
-        
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Retirar Mesa ${mesa.numero}")
-            .setView(dialogView)
-                    .setMessage("O relógio final do último acerto será usado como relógio inicial na próxima locação.")
-            .setPositiveButton("Confirmar Retirada") { _, _ ->
-                val relogioFinal = etRelogioFinal.text.toString().toIntOrNull() ?: 0
-                val valorRecebido = etValorRecebido.text.toString().toDoubleOrNull() ?: 0.0
-                viewModel.retirarMesaDoCliente(mesa.id, args.clienteId, relogioFinal, valorRecebido)
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
+                
+                // ✅ NOVO: Diálogo simples de confirmação
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Retirar Mesa")
+                    .setMessage("Você tem certeza que deseja retirar essa mesa?")
+                    .setPositiveButton("Confirmar") { _, _ ->
+                        // Usar o relógio final do último acerto automaticamente
+                        viewModel.retirarMesaDoCliente(mesa.id, args.clienteId, relogioFinal, 0.0)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
             } catch (e: Exception) {
                 Log.e("ClientDetailFragment", "Erro ao mostrar diálogo de retirada: ${e.message}", e)
                 Toast.makeText(requireContext(), "Erro ao carregar dados da mesa", Toast.LENGTH_SHORT).show()
@@ -350,8 +355,26 @@ class ClientDetailFragment : Fragment() {
         binding.apply {
             tvClientName.text = client.nome
             tvClientAddress.text = client.endereco
-            tvLastVisit.text = "Última visita: ${client.ultimaVisita}"
-            tvActiveTables.text = "${client.mesasAtivas} Mesas ativas"
+            tvLastVisit.text = client.ultimaVisita
+            tvActiveTables.text = client.mesasAtivas.toString()
+            
+            // ✅ CORREÇÃO CRÍTICA: Exibir débito atual sincronizado
+            val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
+            if (client.debitoAtual <= 0) {
+                tvClientCurrentDebt.text = "Sem Débito"
+                tvClientCurrentDebt.setTextColor(requireContext().getColor(android.R.color.holo_green_dark))
+            } else {
+                tvClientCurrentDebt.text = formatter.format(client.debitoAtual)
+                // Cores baseadas no valor do débito
+                val debtColor = when {
+                    client.debitoAtual > 300.0 -> requireContext().getColor(com.example.gestaobilhares.R.color.red_600)
+                    client.debitoAtual > 100.0 -> requireContext().getColor(com.example.gestaobilhares.R.color.orange_500)
+                    else -> requireContext().getColor(com.example.gestaobilhares.R.color.purple_600)
+                }
+                tvClientCurrentDebt.setTextColor(debtColor)
+            }
+            Log.d("ClientDetailFragment", "Débito atual exibido na tela: R$ ${client.debitoAtual}")
+            
             // Observação do cliente
             if (viewModel.isAdminUser()) {
                 etObservations.visibility = View.VISIBLE
@@ -390,6 +413,7 @@ class ClientDetailFragment : Fragment() {
 
     /**
      * ✅ CORRIGIDO: Abre WhatsApp nativo com o número do cliente
+     * Baseado na documentação oficial Android e WhatsApp Business API
      */
     private fun abrirWhatsApp(telefone: String) {
         if (telefone.isEmpty()) {
@@ -402,7 +426,7 @@ class ClientDetailFragment : Fragment() {
             val numeroLimpo = telefone.replace(Regex("[^0-9]"), "")
             
             // Adicionar código do país se necessário (Brasil +55)
-            val numeroCompleto = if (numeroLimpo.length == 11 && numeroLimpo.startsWith("11")) {
+            val numeroCompleto = if (numeroLimpo.length == 11) {
                 "55$numeroLimpo" // Adiciona código do Brasil
             } else if (numeroLimpo.length == 10) {
                 "55$numeroLimpo" // Adiciona código do Brasil
@@ -410,34 +434,85 @@ class ClientDetailFragment : Fragment() {
                 numeroLimpo
             }
             
-            // ✅ CORREÇÃO: Usar intent específico para WhatsApp nativo
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, "Olá! Entro em contato sobre suas mesas de bilhar.")
-                setPackage("com.whatsapp") // Força abertura no app nativo
+            Log.d("ClientDetailFragment", "Número original: $telefone")
+            Log.d("ClientDetailFragment", "Número limpo: $numeroLimpo")
+            Log.d("ClientDetailFragment", "Número completo: $numeroCompleto")
+            
+            // ✅ CORREÇÃO: Mensagem padrão para contato
+            val mensagem = "Olá! Entro em contato sobre suas mesas de bilhar."
+            
+            // ✅ ESTRATÉGIA 1: Tentar WhatsApp nativo primeiro
+            try {
+                val intentWhatsApp = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, mensagem)
+                    setPackage("com.whatsapp")
+                }
+                
+                if (intentWhatsApp.resolveActivity(requireActivity().packageManager) != null) {
+                    startActivity(intentWhatsApp)
+                    Log.d("ClientDetailFragment", "✅ WhatsApp nativo aberto com sucesso")
+                    return
+                }
+            } catch (e: Exception) {
+                Log.d("ClientDetailFragment", "WhatsApp nativo não disponível: ${e.message}")
             }
             
-            // Verificar se o WhatsApp está instalado
-            if (intent.resolveActivity(requireActivity().packageManager) != null) {
-                startActivity(intent)
-            } else {
-                // WhatsApp não instalado, tentar com WhatsApp Business
+            // ✅ ESTRATÉGIA 2: Tentar WhatsApp Business
+            try {
                 val intentBusiness = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, "Olá! Entro em contato sobre suas mesas de bilhar.")
-                    setPackage("com.whatsapp.w4b") // WhatsApp Business
+                    putExtra(Intent.EXTRA_TEXT, mensagem)
+                    setPackage("com.whatsapp.w4b")
                 }
                 
                 if (intentBusiness.resolveActivity(requireActivity().packageManager) != null) {
                     startActivity(intentBusiness)
-                } else {
-                    // Nenhum WhatsApp instalado, mostrar mensagem
-                    Toast.makeText(requireContext(), "WhatsApp não está instalado no dispositivo", Toast.LENGTH_LONG).show()
+                    Log.d("ClientDetailFragment", "✅ WhatsApp Business aberto com sucesso")
+                    return
                 }
+            } catch (e: Exception) {
+                Log.d("ClientDetailFragment", "WhatsApp Business não disponível: ${e.message}")
             }
+            
+            // ✅ ESTRATÉGIA 3: Usar URL wa.me (funciona mesmo sem app instalado)
+            try {
+                val url = "https://wa.me/$numeroCompleto?text=${android.net.Uri.encode(mensagem)}"
+                val intentUrl = Intent(Intent.ACTION_VIEW).apply {
+                    data = android.net.Uri.parse(url)
+                }
+                
+                if (intentUrl.resolveActivity(requireActivity().packageManager) != null) {
+                    startActivity(intentUrl)
+                    Log.d("ClientDetailFragment", "✅ WhatsApp aberto via URL")
+                    return
+                }
+            } catch (e: Exception) {
+                Log.d("ClientDetailFragment", "URL wa.me não funcionou: ${e.message}")
+            }
+            
+            // ✅ ESTRATÉGIA 4: Compartilhamento genérico
+            try {
+                val intentGeneric = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, "$mensagem\n\nContato: $telefone")
+                }
+                
+                val chooser = Intent.createChooser(intentGeneric, "Compartilhar via WhatsApp")
+                startActivity(chooser)
+                Log.d("ClientDetailFragment", "✅ Compartilhamento genérico aberto")
+                return
+            } catch (e: Exception) {
+                Log.d("ClientDetailFragment", "Compartilhamento genérico falhou: ${e.message}")
+            }
+            
+            // ✅ ÚLTIMA OPÇÃO: Mostrar mensagem de erro
+            Toast.makeText(requireContext(), "Não foi possível abrir o WhatsApp. Verifique se está instalado.", Toast.LENGTH_LONG).show()
+            Log.e("ClientDetailFragment", "❌ Todas as estratégias falharam")
+            
         } catch (e: Exception) {
-            Log.e("ClientDetailFragment", "Erro ao abrir WhatsApp: ${e.message}")
-            Toast.makeText(requireContext(), "Erro ao abrir WhatsApp", Toast.LENGTH_SHORT).show()
+            Log.e("ClientDetailFragment", "Erro geral ao abrir WhatsApp: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao abrir WhatsApp: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
     

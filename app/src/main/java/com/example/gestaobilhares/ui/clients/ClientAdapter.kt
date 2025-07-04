@@ -74,11 +74,11 @@ class ClientAdapter(
         private fun configurarStatusVisual(cliente: Cliente) {
             val context = binding.root.context
             
-            // Barra de status lateral baseada no status do cliente
+            // ✅ CORREÇÃO: Barra de status lateral baseada no débito atual
             val statusColor = when {
                 !cliente.ativo -> context.getColor(R.color.red_600)
-                cliente.debitoAnterior > 300.0 -> context.getColor(R.color.red_600)
-                cliente.debitoAnterior > 100.0 -> context.getColor(R.color.orange_600)
+                cliente.debitoAtual > 300.0 -> context.getColor(R.color.red_600)
+                cliente.debitoAtual > 100.0 -> context.getColor(R.color.orange_600)
                 else -> context.getColor(R.color.green_600)
             }
             binding.statusBar.setBackgroundColor(statusColor)
@@ -89,11 +89,11 @@ class ClientAdapter(
                     binding.tvStatusTag.text = "INATIVO"
                     binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_red)
                 }
-                cliente.debitoAnterior > 300.0 -> {
+                cliente.debitoAtual > 300.0 -> {
                     binding.tvStatusTag.text = "DEVEDOR"
                     binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_red)
                 }
-                cliente.debitoAnterior > 100.0 -> {
+                cliente.debitoAtual > 100.0 -> {
                     binding.tvStatusTag.text = "ATENÇÃO"
                     binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_orange)
                 }
@@ -104,7 +104,7 @@ class ClientAdapter(
             }
             
             // Tag especial para débito alto
-            if (cliente.debitoAnterior > 300.0) {
+            if (cliente.debitoAtual > 300.0) {
                 binding.tvSpecialTag.text = "ALTO DÉBITO"
                 binding.tvSpecialTag.setBackgroundResource(R.drawable.rounded_tag_red)
                 binding.tvSpecialTag.visibility = View.VISIBLE
@@ -117,9 +117,8 @@ class ClientAdapter(
             try {
                 val context = binding.root.context
                 
-                // Exibir débito atual do último acerto
-                // Por enquanto usando debitoAnterior - será substituído por débito do último acerto
-                val debitoAtual = cliente.debitoAnterior ?: 0.0
+                // ✅ CORREÇÃO: Usar o débito atual da tabela clientes (atualizado após cada acerto)
+                val debitoAtual = cliente.debitoAtual
                 
                 // Se não há débito, mostrar "Sem Débito"
                 if (debitoAtual <= 0) {

@@ -8,16 +8,13 @@ import androidx.lifecycle.asLiveData
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.NivelAcesso
 import com.example.gestaobilhares.data.repository.RotaRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel para gerenciamento de rotas.
  * Implementa CRUD de rotas com controle de acesso administrativo.
  */
-@HiltViewModel
-class RouteManagementViewModel @Inject constructor(
+class RouteManagementViewModel(
     private val rotaRepository: RotaRepository
 ) : ViewModel() {
 

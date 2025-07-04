@@ -12,6 +12,7 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.google.android.material.button.MaterialButton
 import java.text.NumberFormat
 import java.util.*
+import android.util.Log
 
 class SettlementSummaryDialog : DialogFragment() {
     interface OnAcertoCompartilhadoListener {
@@ -160,41 +161,65 @@ class SettlementSummaryDialog : DialogFragment() {
     
     /**
      * ✅ CORRIGIDO: Envia o resumo via WhatsApp nativo
+     * Usa a mesma estratégia robusta do ClientDetailFragment
      */
     private fun enviarViaWhatsApp(texto: String) {
         try {
-            // ✅ CORREÇÃO: Usar intent específico para WhatsApp nativo
-            val sendIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, texto)
-                type = "text/plain"
-                setPackage("com.whatsapp") // Força abertura no app nativo
+            // ✅ ESTRATÉGIA 1: Tentar WhatsApp nativo primeiro
+            try {
+                val intentWhatsApp = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, texto)
+                    setPackage("com.whatsapp")
+                }
+                
+                if (intentWhatsApp.resolveActivity(requireActivity().packageManager) != null) {
+                    startActivity(intentWhatsApp)
+                    Log.d("SettlementSummaryDialog", "✅ WhatsApp nativo aberto com sucesso")
+                    return
+                }
+            } catch (e: Exception) {
+                Log.d("SettlementSummaryDialog", "WhatsApp nativo não disponível: ${e.message}")
             }
             
-            if (sendIntent.resolveActivity(requireActivity().packageManager) != null) {
-                startActivity(sendIntent)
-            } else {
-                // WhatsApp não instalado, tentar com WhatsApp Business
-                val intentBusiness = Intent().apply {
-                    action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_TEXT, texto)
+            // ✅ ESTRATÉGIA 2: Tentar WhatsApp Business
+            try {
+                val intentBusiness = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
-                    setPackage("com.whatsapp.w4b") // WhatsApp Business
+                    putExtra(Intent.EXTRA_TEXT, texto)
+                    setPackage("com.whatsapp.w4b")
                 }
                 
                 if (intentBusiness.resolveActivity(requireActivity().packageManager) != null) {
                     startActivity(intentBusiness)
-                } else {
-                    // Nenhum WhatsApp instalado, usar compartilhamento genérico
-                    val genericIntent = Intent().apply {
-                        action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_TEXT, texto)
-                        type = "text/plain"
-                    }
-                    startActivity(Intent.createChooser(genericIntent, "Compartilhar resumo do acerto"))
+                    Log.d("SettlementSummaryDialog", "✅ WhatsApp Business aberto com sucesso")
+                    return
                 }
+            } catch (e: Exception) {
+                Log.d("SettlementSummaryDialog", "WhatsApp Business não disponível: ${e.message}")
             }
+            
+            // ✅ ESTRATÉGIA 3: Compartilhamento genérico
+            try {
+                val intentGeneric = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, texto)
+                }
+                
+                val chooser = Intent.createChooser(intentGeneric, "Compartilhar resumo do acerto")
+                startActivity(chooser)
+                Log.d("SettlementSummaryDialog", "✅ Compartilhamento genérico aberto")
+                return
+            } catch (e: Exception) {
+                Log.d("SettlementSummaryDialog", "Compartilhamento genérico falhou: ${e.message}")
+            }
+            
+            // ✅ ÚLTIMA OPÇÃO: Mostrar mensagem de erro
+            android.widget.Toast.makeText(requireContext(), "Não foi possível abrir o WhatsApp. Verifique se está instalado.", android.widget.Toast.LENGTH_LONG).show()
+            Log.e("SettlementSummaryDialog", "❌ Todas as estratégias falharam")
+            
         } catch (e: Exception) {
+            Log.e("SettlementSummaryDialog", "Erro geral ao abrir WhatsApp: ${e.message}", e)
             android.widget.Toast.makeText(requireContext(), "Erro ao compartilhar: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
         }
     }

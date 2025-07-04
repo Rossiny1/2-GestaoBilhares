@@ -3,7 +3,7 @@ package com.example.gestaobilhares.ui.clients
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 // Data classes definidas no final do arquivo
-import dagger.hilt.android.lifecycle.HiltViewModel
+// Hilt removido - usando instanciação direta
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,8 +25,7 @@ import com.example.gestaobilhares.data.repository.AcertoMesaRepository
  * ViewModel para ClientDetailFragment
  * FASE 4A - Implementação crítica com dados mock
  */
-@HiltViewModel
-class ClientDetailViewModel @Inject constructor(
+class ClientDetailViewModel(
     private val clienteRepository: ClienteRepository,
     private val mesaRepository: MesaRepository,
     private val acertoRepository: AcertoRepository,
@@ -81,16 +80,43 @@ class ClientDetailViewModel @Inject constructor(
                     val observacaoExibir = observacaoUltimoAcerto ?: "Nenhuma observação registrada."
                     Log.d("ClientDetailViewModel", "Observação do último acerto: $observacaoExibir")
 
+                    // ✅ CORREÇÃO: Logs detalhados para debug dos dados do cliente
+                    Log.d("ClientDetailViewModel", "=== DADOS DO CLIENTE ===")
+                    Log.d("ClientDetailViewModel", "Nome: '${it.nome}'")
+                    Log.d("ClientDetailViewModel", "Endereço no banco: '${it.endereco}'")
+                    Log.d("ClientDetailViewModel", "Telefone no banco: '${it.telefone}'")
+                    Log.d("ClientDetailViewModel", "Valor ficha: ${it.valorFicha}")
+                    Log.d("ClientDetailViewModel", "Comissão ficha: ${it.comissaoFicha}")
+                    
+                    // ✅ CORREÇÃO: Garantir que campos do cliente sejam exibidos
+                    val enderecoExibir = when {
+                        it.endereco.isNullOrBlank() -> "Endereço não informado"
+                        else -> it.endereco.trim()
+                    }
+                    
+                    val telefoneExibir = when {
+                        it.telefone.isNullOrBlank() -> "Telefone não informado"
+                        else -> it.telefone.trim()
+                    }
+                    
+                    Log.d("ClientDetailViewModel", "Endereço que será exibido: '$enderecoExibir'")
+                    Log.d("ClientDetailViewModel", "Telefone que será exibido: '$telefoneExibir'")
+
+                    // ✅ CORREÇÃO CRÍTICA: Buscar débito atual REAL da tabela clientes
+                    val debitoAtualReal = clienteRepository.obterDebitoAtual(clienteId)
+                    Log.d("ClientDetailViewModel", "Débito atual REAL carregado: R$ $debitoAtualReal")
+                    
                     _clientDetails.value = ClienteResumo(
                         id = it.id,
                         nome = it.nome,
-                        endereco = it.endereco ?: "",
-                        telefone = it.telefone ?: "",
+                        endereco = enderecoExibir,
+                        telefone = telefoneExibir,
                         valorFicha = it.valorFicha,
                         comissaoFicha = it.comissaoFicha,
                         mesasAtivas = 0, // Atualizado abaixo
                         ultimaVisita = ultimaVisita,
-                        observacoes = observacaoExibir
+                        observacoes = observacaoExibir,
+                        debitoAtual = debitoAtualReal // ✅ CORREÇÃO: Usar débito atual REAL
                     )
 
                     Log.d("ClientDetailViewModel", "ClienteResumo criado: ${_clientDetails.value?.nome}")
@@ -229,19 +255,40 @@ class ClientDetailViewModel @Inject constructor(
             Log.d("ClientDetailViewModel", "Carregando histórico de acertos para cliente: $clienteId")
             try {
                 acertoRepository.buscarPorCliente(clienteId).collect { acertos ->
+                    Log.d("ClientDetailViewModel", "=== CARREGANDO HISTÓRICO - DEBUG OBSERVAÇÕES ===")
                     Log.d("ClientDetailViewModel", "Acertos encontrados no banco: ${acertos.size}")
+                    
                     val acertosResumo = acertos.map { acerto ->
+                        Log.d("ClientDetailViewModel", "🔍 Acerto ID ${acerto.id}:")
+                        Log.d("ClientDetailViewModel", "  - Observação no banco: '${acerto.observacoes}'")
+                        Log.d("ClientDetailViewModel", "  - Observação é nula? ${acerto.observacoes == null}")
+                        Log.d("ClientDetailViewModel", "  - Observação é vazia? ${acerto.observacoes?.isEmpty()}")
+                        
+                        // ✅ CORREÇÃO: Garantir que observação seja exibida corretamente
+                        val observacaoExibir = when {
+                            acerto.observacoes.isNullOrBlank() -> "Sem observações"
+                            else -> acerto.observacoes.trim()
+                        }
+                        
+                        Log.d("ClientDetailViewModel", "  - Observação que será exibida: '$observacaoExibir'")
+                        
                         AcertoResumo(
                             id = acerto.id,
                             data = android.text.format.DateFormat.format("dd/MM/yyyy HH:mm", acerto.dataAcerto).toString(),
                             valorTotal = acerto.valorRecebido,
                             status = acerto.status.name,
                             mesasAcertadas = acerto.totalMesas.toInt(),
-                            debitoAtual = acerto.debitoAtual
+                            debitoAtual = acerto.debitoAtual,
+                            observacao = observacaoExibir // ✅ CORREÇÃO: Usar observação garantida
                         )
                     }
                     _settlementHistory.value = acertosResumo
-                    Log.d("ClientDetailViewModel", "Histórico atualizado: ${_settlementHistory.value.size} acertos")
+                    Log.d("ClientDetailViewModel", "✅ Histórico atualizado: ${_settlementHistory.value.size} acertos")
+                    
+                    // ✅ CORREÇÃO: Log detalhado do que foi salvo no histórico
+                    acertosResumo.forEach { resumo ->
+                        Log.d("ClientDetailViewModel", "📋 Resumo ID ${resumo.id}: observação = '${resumo.observacao}'")
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("ClientDetailViewModel", "Erro ao carregar histórico de acertos", e)
@@ -314,7 +361,8 @@ data class ClienteResumo(
     val comissaoFicha: Double,
     val mesasAtivas: Int,
     val ultimaVisita: String,
-    val observacoes: String
+    val observacoes: String,
+    val debitoAtual: Double = 0.0 // ✅ ADICIONADO: Campo para débito atual sincronizado
 )
 
 @Parcelize
@@ -324,7 +372,8 @@ data class AcertoResumo(
     val valorTotal: Double,
     val status: String,
     val mesasAcertadas: Int,
-    val debitoAtual: Double = 0.0
+    val debitoAtual: Double = 0.0,
+    val observacao: String? = null
 ) : Parcelable
 
 /**
