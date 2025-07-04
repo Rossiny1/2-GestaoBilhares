@@ -669,22 +669,38 @@ class SettlementFragment : Fragment() {
                 val metodosPagamento: Map<String, Double> = acerto.metodosPagamentoJson?.let {
                     Gson().fromJson(it, object : TypeToken<Map<String, Double>>() {}.type)
                 } ?: emptyMap()
+                
+                // ✅ CORREÇÃO: Obter números reais das mesas
+                val mesasComNumerosReais = mesas.map { mesaAcerto ->
+                    val mesaReal = viewModel.buscarMesaPorId(mesaAcerto.mesaId)
+                    Mesa(
+                        id = mesaAcerto.mesaId,
+                        numero = mesaReal?.numero ?: mesaAcerto.mesaId.toString(),
+                        fichasInicial = mesaAcerto.relogioInicial,
+                        fichasFinal = mesaAcerto.relogioFinal,
+                        valorFixo = mesaAcerto.valorFixo,
+                        tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA
+                    )
+                }
+                
+                // ✅ NOVO: Obter dados adicionais para o resumo
+                val debitoAnterior = viewModel.debitoAnterior.value
+                val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
+                
+                // ✅ NOVO: Obter comissão da ficha do cliente
+                val cliente = viewModel.obterClientePorId(args.clienteId)
+                val comissaoFicha = cliente?.comissaoFicha ?: 0.0
+                
                 val dialog = SettlementSummaryDialog.newInstance(
                     clienteNome = viewModel.clientName.value,
-                    mesas = mesas.map { mesa ->
-                        Mesa(
-                            id = mesa.mesaId,
-                            numero = mesa.mesaId.toString(),
-                            fichasInicial = mesa.relogioInicial,
-                            fichasFinal = mesa.relogioFinal,
-                            valorFixo = mesa.valorFixo,
-                            tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA
-                        )
-                    },
+                    mesas = mesasComNumerosReais,
                     total = acerto.valorTotal,
                     metodosPagamento = metodosPagamento,
                     observacao = acerto.observacoes,
-                    debitoAtual = acerto.debitoAtual
+                    debitoAtual = acerto.debitoAtual,
+                    debitoAnterior = debitoAnterior,
+                    desconto = desconto,
+                    comissaoFicha = comissaoFicha // ✅ NOVO: Passar comissão da ficha
                 )
                 dialog.acertoCompartilhadoListener = object : SettlementSummaryDialog.OnAcertoCompartilhadoListener {
                     override fun onAcertoCompartilhado() {

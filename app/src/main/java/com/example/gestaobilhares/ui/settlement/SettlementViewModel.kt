@@ -347,4 +347,28 @@ class SettlementViewModel(
     fun setLoading(isLoading: Boolean) {
         _isLoading.value = isLoading
     }
+
+    /**
+     * ✅ NOVO: Busca uma mesa específica por ID para obter o número real
+     */
+    suspend fun buscarMesaPorId(mesaId: Long): Mesa? {
+        return try {
+            mesaRepository.buscarPorId(mesaId)
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao buscar mesa por ID: ${e.message}", e)
+            null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Busca um cliente específico por ID para obter dados como comissão da ficha
+     */
+    suspend fun obterClientePorId(clienteId: Long): com.example.gestaobilhares.data.entities.Cliente? {
+        return try {
+            clienteRepository.obterPorId(clienteId)
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao buscar cliente por ID: ${e.message}", e)
+            null
+        }
+    }
 } 
