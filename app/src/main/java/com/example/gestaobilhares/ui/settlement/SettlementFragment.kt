@@ -254,26 +254,39 @@ class SettlementFragment : Fragment() {
     private fun setupRecyclerViewComDados(mesasDTO: List<MesaDTO>) {
         Log.d("SettlementFragment", "=== CONFIGURANDO RECYCLERVIEW COM DADOS COMPLETOS ===")
         
-        mesasAcertoAdapter = MesasAcertoAdapter {
-            Log.d("SettlementFragment", "Callback onDataChanged acionado - recalculando totais")
-            updateCalculations()
-        }
+        mesasAcertoAdapter = MesasAcertoAdapter(
+            onDataChanged = { updateCalculations() },
+            onCalcularMedia = { mesaId -> 
+                // ✅ NOVO: Calcular média de fichas jogadas dos últimos acertos
+                // Como é assíncrono, vamos usar um valor padrão e atualizar depois
+                Log.d("SettlementFragment", "Solicitando cálculo de média para mesa $mesaId")
+                
+                // Iniciar cálculo assíncrono
+                lifecycleScope.launch {
+                    try {
+                        val media = viewModel.calcularMediaFichasJogadas(mesaId, 5)
+                        Log.d("SettlementFragment", "Média calculada para mesa $mesaId: $media fichas")
+                        
+                        // Atualizar o adapter com a média calculada
+                        mesasAcertoAdapter.atualizarMediaMesa(mesaId, media)
+                        updateCalculations()
+                    } catch (e: Exception) {
+                        Log.e("SettlementFragment", "Erro ao calcular média: ${e.message}", e)
+                    }
+                }
+                
+                // Retornar 0 temporariamente - será atualizado pelo cálculo assíncrono
+                0.0
+            }
+        )
         
-        // Configurar RecyclerView
-        binding.rvMesasAcerto.apply {
-            layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
-            adapter = mesasAcertoAdapter
-            setHasFixedSize(false)
-        }
+        binding.rvMesasAcerto.adapter = mesasAcertoAdapter
+        binding.rvMesasAcerto.layoutManager = LinearLayoutManager(requireContext())
         
-        // Popular adapter com dados completos
-        Log.d("SettlementFragment", "Populando adapter com ${mesasDTO.size} mesas com dados completos")
-        mesasAcertoAdapter.submitList(mesasDTO)
-        
-        // Forçar atualização dos cálculos após popular
-            binding.rvMesasAcerto.post {
-                updateCalculations()
-            Log.d("SettlementFragment", "✅ RecyclerView configurado e cálculos atualizados")
+        // Carregar mesas do cliente
+        args.mesasCliente?.let { mesas ->
+            Log.d("SettlementFragment", "Carregando ${mesas.size} mesas para o acerto")
+            mesasAcertoAdapter.submitList(mesas.toList())
         }
     }
     
@@ -573,13 +586,14 @@ class SettlementFragment : Fragment() {
         val mesasDoAcerto = mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
             // Buscar a mesa original para obter o valorFixo
             val mesaOriginal = args.mesasCliente?.find { it.id == mesaState.mesaId }
-            Mesa(
+            SettlementViewModel.MesaAcerto(
                 id = mesaState.mesaId,
                 numero = (idx + 1).toString(),
                 fichasInicial = mesaState.relogioInicial,
                 fichasFinal = mesaState.relogioFinal,
                 valorFixo = mesaOriginal?.valorFixo ?: 0.0,
-                tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA
+                tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA,
+                comDefeito = mesaState.comDefeito
             )
         }
 

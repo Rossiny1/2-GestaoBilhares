@@ -27,6 +27,15 @@ interface AcertoMesaDao {
     @Query("SELECT * FROM acerto_mesas WHERE acerto_id = :acertoId")
     suspend fun buscarPorAcertoId(acertoId: Long): List<AcertoMesa>
 
+    /**
+     * ✅ NOVO: Busca os últimos acertos de uma mesa para calcular média
+     * @param mesaId ID da mesa
+     * @param limite Máximo de acertos a buscar (padrão 5)
+     * @return Lista dos últimos acertos da mesa
+     */
+    @Query("SELECT * FROM acerto_mesas WHERE mesa_id = :mesaId AND fichas_jogadas > 0 ORDER BY data_criacao DESC LIMIT :limite")
+    suspend fun buscarUltimosAcertosMesa(mesaId: Long, limite: Int = 5): List<AcertoMesa>
+
     @Update
     suspend fun atualizar(acertoMesa: AcertoMesa)
 

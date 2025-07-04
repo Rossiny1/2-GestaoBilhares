@@ -50,11 +50,8 @@ class SettlementViewModel(
     private val _debitoAnterior = MutableStateFlow(0.0)
     val debitoAnterior: StateFlow<Double> = _debitoAnterior.asStateFlow()
 
-
-
-
     data class DadosAcerto(
-        val mesas: List<Mesa>,
+        val mesas: List<MesaAcerto>,
         val representante: String,
         val panoTrocado: Boolean,
         val numeroPano: String?,
@@ -62,6 +59,19 @@ class SettlementViewModel(
         val observacao: String,
         val justificativa: String?,
         val metodosPagamento: Map<String, Double>
+    )
+    
+    /**
+     * ✅ NOVO: Classe específica para mesas no acerto, incluindo campo comDefeito
+     */
+    data class MesaAcerto(
+        val id: Long,
+        val numero: String,
+        val fichasInicial: Int = 0,
+        val fichasFinal: Int = 0,
+        val valorFixo: Double = 0.0,
+        val tipoMesa: com.example.gestaobilhares.data.entities.TipoMesa,
+        val comDefeito: Boolean = false
     )
 
     fun loadClientForSettlement(clienteId: Long) {
@@ -172,10 +182,6 @@ class SettlementViewModel(
             }
         }
     }
-
-
-
-
 
     /**
      * Salva o acerto, agora recebendo os valores discriminados por método de pagamento.
@@ -297,14 +303,14 @@ class SettlementViewModel(
                     com.example.gestaobilhares.data.entities.AcertoMesa(
                         acertoId = acertoId,
                         mesaId = mesa.id,
-                        relogioInicial = mesa.fichasInicial ?: 0,
-                        relogioFinal = mesa.fichasFinal ?: 0,
+                        relogioInicial = mesa.fichasInicial,
+                        relogioFinal = mesa.fichasFinal,
                         fichasJogadas = fichasJogadas,
-                        valorFixo = mesa.valorFixo ?: 0.0,
+                        valorFixo = mesa.valorFixo,
                         valorFicha = cliente?.valorFicha ?: 0.0,
                         comissaoFicha = cliente?.comissaoFicha ?: 0.0,
                         subtotal = subtotal,
-                        comDefeito = false, // TODO: pegar do formulário
+                        comDefeito = mesa.comDefeito,
                         observacoes = null
                     )
                 }
@@ -369,6 +375,21 @@ class SettlementViewModel(
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao buscar cliente por ID: ${e.message}", e)
             null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Calcula a média de fichas jogadas dos últimos acertos de uma mesa
+     * @param mesaId ID da mesa
+     * @param limite Máximo de acertos a considerar (padrão 5)
+     * @return Média de fichas jogadas, ou 0 se não houver acertos anteriores
+     */
+    suspend fun calcularMediaFichasJogadas(mesaId: Long, limite: Int = 5): Double {
+        return try {
+            acertoMesaRepository.calcularMediaFichasJogadas(mesaId, limite)
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao calcular média de fichas: ${e.message}", e)
+            0.0
         }
     }
 } 

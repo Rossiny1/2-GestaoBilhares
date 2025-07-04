@@ -22,6 +22,40 @@ class AcertoMesaRepository @Inject constructor(
     
     suspend fun buscarPorAcertoId(acertoId: Long): List<AcertoMesa> = acertoMesaDao.buscarPorAcertoId(acertoId)
     
+    /**
+     * ✅ NOVO: Busca os últimos acertos de uma mesa para calcular média
+     * @param mesaId ID da mesa
+     * @param limite Máximo de acertos a buscar (padrão 5)
+     * @return Lista dos últimos acertos da mesa
+     */
+    suspend fun buscarUltimosAcertosMesa(mesaId: Long, limite: Int = 5): List<AcertoMesa> {
+        return try {
+            acertoMesaDao.buscarUltimosAcertosMesa(mesaId, limite)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Calcula a média de fichas jogadas dos últimos acertos de uma mesa
+     * @param mesaId ID da mesa
+     * @param limite Máximo de acertos a considerar (padrão 5)
+     * @return Média de fichas jogadas, ou 0 se não houver acertos anteriores
+     */
+    suspend fun calcularMediaFichasJogadas(mesaId: Long, limite: Int = 5): Double {
+        return try {
+            val ultimosAcertos = buscarUltimosAcertosMesa(mesaId, limite)
+            if (ultimosAcertos.isEmpty()) {
+                0.0
+            } else {
+                val totalFichas = ultimosAcertos.sumOf { it.fichasJogadas }
+                totalFichas.toDouble() / ultimosAcertos.size
+            }
+        } catch (e: Exception) {
+            0.0
+        }
+    }
+    
     suspend fun atualizar(acertoMesa: AcertoMesa) = acertoMesaDao.atualizar(acertoMesa)
     
     suspend fun deletar(acertoMesa: AcertoMesa) = acertoMesaDao.deletar(acertoMesa)

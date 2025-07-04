@@ -16,7 +16,8 @@ import java.text.NumberFormat
 import java.util.Locale
 
 class MesasAcertoAdapter(
-    private val onDataChanged: () -> Unit
+    private val onDataChanged: () -> Unit,
+    private val onCalcularMedia: (Long) -> Double = { 0.0 }
 ) : ListAdapter<MesaDTO, MesasAcertoAdapter.MesaAcertoViewHolder>(MesaDTODiffCallback()) {
 
     // Lista para manter o estado dos campos de entrada de cada mesa
@@ -107,6 +108,21 @@ class MesasAcertoAdapter(
                     val mesa = getItem(position)
                     val state = mesaStates.getOrPut(mesa.id) { MesaAcertoState(mesaId = mesa.id) }
                     state.comDefeito = isChecked
+                    
+                    if (isChecked) {
+                        val mediaFichas = onCalcularMedia(mesa.id)
+                        state.mediaFichasJogadas = mediaFichas
+                        
+                        binding.tvFichasJogadas.text = "Fichas Jogadas (Média): ${mediaFichas.toInt()}"
+                        
+                        Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} - Média calculada: $mediaFichas fichas")
+                    } else {
+                        state.mediaFichasJogadas = 0.0
+                        val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
+                        binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                    }
+                    
+                    updateSubtotal(state)
                     onDataChanged()
                 }
             }
@@ -153,19 +169,28 @@ class MesasAcertoAdapter(
                 binding.tvValorFicha.text = "Valor Ficha: R$ %.2f".format(mesa.valorFicha)
                 binding.tvComissaoFicha.text = "Comissão: R$ %.2f".format(mesa.comissaoFicha)
                 
-                // Calcular e exibir fichas jogadas
-                val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
-                state.fichasJogadas = fichasJogadas
-                binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                if (state.comDefeito && state.mediaFichasJogadas > 0) {
+                    binding.tvFichasJogadas.text = "Fichas Jogadas (Média): ${state.mediaFichasJogadas.toInt()}"
+                } else {
+                    val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
+                    state.fichasJogadas = fichasJogadas
+                    binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                }
                 
-                // Calcular subtotal baseado na comissão da ficha (não no valor da ficha)
-                val subtotal = fichasJogadas * mesa.comissaoFicha
+                val subtotal = if (state.comDefeito && state.mediaFichasJogadas > 0) {
+                    state.mediaFichasJogadas * mesa.comissaoFicha
+                } else {
+                    val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
+                    fichasJogadas * mesa.comissaoFicha
+                }
+                
                 binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(subtotal)
                 state.subtotal = subtotal
                 
                 Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} configurada como FICHAS JOGADAS")
                 Log.d("MesasAcertoAdapter", "Relógio inicial: ${state.relogioInicial}, final: ${state.relogioFinal}")
-                Log.d("MesasAcertoAdapter", "Fichas jogadas: $fichasJogadas, Subtotal: R$ %.2f".format(subtotal))
+                Log.d("MesasAcertoAdapter", "Com defeito: ${state.comDefeito}, Média: ${state.mediaFichasJogadas}")
+                Log.d("MesasAcertoAdapter", "Subtotal: R$ %.2f".format(subtotal))
             }
             
             Log.d("MesasAcertoAdapter", "=== BIND CONCLUÍDO MESA ${mesa.numero} ===")
@@ -179,13 +204,24 @@ class MesasAcertoAdapter(
                 binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(state.subtotal)
             } else {
                 // Mesa de fichas jogadas
-                val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
-                state.fichasJogadas = fichasJogadas
-                val subtotal = fichasJogadas * mesa.comissaoFicha
+                val subtotal = if (state.comDefeito && state.mediaFichasJogadas > 0) {
+                    state.mediaFichasJogadas * mesa.comissaoFicha
+                } else {
+                    val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
+                    state.fichasJogadas = fichasJogadas
+                    fichasJogadas * mesa.comissaoFicha
+                }
+                
                 state.subtotal = subtotal
                 
                 // Atualizar exibição das fichas jogadas
-                binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                if (state.comDefeito && state.mediaFichasJogadas > 0) {
+                    binding.tvFichasJogadas.text = "Fichas Jogadas (Média): ${state.mediaFichasJogadas.toInt()}"
+                } else {
+                    val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
+                    binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                }
+                
                 binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(subtotal)
             }
         }
@@ -198,15 +234,13 @@ class MesasAcertoAdapter(
     }
 
     fun isDataValid(): Boolean {
-        // Para mesas de valor fixo, não precisa validar relógios
-        // Para mesas de fichas jogadas, verifica se o relógio final é maior ou igual ao inicial
         return mesaStates.values.all { state ->
             val mesa = currentList.find { it.id == state.mesaId }
             if (mesa?.valorFixo ?: 0.0 > 0) {
-                // Mesa de valor fixo - sempre válida
+                true
+            } else if (state.comDefeito && state.mediaFichasJogadas > 0) {
                 true
             } else {
-                // Mesa de fichas jogadas - valida relógios
                 state.relogioFinal >= state.relogioInicial
             }
         }
@@ -221,6 +255,22 @@ class MesasAcertoAdapter(
      */
     fun updateMesas(mesas: List<MesaDTO>) {
         submitList(mesas)
+    }
+    
+    /**
+     * ✅ NOVO: Atualiza a média de fichas jogadas de uma mesa específica
+     * @param mesaId ID da mesa
+     * @param media Média calculada
+     */
+    fun atualizarMediaMesa(mesaId: Long, media: Double) {
+        val state = mesaStates[mesaId]
+        if (state != null && state.comDefeito) {
+            state.mediaFichasJogadas = media
+            Log.d("MesasAcertoAdapter", "Média atualizada para mesa $mesaId: $media")
+            
+            // Notificar mudança para atualizar a UI
+            onDataChanged()
+        }
     }
 }
 
