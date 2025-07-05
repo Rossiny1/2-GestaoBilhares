@@ -71,7 +71,8 @@ class SettlementViewModel(
         val fichasFinal: Int = 0,
         val valorFixo: Double = 0.0,
         val tipoMesa: com.example.gestaobilhares.data.entities.TipoMesa,
-        val comDefeito: Boolean = false
+        val comDefeito: Boolean = false,
+        val relogioReiniciou: Boolean = false
     )
 
     fun loadClientForSettlement(clienteId: Long) {
@@ -102,21 +103,36 @@ class SettlementViewModel(
      * Prepara as mesas para acerto, definindo relógios iniciais baseados no último acerto
      */
     suspend fun prepararMesasParaAcerto(mesasCliente: List<Mesa>): List<Mesa> {
+        Log.d("SettlementViewModel", "=== PREPARANDO MESAS PARA ACERTO ===")
+        Log.d("SettlementViewModel", "Mesas recebidas: ${mesasCliente.size}")
+        
         return mesasCliente.map { mesa ->
             try {
+                Log.d("SettlementViewModel", "Processando mesa ${mesa.numero} (ID: ${mesa.id})")
+                
                 // Buscar o último acerto desta mesa
                 val ultimoAcertoMesa = acertoMesaRepository.buscarUltimoAcertoMesa(mesa.id)
                 
                 if (ultimoAcertoMesa != null) {
                     // Usar o relógio final do último acerto como inicial do próximo
-                    mesa.copy(fichasInicial = ultimoAcertoMesa.relogioFinal)
+                    val relogioInicial = ultimoAcertoMesa.relogioFinal
+                    Log.d("SettlementViewModel", "Mesa ${mesa.numero}: Último acerto encontrado - relógio final: ${ultimoAcertoMesa.relogioFinal} -> novo relógio inicial: $relogioInicial")
+                    mesa.copy(fichasInicial = relogioInicial)
                 } else {
                     // Primeiro acerto - usar relógio inicial cadastrado ou 0
-                    mesa.copy(fichasInicial = mesa.fichasInicial ?: 0)
+                    val relogioInicial = mesa.fichasInicial ?: 0
+                    Log.d("SettlementViewModel", "Mesa ${mesa.numero}: Primeiro acerto - usando relógio inicial cadastrado: $relogioInicial")
+                    mesa.copy(fichasInicial = relogioInicial)
                 }
             } catch (e: Exception) {
                 Log.e("SettlementViewModel", "Erro ao preparar mesa ${mesa.numero}: ${e.message}")
-                mesa.copy(fichasInicial = mesa.fichasInicial ?: 0)
+                val relogioInicial = mesa.fichasInicial ?: 0
+                mesa.copy(fichasInicial = relogioInicial)
+            }
+        }.also { mesasPreparadas ->
+            Log.d("SettlementViewModel", "=== MESAS PREPARADAS ===")
+            mesasPreparadas.forEach { mesa ->
+                Log.d("SettlementViewModel", "Mesa ${mesa.numero}: relógio inicial=${mesa.fichasInicial}, relógio final=${mesa.fichasFinal}")
             }
         }
     }
@@ -311,6 +327,7 @@ class SettlementViewModel(
                         comissaoFicha = cliente?.comissaoFicha ?: 0.0,
                         subtotal = subtotal,
                         comDefeito = mesa.comDefeito,
+                        relogioReiniciou = mesa.relogioReiniciou,
                         observacoes = null
                     )
                 }

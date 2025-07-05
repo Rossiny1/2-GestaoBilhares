@@ -17,6 +17,7 @@ data class MesaAcertoState(
     var comissaoFicha: Double = 0.0,
     var subtotal: Double = 0.0,
     var comDefeito: Boolean = false,
+    var relogioReiniciou: Boolean = false,
     var fichasJogadas: Int = 0,
     var mediaFichasJogadas: Double = 0.0
 ) : Parcelable 

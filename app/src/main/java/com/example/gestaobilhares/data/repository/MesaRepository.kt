@@ -49,6 +49,11 @@ class MesaRepository @Inject constructor(
         fichasFinal: Int
     ) = mesaDao.atualizarRelogioMesa(mesaId, relogioInicial, relogioFinal, fichasInicial, fichasFinal)
 
+    /**
+     * ✅ NOVO: Busca uma mesa específica por ID
+     */
+    suspend fun buscarPorId(mesaId: Long): Mesa? = mesaDao.obterMesaPorId(mesaId)
+
     suspend fun atualizarRelogioFinal(mesaId: Long, relogioFinal: Int) = 
         mesaDao.atualizarRelogioFinal(mesaId, relogioFinal)
 

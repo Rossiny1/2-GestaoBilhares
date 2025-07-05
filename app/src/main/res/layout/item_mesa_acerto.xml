@@ -153,8 +153,59 @@
                 android:id="@+id/cbRelogioDefeito"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="8dp"
                 android:text="Relógio com Defeito (usar média)" />
+
+            <!-- Checkbox Relógio Reiniciou -->
+            <CheckBox
+                android:id="@+id/cbRelogioReiniciou"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Relógio Reiniciou (ajustar cálculo)" />
+
+            <!-- Campo Média de Fichas (visível apenas quando checkbox marcado) -->
+            <LinearLayout
+                android:id="@+id/layoutMediaFichas"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Média de Fichas:"
+                    android:textSize="14sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/tvMediaFichas"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="0"
+                    android:textSize="16sp"
+                    android:textColor="@color/orange_600"
+                    android:textStyle="bold"
+                    android:background="@drawable/rounded_background_media"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="fichas"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_marginStart="8dp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

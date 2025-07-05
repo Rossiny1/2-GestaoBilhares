@@ -1,0 +1,7 @@
+[33mcbf62bf[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m fix: Corrigir referências não resolvidas no AppRepository - Build estável e fluxo principal funcionando
+app/src/main/java/com/example/gestaobilhares/data/dao/ColaboradorDao.kt
+app/src/main/java/com/example/gestaobilhares/data/repository/AppRepository.kt
+backups/backup-20250703-211241.zip
+backups/backup-20250703-211329.zip
+build-error.txt
+build-log.txt

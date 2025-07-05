@@ -24,6 +24,64 @@ class MesasAcertoAdapter(
     private val mesaStates = mutableMapOf<Long, MesaAcertoState>()
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
+    /**
+     * ✅ NOVO: Calcula as fichas jogadas considerando reinício do relógio
+     * @param relogioInicial Relógio inicial
+     * @param relogioFinal Relógio final
+     * @param relogioReiniciou Se o relógio reiniciou
+     * @return Número de fichas jogadas
+     */
+    private fun calcularFichasJogadas(relogioInicial: Int, relogioFinal: Int, relogioReiniciou: Boolean): Int {
+        Log.d("MesasAcertoAdapter", "=== CÁLCULO FICHAS JOGADAS ===")
+        Log.d("MesasAcertoAdapter", "Relógio inicial: $relogioInicial")
+        Log.d("MesasAcertoAdapter", "Relógio final: $relogioFinal")
+        Log.d("MesasAcertoAdapter", "Relógio reiniciou: $relogioReiniciou")
+        
+        if (relogioReiniciou) {
+            // Determinar o fator de ajuste baseado no número de dígitos do relógio inicial
+            val fatorAjuste = when {
+                relogioInicial >= 10000 -> 100000 // 5 dígitos
+                relogioInicial >= 1000 -> 10000   // 4 dígitos
+                else -> 0 // Não aplicável
+            }
+            
+            Log.d("MesasAcertoAdapter", "Fator de ajuste calculado: $fatorAjuste")
+            
+            if (fatorAjuste > 0) {
+                val relogioFinalAjustado = relogioFinal + fatorAjuste
+                val fichasJogadas = relogioFinalAjustado - relogioInicial
+                Log.d("MesasAcertoAdapter", "✅ RELÓGIO REINICIOU: $relogioFinal + $fatorAjuste = $relogioFinalAjustado")
+                Log.d("MesasAcertoAdapter", "✅ FICHAS CALCULADAS: $relogioFinalAjustado - $relogioInicial = $fichasJogadas")
+                return fichasJogadas.coerceAtLeast(0)
+            } else {
+                Log.d("MesasAcertoAdapter", "⚠️ Relógio reiniciou ativado mas fator de ajuste é 0")
+            }
+        }
+        
+        // Cálculo normal
+        val fichasJogadas = relogioFinal - relogioInicial
+        Log.d("MesasAcertoAdapter", "✅ CÁLCULO NORMAL: $relogioFinal - $relogioInicial = $fichasJogadas")
+        return fichasJogadas.coerceAtLeast(0)
+    }
+
+    /**
+     * ✅ NOVO: Valida se o relógio final é válido considerando os checkboxes
+     * @param relogioInicial Relógio inicial
+     * @param relogioFinal Relógio final
+     * @param comDefeito Se o relógio tem defeito
+     * @param relogioReiniciou Se o relógio reiniciou
+     * @return true se válido, false caso contrário
+     */
+    private fun validarRelogioFinal(relogioInicial: Int, relogioFinal: Int, comDefeito: Boolean, relogioReiniciou: Boolean): Boolean {
+        // Se algum checkbox está marcado, permitir qualquer valor
+        if (comDefeito || relogioReiniciou) {
+            return true
+        }
+        
+        // Validação normal: relógio final deve ser maior ou igual ao inicial
+        return relogioFinal >= relogioInicial
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MesaAcertoViewHolder {
         val binding = ItemMesaAcertoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return MesaAcertoViewHolder(binding)
@@ -110,16 +168,49 @@ class MesasAcertoAdapter(
                     state.comDefeito = isChecked
                     
                     if (isChecked) {
+                        // Mostrar campo de média
+                        binding.layoutMediaFichas.visibility = View.VISIBLE
+                        
+                        // Calcular média de forma assíncrona
                         val mediaFichas = onCalcularMedia(mesa.id)
                         state.mediaFichasJogadas = mediaFichas
                         
+                        // Atualizar exibição da média
+                        binding.tvMediaFichas.text = mediaFichas.toInt().toString()
                         binding.tvFichasJogadas.text = "Fichas Jogadas (Média): ${mediaFichas.toInt()}"
                         
                         Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} - Média calculada: $mediaFichas fichas")
                     } else {
+                        // Ocultar campo de média
+                        binding.layoutMediaFichas.visibility = View.GONE
                         state.mediaFichasJogadas = 0.0
-                        val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
+                        val fichasJogadas = calcularFichasJogadas(state.relogioInicial, state.relogioFinal, state.relogioReiniciou)
                         binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                    }
+                    
+                    updateSubtotal(state)
+                    onDataChanged()
+                }
+            }
+            
+            // ✅ NOVO: Listener para checkbox "Relógio Reiniciou"
+            binding.cbRelogioReiniciou.setOnCheckedChangeListener { _, isChecked ->
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val mesa = getItem(position)
+                    val state = mesaStates.getOrPut(mesa.id) { MesaAcertoState(mesaId = mesa.id) }
+                    state.relogioReiniciou = isChecked
+                    
+                    // Recalcular fichas jogadas
+                    val fichasJogadas = calcularFichasJogadas(state.relogioInicial, state.relogioFinal, state.relogioReiniciou)
+                    state.fichasJogadas = fichasJogadas
+                    
+                    if (isChecked) {
+                        binding.tvFichasJogadas.text = "Fichas Jogadas (Ajustado): $fichasJogadas"
+                        Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} - Relógio reiniciou ativado, fichas ajustadas: $fichasJogadas")
+                    } else {
+                        binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                        Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} - Relógio reiniciou desativado, fichas normais: $fichasJogadas")
                     }
                     
                     updateSubtotal(state)
@@ -130,6 +221,7 @@ class MesasAcertoAdapter(
 
         fun bind(mesa: MesaDTO) {
             Log.d("MesasAcertoAdapter", "=== BIND MESA ${mesa.numero} ===")
+            Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} - fichasInicial recebido: ${mesa.fichasInicial}")
             
             val state = mesaStates.getOrPut(mesa.id) {
                 Log.d("MesasAcertoAdapter", "Criando novo estado para mesa ${mesa.numero}")
@@ -140,6 +232,11 @@ class MesasAcertoAdapter(
                     valorFicha = mesa.valorFicha,
                     comissaoFicha = mesa.comissaoFicha
                 )
+            }
+            
+            if (state.relogioInicial != mesa.fichasInicial) {
+                Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Atualizando relógio inicial de ${state.relogioInicial} para ${mesa.fichasInicial}")
+                state.relogioInicial = mesa.fichasInicial
             }
             
             binding.tvNumeroMesa.text = "Mesa ${mesa.numero}"
@@ -164,24 +261,38 @@ class MesasAcertoAdapter(
                 binding.etRelogioInicial.setText(state.relogioInicial.toString())
                 binding.etRelogioFinal.setText(if (state.relogioFinal > 0) state.relogioFinal.toString() else "")
                 binding.cbRelogioDefeito.isChecked = state.comDefeito
+                binding.cbRelogioReiniciou.isChecked = state.relogioReiniciou
                 
                 // Exibir informações de ficha
                 binding.tvValorFicha.text = "Valor Ficha: R$ %.2f".format(mesa.valorFicha)
                 binding.tvComissaoFicha.text = "Comissão: R$ %.2f".format(mesa.comissaoFicha)
                 
+                // Configurar exibição da média de fichas
                 if (state.comDefeito && state.mediaFichasJogadas > 0) {
+                    binding.layoutMediaFichas.visibility = View.VISIBLE
+                    binding.tvMediaFichas.text = state.mediaFichasJogadas.toInt().toString()
                     binding.tvFichasJogadas.text = "Fichas Jogadas (Média): ${state.mediaFichasJogadas.toInt()}"
                 } else {
-                    val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
+                    binding.layoutMediaFichas.visibility = View.GONE
+                    val fichasJogadas = calcularFichasJogadas(state.relogioInicial, state.relogioFinal, state.relogioReiniciou)
                     state.fichasJogadas = fichasJogadas
-                    binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                    
+                    if (state.relogioReiniciou) {
+                        binding.tvFichasJogadas.text = "Fichas Jogadas (Ajustado): $fichasJogadas"
+                    } else {
+                        binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                    }
                 }
                 
                 val subtotal = if (state.comDefeito && state.mediaFichasJogadas > 0) {
-                    state.mediaFichasJogadas * mesa.comissaoFicha
+                    val subtotalCalculado = state.mediaFichasJogadas * mesa.comissaoFicha
+                    Log.d("MesasAcertoAdapter", "✅ SUBTOTAL COM MÉDIA (BIND): ${state.mediaFichasJogadas} × R$ ${mesa.comissaoFicha} = R$ $subtotalCalculado")
+                    subtotalCalculado
                 } else {
-                    val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
-                    fichasJogadas * mesa.comissaoFicha
+                    val fichasJogadas = calcularFichasJogadas(state.relogioInicial, state.relogioFinal, state.relogioReiniciou)
+                    val subtotalCalculado = fichasJogadas * mesa.comissaoFicha
+                    Log.d("MesasAcertoAdapter", "✅ SUBTOTAL NORMAL (BIND): $fichasJogadas × R$ ${mesa.comissaoFicha} = R$ $subtotalCalculado")
+                    subtotalCalculado
                 }
                 
                 binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(subtotal)
@@ -205,21 +316,33 @@ class MesasAcertoAdapter(
             } else {
                 // Mesa de fichas jogadas
                 val subtotal = if (state.comDefeito && state.mediaFichasJogadas > 0) {
-                    state.mediaFichasJogadas * mesa.comissaoFicha
+                    val subtotalCalculado = state.mediaFichasJogadas * mesa.comissaoFicha
+                    Log.d("MesasAcertoAdapter", "✅ SUBTOTAL COM MÉDIA: ${state.mediaFichasJogadas} × R$ ${mesa.comissaoFicha} = R$ $subtotalCalculado")
+                    subtotalCalculado
                 } else {
-                    val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
+                    val fichasJogadas = calcularFichasJogadas(state.relogioInicial, state.relogioFinal, state.relogioReiniciou)
                     state.fichasJogadas = fichasJogadas
-                    fichasJogadas * mesa.comissaoFicha
+                    val subtotalCalculado = fichasJogadas * mesa.comissaoFicha
+                    Log.d("MesasAcertoAdapter", "✅ SUBTOTAL NORMAL: $fichasJogadas × R$ ${mesa.comissaoFicha} = R$ $subtotalCalculado")
+                    subtotalCalculado
                 }
                 
                 state.subtotal = subtotal
                 
-                // Atualizar exibição das fichas jogadas
+                // Atualizar exibição das fichas jogadas e média
                 if (state.comDefeito && state.mediaFichasJogadas > 0) {
+                    binding.layoutMediaFichas.visibility = View.VISIBLE
+                    binding.tvMediaFichas.text = state.mediaFichasJogadas.toInt().toString()
                     binding.tvFichasJogadas.text = "Fichas Jogadas (Média): ${state.mediaFichasJogadas.toInt()}"
                 } else {
-                    val fichasJogadas = (state.relogioFinal - state.relogioInicial).coerceAtLeast(0)
-                    binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                    binding.layoutMediaFichas.visibility = View.GONE
+                    val fichasJogadas = calcularFichasJogadas(state.relogioInicial, state.relogioFinal, state.relogioReiniciou)
+                    
+                    if (state.relogioReiniciou) {
+                        binding.tvFichasJogadas.text = "Fichas Jogadas (Ajustado): $fichasJogadas"
+                    } else {
+                        binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
+                    }
                 }
                 
                 binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(subtotal)
@@ -241,7 +364,7 @@ class MesasAcertoAdapter(
             } else if (state.comDefeito && state.mediaFichasJogadas > 0) {
                 true
             } else {
-                state.relogioFinal >= state.relogioInicial
+                validarRelogioFinal(state.relogioInicial, state.relogioFinal, state.comDefeito, state.relogioReiniciou)
             }
         }
     }

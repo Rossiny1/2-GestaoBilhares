@@ -66,6 +66,9 @@ data class AcertoMesa(
     @ColumnInfo(name = "com_defeito")
     val comDefeito: Boolean = false,
     
+    @ColumnInfo(name = "relogio_reiniciou")
+    val relogioReiniciou: Boolean = false,
+    
     @ColumnInfo(name = "observacoes")
     val observacoes: String? = null,
     

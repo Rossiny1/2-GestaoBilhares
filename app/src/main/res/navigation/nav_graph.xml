@@ -153,6 +153,10 @@
         <action
             android:id="@+id/action_mesasDepositoFragment_to_cadastroMesaFragment"
             app:destination="@id/cadastroMesaFragment" />
+        <!-- ✅ NOVA AÇÃO: Navegação para detalhes do cliente após vincular mesa -->
+        <action
+            android:id="@+id/action_mesasDepositoFragment_to_clientDetailFragment"
+            app:destination="@id/clientDetailFragment" />
     </fragment>
 
     <!-- Tela de Cadastro de Mesa -->

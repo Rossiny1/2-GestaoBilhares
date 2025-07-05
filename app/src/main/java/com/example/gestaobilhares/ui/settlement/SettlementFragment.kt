@@ -258,7 +258,6 @@ class SettlementFragment : Fragment() {
             onDataChanged = { updateCalculations() },
             onCalcularMedia = { mesaId -> 
                 // ✅ NOVO: Calcular média de fichas jogadas dos últimos acertos
-                // Como é assíncrono, vamos usar um valor padrão e atualizar depois
                 Log.d("SettlementFragment", "Solicitando cálculo de média para mesa $mesaId")
                 
                 // Iniciar cálculo assíncrono
@@ -269,9 +268,15 @@ class SettlementFragment : Fragment() {
                         
                         // Atualizar o adapter com a média calculada
                         mesasAcertoAdapter.atualizarMediaMesa(mesaId, media)
+                        
+                        // Recalcular totais após atualizar a média
                         updateCalculations()
+                        
+                        // Mostrar feedback visual
+                        showSnackbar("Média calculada: ${media.toInt()} fichas")
                     } catch (e: Exception) {
                         Log.e("SettlementFragment", "Erro ao calcular média: ${e.message}", e)
+                        showSnackbar("Erro ao calcular média: ${e.message}")
                     }
                 }
                 
@@ -283,11 +288,12 @@ class SettlementFragment : Fragment() {
         binding.rvMesasAcerto.adapter = mesasAcertoAdapter
         binding.rvMesasAcerto.layoutManager = LinearLayoutManager(requireContext())
         
-        // Carregar mesas do cliente
-        args.mesasCliente?.let { mesas ->
-            Log.d("SettlementFragment", "Carregando ${mesas.size} mesas para o acerto")
-            mesasAcertoAdapter.submitList(mesas.toList())
+        // ✅ CORREÇÃO: Usar as mesas preparadas com relógio inicial correto
+        Log.d("SettlementFragment", "Carregando ${mesasDTO.size} mesas preparadas para o acerto")
+        mesasDTO.forEach { mesa ->
+            Log.d("SettlementFragment", "Mesa ${mesa.numero}: relógio inicial=${mesa.fichasInicial}, relógio final=${mesa.fichasFinal}")
         }
+        mesasAcertoAdapter.submitList(mesasDTO)
     }
     
     private fun setupCalculationListeners() {
@@ -425,6 +431,17 @@ class SettlementFragment : Fragment() {
         binding.actvPaymentMethod.setOnClickListener {
             showPaymentMethodsDialog(paymentMethods)
         }
+    }
+    
+    /**
+     * ✅ NOVO: Mostra um Snackbar com feedback para o usuário
+     */
+    private fun showSnackbar(message: String) {
+        com.google.android.material.snackbar.Snackbar.make(
+            binding.root,
+            message,
+            com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+        ).show()
     }
 
     private fun showPaymentMethodsDialog(paymentMethods: Array<String>) {
@@ -593,7 +610,8 @@ class SettlementFragment : Fragment() {
                 fichasFinal = mesaState.relogioFinal,
                 valorFixo = mesaOriginal?.valorFixo ?: 0.0,
                 tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA,
-                comDefeito = mesaState.comDefeito
+                comDefeito = mesaState.comDefeito,
+                relogioReiniciou = mesaState.relogioReiniciou
             )
         }
 
