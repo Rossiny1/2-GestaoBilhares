@@ -13,12 +13,25 @@ import com.google.android.material.button.MaterialButton
 import java.text.NumberFormat
 import java.util.*
 import android.util.Log
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import android.bluetooth.BluetoothDevice
+import androidx.appcompat.app.AlertDialog
+import android.app.ProgressDialog
 
 class SettlementSummaryDialog : DialogFragment() {
     interface OnAcertoCompartilhadoListener {
         fun onAcertoCompartilhado()
     }
     var acertoCompartilhadoListener: OnAcertoCompartilhadoListener? = null
+    private val REQUEST_BLUETOOTH_PERMISSIONS = 101
+    private val bluetoothPermissions = arrayOf(
+        Manifest.permission.BLUETOOTH_CONNECT,
+        Manifest.permission.BLUETOOTH_SCAN
+    )
+
     companion object {
         fun newInstance(
             clienteNome: String,
@@ -92,7 +105,10 @@ class SettlementSummaryDialog : DialogFragment() {
 
         // Botão Imprimir
         view.findViewById<MaterialButton>(R.id.btnImprimir).setOnClickListener {
-            // 1. Selecionar dispositivo Bluetooth
+            if (!hasBluetoothPermissions()) {
+                requestBluetoothPermissions()
+                return@setOnClickListener
+            }
             val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
             if (bluetoothAdapter == null) {
                 android.widget.Toast.makeText(requireContext(), "Bluetooth não disponível neste dispositivo.", android.widget.Toast.LENGTH_SHORT).show()
@@ -107,18 +123,58 @@ class SettlementSummaryDialog : DialogFragment() {
                 android.widget.Toast.makeText(requireContext(), "Nenhuma impressora Bluetooth pareada.", android.widget.Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            // Simples: pega o primeiro dispositivo pareado (ideal: mostrar lista para o usuário)
-            val printerDevice = pairedDevices.first()
-            val printerHelper = BluetoothPrinterHelper(printerDevice)
-            if (printerHelper.connect()) {
-                val textoRecibo = gerarTextoReciboImpressao(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual, debitoAnterior, desconto, valorTotalMesas)
-                printerHelper.printText(textoRecibo)
-                printerHelper.disconnect()
-                android.widget.Toast.makeText(requireContext(), "Recibo enviado para impressão!", android.widget.Toast.LENGTH_SHORT).show()
-            } else {
-                android.widget.Toast.makeText(requireContext(), "Falha ao conectar à impressora.", android.widget.Toast.LENGTH_SHORT).show()
-            }
-            dismiss()
+            // Diálogo de seleção de impressora
+            val deviceList = pairedDevices.toList()
+            val deviceNames = deviceList.map { it.name ?: it.address }.toTypedArray()
+            AlertDialog.Builder(requireContext())
+                .setTitle("Selecione a impressora")
+                .setItems(deviceNames) { _, which ->
+                    val printerDevice = deviceList[which]
+                    val progressDialog = ProgressDialog(requireContext())
+                    progressDialog.setMessage("Conectando e imprimindo...")
+                    progressDialog.setCancelable(false)
+                    progressDialog.show()
+                    Thread {
+                        var erro: String? = null
+                        try {
+                            val printerHelper = BluetoothPrinterHelper(printerDevice)
+                            if (printerHelper.connect()) {
+                                // Geração do recibo com layout profissional
+                                val recibo = gerarTextoReciboProfissional(clienteNome, mesas, total)
+                                val boldLines = listOf(0, recibo.lines().size - 2) // Título e total
+                                val centerLines = listOf(0, recibo.lines().size - 1) // Título e rodapé
+                                printerHelper.printText(recibo, boldLines, centerLines)
+                                printerHelper.disconnect()
+                            } else {
+                                erro = "Falha ao conectar à impressora."
+                            }
+                        } catch (e: Exception) {
+                            erro = when {
+                                e.message?.contains("socket") == true -> "Impressora desligada ou fora de alcance."
+                                e.message?.contains("broken pipe") == true -> "Falha ao enviar dados. Impressora pode estar desconectada."
+                                else -> "Erro inesperado: ${e.message}"
+                            }
+                        }
+                        requireActivity().runOnUiThread {
+                            progressDialog.dismiss()
+                            if (erro == null) {
+                                android.widget.Toast.makeText(requireContext(), "Recibo enviado para impressão!", android.widget.Toast.LENGTH_SHORT).show()
+                                dismiss()
+                            } else {
+                                AlertDialog.Builder(requireContext())
+                                    .setTitle("Erro na impressão")
+                                    .setMessage(erro)
+                                    .setPositiveButton("Tentar novamente") { _, _ ->
+                                        view?.findViewById<MaterialButton>(R.id.btnImprimir)?.performClick()
+                                    }
+                                    .setNegativeButton("Cancelar", null)
+                                    .show()
+                            }
+                        }
+                    }.start()
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
         }
         
         // Botão WhatsApp
@@ -330,5 +386,54 @@ class SettlementSummaryDialog : DialogFragment() {
         if (text.length >= width) return text
         val left = ((width - text.length) / 2.0).toInt()
         return " ".repeat(left) + text
+    }
+
+    private fun hasBluetoothPermissions(): Boolean {
+        return bluetoothPermissions.all {
+            ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun requestBluetoothPermissions() {
+        ActivityCompat.requestPermissions(requireActivity(), bluetoothPermissions, REQUEST_BLUETOOTH_PERMISSIONS)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_BLUETOOTH_PERMISSIONS) {
+            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                // Permissão concedida, pode tentar imprimir novamente
+                view?.findViewById<MaterialButton>(R.id.btnImprimir)?.performClick()
+            } else {
+                android.widget.Toast.makeText(requireContext(), "Permissão Bluetooth necessária para imprimir.", android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    // Novo método para recibo profissional
+    private fun gerarTextoReciboProfissional(
+        clienteNome: String,
+        mesas: List<Mesa>,
+        total: Double
+    ): String {
+        val sb = StringBuilder()
+        val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
+        val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+        
+        sb.appendLine("********* RECIBO DE ACERTO *********")
+        sb.appendLine("--------------------------------")
+        sb.appendLine("Cliente: $clienteNome")
+        sb.appendLine("Data: $dataAtual")
+        sb.appendLine("--------------------------------")
+        sb.appendLine("Mesas:")
+        mesas.forEach { mesa ->
+            val fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0)
+            sb.appendLine("- Mesa ${mesa.numero}: ${fichasJogadas} fichas")
+        }
+        sb.appendLine("--------------------------------")
+        sb.appendLine("Total: ${formatter.format(total)}")
+        sb.appendLine("--------------------------------")
+        sb.appendLine("Obrigado por confiar!")
+        return sb.toString()
     }
 } 

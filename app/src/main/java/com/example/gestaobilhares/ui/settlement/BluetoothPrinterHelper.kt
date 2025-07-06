@@ -23,13 +23,30 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
         }
     }
 
-    fun printText(text: String) {
+    fun printText(text: String, boldLines: List<Int> = emptyList(), centerLines: List<Int> = emptyList()) {
         try {
-            // ESC/POS: Reset + alinhar à esquerda
+            val lines = text.lines()
+            // ESC/POS: Reset
             outputStream?.write(byteArrayOf(0x1B, 0x40))
-            outputStream?.write(byteArrayOf(0x1B, 0x61, 0x00))
-            outputStream?.write(text.toByteArray(Charsets.UTF_8))
-            outputStream?.write(byteArrayOf(0x0A, 0x0A, 0x0A)) // 3 linhas para corte manual
+            for ((i, line) in lines.withIndex()) {
+                // Centralizar
+                if (i in centerLines) {
+                    outputStream?.write(byteArrayOf(0x1B, 0x61, 0x01))
+                } else {
+                    outputStream?.write(byteArrayOf(0x1B, 0x61, 0x00))
+                }
+                // Negrito
+                if (i in boldLines) {
+                    outputStream?.write(byteArrayOf(0x1B, 0x45, 0x01))
+                }
+                outputStream?.write(line.toByteArray(Charsets.UTF_8))
+                outputStream?.write(byteArrayOf(0x0A))
+                if (i in boldLines) {
+                    outputStream?.write(byteArrayOf(0x1B, 0x45, 0x00))
+                }
+            }
+            // Corte de papel (se suportado)
+            outputStream?.write(byteArrayOf(0x1D, 0x56, 0x01))
             outputStream?.flush()
         } catch (e: IOException) {
             e.printStackTrace()
