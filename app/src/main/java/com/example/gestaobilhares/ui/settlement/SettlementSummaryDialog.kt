@@ -92,8 +92,32 @@ class SettlementSummaryDialog : DialogFragment() {
 
         // Botão Imprimir
         view.findViewById<MaterialButton>(R.id.btnImprimir).setOnClickListener {
-            // TODO: Implementar impressão térmica 58mm
-            android.widget.Toast.makeText(requireContext(), "Funcionalidade de impressão será implementada em breve!", android.widget.Toast.LENGTH_SHORT).show()
+            // 1. Selecionar dispositivo Bluetooth
+            val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+            if (bluetoothAdapter == null) {
+                android.widget.Toast.makeText(requireContext(), "Bluetooth não disponível neste dispositivo.", android.widget.Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (!bluetoothAdapter.isEnabled) {
+                android.widget.Toast.makeText(requireContext(), "Ative o Bluetooth para imprimir.", android.widget.Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val pairedDevices = bluetoothAdapter.bondedDevices
+            if (pairedDevices.isEmpty()) {
+                android.widget.Toast.makeText(requireContext(), "Nenhuma impressora Bluetooth pareada.", android.widget.Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            // Simples: pega o primeiro dispositivo pareado (ideal: mostrar lista para o usuário)
+            val printerDevice = pairedDevices.first()
+            val printerHelper = BluetoothPrinterHelper(printerDevice)
+            if (printerHelper.connect()) {
+                val textoRecibo = gerarTextoReciboImpressao(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual, debitoAnterior, desconto, valorTotalMesas)
+                printerHelper.printText(textoRecibo)
+                printerHelper.disconnect()
+                android.widget.Toast.makeText(requireContext(), "Recibo enviado para impressão!", android.widget.Toast.LENGTH_SHORT).show()
+            } else {
+                android.widget.Toast.makeText(requireContext(), "Falha ao conectar à impressora.", android.widget.Toast.LENGTH_SHORT).show()
+            }
             dismiss()
         }
         
@@ -248,5 +272,63 @@ class SettlementSummaryDialog : DialogFragment() {
             Log.e("SettlementSummaryDialog", "Erro geral ao abrir WhatsApp: ${e.message}", e)
             android.widget.Toast.makeText(requireContext(), "Erro ao compartilhar: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
         }
+    }
+
+    /**
+     * Gera texto formatado do recibo para impressão térmica 58mm
+     */
+    private fun gerarTextoReciboImpressao(
+        clienteNome: String,
+        mesas: List<Mesa>,
+        total: Double,
+        metodosPagamento: Map<String, Double>,
+        observacao: String,
+        debitoAtual: Double,
+        debitoAnterior: Double,
+        desconto: Double,
+        valorTotalMesas: Double
+    ): String {
+        val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
+        val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+        val texto = StringBuilder()
+        texto.append(centerText("ACERTO DE BILHAR", 32)).append("\n")
+        texto.append("--------------------------------\n")
+        texto.append("Cliente: $clienteNome\n")
+        texto.append("Data: $dataAtual\n")
+        texto.append("\nMESAS:\n")
+        var totalFichasJogadas = 0
+        mesas.forEach { mesa ->
+            val fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0)
+            totalFichasJogadas += fichasJogadas
+            texto.append("Mesa ${mesa.numero}: ${mesa.fichasInicial}->${mesa.fichasFinal} (${fichasJogadas})\n")
+        }
+        texto.append("Total fichas: $totalFichasJogadas\n")
+        texto.append("\nRESUMO:\n")
+        if (debitoAnterior > 0) texto.append("Débito ant.: ${formatter.format(debitoAnterior)}\n")
+        texto.append("Total mesas: ${formatter.format(valorTotalMesas)}\n")
+        if (desconto > 0) texto.append("Desconto: ${formatter.format(desconto)}\n")
+        texto.append("Valor total: ${formatter.format(total)}\n")
+        if (metodosPagamento.isNotEmpty()) {
+            val valorRecebido = metodosPagamento.values.sum()
+            texto.append("Recebido: ${formatter.format(valorRecebido)}\n")
+        }
+        if (debitoAtual > 0) texto.append("Débito atual: ${formatter.format(debitoAtual)}\n")
+        texto.append("\nPAGAMENTO:\n")
+        metodosPagamento.forEach { (metodo, valor) ->
+            texto.append("$metodo: ${formatter.format(valor)}\n")
+        }
+        if (observacao.isNotBlank()) {
+            texto.append("Obs: $observacao\n")
+        }
+        texto.append("\n-------------------------------\n")
+        texto.append(centerText("GestaoBilhares", 32)).append("\n\n")
+        return texto.toString()
+    }
+
+    // Função utilitária para centralizar texto na largura da impressora
+    private fun centerText(text: String, width: Int): String {
+        if (text.length >= width) return text
+        val left = ((width - text.length) / 2.0).toInt()
+        return " ".repeat(left) + text
     }
 } 
