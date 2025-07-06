@@ -5,4 +5,28 @@
         <item>Presencial</item>
         <item>por WhatsApp</item>
     </string-array>
+    <string name="recibo_titulo">********* RECIBO DE ACERTO *********</string>
+    <string name="recibo_cliente">Cliente:</string>
+    <string name="recibo_data">Data:</string>
+    <string name="recibo_mesas">Mesas:</string>
+    <string name="recibo_mesa">Mesa %1$d:</string>
+    <string name="recibo_fichas">%1$d fichas</string>
+    <string name="recibo_total">Total:</string>
+    <string name="recibo_agradecimento">Obrigado por confiar!</string>
+    <string name="recibo_linha">--------------------------------</string>
+    <string name="recibo_linha_curta">-</string>
+    <string name="impressao_selecione_impressora">Selecione a impressora</string>
+    <string name="impressao_conectando">Conectando e imprimindo...</string>
+    <string name="impressao_erro_conexao">Falha ao conectar à impressora.</string>
+    <string name="impressao_erro_desligada">Impressora desligada ou fora de alcance.</string>
+    <string name="impressao_erro_envio">Falha ao enviar dados. Impressora pode estar desconectada.</string>
+    <string name="impressao_erro_generico">Erro inesperado: %1$s</string>
+    <string name="impressao_sucesso">Recibo enviado para impressão!</string>
+    <string name="impressao_erro_tentar_novamente">Tentar novamente</string>
+    <string name="impressao_erro_cancelar">Cancelar</string>
+    <string name="impressao_erro_titulo">Erro na impressão</string>
+    <string name="impressao_nenhuma_impressora">Nenhuma impressora Bluetooth pareada.</string>
+    <string name="impressao_bluetooth_nao_disponivel">Bluetooth não disponível neste dispositivo.</string>
+    <string name="impressao_bluetooth_ativar">Ative o Bluetooth para imprimir.</string>
+    <string name="impressao_permissao_necessaria">Permissão Bluetooth necessária para imprimir.</string>
 </resources>

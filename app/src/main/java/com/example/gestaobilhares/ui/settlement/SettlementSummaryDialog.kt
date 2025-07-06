@@ -19,7 +19,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.bluetooth.BluetoothDevice
 import androidx.appcompat.app.AlertDialog
-import android.app.ProgressDialog
+import com.google.android.material.progressindicator.CircularProgressIndicator
 
 class SettlementSummaryDialog : DialogFragment() {
     interface OnAcertoCompartilhadoListener {
@@ -111,29 +111,27 @@ class SettlementSummaryDialog : DialogFragment() {
             }
             val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
             if (bluetoothAdapter == null) {
-                android.widget.Toast.makeText(requireContext(), "Bluetooth não disponível neste dispositivo.", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(requireContext(), getString(R.string.impressao_bluetooth_nao_disponivel), android.widget.Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             if (!bluetoothAdapter.isEnabled) {
-                android.widget.Toast.makeText(requireContext(), "Ative o Bluetooth para imprimir.", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(requireContext(), getString(R.string.impressao_bluetooth_ativar), android.widget.Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             val pairedDevices = bluetoothAdapter.bondedDevices
             if (pairedDevices.isEmpty()) {
-                android.widget.Toast.makeText(requireContext(), "Nenhuma impressora Bluetooth pareada.", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(requireContext(), getString(R.string.impressao_nenhuma_impressora), android.widget.Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             // Diálogo de seleção de impressora
             val deviceList = pairedDevices.toList()
             val deviceNames = deviceList.map { it.name ?: it.address }.toTypedArray()
             AlertDialog.Builder(requireContext())
-                .setTitle("Selecione a impressora")
+                .setTitle(getString(R.string.impressao_selecione_impressora))
                 .setItems(deviceNames) { _, which ->
                     val printerDevice = deviceList[which]
-                    val progressDialog = ProgressDialog(requireContext())
-                    progressDialog.setMessage("Conectando e imprimindo...")
-                    progressDialog.setCancelable(false)
-                    progressDialog.show()
+                    val loadingDialog = LoadingDialog()
+                    loadingDialog.show(childFragmentManager, "loading")
                     Thread {
                         var erro: String? = null
                         try {
@@ -146,34 +144,34 @@ class SettlementSummaryDialog : DialogFragment() {
                                 printerHelper.printText(recibo, boldLines, centerLines)
                                 printerHelper.disconnect()
                             } else {
-                                erro = "Falha ao conectar à impressora."
+                                erro = getString(R.string.impressao_erro_conexao)
                             }
                         } catch (e: Exception) {
                             erro = when {
-                                e.message?.contains("socket") == true -> "Impressora desligada ou fora de alcance."
-                                e.message?.contains("broken pipe") == true -> "Falha ao enviar dados. Impressora pode estar desconectada."
-                                else -> "Erro inesperado: ${e.message}"
+                                e.message?.contains("socket") == true -> getString(R.string.impressao_erro_desligada)
+                                e.message?.contains("broken pipe") == true -> getString(R.string.impressao_erro_envio)
+                                else -> getString(R.string.impressao_erro_generico, e.message ?: "Desconhecido")
                             }
                         }
                         requireActivity().runOnUiThread {
-                            progressDialog.dismiss()
+                            loadingDialog.dismiss()
                             if (erro == null) {
-                                android.widget.Toast.makeText(requireContext(), "Recibo enviado para impressão!", android.widget.Toast.LENGTH_SHORT).show()
+                                android.widget.Toast.makeText(requireContext(), getString(R.string.impressao_sucesso), android.widget.Toast.LENGTH_SHORT).show()
                                 dismiss()
                             } else {
                                 AlertDialog.Builder(requireContext())
-                                    .setTitle("Erro na impressão")
+                                    .setTitle(getString(R.string.impressao_erro_titulo))
                                     .setMessage(erro)
-                                    .setPositiveButton("Tentar novamente") { _, _ ->
+                                    .setPositiveButton(getString(R.string.impressao_erro_tentar_novamente)) { _, _ ->
                                         view?.findViewById<MaterialButton>(R.id.btnImprimir)?.performClick()
                                     }
-                                    .setNegativeButton("Cancelar", null)
+                                    .setNegativeButton(getString(R.string.impressao_erro_cancelar), null)
                                     .show()
                             }
                         }
                     }.start()
                 }
-                .setNegativeButton("Cancelar", null)
+                .setNegativeButton(getString(R.string.impressao_erro_cancelar), null)
                 .show()
         }
         
@@ -347,7 +345,7 @@ class SettlementSummaryDialog : DialogFragment() {
         val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
         val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
         val texto = StringBuilder()
-        texto.append(centerText("ACERTO DE BILHAR", 32)).append("\n")
+        texto.append(centerText(getString(R.string.recibo_titulo), 32)).append("\n")
         texto.append("--------------------------------\n")
         texto.append("Cliente: $clienteNome\n")
         texto.append("Data: $dataAtual\n")
@@ -377,12 +375,16 @@ class SettlementSummaryDialog : DialogFragment() {
             texto.append("Obs: $observacao\n")
         }
         texto.append("\n-------------------------------\n")
-        texto.append(centerText("GestaoBilhares", 32)).append("\n\n")
+        texto.append(centerText(getString(R.string.recibo_agradecimento), 32)).append("\n\n")
         return texto.toString()
     }
 
-    // Função utilitária para centralizar texto na largura da impressora
-    private fun centerText(text: String, width: Int): String {
+    // Funções utilitárias para alinhamento (publicas para testes)
+    fun padRight(text: String, length: Int): String = text.padEnd(length, ' ')
+    fun padLeft(text: String, length: Int): String = text.padStart(length, ' ')
+
+    // Função utilitária para centralizar texto na largura da impressora (publica para testes)
+    fun centerText(text: String, width: Int): String {
         if (text.length >= width) return text
         val left = ((width - text.length) / 2.0).toInt()
         return " ".repeat(left) + text
@@ -405,7 +407,7 @@ class SettlementSummaryDialog : DialogFragment() {
                 // Permissão concedida, pode tentar imprimir novamente
                 view?.findViewById<MaterialButton>(R.id.btnImprimir)?.performClick()
             } else {
-                android.widget.Toast.makeText(requireContext(), "Permissão Bluetooth necessária para imprimir.", android.widget.Toast.LENGTH_LONG).show()
+                android.widget.Toast.makeText(requireContext(), getString(R.string.impressao_permissao_necessaria), android.widget.Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -419,21 +421,35 @@ class SettlementSummaryDialog : DialogFragment() {
         val sb = StringBuilder()
         val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
         val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+        val width = 32
         
-        sb.appendLine("********* RECIBO DE ACERTO *********")
-        sb.appendLine("--------------------------------")
-        sb.appendLine("Cliente: $clienteNome")
-        sb.appendLine("Data: $dataAtual")
-        sb.appendLine("--------------------------------")
-        sb.appendLine("Mesas:")
+        sb.appendLine(centerText(getString(R.string.recibo_titulo), width))
+        sb.appendLine(getString(R.string.recibo_linha_curta).repeat(width))
+        sb.appendLine(padRight(getString(R.string.recibo_cliente), 10) + padLeft(clienteNome, width - 10))
+        sb.appendLine(padRight(getString(R.string.recibo_data), 10) + padLeft(dataAtual, width - 10))
+        sb.appendLine(getString(R.string.recibo_linha_curta).repeat(width))
+        sb.appendLine(getString(R.string.recibo_mesas))
         mesas.forEach { mesa ->
             val fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0)
-            sb.appendLine("- Mesa ${mesa.numero}: ${fichasJogadas} fichas")
+            val desc = getString(R.string.recibo_mesa, mesa.numero)
+            val valor = getString(R.string.recibo_fichas, fichasJogadas)
+            sb.appendLine(padRight(desc, 18) + padLeft(valor, width - 18))
         }
-        sb.appendLine("--------------------------------")
-        sb.appendLine("Total: ${formatter.format(total)}")
-        sb.appendLine("--------------------------------")
-        sb.appendLine("Obrigado por confiar!")
+        sb.appendLine(getString(R.string.recibo_linha_curta).repeat(width))
+        sb.appendLine(padRight(getString(R.string.recibo_total), 18) + padLeft(formatter.format(total), width - 18))
+        sb.appendLine(getString(R.string.recibo_linha_curta).repeat(width))
+        sb.appendLine(centerText(getString(R.string.recibo_agradecimento), width))
         return sb.toString()
+    }
+
+    // DialogFragment customizado para loading moderno
+    private class LoadingDialog : DialogFragment() {
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+            val view = LayoutInflater.from(context).inflate(R.layout.dialog_loading_impressao, null)
+            return AlertDialog.Builder(requireContext())
+                .setView(view)
+                .setCancelable(false)
+                .create()
+        }
     }
 } 
