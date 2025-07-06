@@ -15,7 +15,7 @@ import com.example.gestaobilhares.data.entities.StatusRota
 import com.example.gestaobilhares.databinding.FragmentClientListBinding
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repositories.ClienteRepository
+import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.RotaRepository
 
 /**

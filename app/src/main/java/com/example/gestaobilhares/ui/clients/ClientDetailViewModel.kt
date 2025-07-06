@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.MesaRepository
-import com.example.gestaobilhares.data.repositories.ClienteRepository
+import com.example.gestaobilhares.data.repository.ClienteRepository
 import kotlinx.coroutines.flow.collect
 import kotlinx.parcelize.Parcelize
 import android.os.Parcelable
@@ -26,7 +26,7 @@ import com.example.gestaobilhares.data.repository.AcertoMesaRepository
  * FASE 4A - Implementação crítica com dados mock
  */
 class ClientDetailViewModel(
-    private val clienteRepository: ClienteRepository,
+    private val clienteRepository: com.example.gestaobilhares.data.repository.ClienteRepository,
     private val mesaRepository: MesaRepository,
     private val acertoRepository: AcertoRepository,
     private val acertoMesaRepository: AcertoMesaRepository

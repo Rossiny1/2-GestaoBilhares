@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.data.repositories
+package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.ClienteDao
 import com.example.gestaobilhares.data.entities.Cliente
