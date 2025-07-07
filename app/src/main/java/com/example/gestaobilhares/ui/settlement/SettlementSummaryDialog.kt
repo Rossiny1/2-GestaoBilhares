@@ -137,8 +137,8 @@ class SettlementSummaryDialog : DialogFragment() {
                         try {
                             val printerHelper = BluetoothPrinterHelper(printerDevice)
                             if (printerHelper.connect()) {
-                                // Geração do recibo com layout profissional
-                                val recibo = gerarTextoReciboProfissional(clienteNome, mesas, total)
+                                // Geração do recibo com layout profissional - dados completos
+                                val recibo = gerarTextoReciboProfissional(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual, debitoAnterior, desconto, valorTotalMesas)
                                 val boldLines = listOf(0, recibo.lines().size - 2) // Título e total
                                 val centerLines = listOf(0, recibo.lines().size - 1) // Título e rodapé
                                 printerHelper.printText(recibo, boldLines, centerLines)
@@ -158,6 +158,7 @@ class SettlementSummaryDialog : DialogFragment() {
                             if (erro == null) {
                                 android.widget.Toast.makeText(requireContext(), getString(R.string.impressao_sucesso), android.widget.Toast.LENGTH_SHORT).show()
                                 dismiss()
+                                acertoCompartilhadoListener?.onAcertoCompartilhado()
                             } else {
                                 AlertDialog.Builder(requireContext())
                                     .setTitle(getString(R.string.impressao_erro_titulo))
@@ -412,44 +413,78 @@ class SettlementSummaryDialog : DialogFragment() {
         }
     }
 
-    // Novo método para recibo profissional
+    // Novo método para recibo profissional - Versão completa (mesmos dados do WhatsApp)
     private fun gerarTextoReciboProfissional(
         clienteNome: String,
         mesas: List<Mesa>,
-        total: Double
+        total: Double,
+        metodosPagamento: Map<String, Double>,
+        observacao: String,
+        debitoAtual: Double,
+        debitoAnterior: Double,
+        desconto: Double,
+        valorTotalMesas: Double
     ): String {
         val sb = StringBuilder()
         val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
         val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
-        val width = 32
         
-        sb.appendLine(centerText(getString(R.string.recibo_titulo), width))
-        sb.appendLine(getString(R.string.recibo_linha_curta).repeat(width))
-        sb.appendLine(padRight(getString(R.string.recibo_cliente), 10) + padLeft(clienteNome, width - 10))
-        sb.appendLine(padRight(getString(R.string.recibo_data), 10) + padLeft(dataAtual, width - 10))
-        sb.appendLine(getString(R.string.recibo_linha_curta).repeat(width))
-        sb.appendLine(getString(R.string.recibo_mesas))
+        sb.appendLine("********* RECIBO DE ACERTO *********")
+        sb.appendLine("=====================================")
+        sb.appendLine("Cliente: $clienteNome")
+        sb.appendLine("Data: $dataAtual")
+        sb.appendLine("")
+        sb.appendLine("MESAS ACERTADAS:")
+        var totalFichasJogadas = 0
         mesas.forEach { mesa ->
             val fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0)
-            val desc = getString(R.string.recibo_mesa, mesa.numero)
-            val valor = getString(R.string.recibo_fichas, fichasJogadas)
-            sb.appendLine(padRight(desc, 18) + padLeft(valor, width - 18))
+            totalFichasJogadas += fichasJogadas
+            sb.appendLine("Mesa ${mesa.numero}: ${mesa.fichasInicial} -> ${mesa.fichasFinal} (${fichasJogadas} fichas)")
         }
-        sb.appendLine(getString(R.string.recibo_linha_curta).repeat(width))
-        sb.appendLine(padRight(getString(R.string.recibo_total), 18) + padLeft(formatter.format(total), width - 18))
-        sb.appendLine(getString(R.string.recibo_linha_curta).repeat(width))
-        sb.appendLine(centerText(getString(R.string.recibo_agradecimento), width))
+        sb.appendLine("Total de fichas jogadas: $totalFichasJogadas")
+        sb.appendLine("")
+        sb.appendLine("RESUMO FINANCEIRO:")
+        if (debitoAnterior > 0) {
+            sb.appendLine("Débito anterior: ${formatter.format(debitoAnterior)}")
+        }
+        sb.appendLine("Total das mesas: ${formatter.format(valorTotalMesas)}")
+        if (desconto > 0) {
+            sb.appendLine("Desconto: ${formatter.format(desconto)}")
+        }
+        sb.appendLine("Valor total: ${formatter.format(total)}")
+        if (metodosPagamento.isNotEmpty()) {
+            val valorRecebido = metodosPagamento.values.sum()
+            sb.appendLine("Valor recebido: ${formatter.format(valorRecebido)}")
+        }
+        if (debitoAtual > 0) {
+            sb.appendLine("Débito atual: ${formatter.format(debitoAtual)}")
+        }
+        sb.appendLine("")
+        if (metodosPagamento.isNotEmpty()) {
+            sb.appendLine("FORMA DE PAGAMENTO:")
+            metodosPagamento.forEach { (metodo, valor) ->
+                sb.appendLine("$metodo: ${formatter.format(valor)}")
+            }
+            sb.appendLine("")
+        }
+        if (observacao.isNotBlank()) {
+            sb.appendLine("Observações: $observacao")
+            sb.appendLine("")
+        }
+        sb.appendLine("=====================================")
+        sb.appendLine("Acerto realizado via GestaoBilhares")
+        sb.appendLine("Obrigado por confiar!")
         return sb.toString()
     }
+}
 
-    // DialogFragment customizado para loading moderno
-    private class LoadingDialog : DialogFragment() {
-        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-            val view = LayoutInflater.from(context).inflate(R.layout.dialog_loading_impressao, null)
-            return AlertDialog.Builder(requireContext())
-                .setView(view)
-                .setCancelable(false)
-                .create()
-        }
+// Classe LoadingDialog movida para fora, agora pública e de nível superior
+class LoadingDialog : androidx.fragment.app.DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: android.os.Bundle?): android.app.Dialog {
+        val view = android.view.LayoutInflater.from(context).inflate(com.example.gestaobilhares.R.layout.dialog_loading_impressao, null)
+        return androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setView(view)
+            .setCancelable(false)
+            .create()
     }
 } 
