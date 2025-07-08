@@ -20,6 +20,10 @@ import androidx.core.content.ContextCompat
 import android.bluetooth.BluetoothDevice
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.progressindicator.CircularProgressIndicator
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.graphics.BitmapFactory
+import android.graphics.Typeface
 
 class SettlementSummaryDialog : DialogFragment() {
     interface OnAcertoCompartilhadoListener {
@@ -137,11 +141,43 @@ class SettlementSummaryDialog : DialogFragment() {
                         try {
                             val printerHelper = BluetoothPrinterHelper(printerDevice)
                             if (printerHelper.connect()) {
-                                // Geração do recibo com layout profissional - dados completos
-                                val recibo = gerarTextoReciboProfissional(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual, debitoAnterior, desconto, valorTotalMesas)
-                                val boldLines = listOf(0, recibo.lines().size - 2) // Título e total
-                                val centerLines = listOf(0, recibo.lines().size - 1) // Título e rodapé
-                                printerHelper.printText(recibo, boldLines, centerLines)
+                                // Inflar o layout do recibo
+                                val inflater = LayoutInflater.from(requireContext())
+                                val reciboView = inflater.inflate(R.layout.layout_recibo_impressao, null) as ViewGroup
+                                // Preencher campos
+                                val txtTitulo = reciboView.findViewById<TextView>(R.id.txtTituloRecibo)
+                                val txtCliente = reciboView.findViewById<TextView>(R.id.txtCliente)
+                                val txtData = reciboView.findViewById<TextView>(R.id.txtData)
+                                val txtMesas = reciboView.findViewById<TextView>(R.id.txtMesas)
+                                val txtTotalFichas = reciboView.findViewById<TextView>(R.id.txtTotalFichas)
+                                val txtResumoFinanceiro = reciboView.findViewById<TextView>(R.id.txtResumoFinanceiro)
+                                val txtPagamentos = reciboView.findViewById<TextView>(R.id.txtPagamentos)
+                                val txtObservacoes = reciboView.findViewById<TextView>(R.id.txtObservacoes)
+                                val txtAgradecimento = reciboView.findViewById<TextView>(R.id.txtAgradecimento)
+                                val imgLogo = reciboView.findViewById<ImageView>(R.id.imgLogoRecibo)
+
+                                // Preencher campos do recibo
+                                txtTitulo.text = "Recibo de Acerto"
+                                txtCliente.text = "👤 Cliente: $clienteNome"
+                                txtData.text = "📅 Data: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())}"
+                                txtMesas.text = "🎱 Mesas acertadas:\n$mesasDetalhes"
+                                txtTotalFichas.text = "Total de fichas jogadas: $totalFichasJogadas"
+                                txtResumoFinanceiro.text = "Recebido: R$ ${formatter.format(metodosPagamento.values.sum())}\nDébito anterior: R$ ${formatter.format(debitoAnterior)}\nDébito atual: R$ ${formatter.format(debitoAtual)}"
+                                txtPagamentos.text = "Forma de pagamento:\n$pagamentosText"
+                                txtObservacoes.text = "Observações: $observacao"
+                                txtAgradecimento.text = "Acerto realizado via GestaoBilhares\nObrigado por confiar!"
+                                imgLogo.setImageResource(R.drawable.logo_bilhar)
+
+                                // Ajustar estilos para títulos e valores principais
+                                txtTitulo.setTypeface(null, Typeface.BOLD)
+                                txtCliente.setTypeface(null, Typeface.BOLD)
+                                txtMesas.setTypeface(null, Typeface.BOLD)
+                                txtResumoFinanceiro.setTypeface(null, Typeface.BOLD)
+                                txtPagamentos.setTypeface(null, Typeface.BOLD)
+                                txtObservacoes.setTypeface(null, Typeface.BOLD)
+                                // Fontes menores já estão no layout XML
+                                // Imprimir
+                                printerHelper.printReciboLayoutBitmap(reciboView)
                                 printerHelper.disconnect()
                             } else {
                                 erro = getString(R.string.impressao_erro_conexao)

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layoutReciboImpressao"
+    android:layout_width="384px"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="4dp"
+    android:background="@android:color/white">
+
+    <!-- Divisor superior -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="────────────"
+        android:textColor="#000000"
+        android:textSize="10sp"
+        android:gravity="center" />
+
+    <!-- Logo centralizado -->
+    <ImageView
+        android:id="@+id/imgLogoRecibo"
+        android:layout_width="120dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/logo_bilhar"
+        android:contentDescription="Logo" />
+
+    <!-- Divisor -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="────────────"
+        android:textColor="#000000"
+        android:textSize="10sp"
+        android:gravity="center" />
+
+    <!-- Título -->
+    <TextView
+        android:id="@+id/txtTituloRecibo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Recibo de Acerto"
+        android:textStyle="bold"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:textColor="#000000"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp" />
+
+    <!-- Cliente e Data -->
+    <TextView
+        android:id="@+id/txtCliente"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="👤 Cliente:"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:textSize="10sp" />
+    <TextView
+        android:id="@+id/txtData"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📅 Data:"
+        android:textColor="#000000"
+        android:textSize="10sp"
+        android:layout_marginBottom="2dp" />
+
+    <!-- Mesas -->
+    <TextView
+        android:id="@+id/txtMesas"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🎱 Mesas acertadas:"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:textSize="10sp"
+        android:layout_marginBottom="1dp" />
+    <TextView
+        android:id="@+id/txtTotalFichas"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Total de fichas jogadas:"
+        android:textColor="#000000"
+        android:textSize="10sp"
+        android:layout_marginBottom="2dp" />
+
+    <!-- Resumo Financeiro -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="💰 Resumo Financeiro:"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:textSize="10sp" />
+    <TextView
+        android:id="@+id/txtResumoFinanceiro"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Resumo financeiro:"
+        android:textColor="#000000"
+        android:textSize="10sp"
+        android:layout_marginBottom="2dp" />
+
+    <!-- Pagamentos -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="💳 Forma de Pagamento:"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:textSize="10sp" />
+    <TextView
+        android:id="@+id/txtPagamentos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Forma de pagamento:"
+        android:textColor="#000000"
+        android:textSize="10sp"
+        android:layout_marginBottom="2dp" />
+
+    <!-- Observações -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📝 Observações:"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:textSize="10sp" />
+    <TextView
+        android:id="@+id/txtObservacoes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Observações:"
+        android:textColor="#000000"
+        android:textSize="10sp"
+        android:layout_marginBottom="2dp" />
+
+    <!-- Mensagem final -->
+    <TextView
+        android:id="@+id/txtAgradecimento"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Acerto realizado via GestaoBilhares\nObrigado por confiar!"
+        android:gravity="center"
+        android:textStyle="italic"
+        android:textColor="#000000"
+        android:textSize="10sp"
+        android:layout_marginTop="2dp" />
+
+    <!-- Divisor inferior -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="────────────"
+        android:textColor="#000000"
+        android:textSize="10sp"
+        android:gravity="center" />
+
+</LinearLayout> 
