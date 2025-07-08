@@ -212,25 +212,6 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
         printBitmapRasterGS(bitmap)
     }
 
-    fun printReciboBitmap(settlement: Settlement, context: Context) {
-        // Inflar o layout do recibo
-        val inflater = LayoutInflater.from(context)
-        val view = inflater.inflate(R.layout.layout_recibo_impressao, null)
-        // Preencher campos do recibo (igual ao SettlementSummaryDialog)
-        // ... preencher campos ...
-        // Medir e gerar bitmap compacto
-        val widthSpec = View.MeasureSpec.makeMeasureSpec(384, View.MeasureSpec.EXACTLY)
-        val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        view.measure(widthSpec, heightSpec)
-        view.layout(0, 0, view.measuredWidth, view.measuredHeight)
-        // Gerar bitmap
-        val bitmap = Bitmap.createBitmap(view.measuredWidth, view.measuredHeight, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        view.draw(canvas)
-        // Ajustar escala se necessário para não cortar o logo
-        // ... código de impressão GS v 0 ...
-    }
-
     fun disconnect() {
         try {
             outputStream?.close()

@@ -6,6 +6,7 @@
     <color name="accent_purple">#BB86FC</color>
     <color name="accent_primary">#BB86FC</color>
     <color name="accent_primary_alpha">#33BB86FC</color>
+    <color name="accent_color">#BB86FC</color>
     
     <!-- Cores Material Design -->
     <color name="purple_50">#F3E5F5</color>

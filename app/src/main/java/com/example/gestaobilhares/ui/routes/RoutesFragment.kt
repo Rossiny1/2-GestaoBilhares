@@ -114,6 +114,11 @@ class RoutesFragment : Fragment() {
             Toast.makeText(requireContext(), "Filtros serão implementados em breve", Toast.LENGTH_SHORT).show()
         }
 
+        // Botão de diagnóstico da impressora
+        binding.printerDiagnosticButton.setOnClickListener {
+            findNavController().navigate(R.id.action_routesFragment_to_printerDiagnosticFragment)
+        }
+
         // Link "Ver todas"
         binding.verTodasButton.setOnClickListener {
             // TODO: Navegar para tela de todas as rotas

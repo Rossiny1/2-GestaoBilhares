@@ -30,6 +30,10 @@
         <action
             android:id="@+id/action_routesFragment_to_expenseHistoryFragment"
             app:destination="@id/expenseHistoryFragment" />
+        <!-- Navegação para diagnóstico da impressora -->
+        <action
+            android:id="@+id/action_routesFragment_to_printerDiagnosticFragment"
+            app:destination="@id/printerDiagnosticFragment" />
     </fragment>
 
     <fragment
@@ -44,6 +48,14 @@
         android:id="@+id/expenseHistoryFragment"
         android:name="com.example.gestaobilhares.ui.expenses.ExpenseHistoryFragment"
         android:label="Histórico de Despesas">
+        <!-- Navegação de volta para rotas já está implícita com o botão voltar -->
+    </fragment>
+
+    <!-- Tela de diagnóstico da impressora -->
+    <fragment
+        android:id="@+id/printerDiagnosticFragment"
+        android:name="com.example.gestaobilhares.ui.settlement.PrinterDiagnosticFragment"
+        android:label="Diagnóstico da Impressora">
         <!-- Navegação de volta para rotas já está implícita com o botão voltar -->
     </fragment>
 
