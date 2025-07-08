@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:text="────────────"
         android:textColor="#000000"
-        android:textSize="10sp"
+        android:textSize="8sp"
         android:gravity="center" />
 
     <!-- Logo centralizado -->
@@ -22,7 +22,7 @@
         android:layout_width="120dp"
         android:layout_height="40dp"
         android:layout_gravity="center_horizontal"
-        android:src="@drawable/logo_bilhar"
+        android:src="@drawable/logo_globo1"
         android:contentDescription="Logo" />
 
     <!-- Divisor -->
@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:text="────────────"
         android:textColor="#000000"
-        android:textSize="10sp"
+        android:textSize="8sp"
         android:gravity="center" />
 
     <!-- Título -->
@@ -39,113 +39,180 @@
         android:id="@+id/txtTituloRecibo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Recibo de Acerto"
+        android:text="📋 RECIBO DE ACERTO"
         android:textStyle="bold"
-        android:textSize="12sp"
+        android:textSize="10sp"
         android:gravity="center"
         android:textColor="#000000"
         android:layout_marginTop="2dp"
-        android:layout_marginBottom="2dp" />
+        android:layout_marginBottom="4dp" />
 
-    <!-- Cliente e Data -->
+    <!-- Cliente -->
     <TextView
-        android:id="@+id/txtCliente"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="👤 Cliente:"
+        android:text="Cliente:"
         android:textStyle="bold"
         android:textColor="#000000"
-        android:textSize="10sp" />
+        android:textSize="7sp"
+        android:gravity="center" />
     <TextView
-        android:id="@+id/txtData"
+        android:id="@+id/txtClienteValor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="📅 Data:"
+        android:text="Nome do Cliente"
+        android:textStyle="bold|italic"
         android:textColor="#000000"
-        android:textSize="10sp"
+        android:textSize="7sp"
+        android:gravity="center"
         android:layout_marginBottom="2dp" />
 
-    <!-- Mesas -->
+    <!-- Data -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="4dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Data: "
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:textSize="7sp" />
+        <TextView
+            android:id="@+id/txtData"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="08/07/2025"
+            android:textStyle="bold|italic"
+            android:textColor="#000000"
+            android:textSize="7sp" />
+    </LinearLayout>
+
+    <!-- MESAS ACERTADAS -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🎱 MESAS ACERTADAS"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:textSize="8sp"
+        android:gravity="center"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp" />
     <TextView
         android:id="@+id/txtMesas"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="🎱 Mesas acertadas:"
-        android:textStyle="bold"
+        android:text="Mesa 1122-13: 123 → 523 (400 fichas)"
+        android:textStyle="bold|italic"
         android:textColor="#000000"
-        android:textSize="10sp"
-        android:layout_marginBottom="1dp" />
-    <TextView
-        android:id="@+id/txtTotalFichas"
+        android:textSize="7sp"
+        android:gravity="center" />
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Total de fichas jogadas:"
-        android:textColor="#000000"
-        android:textSize="10sp"
-        android:layout_marginBottom="2dp" />
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="4dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Fichas jogadas: "
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:textSize="7sp" />
+        <TextView
+            android:id="@+id/txtFichasJogadas"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="400"
+            android:textStyle="bold|italic"
+            android:textColor="#000000"
+            android:textSize="7sp" />
+    </LinearLayout>
 
-    <!-- Resumo Financeiro -->
+    <!-- RESUMO FINANCEIRO -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="💰 Resumo Financeiro:"
+        android:text="💰 RESUMO FINANCEIRO"
         android:textStyle="bold"
         android:textColor="#000000"
-        android:textSize="10sp" />
-    <TextView
-        android:id="@+id/txtResumoFinanceiro"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Resumo financeiro:"
-        android:textColor="#000000"
-        android:textSize="10sp"
+        android:textSize="8sp"
+        android:gravity="center"
+        android:layout_marginTop="2dp"
         android:layout_marginBottom="2dp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Débito anterior: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
+        <TextView android:id="@+id/txtDebitoAnterior" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="R$ 0,00" android:textStyle="bold|italic" android:textColor="#000000" android:textSize="7sp" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Subtotal mesas: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
+        <TextView android:id="@+id/txtSubtotalMesas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="R$ 0,00" android:textStyle="bold|italic" android:textColor="#000000" android:textSize="7sp" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
+        <TextView android:id="@+id/txtTotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="R$ 0,00" android:textStyle="bold|italic" android:textColor="#000000" android:textSize="7sp" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Desconto: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
+        <TextView android:id="@+id/txtDesconto" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="R$ 0,00" android:textStyle="bold|italic" android:textColor="#000000" android:textSize="7sp" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Valor recebido: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
+        <TextView android:id="@+id/txtValorRecebido" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="R$ 0,00" android:textStyle="bold|italic" android:textColor="#000000" android:textSize="7sp" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center" android:layout_marginBottom="4dp">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Débito atual: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
+        <TextView android:id="@+id/txtDebitoAtual" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="R$ 0,00" android:textStyle="bold|italic" android:textColor="#000000" android:textSize="7sp" />
+    </LinearLayout>
 
-    <!-- Pagamentos -->
+    <!-- FORMA DE PAGAMENTO -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="💳 Forma de Pagamento:"
+        android:text="💳 FORMA DE PAGAMENTO"
         android:textStyle="bold"
         android:textColor="#000000"
-        android:textSize="10sp" />
+        android:textSize="8sp"
+        android:gravity="center"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp" />
     <TextView
         android:id="@+id/txtPagamentos"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Forma de pagamento:"
+        android:text="Dinheiro: R$ 100,00"
+        android:textStyle="bold|italic"
         android:textColor="#000000"
-        android:textSize="10sp"
-        android:layout_marginBottom="2dp" />
+        android:textSize="7sp"
+        android:gravity="center"
+        android:layout_marginBottom="4dp" />
 
-    <!-- Observações -->
+    <!-- OBSERVAÇÕES -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="📝 Observações:"
+        android:text="📝 OBSERVAÇÕES"
         android:textStyle="bold"
         android:textColor="#000000"
-        android:textSize="10sp" />
+        android:textSize="8sp"
+        android:gravity="center"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp" />
     <TextView
         android:id="@+id/txtObservacoes"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Observações:"
+        android:text="Observações do acerto"
+        android:textStyle="bold|italic"
         android:textColor="#000000"
-        android:textSize="10sp"
-        android:layout_marginBottom="2dp" />
-
-    <!-- Mensagem final -->
-    <TextView
-        android:id="@+id/txtAgradecimento"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Acerto realizado via GestaoBilhares\nObrigado por confiar!"
+        android:textSize="7sp"
         android:gravity="center"
-        android:textStyle="italic"
-        android:textColor="#000000"
-        android:textSize="10sp"
-        android:layout_marginTop="2dp" />
+        android:layout_marginBottom="4dp" />
 
     <!-- Divisor inferior -->
     <TextView
@@ -153,7 +220,19 @@
         android:layout_height="wrap_content"
         android:text="────────────"
         android:textColor="#000000"
-        android:textSize="10sp"
+        android:textSize="8sp"
         android:gravity="center" />
+
+    <!-- Agradecimento -->
+    <TextView
+        android:id="@+id/txtAgradecimento"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Acerto realizado via\nGestaoBilhares\nObrigado por confiar!"
+        android:textStyle="bold|italic"
+        android:textColor="#000000"
+        android:textSize="6sp"
+        android:gravity="center"
+        android:layout_marginTop="2dp" />
 
 </LinearLayout> 

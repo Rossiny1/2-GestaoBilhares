@@ -146,33 +146,66 @@ class SettlementSummaryDialog : DialogFragment() {
                                 val reciboView = inflater.inflate(R.layout.layout_recibo_impressao, null) as ViewGroup
                                 // Preencher campos
                                 val txtTitulo = reciboView.findViewById<TextView>(R.id.txtTituloRecibo)
-                                val txtCliente = reciboView.findViewById<TextView>(R.id.txtCliente)
+                                val txtClienteValor = reciboView.findViewById<TextView>(R.id.txtClienteValor)
                                 val txtData = reciboView.findViewById<TextView>(R.id.txtData)
                                 val txtMesas = reciboView.findViewById<TextView>(R.id.txtMesas)
-                                val txtTotalFichas = reciboView.findViewById<TextView>(R.id.txtTotalFichas)
-                                val txtResumoFinanceiro = reciboView.findViewById<TextView>(R.id.txtResumoFinanceiro)
+                                val txtFichasJogadas = reciboView.findViewById<TextView>(R.id.txtFichasJogadas)
+                                val txtDebitoAnterior = reciboView.findViewById<TextView>(R.id.txtDebitoAnterior)
+                                val txtSubtotalMesas = reciboView.findViewById<TextView>(R.id.txtSubtotalMesas)
+                                val txtTotal = reciboView.findViewById<TextView>(R.id.txtTotal)
+                                val txtDesconto = reciboView.findViewById<TextView>(R.id.txtDesconto)
+                                val txtValorRecebido = reciboView.findViewById<TextView>(R.id.txtValorRecebido)
+                                val txtDebitoAtual = reciboView.findViewById<TextView>(R.id.txtDebitoAtual)
                                 val txtPagamentos = reciboView.findViewById<TextView>(R.id.txtPagamentos)
                                 val txtObservacoes = reciboView.findViewById<TextView>(R.id.txtObservacoes)
                                 val txtAgradecimento = reciboView.findViewById<TextView>(R.id.txtAgradecimento)
                                 val imgLogo = reciboView.findViewById<ImageView>(R.id.imgLogoRecibo)
 
                                 // Preencher campos do recibo
-                                txtTitulo.text = "Recibo de Acerto"
-                                txtCliente.text = "👤 Cliente: $clienteNome"
-                                txtData.text = "📅 Data: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())}"
-                                txtMesas.text = "🎱 Mesas acertadas:\n$mesasDetalhes"
-                                txtTotalFichas.text = "Total de fichas jogadas: $totalFichasJogadas"
-                                txtResumoFinanceiro.text = "Recebido: R$ ${formatter.format(metodosPagamento.values.sum())}\nDébito anterior: R$ ${formatter.format(debitoAnterior)}\nDébito atual: R$ ${formatter.format(debitoAtual)}"
-                                txtPagamentos.text = "Forma de pagamento:\n$pagamentosText"
-                                txtObservacoes.text = "Observações: $observacao"
-                                txtAgradecimento.text = "Acerto realizado via GestaoBilhares\nObrigado por confiar!"
-                                imgLogo.setImageResource(R.drawable.logo_bilhar)
+                                // Cliente
+                                txtClienteValor.text = clienteNome
+                                // Data (apenas data, sem horário)
+                                val dataFormatada = java.text.SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+                                txtData.text = dataFormatada
+                                // Mesas (formatação limpa sem quebras extras)
+                                val mesasFormatadas = StringBuilder()
+                                mesas.forEachIndexed { index, mesa ->
+                                    val fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0)
+                                    mesasFormatadas.append("Mesa${mesa.numero}\n${mesa.fichasInicial}→${mesa.fichasFinal} (${fichasJogadas} fichas)")
+                                    if (index < mesas.size - 1) mesasFormatadas.append("\n")
+                                }
+                                txtMesas.text = mesasFormatadas.toString()
+                                // Fichas jogadas
+                                val totalFichasJogadas = mesas.sumOf { (it.fichasFinal ?: 0) - (it.fichasInicial ?: 0) }
+                                txtFichasJogadas.text = totalFichasJogadas.toString()
+                                // Resumo Financeiro
+                                val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
+                                txtDebitoAnterior.text = formatter.format(debitoAnterior)
+                                txtSubtotalMesas.text = formatter.format(valorTotalMesas)
+                                txtTotal.text = formatter.format(total)
+                                txtDesconto.text = formatter.format(desconto)
+                                txtValorRecebido.text = formatter.format(metodosPagamento.values.sum())
+                                txtDebitoAtual.text = formatter.format(debitoAtual)
+                                // Forma de pagamento (formatação limpa)
+                                val pagamentosFormatados = if (metodosPagamento.isNotEmpty()) {
+                                    metodosPagamento.entries.joinToString("\n") { "${it.key}: ${formatter.format(it.value)}" }
+                                } else {
+                                    "Não informado"
+                                }
+                                txtPagamentos.text = pagamentosFormatados
+                                // Observações
+                                if (observacao.isNullOrBlank()) {
+                                    txtObservacoes.text = "-"
+                                } else {
+                                    txtObservacoes.text = observacao
+                                }
+                                // Logo
+                                imgLogo.setImageResource(R.drawable.logo_globo1)
 
                                 // Ajustar estilos para títulos e valores principais
                                 txtTitulo.setTypeface(null, Typeface.BOLD)
-                                txtCliente.setTypeface(null, Typeface.BOLD)
+                                txtClienteValor.setTypeface(null, Typeface.BOLD)
                                 txtMesas.setTypeface(null, Typeface.BOLD)
-                                txtResumoFinanceiro.setTypeface(null, Typeface.BOLD)
                                 txtPagamentos.setTypeface(null, Typeface.BOLD)
                                 txtObservacoes.setTypeface(null, Typeface.BOLD)
                                 // Fontes menores já estão no layout XML
