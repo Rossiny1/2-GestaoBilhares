@@ -119,6 +119,19 @@ class RoutesFragment : Fragment() {
             findNavController().navigate(R.id.action_routesFragment_to_printerDiagnosticFragment)
         }
 
+        // ✅ FASE 9C: Botão de histórico de ciclos
+        binding.cycleHistoryButton.setOnClickListener {
+            // Por enquanto, navegar para histórico da primeira rota (se houver)
+            val rotas = viewModel.rotasResumo.value
+            if (rotas != null && rotas.isNotEmpty()) {
+                val action = RoutesFragmentDirections
+                    .actionRoutesFragmentToCycleHistoryFragment(rotas.first().rota.id)
+                findNavController().navigate(action)
+            } else {
+                Toast.makeText(requireContext(), "Nenhuma rota disponível para histórico", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         // Link "Ver todas"
         binding.verTodasButton.setOnClickListener {
             // TODO: Navegar para tela de todas as rotas

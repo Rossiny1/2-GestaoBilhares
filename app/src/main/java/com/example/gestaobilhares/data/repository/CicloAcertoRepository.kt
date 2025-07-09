@@ -2,34 +2,149 @@ package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.CicloAcertoDao
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
+import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import java.util.Date
 
 /**
- * Repository para operações relacionadas a ciclos de acerto
- * Abstrai o acesso ao CicloAcertoDao para uso nos ViewModels
+ * Repositório para operações de ciclos de acerto
+ * ✅ FASE 9C: REPOSITÓRIO PARA HISTÓRICO DE CICLOS
  */
 class CicloAcertoRepository(
     private val cicloAcertoDao: CicloAcertoDao
 ) {
-    fun listarPorRota(rotaId: Long): Flow<List<CicloAcertoEntity>> =
-        cicloAcertoDao.listarPorRota(rotaId)
 
-    suspend fun buscarUltimoCicloPorRota(rotaId: Long): CicloAcertoEntity? =
-        cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
+    /**
+     * Busca todos os ciclos de uma rota
+     */
+    suspend fun buscarCiclosPorRota(rotaId: Long): List<CicloAcertoEntity> {
+        return cicloAcertoDao.listarPorRota(rotaId).first()
+    }
 
-    suspend fun buscarCicloEmAndamento(rotaId: Long): CicloAcertoEntity? =
-        cicloAcertoDao.buscarCicloEmAndamento(rotaId)
+    /**
+     * Busca ciclos por período
+     */
+    suspend fun buscarCiclosPorPeriodo(
+        rotaId: Long,
+        dataInicio: Date,
+        dataFim: Date
+    ): List<CicloAcertoEntity> {
+        return cicloAcertoDao.listarPorPeriodo(dataInicio, dataFim).first()
+    }
 
-    suspend fun buscarProximoNumeroCiclo(rotaId: Long, ano: Int): Int =
-        cicloAcertoDao.buscarProximoNumeroCiclo(rotaId, ano)
+    /**
+     * Busca ciclo por ID
+     */
+    suspend fun buscarCicloPorId(cicloId: Long): CicloAcertoEntity? {
+        return cicloAcertoDao.buscarPorId(cicloId)
+    }
 
-    suspend fun inserir(ciclo: CicloAcertoEntity): Long =
-        cicloAcertoDao.inserir(ciclo)
+    /**
+     * Busca ciclo ativo de uma rota
+     */
+    suspend fun buscarCicloAtivo(rotaId: Long): CicloAcertoEntity? {
+        return cicloAcertoDao.buscarCicloEmAndamento(rotaId)
+    }
 
-    suspend fun atualizar(ciclo: CicloAcertoEntity) =
-        cicloAcertoDao.atualizar(ciclo)
+    /**
+     * Insere ou atualiza um ciclo
+     */
+    suspend fun inserirOuAtualizarCiclo(ciclo: CicloAcertoEntity): Long {
+        return cicloAcertoDao.inserir(ciclo)
+    }
 
-    suspend fun deletar(ciclo: CicloAcertoEntity) =
-        cicloAcertoDao.deletar(ciclo)
+    /**
+     * Atualiza status do ciclo
+     */
+    suspend fun atualizarStatusCiclo(cicloId: Long, status: StatusCicloAcerto) {
+        val ciclo = buscarCicloPorId(cicloId)
+        ciclo?.let {
+            val cicloAtualizado = it.copy(status = status)
+            cicloAcertoDao.atualizar(cicloAtualizado)
+        }
+    }
+
+    /**
+     * Atualiza valores do ciclo
+     */
+    suspend fun atualizarValoresCiclo(
+        cicloId: Long,
+        valorTotalAcertado: Double,
+        valorTotalDespesas: Double,
+        clientesAcertados: Int
+    ) {
+        val ciclo = buscarCicloPorId(cicloId)
+        ciclo?.let {
+            val cicloAtualizado = it.copy(
+                valorTotalAcertado = valorTotalAcertado,
+                valorTotalDespesas = valorTotalDespesas,
+                clientesAcertados = clientesAcertados,
+                lucroLiquido = valorTotalAcertado - valorTotalDespesas
+            )
+            cicloAcertoDao.atualizar(cicloAtualizado)
+        }
+    }
+
+    /**
+     * Exclui um ciclo
+     */
+    suspend fun excluirCiclo(cicloId: Long) {
+        val ciclo = buscarCicloPorId(cicloId)
+        ciclo?.let {
+            cicloAcertoDao.deletar(it)
+        }
+    }
+
+    /**
+     * Busca estatísticas de uma rota
+     */
+    suspend fun buscarEstatisticasRota(rotaId: Long): CicloAcertoEntity? {
+        return cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
+    }
+
+    /**
+     * Busca todos os ciclos como Flow
+     */
+    fun buscarCiclosPorRotaFlow(rotaId: Long): Flow<List<CicloAcertoEntity>> {
+        return cicloAcertoDao.listarPorRota(rotaId)
+    }
+
+    /**
+     * Busca ciclos por status
+     */
+    suspend fun buscarCiclosPorStatus(
+        rotaId: Long,
+        status: StatusCicloAcerto
+    ): List<CicloAcertoEntity> {
+        return cicloAcertoDao.listarPorRota(rotaId).first().filter { it.status == status }
+    }
+
+    /**
+     * Finaliza um ciclo
+     */
+    suspend fun finalizarCiclo(cicloId: Long, dataFim: Date) {
+        val ciclo = buscarCicloPorId(cicloId)
+        ciclo?.let {
+            val cicloAtualizado = it.copy(
+                dataFim = dataFim,
+                status = StatusCicloAcerto.FINALIZADO
+            )
+            cicloAcertoDao.atualizar(cicloAtualizado)
+        }
+    }
+
+    /**
+     * Cancela um ciclo
+     */
+    suspend fun cancelarCiclo(cicloId: Long) {
+        atualizarStatusCiclo(cicloId, StatusCicloAcerto.CANCELADO)
+    }
+
+    /**
+     * Busca o próximo número de ciclo para uma rota e ano
+     */
+    suspend fun buscarProximoNumeroCiclo(rotaId: Long, ano: Int): Int {
+        return cicloAcertoDao.buscarProximoNumeroCiclo(rotaId, ano)
+    }
 } 

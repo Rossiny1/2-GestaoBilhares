@@ -59,16 +59,9 @@ class ClientListViewModel(
     private val _clientesTodos = MutableStateFlow<List<Cliente>>(emptyList())
     private val _filtroAtual = MutableStateFlow(FiltroCliente.ATIVOS)
     
-    val clientes: StateFlow<List<Cliente>> = combine(
-        _clientesTodos,
-        _filtroAtual
-    ) { clientes, filtro ->
-        when (filtro) {
-            FiltroCliente.ATIVOS -> clientes.filter { it.ativo }
-            FiltroCliente.DEVEDORES -> clientes.filter { it.debitoAnterior > 100.0 }
-            FiltroCliente.TODOS -> clientes
-        }
-    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    // ✅ FASE 9B: Lista de clientes filtrados
+    private val _clientes = MutableStateFlow<List<Cliente>>(emptyList())
+    val clientes: StateFlow<List<Cliente>> = _clientes.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -109,7 +102,7 @@ class ClientListViewModel(
     }
 
     /**
-     * Carrega clientes da rota
+     * ✅ FASE 9B: Carrega clientes da rota com filtros combinados
      */
     fun carregarClientes(rotaId: Long) {
         viewModelScope.launch {
@@ -117,12 +110,14 @@ class ClientListViewModel(
                 _isLoading.value = true
                 clienteRepository.obterClientesPorRota(rotaId).collect { clientes ->
                     _clientesTodos.value = clientes
+                    aplicarFiltrosCombinados() // Aplicar filtros após carregar
                 }
             } catch (e: Exception) {
                 android.util.Log.e("ClientListViewModel", "Erro ao carregar clientes: ${e.message}")
                 _errorMessage.value = "Erro ao carregar clientes: ${e.message}"
                 // Definir lista vazia para evitar crash
                 _clientesTodos.value = emptyList()
+                _clientes.value = emptyList()
             } finally {
                 _isLoading.value = false
             }
@@ -130,10 +125,11 @@ class ClientListViewModel(
     }
 
     /**
-     * Aplica filtro à lista de clientes
+     * ✅ FASE 9B: Aplica filtro à lista de clientes com filtros combinados
      */
     fun aplicarFiltro(filtro: FiltroCliente) {
         _filtroAtual.value = filtro
+        aplicarFiltrosCombinados()
     }
 
     /**
@@ -161,7 +157,7 @@ class ClientListViewModel(
                     criadoPor = "Sistema" // TODO: Pegar usuário atual
                 )
                 
-                val cicloId = cicloAcertoRepository.inserir(novoCiclo)
+                val cicloId = cicloAcertoRepository.inserirOuAtualizarCiclo(novoCiclo)
                 
                 // Atualizar estado
                 _cicloAcerto.value = proximoCiclo
@@ -197,7 +193,7 @@ class ClientListViewModel(
                     dataAtualizacao = Date()
                 )
                 
-                cicloAcertoRepository.atualizar(cicloFinalizado)
+                cicloAcertoRepository.inserirOuAtualizarCiclo(cicloFinalizado)
                 
                 // Atualizar estado
                 _cicloAcertoEntity.value = cicloFinalizado
@@ -235,11 +231,11 @@ class ClientListViewModel(
     private suspend fun carregarCicloAcertoReal(rota: Rota) {
         try {
             // Buscar ciclo em andamento primeiro
-            var cicloAtual = cicloAcertoRepository.buscarCicloEmAndamento(rota.id)
+            var cicloAtual = cicloAcertoRepository.buscarCicloAtivo(rota.id)
             
             // Se não há ciclo em andamento, buscar o último ciclo
             if (cicloAtual == null) {
-                cicloAtual = cicloAcertoRepository.buscarUltimoCicloPorRota(rota.id)
+                cicloAtual = cicloAcertoRepository.buscarEstatisticasRota(rota.id)
             }
             
             if (cicloAtual != null) {
@@ -279,6 +275,74 @@ class ClientListViewModel(
             StatusCicloAcerto.FINALIZADO -> _statusRota.value = StatusRota.FINALIZADA
             StatusCicloAcerto.CANCELADO -> _statusRota.value = StatusRota.PAUSADA
         }
+    }
+
+    // ✅ FASE 9B: Estado de busca atual
+    private val _buscaAtual = MutableStateFlow("")
+    val buscaAtual: StateFlow<String> = _buscaAtual.asStateFlow()
+
+    /**
+     * ✅ FASE 9B: Busca clientes por nome em tempo real com filtros combinados
+     */
+    fun buscarClientes(query: String) {
+        viewModelScope.launch {
+            try {
+                _buscaAtual.value = query
+                aplicarFiltrosCombinados()
+            } catch (e: Exception) {
+                android.util.Log.e("ClientListViewModel", "Erro na busca: ${e.message}")
+                _errorMessage.value = "Erro na busca: ${e.message}"
+            }
+        }
+    }
+
+    /**
+     * ✅ FASE 9B: Aplicar filtros combinados (busca + status)
+     */
+    private fun aplicarFiltrosCombinados() {
+        val query = _buscaAtual.value.trim()
+        val filtro = _filtroAtual.value ?: FiltroCliente.TODOS
+        val todos = _clientesTodos.value
+        
+        // Primeiro filtrar por status
+        val filtradosPorStatus = when (filtro) {
+            FiltroCliente.TODOS -> todos
+            FiltroCliente.ATIVOS -> todos.filter { it.ativo }
+            FiltroCliente.DEVEDORES -> todos.filter { it.debitoAnterior > 100.0 }
+        }
+        
+        // Depois filtrar por busca
+        val resultadoFinal = if (query.isBlank()) {
+            filtradosPorStatus
+        } else {
+            filtradosPorStatus.filter { it.nome.contains(query, ignoreCase = true) }
+        }
+        
+        // Atualizar lista filtrada
+        _clientes.value = resultadoFinal
+    }
+
+    /**
+     * ✅ FASE 9B: Limpa a busca e restaura lista original
+     */
+    fun limparBusca() {
+        viewModelScope.launch {
+            try {
+                _buscaAtual.value = ""
+                aplicarFiltrosCombinados()
+            } catch (e: Exception) {
+                android.util.Log.e("ClientListViewModel", "Erro ao limpar busca: ${e.message}")
+            }
+        }
+    }
+
+
+
+    /**
+     * ✅ FASE 9A: Obtém o filtro atual para uso na UI
+     */
+    fun getFiltroAtual(): FiltroCliente {
+        return _filtroAtual.value ?: FiltroCliente.TODOS
     }
 
     /**

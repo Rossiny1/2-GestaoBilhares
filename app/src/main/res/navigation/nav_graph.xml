@@ -34,6 +34,10 @@
         <action
             android:id="@+id/action_routesFragment_to_printerDiagnosticFragment"
             app:destination="@id/printerDiagnosticFragment" />
+        <!-- ✅ FASE 9C: Navegação para histórico de ciclos -->
+        <action
+            android:id="@+id/action_routesFragment_to_cycleHistoryFragment"
+            app:destination="@id/cycleHistoryFragment" />
     </fragment>
 
     <fragment
@@ -176,6 +180,32 @@
         android:id="@+id/cadastroMesaFragment"
         android:name="com.example.gestaobilhares.ui.mesas.CadastroMesaFragment"
         android:label="Cadastro de Mesa" />
+
+    <!-- ✅ FASE 9C: Tela de histórico de ciclos -->
+    <fragment
+        android:id="@+id/cycleHistoryFragment"
+        android:name="com.example.gestaobilhares.ui.clients.CycleHistoryFragment"
+        android:label="Histórico de Ciclos">
+        <argument
+            android:name="rotaId"
+            app:argType="long"
+            android:defaultValue="0L" />
+        <!-- Navegação para detalhes do ciclo (futuro) -->
+        <action
+            android:id="@+id/action_cycleHistoryFragment_to_cycleDetailFragment"
+            app:destination="@id/cycleDetailFragment" />
+    </fragment>
+
+    <!-- ✅ FASE 9C: Tela de detalhes do ciclo (placeholder) -->
+    <fragment
+        android:id="@+id/cycleDetailFragment"
+        android:name="com.example.gestaobilhares.ui.clients.CycleHistoryFragment"
+        android:label="Detalhes do Ciclo">
+        <argument
+            android:name="cicloId"
+            app:argType="long"
+            android:defaultValue="0L" />
+    </fragment>
 
     <!-- MainFragment mantido para compatibilidade, será removido futuramente -->
     <fragment
