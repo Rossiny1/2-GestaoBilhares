@@ -30,7 +30,12 @@ import java.time.LocalDateTime
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["rotaId"])]
+    indices = [
+        Index(value = ["rotaId"]),
+        // ✅ FASE 8A: ÍNDICE PARA CICLO
+        Index(value = ["cicloAcerto"]),
+        Index(value = ["rotaId", "cicloAcerto"]) // Índice composto para queries eficientes
+    ]
 )
 data class Despesa(
     @PrimaryKey(autoGenerate = true)
@@ -48,7 +53,10 @@ data class Despesa(
     
     val observacoes: String = "",
     
-    val criadoPor: String = "" // ID do colaborador
+    val criadoPor: String = "", // ID do colaborador
+    
+    // ✅ FASE 8A: VÍNCULO COM CICLO DE ACERTO
+    val cicloAcerto: Int? = null
 )
 
 /**

@@ -24,11 +24,22 @@ import java.util.Date
             parentColumns = ["id"],
             childColumns = ["colaborador_id"],
             onDelete = ForeignKey.SET_NULL
+        ),
+        // ✅ FASE 8A: FOREIGN KEY PARA ROTA
+        ForeignKey(
+            entity = Rota::class,
+            parentColumns = ["id"],
+            childColumns = ["rota_id"],
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
         androidx.room.Index(value = ["cliente_id"]),
-        androidx.room.Index(value = ["colaborador_id"])
+        androidx.room.Index(value = ["colaborador_id"]),
+        // ✅ FASE 8A: ÍNDICES PARA ROTA E CICLO
+        androidx.room.Index(value = ["rota_id"]),
+        androidx.room.Index(value = ["ciclo_acerto"]),
+        androidx.room.Index(value = ["rota_id", "ciclo_acerto"]) // Índice composto para queries eficientes
     ]
 )
 data class Acerto(
@@ -100,7 +111,14 @@ data class Acerto(
     val numeroPano: String? = null,
     
     @ColumnInfo(name = "dados_extras_json")
-    val dadosExtrasJson: String? = null
+    val dadosExtrasJson: String? = null,
+    
+    // ✅ FASE 8A: VÍNCULOS COM ROTA E CICLO
+    @ColumnInfo(name = "rota_id")
+    val rotaId: Long? = null,
+    
+    @ColumnInfo(name = "ciclo_acerto")
+    val cicloAcerto: Int? = null
 )
 
 /**

@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.RotaRepository
+import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 
 /**
  * Fragment modernizado para lista de clientes com controle de status da rota
@@ -42,10 +43,12 @@ class ClientListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // Inicializar ViewModel aqui onde o contexto está disponível
+        // ✅ FASE 8C: Inicializar ViewModel com CicloAcertoRepository
+        val database = AppDatabase.getDatabase(requireContext())
         viewModel = ClientListViewModel(
-            ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
-            RotaRepository(AppDatabase.getDatabase(requireContext()).rotaDao())
+            ClienteRepository(database.clienteDao()),
+            RotaRepository(database.rotaDao()),
+            CicloAcertoRepository(database.cicloAcertoDao())
         )
         
         try {

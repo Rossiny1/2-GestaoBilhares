@@ -22,9 +22,10 @@ import com.example.gestaobilhares.data.entities.*
         Colaborador::class,
         Acerto::class,
         Despesa::class,
-        AcertoMesa::class
+        AcertoMesa::class,
+        CicloAcertoEntity::class // ✅ FASE 8A: NOVA ENTIDADE PARA HISTÓRICO DE CICLOS
     ],
-    version = 9, // ✅ INCREMENTADO: Novos campos no Acerto (representante, tipoAcerto, panoTrocado, numeroPano, dadosExtrasJson)
+    version = 10, // ✅ FASE 8A: VÍNCULOS ROTA/CICLO EM ACERTO E DESPESA + NOVA ENTIDADE CICLOACERTOENTITY
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -65,6 +66,12 @@ abstract class AppDatabase : RoomDatabase() {
      * DAO para operações com acerto-mesas.
      */
     abstract fun acertoMesaDao(): com.example.gestaobilhares.data.dao.AcertoMesaDao
+    
+    /**
+     * DAO para operações com ciclos de acerto.
+     * ✅ FASE 8A: NOVO DAO PARA HISTÓRICO DE CICLOS
+     */
+    abstract fun cicloAcertoDao(): com.example.gestaobilhares.data.dao.CicloAcertoDao
 
     companion object {
         

@@ -5,8 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.StatusRota
+import com.example.gestaobilhares.data.entities.CicloAcertoEntity
+import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.RotaRepository
+import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,6 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import java.util.Date
 
 /**
  * Filtros disponíveis para a lista de clientes
@@ -25,11 +29,12 @@ enum class FiltroCliente {
 
 /**
  * ViewModel para ClientListFragment
- * FASE 3: Implementação com controle de status da rota
+ * ✅ FASE 8C: Integração com sistema de ciclo de acerto real
  */
 class ClientListViewModel(
     private val clienteRepository: ClienteRepository,
-    private val rotaRepository: RotaRepository
+    private val rotaRepository: RotaRepository,
+    private val cicloAcertoRepository: CicloAcertoRepository
 ) : ViewModel() {
 
     private val _rotaInfo = MutableStateFlow<Rota?>(null)
@@ -38,8 +43,18 @@ class ClientListViewModel(
     private val _statusRota = MutableStateFlow(StatusRota.EM_ANDAMENTO)
     val statusRota: StateFlow<StatusRota> = _statusRota.asStateFlow()
 
+    // ✅ FASE 8C: CICLO DE ACERTO REAL
     private val _cicloAcerto = MutableStateFlow(1)
     val cicloAcerto: StateFlow<Int> = _cicloAcerto.asStateFlow()
+    
+    private val _cicloAcertoEntity = MutableStateFlow<CicloAcertoEntity?>(null)
+    val cicloAcertoEntity: StateFlow<CicloAcertoEntity?> = _cicloAcertoEntity.asStateFlow()
+    
+    private val _statusCiclo = MutableStateFlow(StatusCicloAcerto.FINALIZADO)
+    val statusCiclo: StateFlow<StatusCicloAcerto> = _statusCiclo.asStateFlow()
+    
+    private val _progressoCiclo = MutableStateFlow(0)
+    val progressoCiclo: StateFlow<Int> = _progressoCiclo.asStateFlow()
 
     private val _clientesTodos = MutableStateFlow<List<Cliente>>(emptyList())
     private val _filtroAtual = MutableStateFlow(FiltroCliente.ATIVOS)
@@ -74,9 +89,9 @@ class ClientListViewModel(
                 rotaRepository.obterRotaPorId(rotaId).collect { rota ->
                     _rotaInfo.value = rota
                     rota?.let {
-                        // Calcular ciclo de acerto baseado no ano atual
-                        calcularCicloAcerto(it)
-                        // Carregar status atual da rota (mock por enquanto)
+                        // ✅ FASE 8C: Carregar ciclo real do banco de dados
+                        carregarCicloAcertoReal(it)
+                        // Carregar status atual da rota
                         carregarStatusRota(it)
                     }
                 }
@@ -122,35 +137,80 @@ class ClientListViewModel(
     }
 
     /**
-     * Inicia a rota criando um novo ciclo de acerto
+     * ✅ FASE 8C: Inicia a rota criando um novo ciclo de acerto persistente
      */
     fun iniciarRota() {
         viewModelScope.launch {
             try {
-                // TODO: Implementar lógica de banco de dados para ciclos de acerto
+                _isLoading.value = true
+                
+                val rota = _rotaInfo.value ?: return@launch
+                val anoAtual = Calendar.getInstance().get(Calendar.YEAR)
+                
+                // Buscar próximo número de ciclo
+                val proximoCiclo = cicloAcertoRepository.buscarProximoNumeroCiclo(rota.id, anoAtual)
+                
+                // Criar novo ciclo de acerto
+                val novoCiclo = CicloAcertoEntity(
+                    rotaId = rota.id,
+                    numeroCiclo = proximoCiclo,
+                    ano = anoAtual,
+                    dataInicio = Date(),
+                    dataFim = Date(), // Será atualizado quando finalizar
+                    status = StatusCicloAcerto.EM_ANDAMENTO,
+                    criadoPor = "Sistema" // TODO: Pegar usuário atual
+                )
+                
+                val cicloId = cicloAcertoRepository.inserir(novoCiclo)
+                
+                // Atualizar estado
+                _cicloAcerto.value = proximoCiclo
+                _cicloAcertoEntity.value = novoCiclo.copy(id = cicloId)
+                _statusCiclo.value = StatusCicloAcerto.EM_ANDAMENTO
                 _statusRota.value = StatusRota.EM_ANDAMENTO
                 
-                // Incrementar ciclo de acerto se necessário
-                val novoCiclo = calcularProximoCiclo()
-                _cicloAcerto.value = novoCiclo
+                android.util.Log.d("ClientListViewModel", "✅ Ciclo $proximoCiclo iniciado com sucesso")
                 
             } catch (e: Exception) {
+                android.util.Log.e("ClientListViewModel", "Erro ao iniciar rota: ${e.message}", e)
                 _errorMessage.value = "Erro ao iniciar rota: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     /**
-     * Finaliza a rota atual
+     * ✅ FASE 8C: Finaliza a rota atual persistindo o ciclo
      */
     fun finalizarRota() {
         viewModelScope.launch {
             try {
-                // TODO: Implementar lógica de finalização no banco de dados
+                _isLoading.value = true
+                
+                val cicloAtual = _cicloAcertoEntity.value ?: return@launch
+                
+                // Atualizar ciclo para finalizado
+                val cicloFinalizado = cicloAtual.copy(
+                    dataFim = Date(),
+                    status = StatusCicloAcerto.FINALIZADO,
+                    dataAtualizacao = Date()
+                )
+                
+                cicloAcertoRepository.atualizar(cicloFinalizado)
+                
+                // Atualizar estado
+                _cicloAcertoEntity.value = cicloFinalizado
+                _statusCiclo.value = StatusCicloAcerto.FINALIZADO
                 _statusRota.value = StatusRota.FINALIZADA
                 
+                android.util.Log.d("ClientListViewModel", "✅ Ciclo ${cicloAtual.numeroCiclo} finalizado com sucesso")
+                
             } catch (e: Exception) {
+                android.util.Log.e("ClientListViewModel", "Erro ao finalizar rota: ${e.message}", e)
                 _errorMessage.value = "Erro ao finalizar rota: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -170,34 +230,55 @@ class ClientListViewModel(
     }
 
     /**
-     * Calcula o ciclo de acerto baseado no ano atual e histórico da rota
+     * ✅ FASE 8C: Carrega o ciclo de acerto real do banco de dados
      */
-    private fun calcularCicloAcerto(rota: Rota) {
-        val anoAtual = Calendar.getInstance().get(Calendar.YEAR)
-        
-        // TODO: Implementar lógica de consulta ao banco para contar ciclos do ano
-        // Por enquanto, começar sempre com o 1º acerto
-        _cicloAcerto.value = 1
+    private suspend fun carregarCicloAcertoReal(rota: Rota) {
+        try {
+            // Buscar ciclo em andamento primeiro
+            var cicloAtual = cicloAcertoRepository.buscarCicloEmAndamento(rota.id)
+            
+            // Se não há ciclo em andamento, buscar o último ciclo
+            if (cicloAtual == null) {
+                cicloAtual = cicloAcertoRepository.buscarUltimoCicloPorRota(rota.id)
+            }
+            
+            if (cicloAtual != null) {
+                _cicloAcerto.value = cicloAtual.numeroCiclo
+                _cicloAcertoEntity.value = cicloAtual
+                _statusCiclo.value = cicloAtual.status
+                _progressoCiclo.value = cicloAtual.percentualConclusao
+                
+                android.util.Log.d("ClientListViewModel", "✅ Ciclo carregado: ${cicloAtual.titulo}")
+            } else {
+                // Primeiro ciclo da rota
+                _cicloAcerto.value = 1
+                _cicloAcertoEntity.value = null
+                _statusCiclo.value = StatusCicloAcerto.FINALIZADO
+                _progressoCiclo.value = 0
+                
+                android.util.Log.d("ClientListViewModel", "🆕 Primeiro ciclo da rota")
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListViewModel", "Erro ao carregar ciclo: ${e.message}", e)
+            // Valores padrão em caso de erro
+            _cicloAcerto.value = 1
+            _cicloAcertoEntity.value = null
+            _statusCiclo.value = StatusCicloAcerto.FINALIZADO
+            _progressoCiclo.value = 0
+        }
     }
 
     /**
-     * Calcula o próximo ciclo de acerto
-     */
-    private fun calcularProximoCiclo(): Int {
-        val cicloAtual = _cicloAcerto.value
-        
-        // TODO: Implementar lógica do banco de dados
-        // Por enquanto, incrementar até máximo de 12 ciclos por ano
-        return if (cicloAtual < 12) cicloAtual + 1 else 1
-    }
-
-    /**
-     * Carrega o status atual da rota
+     * ✅ FASE 8C: Carrega o status atual da rota baseado no ciclo
      */
     private fun carregarStatusRota(rota: Rota) {
-        // TODO: Implementar lógica de consulta ao banco de dados
-        // Por enquanto, definir como "Não Iniciada" por padrão
-        _statusRota.value = StatusRota.PAUSADA
+        // O status da rota será determinado pelo status do ciclo
+        when (_statusCiclo.value) {
+            StatusCicloAcerto.EM_ANDAMENTO -> _statusRota.value = StatusRota.EM_ANDAMENTO
+            StatusCicloAcerto.FINALIZADO -> _statusRota.value = StatusRota.FINALIZADA
+            StatusCicloAcerto.CANCELADO -> _statusRota.value = StatusRota.PAUSADA
+        }
     }
 
     /**

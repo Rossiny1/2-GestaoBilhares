@@ -140,4 +140,16 @@ interface DespesaDao {
      */
     @Query("DELETE FROM despesas WHERE rotaId = :rotaId")
     suspend fun deletarPorRota(rotaId: Long)
+
+    /**
+     * Busca todas as despesas de um ciclo de acerto específico (todas as rotas).
+     */
+    @Query("SELECT * FROM despesas WHERE cicloAcerto = :cicloAcerto ORDER BY dataHora DESC")
+    fun buscarPorCiclo(cicloAcerto: Int): Flow<List<Despesa>>
+
+    /**
+     * Busca todas as despesas de uma rota e ciclo de acerto específico.
+     */
+    @Query("SELECT * FROM despesas WHERE rotaId = :rotaId AND cicloAcerto = :cicloAcerto ORDER BY dataHora DESC")
+    fun buscarPorRotaECiclo(rotaId: Long, cicloAcerto: Int): Flow<List<Despesa>>
 } 
