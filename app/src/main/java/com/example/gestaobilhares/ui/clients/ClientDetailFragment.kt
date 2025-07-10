@@ -69,6 +69,7 @@ class ClientDetailFragment : Fragment() {
         
         setupUI()
         setupRecyclerView()
+        setupClickListeners() // ✅ ADICIONADO: Configurar listeners dos botões
         observeViewModel()
         
         // Carregar dados do cliente apenas se não estiverem carregados
@@ -345,8 +346,8 @@ class ClientDetailFragment : Fragment() {
         }
         
         lifecycleScope.launch {
-            viewModel.isLoading.collect { _ ->
-                // TODO: Adicionar ProgressBar no layout se necessário
+            viewModel.isLoading.collect { isLoading ->
+                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
             }
         }
     }
@@ -532,6 +533,61 @@ class ClientDetailFragment : Fragment() {
         } catch (e: Exception) {
             Log.e("ClientDetailFragment", "Erro ao fazer ligação: ${e.message}")
             Toast.makeText(requireContext(), "Erro ao fazer ligação", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupClickListeners() {
+        // Botão voltar
+        binding.btnBack.setOnClickListener {
+            findNavController().navigateUp()
+        }
+
+        // Botão novo acerto (Iniciar)
+        binding.btnNewSettlement.setOnClickListener {
+            // Navegar para a tela de acerto
+            val bundle = Bundle().apply {
+                putLong("clienteId", args.clienteId)
+            }
+            findNavController().navigate(R.id.action_clientDetailFragment_to_settlementFragment, bundle)
+        }
+
+        // ✅ NOVO: Botão finalizar acerto
+        binding.btnFinalizarAcerto.setOnClickListener {
+            // TODO: Implementar lógica de finalização do acerto
+            Toast.makeText(requireContext(), "Finalizar acerto será implementado em breve", Toast.LENGTH_SHORT).show()
+        }
+
+        // Botão WhatsApp
+        binding.fabWhatsApp.setOnClickListener {
+            // TODO: Implementar integração com WhatsApp
+            Toast.makeText(requireContext(), "WhatsApp será implementado em breve", Toast.LENGTH_SHORT).show()
+        }
+
+        // Botão telefone
+        binding.fabPhone.setOnClickListener {
+            // TODO: Implementar ligação
+            Toast.makeText(requireContext(), "Ligação será implementada em breve", Toast.LENGTH_SHORT).show()
+        }
+
+        // Botão editar
+        binding.fabEdit.setOnClickListener {
+            // TODO: Implementar edição do cliente
+            Toast.makeText(requireContext(), "Edição será implementada em breve", Toast.LENGTH_SHORT).show()
+        }
+
+        // Botão adicionar mesa
+        binding.btnAdicionarMesa.setOnClickListener {
+            // TODO: Implementar adição de mesa
+            Toast.makeText(requireContext(), "Adicionar mesa será implementado em breve", Toast.LENGTH_SHORT).show()
+        }
+
+        // Navegação do histórico
+        binding.btnHistoryPrevious.setOnClickListener {
+            // TODO: Implementar navegação anterior no histórico
+        }
+
+        binding.btnHistoryNext.setOnClickListener {
+            // TODO: Implementar navegação próxima no histórico
         }
     }
 } 

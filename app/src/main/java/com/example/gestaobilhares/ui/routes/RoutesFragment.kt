@@ -114,19 +114,17 @@ class RoutesFragment : Fragment() {
             Toast.makeText(requireContext(), "Filtros serão implementados em breve", Toast.LENGTH_SHORT).show()
         }
 
-        // Botão de diagnóstico da impressora
-        binding.printerDiagnosticButton.setOnClickListener {
-            findNavController().navigate(R.id.action_routesFragment_to_printerDiagnosticFragment)
-        }
-
         // ✅ FASE 9C: Botão de histórico de ciclos
         binding.cycleHistoryButton.setOnClickListener {
-            // Por enquanto, navegar para histórico da primeira rota (se houver)
             val rotas = viewModel.rotasResumo.value
             if (rotas != null && rotas.isNotEmpty()) {
-                val action = RoutesFragmentDirections
-                    .actionRoutesFragmentToCycleHistoryFragment(rotas.first().rota.id)
-                findNavController().navigate(action)
+                try {
+                    val action = RoutesFragmentDirections
+                        .actionRoutesFragmentToCycleHistoryFragment(rotas.first().rota.id)
+                    findNavController().navigate(action)
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(), "Erro ao abrir histórico: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             } else {
                 Toast.makeText(requireContext(), "Nenhuma rota disponível para histórico", Toast.LENGTH_SHORT).show()
             }

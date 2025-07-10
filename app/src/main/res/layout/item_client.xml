@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="20dp">
+        android:padding="10dp">
 
         <!-- Barra de status lateral -->
         <View
@@ -37,8 +37,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="?attr/colorOnSurface"
-                android:textSize="18sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end"
                 tools:text="Bar do João" />
 
             <!-- Nome fantasia -->

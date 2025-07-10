@@ -96,178 +96,100 @@ class MesasAcertoAdapter(
     override fun submitList(list: List<MesaDTO>?) {
         Log.d("MesasAcertoAdapter", "=== SUBMITLIST CHAMADO ===")
         Log.d("MesasAcertoAdapter", "Lista recebida: ${list?.size ?: 0} itens")
+        Log.d("MesasAcertoAdapter", "Estados existentes antes do submit: ${mesaStates.size}")
+        
         list?.forEachIndexed { index, mesa ->
             Log.d("MesasAcertoAdapter", "Item $index: Mesa ${mesa.numero} (ID: ${mesa.id}, Tipo: ${mesa.tipoMesa})")
         }
+        
         super.submitList(list)
+        
+        Log.d("MesasAcertoAdapter", "Estados existentes após o submit: ${mesaStates.size}")
         Log.d("MesasAcertoAdapter", "=== SUBMITLIST CONCLUÍDO ===")
     }
 
     inner class MesaAcertoViewHolder(private val binding: ItemMesaAcertoBinding) : RecyclerView.ViewHolder(binding.root) {
-
-        init {
-            // Adiciona TextWatchers para atualizar o estado e notificar o fragment
-            val textWatcher = object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                override fun afterTextChanged(s: Editable?) {
-                    val position = adapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val mesa = getItem(position)
-                        val state = mesaStates.getOrPut(mesa.id) { MesaAcertoState(mesaId = mesa.id) }
-                        
-                        // Atualizar relógio inicial
-                        state.relogioInicial = binding.etRelogioInicial.text.toString().toIntOrNull() ?: 0
-                        // Atualizar relógio final
-                        state.relogioFinal = binding.etRelogioFinal.text.toString().toIntOrNull() ?: 0
-                        
-                        // Recalcular subtotal
-                        updateSubtotal(state)
-                        onDataChanged()
-                    }
-                }
-            }
-            
-            // TextWatcher específico para relógio inicial
-            binding.etRelogioInicial.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                override fun afterTextChanged(s: Editable?) {
-                    val position = adapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val mesa = getItem(position)
-                        val state = mesaStates.getOrPut(mesa.id) { MesaAcertoState(mesaId = mesa.id) }
-                        state.relogioInicial = s.toString().toIntOrNull() ?: 0
-                        updateSubtotal(state)
-                        onDataChanged()
-                    }
-                }
-            })
-            
-            // TextWatcher específico para relógio final
-            binding.etRelogioFinal.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                override fun afterTextChanged(s: Editable?) {
-                    val position = adapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val mesa = getItem(position)
-                        val state = mesaStates.getOrPut(mesa.id) { MesaAcertoState(mesaId = mesa.id) }
-                        state.relogioFinal = s.toString().toIntOrNull() ?: 0
-                        updateSubtotal(state)
-                        onDataChanged()
-                    }
-                }
-            })
-            
-            binding.cbRelogioDefeito.setOnCheckedChangeListener { _, isChecked ->
-                val position = adapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    val mesa = getItem(position)
-                    val state = mesaStates.getOrPut(mesa.id) { MesaAcertoState(mesaId = mesa.id) }
-                    state.comDefeito = isChecked
-                    
-                    if (isChecked) {
-                        // Mostrar campo de média
-                        binding.layoutMediaFichas.visibility = View.VISIBLE
-                        
-                        // Calcular média de forma assíncrona
-                        val mediaFichas = onCalcularMedia(mesa.id)
-                        state.mediaFichasJogadas = mediaFichas
-                        
-                        // Atualizar exibição da média
-                        binding.tvMediaFichas.text = mediaFichas.toInt().toString()
-                        binding.tvFichasJogadas.text = "Fichas Jogadas (Média): ${mediaFichas.toInt()}"
-                        
-                        Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} - Média calculada: $mediaFichas fichas")
-                    } else {
-                        // Ocultar campo de média
-                        binding.layoutMediaFichas.visibility = View.GONE
-                        state.mediaFichasJogadas = 0.0
-                        val fichasJogadas = calcularFichasJogadas(state.relogioInicial, state.relogioFinal, state.relogioReiniciou)
-                        binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
-                    }
-                    
-                    updateSubtotal(state)
-                    onDataChanged()
-                }
-            }
-            
-            // ✅ NOVO: Listener para checkbox "Relógio Reiniciou"
-            binding.cbRelogioReiniciou.setOnCheckedChangeListener { _, isChecked ->
-                val position = adapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    val mesa = getItem(position)
-                    val state = mesaStates.getOrPut(mesa.id) { MesaAcertoState(mesaId = mesa.id) }
-                    state.relogioReiniciou = isChecked
-                    
-                    // Recalcular fichas jogadas
-                    val fichasJogadas = calcularFichasJogadas(state.relogioInicial, state.relogioFinal, state.relogioReiniciou)
-                    state.fichasJogadas = fichasJogadas
-                    
-                    if (isChecked) {
-                        binding.tvFichasJogadas.text = "Fichas Jogadas (Ajustado): $fichasJogadas"
-                        Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} - Relógio reiniciou ativado, fichas ajustadas: $fichasJogadas")
-                    } else {
-                        binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
-                        Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} - Relógio reiniciou desativado, fichas normais: $fichasJogadas")
-                    }
-                    
-                    updateSubtotal(state)
-                    onDataChanged()
-                }
-            }
-        }
+        // TextWatchers como variáveis de instância
+        private var relogioInicialWatcher: TextWatcher? = null
+        private var relogioFinalWatcher: TextWatcher? = null
 
         fun bind(mesa: MesaDTO) {
             Log.d("MesasAcertoAdapter", "=== BIND MESA ${mesa.numero} ===")
-            Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} - fichasInicial recebido: ${mesa.fichasInicial}")
-            
             val state = mesaStates.getOrPut(mesa.id) {
-                Log.d("MesasAcertoAdapter", "Criando novo estado para mesa ${mesa.numero}")
                 MesaAcertoState(
-                    mesaId = mesa.id, 
+                    mesaId = mesa.id,
                     relogioInicial = mesa.fichasInicial,
                     valorFixo = mesa.valorFixo,
                     valorFicha = mesa.valorFicha,
                     comissaoFicha = mesa.comissaoFicha
                 )
             }
-            
-            if (state.relogioInicial != mesa.fichasInicial) {
-                Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Atualizando relógio inicial de ${state.relogioInicial} para ${mesa.fichasInicial}")
-                state.relogioInicial = mesa.fichasInicial
+
+            // Remover TextWatchers antes de setar texto
+            binding.etRelogioInicial.removeTextChangedListener(relogioInicialWatcher)
+            binding.etRelogioFinal.removeTextChangedListener(relogioFinalWatcher)
+
+            // Atualizar campos apenas se valor mudou
+            val atualInicial = binding.etRelogioInicial.text.toString()
+            val novoInicial = state.relogioInicial.toString()
+            if (atualInicial != novoInicial) {
+                binding.etRelogioInicial.setText(novoInicial)
+                binding.etRelogioInicial.setSelection(novoInicial.length)
             }
-            
+            val atualFinal = binding.etRelogioFinal.text.toString()
+            val novoFinal = if (state.relogioFinal > 0) state.relogioFinal.toString() else ""
+            if (atualFinal != novoFinal) {
+                binding.etRelogioFinal.setText(novoFinal)
+                binding.etRelogioFinal.setSelection(novoFinal.length)
+            }
+            binding.cbRelogioDefeito.isChecked = state.comDefeito
+            binding.cbRelogioReiniciou.isChecked = state.relogioReiniciou
+
+            // Adicionar TextWatchers novamente
+            relogioInicialWatcher = object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: Editable?) {
+                    val valor = s.toString().toIntOrNull() ?: 0
+                    if (state.relogioInicial != valor) {
+                        state.relogioInicial = valor
+                        updateSubtotal(state)
+                        onDataChanged()
+                        notifyItemChanged(adapterPosition)
+                    }
+                }
+            }
+            relogioFinalWatcher = object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: Editable?) {
+                    val valor = s.toString().toIntOrNull() ?: 0
+                    if (state.relogioFinal != valor) {
+                        state.relogioFinal = valor
+                        updateSubtotal(state)
+                        onDataChanged()
+                        notifyItemChanged(adapterPosition)
+                    }
+                }
+            }
+            binding.etRelogioInicial.addTextChangedListener(relogioInicialWatcher)
+            binding.etRelogioFinal.addTextChangedListener(relogioFinalWatcher)
+
+            // Layouts e textos
             binding.tvNumeroMesa.text = "Mesa ${mesa.numero}"
             binding.tvTipoMesa.text = mesa.tipoMesa
-            Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} - Tipo: ${mesa.tipoMesa}")
-
-            // Exibe o layout correto conforme o tipo da mesa
-            // Mesas de valor fixo têm valorFixo > 0
             val isValorFixo = mesa.valorFixo > 0
-            Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} - É valor fixo: $isValorFixo (valorFixo: ${mesa.valorFixo})")
-            
             if (isValorFixo) {
                 binding.layoutFichas.visibility = View.GONE
                 binding.layoutValorFixo.visibility = View.VISIBLE
                 binding.tvValorFixo.text = "Valor Mensal: R$ %.2f".format(mesa.valorFixo)
                 binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(mesa.valorFixo)
                 state.subtotal = mesa.valorFixo
-                Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} configurada como VALOR FIXO")
             } else {
                 binding.layoutFichas.visibility = View.VISIBLE
                 binding.layoutValorFixo.visibility = View.GONE
-                binding.etRelogioInicial.setText(state.relogioInicial.toString())
-                binding.etRelogioFinal.setText(if (state.relogioFinal > 0) state.relogioFinal.toString() else "")
-                binding.cbRelogioDefeito.isChecked = state.comDefeito
-                binding.cbRelogioReiniciou.isChecked = state.relogioReiniciou
-                
-                // Exibir informações de ficha
                 binding.tvValorFicha.text = "Valor Ficha: R$ %.2f".format(mesa.valorFicha)
                 binding.tvComissaoFicha.text = "Comissão: R$ %.2f".format(mesa.comissaoFicha)
-                
-                // Configurar exibição da média de fichas
                 if (state.comDefeito && state.mediaFichasJogadas > 0) {
                     binding.layoutMediaFichas.visibility = View.VISIBLE
                     binding.tvMediaFichas.text = state.mediaFichasJogadas.toInt().toString()
@@ -276,35 +198,21 @@ class MesasAcertoAdapter(
                     binding.layoutMediaFichas.visibility = View.GONE
                     val fichasJogadas = calcularFichasJogadas(state.relogioInicial, state.relogioFinal, state.relogioReiniciou)
                     state.fichasJogadas = fichasJogadas
-                    
                     if (state.relogioReiniciou) {
                         binding.tvFichasJogadas.text = "Fichas Jogadas (Ajustado): $fichasJogadas"
                     } else {
                         binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
                     }
                 }
-                
                 val subtotal = if (state.comDefeito && state.mediaFichasJogadas > 0) {
-                    val subtotalCalculado = state.mediaFichasJogadas * mesa.comissaoFicha
-                    Log.d("MesasAcertoAdapter", "✅ SUBTOTAL COM MÉDIA (BIND): ${state.mediaFichasJogadas} × R$ ${mesa.comissaoFicha} = R$ $subtotalCalculado")
-                    subtotalCalculado
+                    state.mediaFichasJogadas * mesa.comissaoFicha
                 } else {
                     val fichasJogadas = calcularFichasJogadas(state.relogioInicial, state.relogioFinal, state.relogioReiniciou)
-                    val subtotalCalculado = fichasJogadas * mesa.comissaoFicha
-                    Log.d("MesasAcertoAdapter", "✅ SUBTOTAL NORMAL (BIND): $fichasJogadas × R$ ${mesa.comissaoFicha} = R$ $subtotalCalculado")
-                    subtotalCalculado
+                    fichasJogadas * mesa.comissaoFicha
                 }
-                
                 binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(subtotal)
                 state.subtotal = subtotal
-                
-                Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero} configurada como FICHAS JOGADAS")
-                Log.d("MesasAcertoAdapter", "Relógio inicial: ${state.relogioInicial}, final: ${state.relogioFinal}")
-                Log.d("MesasAcertoAdapter", "Com defeito: ${state.comDefeito}, Média: ${state.mediaFichasJogadas}")
-                Log.d("MesasAcertoAdapter", "Subtotal: R$ %.2f".format(subtotal))
             }
-            
-            Log.d("MesasAcertoAdapter", "=== BIND CONCLUÍDO MESA ${mesa.numero} ===")
         }
 
         private fun updateSubtotal(state: MesaAcertoState) {
@@ -353,7 +261,14 @@ class MesasAcertoAdapter(
     // --- Métodos públicos para o Fragment ---
 
     fun getSubtotal(): Double {
-        return mesaStates.values.sumOf { it.subtotal }
+        val subtotal = mesaStates.values.sumOf { it.subtotal }
+        Log.d("MesasAcertoAdapter", "=== GETSUBTOTAL CHAMADO ===")
+        Log.d("MesasAcertoAdapter", "Total de estados: ${mesaStates.size}")
+        mesaStates.forEach { (mesaId, state) ->
+            Log.d("MesasAcertoAdapter", "Mesa ID $mesaId: subtotal=${state.subtotal}")
+        }
+        Log.d("MesasAcertoAdapter", "Subtotal total calculado: $subtotal")
+        return subtotal
     }
 
     fun isDataValid(): Boolean {
@@ -370,6 +285,11 @@ class MesasAcertoAdapter(
     }
 
     fun getMesasAcerto(): List<MesaAcertoState> {
+        Log.d("MesasAcertoAdapter", "=== GETMESASACERTO CHAMADO ===")
+        Log.d("SettlementFragment", "Total de estados de mesa: ${mesaStates.size}")
+        mesaStates.forEach { (mesaId, state) ->
+            Log.d("MesasAcertoAdapter", "Mesa ID $mesaId: relógio inicial=${state.relogioInicial}, final=${state.relogioFinal}, subtotal=${state.subtotal}")
+        }
         return mesaStates.values.toList()
     }
 

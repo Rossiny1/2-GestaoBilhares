@@ -64,15 +64,6 @@
                     app:tint="@android:color/white" />
 
                 <ImageView
-                    android:id="@+id/printerDiagnosticButton"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="16dp"
-                    android:src="@drawable/ic_receipt"
-                    android:contentDescription="Diagnóstico da Impressora"
-                    app:tint="@android:color/white" />
-
-                <ImageView
                     android:id="@+id/cycleHistoryButton"
                     android:layout_width="24dp"
                     android:layout_height="24dp"

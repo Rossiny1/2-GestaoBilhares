@@ -41,9 +41,23 @@ class SettlementDetailViewModel(
                 if (acerto != null) {
                     Log.d("SettlementDetailViewModel", "Acerto encontrado: $acerto")
                     
-                    // Buscar dados detalhados por mesa
+                    // ✅ CORREÇÃO CRÍTICA: Buscar dados detalhados por mesa com logs
                     val acertoMesas = acertoMesaRepository.buscarPorAcertoId(acertoId)
+                    Log.d("SettlementDetailViewModel", "=== BUSCANDO MESAS DO ACERTO ===")
+                    Log.d("SettlementDetailViewModel", "Acerto ID: $acertoId")
                     Log.d("SettlementDetailViewModel", "Encontradas ${acertoMesas.size} mesas para o acerto")
+                    
+                    acertoMesas.forEachIndexed { index, acertoMesa ->
+                        Log.d("SettlementDetailViewModel", "=== MESA ${index + 1} RECUPERADA ===")
+                        Log.d("SettlementDetailViewModel", "ID da mesa: ${acertoMesa.mesaId}")
+                        Log.d("SettlementDetailViewModel", "Relógio inicial: ${acertoMesa.relogioInicial}")
+                        Log.d("SettlementDetailViewModel", "Relógio final: ${acertoMesa.relogioFinal}")
+                        Log.d("SettlementDetailViewModel", "Fichas jogadas: ${acertoMesa.fichasJogadas}")
+                        Log.d("SettlementDetailViewModel", "Valor fixo: R$ ${acertoMesa.valorFixo}")
+                        Log.d("SettlementDetailViewModel", "Subtotal: R$ ${acertoMesa.subtotal}")
+                        Log.d("SettlementDetailViewModel", "Com defeito: ${acertoMesa.comDefeito}")
+                        Log.d("SettlementDetailViewModel", "Relógio reiniciou: ${acertoMesa.relogioReiniciou}")
+                    }
                     
                     val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
                     val dataFormatada = formatter.format(acerto.dataAcerto)

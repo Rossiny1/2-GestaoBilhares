@@ -301,9 +301,25 @@ class SettlementViewModel(
                 val acertoSalvo = acertoRepository.buscarPorId(acertoId)
                 Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Observação no banco após salvamento: '${acertoSalvo?.observacoes}'")
                 
-                // Salvar dados detalhados de cada mesa do acerto
+                // ✅ CORREÇÃO CRÍTICA: Salvar dados detalhados de cada mesa do acerto com logs
                 val cliente = clienteRepository.obterPorId(clienteId)
-                val acertoMesas = dadosAcerto.mesas.map { mesa ->
+                Log.d("SettlementViewModel", "=== SALVANDO MESAS DO ACERTO ===")
+                Log.d("SettlementViewModel", "Total de mesas recebidas: ${dadosAcerto.mesas.size}")
+                Log.d("SettlementViewModel", "Cliente encontrado: ${cliente?.nome}")
+                Log.d("SettlementViewModel", "Valor ficha do cliente: R$ ${cliente?.valorFicha}")
+                Log.d("SettlementViewModel", "Comissão ficha do cliente: R$ ${cliente?.comissaoFicha}")
+                
+                // Garantir que não há duplicidade de mesaId
+                val mesaIds = dadosAcerto.mesas.map { it.id }
+                val duplicados = mesaIds.groupBy { it }.filter { it.value.size > 1 }.keys
+                if (duplicados.isNotEmpty()) {
+                    Log.e("SettlementViewModel", "DUPLICIDADE DETECTADA nos IDs das mesas: $duplicados")
+                }
+                val mesasUnicas = dadosAcerto.mesas.distinctBy { it.id }
+                if (mesasUnicas.size != dadosAcerto.mesas.size) {
+                    Log.w("SettlementViewModel", "Removendo mesas duplicadas antes de salvar. Total antes: ${dadosAcerto.mesas.size}, depois: ${mesasUnicas.size}")
+                }
+                val acertoMesas = mesasUnicas.mapIndexed { index, mesa ->
                     val fichasJogadas = if (mesa.valorFixo > 0) {
                         0 // Mesa de valor fixo não tem fichas jogadas
                     } else {
@@ -315,6 +331,17 @@ class SettlementViewModel(
                     } else {
                         fichasJogadas * (cliente?.comissaoFicha ?: 0.0)
                     }
+                    
+                    Log.d("SettlementViewModel", "=== MESA ${index + 1} ===")
+                    Log.d("SettlementViewModel", "ID da mesa: ${mesa.id}")
+                    Log.d("SettlementViewModel", "Número da mesa: ${mesa.numero}")
+                    Log.d("SettlementViewModel", "Relógio inicial: ${mesa.fichasInicial}")
+                    Log.d("SettlementViewModel", "Relógio final: ${mesa.fichasFinal}")
+                    Log.d("SettlementViewModel", "Fichas jogadas: $fichasJogadas")
+                    Log.d("SettlementViewModel", "Valor fixo: R$ ${mesa.valorFixo}")
+                    Log.d("SettlementViewModel", "Subtotal calculado: R$ $subtotal")
+                    Log.d("SettlementViewModel", "Com defeito: ${mesa.comDefeito}")
+                    Log.d("SettlementViewModel", "Relógio reiniciou: ${mesa.relogioReiniciou}")
                     
                     com.example.gestaobilhares.data.entities.AcertoMesa(
                         acertoId = acertoId,
@@ -332,8 +359,14 @@ class SettlementViewModel(
                     )
                 }
                 
+                Log.d("SettlementViewModel", "=== INSERINDO MESAS NO BANCO ===")
+                Log.d("SettlementViewModel", "Total de AcertoMesa a inserir: ${acertoMesas.size}")
+                acertoMesas.forEachIndexed { index, acertoMesa ->
+                    Log.d("SettlementViewModel", "AcertoMesa ${index + 1}: Mesa ${acertoMesa.mesaId} - Subtotal: R$ ${acertoMesa.subtotal}")
+                }
+                
                 acertoMesaRepository.inserirLista(acertoMesas)
-                Log.d("SettlementViewModel", "Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
+                Log.d("SettlementViewModel", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
                 
                 // ✅ CRÍTICO: Atualizar o débito atual na tabela de clientes
                 clienteRepository.atualizarDebitoAtual(clienteId, debitoAtual)

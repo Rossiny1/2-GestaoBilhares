@@ -68,8 +68,19 @@ class ClientDetailViewModel(
                     val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
                     val ultimaVisita = if (ultimoAcerto != null) {
                         Log.d("ClientDetailViewModel", "Último acerto encontrado em: ${ultimoAcerto.dataAcerto}")
+                        
+                        // ✅ NOVO: Calcular dias sem acerto
+                        val hoje = java.time.LocalDate.now()
+                        val dataUltimoAcerto = ultimoAcerto.dataAcerto.toInstant()
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDate()
+                        val diasSemAcerto = java.time.temporal.ChronoUnit.DAYS.between(dataUltimoAcerto, hoje).toInt()
+                        
+                        Log.d("ClientDetailViewModel", "Dias sem acerto: $diasSemAcerto")
+                        
                         calcularTempoRelativoReal(ultimoAcerto.dataAcerto)
                     } else {
+                        Log.d("ClientDetailViewModel", "Nenhum acerto encontrado - cliente nunca visitado")
                         "Nunca visitado"
                     }
 
@@ -116,7 +127,16 @@ class ClientDetailViewModel(
                         mesasAtivas = 0, // Atualizado abaixo
                         ultimaVisita = ultimaVisita,
                         observacoes = observacaoExibir,
-                        debitoAtual = debitoAtualReal // ✅ CORREÇÃO: Usar débito atual REAL
+                        debitoAtual = debitoAtualReal, // ✅ CORREÇÃO: Usar débito atual REAL
+                        diasSemAcerto = if (ultimoAcerto != null) {
+                            val hoje = java.time.LocalDate.now()
+                            val dataUltimoAcerto = ultimoAcerto.dataAcerto.toInstant()
+                                .atZone(java.time.ZoneId.systemDefault())
+                                .toLocalDate()
+                            java.time.temporal.ChronoUnit.DAYS.between(dataUltimoAcerto, hoje).toInt()
+                        } else {
+                            0 // Se nunca acertou, considera 0 dias
+                        }
                     )
 
                     Log.d("ClientDetailViewModel", "ClienteResumo criado: ${_clientDetails.value?.nome}")
@@ -362,7 +382,8 @@ data class ClienteResumo(
     val mesasAtivas: Int,
     val ultimaVisita: String,
     val observacoes: String,
-    val debitoAtual: Double = 0.0 // ✅ ADICIONADO: Campo para débito atual sincronizado
+    val debitoAtual: Double = 0.0, // ✅ ADICIONADO: Campo para débito atual sincronizado
+    val diasSemAcerto: Int = 0 // ✅ ADICIONADO: Campo para dias sem acerto
 )
 
 @Parcelize

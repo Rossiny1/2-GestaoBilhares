@@ -600,12 +600,22 @@ class SettlementFragment : Fragment() {
         val observacaoFinal = if (observacao.isBlank()) "Acerto realizado via app" else observacao
         Log.d("SettlementFragment", "Observação final que será salva: '$observacaoFinal'")
 
+        // ✅ CORREÇÃO CRÍTICA: Usar dados do adapter como fonte única e confiável
         val mesasDoAcerto = mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
-            // Buscar a mesa original para obter o valorFixo
-            val mesaOriginal = args.mesasCliente?.find { it.id == mesaState.mesaId }
+            // Buscar a mesa original no adapter para obter dados completos
+            val mesaOriginal = mesasAcertoAdapter.currentList.find { it.id == mesaState.mesaId }
+            
+            Log.d("SettlementFragment", "=== MONTANDO MESA PARA SALVAR ===")
+            Log.d("SettlementFragment", "Mesa ${idx + 1}: ID=${mesaState.mesaId}")
+            Log.d("SettlementFragment", "Relógio inicial: ${mesaState.relogioInicial}")
+            Log.d("SettlementFragment", "Relógio final: ${mesaState.relogioFinal}")
+            Log.d("SettlementFragment", "Valor fixo (mesa original): ${mesaOriginal?.valorFixo ?: 0.0}")
+            Log.d("SettlementFragment", "Com defeito: ${mesaState.comDefeito}")
+            Log.d("SettlementFragment", "Relógio reiniciou: ${mesaState.relogioReiniciou}")
+            
             SettlementViewModel.MesaAcerto(
                 id = mesaState.mesaId,
-                numero = (idx + 1).toString(),
+                numero = mesaOriginal?.numero ?: (idx + 1).toString(),
                 fichasInicial = mesaState.relogioInicial,
                 fichasFinal = mesaState.relogioFinal,
                 valorFixo = mesaOriginal?.valorFixo ?: 0.0,
@@ -613,6 +623,12 @@ class SettlementFragment : Fragment() {
                 comDefeito = mesaState.comDefeito,
                 relogioReiniciou = mesaState.relogioReiniciou
             )
+        }
+        
+        Log.d("SettlementFragment", "=== LISTA DE MESAS PARA SALVAR ===")
+        Log.d("SettlementFragment", "Total de mesas: ${mesasDoAcerto.size}")
+        mesasDoAcerto.forEachIndexed { index, mesa ->
+            Log.d("SettlementFragment", "Mesa ${index + 1}: ${mesa.numero} - Valor fixo: R$ ${mesa.valorFixo}")
         }
 
         val dadosAcerto = SettlementViewModel.DadosAcerto(

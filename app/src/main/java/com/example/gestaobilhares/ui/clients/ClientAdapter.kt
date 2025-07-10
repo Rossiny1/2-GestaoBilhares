@@ -73,12 +73,15 @@ class ClientAdapter(
         
         private fun configurarStatusVisual(cliente: Cliente) {
             val context = binding.root.context
+            val debito = cliente.debitoAtual
             
-            // ✅ CORREÇÃO: Barra de status lateral baseada no débito atual
+            // Calcular dias desde o último acerto (mock por enquanto)
+            val diasSemAcerto = 30 // Será calculado dinamicamente quando integrar com histórico
+            
             val statusColor = when {
                 !cliente.ativo -> context.getColor(R.color.red_600)
-                cliente.debitoAtual > 300.0 -> context.getColor(R.color.red_600)
-                cliente.debitoAtual > 100.0 -> context.getColor(R.color.orange_600)
+                debito > 300.0 -> context.getColor(R.color.red_600)
+                diasSemAcerto > 90 -> context.getColor(R.color.orange_600)
                 else -> context.getColor(R.color.green_600)
             }
             binding.statusBar.setBackgroundColor(statusColor)
@@ -89,11 +92,11 @@ class ClientAdapter(
                     binding.tvStatusTag.text = "INATIVO"
                     binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_red)
                 }
-                cliente.debitoAtual > 300.0 -> {
+                debito > 300.0 -> {
                     binding.tvStatusTag.text = "DEVEDOR"
                     binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_red)
                 }
-                cliente.debitoAtual > 100.0 -> {
+                diasSemAcerto > 90 -> {
                     binding.tvStatusTag.text = "ATENÇÃO"
                     binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_orange)
                 }
@@ -104,7 +107,7 @@ class ClientAdapter(
             }
             
             // Tag especial para débito alto
-            if (cliente.debitoAtual > 300.0) {
+            if (debito > 300.0) {
                 binding.tvSpecialTag.text = "ALTO DÉBITO"
                 binding.tvSpecialTag.setBackgroundResource(R.drawable.rounded_tag_red)
                 binding.tvSpecialTag.visibility = View.VISIBLE
