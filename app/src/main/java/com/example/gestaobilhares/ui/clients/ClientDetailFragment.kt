@@ -140,46 +140,50 @@ class ClientDetailFragment : Fragment() {
             findNavController().popBackStack()
         }
         
-        // Botão Novo Acerto - FASE 4A: Navegar para SettlementFragment ✅
+        // Botão Novo Acerto - CORRIGIDO: Navegação simplificada para evitar crash
         binding.btnNewSettlement.setOnClickListener {
-            val mesasAtivas = viewModel.mesasCliente.value
-            Log.d("NovoAcerto", "Mesas ativas encontradas: ${mesasAtivas.size}")
-            
-            if (mesasAtivas.isEmpty()) {
-                Toast.makeText(requireContext(), "Este cliente não possui mesas ativas para acerto.", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
+            try {
+                val mesasAtivas = viewModel.mesasCliente.value
+                Log.d("NovoAcerto", "Mesas ativas encontradas: ${mesasAtivas.size}")
+                
+                if (mesasAtivas.isEmpty()) {
+                    Toast.makeText(requireContext(), "Este cliente não possui mesas ativas para acerto.", Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
+                
+                // Obter dados do cliente para incluir nos MesaDTOs
+                val cliente = viewModel.clientDetails.value
+                val valorFicha = cliente?.valorFicha ?: 0.0
+                val comissaoFicha = cliente?.comissaoFicha ?: 0.0
+                
+                val mesasDTO = mesasAtivas.map { mesa ->
+                    Log.d("NovoAcerto", "Convertendo mesa ${mesa.numero} - ID: ${mesa.id}")
+                    MesaDTO(
+                        id = mesa.id,
+                        numero = mesa.numero,
+                        fichasInicial = mesa.fichasInicial ?: 0,
+                        fichasFinal = mesa.fichasFinal ?: 0,
+                        tipoMesa = mesa.tipoMesa.name,
+                        ativa = mesa.ativa,
+                        valorFixo = mesa.valorFixo ?: 0.0,
+                        valorFicha = valorFicha,
+                        comissaoFicha = comissaoFicha
+                    )
+                }.toTypedArray()
+                
+                Log.d("NovoAcerto", "Enviando ${mesasDTO.size} mesas para SettlementFragment")
+                Log.d("NovoAcerto", "Mesas: ${mesasDTO.joinToString { "Mesa ${it.numero} (ID: ${it.id})" }}")
+                Log.d("NovoAcerto", "Valor Ficha: $valorFicha, Comissão Ficha: $comissaoFicha")
+                
+                val action = ClientDetailFragmentDirections
+                    .actionClientDetailFragmentToSettlementFragment(
+                        args.clienteId
+                    )
+                findNavController().navigate(action)
+            } catch (e: Exception) {
+                Log.e("ClientDetailFragment", "Erro ao navegar para SettlementFragment: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao abrir tela de acerto: ${e.message}", Toast.LENGTH_LONG).show()
             }
-            
-            // Obter dados do cliente para incluir nos MesaDTOs
-            val cliente = viewModel.clientDetails.value
-            val valorFicha = cliente?.valorFicha ?: 0.0
-            val comissaoFicha = cliente?.comissaoFicha ?: 0.0
-            
-            val mesasDTO = mesasAtivas.map { mesa ->
-                Log.d("NovoAcerto", "Convertendo mesa ${mesa.numero} - ID: ${mesa.id}")
-                MesaDTO(
-                    id = mesa.id,
-                    numero = mesa.numero,
-                    fichasInicial = mesa.fichasInicial ?: 0,
-                    fichasFinal = mesa.fichasFinal ?: 0,
-                    tipoMesa = mesa.tipoMesa.name,
-                    ativa = mesa.ativa,
-                    valorFixo = mesa.valorFixo ?: 0.0,
-                    valorFicha = valorFicha,
-                    comissaoFicha = comissaoFicha
-                )
-            }.toTypedArray()
-            
-            Log.d("NovoAcerto", "Enviando ${mesasDTO.size} mesas para SettlementFragment")
-            Log.d("NovoAcerto", "Mesas: ${mesasDTO.joinToString { "Mesa ${it.numero} (ID: ${it.id})" }}")
-            Log.d("NovoAcerto", "Valor Ficha: $valorFicha, Comissão Ficha: $comissaoFicha")
-            
-            val action = ClientDetailFragmentDirections
-                .actionClientDetailFragmentToSettlementFragment(
-                    mesasDTO,
-                    args.clienteId
-                )
-            findNavController().navigate(action)
         }
         
         // Botões de contato
@@ -283,8 +287,7 @@ class ClientDetailFragment : Fragment() {
                                 }.toTypedArray()
                                 
                                 val action = ClientDetailFragmentDirections.actionClientDetailFragmentToSettlementFragment(
-                                    clienteId = args.clienteId,
-                                    mesasCliente = mesasDTO
+                                    args.clienteId
                                 )
                                 findNavController().navigate(action)
                             }
@@ -345,11 +348,7 @@ class ClientDetailFragment : Fragment() {
             }
         }
         
-        lifecycleScope.launch {
-            viewModel.isLoading.collect { isLoading ->
-                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            }
-        }
+
     }
 
     private fun updateClientUI(client: ClienteResumo) {
@@ -551,11 +550,7 @@ class ClientDetailFragment : Fragment() {
             findNavController().navigate(R.id.action_clientDetailFragment_to_settlementFragment, bundle)
         }
 
-        // ✅ NOVO: Botão finalizar acerto
-        binding.btnFinalizarAcerto.setOnClickListener {
-            // TODO: Implementar lógica de finalização do acerto
-            Toast.makeText(requireContext(), "Finalizar acerto será implementado em breve", Toast.LENGTH_SHORT).show()
-        }
+
 
         // Botão WhatsApp
         binding.fabWhatsApp.setOnClickListener {

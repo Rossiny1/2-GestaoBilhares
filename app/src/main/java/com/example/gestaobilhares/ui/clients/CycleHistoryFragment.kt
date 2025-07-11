@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentCycleHistoryBinding
 import com.example.gestaobilhares.ui.clients.adapter.CycleHistoryAdapter
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 
@@ -26,7 +28,11 @@ class CycleHistoryFragment : Fragment() {
     private val binding get() = _binding!!
     
     private val args: CycleHistoryFragmentArgs by navArgs()
-    private val viewModel: CycleHistoryViewModel by activityViewModels()
+    private val viewModel: CycleHistoryViewModel by viewModels {
+        CycleHistoryViewModelFactory(
+            CicloAcertoRepository(AppDatabase.getDatabase(requireContext()).cicloAcertoDao())
+        )
+    }
     
     private lateinit var cycleAdapter: CycleHistoryAdapter
 

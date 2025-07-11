@@ -2,6 +2,7 @@ package com.example.gestaobilhares.ui.routes
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -187,9 +188,15 @@ class RoutesFragment : Fragment() {
                     false
                 }
                 R.id.navigation_relatorios -> {
-                    // TODO: Navegar para relatórios
-                    Toast.makeText(requireContext(), "Relatórios será implementado em breve", Toast.LENGTH_SHORT).show()
-                    false
+                    // ✅ CORRIGIDO: Navegar para tela de relatórios
+                    try {
+                        findNavController().navigate(R.id.reportsFragment)
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao navegar para relatórios: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir relatórios: ${e.message}", Toast.LENGTH_SHORT).show()
+                        false
+                    }
                 }
                 else -> false
             }

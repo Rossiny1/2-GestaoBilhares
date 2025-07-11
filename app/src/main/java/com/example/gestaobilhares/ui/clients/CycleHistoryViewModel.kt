@@ -1,6 +1,7 @@
 package com.example.gestaobilhares.ui.clients
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
@@ -23,6 +24,22 @@ data class CycleStatistics(
     val periodoInicio: Date? = null,
     val periodoFim: Date? = null
 )
+
+/**
+ * Factory para criar CycleHistoryViewModel com dependências
+ */
+class CycleHistoryViewModelFactory(
+    private val cicloAcertoRepository: CicloAcertoRepository
+) : ViewModelProvider.Factory {
+    
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(CycleHistoryViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return CycleHistoryViewModel(cicloAcertoRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
 
 /**
  * ViewModel para gerenciar histórico de ciclos e relatórios

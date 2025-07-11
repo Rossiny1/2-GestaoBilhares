@@ -201,38 +201,7 @@ class ClientListFragment : Fragment() {
             }
         }
         
-        // ✅ FASE 8C: Observar entidade do ciclo (datas, status, progresso)
-        lifecycleScope.launch {
-            viewModel.cicloAcertoEntity.collect { cicloEntity ->
-                try {
-                    atualizarInformacoesCiclo(cicloEntity)
-                } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar entidade do ciclo: ${e.message}")
-                }
-            }
-        }
-        
-        // ✅ FASE 8C: Observar status do ciclo
-        lifecycleScope.launch {
-            viewModel.statusCiclo.collect { statusCiclo ->
-                try {
-                    atualizarStatusCiclo(statusCiclo)
-                } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar status do ciclo: ${e.message}")
-                }
-            }
-        }
-        
-        // ✅ FASE 8C: Observar progresso do ciclo
-        lifecycleScope.launch {
-            viewModel.progressoCiclo.collect { progresso ->
-                try {
-                    atualizarProgressoCiclo(progresso)
-                } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar progresso do ciclo: ${e.message}")
-                }
-            }
-        }
+
         
         // ✅ FASE 9A: Observar clientes com empty state melhorado
         lifecycleScope.launch {
@@ -264,12 +233,7 @@ class ClientListFragment : Fragment() {
             }
         }
         
-        // ✅ FASE 9A: Observar estado de carregamento
-        lifecycleScope.launch {
-            viewModel.isLoading.collect { carregando ->
-                _binding?.progressBar?.visibility = if (carregando) View.VISIBLE else View.GONE
-            }
-        }
+
     }
     
     private fun atualizarInfoRota(rota: com.example.gestaobilhares.data.entities.Rota) {
@@ -337,97 +301,11 @@ class ClientListFragment : Fragment() {
         }
     }
     
-    // ✅ FASE 8C: Atualizar informações detalhadas do ciclo
-    private fun atualizarInformacoesCiclo(cicloEntity: com.example.gestaobilhares.data.entities.CicloAcertoEntity?) {
-        _binding?.let { binding ->
-            cicloEntity?.let { ciclo ->
-                val formatter = SimpleDateFormat("dd/MM HH:mm", Locale("pt", "BR"))
-                val dataInicio = ciclo.dataInicio?.let { formatter.format(it) } ?: "Não iniciado"
-                val dataFim = ciclo.dataFim?.let { formatter.format(it) } ?: "Em andamento"
-                binding.tvCycleInfo.text = "Início: $dataInicio • Fim: $dataFim"
-                val valor = ciclo.valorTotalAcertado
-                val valorFormatado = NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(valor)
-                binding.tvCycleValue.text = "Total: $valorFormatado"
-            } ?: run {
-                binding.tvCycleInfo.text = "Ciclo não iniciado"
-                binding.tvCycleValue.text = "Total: R$ 0,00"
-            }
-        }
-    }
+
     
-    // ✅ FASE 9A: Atualizar status visual do ciclo com animação
-    private fun atualizarStatusCiclo(statusCiclo: StatusCicloAcerto?) {
-        _binding?.let { binding ->
-            val context = requireContext()
-            val statusText: String
-            val color: Int
-            
-            when (statusCiclo) {
-                StatusCicloAcerto.EM_ANDAMENTO -> {
-                    statusText = "Em Andamento"
-                    color = context.getColor(R.color.green_600)
-                }
-                StatusCicloAcerto.FINALIZADO -> {
-                    statusText = "Finalizado"
-                    color = context.getColor(R.color.purple_600)
-                }
-                StatusCicloAcerto.CANCELADO -> {
-                    statusText = "Cancelado"
-                    color = context.getColor(R.color.red_600)
-                }
-                else -> {
-                    statusText = "Não Iniciado"
-                    color = context.getColor(R.color.gray_600)
-                }
-            }
-            
-            // Atualizar textos
-            binding.tvCycleStatusLabel.text = statusText
-            binding.tvCycleStatus.text = statusText
-            
-            // Animar mudança de cor do indicador
-            binding.cycleStatusIndicator.backgroundTintList = android.content.res.ColorStateList.valueOf(color)
-            
-            // Animação de pulse para status em andamento
-            if (statusCiclo == StatusCicloAcerto.EM_ANDAMENTO) {
-                val pulse = AnimationUtils.loadAnimation(context, R.anim.pulse)
-                binding.cycleStatusIndicator.startAnimation(pulse)
-            } else {
-                binding.cycleStatusIndicator.clearAnimation()
-            }
-        }
-    }
+
     
-    // ✅ FASE 9A: Atualizar progresso visual do ciclo com animação
-    private fun atualizarProgressoCiclo(percentual: Int?) {
-        _binding?.let { binding ->
-            val percent = percentual ?: 0
-            binding.tvCycleProgress.text = "$percent% concluído"
-            binding.tvCyclePercent.text = "$percent%"
-            
-            // Animação da barra de progresso
-            binding.progressBarCycle?.let { progressBar ->
-                progressBar.visibility = View.VISIBLE
-                
-                // Animar a mudança de progresso
-                val animator = android.animation.ValueAnimator.ofInt(progressBar.progress, percent)
-                animator.duration = 500
-                animator.addUpdateListener { animation ->
-                    progressBar.progress = animation.animatedValue as Int
-                }
-                animator.start()
-                
-                // Mudar cor baseado no progresso
-                val context = requireContext()
-                val color = when {
-                    percent >= 100 -> context.getColor(R.color.green_600)
-                    percent >= 50 -> context.getColor(R.color.orange_600)
-                    else -> context.getColor(R.color.blue_600)
-                }
-                progressBar.progressTintList = android.content.res.ColorStateList.valueOf(color)
-            }
-        }
-    }
+
     
     // ✅ FASE 9A: Toggle da busca com animação
     private fun toggleBusca() {

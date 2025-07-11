@@ -118,10 +118,6 @@
             android:name="clienteId"
             app:argType="long"
             android:defaultValue="0L" />
-        <argument
-            android:name="mesasCliente"
-            app:argType="com.example.gestaobilhares.ui.settlement.MesaDTO[]"
-            app:nullable="true" />
     </fragment>
 
     <!-- FASE 4B: Tela de cadastro de cliente -->
@@ -206,6 +202,12 @@
             app:argType="long"
             android:defaultValue="0L" />
     </fragment>
+
+    <!-- Tela de Relatórios -->
+    <fragment
+        android:id="@+id/reportsFragment"
+        android:name="com.example.gestaobilhares.ui.reports.ReportsFragment"
+        android:label="Relatórios" />
 
     <!-- MainFragment mantido para compatibilidade, será removido futuramente -->
     <fragment
