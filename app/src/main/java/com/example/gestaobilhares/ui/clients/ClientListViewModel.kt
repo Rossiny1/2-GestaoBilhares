@@ -168,6 +168,9 @@ class ClientListViewModel(
                 // Buscar próximo número de ciclo
                 val proximoCiclo = cicloAcertoRepository.buscarProximoNumeroCiclo(rota.id, anoAtual)
                 
+                // ✅ NOVO: Salvar pendências do ciclo anterior antes de reinicializar
+                val pendenciasCicloAnterior = _pendencias.value
+                
                 // Criar novo ciclo de acerto
                 val novoCiclo = CicloAcertoEntity(
                     rotaId = rota.id,
@@ -187,7 +190,16 @@ class ClientListViewModel(
                 _statusCiclo.value = StatusCicloAcerto.EM_ANDAMENTO
                 _statusRota.value = StatusRota.EM_ANDAMENTO
                 
-                android.util.Log.d("ClientListViewModel", "✅ Ciclo $proximoCiclo iniciado com sucesso")
+                // ✅ NOVO: Reinicializar campos do card de progresso para o novo ciclo
+                _faturamento.value = 0.0
+                _percentualAcertados.value = 0
+                _clientesAcertados.value = 0
+                _progressoCiclo.value = 0
+                
+                // ✅ NOVO: Manter pendências do ciclo anterior
+                _pendencias.value = pendenciasCicloAnterior
+                
+                android.util.Log.d("ClientListViewModel", "✅ Ciclo $proximoCiclo iniciado com sucesso - campos reinicializados, pendências mantidas: $pendenciasCicloAnterior")
                 
             } catch (e: Exception) {
                 android.util.Log.e("ClientListViewModel", "Erro ao iniciar rota: ${e.message}", e)
@@ -458,22 +470,31 @@ class ClientListViewModel(
     }
 
     /**
-     * ✅ NOVO: Calcula pendências (débitos > R$300 + sem acerto há >4 meses)
+     * ✅ NOVO: Calcula pendências do ciclo anterior (débitos > R$300 + sem acerto há >4 meses)
      */
     private suspend fun calcularPendencias(clientes: List<Cliente>): Int {
         return try {
-            val hoje = java.time.LocalDate.now()
-            val quatroMesesAtras = hoje.minusMonths(4)
+            val cicloAtual = _cicloAcerto.value
+            val cicloAnterior = cicloAtual - 1
             
-            clientes.count { cliente ->
-                val temDebitoAlto = cliente.debitoAtual > 300.0
-                val semAcertoRecente = cliente.dataUltimaAtualizacao.toInstant()
-                    .atZone(java.time.ZoneId.systemDefault())
-                    .toLocalDate()
-                    .isBefore(quatroMesesAtras)
-                
-                temDebitoAlto || semAcertoRecente
+            // Se é o primeiro ciclo, não há pendências do ciclo anterior
+            if (cicloAnterior <= 0) {
+                android.util.Log.d("ClientListViewModel", "✅ Primeiro ciclo - sem pendências anteriores")
+                return 0
             }
+            
+            // Buscar acertos do ciclo anterior para identificar pendências
+            val acertosCicloAnterior = acertoRepository.buscarPorRotaECiclo(rotaId, cicloAnterior).first()
+            val clientesAcertadosCicloAnterior = acertosCicloAnterior.map { it.clienteId }.toSet()
+            
+            // Contar clientes que NÃO foram acertados no ciclo anterior
+            val pendencias = clientes.count { cliente ->
+                !clientesAcertadosCicloAnterior.contains(cliente.id)
+            }
+            
+            android.util.Log.d("ClientListViewModel", "✅ Pendências do ciclo anterior ($cicloAnterior): $pendencias de ${clientes.size} clientes")
+            
+            pendencias
         } catch (e: Exception) {
             android.util.Log.e("ClientListViewModel", "Erro ao calcular pendências: ${e.message}")
             0

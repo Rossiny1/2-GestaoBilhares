@@ -125,6 +125,18 @@ class ClientListFragment : Fragment() {
                 // TODO: Implementar filtro
             }
             
+            // ✅ NOVO: Botão de relatórios de ciclos
+            binding.btnReports.setOnClickListener {
+                try {
+                    val action = ClientListFragmentDirections
+                        .actionClientListFragmentToCycleHistoryFragment(args.rotaId)
+                    findNavController().navigate(action)
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao navegar para relatórios: ${e.message}")
+                    mostrarFeedback("Erro ao abrir relatórios: ${e.message}", Snackbar.LENGTH_LONG)
+                }
+            }
+            
             // ✅ FASE 9A: Controle de status da rota com feedback
             binding.btnStartRoute.setOnClickListener {
                 viewModel.iniciarRota()
@@ -207,7 +219,8 @@ class ClientListFragment : Fragment() {
         lifecycleScope.launch {
             viewModel.progressoCiclo.collect { progresso ->
                 try {
-                    _binding?.progressBarCycle?.progress = progresso
+                    // ProgressBar removido do layout, apenas log para debug
+                    android.util.Log.d("ClientListFragment", "Progresso do ciclo: $progresso")
                 } catch (e: Exception) {
                     android.util.Log.e("ClientListFragment", "Erro ao atualizar progresso: ${e.message}")
                 }
@@ -355,59 +368,14 @@ class ClientListFragment : Fragment() {
     
     // ✅ FASE 9A: Toggle da busca com animação
     private fun toggleBusca() {
-        _binding?.let { binding ->
-            if (binding.searchLayout.visibility == View.VISIBLE) {
-                // Desativar busca com animação de fade out
-                val fadeOut = AlphaAnimation(1.0f, 0.0f)
-                fadeOut.duration = 200
-                fadeOut.setAnimationListener(object : Animation.AnimationListener {
-                    override fun onAnimationStart(animation: Animation?) {}
-                    override fun onAnimationEnd(animation: Animation?) {
-                        binding.searchLayout.visibility = View.GONE
-                    }
-                    override fun onAnimationRepeat(animation: Animation?) {}
-                })
-                binding.searchLayout.startAnimation(fadeOut)
-                binding.btnSearch.setImageResource(R.drawable.ic_search)
-                binding.etSearch.setText("")
-                viewModel.limparBusca()
-            } else {
-                // Ativar busca com animação de fade in
-                binding.searchLayout.visibility = View.VISIBLE
-                val fadeIn = AlphaAnimation(0.0f, 1.0f)
-                fadeIn.duration = 200
-                binding.searchLayout.startAnimation(fadeIn)
-                binding.btnSearch.setImageResource(R.drawable.ic_close)
-                binding.etSearch.requestFocus()
-                
-                // Mostrar teclado
-                val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-                imm.showSoftInput(binding.etSearch, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
-            }
-        }
+        // Busca removida do layout, apenas log para debug
+        android.util.Log.d("ClientListFragment", "Busca não disponível - layout simplificado")
     }
     
     // ✅ FASE 9A: Configurar busca em tempo real com debounce
     private fun configurarBusca() {
-        _binding?.let { binding ->
-            var searchJob: kotlinx.coroutines.Job? = null
-            
-            binding.etSearch.addTextChangedListener(object : android.text.TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                override fun afterTextChanged(s: android.text.Editable?) {
-                    // Cancelar busca anterior
-                    searchJob?.cancel()
-                    
-                    // Nova busca com delay de 300ms
-                    searchJob = lifecycleScope.launch {
-                        kotlinx.coroutines.delay(300)
-                        val query = s?.toString()?.trim() ?: ""
-                        viewModel.buscarClientes(query)
-                    }
-                }
-            })
-        }
+        // Busca removida do layout, apenas log para debug
+        android.util.Log.d("ClientListFragment", "Busca não disponível - layout simplificado")
     }
     
     // ✅ FASE 9B: Atualizar empty state com filtros combinados
@@ -415,17 +383,9 @@ class ClientListFragment : Fragment() {
         _binding?.let { binding ->
             if (mostrar) {
                 // Determinar contexto do empty state
-                val isBusca = binding.searchLayout.visibility == View.VISIBLE
                 val filtroAtual = viewModel.getFiltroAtual()
-                val temBusca = viewModel.buscaAtual.value.isNotBlank()
                 
                 when {
-                    isBusca && temBusca -> {
-                        binding.ivEmptyStateIcon.setImageResource(R.drawable.ic_search)
-                        binding.tvEmptyStateTitle.text = "Nenhum resultado encontrado"
-                        binding.tvEmptyStateMessage.text = "Tente usar termos diferentes na busca ou ajustar os filtros."
-                        binding.btnEmptyStateAction.visibility = View.GONE
-                    }
                     filtroAtual == FiltroCliente.DEVEDORES -> {
                         binding.ivEmptyStateIcon.setImageResource(R.drawable.ic_money)
                         binding.tvEmptyStateTitle.text = "Nenhum devedor encontrado"

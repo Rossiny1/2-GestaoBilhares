@@ -68,9 +68,19 @@ class SettlementSummaryDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val view = LayoutInflater.from(context).inflate(R.layout.dialog_settlement_summary, null)
         val clienteNome = arguments?.getString("clienteNome") ?: ""
-        val mesas = arguments?.getParcelableArrayList<Mesa>("mesas") ?: emptyList<Mesa>()
+        val mesas = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            arguments?.getParcelableArrayList("mesas", Mesa::class.java) ?: emptyList<Mesa>()
+        } else {
+            @Suppress("DEPRECATION")
+            arguments?.getParcelableArrayList<Mesa>("mesas") ?: emptyList<Mesa>()
+        }
         val total = arguments?.getDouble("total") ?: 0.0
-        val metodosPagamento = arguments?.getSerializable("metodosPagamento") as? HashMap<String, Double> ?: hashMapOf()
+        val metodosPagamento = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            arguments?.getSerializable("metodosPagamento", HashMap::class.java) as? HashMap<String, Double> ?: hashMapOf()
+        } else {
+            @Suppress("DEPRECATION")
+            arguments?.getSerializable("metodosPagamento") as? HashMap<String, Double> ?: hashMapOf()
+        }
         val observacao = arguments?.getString("observacao") ?: ""
         val debitoAtual = arguments?.getDouble("debitoAtual") ?: 0.0
         val debitoAnterior = arguments?.getDouble("debitoAnterior") ?: 0.0
@@ -158,7 +168,6 @@ class SettlementSummaryDialog : DialogFragment() {
                                 val txtDebitoAtual = reciboView.findViewById<TextView>(R.id.txtDebitoAtual)
                                 val txtPagamentos = reciboView.findViewById<TextView>(R.id.txtPagamentos)
                                 val txtObservacoes = reciboView.findViewById<TextView>(R.id.txtObservacoes)
-                                val txtAgradecimento = reciboView.findViewById<TextView>(R.id.txtAgradecimento)
                                 val imgLogo = reciboView.findViewById<ImageView>(R.id.imgLogoRecibo)
 
                                 // Preencher campos do recibo

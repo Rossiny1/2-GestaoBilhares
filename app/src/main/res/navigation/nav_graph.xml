@@ -80,6 +80,10 @@
         <action
             android:id="@+id/action_clientListFragment_to_clientRegisterFragment"
             app:destination="@id/clientRegisterFragment" />
+        <!-- ✅ NOVO: Navegação para histórico de ciclos -->
+        <action
+            android:id="@+id/action_clientListFragment_to_cycleHistoryFragment"
+            app:destination="@id/cycleHistoryFragment" />
     </fragment>
 
     <!-- FASE 4A: Tela de detalhes do cliente -->
