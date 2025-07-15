@@ -201,6 +201,58 @@ class ClientListFragment : Fragment() {
             }
         }
         
+        // ✅ FASE 8C: Observar progresso do ciclo real
+        lifecycleScope.launch {
+            viewModel.progressoCiclo.collect { progresso ->
+                try {
+                    _binding?.progressBarCycle?.progress = progresso
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar progresso: ${e.message}")
+                }
+            }
+        }
+        
+        // ✅ NOVO: Observar dados do card de progresso
+        lifecycleScope.launch {
+            viewModel.percentualAcertados.collect { percentual ->
+                try {
+                    _binding?.tvPercentualAcertados?.text = "$percentual%"
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar percentual: ${e.message}")
+                }
+            }
+        }
+        
+        lifecycleScope.launch {
+            viewModel.totalClientes.collect { total ->
+                try {
+                    _binding?.tvTotalClientes?.text = "de $total clientes"
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar total clientes: ${e.message}")
+                }
+            }
+        }
+        
+        lifecycleScope.launch {
+            viewModel.faturamento.collect { faturamento ->
+                try {
+                    val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+                    _binding?.tvFaturamento?.text = formatter.format(faturamento)
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar faturamento: ${e.message}")
+                }
+            }
+        }
+        
+        lifecycleScope.launch {
+            viewModel.pendencias.collect { pendencias ->
+                try {
+                    _binding?.tvPendencias?.text = pendencias.toString()
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar pendências: ${e.message}")
+                }
+            }
+        }
 
         
         // ✅ FASE 9A: Observar clientes com empty state melhorado
@@ -251,29 +303,21 @@ class ClientListFragment : Fragment() {
             when (status) {
                 StatusRota.EM_ANDAMENTO -> {
                     binding.tvRouteStatus.text = "Em Andamento"
-                    binding.statusIndicator.backgroundTintList = 
-                        android.content.res.ColorStateList.valueOf(context.getColor(R.color.green_600))
                     binding.btnStartRoute.isEnabled = false
                     binding.btnFinishRoute.isEnabled = true
                 }
                 StatusRota.FINALIZADA -> {
                     binding.tvRouteStatus.text = "Finalizada"
-                    binding.statusIndicator.backgroundTintList = 
-                        android.content.res.ColorStateList.valueOf(context.getColor(R.color.purple_600))
                     binding.btnStartRoute.isEnabled = true
                     binding.btnFinishRoute.isEnabled = false
                 }
                 StatusRota.PAUSADA -> {
                     binding.tvRouteStatus.text = "Não Iniciada"
-                    binding.statusIndicator.backgroundTintList = 
-                        android.content.res.ColorStateList.valueOf(context.getColor(R.color.orange_600))
                     binding.btnStartRoute.isEnabled = true
                     binding.btnFinishRoute.isEnabled = false
                 }
                 else -> {
                     binding.tvRouteStatus.text = "Não Iniciada"
-                    binding.statusIndicator.backgroundTintList = 
-                        android.content.res.ColorStateList.valueOf(context.getColor(R.color.orange_600))
                     binding.btnStartRoute.isEnabled = true
                     binding.btnFinishRoute.isEnabled = false
                 }

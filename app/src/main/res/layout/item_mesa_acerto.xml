@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
+    android:visibility="visible"
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
     app:strokeColor="?attr/colorOutline"
@@ -14,7 +15,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:visibility="visible">
 
         <!-- Título da Mesa -->
         <LinearLayout

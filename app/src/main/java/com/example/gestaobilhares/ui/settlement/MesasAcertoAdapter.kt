@@ -87,9 +87,17 @@ class MesasAcertoAdapter(
         return MesaAcertoViewHolder(binding)
     }
 
+    override fun getItemCount(): Int {
+        val count = super.getItemCount()
+        Log.d("MesasAcertoAdapter", "getItemCount() retornou: $count")
+        Log.d("MesasAcertoAdapter", "currentList.size: ${currentList.size}")
+        return count
+    }
+
     override fun onBindViewHolder(holder: MesaAcertoViewHolder, position: Int) {
         val mesa = getItem(position)
         Log.d("MesasAcertoAdapter", "Binding mesa na posição $position: Mesa ${mesa.numero} (ID: ${mesa.id})")
+        Log.d("MesasAcertoAdapter", "ViewHolder: ${holder.hashCode()}")
         holder.bind(mesa)
     }
 

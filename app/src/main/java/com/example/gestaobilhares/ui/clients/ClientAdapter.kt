@@ -58,12 +58,6 @@ class ClientAdapter(
                 "Endereço não informado"
             }
             
-            // Informações das mesas (mock por enquanto - será integrado com dados reais)
-            binding.tvTableCount.text = "2 mesas ativas"
-            
-            // Último acerto (mock por enquanto - será integrado com dados reais)
-            binding.tvLastSettlement.text = "há 3 dias"
-            
             // Configurar status visual
             configurarStatusVisual(cliente)
             

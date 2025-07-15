@@ -56,6 +56,22 @@ class ClientListViewModel(
     private val _progressoCiclo = MutableStateFlow(0)
     val progressoCiclo: StateFlow<Int> = _progressoCiclo.asStateFlow()
 
+    // ✅ NOVOS: Dados para o card de progresso do ciclo
+    private val _percentualAcertados = MutableStateFlow(0)
+    val percentualAcertados: StateFlow<Int> = _percentualAcertados.asStateFlow()
+    
+    private val _totalClientes = MutableStateFlow(0)
+    val totalClientes: StateFlow<Int> = _totalClientes.asStateFlow()
+    
+    private val _clientesAcertados = MutableStateFlow(0)
+    val clientesAcertados: StateFlow<Int> = _clientesAcertados.asStateFlow()
+    
+    private val _faturamento = MutableStateFlow(0.0)
+    val faturamento: StateFlow<Double> = _faturamento.asStateFlow()
+    
+    private val _pendencias = MutableStateFlow(0)
+    val pendencias: StateFlow<Int> = _pendencias.asStateFlow()
+
     private val _clientesTodos = MutableStateFlow<List<Cliente>>(emptyList())
     private val _filtroAtual = MutableStateFlow(FiltroCliente.ATIVOS)
     
@@ -111,6 +127,9 @@ class ClientListViewModel(
                 clienteRepository.obterClientesPorRota(rotaId).collect { clientes ->
                     _clientesTodos.value = clientes
                     aplicarFiltrosCombinados() // Aplicar filtros após carregar
+                    
+                    // ✅ NOVO: Calcular dados do card de progresso
+                    calcularDadosProgressoCiclo(clientes)
                 }
             } catch (e: Exception) {
                 android.util.Log.e("ClientListViewModel", "Erro ao carregar clientes: ${e.message}")
@@ -350,5 +369,100 @@ class ClientListViewModel(
      */
     fun limparErro() {
         _errorMessage.value = null
+    }
+
+    /**
+     * ✅ NOVO: Calcula dados do card de progresso do ciclo em tempo real
+     */
+    private suspend fun calcularDadosProgressoCiclo(clientes: List<Cliente>) {
+        try {
+            val totalClientes = clientes.size
+            _totalClientes.value = totalClientes
+            
+            // Calcular clientes acertados no ciclo atual
+            val cicloAtual = _cicloAcerto.value
+            val clientesAcertados = calcularClientesAcertadosNoCiclo(clientes, cicloAtual)
+            _clientesAcertados.value = clientesAcertados
+            
+            // Calcular percentual
+            val percentual = if (totalClientes > 0) {
+                (clientesAcertados * 100) / totalClientes
+            } else {
+                0
+            }
+            _percentualAcertados.value = percentual
+            _progressoCiclo.value = percentual
+            
+            // Calcular faturamento do ciclo atual
+            val faturamento = calcularFaturamentoCicloAtual(cicloAtual)
+            _faturamento.value = faturamento
+            
+            // Calcular pendências
+            val pendencias = calcularPendencias(clientes)
+            _pendencias.value = pendencias
+            
+            android.util.Log.d("ClientListViewModel", "✅ Dados do progresso calculados: $percentual% de $totalClientes clientes, R$ $faturamento, $pendencias pendências")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListViewModel", "Erro ao calcular dados do progresso: ${e.message}")
+            // Valores padrão em caso de erro
+            _percentualAcertados.value = 0
+            _totalClientes.value = 0
+            _clientesAcertados.value = 0
+            _faturamento.value = 0.0
+            _pendencias.value = 0
+        }
+    }
+
+    /**
+     * ✅ NOVO: Calcula quantos clientes foram acertados no ciclo atual
+     */
+    private suspend fun calcularClientesAcertadosNoCiclo(clientes: List<Cliente>, cicloAtual: Int): Int {
+        return try {
+            // TODO: Implementar busca real no banco quando tivermos os acertos vinculados ao ciclo
+            // Por enquanto, simula baseado no status dos clientes
+            clientes.count { it.ativo && it.debitoAtual <= 100.0 }
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListViewModel", "Erro ao calcular clientes acertados: ${e.message}")
+            0
+        }
+    }
+
+    /**
+     * ✅ NOVO: Calcula faturamento do ciclo atual
+     */
+    private suspend fun calcularFaturamentoCicloAtual(cicloAtual: Int): Double {
+        return try {
+            // TODO: Implementar busca real no banco quando tivermos os acertos vinculados ao ciclo
+            // Por enquanto, simula baseado no ciclo
+            val baseFaturamento = 2500.0
+            baseFaturamento + (cicloAtual * 350.0)
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListViewModel", "Erro ao calcular faturamento: ${e.message}")
+            0.0
+        }
+    }
+
+    /**
+     * ✅ NOVO: Calcula pendências (débitos > R$300 + sem acerto há >4 meses)
+     */
+    private suspend fun calcularPendencias(clientes: List<Cliente>): Int {
+        return try {
+            val hoje = java.time.LocalDate.now()
+            val quatroMesesAtras = hoje.minusMonths(4)
+            
+            clientes.count { cliente ->
+                val temDebitoAlto = cliente.debitoAtual > 300.0
+                val semAcertoRecente = cliente.dataUltimaAtualizacao.toInstant()
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDate()
+                    .isBefore(quatroMesesAtras)
+                
+                temDebitoAlto || semAcertoRecente
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListViewModel", "Erro ao calcular pendências: ${e.message}")
+            0
+        }
     }
 } 

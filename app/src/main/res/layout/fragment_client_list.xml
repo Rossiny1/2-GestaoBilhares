@@ -121,98 +121,92 @@
                 android:orientation="vertical"
                 android:padding="8dp">
 
-                <!-- Título do Ciclo de Acerto -->
-                <TextView
-                    android:id="@+id/tvCycleTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp"
-                    android:text="1º Acerto"
-                    android:textColor="?attr/colorPrimary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:gravity="center" />
-
-                <!-- Status e Controles -->
+                <!-- Linha 1: Título centralizado + Botão Iniciar -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
 
-                    <!-- Status da Rota -->
+                    <!-- Título centralizado -->
+                    <TextView
+                        android:id="@+id/tvCycleTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="1º Acerto"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp" />
+
+                    <!-- Botão Iniciar -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnStartRoute"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:text="Iniciar"
+                        android:textSize="14sp"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        android:gravity="center" />
+                </LinearLayout>
+
+                <!-- Linha 2: Status + Botão Finalizar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <!-- Status à esquerda -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:gravity="center_vertical"
+                        android:paddingEnd="8dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Status"
+                            android:text="Status:"
                             android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
-                        <LinearLayout
+                        <TextView
+                            android:id="@+id/tvRouteStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
-                            <View
-                                android:id="@+id/statusIndicator"
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
-                                android:layout_marginEnd="4dp"
-                                android:background="@drawable/circle_shape"
-                                android:backgroundTint="@color/orange_600" />
-
-                            <TextView
-                                android:id="@+id/tvRouteStatus"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Não Iniciada"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:singleLine="true"
-                                android:ellipsize="end" />
-
-                        </LinearLayout>
+                            android:text="Em andamento"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:singleLine="true"
+                            android:ellipsize="end" />
 
                     </LinearLayout>
 
-                    <!-- Botões de Controle -->
-                    <LinearLayout
+                    <!-- Botão Finalizar à direita -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnFinishRoute"
+                        style="@style/Widget.Material3.Button"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
-                        android:orientation="horizontal"
-                        android:gravity="center">
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnStartRoute"
-                            style="@style/Widget.Material3.Button.TonalButton"
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:text="Iniciar"
-                            android:textSize="12sp" />
-                        <Space
-                            android:layout_width="8dp"
-                            android:layout_height="0dp" />
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnFinishRoute"
-                            style="@style/Widget.Material3.Button"
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:enabled="false"
-                            android:text="Finalizar"
-                            android:textSize="12sp" />
-                    </LinearLayout>
+                        android:enabled="false"
+                        android:text="Finalizar"
+                        android:textSize="14sp"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        android:gravity="center" />
 
                 </LinearLayout>
 
@@ -238,31 +232,134 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Informações do Ciclo -->
+                <!-- Título do Card -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Progresso do Ciclo"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Informações Principais em Grid -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical"
                     android:layout_marginBottom="12dp">
 
-                    <TextView
+                    <!-- Percentual de Clientes Acertados -->
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Progresso do Ciclo"
-                        android:textColor="?attr/colorPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/rounded_background"
+                        android:backgroundTint="@color/green_50"
+                        android:padding="12dp"
+                        android:layout_marginEnd="6dp">
+
+                        <TextView
+                            android:id="@+id/tvPercentualAcertados"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="85%"
+                            android:textColor="@color/green_600"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvTotalClientes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="de 32 clientes"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:layout_marginTop="2dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="acertados"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <!-- Faturamento -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/rounded_background"
+                        android:backgroundTint="@color/blue_50"
+                        android:padding="12dp"
+                        android:layout_marginHorizontal="3dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Faturou"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvFaturamento"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="R$ 2.850,50"
+                            android:textColor="@color/blue_600"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <!-- Pendências -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/rounded_background"
+                        android:backgroundTint="@color/orange_50"
+                        android:padding="12dp"
+                        android:layout_marginStart="6dp">
+
+                        <TextView
+                            android:id="@+id/tvPendencias"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="8"
+                            android:textColor="@color/orange_600"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="pendências"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
+                <!-- Barra de Progresso -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="8dp">
+                    android:layout_marginTop="8dp">
 
                     <ProgressBar
                         android:id="@+id/progressBarCycle"
@@ -341,7 +438,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="8dp">
 
                 <!-- Novo Cliente -->
                 <LinearLayout
@@ -354,12 +451,12 @@
                     android:focusable="true"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="12dp">
+                    android:padding="8dp">
 
                     <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_marginBottom="8dp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginBottom="4dp"
                         android:src="@drawable/ic_person"
                         app:tint="?attr/colorPrimary" />
 
@@ -369,7 +466,7 @@
                         android:text="Novo\nCliente"
                         android:textAlignment="center"
                         android:textColor="?attr/colorOnSurface"
-                        android:textSize="12sp"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
 
                 </LinearLayout>
@@ -378,7 +475,7 @@
                 <View
                     android:layout_width="1dp"
                     android:layout_height="match_parent"
-                    android:layout_marginVertical="8dp"
+                    android:layout_marginVertical="4dp"
                     android:background="?attr/colorOutline" />
 
                 <!-- Nova Despesa -->
@@ -392,12 +489,12 @@
                     android:focusable="true"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="12dp">
+                    android:padding="8dp">
 
                     <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_marginBottom="8dp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginBottom="4dp"
                         android:src="@drawable/ic_money"
                         app:tint="?attr/colorSecondary" />
 
@@ -407,7 +504,7 @@
                         android:text="Nova\nDespesa"
                         android:textAlignment="center"
                         android:textColor="?attr/colorOnSurface"
-                        android:textSize="12sp"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
 
                 </LinearLayout>

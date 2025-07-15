@@ -253,6 +253,12 @@ class SettlementFragment : Fragment() {
     
     private fun setupRecyclerViewComDados(mesasDTO: List<MesaDTO>) {
         Log.d("SettlementFragment", "=== CONFIGURANDO RECYCLERVIEW COM DADOS COMPLETOS ===")
+        Log.d("SettlementFragment", "Total de mesas recebidas: ${mesasDTO.size}")
+        
+        // ✅ DIAGNÓSTICO: Verificar cada mesa individualmente
+        mesasDTO.forEachIndexed { index, mesa ->
+            Log.d("SettlementFragment", "Mesa $index: ID=${mesa.id}, Número=${mesa.numero}, Tipo=${mesa.tipoMesa}, Ativa=${mesa.ativa}")
+        }
         
         mesasAcertoAdapter = MesasAcertoAdapter(
             onDataChanged = { updateCalculations() },
@@ -293,7 +299,24 @@ class SettlementFragment : Fragment() {
         mesasDTO.forEach { mesa ->
             Log.d("SettlementFragment", "Mesa ${mesa.numero}: relógio inicial=${mesa.fichasInicial}, relógio final=${mesa.fichasFinal}")
         }
+        
+        // ✅ DIAGNÓSTICO: Verificar se o adapter está sendo configurado corretamente
+        Log.d("SettlementFragment", "Adapter configurado: ${mesasAcertoAdapter.itemCount} itens")
+        Log.d("SettlementFragment", "LayoutManager configurado: ${binding.rvMesasAcerto.layoutManager}")
+        
         mesasAcertoAdapter.submitList(mesasDTO)
+        
+        // ✅ DIAGNÓSTICO: Verificar após submitList
+        Log.d("SettlementFragment", "Após submitList: ${mesasAcertoAdapter.itemCount} itens no adapter")
+        Log.d("SettlementFragment", "RecyclerView visível: ${binding.rvMesasAcerto.visibility}")
+        Log.d("SettlementFragment", "RecyclerView altura: ${binding.rvMesasAcerto.height}")
+        
+        // ✅ NOVO: Forçar atualização do RecyclerView
+        binding.rvMesasAcerto.post {
+            Log.d("SettlementFragment", "Post executado - RecyclerView atualizado")
+            Log.d("SettlementFragment", "ItemCount após post: ${mesasAcertoAdapter.itemCount}")
+            binding.rvMesasAcerto.invalidate()
+        }
     }
     
     private fun setupCalculationListeners() {
