@@ -18,6 +18,7 @@ import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.RotaRepository
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.data.repository.AcertoRepository
 import java.text.SimpleDateFormat
 import java.util.Locale
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
@@ -51,12 +52,13 @@ class ClientListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ FASE 8C: Inicializar ViewModel com CicloAcertoRepository
+        // ✅ FASE 8C: Inicializar ViewModel com CicloAcertoRepository e AcertoRepository
         val database = AppDatabase.getDatabase(requireContext())
         viewModel = ClientListViewModel(
             ClienteRepository(database.clienteDao()),
             RotaRepository(database.rotaDao()),
-            CicloAcertoRepository(database.cicloAcertoDao())
+            CicloAcertoRepository(database.cicloAcertoDao()),
+            AcertoRepository(database.acertoDao())
         )
         
         try {

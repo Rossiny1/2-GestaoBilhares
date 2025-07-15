@@ -76,7 +76,7 @@
         <!-- Hero Section com Imagem de Fundo -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="200dp">
+            android:layout_height="280dp">
 
             <ImageView
                 android:id="@+id/ivClientBackground"
@@ -98,6 +98,7 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
+                <!-- Nome do Cliente com altura mínima -->
                 <TextView
                     android:id="@+id/tvClientName"
                     android:layout_width="match_parent"
@@ -105,15 +106,20 @@
                     android:textColor="@color/white"
                     android:textSize="24sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="4dp"
+                    android:layout_marginBottom="8dp"
+                    android:minHeight="32dp"
+                    android:maxLines="2"
+                    android:ellipsize="end"
                     tools:text="Bar do João" />
 
+                <!-- Endereço com altura mínima -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="16dp">
+                    android:layout_marginBottom="20dp"
+                    android:minHeight="24dp">
 
                     <ImageView
                         android:layout_width="16dp"
@@ -129,19 +135,22 @@
                         android:layout_weight="1"
                         android:textColor="@color/white"
                         android:textSize="16sp"
+                        android:maxLines="2"
+                        android:ellipsize="end"
                         tools:text="Rua das Flores, 123 - Centro" />
 
                 </LinearLayout>
 
-                <!-- Stats Cards -->
+                <!-- Stats Cards com altura mínima garantida -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:minHeight="80dp">
 
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:layout_marginEnd="4dp"
                         app:cardCornerRadius="12dp"
@@ -150,9 +159,9 @@
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:orientation="vertical"
-                            android:padding="12dp"
+                            android:padding="16dp"
                             android:gravity="center">
 
                         <TextView
@@ -177,7 +186,7 @@
 
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:layout_marginHorizontal="4dp"
                         app:cardCornerRadius="12dp"
@@ -186,9 +195,9 @@
 
                         <LinearLayout
                         android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:orientation="vertical"
-                            android:padding="12dp"
+                            android:padding="16dp"
                             android:gravity="center">
 
                             <TextView
@@ -214,7 +223,7 @@
                     <!-- ✅ NOVO: Card Débito Atual -->
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:layout_marginStart="4dp"
                         app:cardCornerRadius="12dp"
@@ -223,9 +232,9 @@
 
                         <LinearLayout
                         android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:orientation="vertical"
-                            android:padding="12dp"
+                            android:padding="16dp"
                             android:gravity="center">
 
                             <TextView

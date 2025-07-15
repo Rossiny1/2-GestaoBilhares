@@ -147,21 +147,37 @@ class SettlementDetailFragment : Fragment() {
     }
 
     private fun setupMesasRecyclerView(settlement: SettlementDetailViewModel.SettlementDetail) {
+        // ✅ DIAGNÓSTICO: Logs detalhados para identificar o problema
+        Log.d("SettlementDetailFragment", "=== SETUP MESAS RECYCLERVIEW ===")
+        Log.d("SettlementDetailFragment", "Total de mesas no settlement: ${settlement.acertoMesas.size}")
+        settlement.acertoMesas.forEachIndexed { index, acertoMesa ->
+            Log.d("SettlementDetailFragment", "Mesa $index: ID=${acertoMesa.mesaId}, Relógio=${acertoMesa.relogioInicial}-${acertoMesa.relogioFinal}, Subtotal=${acertoMesa.subtotal}")
+        }
+        
         // ✅ MELHORIA: Buscar dados completos das mesas para exibir numeração correta
         lifecycleScope.launch {
             try {
                 val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
                 val mesasCompletas = mutableMapOf<Long, AcertoMesaDetailAdapter.MesaCompleta>()
                 
+                Log.d("SettlementDetailFragment", "=== BUSCANDO DADOS COMPLETOS DAS MESAS ===")
                 for (acertoMesa in settlement.acertoMesas) {
+                    Log.d("SettlementDetailFragment", "Buscando mesa ID: ${acertoMesa.mesaId}")
                     val mesaCompleta = mesaRepository.buscarPorId(acertoMesa.mesaId)
                     if (mesaCompleta != null) {
+                        Log.d("SettlementDetailFragment", "Mesa encontrada: ${mesaCompleta.numero} (${mesaCompleta.tipoMesa.name})")
                         mesasCompletas[acertoMesa.mesaId] = AcertoMesaDetailAdapter.MesaCompleta(
                             numero = mesaCompleta.numero,
                             tipo = mesaCompleta.tipoMesa.name
                         )
+                    } else {
+                        Log.w("SettlementDetailFragment", "Mesa não encontrada para ID: ${acertoMesa.mesaId}")
                     }
                 }
+                
+                Log.d("SettlementDetailFragment", "=== CONFIGURANDO ADAPTER ===")
+                Log.d("SettlementDetailFragment", "Mesas para adapter: ${settlement.acertoMesas.size}")
+                Log.d("SettlementDetailFragment", "Mesas completas encontradas: ${mesasCompletas.size}")
                 
                 // Configurar adapter com dados completos
                 mesaDetailAdapter = AcertoMesaDetailAdapter(
@@ -172,10 +188,13 @@ class SettlementDetailFragment : Fragment() {
                     mesasCompletas = mesasCompletas
                 )
                 
+                Log.d("SettlementDetailFragment", "=== CONFIGURANDO RECYCLERVIEW ===")
                 binding.rvMesasDetalhe.apply {
                     layoutManager = LinearLayoutManager(requireContext())
                     adapter = mesaDetailAdapter
                 }
+                
+                Log.d("SettlementDetailFragment", "Adapter configurado com ${mesaDetailAdapter?.itemCount ?: 0} itens")
                 
             } catch (e: Exception) {
                 Log.e("SettlementDetailFragment", "Erro ao carregar dados das mesas", e)

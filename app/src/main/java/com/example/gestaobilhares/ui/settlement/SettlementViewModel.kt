@@ -11,6 +11,7 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
+import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.entities.Acerto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -26,7 +27,8 @@ class SettlementViewModel(
     private val mesaRepository: MesaRepository,
     private val clienteRepository: ClienteRepository,
     private val acertoRepository: AcertoRepository,
-    private val acertoMesaRepository: AcertoMesaRepository
+    private val acertoMesaRepository: AcertoMesaRepository,
+    private val cicloAcertoRepository: CicloAcertoRepository
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -211,20 +213,35 @@ class SettlementViewModel(
             try {
                 Log.d("SettlementViewModel", "Salvando acerto com clienteId=$clienteId, mesas=${dadosAcerto.mesas.map { it.numero }}")
                 
+                // Buscar cliente uma única vez
+                val cliente = clienteRepository.obterPorId(clienteId)
+                val rotaId = cliente?.rotaId ?: 0L
+                
+                // Buscar ciclo atual da rota
+                val cicloAtual = try {
+                    val cicloAtivo = cicloAcertoRepository.buscarCicloAtivo(rotaId)
+                    if (cicloAtivo != null) {
+                        cicloAtivo.numeroCiclo
+                    } else {
+                        val ultimoCiclo = cicloAcertoRepository.buscarEstatisticasRota(rotaId)
+                        ultimoCiclo?.numeroCiclo ?: 1
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("SettlementViewModel", "Erro ao buscar ciclo atual: ${e.message}")
+                    1
+                }
+
                 // Calcular valores do acerto
                 val valorRecebido = metodosPagamento.values.sum()
                 val debitoAnterior = _debitoAnterior.value
                 val valorTotal = dadosAcerto.mesas.sumOf { mesa ->
                     if (mesa.valorFixo > 0) {
-                        mesa.valorFixo // Mesa de valor fixo
+                        mesa.valorFixo
                     } else {
-                        // Mesa de fichas jogadas - calcular baseado no cliente
-                        val cliente = clienteRepository.obterPorId(clienteId)
                         val fichasJogadas = (mesa.fichasFinal - mesa.fichasInicial).coerceAtLeast(0)
                         fichasJogadas * (cliente?.comissaoFicha ?: 0.0)
                     }
                 }
-                // ✅ CORREÇÃO: Usar o desconto passado como parâmetro
                 val valorComDesconto = valorTotal - desconto
                 val debitoAtual = debitoAnterior + valorComDesconto - valorRecebido
                 
@@ -269,6 +286,12 @@ class SettlementViewModel(
                 Log.d("SettlementViewModel", "Número do pano: '${dadosAcerto.numeroPano}'")
                 Log.d("SettlementViewModel", "Métodos de pagamento: $metodosPagamento")
 
+                // ✅ CORREÇÃO CRÍTICA: Vínculos com rota e ciclo
+                android.util.Log.d("SettlementViewModel", "=== VINCULANDO ACERTO À ROTA E CICLO ===")
+                android.util.Log.d("SettlementViewModel", "Cliente ID: $clienteId")
+                android.util.Log.d("SettlementViewModel", "Rota ID do cliente: $rotaId")
+                android.util.Log.d("SettlementViewModel", "Ciclo atual: $cicloAtual")
+                
                 val acerto = Acerto(
                     clienteId = clienteId,
                     colaboradorId = null, // ✅ CORREÇÃO: Usar null para evitar foreign key constraint
@@ -290,7 +313,10 @@ class SettlementViewModel(
                     tipoAcerto = dadosAcerto.tipoAcerto,
                     panoTrocado = dadosAcerto.panoTrocado,
                     numeroPano = dadosAcerto.numeroPano,
-                    dadosExtrasJson = dadosExtrasJson
+                    dadosExtrasJson = dadosExtrasJson,
+                    // ✅ CORREÇÃO CRÍTICA: Vínculos com rota e ciclo
+                    rotaId = rotaId,
+                    cicloAcerto = cicloAtual
                 )
                 
                 val acertoId = acertoRepository.inserir(acerto)
@@ -302,7 +328,6 @@ class SettlementViewModel(
                 Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Observação no banco após salvamento: '${acertoSalvo?.observacoes}'")
                 
                 // ✅ CORREÇÃO CRÍTICA: Salvar dados detalhados de cada mesa do acerto com logs
-                val cliente = clienteRepository.obterPorId(clienteId)
                 Log.d("SettlementViewModel", "=== SALVANDO MESAS DO ACERTO ===")
                 Log.d("SettlementViewModel", "Total de mesas recebidas: ${dadosAcerto.mesas.size}")
                 Log.d("SettlementViewModel", "Cliente encontrado: ${cliente?.nome}")

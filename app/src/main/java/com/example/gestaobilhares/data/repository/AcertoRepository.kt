@@ -50,4 +50,14 @@ class AcertoRepository @Inject constructor(
             null
         }
     }
+
+    /**
+     * ✅ NOVO: Busca acertos por rota e ciclo específico
+     * @param rotaId ID da rota
+     * @param cicloAcerto Número do ciclo de acerto
+     * @return Flow com lista de acertos da rota e ciclo
+     */
+    fun buscarPorRotaECiclo(rotaId: Long, cicloAcerto: Int): Flow<List<Acerto>> {
+        return acertoDao.buscarPorRotaECiclo(rotaId, cicloAcerto)
+    }
 } 

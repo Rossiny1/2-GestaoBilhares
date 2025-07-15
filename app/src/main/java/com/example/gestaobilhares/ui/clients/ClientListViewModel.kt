@@ -10,12 +10,14 @@ import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.RotaRepository
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.data.repository.AcertoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -34,7 +36,8 @@ enum class FiltroCliente {
 class ClientListViewModel(
     private val clienteRepository: ClienteRepository,
     private val rotaRepository: RotaRepository,
-    private val cicloAcertoRepository: CicloAcertoRepository
+    private val cicloAcertoRepository: CicloAcertoRepository,
+    private val acertoRepository: AcertoRepository
 ) : ViewModel() {
 
     private val _rotaInfo = MutableStateFlow<Rota?>(null)
@@ -415,13 +418,19 @@ class ClientListViewModel(
     }
 
     /**
-     * ✅ NOVO: Calcula quantos clientes foram acertados no ciclo atual
+     * ✅ CORRIGIDO: Calcula quantos clientes foram acertados no ciclo atual usando dados reais
      */
     private suspend fun calcularClientesAcertadosNoCiclo(clientes: List<Cliente>, cicloAtual: Int): Int {
         return try {
-            // TODO: Implementar busca real no banco quando tivermos os acertos vinculados ao ciclo
-            // Por enquanto, simula baseado no status dos clientes
-            clientes.count { it.ativo && it.debitoAtual <= 100.0 }
+            // Buscar acertos reais do banco de dados para esta rota e ciclo
+            val acertos = acertoRepository.buscarPorRotaECiclo(rotaId, cicloAtual).first()
+            
+            // Contar clientes únicos que foram acertados
+            val clientesAcertados = acertos.map { it.clienteId }.distinct()
+            
+            android.util.Log.d("ClientListViewModel", "✅ Clientes acertados no ciclo $cicloAtual: ${clientesAcertados.size} de ${clientes.size}")
+            
+            clientesAcertados.size
         } catch (e: Exception) {
             android.util.Log.e("ClientListViewModel", "Erro ao calcular clientes acertados: ${e.message}")
             0
@@ -429,14 +438,19 @@ class ClientListViewModel(
     }
 
     /**
-     * ✅ NOVO: Calcula faturamento do ciclo atual
+     * ✅ CORRIGIDO: Calcula faturamento real do ciclo atual
      */
     private suspend fun calcularFaturamentoCicloAtual(cicloAtual: Int): Double {
         return try {
-            // TODO: Implementar busca real no banco quando tivermos os acertos vinculados ao ciclo
-            // Por enquanto, simula baseado no ciclo
-            val baseFaturamento = 2500.0
-            baseFaturamento + (cicloAtual * 350.0)
+            // Buscar acertos reais do banco de dados para esta rota e ciclo
+            val acertos = acertoRepository.buscarPorRotaECiclo(rotaId, cicloAtual).first()
+            
+            // Somar todos os valores recebidos dos acertos
+            val faturamentoTotal = acertos.sumOf { it.valorRecebido }
+            
+            android.util.Log.d("ClientListViewModel", "✅ Faturamento real do ciclo $cicloAtual: R$ $faturamentoTotal")
+            
+            faturamentoTotal
         } catch (e: Exception) {
             android.util.Log.e("ClientListViewModel", "Erro ao calcular faturamento: ${e.message}")
             0.0

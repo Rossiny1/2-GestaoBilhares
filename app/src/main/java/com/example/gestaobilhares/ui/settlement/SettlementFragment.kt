@@ -25,6 +25,7 @@ import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.AcertoMesaRepository
+import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -74,7 +75,8 @@ class SettlementFragment : Fragment() {
             MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao()),
             ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
             AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao()),
-            AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao())
+            AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao()),
+            CicloAcertoRepository(AppDatabase.getDatabase(requireContext()).cicloAcertoDao())
         )
         
         Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
