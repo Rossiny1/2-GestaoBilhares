@@ -23,9 +23,11 @@ import com.example.gestaobilhares.data.entities.*
         Acerto::class,
         Despesa::class,
         AcertoMesa::class,
-        CicloAcertoEntity::class // ✅ FASE 8A: NOVA ENTIDADE PARA HISTÓRICO DE CICLOS
+        CicloAcertoEntity::class, // ✅ FASE 8A: NOVA ENTIDADE PARA HISTÓRICO DE CICLOS
+        CategoriaDespesa::class, // ✅ NOVO: CATEGORIAS DE DESPESAS
+        TipoDespesa::class // ✅ NOVO: TIPOS DE DESPESAS
     ],
-    version = 10, // ✅ FASE 8A: VÍNCULOS ROTA/CICLO EM ACERTO E DESPESA + NOVA ENTIDADE CICLOACERTOENTITY
+    version = 11, // ✅ NOVO: ADICIONADAS ENTIDADES DE CATEGORIA E TIPO DE DESPESAS
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -72,6 +74,18 @@ abstract class AppDatabase : RoomDatabase() {
      * ✅ FASE 8A: NOVO DAO PARA HISTÓRICO DE CICLOS
      */
     abstract fun cicloAcertoDao(): com.example.gestaobilhares.data.dao.CicloAcertoDao
+    
+    /**
+     * DAO para operações com categorias de despesas.
+     * ✅ NOVO: CATEGORIAS DE DESPESAS
+     */
+    abstract fun categoriaDespesaDao(): com.example.gestaobilhares.data.dao.CategoriaDespesaDao
+    
+    /**
+     * DAO para operações com tipos de despesas.
+     * ✅ NOVO: TIPOS DE DESPESAS
+     */
+    abstract fun tipoDespesaDao(): com.example.gestaobilhares.data.dao.TipoDespesaDao
 
     companion object {
         

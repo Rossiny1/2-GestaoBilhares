@@ -6,8 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Repository para gerenciar despesas.
@@ -15,13 +13,12 @@ import javax.inject.Singleton
  * 
  * @property despesaDao DAO para operações no banco de dados
  */
-@Singleton
-class DespesaRepository @Inject constructor(
+class DespesaRepository(
     private val despesaDao: DespesaDao
 ) {
     
-    // Flag para usar dados mock durante desenvolvimento
-    private val usarDadosMock = true
+    // ✅ CORRIGIDO: Usar dados reais do banco de dados
+    private val usarDadosMock = false
     
     /**
      * Busca todas as despesas com informações das rotas.
@@ -123,6 +120,20 @@ class DespesaRepository @Inject constructor(
             despesaDao.calcularTotalPorRota(rotaId)
         }
     }
+    
+    /**
+     * ✅ NOVO: Busca despesas por rota e ciclo específico.
+     * @param rotaId ID da rota
+     * @param cicloAcerto Número do ciclo
+     * @return Flow com lista de despesas da rota e ciclo
+     */
+    fun buscarPorRotaECiclo(rotaId: Long, cicloAcerto: Int): Flow<List<Despesa>> {
+        return if (usarDadosMock) {
+            flowOf(obterDespesasMockPorRota(rotaId).filter { true }) // Mock sempre retorna vazio
+        } else {
+            despesaDao.buscarPorRotaECiclo(rotaId, cicloAcerto)
+        }
+    }
 
     /**
      * Dados mock para desenvolvimento e testes.
@@ -137,7 +148,7 @@ class DespesaRepository @Inject constructor(
                 rotaId = 1,
                 descricao = "Combustível para veículo",
                 valor = 85.50,
-                categoria = CategoriaDespesa.COMBUSTIVEL.displayName,
+                categoria = CategoriaDespesaEnum.COMBUSTIVEL.displayName,
                 dataHora = agora.minusDays(1),
                 observacoes = "Posto BR - Km 150",
                 criadoPor = "João Silva",
@@ -148,7 +159,7 @@ class DespesaRepository @Inject constructor(
                 rotaId = 1,
                 descricao = "Almoço da equipe",
                 valor = 45.00,
-                categoria = CategoriaDespesa.ALIMENTACAO.displayName,
+                categoria = CategoriaDespesaEnum.ALIMENTACAO.displayName,
                 dataHora = agora.minusDays(2),
                 observacoes = "Restaurante do João",
                 criadoPor = "João Silva",
@@ -159,7 +170,7 @@ class DespesaRepository @Inject constructor(
                 rotaId = 2,
                 descricao = "Manutenção preventiva",
                 valor = 120.00,
-                categoria = CategoriaDespesa.MANUTENCAO.displayName,
+                categoria = CategoriaDespesaEnum.MANUTENCAO.displayName,
                 dataHora = agora.minusDays(3),
                 observacoes = "Troca de óleo e filtros",
                 criadoPor = "Maria Santos",
@@ -170,7 +181,7 @@ class DespesaRepository @Inject constructor(
                 rotaId = 2,
                 descricao = "Material de limpeza",
                 valor = 32.75,
-                categoria = CategoriaDespesa.MATERIAIS.displayName,
+                categoria = CategoriaDespesaEnum.MATERIAIS.displayName,
                 dataHora = agora.minusDays(4),
                 observacoes = "Produtos para limpeza das mesas",
                 criadoPor = "Maria Santos",
@@ -181,7 +192,7 @@ class DespesaRepository @Inject constructor(
                 rotaId = 3,
                 descricao = "Passagem de ônibus",
                 valor = 8.50,
-                categoria = CategoriaDespesa.TRANSPORTE.displayName,
+                categoria = CategoriaDespesaEnum.TRANSPORTE.displayName,
                 dataHora = agora.minusDays(5),
                 observacoes = "Transporte para cliente",
                 criadoPor = "Carlos Oliveira",

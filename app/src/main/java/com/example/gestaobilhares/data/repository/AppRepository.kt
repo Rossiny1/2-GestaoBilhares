@@ -2,6 +2,7 @@ package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.*
 import com.example.gestaobilhares.data.entities.*
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * ✅ REPOSITORY CONSOLIDADO - AppRepository
@@ -14,7 +15,7 @@ class AppRepository(
     private val mesaDao: MesaDao,
     private val rotaDao: RotaDao,
     private val despesaDao: DespesaDao,
-    private val colaboradorDao: ColaboradorDao
+    private val colaboradorDao: ColaboradorDao? = null
 ) {
     
     // ==================== CLIENTE ====================
@@ -108,15 +109,16 @@ class AppRepository(
     suspend fun calcularTotalGeral() = despesaDao.calcularTotalGeral()
     suspend fun contarDespesasPorRota(rotaId: Long) = despesaDao.contarPorRota(rotaId)
     suspend fun deletarDespesasPorRota(rotaId: Long) = despesaDao.deletarPorRota(rotaId)
+    fun buscarDespesasPorRotaECiclo(rotaId: Long, cicloAcerto: Int) = despesaDao.buscarPorRotaECiclo(rotaId, cicloAcerto)
     
     // ==================== COLABORADOR ====================
     
-    fun obterTodosColaboradores() = colaboradorDao.obterTodos()
-    fun obterColaboradoresAtivos() = colaboradorDao.obterAtivos()
-    suspend fun obterColaboradorPorId(id: Long) = colaboradorDao.obterPorId(id)
-    suspend fun obterColaboradorPorEmail(email: String) = colaboradorDao.obterPorEmail(email)
-    suspend fun inserirColaborador(colaborador: Colaborador) = colaboradorDao.inserir(colaborador)
-    suspend fun atualizarColaborador(colaborador: Colaborador) = colaboradorDao.atualizar(colaborador)
-    suspend fun deletarColaborador(colaborador: Colaborador) = colaboradorDao.deletar(colaborador)
-    suspend fun contarColaboradoresAtivos() = colaboradorDao.contarAtivos()
+    fun obterTodosColaboradores() = colaboradorDao?.obterTodos() ?: flowOf(emptyList())
+    fun obterColaboradoresAtivos() = colaboradorDao?.obterAtivos() ?: flowOf(emptyList())
+    suspend fun obterColaboradorPorId(id: Long) = colaboradorDao?.obterPorId(id)
+    suspend fun obterColaboradorPorEmail(email: String) = colaboradorDao?.obterPorEmail(email)
+    suspend fun inserirColaborador(colaborador: Colaborador) = colaboradorDao?.inserir(colaborador) ?: 0L
+    suspend fun atualizarColaborador(colaborador: Colaborador) = colaboradorDao?.atualizar(colaborador)
+    suspend fun deletarColaborador(colaborador: Colaborador) = colaboradorDao?.deletar(colaborador)
+    suspend fun contarColaboradoresAtivos() = colaboradorDao?.contarAtivos() ?: 0
 } 

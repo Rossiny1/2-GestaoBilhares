@@ -84,6 +84,10 @@
         <action
             android:id="@+id/action_clientListFragment_to_cycleHistoryFragment"
             app:destination="@id/cycleHistoryFragment" />
+        <!-- ✅ NOVO: Navegação para cadastro de despesas -->
+        <action
+            android:id="@+id/action_clientListFragment_to_expenseRegisterFragment"
+            app:destination="@id/expenseRegisterFragment" />
     </fragment>
 
     <!-- FASE 4A: Tela de detalhes do cliente -->
@@ -203,6 +207,17 @@
         android:label="Detalhes do Ciclo">
         <argument
             android:name="cicloId"
+            app:argType="long"
+            android:defaultValue="0L" />
+    </fragment>
+
+    <!-- ✅ NOVO: Tela de cadastro de despesas -->
+    <fragment
+        android:id="@+id/expenseRegisterFragment"
+        android:name="com.example.gestaobilhares.ui.expenses.ExpenseRegisterFragment"
+        android:label="Nova Despesa">
+        <argument
+            android:name="rotaId"
             app:argType="long"
             android:defaultValue="0L" />
     </fragment>

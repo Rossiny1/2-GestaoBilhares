@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
-import com.example.gestaobilhares.data.entities.CategoriaDespesa
+import com.example.gestaobilhares.data.entities.CategoriaDespesaEnum
 import com.example.gestaobilhares.data.entities.DespesaResumo
 import com.example.gestaobilhares.databinding.FragmentExpenseHistoryBinding
 import com.google.android.material.chip.Chip
@@ -103,29 +103,29 @@ class ExpenseHistoryFragment : Fragment() {
         }
 
         // Chips de categorias
-        binding.chipCombustivel.setOnClickListener {
-            viewModel.filterByCategory(CategoriaDespesa.COMBUSTIVEL.displayName)
-            updateChipSelection(CategoriaDespesa.COMBUSTIVEL.displayName)
+                binding.chipCombustivel.setOnClickListener {
+            viewModel.filterByCategory(CategoriaDespesaEnum.COMBUSTIVEL.displayName)
+            updateChipSelection(CategoriaDespesaEnum.COMBUSTIVEL.displayName)
         }
-
+        
         binding.chipAlimentacao.setOnClickListener {
-            viewModel.filterByCategory(CategoriaDespesa.ALIMENTACAO.displayName)
-            updateChipSelection(CategoriaDespesa.ALIMENTACAO.displayName)
+            viewModel.filterByCategory(CategoriaDespesaEnum.ALIMENTACAO.displayName)
+            updateChipSelection(CategoriaDespesaEnum.ALIMENTACAO.displayName)
         }
-
+        
         binding.chipTransporte.setOnClickListener {
-            viewModel.filterByCategory(CategoriaDespesa.TRANSPORTE.displayName)
-            updateChipSelection(CategoriaDespesa.TRANSPORTE.displayName)
+            viewModel.filterByCategory(CategoriaDespesaEnum.TRANSPORTE.displayName)
+            updateChipSelection(CategoriaDespesaEnum.TRANSPORTE.displayName)
         }
-
+        
         binding.chipManutencao.setOnClickListener {
-            viewModel.filterByCategory(CategoriaDespesa.MANUTENCAO.displayName)
-            updateChipSelection(CategoriaDespesa.MANUTENCAO.displayName)
+            viewModel.filterByCategory(CategoriaDespesaEnum.MANUTENCAO.displayName)
+            updateChipSelection(CategoriaDespesaEnum.MANUTENCAO.displayName)
         }
-
+        
         binding.chipMateriais.setOnClickListener {
-            viewModel.filterByCategory(CategoriaDespesa.MATERIAIS.displayName)
-            updateChipSelection(CategoriaDespesa.MATERIAIS.displayName)
+            viewModel.filterByCategory(CategoriaDespesaEnum.MATERIAIS.displayName)
+            updateChipSelection(CategoriaDespesaEnum.MATERIAIS.displayName)
         }
     }
 
@@ -143,11 +143,11 @@ class ExpenseHistoryFragment : Fragment() {
         // Marca o chip selecionado
         when (selectedCategory) {
             null -> binding.chipTodas.isChecked = true
-            CategoriaDespesa.COMBUSTIVEL.displayName -> binding.chipCombustivel.isChecked = true
-            CategoriaDespesa.ALIMENTACAO.displayName -> binding.chipAlimentacao.isChecked = true
-            CategoriaDespesa.TRANSPORTE.displayName -> binding.chipTransporte.isChecked = true
-            CategoriaDespesa.MANUTENCAO.displayName -> binding.chipManutencao.isChecked = true
-            CategoriaDespesa.MATERIAIS.displayName -> binding.chipMateriais.isChecked = true
+            CategoriaDespesaEnum.COMBUSTIVEL.displayName -> binding.chipCombustivel.isChecked = true
+            CategoriaDespesaEnum.ALIMENTACAO.displayName -> binding.chipAlimentacao.isChecked = true
+            CategoriaDespesaEnum.TRANSPORTE.displayName -> binding.chipTransporte.isChecked = true
+            CategoriaDespesaEnum.MANUTENCAO.displayName -> binding.chipManutencao.isChecked = true
+            CategoriaDespesaEnum.MATERIAIS.displayName -> binding.chipMateriais.isChecked = true
         }
     }
 

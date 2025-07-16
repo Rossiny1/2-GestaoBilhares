@@ -19,6 +19,7 @@ import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.RotaRepository
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import java.text.SimpleDateFormat
 import java.util.Locale
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
@@ -52,13 +53,21 @@ class ClientListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ FASE 8C: Inicializar ViewModel com CicloAcertoRepository e AcertoRepository
+        // ✅ FASE 8C: Inicializar ViewModel com todos os repositórios necessários
         val database = AppDatabase.getDatabase(requireContext())
         viewModel = ClientListViewModel(
             ClienteRepository(database.clienteDao()),
             RotaRepository(database.rotaDao()),
             CicloAcertoRepository(database.cicloAcertoDao()),
-            AcertoRepository(database.acertoDao())
+            AcertoRepository(database.acertoDao()),
+            AppRepository(
+                database.clienteDao(),
+                database.acertoDao(),
+                database.mesaDao(),
+                database.rotaDao(),
+                database.despesaDao(),
+                null // ColaboradorDao não implementado ainda
+            )
         )
         
         try {
@@ -156,11 +165,9 @@ class ClientListFragment : Fragment() {
             }
             
             binding.btnAddExpense.setOnClickListener {
-                androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                    .setTitle("Cadastrar Despesa")
-                    .setMessage("Funcionalidade será implementada na próxima fase!")
-                    .setPositiveButton("OK", null)
-                    .show()
+                val action = ClientListFragmentDirections
+                    .actionClientListFragmentToExpenseRegisterFragment(args.rotaId)
+                findNavController().navigate(action)
             }
             
             // Filtros rápidos
@@ -265,6 +272,18 @@ class ClientListFragment : Fragment() {
                     _binding?.tvPendencias?.text = pendencias.toString()
                 } catch (e: Exception) {
                     android.util.Log.e("ClientListFragment", "Erro ao atualizar pendências: ${e.message}")
+                }
+            }
+        }
+        
+        // ✅ NOVO: Observar despesas do ciclo atual
+        lifecycleScope.launch {
+            viewModel.despesas.collect { despesas ->
+                try {
+                    val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+                    _binding?.tvDespesas?.text = formatter.format(despesas)
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar despesas: ${e.message}")
                 }
             }
         }

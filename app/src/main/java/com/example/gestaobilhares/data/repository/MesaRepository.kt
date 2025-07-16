@@ -3,16 +3,13 @@ package com.example.gestaobilhares.data.repository
 import com.example.gestaobilhares.data.dao.MesaDao
 import com.example.gestaobilhares.data.entities.Mesa
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Repository para operações relacionadas a mesas
  * Implementa o padrão Repository para abstrair a camada de dados
  * e fornecer uma interface limpa para os ViewModels.
  */
-@Singleton
-class MesaRepository @Inject constructor(
+class MesaRepository(
     private val mesaDao: MesaDao
 ) {
     fun obterMesasPorCliente(clienteId: Long): Flow<List<Mesa>> =

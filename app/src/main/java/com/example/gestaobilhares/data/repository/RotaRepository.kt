@@ -6,16 +6,13 @@ import com.example.gestaobilhares.data.entities.RotaResumo
 import com.example.gestaobilhares.data.entities.StatusRota
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Repository para gerenciar dados das rotas.
  * Atua como uma única fonte de verdade para os dados das rotas.
  * Coordena entre o banco de dados local e futuras fontes remotas.
  */
-@Singleton
-class RotaRepository @Inject constructor(
+class RotaRepository(
     private val rotaDao: RotaDao
 ) {
     

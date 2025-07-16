@@ -92,18 +92,7 @@ class Converters {
         return StatusAcerto.valueOf(value)
     }
     
-    /**
-     * Conversores para CategoriaDespesa enum
-     */
-    @TypeConverter
-    fun fromCategoriaDespesa(value: CategoriaDespesa): String {
-        return value.name
-    }
-
-    @TypeConverter
-    fun toCategoriaDespesa(value: String): CategoriaDespesa {
-        return CategoriaDespesa.valueOf(value)
-    }
+    // Conversores para CategoriaDespesa enum removidos - agora usando entidades dinâmicas
     
     /**
      * Conversores para LocalDateTime

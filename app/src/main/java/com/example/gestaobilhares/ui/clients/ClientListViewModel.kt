@@ -7,10 +7,12 @@ import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.StatusRota
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
+import com.example.gestaobilhares.data.entities.Despesa
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.RotaRepository
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,7 +39,8 @@ class ClientListViewModel(
     private val clienteRepository: ClienteRepository,
     private val rotaRepository: RotaRepository,
     private val cicloAcertoRepository: CicloAcertoRepository,
-    private val acertoRepository: AcertoRepository
+    private val acertoRepository: AcertoRepository,
+    private val appRepository: AppRepository
 ) : ViewModel() {
 
     private val _rotaInfo = MutableStateFlow<Rota?>(null)
@@ -74,6 +77,10 @@ class ClientListViewModel(
     
     private val _pendencias = MutableStateFlow(0)
     val pendencias: StateFlow<Int> = _pendencias.asStateFlow()
+    
+    // ✅ NOVO: Dados de despesas do ciclo atual
+    private val _despesas = MutableStateFlow(0.0)
+    val despesas: StateFlow<Double> = _despesas.asStateFlow()
 
     private val _clientesTodos = MutableStateFlow<List<Cliente>>(emptyList())
     private val _filtroAtual = MutableStateFlow(FiltroCliente.ATIVOS)
@@ -412,11 +419,15 @@ class ClientListViewModel(
             val faturamento = calcularFaturamentoCicloAtual(cicloAtual)
             _faturamento.value = faturamento
             
+            // Calcular despesas do ciclo atual
+            val despesas = calcularDespesasCicloAtual(cicloAtual)
+            _despesas.value = despesas
+            
             // Calcular pendências
             val pendencias = calcularPendencias(clientes)
             _pendencias.value = pendencias
             
-            android.util.Log.d("ClientListViewModel", "✅ Dados do progresso calculados: $percentual% de $totalClientes clientes, R$ $faturamento, $pendencias pendências")
+            android.util.Log.d("ClientListViewModel", "✅ Dados do progresso calculados: $percentual% de $totalClientes clientes, R$ $faturamento, R$ $despesas despesas, $pendencias pendências")
             
         } catch (e: Exception) {
             android.util.Log.e("ClientListViewModel", "Erro ao calcular dados do progresso: ${e.message}")
@@ -470,29 +481,57 @@ class ClientListViewModel(
     }
 
     /**
-     * ✅ NOVO: Calcula pendências do ciclo anterior (débitos > R$300 + sem acerto há >4 meses)
+     * ✅ NOVO: Calcula despesas reais do ciclo atual
+     */
+    private suspend fun calcularDespesasCicloAtual(cicloAtual: Int): Double {
+        return try {
+            // Buscar despesas reais do banco de dados para esta rota e ciclo
+            val despesas = appRepository.buscarDespesasPorRotaECiclo(rotaId, cicloAtual).first()
+            
+            // Somar todos os valores das despesas
+            val totalDespesas = despesas.sumOf { despesa: Despesa -> despesa.valor }
+            
+            android.util.Log.d("ClientListViewModel", "✅ Despesas reais do ciclo $cicloAtual: R$ $totalDespesas")
+            
+            totalDespesas
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListViewModel", "Erro ao calcular despesas: ${e.message}")
+            0.0
+        }
+    }
+
+    /**
+     * ✅ CORRIGIDO: Calcula pendências reais (débitos > R$300 + sem acerto há >4 meses)
      */
     private suspend fun calcularPendencias(clientes: List<Cliente>): Int {
         return try {
-            val cicloAtual = _cicloAcerto.value
-            val cicloAnterior = cicloAtual - 1
+            val agora = java.util.Calendar.getInstance().time
+            val quatroMesesAtras = java.util.Calendar.getInstance().apply {
+                add(java.util.Calendar.MONTH, -4)
+            }.time
             
-            // Se é o primeiro ciclo, não há pendências do ciclo anterior
-            if (cicloAnterior <= 0) {
-                android.util.Log.d("ClientListViewModel", "✅ Primeiro ciclo - sem pendências anteriores")
-                return 0
+            var pendencias = 0
+            
+            for (cliente in clientes) {
+                // Buscar último acerto do cliente
+                val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(cliente.id)
+                
+                val temPendencia = when {
+                    // Cliente com débito > R$300
+                    cliente.debitoAnterior > 300.0 -> true
+                    
+                    // Cliente sem acerto há mais de 4 meses
+                    ultimoAcerto == null || ultimoAcerto.dataAcerto.before(quatroMesesAtras) -> true
+                    
+                    else -> false
+                }
+                
+                if (temPendencia) {
+                    pendencias++
+                }
             }
             
-            // Buscar acertos do ciclo anterior para identificar pendências
-            val acertosCicloAnterior = acertoRepository.buscarPorRotaECiclo(rotaId, cicloAnterior).first()
-            val clientesAcertadosCicloAnterior = acertosCicloAnterior.map { it.clienteId }.toSet()
-            
-            // Contar clientes que NÃO foram acertados no ciclo anterior
-            val pendencias = clientes.count { cliente ->
-                !clientesAcertadosCicloAnterior.contains(cliente.id)
-            }
-            
-            android.util.Log.d("ClientListViewModel", "✅ Pendências do ciclo anterior ($cicloAnterior): $pendencias de ${clientes.size} clientes")
+            android.util.Log.d("ClientListViewModel", "✅ Pendências calculadas: $pendencias de ${clientes.size} clientes (débito>R$300 ou sem acerto>4meses)")
             
             pendencias
         } catch (e: Exception) {

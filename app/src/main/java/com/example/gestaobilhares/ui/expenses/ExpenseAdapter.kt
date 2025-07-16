@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.DespesaResumo
-import com.example.gestaobilhares.data.entities.CategoriaDespesa
+import com.example.gestaobilhares.data.entities.CategoriaDespesaEnum
 import com.example.gestaobilhares.databinding.ItemExpenseBinding
 import java.text.NumberFormat
 import java.time.LocalDateTime
@@ -122,11 +122,11 @@ class ExpenseAdapter(
          */
         private fun getCategoryIcon(categoria: String): Int {
             return when (categoria) {
-                CategoriaDespesa.COMBUSTIVEL.displayName -> R.drawable.ic_local_gas_station
-                CategoriaDespesa.ALIMENTACAO.displayName -> R.drawable.ic_restaurant
-                CategoriaDespesa.TRANSPORTE.displayName -> R.drawable.ic_directions_bus
-                CategoriaDespesa.MANUTENCAO.displayName -> R.drawable.ic_build
-                CategoriaDespesa.MATERIAIS.displayName -> R.drawable.ic_inventory
+                CategoriaDespesaEnum.COMBUSTIVEL.displayName -> R.drawable.ic_local_gas_station
+                CategoriaDespesaEnum.ALIMENTACAO.displayName -> R.drawable.ic_restaurant
+                CategoriaDespesaEnum.TRANSPORTE.displayName -> R.drawable.ic_directions_bus
+                CategoriaDespesaEnum.MANUTENCAO.displayName -> R.drawable.ic_build
+                CategoriaDespesaEnum.MATERIAIS.displayName -> R.drawable.ic_inventory
                 else -> R.drawable.ic_receipt
             }
         }

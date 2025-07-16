@@ -3,11 +3,8 @@ package com.example.gestaobilhares.data.repository
 import com.example.gestaobilhares.data.dao.AcertoDao
 import com.example.gestaobilhares.data.entities.Acerto
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class AcertoRepository @Inject constructor(
+class AcertoRepository(
     private val acertoDao: AcertoDao
 ) {
     suspend fun inserir(acerto: Acerto): Long = acertoDao.inserir(acerto)

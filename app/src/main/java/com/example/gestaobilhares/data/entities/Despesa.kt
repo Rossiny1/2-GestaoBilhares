@@ -49,6 +49,9 @@ data class Despesa(
     
     val categoria: String,
     
+    // ✅ NOVO: VÍNCULO COM TIPO DE DESPESA
+    val tipoDespesa: String = "",
+    
     val dataHora: LocalDateTime = LocalDateTime.now(),
     
     val observacoes: String = "",
@@ -60,9 +63,9 @@ data class Despesa(
 )
 
 /**
- * Enum para categorias de despesas
+ * Enum para categorias de despesas (legado - será substituído por entidades dinâmicas)
  */
-enum class CategoriaDespesa(val displayName: String) {
+enum class CategoriaDespesaEnum(val displayName: String) {
     COMBUSTIVEL("Combustível"),
     ALIMENTACAO("Alimentação"),
     TRANSPORTE("Transporte"),

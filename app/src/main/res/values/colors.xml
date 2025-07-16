@@ -83,6 +83,7 @@
     <color name="blue_600">#1E88E5</color>
     <color name="blue_700">#1976D2</color>
     <color name="info">#2196F3</color>
+    <color name="primary_blue">#1976D2</color>
     
     <!-- Cores cinzas -->
     <color name="gray_50">#FAFAFA</color>
