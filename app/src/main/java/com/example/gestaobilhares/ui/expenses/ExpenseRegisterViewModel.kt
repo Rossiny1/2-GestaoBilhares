@@ -227,7 +227,7 @@ class ExpenseRegisterViewModel(
                 }
 
                 // ✅ CORRIGIDO: Usar ciclo ativo real
-                val cicloAtual = cicloAtivo.numeroCiclo
+                val cicloId = cicloAtivo.id
 
                 // Criar despesa
                 val despesa = Despesa(
@@ -239,7 +239,7 @@ class ExpenseRegisterViewModel(
                     dataHora = _selectedDate.value,
                     observacoes = observacoes,
                     criadoPor = "Sistema", // TODO: Pegar usuário atual
-                    cicloAcerto = cicloAtual
+                    cicloId = cicloId
                 )
 
                 val despesaId = despesaRepository.inserir(despesa)

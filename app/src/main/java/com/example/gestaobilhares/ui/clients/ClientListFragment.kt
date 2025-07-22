@@ -27,7 +27,9 @@ import java.text.NumberFormat
 import android.view.animation.AnimationUtils
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import android.util.Log
 
 /**
  * Fragment modernizado para lista de clientes com controle de status da rota
@@ -52,6 +54,7 @@ class ClientListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        android.util.Log.d("DEBUG_DIAG", "onViewCreated chamado - TESTE DE LOG")
         
         // ✅ FASE 8C: Inicializar ViewModel com todos os repositórios necessários
         val database = AppDatabase.getDatabase(requireContext())
@@ -59,7 +62,7 @@ class ClientListFragment : Fragment() {
             ClienteRepository(database.clienteDao()),
             RotaRepository(database.rotaDao()),
             CicloAcertoRepository(database.cicloAcertoDao()),
-            AcertoRepository(database.acertoDao()),
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
             AppRepository(
                 database.clienteDao(),
                 database.acertoDao(),
@@ -185,6 +188,11 @@ class ClientListFragment : Fragment() {
                 viewModel.aplicarFiltro(FiltroCliente.TODOS)
                 atualizarEstadoFiltros(binding.btnFilterAll)
             }
+
+            val fabLogs: FloatingActionButton? = view?.findViewById(R.id.fab_logs)
+            fabLogs?.setOnClickListener {
+                findNavController().navigate(R.id.logViewerFragment)
+            }
         }
     }
     
@@ -222,79 +230,41 @@ class ClientListFragment : Fragment() {
             }
         }
         
-        // ✅ FASE 8C: Observar progresso do ciclo real
+        // Remover observação dos StateFlows antigos do card de progresso
+        // lifecycleScope.launch { viewModel.progressoCiclo.collect { ... } }
+        // lifecycleScope.launch { viewModel.percentualAcertados.collect { ... } }
+        // lifecycleScope.launch { viewModel.totalClientes.collect { ... } }
+        // lifecycleScope.launch { viewModel.faturamento.collect { ... } }
+        // lifecycleScope.launch { viewModel.pendencias.collect { ... } }
+        // lifecycleScope.launch { viewModel.despesas.collect { ... } }
+        // O card de progresso deve ser atualizado apenas via cicloProgressoCard
         lifecycleScope.launch {
-            viewModel.progressoCiclo.collect { progresso ->
+            viewModel.cicloProgressoCard.collect { card ->
                 try {
-                    // ProgressBar removido do layout, apenas log para debug
-                    android.util.Log.d("ClientListFragment", "Progresso do ciclo: $progresso")
+                    card?.let {
+                        val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+                        _binding?.tvPercentualAcertados?.text = "${it.percentual}%"
+                        _binding?.tvTotalClientes?.text = "de ${it.totalClientes} clientes"
+                        _binding?.tvFaturamento?.text = formatter.format(it.receita)
+                        _binding?.tvDespesas?.text = formatter.format(it.despesas)
+                        _binding?.tvPendencias?.text = it.pendencias.toString()
+                    }
                 } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar progresso: ${e.message}")
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar card de progresso: ${e.message}")
                 }
             }
         }
-        
-        // ✅ NOVO: Observar dados do card de progresso
-        lifecycleScope.launch {
-            viewModel.percentualAcertados.collect { percentual ->
-                try {
-                    _binding?.tvPercentualAcertados?.text = "$percentual%"
-                } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar percentual: ${e.message}")
-                }
-            }
-        }
-        
-        lifecycleScope.launch {
-            viewModel.totalClientes.collect { total ->
-                try {
-                    _binding?.tvTotalClientes?.text = "de $total clientes"
-                } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar total clientes: ${e.message}")
-                }
-            }
-        }
-        
-        lifecycleScope.launch {
-            viewModel.faturamento.collect { faturamento ->
-                try {
-                    val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
-                    _binding?.tvFaturamento?.text = formatter.format(faturamento)
-                } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar faturamento: ${e.message}")
-                }
-            }
-        }
-        
-        lifecycleScope.launch {
-            viewModel.pendencias.collect { pendencias ->
-                try {
-                    _binding?.tvPendencias?.text = pendencias.toString()
-                } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar pendências: ${e.message}")
-                }
-            }
-        }
-        
-        // ✅ NOVO: Observar despesas do ciclo atual
-        lifecycleScope.launch {
-            viewModel.despesas.collect { despesas ->
-                try {
-                    val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
-                    _binding?.tvDespesas?.text = formatter.format(despesas)
-                } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar despesas: ${e.message}")
-                }
-            }
-        }
-
         
         // ✅ FASE 9A: Observar clientes com empty state melhorado
         lifecycleScope.launch {
             viewModel.clientes.collect { clientes ->
                 try {
                     clientAdapter.submitList(clientes)
-                    
+                    // Atualizar card de progresso de forma síncrona
+                    val rotaId = args.rotaId
+                    lifecycleScope.launch {
+                        viewModel.atualizarCardProgressoSincrono(rotaId)
+                    }
                     // Mostrar/esconder empty state com animação
                     _binding?.let { binding ->
                         if (clientes.isEmpty()) {
@@ -319,6 +289,16 @@ class ClientListFragment : Fragment() {
             }
         }
         
+        // NOVO: Observa evento de acerto salvo para atualizar card de progresso
+        findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Boolean>("acerto_salvo")?.observe(
+            viewLifecycleOwner
+        ) { acertoSalvo ->
+            if (acertoSalvo == true) {
+                Log.d("ClientListFragment", "[DEBUG] Evento acerto_salvo recebido, recarregando clientes para rotaId=${args.rotaId}")
+                viewModel.carregarClientes(args.rotaId)
+                findNavController().currentBackStackEntry?.savedStateHandle?.set("acerto_salvo", false)
+            }
+        }
 
     }
     

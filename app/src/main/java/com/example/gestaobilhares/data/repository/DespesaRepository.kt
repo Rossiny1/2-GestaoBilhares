@@ -122,20 +122,6 @@ class DespesaRepository(
     }
     
     /**
-     * ✅ NOVO: Busca despesas por rota e ciclo específico.
-     * @param rotaId ID da rota
-     * @param cicloAcerto Número do ciclo
-     * @return Flow com lista de despesas da rota e ciclo
-     */
-    fun buscarPorRotaECiclo(rotaId: Long, cicloAcerto: Int): Flow<List<Despesa>> {
-        return if (usarDadosMock) {
-            flowOf(obterDespesasMockPorRota(rotaId).filter { true }) // Mock sempre retorna vazio
-        } else {
-            despesaDao.buscarPorRotaECiclo(rotaId, cicloAcerto)
-        }
-    }
-
-    /**
      * Dados mock para desenvolvimento e testes.
      * Remove quando integrar com dados reais.
      */

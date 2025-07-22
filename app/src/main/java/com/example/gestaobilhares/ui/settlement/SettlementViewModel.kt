@@ -218,18 +218,12 @@ class SettlementViewModel(
                 val rotaId = cliente?.rotaId ?: 0L
                 
                 // Buscar ciclo atual da rota
-                val cicloAtual = try {
-                    val cicloAtivo = cicloAcertoRepository.buscarCicloAtivo(rotaId)
-                    if (cicloAtivo != null) {
-                        cicloAtivo.numeroCiclo
-                    } else {
-                        val ultimoCiclo = cicloAcertoRepository.buscarEstatisticasRota(rotaId)
-                        ultimoCiclo?.numeroCiclo ?: 1
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e("SettlementViewModel", "Erro ao buscar ciclo atual: ${e.message}")
-                    1
+                val cicloAtivo = cicloAcertoRepository.buscarCicloAtivo(rotaId)
+                val cicloId = cicloAtivo?.id ?: run {
+                    val ultimoCiclo = cicloAcertoRepository.buscarEstatisticasRota(rotaId)
+                    ultimoCiclo?.id ?: 1L
                 }
+                android.util.Log.d("DEBUG_DIAG", "[SALVAR_ACERTO] cicloId usado: $cicloId | rotaId: $rotaId | status ciclo ativo: ${cicloAtivo?.status}")
 
                 // Calcular valores do acerto
                 val valorRecebido = metodosPagamento.values.sum()
@@ -290,7 +284,7 @@ class SettlementViewModel(
                 android.util.Log.d("SettlementViewModel", "=== VINCULANDO ACERTO À ROTA E CICLO ===")
                 android.util.Log.d("SettlementViewModel", "Cliente ID: $clienteId")
                 android.util.Log.d("SettlementViewModel", "Rota ID do cliente: $rotaId")
-                android.util.Log.d("SettlementViewModel", "Ciclo atual: $cicloAtual")
+                android.util.Log.d("SettlementViewModel", "Ciclo atual: $cicloId")
                 
                 val acerto = Acerto(
                     clienteId = clienteId,
@@ -316,15 +310,15 @@ class SettlementViewModel(
                     dadosExtrasJson = dadosExtrasJson,
                     // ✅ CORREÇÃO CRÍTICA: Vínculos com rota e ciclo
                     rotaId = rotaId,
-                    cicloAcerto = cicloAtual
+                    cicloId = cicloId
                 )
                 
-                val acertoId = acertoRepository.inserir(acerto)
-                Log.d("SettlementViewModel", "✅ Acerto salvo com ID: $acertoId")
+                acertoRepository.salvarAcerto(acerto)
+                Log.d("SettlementViewModel", "✅ Acerto salvo com ID: ${acerto.id}")
                 Log.d("SettlementViewModel", "✅ Observações CONFIRMADAS no banco: '$observacaoParaSalvar'")
                 
                 // ✅ CORREÇÃO: Verificar se realmente foi salvo
-                val acertoSalvo = acertoRepository.buscarPorId(acertoId)
+                val acertoSalvo = acertoRepository.buscarPorId(acerto.id)
                 Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Observação no banco após salvamento: '${acertoSalvo?.observacoes}'")
                 
                 // ✅ CORREÇÃO CRÍTICA: Salvar dados detalhados de cada mesa do acerto com logs
@@ -369,7 +363,7 @@ class SettlementViewModel(
                     Log.d("SettlementViewModel", "Relógio reiniciou: ${mesa.relogioReiniciou}")
                     
                     com.example.gestaobilhares.data.entities.AcertoMesa(
-                        acertoId = acertoId,
+                        acertoId = acerto.id,
                         mesaId = mesa.id,
                         relogioInicial = mesa.fichasInicial,
                         relogioFinal = mesa.fichasFinal,
@@ -391,7 +385,7 @@ class SettlementViewModel(
                 }
                 
                 acertoMesaRepository.inserirLista(acertoMesas)
-                Log.d("SettlementViewModel", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
+                Log.d("SettlementViewModel", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto ${acerto.id}")
                 
                 // ✅ CRÍTICO: Atualizar o débito atual na tabela de clientes
                 clienteRepository.atualizarDebitoAtual(clienteId, debitoAtual)
@@ -401,7 +395,7 @@ class SettlementViewModel(
                 val clienteAtualizado = clienteRepository.obterPorId(clienteId)
                 Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Débito atual na tabela clientes após atualização: R$ ${clienteAtualizado?.debitoAtual}")
                 
-                _resultadoSalvamento.value = Result.success(acertoId)
+                _resultadoSalvamento.value = Result.success(acerto.id)
             } catch (e: Exception) {
                 Log.e("SettlementViewModel", "Erro ao salvar acerto: ${e.localizedMessage}", e)
                 _resultadoSalvamento.value = Result.failure(e)

@@ -71,12 +71,13 @@ class SettlementFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar ViewModel aqui onde o contexto está disponível
+        val database = AppDatabase.getDatabase(requireContext())
         viewModel = SettlementViewModel(
-            MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao()),
-            ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
-            AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao()),
-            AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao()),
-            CicloAcertoRepository(AppDatabase.getDatabase(requireContext()).cicloAcertoDao())
+            MesaRepository(database.mesaDao()),
+            ClienteRepository(database.clienteDao()),
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
+            AcertoMesaRepository(database.acertoMesaDao()),
+            CicloAcertoRepository(database.cicloAcertoDao())
         )
         
         Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
@@ -720,6 +721,8 @@ class SettlementFragment : Fragment() {
                         val acertoId = it.getOrNull() ?: return@let
                         Log.d("SettlementFragment", "✅ Acerto salvo com sucesso! ID: $acertoId")
                         
+                        // NOVO: Notificar ClientListFragment para atualizar card de progresso
+                        findNavController().previousBackStackEntry?.savedStateHandle?.set("acerto_salvo", true)
 
                         
                         mostrarDialogoResumoComAcerto(acertoId)

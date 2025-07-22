@@ -63,7 +63,7 @@ class ClientDetailFragment : Fragment() {
         viewModel = ClientDetailViewModel(
             ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
             MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao()),
-            AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao()),
+            AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao()),
             AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao())
         )
         
@@ -213,9 +213,8 @@ class ClientDetailFragment : Fragment() {
 
     private fun setupRecyclerView() {
         settlementHistoryAdapter = SettlementHistoryAdapter { acerto ->
-            // Navegar para detalhes do acerto - FASE 4B+ IMPLEMENTADO! ✅
-            val action = ClientDetailFragmentDirections
-                .actionClientDetailFragmentToSettlementDetailFragment(acerto.id)
+            // Navegar para detalhes do acerto
+            val action = ClientDetailFragmentDirections.actionClientDetailFragmentToSettlementDetailFragment(acerto.id)
             findNavController().navigate(action)
         }
         

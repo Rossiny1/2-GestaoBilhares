@@ -32,9 +32,9 @@ import java.time.LocalDateTime
     ],
     indices = [
         Index(value = ["rotaId"]),
-        // ✅ FASE 8A: ÍNDICE PARA CICLO
-        Index(value = ["cicloAcerto"]),
-        Index(value = ["rotaId", "cicloAcerto"]) // Índice composto para queries eficientes
+        // Novo: índice para cicloId
+        Index(value = ["cicloId"]),
+        Index(value = ["rotaId", "cicloId"]) // Índice composto para queries eficientes
     ]
 )
 data class Despesa(
@@ -58,8 +58,8 @@ data class Despesa(
     
     val criadoPor: String = "", // ID do colaborador
     
-    // ✅ FASE 8A: VÍNCULO COM CICLO DE ACERTO
-    val cicloAcerto: Int? = null
+    // NOVO: VÍNCULO COM CICLO DE ACERTO (id do ciclo)
+    val cicloId: Long? = null
 )
 
 /**

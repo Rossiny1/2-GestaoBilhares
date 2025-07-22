@@ -3,9 +3,13 @@ package com.example.gestaobilhares.data.repository
 import com.example.gestaobilhares.data.dao.CicloAcertoDao
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
+import com.example.gestaobilhares.utils.AppLogger
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import java.util.Date
+import java.util.Calendar
 
 /**
  * Repositório para operações de ciclos de acerto
@@ -146,5 +150,64 @@ class CicloAcertoRepository(
      */
     suspend fun buscarProximoNumeroCiclo(rotaId: Long, ano: Int): Int {
         return cicloAcertoDao.buscarProximoNumeroCiclo(rotaId, ano)
+    }
+
+    /**
+     * Observa o ciclo ativo de uma rota como Flow.
+     */
+    fun observarCicloAtivo(rotaId: Long): Flow<CicloAcertoEntity?> {
+        return cicloAcertoDao.observarCicloEmAndamento(rotaId)
+    }
+
+    suspend fun iniciarNovoCiclo(rotaId: Long): Long {
+        AppLogger.log("CicloAcertoRepo", "Iniciando novo ciclo para rotaId: $rotaId")
+        return withContext(Dispatchers.IO) {
+            val cicloAnterior = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
+            if (cicloAnterior != null && cicloAnterior.status == StatusCicloAcerto.EM_ANDAMENTO) {
+                AppLogger.log("CicloAcertoRepo", "AVISO: Tentativa de iniciar novo ciclo, mas o ciclo ${cicloAnterior.id} já está em andamento.")
+                return@withContext cicloAnterior.id
+            }
+
+            val calendar = Calendar.getInstance()
+            val anoAtual = calendar.get(Calendar.YEAR)
+            val proximoNumeroCiclo = cicloAcertoDao.buscarProximoNumeroCiclo(rotaId, anoAtual)
+            AppLogger.log("CicloAcertoRepo", "Novo número de ciclo calculado: $proximoNumeroCiclo para o ano $anoAtual")
+            val novoCiclo = CicloAcertoEntity(
+                rotaId = rotaId,
+                numeroCiclo = proximoNumeroCiclo,
+                ano = anoAtual,
+                dataInicio = Date(),
+                dataFim = Date(), // Será atualizado ao finalizar
+                status = StatusCicloAcerto.EM_ANDAMENTO
+            )
+            val id = cicloAcertoDao.inserir(novoCiclo)
+            AppLogger.log("CicloAcertoRepo", "Novo ciclo inserido com sucesso! ID: $id")
+            id
+        }
+    }
+
+    suspend fun getNumeroCicloAtual(rotaId: Long): Int {
+        AppLogger.log("CicloAcertoRepo", "Buscando número do ciclo atual para rotaId: $rotaId")
+        val ciclo = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
+        val numeroCiclo = ciclo?.numeroCiclo ?: 1 // Se não houver ciclo, assume-se que é o primeiro
+        AppLogger.log("CicloAcertoRepo", "Número do ciclo encontrado: $numeroCiclo (Ciclo ID: ${ciclo?.id ?: "Nenhum"})")
+        return numeroCiclo
+    }
+
+    suspend fun finalizarCicloAtual(rotaId: Long) {
+        AppLogger.log("CicloAcertoRepo", "Tentando finalizar ciclo atual para rotaId: $rotaId")
+        withContext(Dispatchers.IO) {
+            val cicloAtual = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
+            if (cicloAtual != null) {
+                val cicloFinalizado = cicloAtual.copy(
+                    dataFim = Date(),
+                    status = StatusCicloAcerto.FINALIZADO
+                )
+                cicloAcertoDao.atualizar(cicloFinalizado)
+                AppLogger.log("CicloAcertoRepo", "Ciclo ${cicloAtual.id} finalizado com sucesso.")
+            } else {
+                AppLogger.log("CicloAcertoRepo", "AVISO: Nenhum ciclo em andamento encontrado para finalizar na rota $rotaId.")
+            }
+        }
     }
 } 

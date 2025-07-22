@@ -52,7 +52,7 @@ class SettlementDetailFragment : Fragment() {
         
         // Inicializar ViewModel aqui onde o contexto está disponível
         viewModel = SettlementDetailViewModel(
-            AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao()),
+            AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao()),
             AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao())
         )
         

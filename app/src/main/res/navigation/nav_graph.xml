@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/loginFragment">
 
@@ -154,12 +155,19 @@
     <fragment
         android:id="@+id/settlementDetailFragment"
         android:name="com.example.gestaobilhares.ui.settlement.SettlementDetailFragment"
-        android:label="Detalhes do Acerto">
+        android:label="Detalhes do Acerto"
+        tools:layout="@layout/fragment_settlement_detail">
         <argument
             android:name="acertoId"
             app:argType="long"
             android:defaultValue="0L" />
     </fragment>
+
+    <fragment
+        android:id="@+id/logViewerFragment"
+        android:name="com.example.gestaobilhares.ui.logs.LogViewerFragment"
+        android:label="Visualizador de Logs"
+        tools:layout="@layout/fragment_log_viewer" />
 
     <!-- Tela de Depósito de Mesas -->
     <fragment

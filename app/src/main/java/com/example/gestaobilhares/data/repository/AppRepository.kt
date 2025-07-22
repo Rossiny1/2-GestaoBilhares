@@ -109,7 +109,8 @@ class AppRepository(
     suspend fun calcularTotalGeral() = despesaDao.calcularTotalGeral()
     suspend fun contarDespesasPorRota(rotaId: Long) = despesaDao.contarPorRota(rotaId)
     suspend fun deletarDespesasPorRota(rotaId: Long) = despesaDao.deletarPorRota(rotaId)
-    fun buscarDespesasPorRotaECiclo(rotaId: Long, cicloAcerto: Int) = despesaDao.buscarPorRotaECiclo(rotaId, cicloAcerto)
+    fun buscarDespesasPorCicloId(cicloId: Long) = despesaDao.buscarPorCicloId(cicloId)
+    fun buscarDespesasPorRotaECicloId(rotaId: Long, cicloId: Long) = despesaDao.buscarPorRotaECicloId(rotaId, cicloId)
     
     // ==================== COLABORADOR ====================
     

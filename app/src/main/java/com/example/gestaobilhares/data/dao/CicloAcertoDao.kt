@@ -83,6 +83,12 @@ interface CicloAcertoDao {
     suspend fun buscarCicloEmAndamento(rotaId: Long): CicloAcertoEntity?
     
     /**
+     * Busca o ciclo em andamento de uma rota como Flow.
+     */
+    @Query("SELECT * FROM ciclos_acerto WHERE rota_id = :rotaId AND status = 'EM_ANDAMENTO' LIMIT 1")
+    fun observarCicloEmAndamento(rotaId: Long): Flow<CicloAcertoEntity?>
+    
+    /**
      * Lista ciclos por período (para relatórios).
      */
     @Query("SELECT * FROM ciclos_acerto WHERE data_inicio >= :dataInicio AND data_fim <= :dataFim ORDER BY ano DESC, numero_ciclo DESC")
