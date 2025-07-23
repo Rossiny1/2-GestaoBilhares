@@ -526,7 +526,7 @@ class ClientListViewModel(
                 
                 val temPendencia = when {
                     // Cliente com débito > R$300
-                    cliente.debitoAnterior > 300.0 -> true
+                    cliente.debitoAtual > 300.0 -> true
                     
                     // Cliente sem acerto há mais de 4 meses
                     ultimoAcerto == null || ultimoAcerto.dataAcerto.before(quatroMesesAtras) -> true
@@ -550,17 +550,11 @@ class ClientListViewModel(
 
     // Função síncrona para calcular pendências (simplificada para uso no combine)
     private fun calcularPendenciasReaisSync(clientes: List<Cliente>): Int {
-        val quatroMesesAtras = java.util.Calendar.getInstance().apply {
-            add(java.util.Calendar.MONTH, -4)
-        }.time
         return clientes.count { cliente ->
             val debitoAtual = cliente.debitoAtual
-            val temPendencia = when {
-                debitoAtual > 300.0 -> true
-                // cliente.ultimoAcerto pode não existir, então sempre false aqui
-                else -> false
-            }
-            temPendencia
+            // Verificar se o cliente tem débito > R$300
+            // Esta é a verificação principal para pendências
+            debitoAtual > 300.0
         }
     }
 
@@ -593,7 +587,7 @@ class ClientListViewModel(
                     val despesas = despesasList.sumOf { it.valor }
                     AppLogger.log("ClientListVM", "Despesas totais da rota: R$$despesas")
 
-                    val pendencias = totalClientes - clientesAcertados
+                    val pendencias = calcularPendencias(clientes)
                     AppLogger.log("ClientListVM", "Pendências do ciclo: $pendencias")
 
                     val saldo = receita - despesas
@@ -647,7 +641,7 @@ class ClientListViewModel(
             val totalClientes = clientes.size
             val faturamentoReal = acertos.sumOf { it.valorRecebido }
             val despesasReais = despesas.sumOf { it.valor }
-            val pendencias = totalClientes - clientesAcertados
+            val pendencias = calcularPendencias(clientes)
             val percentualAcertados = if (totalClientes > 0) (clientesAcertados * 100) / totalClientes else 0
             val saldo = faturamentoReal - despesasReais
             AppLogger.log("ClientListVM", "[CARD] Resultado: receita=$faturamentoReal, despesas=$despesasReais, saldo=$saldo, percentual=$percentualAcertados, clientesAcertados=$clientesAcertados, totalClientes=$totalClientes, pendencias=$pendencias")
