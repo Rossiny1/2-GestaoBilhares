@@ -210,19 +210,22 @@ class SettlementViewModel(
      */
     fun salvarAcerto(clienteId: Long, dadosAcerto: DadosAcerto, metodosPagamento: Map<String, Double>, desconto: Double = 0.0) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 Log.d("SettlementViewModel", "Salvando acerto com clienteId=$clienteId, mesas=${dadosAcerto.mesas.map { it.numero }}")
                 
                 // Buscar cliente uma única vez
-                val cliente = clienteRepository.obterPorId(clienteId)
-                val rotaId = cliente?.rotaId ?: 0L
+                val cliente = clienteRepository.obterPorId(clienteId) ?: throw IllegalStateException("Cliente não encontrado para o ID: $clienteId")
+                val rotaId = cliente.rotaId
                 
                 // Buscar ciclo atual da rota
                 val cicloAtivo = cicloAcertoRepository.buscarCicloAtivo(rotaId)
                 val cicloId = cicloAtivo?.id ?: run {
+                    Log.w("SettlementViewModel", "Nenhum ciclo ativo encontrado para a rota $rotaId. Tentando buscar o último ciclo existente.")
                     val ultimoCiclo = cicloAcertoRepository.buscarEstatisticasRota(rotaId)
-                    ultimoCiclo?.id ?: 1L
+                    ultimoCiclo?.id ?: throw IllegalStateException("Nenhum ciclo encontrado para a rota $rotaId.")
                 }
+                
                 android.util.Log.d("DEBUG_DIAG", "[SALVAR_ACERTO] cicloId usado: $cicloId | rotaId: $rotaId | status ciclo ativo: ${cicloAtivo?.status}")
 
                 // Calcular valores do acerto
@@ -233,7 +236,7 @@ class SettlementViewModel(
                         mesa.valorFixo
                     } else {
                         val fichasJogadas = (mesa.fichasFinal - mesa.fichasInicial).coerceAtLeast(0)
-                        fichasJogadas * (cliente?.comissaoFicha ?: 0.0)
+                        fichasJogadas * (cliente.comissaoFicha)
                     }
                 }
                 val valorComDesconto = valorTotal - desconto
@@ -313,20 +316,19 @@ class SettlementViewModel(
                     cicloId = cicloId
                 )
                 
-                acertoRepository.salvarAcerto(acerto)
-                Log.d("SettlementViewModel", "✅ Acerto salvo com ID: ${acerto.id}")
-                Log.d("SettlementViewModel", "✅ Observações CONFIRMADAS no banco: '$observacaoParaSalvar'")
+                val acertoId = acertoRepository.salvarAcerto(acerto)
+                Log.d("SettlementViewModel", "✅ Acerto salvo com ID: $acertoId")
                 
                 // ✅ CORREÇÃO: Verificar se realmente foi salvo
-                val acertoSalvo = acertoRepository.buscarPorId(acerto.id)
+                val acertoSalvo = acertoRepository.buscarPorId(acertoId)
                 Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Observação no banco após salvamento: '${acertoSalvo?.observacoes}'")
                 
                 // ✅ CORREÇÃO CRÍTICA: Salvar dados detalhados de cada mesa do acerto com logs
                 Log.d("SettlementViewModel", "=== SALVANDO MESAS DO ACERTO ===")
                 Log.d("SettlementViewModel", "Total de mesas recebidas: ${dadosAcerto.mesas.size}")
-                Log.d("SettlementViewModel", "Cliente encontrado: ${cliente?.nome}")
-                Log.d("SettlementViewModel", "Valor ficha do cliente: R$ ${cliente?.valorFicha}")
-                Log.d("SettlementViewModel", "Comissão ficha do cliente: R$ ${cliente?.comissaoFicha}")
+                Log.d("SettlementViewModel", "Cliente encontrado: ${cliente.nome}")
+                Log.d("SettlementViewModel", "Valor ficha do cliente: R$ ${cliente.valorFicha}")
+                Log.d("SettlementViewModel", "Comissão ficha do cliente: R$ ${cliente.comissaoFicha}")
                 
                 // Garantir que não há duplicidade de mesaId
                 val mesaIds = dadosAcerto.mesas.map { it.id }
@@ -348,7 +350,7 @@ class SettlementViewModel(
                     val subtotal = if (mesa.valorFixo > 0) {
                         mesa.valorFixo
                     } else {
-                        fichasJogadas * (cliente?.comissaoFicha ?: 0.0)
+                        fichasJogadas * (cliente.comissaoFicha)
                     }
                     
                     Log.d("SettlementViewModel", "=== MESA ${index + 1} ===")
@@ -363,14 +365,14 @@ class SettlementViewModel(
                     Log.d("SettlementViewModel", "Relógio reiniciou: ${mesa.relogioReiniciou}")
                     
                     com.example.gestaobilhares.data.entities.AcertoMesa(
-                        acertoId = acerto.id,
+                        acertoId = acertoId,
                         mesaId = mesa.id,
                         relogioInicial = mesa.fichasInicial,
                         relogioFinal = mesa.fichasFinal,
                         fichasJogadas = fichasJogadas,
                         valorFixo = mesa.valorFixo,
-                        valorFicha = cliente?.valorFicha ?: 0.0,
-                        comissaoFicha = cliente?.comissaoFicha ?: 0.0,
+                        valorFicha = cliente.valorFicha,
+                        comissaoFicha = cliente.comissaoFicha,
                         subtotal = subtotal,
                         comDefeito = mesa.comDefeito,
                         relogioReiniciou = mesa.relogioReiniciou,
@@ -385,7 +387,7 @@ class SettlementViewModel(
                 }
                 
                 acertoMesaRepository.inserirLista(acertoMesas)
-                Log.d("SettlementViewModel", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto ${acerto.id}")
+                Log.d("SettlementViewModel", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
                 
                 // ✅ CRÍTICO: Atualizar o débito atual na tabela de clientes
                 clienteRepository.atualizarDebitoAtual(clienteId, debitoAtual)
@@ -395,10 +397,12 @@ class SettlementViewModel(
                 val clienteAtualizado = clienteRepository.obterPorId(clienteId)
                 Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Débito atual na tabela clientes após atualização: R$ ${clienteAtualizado?.debitoAtual}")
                 
-                _resultadoSalvamento.value = Result.success(acerto.id)
+                _resultadoSalvamento.value = Result.success(acertoId)
             } catch (e: Exception) {
                 Log.e("SettlementViewModel", "Erro ao salvar acerto: ${e.localizedMessage}", e)
                 _resultadoSalvamento.value = Result.failure(e)
+            } finally {
+                _isLoading.value = false
             }
         }
     }

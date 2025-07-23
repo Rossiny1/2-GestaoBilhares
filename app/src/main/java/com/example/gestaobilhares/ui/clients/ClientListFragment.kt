@@ -101,14 +101,14 @@ class ClientListFragment : Fragment() {
                 .show()
         }
     }
-    
+
     private fun configurarRecyclerView() {
         clientAdapter = ClientAdapter { cliente ->
             // Verificar se a rota está em andamento antes de permitir navegação
             if (viewModel.podeAcessarCliente()) {
-                val action = ClientListFragmentDirections
-                    .actionClientListFragmentToClientDetailFragment(cliente.id)
-                findNavController().navigate(action)
+            val action = ClientListFragmentDirections
+                .actionClientListFragmentToClientDetailFragment(cliente.id)
+            findNavController().navigate(action)
             } else {
                 mostrarAlertaRotaNaoIniciada()
             }
@@ -195,7 +195,7 @@ class ClientListFragment : Fragment() {
             }
         }
     }
-    
+
     private fun observarViewModel() {
         // Observar dados da rota
         lifecycleScope.launch {
@@ -266,7 +266,7 @@ class ClientListFragment : Fragment() {
                         viewModel.atualizarCardProgressoSincrono(rotaId)
                     }
                     // Mostrar/esconder empty state com animação
-                    _binding?.let { binding ->
+        _binding?.let { binding ->
                         if (clientes.isEmpty()) {
                             atualizarEmptyState(true)
                         } else {

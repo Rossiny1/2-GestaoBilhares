@@ -112,11 +112,11 @@ class ClientListViewModel(
             combine(
                 cicloAtivo,
                 clientes
-            ) { ciclo, clientes ->
+        ) { ciclo, clientes ->
                 android.util.Log.d("DEBUG_DIAG", "[CARD] combine cicloAtivo: ${ciclo?.id}, clientes: ${clientes.size}")
                 Pair(ciclo, clientes)
             }.flatMapLatest { (ciclo, clientes) ->
-                if (ciclo == null) {
+            if (ciclo == null) {
                     android.util.Log.d("DEBUG_DIAG", "[CARD] cicloAtivo é null, card zerado")
                     return@flatMapLatest kotlinx.coroutines.flow.flowOf(
                         CicloProgressoCard(0.0, 0.0, 0.0, 0, 0, clientes.size, 0)
@@ -130,23 +130,23 @@ class ClientListViewModel(
                 ) { acertos, despesas ->
                     android.util.Log.d("DEBUG_DIAG", "[CARD] acertos retornados: ${acertos.size}, cicloId esperado: $cicloId, cicloIds dos acertos: ${acertos.map { it.cicloId }}")
                     android.util.Log.d("DEBUG_DIAG", "[CARD] despesas retornadas: ${despesas.size}")
-                    val clientesAcertados = acertos.map { it.clienteId }.distinct().size
-                    val totalClientes = clientes.size
-                    val faturamentoReal = acertos.sumOf { it.valorRecebido }
-                    val despesasReais = despesas.sumOf { it.valor }
+                val clientesAcertados = acertos.map { it.clienteId }.distinct().size
+                val totalClientes = clientes.size
+                val faturamentoReal = acertos.sumOf { it.valorRecebido }
+                val despesasReais = despesas.sumOf { it.valor }
                     val pendencias = calcularPendenciasReaisSync(clientes)
                     val percentualAcertados = if (totalClientes > 0) (clientesAcertados * 100) / totalClientes else 0
-                    val saldo = faturamentoReal - despesasReais
+                val saldo = faturamentoReal - despesasReais
                     android.util.Log.d("DEBUG_DIAG", "[CARD] resultado: receita=$faturamentoReal, despesas=$despesasReais, saldo=$saldo, percentual=$percentualAcertados, clientesAcertados=$clientesAcertados, totalClientes=$totalClientes, pendencias=$pendencias")
-                    CicloProgressoCard(
-                        receita = faturamentoReal,
-                        despesas = despesasReais,
-                        saldo = saldo,
-                        percentual = percentualAcertados,
-                        clientesAcertados = clientesAcertados,
-                        totalClientes = totalClientes,
-                        pendencias = pendencias
-                    )
+                CicloProgressoCard(
+                    receita = faturamentoReal,
+                    despesas = despesasReais,
+                    saldo = saldo,
+                    percentual = percentualAcertados,
+                    clientesAcertados = clientesAcertados,
+                    totalClientes = totalClientes,
+                    pendencias = pendencias
+                )
                 }
             }.collect {
                 _cicloProgressoCard.value = it
@@ -535,7 +535,7 @@ class ClientListViewModel(
                 }
                 
                 if (temPendencia) {
-                    pendencias++
+                        pendencias++
                 }
             }
             

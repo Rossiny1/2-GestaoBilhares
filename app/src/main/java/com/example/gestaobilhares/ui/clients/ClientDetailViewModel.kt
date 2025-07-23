@@ -113,9 +113,9 @@ class ClientDetailViewModel(
                     Log.d("ClientDetailViewModel", "Endereço que será exibido: '$enderecoExibir'")
                     Log.d("ClientDetailViewModel", "Telefone que será exibido: '$telefoneExibir'")
 
-                    // ✅ CORREÇÃO CRÍTICA: Buscar débito atual REAL da tabela clientes
-                    val debitoAtualReal = clienteRepository.obterDebitoAtual(clienteId)
-                    Log.d("ClientDetailViewModel", "Débito atual REAL carregado: R$ $debitoAtualReal")
+                    // ✅ CORREÇÃO CRÍTICA: Buscar débito atual do ÚLTIMO ACERTO como fonte da verdade
+                    val debitoAtualReal = ultimoAcerto?.debitoAtual ?: 0.0
+                    Log.d("ClientDetailViewModel", "Débito atual REAL (do último acerto): R$ $debitoAtualReal")
                     
                     _clientDetails.value = ClienteResumo(
                         id = it.id,
@@ -127,7 +127,7 @@ class ClientDetailViewModel(
                         mesasAtivas = 0, // Atualizado abaixo
                         ultimaVisita = ultimaVisita,
                         observacoes = observacaoExibir,
-                        debitoAtual = debitoAtualReal, // ✅ CORREÇÃO: Usar débito atual REAL
+                        debitoAtual = debitoAtualReal, // ✅ CORREÇÃO: Usar débito atual do último acerto
                         diasSemAcerto = if (ultimoAcerto != null) {
                             val hoje = java.time.LocalDate.now()
                             val dataUltimoAcerto = ultimoAcerto.dataAcerto.toInstant()

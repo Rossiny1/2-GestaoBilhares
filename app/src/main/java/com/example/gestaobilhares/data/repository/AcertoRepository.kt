@@ -12,10 +12,10 @@ import kotlinx.coroutines.withContext
 
 class AcertoRepository(private val acertoDao: AcertoDao, private val clienteDao: ClienteDao) {
 
-    suspend fun salvarAcerto(acerto: Acerto) {
+    suspend fun salvarAcerto(acerto: Acerto): Long {
         AppLogger.log("AcertoRepo", "Tentando salvar acerto para clienteId: ${acerto.clienteId}, ciclo: ${acerto.cicloId}, valorRecebido: ${acerto.valorRecebido}")
         android.util.Log.d("DEBUG_DIAG", "[ACERTO] Salvando acerto: clienteId=${acerto.clienteId}, cicloId=${acerto.cicloId}, valorRecebido=${acerto.valorRecebido}")
-        try {
+        return try {
             // Verificar se o cliente existe
             val cliente = clienteDao.obterPorId(acerto.clienteId)
             if (cliente == null) {
@@ -24,25 +24,12 @@ class AcertoRepository(private val acertoDao: AcertoDao, private val clienteDao:
                 android.util.Log.e("DEBUG_DIAG", msg)
                 throw IllegalStateException(msg)
             }
-            // Verificar se o ciclo existe (se houver cicloId)
-            if (acerto.cicloId != null && acerto.cicloId != 0L) {
-                // Supondo que exista um cicloAcertoDao com método obterPorId
-                // Se não existir, apenas logar
-                try {
-                    // Substitua pelo DAO correto se necessário
-                    // val ciclo = cicloAcertoDao.obterPorId(acerto.cicloId)
-                    // if (ciclo == null) {
-                    //     val msg = "ERRO: Ciclo com id ${acerto.cicloId} não existe. Não é possível salvar acerto."
-                    //     AppLogger.log("AcertoRepo", msg)
-                    //     android.util.Log.e("DEBUG_DIAG", msg)
-                    //     throw IllegalStateException(msg)
-                    // }
-                    // Por enquanto, só loga
-                    android.util.Log.d("DEBUG_DIAG", "[ACERTO] (INFO) Não foi possível verificar cicloId=${acerto.cicloId} pois cicloAcertoDao não está disponível neste repositório.")
-                } catch (e: Exception) {
-                    android.util.Log.e("DEBUG_DIAG", "[ACERTO] Erro ao verificar cicloId: ${e.message}")
-                }
+            
+            // Log para verificar o cicloId antes de salvar
+            if (acerto.cicloId == null || acerto.cicloId == 0L) {
+                 android.util.Log.w("DEBUG_DIAG", "[ACERTO] AVISO: cicloId é nulo ou 0. O acerto será salvo sem vínculo de ciclo.")
             }
+
             val id = acertoDao.inserir(acerto)
             AppLogger.log("AcertoRepo", "Acerto salvo com sucesso! ID: $id")
             android.util.Log.d("DEBUG_DIAG", "[ACERTO] Acerto salvo com sucesso! ID: $id, cicloId=${acerto.cicloId}")
@@ -51,16 +38,15 @@ class AcertoRepository(private val acertoDao: AcertoDao, private val clienteDao:
             withContext(Dispatchers.IO) {
                 val clienteAtual = clienteDao.obterPorId(acerto.clienteId)
                 clienteAtual?.let {
-                    AppLogger.log("AcertoRepo", "Cliente encontrado: ${it.nome}. Débito anterior: ${it.debitoAtual}")
-                    val novoDebito = it.debitoAtual - acerto.valorRecebido + acerto.debitoAtual
-                    val clienteAtualizado = it.copy(debitoAtual = novoDebito)
-                    clienteDao.atualizar(clienteAtualizado)
-                    AppLogger.log("AcertoRepo", "Débito do cliente atualizado para: $novoDebito")
-                } ?: AppLogger.log("AcertoRepo", "AVISO: Cliente com id ${acerto.clienteId} não encontrado para atualizar débito.")
+                    // A lógica de atualização de débito já é tratada no ViewModel. 
+                    // Removido para evitar dupla atualização.
+                }
             }
+            id
         } catch (e: Exception) {
             AppLogger.log("AcertoRepo", "ERRO ao salvar acerto: ${e.message}")
             android.util.Log.e("DEBUG_DIAG", "[ACERTO] ERRO ao salvar acerto: ${e.message}")
+            -1L // Retorna um ID inválido em caso de erro
         }
     }
 
