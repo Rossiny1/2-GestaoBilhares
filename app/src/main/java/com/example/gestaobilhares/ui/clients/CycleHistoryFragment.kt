@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentCycleHistoryBinding
@@ -31,19 +30,28 @@ class CycleHistoryFragment : Fragment() {
     private var _binding: FragmentCycleHistoryBinding? = null
     private val binding get() = _binding!!
     
-    private val args: CycleHistoryFragmentArgs by navArgs()
+    // ✅ CORREÇÃO: Usar Bundle em vez de navArgs para evitar problemas de geração
+    private var rotaId: Long = 0L
+    
     private val viewModel: CycleHistoryViewModel by viewModels {
         CycleHistoryViewModelFactory(
             CicloAcertoRepository(
                 AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
                 DespesaRepository(AppDatabase.getDatabase(requireContext()).despesaDao()),
                 AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao()),
-                ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao())
+                ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
+                AppDatabase.getDatabase(requireContext()).rotaDao() // ✅ NOVO: Para relatórios
             )
         )
     }
     
     private lateinit var cycleAdapter: CycleHistoryAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // ✅ CORREÇÃO: Obter rotaId dos argumentos
+        rotaId = arguments?.getLong("rotaId", 0L) ?: 0L
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,21 +65,22 @@ class CycleHistoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-
-        
         configurarRecyclerView()
         configurarBotoes()
         configurarObservadores()
         
         // Carregar dados
-        val rotaId = arguments?.getLong("rotaId", 0L) ?: 0L
         viewModel.carregarHistoricoCiclos(rotaId)
     }
 
     private fun configurarRecyclerView() {
         cycleAdapter = CycleHistoryAdapter { ciclo ->
-            // ciclo é do tipo CycleHistoryItem agora
-            // TODO: ação ao clicar no ciclo
+            // ✅ NOVO: Verificar se o ciclo está finalizado para mostrar opção de relatório
+            if (ciclo.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
+                mostrarDialogoRelatorio(ciclo)
+            } else {
+                mostrarFeedback("Apenas ciclos finalizados podem gerar relatórios", Snackbar.LENGTH_SHORT)
+            }
         }
         
         binding.rvCycles.apply {
@@ -159,7 +168,7 @@ class CycleHistoryFragment : Fragment() {
     }
 
     private fun exportarRelatorio() {
-        val rotaId = arguments?.getLong("rotaId", 0L) ?: 0L
+        // Usar o rotaId do args que já está disponível
         viewModel.exportarRelatorio(rotaId) { sucesso ->
             if (sucesso) {
                 mostrarFeedback("Relatório exportado com sucesso!", Snackbar.LENGTH_SHORT)
@@ -172,6 +181,38 @@ class CycleHistoryFragment : Fragment() {
     private fun mostrarDialogoFiltros() {
         // TODO: Implementar diálogo de filtros por período
         mostrarFeedback("Filtros serão implementados na próxima fase", Snackbar.LENGTH_SHORT)
+    }
+
+    /**
+     * ✅ NOVO: Mostra diálogo para gerar relatório PDF do ciclo
+     */
+    private fun mostrarDialogoRelatorio(ciclo: CycleHistoryItem) {
+        lifecycleScope.launch {
+            try {
+                // Buscar dados completos do ciclo
+                val cicloEntity = viewModel.buscarCicloPorId(ciclo.id)
+                val rota = viewModel.buscarRotaPorId(rotaId)
+                val acertos = viewModel.buscarAcertosPorCiclo(ciclo.id)
+                val despesas = viewModel.buscarDespesasPorCiclo(ciclo.id)
+                val clientes = viewModel.buscarClientesPorRota(rotaId)
+                
+                if (cicloEntity != null && rota != null) {
+                    val dialog = CycleReportDialog.newInstance(
+                        ciclo = cicloEntity,
+                        rota = rota,
+                        acertos = acertos,
+                        despesas = despesas,
+                        clientes = clientes
+                    )
+                    dialog.show(parentFragmentManager, "CycleReportDialog")
+                } else {
+                    mostrarFeedback("Erro ao carregar dados do ciclo", Snackbar.LENGTH_LONG)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("CycleHistoryFragment", "Erro ao mostrar diálogo de relatório", e)
+                mostrarFeedback("Erro ao carregar dados: ${e.message}", Snackbar.LENGTH_LONG)
+            }
+        }
     }
 
     private fun formatarMoeda(valor: Double): String {

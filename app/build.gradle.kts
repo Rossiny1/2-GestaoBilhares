@@ -67,4 +67,12 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     implementation("com.google.code.gson:gson:2.10.1")
+    
+    // ✅ NOVO: Dependências para geração de PDF
+    implementation("com.itextpdf:kernel:7.1.16")
+    implementation("com.itextpdf:io:7.1.16")
+    implementation("com.itextpdf:layout:7.1.16")
+    
+    // ✅ NOVO: Dependências para compartilhamento e permissões
+    implementation("androidx.activity:activity-ktx:1.8.2")
 } 

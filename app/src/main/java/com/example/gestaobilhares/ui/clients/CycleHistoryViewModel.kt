@@ -46,6 +46,7 @@ class CycleHistoryViewModelFactory(
 
 data class CycleHistoryItem(
     val id: Long,
+    val rotaId: Long,
     val titulo: String,
     val dataInicio: Date,
     val dataFim: Date,
@@ -102,9 +103,10 @@ class CycleHistoryViewModel(
 
                     CycleHistoryItem(
                         id = ciclo.id,
+                        rotaId = ciclo.rotaId,
                         titulo = ciclo.titulo,
                         dataInicio = ciclo.dataInicio,
-                        dataFim = ciclo.dataFim,
+                        dataFim = ciclo.dataFim ?: Date(), // Usar data atual se for nula
                         valorTotalAcertado = ciclo.valorTotalAcertado,
                         valorTotalDespesas = ciclo.valorTotalDespesas,
                         lucroLiquido = ciclo.lucroLiquido,
@@ -144,7 +146,7 @@ class CycleHistoryViewModel(
         val lucroMedioPorCiclo = if (totalCiclos > 0) lucroLiquido / totalCiclos else 0.0
         
         val periodoInicio = ciclos.minOfOrNull { it.dataInicio }
-        val periodoFim = ciclos.maxOfOrNull { it.dataFim }
+        val periodoFim = ciclos.mapNotNull { it.dataFim }.maxOfOrNull { it }
 
         val stats = CycleStatistics(
             totalCiclos = totalCiclos,
@@ -220,5 +222,65 @@ class CycleHistoryViewModel(
      */
     fun limparErro() {
         _errorMessage.value = null
+    }
+
+    /**
+     * ✅ NOVO: Busca ciclo por ID para relatório
+     */
+    suspend fun buscarCicloPorId(cicloId: Long): CicloAcertoEntity? {
+        return try {
+            cicloAcertoRepository.buscarCicloPorId(cicloId)
+        } catch (e: Exception) {
+            android.util.Log.e("CycleHistoryViewModel", "Erro ao buscar ciclo: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * ✅ NOVO: Busca rota por ID para relatório
+     */
+    suspend fun buscarRotaPorId(rotaId: Long): com.example.gestaobilhares.data.entities.Rota? {
+        return try {
+            cicloAcertoRepository.buscarRotaPorId(rotaId)
+        } catch (e: Exception) {
+            android.util.Log.e("CycleHistoryViewModel", "Erro ao buscar rota: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * ✅ NOVO: Busca acertos por ciclo para relatório
+     */
+    suspend fun buscarAcertosPorCiclo(cicloId: Long): List<com.example.gestaobilhares.data.entities.Acerto> {
+        return try {
+            cicloAcertoRepository.buscarAcertosPorCiclo(cicloId)
+        } catch (e: Exception) {
+            android.util.Log.e("CycleHistoryViewModel", "Erro ao buscar acertos: ${e.message}")
+            emptyList()
+        }
+    }
+
+    /**
+     * ✅ NOVO: Busca despesas por ciclo para relatório
+     */
+    suspend fun buscarDespesasPorCiclo(cicloId: Long): List<com.example.gestaobilhares.data.entities.Despesa> {
+        return try {
+            cicloAcertoRepository.buscarDespesasPorCiclo(cicloId)
+        } catch (e: Exception) {
+            android.util.Log.e("CycleHistoryViewModel", "Erro ao buscar despesas: ${e.message}")
+            emptyList()
+        }
+    }
+
+    /**
+     * ✅ NOVO: Busca clientes por rota para relatório
+     */
+    suspend fun buscarClientesPorRota(rotaId: Long): List<com.example.gestaobilhares.data.entities.Cliente> {
+        return try {
+            cicloAcertoRepository.buscarClientesPorRota(rotaId)
+        } catch (e: Exception) {
+            android.util.Log.e("CycleHistoryViewModel", "Erro ao buscar clientes: ${e.message}")
+            emptyList()
+        }
     }
 } 

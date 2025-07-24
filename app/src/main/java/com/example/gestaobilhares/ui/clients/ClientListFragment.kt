@@ -225,11 +225,13 @@ class ClientListFragment : Fragment() {
             }
         }
         
-        // ✅ FASE 8C: Observar ciclo de acerto real
+        // ✅ FASE 8C: Observar ciclo ativo real
         lifecycleScope.launch {
-            viewModel.cicloAcerto.collect { ciclo ->
+            viewModel.cicloAtivo.collect { cicloEntity ->
                 try {
-                    _binding?.tvCycleTitle?.text = "${ciclo}º Acerto"
+                    cicloEntity?.let { ciclo ->
+                        _binding?.tvCycleTitle?.text = "${ciclo.numeroCiclo}º Acerto"
+                    }
                 } catch (e: Exception) {
                     android.util.Log.e("ClientListFragment", "Erro ao atualizar ciclo de acerto: ${e.message}")
                 }
@@ -254,6 +256,7 @@ class ClientListFragment : Fragment() {
                         _binding?.tvFaturamento?.text = formatter.format(it.receita)
                         _binding?.tvDespesas?.text = formatter.format(it.despesas)
                         _binding?.tvPendencias?.text = it.pendencias.toString()
+                        _binding?.tvDebitoTotal?.text = formatter.format(it.debitoTotal)
                     }
                 } catch (e: Exception) {
                     android.util.Log.e("ClientListFragment", "Erro ao atualizar card de progresso: ${e.message}")
@@ -266,11 +269,7 @@ class ClientListFragment : Fragment() {
             viewModel.clientes.collect { clientes ->
                 try {
                     clientAdapter.submitList(clientes)
-                    // Atualizar card de progresso de forma síncrona
-                    val rotaId = args.rotaId
-                    lifecycleScope.launch {
-                        viewModel.atualizarCardProgressoSincrono(rotaId)
-                    }
+                    // Card de progresso é atualizado automaticamente via fluxo reativo
                     // Mostrar/esconder empty state com animação
         _binding?.let { binding ->
                         if (clientes.isEmpty()) {

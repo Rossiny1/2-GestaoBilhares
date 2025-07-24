@@ -20,7 +20,8 @@ class CicloAcertoRepository(
     private val cicloAcertoDao: CicloAcertoDao,
     private val despesaRepository: DespesaRepository,
     private val acertoRepository: com.example.gestaobilhares.data.repository.AcertoRepository,
-    private val clienteRepository: ClienteRepository // NOVO
+    private val clienteRepository: ClienteRepository, // NOVO
+    private val rotaDao: com.example.gestaobilhares.data.dao.RotaDao? = null // NOVO: Para relatórios
 ) {
 
     /**
@@ -284,5 +285,41 @@ class CicloAcertoRepository(
     // NOVO: Buscar acertos de uma rota e ciclo
     suspend fun buscarAcertosPorRotaECiclo(rotaId: Long, cicloId: Long): List<com.example.gestaobilhares.data.entities.Acerto> {
         return acertoRepository.buscarPorRotaECicloId(rotaId, cicloId).first()
+    }
+
+    /**
+     * ✅ NOVO: Busca rota por ID para relatório
+     */
+    suspend fun buscarRotaPorId(rotaId: Long): com.example.gestaobilhares.data.entities.Rota? {
+        return try {
+            rotaDao?.getRotaById(rotaId)
+        } catch (e: Exception) {
+            android.util.Log.e("CicloAcertoRepository", "Erro ao buscar rota: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * ✅ NOVO: Busca acertos por ciclo para relatório
+     */
+    suspend fun buscarAcertosPorCiclo(cicloId: Long): List<com.example.gestaobilhares.data.entities.Acerto> {
+        return try {
+            acertoRepository.buscarPorCicloId(cicloId).first()
+        } catch (e: Exception) {
+            android.util.Log.e("CicloAcertoRepository", "Erro ao buscar acertos: ${e.message}")
+            emptyList()
+        }
+    }
+
+    /**
+     * ✅ NOVO: Busca despesas por ciclo para relatório
+     */
+    suspend fun buscarDespesasPorCiclo(cicloId: Long): List<com.example.gestaobilhares.data.entities.Despesa> {
+        return try {
+            despesaRepository.buscarPorCicloId(cicloId).first()
+        } catch (e: Exception) {
+            android.util.Log.e("CicloAcertoRepository", "Erro ao buscar despesas: ${e.message}")
+            emptyList()
+        }
     }
 } 
