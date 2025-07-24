@@ -9,16 +9,18 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.databinding.ItemCycleHistoryBinding
+import com.example.gestaobilhares.ui.clients.CycleHistoryItem
 import java.text.SimpleDateFormat
 import java.util.Locale
+import android.view.View
 
 /**
  * Adapter para lista de ciclos de acerto no histórico
  * ✅ FASE 9C: ADAPTER PARA HISTÓRICO DE CICLOS
  */
 class CycleHistoryAdapter(
-    private val onCicloClick: (CicloAcertoEntity) -> Unit
-) : ListAdapter<CicloAcertoEntity, CycleHistoryAdapter.CycleViewHolder>(CycleDiffCallback()) {
+    private val onCicloClick: (CycleHistoryItem) -> Unit
+) : ListAdapter<CycleHistoryItem, CycleHistoryAdapter.CycleViewHolder>(CycleDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CycleViewHolder {
         val binding = ItemCycleHistoryBinding.inflate(
@@ -35,13 +37,13 @@ class CycleHistoryAdapter(
 
     class CycleViewHolder(
         private val binding: ItemCycleHistoryBinding,
-        private val onCicloClick: (CicloAcertoEntity) -> Unit
+        private val onCicloClick: (CycleHistoryItem) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private val dateFormatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
         private val currencyFormatter = java.text.NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
-        fun bind(ciclo: CicloAcertoEntity) {
+        fun bind(ciclo: CycleHistoryItem) {
             binding.apply {
                 // Título do ciclo
                 tvCycleTitle.text = ciclo.titulo
@@ -54,21 +56,30 @@ class CycleHistoryAdapter(
                 tvExpenses.text = currencyFormatter.format(ciclo.valorTotalDespesas)
                 tvProfit.text = currencyFormatter.format(ciclo.lucroLiquido)
                 
+                // Débito total
+                tvDebitTotal.text = currencyFormatter.format(ciclo.debitoTotal)
+                
                 // Status
-                tvStatus.text = when (ciclo.status) {
-                    StatusCicloAcerto.EM_ANDAMENTO -> "Em Andamento"
-                    StatusCicloAcerto.FINALIZADO -> "Finalizado"
-                    StatusCicloAcerto.CANCELADO -> "Cancelado"
+                when (ciclo.status) {
+                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO -> {
+                        tvStatus.text = "Em Andamento"
+                        tvStatus.setTextColor(root.context.getColor(R.color.white))
+                        tvStatus.background.setTint(root.context.getColor(R.color.orange_600))
+                        tvStatus.visibility = View.VISIBLE
+                    }
+                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO -> {
+                        tvStatus.text = "Finalizado"
+                        tvStatus.setTextColor(root.context.getColor(R.color.white))
+                        tvStatus.background.setTint(root.context.getColor(R.color.green_600))
+                        tvStatus.visibility = View.VISIBLE
+                    }
+                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.CANCELADO -> {
+                        tvStatus.text = "Cancelado"
+                        tvStatus.setTextColor(root.context.getColor(R.color.white))
+                        tvStatus.background.setTint(root.context.getColor(R.color.red_600))
+                        tvStatus.visibility = View.VISIBLE
+                    }
                 }
-                
-                // Cor do status
-                val statusColor = when (ciclo.status) {
-                    StatusCicloAcerto.EM_ANDAMENTO -> R.color.orange_600
-                    StatusCicloAcerto.FINALIZADO -> R.color.green_600
-                    StatusCicloAcerto.CANCELADO -> R.color.red_600
-                }
-                tvStatus.setTextColor(root.context.getColor(statusColor))
-                
                 // Cor do lucro
                 val profitColor = if (ciclo.lucroLiquido >= 0) {
                     R.color.green_600
@@ -76,8 +87,7 @@ class CycleHistoryAdapter(
                     R.color.red_600
                 }
                 tvProfit.setTextColor(root.context.getColor(profitColor))
-                
-                // Progresso
+                // Progresso real
                 tvProgress.text = "${ciclo.clientesAcertados}/${ciclo.totalClientes} clientes"
                 val progressPercent = if (ciclo.totalClientes > 0) {
                     (ciclo.clientesAcertados * 100) / ciclo.totalClientes
@@ -85,7 +95,6 @@ class CycleHistoryAdapter(
                     0
                 }
                 tvProgressPercent.text = "$progressPercent%"
-                
                 // Click listener
                 root.setOnClickListener {
                     onCicloClick(ciclo)
@@ -94,12 +103,12 @@ class CycleHistoryAdapter(
         }
     }
 
-    private class CycleDiffCallback : DiffUtil.ItemCallback<CicloAcertoEntity>() {
-        override fun areItemsTheSame(oldItem: CicloAcertoEntity, newItem: CicloAcertoEntity): Boolean {
+    private class CycleDiffCallback : DiffUtil.ItemCallback<CycleHistoryItem>() {
+        override fun areItemsTheSame(oldItem: CycleHistoryItem, newItem: CycleHistoryItem): Boolean {
             return oldItem.id == newItem.id
         }
 
-        override fun areContentsTheSame(oldItem: CicloAcertoEntity, newItem: CicloAcertoEntity): Boolean {
+        override fun areContentsTheSame(oldItem: CycleHistoryItem, newItem: CycleHistoryItem): Boolean {
             return oldItem == newItem
         }
     }

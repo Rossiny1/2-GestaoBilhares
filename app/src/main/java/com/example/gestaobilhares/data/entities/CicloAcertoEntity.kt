@@ -68,6 +68,9 @@ data class CicloAcertoEntity(
     @ColumnInfo(name = "lucro_liquido")
     val lucroLiquido: Double = 0.0,
     
+    @ColumnInfo(name = "debito_total")
+    val debitoTotal: Double = 0.0,
+    
     @ColumnInfo(name = "observacoes")
     val observacoes: String? = null,
     

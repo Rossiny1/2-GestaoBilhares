@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.util.Date
 import java.util.Calendar
+import com.example.gestaobilhares.data.repository.ClienteRepository
 
 /**
  * Repositório para operações de ciclos de acerto
@@ -18,7 +19,8 @@ import java.util.Calendar
 class CicloAcertoRepository(
     private val cicloAcertoDao: CicloAcertoDao,
     private val despesaRepository: DespesaRepository,
-    private val acertoRepository: com.example.gestaobilhares.data.repository.AcertoRepository // NOVO: injetar AcertoRepository
+    private val acertoRepository: com.example.gestaobilhares.data.repository.AcertoRepository,
+    private val clienteRepository: ClienteRepository // NOVO
 ) {
 
     /**
@@ -167,11 +169,32 @@ class CicloAcertoRepository(
     suspend fun finalizarCiclo(cicloId: Long, dataFim: Date) {
         val ciclo = buscarCicloPorId(cicloId)
         ciclo?.let {
-            val cicloAtualizado = it.copy(
+            val rotaId = it.rotaId
+            // Realiza o cálculo final de todos os dados agregados
+            val acertos = acertoRepository.buscarPorCicloId(cicloId).first()
+            val despesas = despesaRepository.buscarPorCicloId(cicloId).first()
+            val clientes = clienteRepository.obterClientesPorRota(rotaId).first()
+
+            val valorTotalAcertado = acertos.sumOf { a -> a.valorRecebido }
+            val valorTotalDespesas = despesas.sumOf { d -> d.valor }
+            val lucroLiquido = valorTotalAcertado - valorTotalDespesas
+            val clientesAcertados = acertos.map { a -> a.clienteId }.distinct().size
+            val totalClientes = clientes.size
+            val debitoTotal = clientes.sumOf { c -> c.debitoAtual }
+
+            // Cria a versão final e imutável do ciclo
+            val cicloFinalizado = it.copy(
                 dataFim = dataFim,
-                status = StatusCicloAcerto.FINALIZADO
+                status = StatusCicloAcerto.FINALIZADO,
+                valorTotalAcertado = valorTotalAcertado,
+                valorTotalDespesas = valorTotalDespesas,
+                lucroLiquido = lucroLiquido,
+                clientesAcertados = clientesAcertados,
+                totalClientes = totalClientes,
+                debitoTotal = debitoTotal // Salva o valor "congelado"
             )
-            cicloAcertoDao.atualizar(cicloAtualizado)
+            cicloAcertoDao.atualizar(cicloFinalizado)
+            AppLogger.log("CicloAcertoRepo", "Ciclo $cicloId finalizado com dados completos salvos.")
         }
     }
 
@@ -251,5 +274,15 @@ class CicloAcertoRepository(
     // NOVO: Buscar despesas por cicloId
     suspend fun buscarDespesasPorCicloId(cicloId: Long): List<com.example.gestaobilhares.data.entities.Despesa> {
         return despesaRepository.buscarPorCicloId(cicloId).first()
+    }
+
+    // NOVO: Buscar clientes de uma rota
+    suspend fun buscarClientesPorRota(rotaId: Long): List<com.example.gestaobilhares.data.entities.Cliente> {
+        return clienteRepository.obterClientesPorRota(rotaId).first()
+    }
+
+    // NOVO: Buscar acertos de uma rota e ciclo
+    suspend fun buscarAcertosPorRotaECiclo(rotaId: Long, cicloId: Long): List<com.example.gestaobilhares.data.entities.Acerto> {
+        return acertoRepository.buscarPorRotaECicloId(rotaId, cicloId).first()
     }
 } 

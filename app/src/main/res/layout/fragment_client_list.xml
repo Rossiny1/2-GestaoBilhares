@@ -430,6 +430,34 @@
 
                         </LinearLayout>
 
+                        <!-- Linha 3: Débito total -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="4dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Débito total"
+                                android:textColor="@color/orange_600"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvDebitoTotal"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="R$ 0,00"
+                                android:textColor="@color/orange_600"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                tools:text="R$ 2.500,00" />
+                        </LinearLayout>
+
                     </LinearLayout>
 
                 </LinearLayout>

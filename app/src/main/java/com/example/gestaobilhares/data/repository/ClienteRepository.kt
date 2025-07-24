@@ -3,6 +3,7 @@ package com.example.gestaobilhares.data.repository
 import com.example.gestaobilhares.data.dao.ClienteDao
 import com.example.gestaobilhares.data.entities.Cliente
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 /**
  * Repository para operações relacionadas a clientes
@@ -106,5 +107,17 @@ class ClienteRepository(
      */
     suspend fun obterClienteComDebitoAtual(clienteId: Long): Cliente? {
         return clienteDao.obterClienteComDebitoAtual(clienteId)
+    }
+
+    /**
+     * Obtém o débito total de todos os clientes de uma rota
+     */
+    suspend fun obterDebitoTotalPorRota(rotaId: Long): Double {
+        return try {
+            clienteDao.obterClientesPorRota(rotaId).first().sumOf { it.debitoAtual }
+        } catch (e: Exception) {
+            android.util.Log.e("ClienteRepository", "Erro ao calcular débito total: ${e.message}", e)
+            0.0
+        }
     }
 } 

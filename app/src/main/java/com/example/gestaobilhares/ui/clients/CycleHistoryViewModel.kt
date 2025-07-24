@@ -41,6 +41,23 @@ class CycleHistoryViewModelFactory(
     }
 }
 
+// DTO para o Adapter do histórico de ciclos
+// Inclui todos os campos necessários para exibição
+
+data class CycleHistoryItem(
+    val id: Long,
+    val titulo: String,
+    val dataInicio: Date,
+    val dataFim: Date,
+    val valorTotalAcertado: Double,
+    val valorTotalDespesas: Double,
+    val lucroLiquido: Double,
+    val debitoTotal: Double,
+    val clientesAcertados: Int,
+    val totalClientes: Int,
+    val status: com.example.gestaobilhares.data.entities.StatusCicloAcerto
+)
+
 /**
  * ViewModel para gerenciar histórico de ciclos e relatórios
  * ✅ FASE 9C: HISTÓRICO DE CICLOS E RELATÓRIOS FINANCEIROS
@@ -51,8 +68,8 @@ class CycleHistoryViewModel(
     
 
 
-    private val _ciclos = MutableStateFlow<List<CicloAcertoEntity>>(emptyList())
-    val ciclos: StateFlow<List<CicloAcertoEntity>> = _ciclos.asStateFlow()
+    private val _ciclos = MutableStateFlow<List<CycleHistoryItem>>(emptyList())
+    val ciclos: StateFlow<List<CycleHistoryItem>> = _ciclos.asStateFlow()
 
     private val _estatisticas = MutableStateFlow(CycleStatistics())
     val estatisticas: StateFlow<CycleStatistics> = _estatisticas.asStateFlow()
@@ -70,24 +87,38 @@ class CycleHistoryViewModel(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                
-                // Buscar todos os ciclos da rota
-                val ciclosRota = cicloAcertoRepository.buscarCiclosPorRota(rotaId)
-                // Recalcular todos os ciclos antes de exibir
-                for (ciclo in ciclosRota) {
-                    cicloAcertoRepository.atualizarValoresCicloComRecalculo(ciclo.id)
+
+                // Buscar os dados brutos do repositório
+                val ciclosEntity = cicloAcertoRepository.buscarCiclosPorRota(rotaId)
+                val clientes = cicloAcertoRepository.buscarClientesPorRota(rotaId)
+
+                // Mapear para o DTO, aplicando a lógica correta para débito total
+                val ciclosDTO = ciclosEntity.map { ciclo ->
+                    val debitoTotal = if (ciclo.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
+                        ciclo.debitoTotal // Usa o valor salvo e imutável
+                    } else {
+                        clientes.sumOf { it.debitoAtual } // Calcula ao vivo apenas para o ciclo em andamento
+                    }
+
+                    CycleHistoryItem(
+                        id = ciclo.id,
+                        titulo = ciclo.titulo,
+                        dataInicio = ciclo.dataInicio,
+                        dataFim = ciclo.dataFim,
+                        valorTotalAcertado = ciclo.valorTotalAcertado,
+                        valorTotalDespesas = ciclo.valorTotalDespesas,
+                        lucroLiquido = ciclo.lucroLiquido,
+                        debitoTotal = debitoTotal,
+                        clientesAcertados = ciclo.clientesAcertados, // Usar dados já calculados
+                        totalClientes = ciclo.totalClientes,       // Usar dados já calculados
+                        status = ciclo.status
+                    )
                 }
-                val ciclosAtualizados = cicloAcertoRepository.buscarCiclosPorRota(rotaId)
-                com.example.gestaobilhares.utils.AppLogger.log(
-                    "CycleHistoryViewModel",
-                    "Histórico carregado para rota $rotaId: ${ciclosAtualizados.size} ciclos. Dados: " +
-                        ciclosAtualizados.joinToString(" | ") { c -> "id=${c.id}, total=${c.valorTotalAcertado}, despesas=${c.valorTotalDespesas}, lucro=${c.lucroLiquido}, clientes=${c.clientesAcertados}" }
-                )
-                _ciclos.value = ciclosAtualizados
-                
-                // Calcular estatísticas
-                calcularEstatisticas(ciclosAtualizados)
-                
+                _ciclos.value = ciclosDTO
+
+                // Calcular estatísticas com os dados já carregados
+                calcularEstatisticas(ciclosEntity)
+
             } catch (e: Exception) {
                 android.util.Log.e("CycleHistoryViewModel", "Erro ao carregar histórico: ${e.message}")
                 _errorMessage.value = "Erro ao carregar histórico: ${e.message}"
@@ -156,7 +187,7 @@ class CycleHistoryViewModel(
     /**
      * Filtra ciclos por período
      */
-    fun filtrarPorPeriodo(dataInicio: Date, dataFim: Date) {
+    fun filtrarPorPeriodo(rotaId: Long, dataInicio: Date, dataFim: Date) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
@@ -166,10 +197,10 @@ class CycleHistoryViewModel(
                 }
                 
                 _ciclos.value = ciclosFiltrados
-                calcularEstatisticas(ciclosFiltrados)
+                calcularEstatisticas(cicloAcertoRepository.buscarCiclosPorRota(rotaId))
                 
             } catch (e: Exception) {
-                android.util.Log.e("CycleHistoryViewModel", "Erro ao filtrar: ${e.message}")
+                android.util.Log.e("CycleHistoryViewModel", "Erro ao filtrar: "+e.message)
                 _errorMessage.value = "Erro ao filtrar: ${e.message}"
             } finally {
                 _isLoading.value = false

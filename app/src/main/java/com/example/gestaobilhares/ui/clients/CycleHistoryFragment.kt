@@ -17,8 +17,10 @@ import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
+import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
+import com.example.gestaobilhares.ui.clients.CycleHistoryItem
 
 /**
  * Fragment para exibir o histórico de ciclos de acerto de uma rota
@@ -35,7 +37,8 @@ class CycleHistoryFragment : Fragment() {
             CicloAcertoRepository(
                 AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
                 DespesaRepository(AppDatabase.getDatabase(requireContext()).despesaDao()),
-                AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao())
+                AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao()),
+                ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao())
             )
         )
     }
@@ -67,15 +70,13 @@ class CycleHistoryFragment : Fragment() {
 
     private fun configurarRecyclerView() {
         cycleAdapter = CycleHistoryAdapter { ciclo ->
-            // Navegar para detalhes do ciclo
-            val action = CycleHistoryFragmentDirections
-                .actionCycleHistoryFragmentToCycleDetailFragment(ciclo.id)
-            findNavController().navigate(action)
+            // ciclo é do tipo CycleHistoryItem agora
+            // TODO: ação ao clicar no ciclo
         }
         
         binding.rvCycles.apply {
-            adapter = cycleAdapter
             layoutManager = LinearLayoutManager(requireContext())
+            adapter = cycleAdapter
         }
     }
 

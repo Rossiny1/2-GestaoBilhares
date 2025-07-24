@@ -62,7 +62,8 @@ class ExpenseRegisterFragment : Fragment() {
             CicloAcertoRepository(
                 database.cicloAcertoDao(),
                 DespesaRepository(database.despesaDao()),
-                AcertoRepository(database.acertoDao(), database.clienteDao())
+                AcertoRepository(database.acertoDao(), database.clienteDao()),
+                ClienteRepository(database.clienteDao())
             )
         )
         

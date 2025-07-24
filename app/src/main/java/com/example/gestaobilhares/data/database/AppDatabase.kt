@@ -27,7 +27,7 @@ import com.example.gestaobilhares.data.entities.*
         CategoriaDespesa::class, // ✅ NOVO: CATEGORIAS DE DESPESAS
         TipoDespesa::class // ✅ NOVO: TIPOS DE DESPESAS
     ],
-    version = 11, // ✅ NOVO: ADICIONADAS ENTIDADES DE CATEGORIA E TIPO DE DESPESAS
+    version = 12, // ✅ MIGRATION: Adicionado campo debito_total em ciclos_acerto
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -102,16 +102,18 @@ abstract class AppDatabase : RoomDatabase() {
          */
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
+                val MIGRATION_11_12 = object : androidx.room.migration.Migration(11, 12) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        database.execSQL("ALTER TABLE ciclos_acerto ADD COLUMN debito_total REAL NOT NULL DEFAULT 0.0")
+                    }
+                }
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    // Para produção, remover allowMainThreadQueries()
-                    // .allowMainThreadQueries() // Apenas para desenvolvimento/testes
-                    .fallbackToDestructiveMigration() // Para desenvolvimento inicial
+                    .addMigrations(MIGRATION_11_12)
                     .build()
-                
                 INSTANCE = instance
                 instance
             }

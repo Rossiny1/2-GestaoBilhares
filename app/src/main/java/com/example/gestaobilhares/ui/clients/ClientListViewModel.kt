@@ -111,42 +111,42 @@ class ClientListViewModel(
         viewModelScope.launch {
             combine(
                 cicloAtivo,
-                clientes
-        ) { ciclo, clientes ->
-                android.util.Log.d("DEBUG_DIAG", "[CARD] combine cicloAtivo: ${ciclo?.id}, clientes: ${clientes.size}")
-                Pair(ciclo, clientes)
-            }.flatMapLatest { (ciclo, clientes) ->
-            if (ciclo == null) {
-                    android.util.Log.d("DEBUG_DIAG", "[CARD] cicloAtivo é null, card zerado")
+                clientes,
+                clienteRepository.obterClientesPorRota(rotaId) // Adiciona o Flow de clientes para o débito total
+            ) { ciclo, clientesVisiveis, todosClientes ->
+                Triple(ciclo, clientesVisiveis, todosClientes)
+            }.flatMapLatest { (ciclo, clientesVisiveis, todosClientes) ->
+                if (ciclo == null) {
+                    val debitoTotal = todosClientes.sumOf { it.debitoAtual }
                     return@flatMapLatest kotlinx.coroutines.flow.flowOf(
-                        CicloProgressoCard(0.0, 0.0, 0.0, 0, 0, clientes.size, 0)
+                        CicloProgressoCard(0.0, 0.0, 0.0, 0, 0, todosClientes.size, 0, debitoTotal)
                     )
                 }
-                val cicloId = ciclo.id
-                android.util.Log.d("DEBUG_DIAG", "[CARD] cicloId ativo: $cicloId, status: ${ciclo.status}")
+                
+                val debitoTotal = todosClientes.sumOf { it.debitoAtual }
+
                 combine(
                     acertoRepository.buscarPorRotaECicloId(rotaId, ciclo.id),
                     appRepository.buscarDespesasPorCicloId(ciclo.id)
                 ) { acertos, despesas ->
-                    android.util.Log.d("DEBUG_DIAG", "[CARD] acertos retornados: ${acertos.size}, cicloId esperado: $cicloId, cicloIds dos acertos: ${acertos.map { it.cicloId }}")
-                    android.util.Log.d("DEBUG_DIAG", "[CARD] despesas retornadas: ${despesas.size}")
-                val clientesAcertados = acertos.map { it.clienteId }.distinct().size
-                val totalClientes = clientes.size
-                val faturamentoReal = acertos.sumOf { it.valorRecebido }
-                val despesasReais = despesas.sumOf { it.valor }
-                    val pendencias = calcularPendenciasReaisSync(clientes)
+                    val clientesAcertados = acertos.map { it.clienteId }.distinct().size
+                    val totalClientes = todosClientes.size
+                    val faturamentoReal = acertos.sumOf { it.valorRecebido }
+                    val despesasReais = despesas.sumOf { it.valor }
+                    val pendencias = calcularPendenciasReaisSync(todosClientes)
                     val percentualAcertados = if (totalClientes > 0) (clientesAcertados * 100) / totalClientes else 0
-                val saldo = faturamentoReal - despesasReais
-                    android.util.Log.d("DEBUG_DIAG", "[CARD] resultado: receita=$faturamentoReal, despesas=$despesasReais, saldo=$saldo, percentual=$percentualAcertados, clientesAcertados=$clientesAcertados, totalClientes=$totalClientes, pendencias=$pendencias")
-                CicloProgressoCard(
-                    receita = faturamentoReal,
-                    despesas = despesasReais,
-                    saldo = saldo,
-                    percentual = percentualAcertados,
-                    clientesAcertados = clientesAcertados,
-                    totalClientes = totalClientes,
-                    pendencias = pendencias
-                )
+                    val saldo = faturamentoReal - despesasReais
+                    
+                    CicloProgressoCard(
+                        receita = faturamentoReal,
+                        despesas = despesasReais,
+                        saldo = saldo,
+                        percentual = percentualAcertados,
+                        clientesAcertados = clientesAcertados,
+                        totalClientes = totalClientes,
+                        pendencias = pendencias,
+                        debitoTotal = debitoTotal
+                    )
                 }
             }.collect {
                 _cicloProgressoCard.value = it
@@ -284,21 +284,18 @@ class ClientListViewModel(
                 
                 val cicloAtual = _cicloAcertoEntity.value ?: return@launch
                 
-                // Atualizar ciclo para finalizado
-                val cicloFinalizado = cicloAtual.copy(
-                    dataFim = Date(),
-                    status = StatusCicloAcerto.FINALIZADO,
-                    dataAtualizacao = Date()
-                )
+                // Centralizar a lógica de finalização no repositório
+                cicloAcertoRepository.finalizarCiclo(cicloAtual.id, Date())
                 
-                cicloAcertoRepository.inserirOuAtualizarCiclo(cicloFinalizado)
+                // Recarregar o ciclo para obter os dados atualizados (status e débito total)
+                val cicloFinalizado = cicloAcertoRepository.buscarCicloPorId(cicloAtual.id)
                 
-                // Atualizar estado
+                // Atualizar estado da UI
                 _cicloAcertoEntity.value = cicloFinalizado
                 _statusCiclo.value = StatusCicloAcerto.FINALIZADO
                 _statusRota.value = StatusRota.FINALIZADA
                 
-                android.util.Log.d("ClientListViewModel", "✅ Ciclo ${cicloAtual.numeroCiclo} finalizado com sucesso")
+                android.util.Log.d("ClientListViewModel", "✅ Ciclo ${cicloAtual.numeroCiclo} finalizado com sucesso via repositório")
                 
             } catch (e: Exception) {
                 android.util.Log.e("ClientListViewModel", "Erro ao finalizar rota: ${e.message}", e)
@@ -599,14 +596,15 @@ class ClientListViewModel(
                         percentual = percentual,
                         clientesAcertados = clientesAcertados,
                         totalClientes = totalClientes,
-                        pendencias = pendencias
+                        pendencias = pendencias,
+                        debitoTotal = calcularDebitoTotal()
                     )
                     _cicloProgressoCard.value = card
                     AppLogger.log("ClientListVM", "Card de progresso atualizado com sucesso: $card")
                 } else {
                     AppLogger.log("ClientListVM", "Nenhum cliente na rota. Resetando card de progresso.")
                     // Resetar card se não houver clientes
-                    _cicloProgressoCard.value = CicloProgressoCard(0.0,0.0,0.0,0,0,0,0)
+                    _cicloProgressoCard.value = CicloProgressoCard(0.0,0.0,0.0,0,0,0,0,0.0)
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao atualizar o progresso do ciclo: ${e.message}"
@@ -623,7 +621,7 @@ class ClientListViewModel(
             val ciclo = cicloAcertoRepository.buscarCicloAtivo(rotaId) ?: cicloAcertoRepository.buscarEstatisticasRota(rotaId)
             if (ciclo == null) {
                 AppLogger.log("ClientListVM", "[CARD] Nenhum ciclo encontrado para rotaId: $rotaId. Card zerado.")
-                _cicloProgressoCard.value = CicloProgressoCard(0.0,0.0,0.0,0,0,0,0)
+                _cicloProgressoCard.value = CicloProgressoCard(0.0,0.0,0.0,0,0,0,0,0.0)
                 return
             }
             AppLogger.log("ClientListVM", "[CARD] Ciclo usado: id=${ciclo.id}, status=${ciclo.status}, dataInicio=${ciclo.dataInicio}")
@@ -652,11 +650,24 @@ class ClientListViewModel(
                 percentual = percentualAcertados,
                 clientesAcertados = clientesAcertados,
                 totalClientes = totalClientes,
-                pendencias = pendencias
+                pendencias = pendencias,
+                debitoTotal = calcularDebitoTotal()
             )
         } catch (e: Exception) {
             AppLogger.log("ClientListVM", "[CARD] ERRO ao calcular card: ${e.message}")
-            _cicloProgressoCard.value = CicloProgressoCard(0.0,0.0,0.0,0,0,0,0)
+            _cicloProgressoCard.value = CicloProgressoCard(0.0,0.0,0.0,0,0,0,0,0.0)
+        }
+    }
+
+    // NOVO: Calcula o débito total de todos os clientes da rota
+    private suspend fun calcularDebitoTotal(): Double {
+        return try {
+            val debitoTotal = clienteRepository.obterDebitoTotalPorRota(rotaId)
+            android.util.Log.d("ClientListViewModel", "✅ Débito total calculado (banco): R$$debitoTotal")
+            debitoTotal
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListViewModel", "Erro ao calcular débito total: ${e.message}")
+            0.0
         }
     }
 } 
@@ -669,5 +680,6 @@ data class CicloProgressoCard(
     val percentual: Int,
     val clientesAcertados: Int,
     val totalClientes: Int,
-    val pendencias: Int
+    val pendencias: Int,
+    val debitoTotal: Double // NOVO
 ) 
