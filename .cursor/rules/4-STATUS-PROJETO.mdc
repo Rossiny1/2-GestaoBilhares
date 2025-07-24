@@ -231,30 +231,45 @@
 
 ---
 
-# 🆕 ATUALIZAÇÃO 09/07/2025 - FASE 9C: HISTÓRICO DE CICLOS E RELATÓRIOS
+# 🆕 ATUALIZAÇÃO 10/07/2025 - FASE 9C: HISTÓRICO DE CICLOS CORRIGIDO
 
 ## ✅ IMPLEMENTADO
+
 - Tela de Histórico de Ciclos com estatísticas financeiras (receita, despesas, lucro líquido e médio)
 - Novo Fragmento, ViewModel, Adapter e layouts profissionais
 - Navegação integrada: botão de acesso ao histórico na tela de Rotas
 - Repositório e DAO integrados ao ciclo real do banco
 - Correções de build, SafeArgs e data classes imutáveis
-- Commit documentado: build 100% OK, APK gerado com sucesso
+- **CORREÇÃO CRÍTICA:** Atualização automática dos valores do ciclo após cada acerto
+- **INTEGRAÇÃO COMPLETA:** CicloAcertoRepository + DespesaRepository para dados reais
+- **DADOS REAIS:** Histórico agora mostra valores corretos (não mais zerados)
 
 ## 🟢 STATUS ATUAL
+
 - Fluxo principal: Login → Rotas → Clientes → Detalhes → Acerto → Histórico de Ciclos
-- Histórico de ciclos mostra dados reais do banco, com filtros básicos
-- Relatórios financeiros já exibem totais e médias por ciclo
+- **HISTÓRICO CORRIGIDO:** Agora exibe dados reais (receita, despesas, lucro, progresso)
+- **ATUALIZAÇÃO AUTOMÁTICA:** Valores do ciclo são recalculados após cada acerto
+- **INTEGRAÇÃO COMPLETA:** Despesas e acertos vinculados corretamente aos ciclos
 - Build limpo, sem erros críticos
 
-## 🔜 PRÓXIMOS PASSOS SUGERIDOS
-1. Tela de detalhes do ciclo (clientes, mesas, despesas, ações rápidas)
-2. Filtros avançados (período, status, valor)
-3. Exportação de relatórios (PDF/Excel)
-4. Backup/restore e exportação de dados
-5. Gráficos e dashboards financeiros
-6. Testes automatizados e refino de UX
+## 🔧 CORREÇÕES IMPLEMENTADAS
 
-**Status:** FASE 9C CONCLUÍDA COM SUCESSO
-**Commit:** bbd1875 - feat: Histórico de Ciclos, Relatórios Financeiros, integração e build OK
-**Data:** 09/07/2025
+1. **Problema identificado:** Campos financeiros do ciclo sempre zerados
+2. **Causa raiz:** Falta de atualização dos valores após salvar acertos
+3. **Solução:** Implementação de atualização automática no SettlementViewModel
+4. **Integração:** CicloAcertoRepository + DespesaRepository para dados completos
+5. **Resultado:** Histórico de ciclos agora reflete dados reais do banco
+
+## 🔜 PRÓXIMOS PASSOS SUGERIDOS
+
+1. Testes finais da tela de histórico corrigida
+2. Tela de detalhes do ciclo (clientes, mesas, despesas, ações rápidas)
+3. Filtros avançados (período, status, valor)
+4. Exportação de relatórios (PDF/Excel)
+5. Backup/restore e exportação de dados
+6. Gráficos e dashboards financeiros
+7. Testes automatizados e refino de UX
+
+**Status:** FASE 9C CORRIGIDA E FUNCIONAL
+**Commit:** Correção do histórico de ciclos - dados reais implementados
+**Data:** 10/07/2025

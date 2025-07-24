@@ -63,14 +63,6 @@
                     android:contentDescription="Filtrar"
                     app:tint="@android:color/white" />
 
-                <ImageView
-                    android:id="@+id/cycleHistoryButton"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_assignment"
-                    android:contentDescription="Histórico de Ciclos"
-                    app:tint="@android:color/white" />
-
             </LinearLayout>
 
             <!-- Cards de resumo -->

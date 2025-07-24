@@ -59,7 +59,11 @@ class ExpenseRegisterFragment : Fragment() {
             DespesaRepository(database.despesaDao()),
             CategoriaDespesaRepository(database.categoriaDespesaDao()),
             TipoDespesaRepository(database.tipoDespesaDao()),
-            CicloAcertoRepository(database.cicloAcertoDao())
+            CicloAcertoRepository(
+                database.cicloAcertoDao(),
+                DespesaRepository(database.despesaDao()),
+                AcertoRepository(database.acertoDao(), database.clienteDao())
+            )
         )
         
         setupUI()

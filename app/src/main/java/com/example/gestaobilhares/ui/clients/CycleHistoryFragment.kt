@@ -15,6 +15,8 @@ import com.example.gestaobilhares.databinding.FragmentCycleHistoryBinding
 import com.example.gestaobilhares.ui.clients.adapter.CycleHistoryAdapter
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.data.repository.DespesaRepository
+import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 
@@ -30,7 +32,11 @@ class CycleHistoryFragment : Fragment() {
     private val args: CycleHistoryFragmentArgs by navArgs()
     private val viewModel: CycleHistoryViewModel by viewModels {
         CycleHistoryViewModelFactory(
-            CicloAcertoRepository(AppDatabase.getDatabase(requireContext()).cicloAcertoDao())
+            CicloAcertoRepository(
+                AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
+                DespesaRepository(AppDatabase.getDatabase(requireContext()).despesaDao()),
+                AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao())
+            )
         )
     }
     
@@ -47,6 +53,8 @@ class CycleHistoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+
         
         configurarRecyclerView()
         configurarBotoes()

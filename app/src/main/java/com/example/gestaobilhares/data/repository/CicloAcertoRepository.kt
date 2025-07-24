@@ -16,14 +16,22 @@ import java.util.Calendar
  * ✅ FASE 9C: REPOSITÓRIO PARA HISTÓRICO DE CICLOS
  */
 class CicloAcertoRepository(
-    private val cicloAcertoDao: CicloAcertoDao
+    private val cicloAcertoDao: CicloAcertoDao,
+    private val despesaRepository: DespesaRepository,
+    private val acertoRepository: com.example.gestaobilhares.data.repository.AcertoRepository // NOVO: injetar AcertoRepository
 ) {
 
     /**
      * Busca todos os ciclos de uma rota
      */
     suspend fun buscarCiclosPorRota(rotaId: Long): List<CicloAcertoEntity> {
-        return cicloAcertoDao.listarPorRota(rotaId).first()
+        val ciclos = cicloAcertoDao.listarPorRota(rotaId).first()
+        com.example.gestaobilhares.utils.AppLogger.log(
+            "CicloAcertoRepo",
+            "Buscando ciclos da rota $rotaId: encontrados ${ciclos.size} ciclos. Dados: " +
+                    ciclos.joinToString(" | ") { c -> "id=${c.id}, total=${c.valorTotalAcertado}, despesas=${c.valorTotalDespesas}, lucro=${c.lucroLiquido}, clientes=${c.clientesAcertados}" }
+        )
+        return ciclos
     }
 
     /**
@@ -87,6 +95,35 @@ class CicloAcertoRepository(
                 lucroLiquido = valorTotalAcertado - valorTotalDespesas
             )
             cicloAcertoDao.atualizar(cicloAtualizado)
+            com.example.gestaobilhares.utils.AppLogger.log(
+                "CicloAcertoRepo",
+                "Ciclo atualizado: cicloId=$cicloId, valorTotalAcertado=$valorTotalAcertado, valorTotalDespesas=$valorTotalDespesas, clientesAcertados=$clientesAcertados, lucroLiquido=${valorTotalAcertado - valorTotalDespesas}"
+            )
+        }
+    }
+
+    /**
+     * Recalcula e atualiza todos os campos agregados do ciclo a partir dos acertos e despesas do ciclo
+     */
+    suspend fun atualizarValoresCicloComRecalculo(cicloId: Long) {
+        val ciclo = buscarCicloPorId(cicloId)
+        ciclo?.let {
+            val acertos = acertoRepository.buscarPorCicloId(cicloId).first()
+            val despesas = despesaRepository.buscarPorCicloId(cicloId).first()
+            val valorTotalAcertado = acertos.sumOf { it.valorRecebido }
+            val valorTotalDespesas = despesas.sumOf { it.valor }
+            val clientesAcertados = acertos.map { it.clienteId }.distinct().size
+            val cicloAtualizado = it.copy(
+                valorTotalAcertado = valorTotalAcertado,
+                valorTotalDespesas = valorTotalDespesas,
+                clientesAcertados = clientesAcertados,
+                lucroLiquido = valorTotalAcertado - valorTotalDespesas
+            )
+            cicloAcertoDao.atualizar(cicloAtualizado)
+            com.example.gestaobilhares.utils.AppLogger.log(
+                "CicloAcertoRepo",
+                "[RECALCULO] Ciclo $cicloId atualizado: arrecadado=$valorTotalAcertado, despesas=$valorTotalDespesas, clientes=$clientesAcertados, lucro=${valorTotalAcertado - valorTotalDespesas}"
+            )
         }
     }
 
@@ -209,5 +246,10 @@ class CicloAcertoRepository(
                 AppLogger.log("CicloAcertoRepo", "AVISO: Nenhum ciclo em andamento encontrado para finalizar na rota $rotaId.")
             }
         }
+    }
+
+    // NOVO: Buscar despesas por cicloId
+    suspend fun buscarDespesasPorCicloId(cicloId: Long): List<com.example.gestaobilhares.data.entities.Despesa> {
+        return despesaRepository.buscarPorCicloId(cicloId).first()
     }
 } 

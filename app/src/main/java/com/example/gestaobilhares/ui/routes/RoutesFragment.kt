@@ -115,22 +115,6 @@ class RoutesFragment : Fragment() {
             Toast.makeText(requireContext(), "Filtros serão implementados em breve", Toast.LENGTH_SHORT).show()
         }
 
-        // ✅ FASE 9C: Botão de histórico de ciclos
-        binding.cycleHistoryButton.setOnClickListener {
-            val rotas = viewModel.rotasResumo.value
-            if (rotas != null && rotas.isNotEmpty()) {
-                try {
-                    val action = RoutesFragmentDirections
-                        .actionRoutesFragmentToCycleHistoryFragment(rotas.first().rota.id)
-                    findNavController().navigate(action)
-                } catch (e: Exception) {
-                    Toast.makeText(requireContext(), "Erro ao abrir histórico: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                Toast.makeText(requireContext(), "Nenhuma rota disponível para histórico", Toast.LENGTH_SHORT).show()
-            }
-        }
-
         // Link "Ver todas"
         binding.verTodasButton.setOnClickListener {
             // TODO: Navegar para tela de todas as rotas

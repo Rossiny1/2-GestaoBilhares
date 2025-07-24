@@ -318,6 +318,28 @@ class SettlementViewModel(
                 
                 val acertoId = acertoRepository.salvarAcerto(acerto)
                 Log.d("SettlementViewModel", "✅ Acerto salvo com ID: $acertoId")
+
+                // NOVO: Atualizar valores do ciclo após salvar acerto
+                // Buscar todos os acertos e despesas ANTERIORES do ciclo para calcular os totais
+                val acertosAnteriores = acertoRepository.buscarPorRotaECicloId(rotaId, cicloId).first().filter { it.id != acertoId }
+                val despesasDoCiclo = cicloAcertoRepository.buscarDespesasPorCicloId(cicloId)
+
+                // Somar os valores anteriores com o valor do acerto ATUAL
+                val valorTotalAcertado = acertosAnteriores.sumOf { it.valorRecebido } + acerto.valorRecebido
+                val valorTotalDespesas = despesasDoCiclo.sumOf { it.valor }
+                val clientesAcertados = (acertosAnteriores.map { it.clienteId } + acerto.clienteId).distinct().size
+                
+                Log.d("SettlementViewModel", "=== ATUALIZANDO VALORES DO CICLO $cicloId ===")
+                Log.d("SettlementViewModel", "Total Acertado: $valorTotalAcertado (Anteriores: ${acertosAnteriores.sumOf { it.valorRecebido }} + Atual: ${acerto.valorRecebido})")
+                Log.d("SettlementViewModel", "Total Despesas: $valorTotalDespesas")
+                Log.d("SettlementViewModel", "Clientes Acertados: $clientesAcertados")
+
+                cicloAcertoRepository.atualizarValoresCiclo(
+                    cicloId = cicloId,
+                    valorTotalAcertado = valorTotalAcertado,
+                    valorTotalDespesas = valorTotalDespesas,
+                    clientesAcertados = clientesAcertados
+                )
                 
                 // ✅ CORREÇÃO: Verificar se realmente foi salvo
                 val acertoSalvo = acertoRepository.buscarPorId(acertoId)

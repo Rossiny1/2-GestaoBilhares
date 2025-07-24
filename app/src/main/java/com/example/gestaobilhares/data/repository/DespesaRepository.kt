@@ -120,6 +120,19 @@ class DespesaRepository(
             despesaDao.calcularTotalPorRota(rotaId)
         }
     }
+
+    /**
+     * Busca despesas por cicloId.
+     * @param cicloId ID do ciclo
+     * @return Flow com lista de despesas do ciclo
+     */
+    fun buscarPorCicloId(cicloId: Long): Flow<List<Despesa>> {
+        return if (usarDadosMock) {
+            flowOf(emptyList()) // Mock vazio para ciclos
+        } else {
+            despesaDao.buscarPorCicloId(cicloId)
+        }
+    }
     
     /**
      * Dados mock para desenvolvimento e testes.

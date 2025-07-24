@@ -18,6 +18,7 @@ import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.RotaRepository
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.AppRepository
 import java.text.SimpleDateFormat
@@ -61,7 +62,11 @@ class ClientListFragment : Fragment() {
         viewModel = ClientListViewModel(
             ClienteRepository(database.clienteDao()),
             RotaRepository(database.rotaDao()),
-            CicloAcertoRepository(database.cicloAcertoDao()),
+            CicloAcertoRepository(
+                database.cicloAcertoDao(),
+                DespesaRepository(database.despesaDao()),
+                AcertoRepository(database.acertoDao(), database.clienteDao())
+            ),
             AcertoRepository(database.acertoDao(), database.clienteDao()),
             AppRepository(
                 database.clienteDao(),

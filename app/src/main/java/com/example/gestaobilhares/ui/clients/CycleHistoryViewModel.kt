@@ -48,6 +48,8 @@ class CycleHistoryViewModelFactory(
 class CycleHistoryViewModel(
     private val cicloAcertoRepository: CicloAcertoRepository
 ) : ViewModel() {
+    
+
 
     private val _ciclos = MutableStateFlow<List<CicloAcertoEntity>>(emptyList())
     val ciclos: StateFlow<List<CicloAcertoEntity>> = _ciclos.asStateFlow()
@@ -71,10 +73,20 @@ class CycleHistoryViewModel(
                 
                 // Buscar todos os ciclos da rota
                 val ciclosRota = cicloAcertoRepository.buscarCiclosPorRota(rotaId)
-                _ciclos.value = ciclosRota
+                // Recalcular todos os ciclos antes de exibir
+                for (ciclo in ciclosRota) {
+                    cicloAcertoRepository.atualizarValoresCicloComRecalculo(ciclo.id)
+                }
+                val ciclosAtualizados = cicloAcertoRepository.buscarCiclosPorRota(rotaId)
+                com.example.gestaobilhares.utils.AppLogger.log(
+                    "CycleHistoryViewModel",
+                    "Histórico carregado para rota $rotaId: ${ciclosAtualizados.size} ciclos. Dados: " +
+                        ciclosAtualizados.joinToString(" | ") { c -> "id=${c.id}, total=${c.valorTotalAcertado}, despesas=${c.valorTotalDespesas}, lucro=${c.lucroLiquido}, clientes=${c.clientesAcertados}" }
+                )
+                _ciclos.value = ciclosAtualizados
                 
                 // Calcular estatísticas
-                calcularEstatisticas(ciclosRota)
+                calcularEstatisticas(ciclosAtualizados)
                 
             } catch (e: Exception) {
                 android.util.Log.e("CycleHistoryViewModel", "Erro ao carregar histórico: ${e.message}")
