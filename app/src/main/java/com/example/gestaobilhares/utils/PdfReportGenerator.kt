@@ -59,14 +59,8 @@ class PdfReportGenerator(private val context: Context) {
             // Adicionar cabeçalho
             addHeader(document, rota, ciclo)
             
-            // Adicionar resumo executivo
-            addExecutiveSummary(document, ciclo)
-            
             // Adicionar lista de recebimentos
             addReceiptsList(document, acertos, clientes)
-            
-            // Adicionar resumo financeiro
-            addFinancialSummary(document, ciclo)
             
             // Adicionar lista de despesas
             addExpensesList(document, despesas)
@@ -90,24 +84,45 @@ class PdfReportGenerator(private val context: Context) {
      */
     private fun addHeader(document: Document, rota: Rota, ciclo: CicloAcertoEntity) {
         try {
-            // Logo
-            val logoStream = context.resources.openRawResource(R.drawable.logo_globo1)
-            val logoBytes = logoStream.readBytes()
-            logoStream.close()
+            // Tabela para organizar logo e título na mesma linha
+            val headerTable = Table(2)
+                .setWidth(UnitValue.createPercentValue(100f))
+                .setMarginBottom(20f)
             
-            val logo = Image(ImageDataFactory.create(logoBytes))
-            logo.setWidth(150f)
-            logo.setHorizontalAlignment(HorizontalAlignment.CENTER)
-            document.add(logo)
+            // Célula do logo
+            val logoCell = Cell()
+            try {
+                val logoStream = context.resources.openRawResource(R.drawable.logo_globo1)
+                val logoBytes = logoStream.readBytes()
+                logoStream.close()
+                
+                val logo = Image(ImageDataFactory.create(logoBytes))
+                logo.setWidth(80f)
+                logoCell.add(logo)
+            } catch (e: Exception) {
+                logoCell.add(Paragraph("LOGO"))
+            }
+            logoCell.setBorder(null)
+            headerTable.addCell(logoCell)
             
-            // Título do relatório
-            val title = Paragraph("RELATÓRIO DETALHADO DE FECHAMENTO")
-                .setFontSize(20f)
-                .setBold()
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginTop(20f)
-                .setMarginBottom(10f)
-            document.add(title)
+            // Célula do título
+            val titleCell = Cell()
+            titleCell.add(
+                Paragraph("RELATÓRIO DE FECHAMENTO")
+                    .setFontSize(16f)
+                    .setBold()
+                    .setTextAlignment(TextAlignment.RIGHT)
+            )
+            titleCell.add(
+                Paragraph("${rota.nome} - Ciclo ${ciclo.ano} #${ciclo.numeroCiclo}")
+                    .setFontSize(12f)
+                    .setTextAlignment(TextAlignment.RIGHT)
+                    .setMarginTop(5f)
+            )
+            titleCell.setBorder(null)
+            headerTable.addCell(titleCell)
+            
+            document.add(headerTable)
             
             // Informações da rota
             val routeInfo = Table(2)
@@ -187,17 +202,14 @@ class PdfReportGenerator(private val context: Context) {
             return
         }
         
-        // Cabeçalho da tabela
-        val receiptsTable = Table(8)
+        // Cabeçalho da tabela (removendo colunas desnecessárias)
+        val receiptsTable = Table(5)
             .setWidth(UnitValue.createPercentValue(100f))
             .setMarginBottom(20f)
         
         receiptsTable.addHeaderCell(createHeaderCell("Cliente"))
         receiptsTable.addHeaderCell(createHeaderCell("Data"))
-        receiptsTable.addHeaderCell(createHeaderCell("Mesa"))
-        receiptsTable.addHeaderCell(createHeaderCell("Relógio Inicial"))
-        receiptsTable.addHeaderCell(createHeaderCell("Relógio Final"))
-        receiptsTable.addHeaderCell(createHeaderCell("Fichas"))
+        receiptsTable.addHeaderCell(createHeaderCell("Tipo Pagamento"))
         receiptsTable.addHeaderCell(createHeaderCell("Recebido"))
         receiptsTable.addHeaderCell(createHeaderCell("Débito"))
         
@@ -209,30 +221,27 @@ class PdfReportGenerator(private val context: Context) {
         
         acertos.forEach { acerto ->
             val cliente = clientes.find { it.id == acerto.clienteId }
-            val clienteNome = cliente?.nome ?: "Cliente não encontrado"
+            val clienteNome = cliente?.nome ?: "Cliente #${acerto.clienteId}"
+            
+            // Determinar tipo de pagamento (simplificado por enquanto)
+            val tipoPagamento = "Dinheiro" // Por enquanto, será melhorado na próxima etapa
             
             receiptsTable.addCell(createCell(clienteNome, false))
             receiptsTable.addCell(createCell(dateOnlyFormatter.format(acerto.dataAcerto), false))
-            receiptsTable.addCell(createCell("N/A", false)) // mesaId não existe na entidade Acerto
-            receiptsTable.addCell(createCell("N/A", false)) // relogioInicial não existe na entidade Acerto
-            receiptsTable.addCell(createCell("N/A", false)) // relogioFinal não existe na entidade Acerto
-            receiptsTable.addCell(createCell("N/A", false)) // cálculo não possível
+            receiptsTable.addCell(createCell(tipoPagamento, false))
             receiptsTable.addCell(createCell(currencyFormatter.format(acerto.valorRecebido), false))
             receiptsTable.addCell(createCell(currencyFormatter.format(acerto.debitoAtual), false))
             
             totalRecebido += acerto.valorRecebido
             totalDebito += acerto.debitoAtual
-            
-            // Calcular totais por forma de pagamento
-            acerto.metodosPagamentoJson?.let { metodosJson ->
-                try {
-                    // Aqui você pode implementar parsing do JSON se necessário
-                    // Por enquanto, vamos assumir que não temos dados detalhados
-                } catch (e: Exception) {
-                    // Ignorar erro de parsing
-                }
-            }
         }
+        
+        // Adicionar linha de totais
+        receiptsTable.addCell(createCell("TOTAIS", true))
+        receiptsTable.addCell(createCell("", true))
+        receiptsTable.addCell(createCell("", true))
+        receiptsTable.addCell(createCell(currencyFormatter.format(totalRecebido), true))
+        receiptsTable.addCell(createCell(currencyFormatter.format(totalDebito), true))
         
         document.add(receiptsTable)
         
@@ -319,9 +328,9 @@ class PdfReportGenerator(private val context: Context) {
             
             despesasCategoria.forEach { despesa ->
                 expensesTable.addCell(createCell(despesa.descricao, false))
-                expensesTable.addCell(createCell(despesa.dataHora.format(localDateTimeFormatter), false))
+                expensesTable.addCell(createCell(try { despesa.dataHora.format(localDateTimeFormatter) } catch (e: Exception) { "Data inválida" }, false))
                 expensesTable.addCell(createCell(currencyFormatter.format(despesa.valor), false))
-                expensesTable.addCell(createCell(despesa.observacoes, false))
+                expensesTable.addCell(createCell(despesa.observacoes ?: "", false))
             }
             
             document.add(expensesTable)

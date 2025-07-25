@@ -459,7 +459,7 @@ class SettlementFragment : Fragment() {
     }
     
     private fun setupPaymentMethod() {
-        val paymentMethods = arrayOf("Dinheiro", "PIX", "Cartão Débito", "Cartão Crédito", "Transferência")
+        val paymentMethods = arrayOf("Dinheiro", "PIX", "Cartão Débito", "Cartão Crédito", "Cheque")
         binding.actvPaymentMethod.keyListener = null // Impede digitação manual
         binding.actvPaymentMethod.setOnClickListener {
             showPaymentMethodsDialog(paymentMethods)
