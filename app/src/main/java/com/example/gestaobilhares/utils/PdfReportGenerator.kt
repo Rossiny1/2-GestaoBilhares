@@ -92,7 +92,7 @@ class PdfReportGenerator(private val context: Context) {
             // Tabela para organizar logo e título na mesma linha
             val headerTable = Table(2)
                 .setWidth(UnitValue.createPercentValue(100f))
-                .setMarginBottom(20f)
+                .setMarginBottom(10f) // ✅ REDUZIDO: era 20f
             
             // Célula do logo
             val logoCell = Cell()
@@ -102,7 +102,7 @@ class PdfReportGenerator(private val context: Context) {
                 logoStream.close()
                 
                 val logo = Image(ImageDataFactory.create(logoBytes))
-                logo.setWidth(80f)
+                logo.setWidth(120f) // ✅ AUMENTADO: era 80f
                 logoCell.add(logo)
             } catch (e: Exception) {
                 logoCell.add(Paragraph("LOGO"))
@@ -114,15 +114,15 @@ class PdfReportGenerator(private val context: Context) {
             val titleCell = Cell()
             titleCell.add(
                 Paragraph("RELATÓRIO DE FECHAMENTO")
-                    .setFontSize(16f)
+                    .setFontSize(14f) // ✅ REDUZIDO: era 16f
                     .setBold()
                     .setTextAlignment(TextAlignment.RIGHT)
             )
             titleCell.add(
                 Paragraph("${rota.nome} - Ciclo ${ciclo.ano} #${ciclo.numeroCiclo}")
-                    .setFontSize(12f)
+                    .setFontSize(11f) // ✅ REDUZIDO: era 12f
                     .setTextAlignment(TextAlignment.RIGHT)
-                    .setMarginTop(5f)
+                    .setMarginTop(3f) // ✅ REDUZIDO: era 5f
             )
             titleCell.setBorder(null)
             headerTable.addCell(titleCell)
@@ -132,8 +132,8 @@ class PdfReportGenerator(private val context: Context) {
             // Informações da rota
             val routeInfo = Table(2)
                 .setWidth(UnitValue.createPercentValue(100f))
-                .setMarginTop(20f)
-                .setMarginBottom(20f)
+                .setMarginTop(10f) // ✅ REDUZIDO: era 20f
+                .setMarginBottom(10f) // ✅ REDUZIDO: era 20f
             
             routeInfo.addCell(createCell("ROTA:", true))
             routeInfo.addCell(createCell(rota.nome, false))
@@ -150,11 +150,11 @@ class PdfReportGenerator(private val context: Context) {
             Log.e("PdfReportGenerator", "Erro ao adicionar cabeçalho", e)
             // Continuar sem logo se houver erro
             val title = Paragraph("RELATÓRIO DETALHADO DE FECHAMENTO")
-                .setFontSize(20f)
+                .setFontSize(18f) // ✅ REDUZIDO: era 20f
                 .setBold()
                 .setTextAlignment(TextAlignment.CENTER)
-                .setMarginTop(20f)
-                .setMarginBottom(20f)
+                .setMarginTop(15f) // ✅ REDUZIDO: era 20f
+                .setMarginBottom(15f) // ✅ REDUZIDO: era 20f
             document.add(title)
         }
     }
@@ -193,16 +193,16 @@ class PdfReportGenerator(private val context: Context) {
      */
     private fun addReceiptsList(document: Document, acertos: List<Acerto>, clientes: List<Cliente>) {
         val receiptsTitle = Paragraph("LISTA DE RECEBIMENTOS")
-            .setFontSize(16f)
+            .setFontSize(14f) // ✅ REDUZIDO: era 16f
             .setBold()
-            .setMarginTop(30f)
-            .setMarginBottom(15f)
+            .setMarginTop(15f) // ✅ REDUZIDO: era 30f
+            .setMarginBottom(8f) // ✅ REDUZIDO: era 15f
         document.add(receiptsTitle)
         
         if (acertos.isEmpty()) {
             val noData = Paragraph("Nenhum acerto encontrado neste ciclo.")
                 .setItalic()
-                .setMarginBottom(20f)
+                .setMarginBottom(10f) // ✅ REDUZIDO: era 20f
             document.add(noData)
             return
         }
@@ -210,7 +210,7 @@ class PdfReportGenerator(private val context: Context) {
         // Cabeçalho da tabela
         val receiptsTable = Table(5)
             .setWidth(UnitValue.createPercentValue(100f))
-            .setMarginBottom(20f)
+            .setMarginBottom(10f) // ✅ REDUZIDO: era 20f
         
         receiptsTable.addHeaderCell(createHeaderCell("Cliente"))
         receiptsTable.addHeaderCell(createHeaderCell("Data"))
@@ -240,12 +240,12 @@ class PdfReportGenerator(private val context: Context) {
             totalDebito += acerto.debitoAtual
         }
         
-        // Adicionar linha de totais
+        // ✅ MELHORADA: Linha de totais integrada com fundo cinza
         receiptsTable.addCell(createCell("TOTAIS", true))
         receiptsTable.addCell(createCell("", true))
-        receiptsTable.addCell(createCell("", true))
-        receiptsTable.addCell(createCell(currencyFormatter.format(totalRecebido), true))
-        receiptsTable.addCell(createCell(currencyFormatter.format(totalDebito), true))
+        receiptsTable.addCell(createTotalCell("TOTAIS")) // ✅ NOVO: "TOTAIS" na coluna pagamento
+        receiptsTable.addCell(createTotalCell(currencyFormatter.format(totalRecebido))) // ✅ NOVO: Fundo cinza centralizado
+        receiptsTable.addCell(createTotalCell(currencyFormatter.format(totalDebito))) // ✅ NOVO: Fundo cinza centralizado
         
         document.add(receiptsTable)
     }
@@ -255,10 +255,10 @@ class PdfReportGenerator(private val context: Context) {
      */
     private fun addPaymentMethodsSummary(document: Document, acertos: List<Acerto>) {
         val summaryTitle = Paragraph("RESUMO POR MODALIDADE DE PAGAMENTO")
-            .setFontSize(16f)
+            .setFontSize(14f) // ✅ REDUZIDO: era 16f
             .setBold()
-            .setMarginTop(30f)
-            .setMarginBottom(15f)
+            .setMarginTop(15f) // ✅ REDUZIDO: era 30f
+            .setMarginBottom(8f) // ✅ REDUZIDO: era 15f
         document.add(summaryTitle)
         
         // Calcular totais por modalidade
@@ -266,7 +266,7 @@ class PdfReportGenerator(private val context: Context) {
         
         val summaryTable = Table(2)
             .setWidth(UnitValue.createPercentValue(100f))
-            .setMarginBottom(20f)
+            .setMarginBottom(10f) // ✅ REDUZIDO: era 20f
         
         // Adicionar cada modalidade
         summaryTable.addCell(createCell("PIX:", true))
@@ -293,16 +293,16 @@ class PdfReportGenerator(private val context: Context) {
      */
     private fun addExpensesList(document: Document, despesas: List<Despesa>) {
         val expensesTitle = Paragraph("LISTA DE DESPESAS")
-            .setFontSize(16f)
+            .setFontSize(14f) // ✅ REDUZIDO: era 16f
             .setBold()
-            .setMarginTop(30f)
-            .setMarginBottom(15f)
+            .setMarginTop(15f) // ✅ REDUZIDO: era 30f
+            .setMarginBottom(8f) // ✅ REDUZIDO: era 15f
         document.add(expensesTitle)
         
         if (despesas.isEmpty()) {
             val noData = Paragraph("Nenhuma despesa encontrada neste ciclo.")
                 .setItalic()
-                .setMarginBottom(20f)
+                .setMarginBottom(10f) // ✅ REDUZIDO: era 20f
             document.add(noData)
             return
         }
@@ -312,15 +312,15 @@ class PdfReportGenerator(private val context: Context) {
         
         despesasPorCategoria.forEach { (categoria, despesasCategoria) ->
             val categoriaTitle = Paragraph("Categoria: $categoria")
-                .setFontSize(14f)
+                .setFontSize(12f) // ✅ REDUZIDO: era 14f
                 .setBold()
-                .setMarginTop(20f)
-                .setMarginBottom(10f)
+                .setMarginTop(10f) // ✅ REDUZIDO: era 20f
+                .setMarginBottom(5f) // ✅ REDUZIDO: era 10f
             document.add(categoriaTitle)
             
             val expensesTable = Table(4)
                 .setWidth(UnitValue.createPercentValue(100f))
-                .setMarginBottom(15f)
+                .setMarginBottom(8f) // ✅ REDUZIDO: era 15f
             
             expensesTable.addHeaderCell(createHeaderCell("Descrição"))
             expensesTable.addHeaderCell(createHeaderCell("Data"))
@@ -334,23 +334,23 @@ class PdfReportGenerator(private val context: Context) {
                 expensesTable.addCell(createCell(despesa.observacoes ?: "", false))
             }
             
-            document.add(expensesTable)
-            
-            // Total da categoria
+            // ✅ NOVO: Total da categoria integrado na tabela com fundo cinza
             val totalCategoria = despesasCategoria.sumOf { it.valor }
-            val totalCategoriaText = Paragraph("Total $categoria: ${currencyFormatter.format(totalCategoria)}")
-                .setBold()
-                .setMarginBottom(10f)
-            document.add(totalCategoriaText)
+            expensesTable.addCell(createTotalCell("TOTAL $categoria"))
+            expensesTable.addCell(createTotalCell(""))
+            expensesTable.addCell(createTotalCell(currencyFormatter.format(totalCategoria)))
+            expensesTable.addCell(createTotalCell(""))
+            
+            document.add(expensesTable)
         }
         
         // Total geral das despesas
         val totalGeral = despesas.sumOf { it.valor }
         val totalGeralText = Paragraph("TOTAL GERAL DAS DESPESAS: ${currencyFormatter.format(totalGeral)}")
-            .setFontSize(14f)
+            .setFontSize(12f) // ✅ REDUZIDO: era 14f
             .setBold()
-            .setMarginTop(20f)
-            .setMarginBottom(20f)
+            .setMarginTop(10f) // ✅ REDUZIDO: era 20f
+            .setMarginBottom(10f) // ✅ REDUZIDO: era 20f
         document.add(totalGeralText)
     }
 
@@ -359,10 +359,10 @@ class PdfReportGenerator(private val context: Context) {
      */
     private fun addEnhancedFinalSummary(document: Document, ciclo: CicloAcertoEntity, acertos: List<Acerto>, despesas: List<Despesa>) {
         val finalTitle = Paragraph("RESUMO DO FECHAMENTO")
-            .setFontSize(16f)
+            .setFontSize(14f) // ✅ REDUZIDO: era 16f
             .setBold()
-            .setMarginTop(30f)
-            .setMarginBottom(15f)
+            .setMarginTop(15f) // ✅ REDUZIDO: era 30f
+            .setMarginBottom(8f) // ✅ REDUZIDO: era 15f
         document.add(finalTitle)
         
         // Calcular valores conforme especificação
@@ -376,13 +376,16 @@ class PdfReportGenerator(private val context: Context) {
         val somaPix = totaisPorModalidade["PIX"] ?: 0.0
         val somaCartao = totaisPorModalidade["Cartão"] ?: 0.0
         val totalCheques = totaisPorModalidade["Cheque"] ?: 0.0
-        val somaDespesas = despesas.sumOf { it.valor }
+        
+        // ✅ CORREÇÃO: Soma despesas = Total geral das despesas - despesas de viagem
+        val totalGeralDespesas = despesas.sumOf { it.valor }
+        val somaDespesas = totalGeralDespesas - despesasViagem
         
         val totalGeral = subtotal - comissaoMotorista - comissaoIltair - somaPix - somaCartao - somaDespesas - totalCheques
         
         val finalTable = Table(2)
             .setWidth(UnitValue.createPercentValue(100f))
-            .setMarginBottom(20f)
+            .setMarginBottom(10f) // ✅ REDUZIDO: era 20f
         
         // Adicionar todos os campos conforme especificação
         finalTable.addCell(createCell("TOTAL RECEBIDO (Faturamento Total):", true))
@@ -413,8 +416,8 @@ class PdfReportGenerator(private val context: Context) {
         finalTable.addCell(createCell("", true))
         finalTable.addCell(createCell("", true))
         
-        finalTable.addCell(createCell("TOTAL GERAL:", true))
-        finalTable.addCell(createCell(currencyFormatter.format(totalGeral), true))
+        finalTable.addCell(createTotalCell("TOTAL GERAL:")) // ✅ NOVO: Usar createTotalCell para fundo cinza
+        finalTable.addCell(createTotalCell(currencyFormatter.format(totalGeral))) // ✅ NOVO: Usar createTotalCell para fundo cinza
         
         document.add(finalTable)
         
@@ -423,7 +426,7 @@ class PdfReportGenerator(private val context: Context) {
             .setFontSize(10f)
             .setItalic()
             .setTextAlignment(TextAlignment.CENTER)
-            .setMarginTop(30f)
+            .setMarginTop(15f) // ✅ REDUZIDO: era 30f
         document.add(footer)
     }
 
@@ -516,5 +519,17 @@ class PdfReportGenerator(private val context: Context) {
         }
         
         return cell
+    }
+
+    /**
+     * Cria célula de total
+     */
+    private fun createTotalCell(text: String): Cell {
+        return Cell()
+            .add(Paragraph(text))
+            .setBackgroundColor(DeviceRgb(220, 220, 220)) // Fundo cinza
+            .setTextAlignment(TextAlignment.CENTER)
+            .setFontSize(9f)
+            .setBold()
     }
 } 
