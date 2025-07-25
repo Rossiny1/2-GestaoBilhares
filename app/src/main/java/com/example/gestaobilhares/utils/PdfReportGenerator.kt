@@ -23,10 +23,12 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import java.util.*
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 /**
  * Gerador de relatórios PDF para ciclos de acerto
- * ✅ FASE 9C: RELATÓRIOS DETALHADOS EM PDF
+ * ✅ FASE 9C: RELATÓRIOS DETALHADOS EM PDF - VERSÃO MELHORADA
  */
 class PdfReportGenerator(private val context: Context) {
 
@@ -59,14 +61,17 @@ class PdfReportGenerator(private val context: Context) {
             // Adicionar cabeçalho
             addHeader(document, rota, ciclo)
             
-            // Adicionar lista de recebimentos
+            // Adicionar lista de recebimentos (MELHORADA)
             addReceiptsList(document, acertos, clientes)
+            
+            // ✅ NOVO: Adicionar resumo por modalidade de pagamento
+            addPaymentMethodsSummary(document, acertos)
             
             // Adicionar lista de despesas
             addExpensesList(document, despesas)
             
-            // Adicionar resumo final
-            addFinalSummary(document, ciclo)
+            // Adicionar resumo final (COMPLETAMENTE REFORMULADO)
+            addEnhancedFinalSummary(document, ciclo, acertos, despesas)
             
             document.close()
             
@@ -184,7 +189,7 @@ class PdfReportGenerator(private val context: Context) {
     }
 
     /**
-     * Adiciona lista detalhada de recebimentos
+     * ✅ MELHORADA: Adiciona lista detalhada de recebimentos com métodos de pagamento reais
      */
     private fun addReceiptsList(document: Document, acertos: List<Acerto>, clientes: List<Cliente>) {
         val receiptsTitle = Paragraph("LISTA DE RECEBIMENTOS")
@@ -202,7 +207,7 @@ class PdfReportGenerator(private val context: Context) {
             return
         }
         
-        // Cabeçalho da tabela (removendo colunas desnecessárias)
+        // Cabeçalho da tabela
         val receiptsTable = Table(5)
             .setWidth(UnitValue.createPercentValue(100f))
             .setMarginBottom(20f)
@@ -216,19 +221,18 @@ class PdfReportGenerator(private val context: Context) {
         // Dados dos acertos
         var totalRecebido = 0.0
         var totalDebito = 0.0
-        var totalPix = 0.0
-        var totalCheque = 0.0
         
         acertos.forEach { acerto ->
             val cliente = clientes.find { it.id == acerto.clienteId }
             val clienteNome = cliente?.nome ?: "Cliente #${acerto.clienteId}"
             
-            // Determinar tipo de pagamento (simplificado por enquanto)
-            val tipoPagamento = "Dinheiro" // Por enquanto, será melhorado na próxima etapa
+            // ✅ NOVA LÓGICA: Processar métodos de pagamento reais do JSON
+            val metodosPagamento = processarMetodosPagamento(acerto.metodosPagamentoJson)
+            val tipoPagamentoTexto = formatarTiposPagamento(metodosPagamento)
             
             receiptsTable.addCell(createCell(clienteNome, false))
             receiptsTable.addCell(createCell(dateOnlyFormatter.format(acerto.dataAcerto), false))
-            receiptsTable.addCell(createCell(tipoPagamento, false))
+            receiptsTable.addCell(createCell(tipoPagamentoTexto, false))
             receiptsTable.addCell(createCell(currencyFormatter.format(acerto.valorRecebido), false))
             receiptsTable.addCell(createCell(currencyFormatter.format(acerto.debitoAtual), false))
             
@@ -244,47 +248,44 @@ class PdfReportGenerator(private val context: Context) {
         receiptsTable.addCell(createCell(currencyFormatter.format(totalDebito), true))
         
         document.add(receiptsTable)
-        
-        // Resumo dos recebimentos
-        val receiptsSummary = Table(2)
-            .setWidth(UnitValue.createPercentValue(100f))
-            .setMarginBottom(20f)
-        
-        receiptsSummary.addCell(createCell("TOTAL RECEBIDO:", true))
-        receiptsSummary.addCell(createCell(currencyFormatter.format(totalRecebido), false))
-        receiptsSummary.addCell(createCell("TOTAL DÉBITO:", true))
-        receiptsSummary.addCell(createCell(currencyFormatter.format(totalDebito), false))
-        receiptsSummary.addCell(createCell("RECEBIDO VIA PIX:", true))
-        receiptsSummary.addCell(createCell(currencyFormatter.format(totalPix), false))
-        receiptsSummary.addCell(createCell("RECEBIDO VIA CHEQUE:", true))
-        receiptsSummary.addCell(createCell(currencyFormatter.format(totalCheque), false))
-        
-        document.add(receiptsSummary)
     }
 
     /**
-     * Adiciona resumo financeiro
+     * ✅ NOVA: Seção de resumo por modalidade de pagamento
      */
-    private fun addFinancialSummary(document: Document, ciclo: CicloAcertoEntity) {
-        val financialTitle = Paragraph("RESUMO FINANCEIRO")
+    private fun addPaymentMethodsSummary(document: Document, acertos: List<Acerto>) {
+        val summaryTitle = Paragraph("RESUMO POR MODALIDADE DE PAGAMENTO")
             .setFontSize(16f)
             .setBold()
             .setMarginTop(30f)
             .setMarginBottom(15f)
-        document.add(financialTitle)
+        document.add(summaryTitle)
         
-        val financialTable = Table(2)
+        // Calcular totais por modalidade
+        val totaisPorModalidade = calcularTotaisPorModalidade(acertos)
+        
+        val summaryTable = Table(2)
             .setWidth(UnitValue.createPercentValue(100f))
             .setMarginBottom(20f)
         
-        financialTable.addCell(createCell("FATURAMENTO BRUTO:", true))
-        financialTable.addCell(createCell(currencyFormatter.format(ciclo.valorTotalAcertado), false))
-        financialTable.addCell(createCell("DÉBITOS PENDENTES:", true))
-        financialTable.addCell(createCell(currencyFormatter.format(ciclo.debitoTotal), false))
-        financialTable.addCell(createCell("FATURAMENTO LÍQUIDO:", true))
-        financialTable.addCell(createCell(currencyFormatter.format(ciclo.valorTotalAcertado - ciclo.debitoTotal), false))
+        // Adicionar cada modalidade
+        summaryTable.addCell(createCell("PIX:", true))
+        summaryTable.addCell(createCell(currencyFormatter.format(totaisPorModalidade["PIX"] ?: 0.0), false))
         
-        document.add(financialTable)
+        summaryTable.addCell(createCell("CARTÃO:", true))
+        summaryTable.addCell(createCell(currencyFormatter.format(totaisPorModalidade["Cartão"] ?: 0.0), false))
+        
+        summaryTable.addCell(createCell("CHEQUE:", true))
+        summaryTable.addCell(createCell(currencyFormatter.format(totaisPorModalidade["Cheque"] ?: 0.0), false))
+        
+        summaryTable.addCell(createCell("DINHEIRO:", true))
+        summaryTable.addCell(createCell(currencyFormatter.format(totaisPorModalidade["Dinheiro"] ?: 0.0), false))
+        
+        val totalRecebido = totaisPorModalidade.values.sum()
+        summaryTable.addCell(createCell("TOTAL RECEBIDO:", true))
+        summaryTable.addCell(createCell(currencyFormatter.format(totalRecebido), false))
+        
+        document.add(summaryTable)
     }
 
     /**
@@ -354,9 +355,9 @@ class PdfReportGenerator(private val context: Context) {
     }
 
     /**
-     * Adiciona resumo final do fechamento
+     * ✅ NOVA: Resumo final completamente reformulado conforme especificação
      */
-    private fun addFinalSummary(document: Document, ciclo: CicloAcertoEntity) {
+    private fun addEnhancedFinalSummary(document: Document, ciclo: CicloAcertoEntity, acertos: List<Acerto>, despesas: List<Despesa>) {
         val finalTitle = Paragraph("RESUMO DO FECHAMENTO")
             .setFontSize(16f)
             .setBold()
@@ -364,16 +365,56 @@ class PdfReportGenerator(private val context: Context) {
             .setMarginBottom(15f)
         document.add(finalTitle)
         
+        // Calcular valores conforme especificação
+        val totalRecebido = acertos.sumOf { it.valorRecebido }
+        val despesasViagem = despesas.filter { it.categoria.equals("Viagem", ignoreCase = true) }.sumOf { it.valor }
+        val subtotal = totalRecebido - despesasViagem
+        val comissaoMotorista = subtotal * 0.03 // 3% do subtotal
+        val comissaoIltair = totalRecebido * 0.02 // 2% do faturamento total
+        
+        val totaisPorModalidade = calcularTotaisPorModalidade(acertos)
+        val somaPix = totaisPorModalidade["PIX"] ?: 0.0
+        val somaCartao = totaisPorModalidade["Cartão"] ?: 0.0
+        val totalCheques = totaisPorModalidade["Cheque"] ?: 0.0
+        val somaDespesas = despesas.sumOf { it.valor }
+        
+        val totalGeral = subtotal - comissaoMotorista - comissaoIltair - somaPix - somaCartao - somaDespesas - totalCheques
+        
         val finalTable = Table(2)
             .setWidth(UnitValue.createPercentValue(100f))
             .setMarginBottom(20f)
         
-        finalTable.addCell(createCell("FATURAMENTO TOTAL:", true))
-        finalTable.addCell(createCell(currencyFormatter.format(ciclo.valorTotalAcertado), false))
-        finalTable.addCell(createCell("DESPESAS TOTAIS:", true))
-        finalTable.addCell(createCell(currencyFormatter.format(ciclo.valorTotalDespesas), false))
-        finalTable.addCell(createCell("LUCRO LÍQUIDO:", true))
-        finalTable.addCell(createCell(currencyFormatter.format(ciclo.lucroLiquido), false))
+        // Adicionar todos os campos conforme especificação
+        finalTable.addCell(createCell("TOTAL RECEBIDO (Faturamento Total):", true))
+        finalTable.addCell(createCell(currencyFormatter.format(totalRecebido), false))
+        
+        finalTable.addCell(createCell("DESPESAS DE VIAGEM:", true))
+        finalTable.addCell(createCell(currencyFormatter.format(despesasViagem), false))
+        
+        finalTable.addCell(createCell("SUBTOTAL:", true))
+        finalTable.addCell(createCell(currencyFormatter.format(subtotal), false))
+        
+        finalTable.addCell(createCell("COMISSÃO DO MOTORISTA (3%):", true))
+        finalTable.addCell(createCell(currencyFormatter.format(comissaoMotorista), false))
+        
+        finalTable.addCell(createCell("COMISSÃO ILTAIR (2%):", true))
+        finalTable.addCell(createCell(currencyFormatter.format(comissaoIltair), false))
+        
+        finalTable.addCell(createCell("SOMA PIX:", true))
+        finalTable.addCell(createCell(currencyFormatter.format(somaPix), false))
+        
+        finalTable.addCell(createCell("SOMA DESPESAS:", true))
+        finalTable.addCell(createCell(currencyFormatter.format(somaDespesas), false))
+        
+        finalTable.addCell(createCell("CHEQUES:", true))
+        finalTable.addCell(createCell(currencyFormatter.format(totalCheques), false))
+        
+        // Linha separadora
+        finalTable.addCell(createCell("", true))
+        finalTable.addCell(createCell("", true))
+        
+        finalTable.addCell(createCell("TOTAL GERAL:", true))
+        finalTable.addCell(createCell(currencyFormatter.format(totalGeral), true))
         
         document.add(finalTable)
         
@@ -384,6 +425,69 @@ class PdfReportGenerator(private val context: Context) {
             .setTextAlignment(TextAlignment.CENTER)
             .setMarginTop(30f)
         document.add(footer)
+    }
+
+    /**
+     * ✅ NOVA: Processa JSON dos métodos de pagamento
+     */
+    private fun processarMetodosPagamento(metodosPagamentoJson: String?): Map<String, Double> {
+        return try {
+            if (metodosPagamentoJson.isNullOrBlank()) {
+                mapOf("Dinheiro" to 0.0) // Default se não houver informação
+            } else {
+                val tipo = object : TypeToken<Map<String, Double>>() {}.type
+                Gson().fromJson(metodosPagamentoJson, tipo) ?: mapOf("Dinheiro" to 0.0)
+            }
+        } catch (e: Exception) {
+            Log.e("PdfReportGenerator", "Erro ao processar métodos de pagamento: ${e.message}")
+            mapOf("Dinheiro" to 0.0)
+        }
+    }
+
+    /**
+     * ✅ NOVA: Formata tipos de pagamento para exibição
+     */
+    private fun formatarTiposPagamento(metodosPagamento: Map<String, Double>): String {
+        return if (metodosPagamento.size == 1) {
+            // Se for apenas um método, exibir só o nome
+            metodosPagamento.keys.first()
+        } else {
+            // Se forem múltiplos métodos, discriminar todos com valores
+            metodosPagamento.entries
+                .filter { it.value > 0 }
+                .joinToString(", ") { "${it.key}: ${currencyFormatter.format(it.value)}" }
+                .ifEmpty { "Não informado" }
+        }
+    }
+
+    /**
+     * ✅ NOVA: Calcula totais por modalidade de pagamento
+     */
+    private fun calcularTotaisPorModalidade(acertos: List<Acerto>): Map<String, Double> {
+        val totais = mutableMapOf(
+            "PIX" to 0.0,
+            "Cartão" to 0.0,
+            "Cheque" to 0.0,
+            "Dinheiro" to 0.0
+        )
+        
+        acertos.forEach { acerto ->
+            val metodos = processarMetodosPagamento(acerto.metodosPagamentoJson)
+            metodos.forEach { (metodo, valor) ->
+                when (metodo.uppercase()) {
+                    "PIX" -> totais["PIX"] = (totais["PIX"] ?: 0.0) + valor
+                    "CARTÃO", "CARTAO" -> totais["Cartão"] = (totais["Cartão"] ?: 0.0) + valor
+                    "CHEQUE" -> totais["Cheque"] = (totais["Cheque"] ?: 0.0) + valor
+                    "DINHEIRO" -> totais["Dinheiro"] = (totais["Dinheiro"] ?: 0.0) + valor
+                    else -> {
+                        // Para métodos não mapeados, adicionar como dinheiro
+                        totais["Dinheiro"] = (totais["Dinheiro"] ?: 0.0) + valor
+                    }
+                }
+            }
+        }
+        
+        return totais
     }
 
     /**
