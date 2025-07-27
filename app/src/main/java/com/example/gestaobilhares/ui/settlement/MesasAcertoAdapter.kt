@@ -183,6 +183,43 @@ class MesasAcertoAdapter(
             binding.etRelogioInicial.addTextChangedListener(relogioInicialWatcher)
             binding.etRelogioFinal.addTextChangedListener(relogioFinalWatcher)
 
+            // ✅ RESTAURADO: Listeners dos checkboxes que estavam faltando
+            binding.cbRelogioDefeito.setOnCheckedChangeListener { _, isChecked ->
+                Log.d("MesasAcertoAdapter", "=== CHECKBOX RELÓGIO COM DEFEITO ===")
+                Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Relógio com defeito = $isChecked")
+                
+                if (state.comDefeito != isChecked) {
+                    state.comDefeito = isChecked
+                    
+                    if (isChecked) {
+                        // Calcular média se marcado
+                        val media = onCalcularMedia(mesa.id)
+                        state.mediaFichasJogadas = media
+                        Log.d("MesasAcertoAdapter", "Média calculada para mesa ${mesa.numero}: $media")
+                    } else {
+                        // Limpar média se desmarcado
+                        state.mediaFichasJogadas = 0.0
+                        Log.d("MesasAcertoAdapter", "Média limpa para mesa ${mesa.numero}")
+                    }
+                    
+                    updateSubtotal(state)
+                    onDataChanged()
+                    notifyItemChanged(adapterPosition)
+                }
+            }
+            
+            binding.cbRelogioReiniciou.setOnCheckedChangeListener { _, isChecked ->
+                Log.d("MesasAcertoAdapter", "=== CHECKBOX RELÓGIO REINICIOU ===")
+                Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Relógio reiniciou = $isChecked")
+                
+                if (state.relogioReiniciou != isChecked) {
+                    state.relogioReiniciou = isChecked
+                    updateSubtotal(state)
+                    onDataChanged()
+                    notifyItemChanged(adapterPosition)
+                }
+            }
+
             // Layouts e textos
             binding.tvNumeroMesa.text = "Mesa ${mesa.numero}"
             binding.tvTipoMesa.text = mesa.tipoMesa

@@ -59,8 +59,8 @@
 
     </LinearLayout>
 
-    <!-- Scroll View para o conteúdo -->
-    <ScrollView
+    <!-- ✅ CORREÇÃO OFICIAL: NestedScrollView em vez de ScrollView -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
@@ -490,7 +490,7 @@
 
         </LinearLayout>
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <!-- Loading indicator -->
     <ProgressBar
