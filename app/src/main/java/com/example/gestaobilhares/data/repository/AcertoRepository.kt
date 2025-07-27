@@ -12,6 +12,25 @@ import kotlinx.coroutines.withContext
 
 class AcertoRepository(private val acertoDao: AcertoDao, private val clienteDao: ClienteDao) {
 
+    /**
+     * ✅ NOVA FUNCIONALIDADE: Verifica se já existe acerto para cliente no ciclo atual
+     */
+    suspend fun verificarAcertoExistente(clienteId: Long, cicloId: Long): Acerto? {
+        return withContext(Dispatchers.IO) {
+            val acertosExistentes = acertoDao.buscarPorClienteECicloId(clienteId, cicloId).first()
+            val acertoExistente = acertosExistentes.firstOrNull()
+            
+            AppLogger.log("AcertoRepo", "Verificando acerto existente: clienteId=$clienteId, cicloId=$cicloId")
+            if (acertoExistente != null) {
+                AppLogger.log("AcertoRepo", "⚠️ ACERTO JÁ EXISTE: ID=${acertoExistente.id}, valor=${acertoExistente.valorRecebido}")
+            } else {
+                AppLogger.log("AcertoRepo", "✅ Nenhum acerto existente. Pode prosseguir com salvamento.")
+            }
+            
+            acertoExistente
+        }
+    }
+
     suspend fun salvarAcerto(acerto: Acerto): Long {
         AppLogger.log("AcertoRepo", "Tentando salvar acerto para clienteId: ${acerto.clienteId}, ciclo: ${acerto.cicloId}, valorRecebido: ${acerto.valorRecebido}")
         android.util.Log.d("DEBUG_DIAG", "[ACERTO] Salvando acerto: clienteId=${acerto.clienteId}, cicloId=${acerto.cicloId}, valorRecebido=${acerto.valorRecebido}")
@@ -114,4 +133,54 @@ class AcertoRepository(private val acertoDao: AcertoDao, private val clienteDao:
     fun buscarPorCicloId(cicloId: Long) = acertoDao.buscarPorCicloId(cicloId)
     fun buscarPorRotaECicloId(rotaId: Long, cicloId: Long) = acertoDao.buscarPorRotaECicloId(rotaId, cicloId)
     fun buscarPorClienteECicloId(clienteId: Long, cicloId: Long) = acertoDao.buscarPorClienteECicloId(clienteId, cicloId)
+
+    /**
+     * ✅ NOVA FUNCIONALIDADE: Verifica se um acerto pode ser editado
+     * Regras: Apenas o último acerto da rota no ciclo ativo pode ser editado
+     */
+    suspend fun podeEditarAcerto(acertoId: Long, cicloAcertoRepository: com.example.gestaobilhares.data.repository.CicloAcertoRepository): PermissaoEdicao {
+        return withContext(Dispatchers.IO) {
+            try {
+                val acerto = buscarPorId(acertoId)
+                if (acerto == null) {
+                    AppLogger.log("AcertoRepo", "❌ Acerto não encontrado para edição: ID=$acertoId")
+                    return@withContext PermissaoEdicao.AcertoNaoEncontrado
+                }
+
+                // Verificar se o ciclo está ativo
+                val cicloAtivo = cicloAcertoRepository.buscarCicloAtivo(acerto.rotaId!!)
+                if (cicloAtivo == null || cicloAtivo.id != acerto.cicloId) {
+                    AppLogger.log("AcertoRepo", "❌ Ciclo não está ativo para edição: cicloId=${acerto.cicloId}, rotaId=${acerto.rotaId}")
+                    return@withContext PermissaoEdicao.CicloInativo("O ciclo deste acerto não está mais ativo.")
+                }
+
+                // Buscar o último acerto da rota no ciclo ativo
+                val acertosRota = buscarPorRotaECicloId(acerto.rotaId, cicloAtivo.id).first()
+                val ultimoAcerto = acertosRota.maxByOrNull { it.dataAcerto }
+                
+                if (ultimoAcerto == null || ultimoAcerto.id != acertoId) {
+                    AppLogger.log("AcertoRepo", "❌ Não é o último acerto da rota. Último: ${ultimoAcerto?.id}, Solicitado: $acertoId")
+                    return@withContext PermissaoEdicao.NaoEhUltimoAcerto("Apenas o último acerto da rota pode ser editado.")
+                }
+
+                AppLogger.log("AcertoRepo", "✅ Acerto pode ser editado: ID=$acertoId")
+                PermissaoEdicao.Permitido
+                
+            } catch (e: Exception) {
+                AppLogger.log("AcertoRepo", "❌ Erro ao verificar permissão de edição: ${e.message}")
+                PermissaoEdicao.ErroValidacao(e.message ?: "Erro desconhecido")
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVA CLASSE: Resultado da validação de edição
+     */
+    sealed class PermissaoEdicao {
+        object Permitido : PermissaoEdicao()
+        object AcertoNaoEncontrado : PermissaoEdicao()
+        data class CicloInativo(val motivo: String) : PermissaoEdicao()
+        data class NaoEhUltimoAcerto(val motivo: String) : PermissaoEdicao()
+        data class ErroValidacao(val motivo: String) : PermissaoEdicao()
+    }
 } 

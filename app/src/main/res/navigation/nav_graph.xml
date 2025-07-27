@@ -127,6 +127,11 @@
             android:name="clienteId"
             app:argType="long"
             android:defaultValue="0L" />
+        <!-- ✅ NOVO PARÂMETRO: Para modo de edição -->
+        <argument
+            android:name="acertoIdParaEdicao"
+            app:argType="long"
+            android:defaultValue="0L" />
     </fragment>
 
     <!-- FASE 4B: Tela de cadastro de cliente -->
@@ -161,6 +166,10 @@
             android:name="acertoId"
             app:argType="long"
             android:defaultValue="0L" />
+        <!-- ✅ NOVA NAVEGAÇÃO: Para edição de acerto -->
+        <action
+            android:id="@+id/action_settlementDetailFragment_to_settlementFragment"
+            app:destination="@id/settlementFragment" />
     </fragment>
 
     <fragment

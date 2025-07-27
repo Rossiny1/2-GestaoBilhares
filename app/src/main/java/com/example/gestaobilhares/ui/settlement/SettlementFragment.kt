@@ -28,6 +28,7 @@ import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.data.entities.Acerto
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -724,24 +725,52 @@ class SettlementFragment : Fragment() {
                 viewModel.setLoading(false)
                 
                 resultado?.let {
-                    if (it.isSuccess) {
-                        val acertoId = it.getOrNull() ?: return@let
-                        Log.d("SettlementFragment", "✅ Acerto salvo com sucesso! ID: $acertoId")
+                    when (it) {
+                        is SettlementViewModel.ResultadoSalvamento.Sucesso -> {
+                            Log.d("SettlementFragment", "✅ Acerto salvo com sucesso! ID: ${it.acertoId}")
+                            
+                            // NOVO: Notificar ClientListFragment para atualizar card de progresso
+                            findNavController().previousBackStackEntry?.savedStateHandle?.set("acerto_salvo", true)
+                            
+                            mostrarDialogoResumoComAcerto(it.acertoId)
+                        }
                         
-                        // NOVO: Notificar ClientListFragment para atualizar card de progresso
-                        findNavController().previousBackStackEntry?.savedStateHandle?.set("acerto_salvo", true)
-
+                        is SettlementViewModel.ResultadoSalvamento.Erro -> {
+                            Log.e("SettlementFragment", "Erro ao salvar acerto: ${it.mensagem}")
+                            Toast.makeText(requireContext(), "Erro ao salvar acerto: ${it.mensagem}", Toast.LENGTH_LONG).show()
+                        }
                         
-                        mostrarDialogoResumoComAcerto(acertoId)
-                    } else {
-                        // Em caso de erro, mostrar mensagem
-                        val error = it.exceptionOrNull()
-                        Log.e("SettlementFragment", "Erro ao salvar acerto: ${error?.message}")
-                        Toast.makeText(requireContext(), "Erro ao salvar acerto: ${error?.message}", Toast.LENGTH_LONG).show()
+                        is SettlementViewModel.ResultadoSalvamento.AcertoJaExiste -> {
+                            Log.w("SettlementFragment", "⚠️ Acerto já existe: ID ${it.acertoExistente.id}")
+                            mostrarDialogoAcertoJaExiste(it.acertoExistente)
+                        }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * ✅ NOVA FUNCIONALIDADE: Mostra diálogo quando já existe acerto no ciclo atual
+     */
+    private fun mostrarDialogoAcertoJaExiste(acertoExistente: Acerto) {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("⚠️ Acerto Já Realizado")
+            .setMessage(
+                "Este cliente já possui um acerto salvo neste ciclo.\n\n" +
+                "📋 Detalhes do acerto existente:\n" +
+                "• ID: #${acertoExistente.id.toString().padStart(4, '0')}\n" +
+                "• Valor recebido: R$ ${String.format("%.2f", acertoExistente.valorRecebido)}\n" +
+                "• Data: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(acertoExistente.dataAcerto)}\n\n" +
+                "💡 Para alterar este acerto, vá até o histórico do cliente e selecione o último acerto."
+            )
+            .setPositiveButton("Ver Histórico") { _, _ ->
+                // Voltar para a tela de detalhes do cliente para ver o histórico
+                findNavController().popBackStack()
+            }
+            .setNegativeButton("Entendi", null)
+            .setCancelable(false)
+            .show()
     }
 
     private fun mostrarDialogoResumoComAcerto(acertoId: Long) {

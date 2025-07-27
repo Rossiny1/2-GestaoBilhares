@@ -14,6 +14,7 @@ import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.databinding.FragmentSettlementDetailBinding
 import com.example.gestaobilhares.utils.AppLogger
@@ -95,11 +96,7 @@ class SettlementDetailFragment : Fragment() {
         
         // Botão editar
         binding.btnEdit.setOnClickListener {
-            androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("✏️ Editar Acerto")
-                .setMessage("Funcionalidade de edição será implementada na próxima fase!\n\n🚀 Em breve você poderá:\n• Editar valores e fichas\n• Alterar status de pagamento\n• Adicionar observações")
-                .setPositiveButton("OK", null)
-                .show()
+            verificarPermissaoEdicao()
         }
 
         // ✅ NOVO: Botão Imprimir
@@ -359,6 +356,131 @@ class SettlementDetailFragment : Fragment() {
         } catch (e: Exception) {
             AppLogger.log("SettlementDetailFragment", "Erro ao enviar via WhatsApp: ${e.message}")
             android.widget.Toast.makeText(requireContext(), "Erro ao abrir WhatsApp", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * ✅ NOVA FUNCIONALIDADE: Verifica se o acerto pode ser editado
+     */
+    private fun verificarPermissaoEdicao() {
+        lifecycleScope.launch {
+            try {
+                AppLogger.log("SettlementDetailFragment", "=== VERIFICANDO PERMISSÃO DE EDIÇÃO ===")
+                AppLogger.log("SettlementDetailFragment", "Acerto ID: ${args.acertoId}")
+                
+                // Mostrar loading
+                binding.btnEdit.isEnabled = false
+                
+                // Inicializar repositórios com construtores corretos
+                val acertoRepo = AcertoRepository(
+                    AppDatabase.getDatabase(requireContext()).acertoDao(),
+                    AppDatabase.getDatabase(requireContext()).clienteDao()
+                )
+                val clienteRepo = com.example.gestaobilhares.data.repository.ClienteRepository(
+                    AppDatabase.getDatabase(requireContext()).clienteDao()
+                )
+                val despesaRepo = com.example.gestaobilhares.data.repository.DespesaRepository(
+                    AppDatabase.getDatabase(requireContext()).despesaDao()
+                )
+                val cicloAcertoRepository = CicloAcertoRepository(
+                    AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
+                    despesaRepo,
+                    acertoRepo,
+                    clienteRepo,
+                    AppDatabase.getDatabase(requireContext()).rotaDao()
+                )
+                
+                // Verificar permissão
+                val permissao = acertoRepo.podeEditarAcerto(args.acertoId, cicloAcertoRepository)
+                
+                when (permissao) {
+                    is AcertoRepository.PermissaoEdicao.Permitido -> {
+                        AppLogger.log("SettlementDetailFragment", "✅ Edição permitida. Navegando para tela de edição...")
+                        navegarParaEdicao()
+                    }
+                    is AcertoRepository.PermissaoEdicao.CicloInativo -> {
+                        mostrarDialogoPermissaoNegada(
+                            "Ciclo Inativo",
+                            permissao.motivo + "\n\nApenas acertos do ciclo atual podem ser editados."
+                        )
+                    }
+                    is AcertoRepository.PermissaoEdicao.NaoEhUltimoAcerto -> {
+                        mostrarDialogoPermissaoNegada(
+                            "Edição Não Permitida",
+                            permissao.motivo + "\n\nPara editar um acerto anterior, você deve primeiro excluir os acertos posteriores."
+                        )
+                    }
+                    is AcertoRepository.PermissaoEdicao.AcertoNaoEncontrado -> {
+                        mostrarDialogoPermissaoNegada(
+                            "Erro",
+                            "O acerto não foi encontrado no banco de dados."
+                        )
+                    }
+                    is AcertoRepository.PermissaoEdicao.ErroValidacao -> {
+                        mostrarDialogoPermissaoNegada(
+                            "Erro de Validação",
+                            "Ocorreu um erro ao validar a permissão de edição:\n${permissao.motivo}"
+                        )
+                    }
+                }
+                
+            } catch (e: Exception) {
+                AppLogger.log("SettlementDetailFragment", "❌ Erro ao verificar permissão: ${e.message}")
+                mostrarDialogoPermissaoNegada(
+                    "Erro",
+                    "Ocorreu um erro inesperado: ${e.message}"
+                )
+            } finally {
+                binding.btnEdit.isEnabled = true
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVA FUNCIONALIDADE: Mostra diálogo quando edição não é permitida
+     */
+    private fun mostrarDialogoPermissaoNegada(titulo: String, mensagem: String) {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("⚠️ $titulo")
+            .setMessage(mensagem)
+            .setPositiveButton("Entendi", null)
+            .show()
+    }
+
+    /**
+     * ✅ NOVA FUNCIONALIDADE: Navega para tela de edição
+     */
+    private fun navegarParaEdicao() {
+        try {
+            val acerto = currentSettlement
+            if (acerto != null) {
+                // Descobrir o clienteId a partir do acerto
+                lifecycleScope.launch {
+                    val acertoCompleto = viewModel.buscarAcertoPorId(args.acertoId)
+                    
+                    if (acertoCompleto != null) {
+                        val action = SettlementDetailFragmentDirections
+                            .actionSettlementDetailFragmentToSettlementFragment(
+                                clienteId = acertoCompleto.clienteId,
+                                acertoIdParaEdicao = args.acertoId
+                            )
+                        findNavController().navigate(action)
+                    } else {
+                        android.widget.Toast.makeText(
+                            requireContext(),
+                            "Erro: Não foi possível carregar dados do acerto",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            AppLogger.log("SettlementDetailFragment", "Erro ao navegar para edição: ${e.message}")
+            android.widget.Toast.makeText(
+                requireContext(),
+                "Erro ao abrir tela de edição: ${e.message}",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
         }
     }
 

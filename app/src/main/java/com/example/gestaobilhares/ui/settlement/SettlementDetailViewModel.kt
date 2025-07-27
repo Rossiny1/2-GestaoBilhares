@@ -166,4 +166,11 @@ class SettlementDetailViewModel(
         val metodosPagamento: Map<String, Double>,
         val dataFinalizacao: Date?
     )
+
+    /**
+     * ✅ NOVA FUNCIONALIDADE: Busca um acerto por ID
+     */
+    suspend fun buscarAcertoPorId(acertoId: Long): Acerto? {
+        return acertoRepository.buscarPorId(acertoId)
+    }
 } 

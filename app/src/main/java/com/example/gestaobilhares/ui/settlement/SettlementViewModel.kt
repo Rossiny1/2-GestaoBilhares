@@ -31,6 +31,15 @@ class SettlementViewModel(
     private val cicloAcertoRepository: CicloAcertoRepository
 ) : ViewModel() {
 
+    /**
+     * ✅ NOVA CLASSE: Resultado específico para salvamento de acerto
+     */
+    sealed class ResultadoSalvamento {
+        data class Sucesso(val acertoId: Long) : ResultadoSalvamento()
+        data class Erro(val mensagem: String) : ResultadoSalvamento()
+        data class AcertoJaExiste(val acertoExistente: Acerto) : ResultadoSalvamento()
+    }
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -43,8 +52,8 @@ class SettlementViewModel(
     private val _mesasCliente = MutableStateFlow<List<Mesa>>(emptyList())
     val mesasCliente: StateFlow<List<Mesa>> = _mesasCliente.asStateFlow()
 
-    private val _resultadoSalvamento = MutableStateFlow<Result<Long>?>(null)
-    val resultadoSalvamento: StateFlow<Result<Long>?> = _resultadoSalvamento.asStateFlow()
+    private val _resultadoSalvamento = MutableStateFlow<ResultadoSalvamento?>(null)
+    val resultadoSalvamento: StateFlow<ResultadoSalvamento?> = _resultadoSalvamento.asStateFlow()
 
     private val _historicoAcertos = MutableStateFlow<List<Acerto>>(emptyList())
     val historicoAcertos: StateFlow<List<Acerto>> = _historicoAcertos.asStateFlow()
@@ -227,6 +236,15 @@ class SettlementViewModel(
                 }
                 
                 android.util.Log.d("DEBUG_DIAG", "[SALVAR_ACERTO] cicloId usado: $cicloId | rotaId: $rotaId | status ciclo ativo: ${cicloAtivo?.status}")
+
+                // ✅ NOVA VALIDAÇÃO: Verificar se já existe acerto para este cliente no ciclo atual
+                val acertoExistente = acertoRepository.verificarAcertoExistente(clienteId, cicloId)
+                if (acertoExistente != null) {
+                    Log.w("SettlementViewModel", "⚠️ ACERTO JÁ EXISTE: Cliente $clienteId já possui acerto (ID: ${acertoExistente.id}) no ciclo $cicloId")
+                    _resultadoSalvamento.value = ResultadoSalvamento.AcertoJaExiste(acertoExistente)
+                    _isLoading.value = false
+                    return@launch
+                }
 
                 // Calcular valores do acerto
                 val valorRecebido = metodosPagamento.values.sum()
@@ -419,10 +437,10 @@ class SettlementViewModel(
                 val clienteAtualizado = clienteRepository.obterPorId(clienteId)
                 Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Débito atual na tabela clientes após atualização: R$ ${clienteAtualizado?.debitoAtual}")
                 
-                _resultadoSalvamento.value = Result.success(acertoId)
+                _resultadoSalvamento.value = ResultadoSalvamento.Sucesso(acertoId)
             } catch (e: Exception) {
                 Log.e("SettlementViewModel", "Erro ao salvar acerto: ${e.localizedMessage}", e)
-                _resultadoSalvamento.value = Result.failure(e)
+                _resultadoSalvamento.value = ResultadoSalvamento.Erro(e.localizedMessage ?: "Erro desconhecido")
             } finally {
                 _isLoading.value = false
             }
