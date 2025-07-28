@@ -111,29 +111,51 @@ class SettlementViewModel(
     }
 
     /**
-     * Prepara as mesas para acerto, definindo relógios iniciais baseados no último acerto
+     * ✅ FUNÇÃO CRÍTICA: Prepara as mesas para acerto, definindo relógios iniciais
+     * @param mesasCliente Lista de mesas do cliente
+     * @param acertoIdParaEdicao ID do acerto sendo editado (null se for novo acerto)
      */
-    suspend fun prepararMesasParaAcerto(mesasCliente: List<Mesa>): List<Mesa> {
+    suspend fun prepararMesasParaAcerto(mesasCliente: List<Mesa>, acertoIdParaEdicao: Long? = null): List<Mesa> {
         Log.d("SettlementViewModel", "=== PREPARANDO MESAS PARA ACERTO ===")
-        Log.d("SettlementViewModel", "Mesas recebidas: ${mesasCliente.size}")
+        Log.d("SettlementViewModel", "Mesas recebidas: ${mesasCliente.size}, Modo edição: ${acertoIdParaEdicao != null}")
         
         return mesasCliente.map { mesa ->
             try {
                 Log.d("SettlementViewModel", "Processando mesa ${mesa.numero} (ID: ${mesa.id})")
                 
-                // Buscar o último acerto desta mesa
-                val ultimoAcertoMesa = acertoMesaRepository.buscarUltimoAcertoMesa(mesa.id)
-                
-                if (ultimoAcertoMesa != null) {
-                    // Usar o relógio final do último acerto como inicial do próximo
-                    val relogioInicial = ultimoAcertoMesa.relogioFinal
-                    Log.d("SettlementViewModel", "Mesa ${mesa.numero}: Último acerto encontrado - relógio final: ${ultimoAcertoMesa.relogioFinal} -> novo relógio inicial: $relogioInicial")
-                    mesa.copy(fichasInicial = relogioInicial)
+                if (acertoIdParaEdicao != null) {
+                    // ✅ MODO EDIÇÃO: Carregar dados do acerto sendo editado
+                    val acertoMesa = acertoMesaRepository.buscarAcertoMesaPorAcertoEMesa(acertoIdParaEdicao, mesa.id)
+                    if (acertoMesa != null) {
+                        // Usar o relógio inicial do acerto sendo editado
+                        val relogioInicial = acertoMesa.relogioInicial
+                        val relogioFinal = acertoMesa.relogioFinal
+                        Log.d("SettlementViewModel", "Mesa ${mesa.numero}: MODO EDIÇÃO - relógio inicial: $relogioInicial, relógio final: $relogioFinal")
+                        mesa.copy(
+                            fichasInicial = relogioInicial,
+                            fichasFinal = relogioFinal
+                        )
+                    } else {
+                        // Fallback: usar dados da mesa
+                        val relogioInicial = mesa.fichasInicial ?: 0
+                        Log.d("SettlementViewModel", "Mesa ${mesa.numero}: MODO EDIÇÃO - acerto não encontrado, usando dados da mesa: $relogioInicial")
+                        mesa.copy(fichasInicial = relogioInicial)
+                    }
                 } else {
-                    // Primeiro acerto - usar relógio inicial cadastrado ou 0
-                    val relogioInicial = mesa.fichasInicial ?: 0
-                    Log.d("SettlementViewModel", "Mesa ${mesa.numero}: Primeiro acerto - usando relógio inicial cadastrado: $relogioInicial")
-                    mesa.copy(fichasInicial = relogioInicial)
+                    // ✅ MODO NOVO ACERTO: Usar lógica original
+                    val ultimoAcertoMesa = acertoMesaRepository.buscarUltimoAcertoMesa(mesa.id)
+                    
+                    if (ultimoAcertoMesa != null) {
+                        // Usar o relógio final do último acerto como inicial do próximo
+                        val relogioInicial = ultimoAcertoMesa.relogioFinal
+                        Log.d("SettlementViewModel", "Mesa ${mesa.numero}: MODO NOVO ACERTO - relógio final: ${ultimoAcertoMesa.relogioFinal} -> novo relógio inicial: $relogioInicial")
+                        mesa.copy(fichasInicial = relogioInicial)
+                    } else {
+                        // Primeiro acerto - usar relógio inicial cadastrado ou 0
+                        val relogioInicial = mesa.fichasInicial ?: 0
+                        Log.d("SettlementViewModel", "Mesa ${mesa.numero}: MODO NOVO ACERTO - primeiro acerto, usando relógio inicial cadastrado: $relogioInicial")
+                        mesa.copy(fichasInicial = relogioInicial)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("SettlementViewModel", "Erro ao preparar mesa ${mesa.numero}: ${e.message}")
@@ -190,18 +212,33 @@ class SettlementViewModel(
     }
 
     /**
-     * Busca o débito atual do último acerto do cliente para usar como débito anterior
+     * ✅ FUNÇÃO CRÍTICA: Busca o débito para usar como débito anterior
+     * @param clienteId ID do cliente
+     * @param acertoIdParaEdicao ID do acerto sendo editado (null se for novo acerto)
      */
-    fun buscarDebitoAnterior(clienteId: Long) {
+    fun buscarDebitoAnterior(clienteId: Long, acertoIdParaEdicao: Long? = null) {
         viewModelScope.launch {
             try {
-                val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
-                if (ultimoAcerto != null) {
-                    _debitoAnterior.value = ultimoAcerto.debitoAtual
-                    Log.d("SettlementViewModel", "Débito anterior carregado: R$ ${ultimoAcerto.debitoAtual}")
+                if (acertoIdParaEdicao != null) {
+                    // ✅ MODO EDIÇÃO: Usar débito ANTERIOR do acerto sendo editado (não o atual!)
+                    val acertoParaEdicao = acertoRepository.buscarPorId(acertoIdParaEdicao)
+                    if (acertoParaEdicao != null) {
+                        _debitoAnterior.value = acertoParaEdicao.debitoAnterior
+                        Log.d("SettlementViewModel", "MODO EDIÇÃO: Débito ANTERIOR do acerto sendo editado: R$ ${acertoParaEdicao.debitoAnterior}")
+                    } else {
+                        _debitoAnterior.value = 0.0
+                        Log.w("SettlementViewModel", "MODO EDIÇÃO: Acerto para edição não encontrado, débito anterior: R$ 0,00")
+                    }
                 } else {
-                    _debitoAnterior.value = 0.0
-                    Log.d("SettlementViewModel", "Nenhum acerto anterior encontrado, débito anterior: R$ 0,00")
+                    // ✅ MODO NOVO ACERTO: Usar débito do último acerto como anterior
+                    val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
+                    if (ultimoAcerto != null) {
+                        _debitoAnterior.value = ultimoAcerto.debitoAtual
+                        Log.d("SettlementViewModel", "MODO NOVO ACERTO: Débito anterior carregado: R$ ${ultimoAcerto.debitoAtual}")
+                    } else {
+                        _debitoAnterior.value = 0.0
+                        Log.d("SettlementViewModel", "MODO NOVO ACERTO: Nenhum acerto anterior encontrado, débito anterior: R$ 0,00")
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("SettlementViewModel", "Erro ao buscar débito anterior: ${e.message}")

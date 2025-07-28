@@ -103,8 +103,11 @@ class SettlementFragment : Fragment() {
         // Quarto: configurar UI básica
         configurarUIBasica()
         
-                // Quinto: buscar débito anterior (usado para cálculo do débito atual)
-        viewModel.buscarDebitoAnterior(args.clienteId)
+                // ✅ CORREÇÃO: Quinto: buscar débito anterior com modo de edição
+        viewModel.buscarDebitoAnterior(
+            args.clienteId,
+            args.acertoIdParaEdicao.takeIf { it != 0L }
+        )
 
         
         
@@ -155,8 +158,11 @@ class SettlementFragment : Fragment() {
                         if (mesasCliente != null && mesasCliente.isNotEmpty()) {
                             Log.d("SettlementFragment", "✅ Mesas do cliente carregadas: ${mesasCliente.size}")
                     
-                            // Preparar mesas para acerto
-                            val mesasPreparadas = viewModel.prepararMesasParaAcerto(mesasCliente)
+                            // ✅ CORREÇÃO: Preparar mesas para acerto com modo de edição
+                            val mesasPreparadas = viewModel.prepararMesasParaAcerto(
+                                mesasCliente, 
+                                args.acertoIdParaEdicao.takeIf { it != 0L }
+                            )
                             
                             // Converter para DTO com dados do cliente já carregados
                             val mesasDTO = mesasPreparadas.map { mesa ->
@@ -215,7 +221,13 @@ class SettlementFragment : Fragment() {
             if (mesasCliente.isNotEmpty()) {
                 Log.d("SettlementFragment", "✅ Fallback: ${mesasCliente.size} mesas carregadas")
                 
-                val mesasDTO = mesasCliente.map { mesa ->
+                // ✅ CORREÇÃO: Preparar mesas para acerto com modo de edição no fallback
+                val mesasPreparadas = viewModel.prepararMesasParaAcerto(
+                    mesasCliente,
+                    args.acertoIdParaEdicao.takeIf { it != 0L }
+                )
+                
+                val mesasDTO = mesasPreparadas.map { mesa ->
                     MesaDTO(
                         id = mesa.id,
                         numero = mesa.numero,

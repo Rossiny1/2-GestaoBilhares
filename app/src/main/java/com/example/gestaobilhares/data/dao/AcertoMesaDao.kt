@@ -28,6 +28,15 @@ interface AcertoMesaDao {
     suspend fun buscarPorAcertoId(acertoId: Long): List<AcertoMesa>
 
     /**
+     * ✅ NOVO: Busca um acerto mesa específico por acerto e mesa
+     * @param acertoId ID do acerto
+     * @param mesaId ID da mesa
+     * @return AcertoMesa específico ou null se não encontrado
+     */
+    @Query("SELECT * FROM acerto_mesas WHERE acerto_id = :acertoId AND mesa_id = :mesaId LIMIT 1")
+    suspend fun buscarAcertoMesaPorAcertoEMesa(acertoId: Long, mesaId: Long): AcertoMesa?
+
+    /**
      * ✅ NOVO: Busca os últimos acertos de uma mesa para calcular média
      * @param mesaId ID da mesa
      * @param limite Máximo de acertos a buscar (padrão 5)

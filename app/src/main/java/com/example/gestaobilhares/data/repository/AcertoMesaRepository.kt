@@ -20,6 +20,15 @@ class AcertoMesaRepository(
     suspend fun buscarPorAcertoId(acertoId: Long): List<AcertoMesa> = acertoMesaDao.buscarPorAcertoId(acertoId)
     
     /**
+     * ✅ NOVO: Busca um acerto mesa específico por acerto e mesa
+     * @param acertoId ID do acerto
+     * @param mesaId ID da mesa
+     * @return AcertoMesa específico ou null se não encontrado
+     */
+    suspend fun buscarAcertoMesaPorAcertoEMesa(acertoId: Long, mesaId: Long): AcertoMesa? = 
+        acertoMesaDao.buscarAcertoMesaPorAcertoEMesa(acertoId, mesaId)
+    
+    /**
      * ✅ NOVO: Busca os últimos acertos de uma mesa para calcular média
      * @param mesaId ID da mesa
      * @param limite Máximo de acertos a buscar (padrão 5)
