@@ -102,6 +102,10 @@ class ClientListViewModel(
     private val _cicloProgressoCard = MutableStateFlow<CicloProgressoCard?>(null)
     val cicloProgressoCard: StateFlow<CicloProgressoCard?> = _cicloProgressoCard.asStateFlow()
 
+    // ✅ NOVO: Dados reais da rota (clientes ativos e mesas)
+    private val _dadosRotaReais = MutableStateFlow(DadosRotaReais(0, 0))
+    val dadosRotaReais: StateFlow<DadosRotaReais> = _dadosRotaReais.asStateFlow()
+
     init {
         // Configurar fluxo reativo baseado no rotaId
         viewModelScope.launch {
@@ -572,6 +576,32 @@ class ClientListViewModel(
         }
     }
 
+    /**
+     * ✅ NOVO: Carrega dados reais da rota em tempo real (clientes ativos e mesas)
+     */
+    fun carregarDadosRotaEmTempoReal(rotaId: Long) {
+        viewModelScope.launch {
+            try {
+                // Observar clientes ativos da rota
+                clienteRepository.obterClientesPorRota(rotaId).collect { clientes ->
+                    val clientesAtivos = clientes.count { it.ativo }
+                    
+                    // Buscar total de mesas da rota
+                    val totalMesas = appRepository.buscarMesasPorRota(rotaId).first().size
+                    
+                    _dadosRotaReais.value = DadosRotaReais(
+                        totalClientes = clientesAtivos,
+                        totalMesas = totalMesas
+                    )
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("ClientListViewModel", "Erro ao carregar dados da rota: ${e.message}")
+                // Valores padrão em caso de erro
+                _dadosRotaReais.value = DadosRotaReais(0, 0)
+            }
+        }
+    }
+
     // Funções obsoletas removidas - card de progresso agora é totalmente reativo
 } 
 
@@ -585,4 +615,10 @@ data class CicloProgressoCard(
     val totalClientes: Int,
     val pendencias: Int,
     val debitoTotal: Double // NOVO
+) 
+
+// ✅ NOVO: Data class para dados reais da rota
+data class DadosRotaReais(
+    val totalClientes: Int,
+    val totalMesas: Int
 ) 

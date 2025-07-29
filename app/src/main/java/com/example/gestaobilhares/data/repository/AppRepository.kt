@@ -68,6 +68,7 @@ class AppRepository(
         mesaDao.atualizarRelogioFinal(mesaId, relogioFinal)
     suspend fun obterMesasPorClienteDireto(clienteId: Long) = 
         mesaDao.obterMesasPorClienteDireto(clienteId)
+    fun buscarMesasPorRota(rotaId: Long) = mesaDao.buscarMesasPorRota(rotaId)
     
     // ==================== ROTA ====================
     

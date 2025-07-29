@@ -90,6 +90,7 @@ class ClientListFragment : Fragment() {
         configurarBotoes()
         configurarBusca() // ✅ FASE 8C: Configurar busca
         observarViewModel()
+        observarDadosRotaReais() // ✅ NOVO: Observar dados reais da rota
             
             // Carregar dados da rota
             val rotaId = args.rotaId
@@ -310,8 +311,24 @@ class ClientListFragment : Fragment() {
     private fun atualizarInfoRota(rota: com.example.gestaobilhares.data.entities.Rota) {
         _binding?.let { binding ->
             binding.tvTitle.text = rota.nome
-            // TODO: Carregar informações dinâmicas (clientes ativos, mesas)
-            binding.tvRouteInfo.text = "12 clientes ativos • 24 mesas"
+            
+            // ✅ NOVO: Carregar dados reais em tempo real
+            viewModel.carregarDadosRotaEmTempoReal(rota.id)
+        }
+    }
+    
+    // ✅ NOVO: Observar dados reais da rota
+    private fun observarDadosRotaReais() {
+        lifecycleScope.launch {
+            viewModel.dadosRotaReais.collect { dados ->
+                try {
+                    _binding?.let { binding ->
+                        binding.tvRouteInfo.text = "${dados.totalClientes} clientes ativos • ${dados.totalMesas} mesas"
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao atualizar dados da rota: ${e.message}")
+                }
+            }
         }
     }
     
@@ -372,14 +389,72 @@ class ClientListFragment : Fragment() {
     
     // ✅ FASE 9A: Toggle da busca com animação
     private fun toggleBusca() {
-        // Busca removida do layout, apenas log para debug
-        android.util.Log.d("ClientListFragment", "Busca não disponível - layout simplificado")
+        _binding?.let { binding ->
+            val searchLayout = binding.searchLayout
+            val isVisible = searchLayout.visibility == View.VISIBLE
+            
+            if (isVisible) {
+                // Esconder campo de pesquisa com animação de slide para cima
+                val slideUp = android.view.animation.AnimationUtils.loadAnimation(requireContext(), android.R.anim.slide_out_right)
+                slideUp.setAnimationListener(object : android.view.animation.Animation.AnimationListener {
+                    override fun onAnimationStart(animation: android.view.animation.Animation?) {}
+                    override fun onAnimationEnd(animation: android.view.animation.Animation?) {
+                        searchLayout.visibility = View.GONE
+                        binding.etSearch.setText("")
+                        viewModel.limparBusca()
+                        
+                        // Esconder teclado
+                        val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                        imm.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
+                    }
+                    override fun onAnimationRepeat(animation: android.view.animation.Animation?) {}
+                })
+                searchLayout.startAnimation(slideUp)
+            } else {
+                // Mostrar campo de pesquisa com animação de slide para baixo
+                searchLayout.visibility = View.VISIBLE
+                val slideDown = android.view.animation.AnimationUtils.loadAnimation(requireContext(), android.R.anim.slide_in_left)
+                searchLayout.startAnimation(slideDown)
+                
+                // Focar no campo de pesquisa
+                binding.etSearch.requestFocus()
+                
+                // Mostrar teclado
+                val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.showSoftInput(binding.etSearch, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+            }
+        }
     }
     
     // ✅ FASE 9A: Configurar busca em tempo real com debounce
     private fun configurarBusca() {
-        // Busca removida do layout, apenas log para debug
-        android.util.Log.d("ClientListFragment", "Busca não disponível - layout simplificado")
+        _binding?.let { binding ->
+            // Configurar TextWatcher com debounce
+            var searchJob: kotlinx.coroutines.Job? = null
+            
+            binding.etSearch.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    // Cancelar busca anterior
+                    searchJob?.cancel()
+                    
+                    // Iniciar nova busca com delay de 300ms (debounce)
+                    searchJob = lifecycleScope.launch {
+                        kotlinx.coroutines.delay(300)
+                        val query = s?.toString() ?: ""
+                        viewModel.buscarClientes(query)
+                    }
+                }
+            })
+            
+            // Configurar ícone de limpar
+            binding.tilSearch.setEndIconOnClickListener {
+                binding.etSearch.setText("")
+                viewModel.limparBusca()
+                binding.etSearch.requestFocus()
+            }
+        }
     }
     
     // ✅ FASE 9B: Atualizar empty state com filtros combinados

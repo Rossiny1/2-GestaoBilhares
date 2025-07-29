@@ -306,7 +306,7 @@
                                     android:id="@+id/tvFaturamento"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="R$ 12.585,85"
+                                    android:text="R$ 0,00"
                                     android:textColor="@color/blue_600"
                                     android:textSize="15sp"
                                     android:textStyle="bold"
@@ -340,7 +340,7 @@
                                     android:id="@+id/tvDespesas"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="R$ 1.250,00"
+                                    android:text="R$ 0,00"
                                     android:textColor="@color/red_600"
                                     android:textSize="15sp"
                                     android:textStyle="bold"
@@ -374,7 +374,7 @@
                                     android:id="@+id/tvPercentualAcertados"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="2%"
+                                    android:text="0%"
                                     android:textColor="@color/green_600"
                                     android:textSize="16sp"
                                     android:textStyle="bold" />
@@ -383,7 +383,7 @@
                                     android:id="@+id/tvTotalClientes"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="de 10 clientes"
+                                    android:text="de 0 clientes"
                                     android:textColor="?attr/colorOnSurfaceVariant"
                                     android:textSize="11sp"
                                     android:layout_marginTop="1dp" />
@@ -413,7 +413,7 @@
                                     android:id="@+id/tvPendencias"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="3"
+                                    android:text="0"
                                     android:textColor="@color/orange_600"
                                     android:textSize="16sp"
                                     android:textStyle="bold" />
@@ -454,8 +454,7 @@
                                 android:text="R$ 0,00"
                                 android:textColor="@color/orange_600"
                                 android:textSize="15sp"
-                                android:textStyle="bold"
-                                tools:text="R$ 2.500,00" />
+                                android:textStyle="bold" />
                         </LinearLayout>
 
                     </LinearLayout>
@@ -554,6 +553,42 @@
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- ✅ NOVO: Campo de pesquisa (inicialmente oculto) -->
+            <LinearLayout
+                android:id="@+id/searchLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="12dp"
+                android:background="?attr/colorSurface"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilSearch"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Pesquisar cliente por nome"
+                    app:endIconDrawable="@drawable/ic_close"
+                    app:endIconMode="custom"
+                    app:startIconDrawable="@drawable/ic_search"
+                    app:startIconTint="?attr/colorOnSurfaceVariant">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etSearch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:textSize="16sp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
 
             <!-- Filtros Rápidos -->
             <com.google.android.material.card.MaterialCardView

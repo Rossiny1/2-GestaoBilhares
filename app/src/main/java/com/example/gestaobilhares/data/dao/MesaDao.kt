@@ -72,4 +72,12 @@ interface MesaDao {
 
     @Query("SELECT * FROM mesas WHERE cliente_id = :clienteId AND ativa = 1 ORDER BY numero ASC")
     suspend fun obterMesasPorClienteDireto(clienteId: Long): List<Mesa>
+    
+    @Query("""
+        SELECT m.* FROM mesas m
+        INNER JOIN clientes c ON m.cliente_id = c.id
+        WHERE c.rota_id = :rotaId AND m.ativa = 1
+        ORDER BY m.numero ASC
+    """)
+    fun buscarMesasPorRota(rotaId: Long): Flow<List<Mesa>>
 } 
