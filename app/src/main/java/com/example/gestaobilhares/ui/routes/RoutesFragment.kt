@@ -16,6 +16,7 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRoutesBinding
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.RotaRepository
+import com.google.android.material.navigation.NavigationView
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -24,7 +25,7 @@ import java.util.Locale
  * Mostra lista de rotas, estatísticas e permite adicionar novas rotas.
  * Implementa o padrão MVVM usando ViewBinding e ViewModel.
  * 
- * FASE 3: Inclui controle de acesso admin, card de valor acertado e relatório de fechamento.
+ * FASE 4: Inclui Navigation Drawer, dados reais e menu lateral.
  */
 class RoutesFragment : Fragment() {
 
@@ -58,6 +59,7 @@ class RoutesFragment : Fragment() {
         
         setupRecyclerView()
         setupClickListeners()
+        setupNavigationDrawer()
         setupBottomNavigation()
         observeViewModel()
     }
@@ -80,63 +82,79 @@ class RoutesFragment : Fragment() {
     }
 
     /**
-     * FASE 3: Configura os listeners de clique dos botões incluindo controle de acesso.
+     * Configura o Navigation Drawer.
+     */
+    private fun setupNavigationDrawer() {
+        // Configurar listener do menu lateral
+        binding.navigationView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_manage_collaborator -> {
+                    Toast.makeText(requireContext(), "Gerenciar Colaborador será implementado em breve", Toast.LENGTH_SHORT).show()
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                R.id.nav_manage_expenses -> {
+                    Toast.makeText(requireContext(), "Gerenciar Despesas será implementado em breve", Toast.LENGTH_SHORT).show()
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                R.id.nav_manage_tables -> {
+                    Toast.makeText(requireContext(), "Gerenciar Mesas será implementado em breve", Toast.LENGTH_SHORT).show()
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                R.id.nav_management_report -> {
+                    Toast.makeText(requireContext(), "Relatório Gerencial será implementado em breve", Toast.LENGTH_SHORT).show()
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                R.id.nav_message_settings -> {
+                    Toast.makeText(requireContext(), "Configurações de Mensagens será implementado em breve", Toast.LENGTH_SHORT).show()
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                R.id.nav_system_settings -> {
+                    Toast.makeText(requireContext(), "Configuração do Sistema será implementado em breve", Toast.LENGTH_SHORT).show()
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    /**
+     * Configura os listeners de clique dos botões.
      */
     private fun setupClickListeners() {
-        // FASE 3: Botão de adicionar rota (FAB) - com controle de acesso
+        // Botão de menu lateral
+        binding.btnMenu.setOnClickListener {
+            binding.drawerLayout.openDrawer(binding.navigationView)
+        }
+
+        // Botão de adicionar rota (FAB) - com controle de acesso
         binding.addRouteFab.setOnClickListener {
             viewModel.showAddRouteDialog()
         }
 
-        // FASE 3: Botão de relatório de fechamento
+        // Botão de relatório de fechamento
         binding.reportFab.setOnClickListener {
             showReportConfirmationDialog()
         }
 
-        // Botão de gerenciar rotas
-        binding.manageButton.setOnClickListener {
-            findNavController().navigate(R.id.action_routesFragment_to_routeManagementFragment)
-        }
-
-        // Botão Histórico de Despesas
-        binding.expenseHistoryFab.setOnClickListener {
-            findNavController().navigate(R.id.action_routesFragment_to_expenseHistoryFragment)
-        }
-
         // Botão de pesquisa
         binding.searchButton.setOnClickListener {
-            // TODO: Implementar busca na próxima fase
             Toast.makeText(requireContext(), "Busca será implementada em breve", Toast.LENGTH_SHORT).show()
         }
 
         // Botão de filtro
         binding.filterButton.setOnClickListener {
-            // TODO: Implementar filtros na próxima fase
             Toast.makeText(requireContext(), "Filtros serão implementados em breve", Toast.LENGTH_SHORT).show()
-        }
-
-        // Link "Ver todas"
-        binding.verTodasButton.setOnClickListener {
-            // TODO: Navegar para tela de todas as rotas
-            Toast.makeText(requireContext(), "Lista completa será implementada em breve", Toast.LENGTH_SHORT).show()
-        }
-
-        // Navegação do card em destaque
-        binding.rotaPreviousButton.setOnClickListener {
-            // TODO: Implementar navegação entre rotas em destaque
-        }
-
-        binding.rotaNextButton.setOnClickListener {
-            // TODO: Implementar navegação entre rotas em destaque
-        }
-
-        binding.rotaDestaqueCard.setOnClickListener {
-            // TODO: Navegar para a rota em destaque
         }
     }
 
     /**
-     * FASE 3: Mostra diálogo de confirmação para geração de relatório.
+     * Mostra diálogo de confirmação para geração de relatório.
      */
     private fun showReportConfirmationDialog() {
         AlertDialog.Builder(requireContext(), R.style.DarkDialogTheme)
@@ -162,17 +180,14 @@ class RoutesFragment : Fragment() {
                     true
                 }
                 R.id.navigation_acertos -> {
-                    // TODO: Navegar para acertos
                     Toast.makeText(requireContext(), "Acertos será implementado em breve", Toast.LENGTH_SHORT).show()
                     false
                 }
                 R.id.navigation_cadastros -> {
-                    // TODO: Navegar para cadastros
                     Toast.makeText(requireContext(), "Cadastros será implementado em breve", Toast.LENGTH_SHORT).show()
                     false
                 }
                 R.id.navigation_relatorios -> {
-                    // ✅ CORRIGIDO: Navegar para tela de relatórios
                     try {
                         findNavController().navigate(R.id.reportsFragment)
                         true
@@ -188,46 +203,35 @@ class RoutesFragment : Fragment() {
     }
 
     /**
-     * FASE 3: Observa as mudanças no ViewModel e atualiza a UI com novas funcionalidades.
+     * Observa as mudanças no ViewModel e atualiza a UI.
      */
     private fun observeViewModel() {
         // Observa a lista de rotas
         viewModel.rotasResumo.observe(viewLifecycleOwner) { rotas ->
             routesAdapter.submitList(rotas)
-            
-            // Atualiza o card em destaque com a primeira rota (se houver)
-            if (rotas.isNotEmpty()) {
-                val rotaDestaque = rotas.first()
-                binding.rotaDestaqueTitulo.text = rotaDestaque.rota.nome
-                binding.rotaDestaqueInfo.text = "${rotaDestaque.clientesAtivos} clientes • ${rotaDestaque.pendencias} pendências"
-            }
         }
 
-        // FASE 3: Observa as estatísticas gerais incluindo valor acertado
+        // Observa as estatísticas gerais com dados reais
         viewModel.estatisticas.observe(viewLifecycleOwner) { stats ->
-            binding.clientesAtivosCount.text = stats.totalClientesAtivos.toString()
-            binding.pendenciasCount.text = stats.totalPendencias.toString()
-            // FASE 3: Atualiza o card de valor acertado
-            binding.valorAcertadoAmount.text = currencyFormatter.format(stats.valorAcertadoNaoFinalizado)
+            binding.totalMesasCount.text = stats.totalMesas.toString()
+            binding.totalClientesCount.text = stats.totalClientesAtivos.toString()
+            binding.totalPendenciasCount.text = stats.totalPendencias.toString()
         }
 
-        // FASE 3: Observa controle de acesso admin
+        // Observa controle de acesso admin
         viewModel.isAdmin.observe(viewLifecycleOwner) { isAdmin ->
-            // FASE 3: Controla visibilidade do FAB baseado no nível de acesso
             binding.addRouteFab.visibility = if (isAdmin) View.VISIBLE else View.GONE
         }
 
-        // FASE 3: Observa estado de loading
+        // Observa estado de loading
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // Mostra/esconde indicador de loading nos botões
             binding.reportFab.isEnabled = !isLoading
             binding.addRouteFab.isEnabled = !isLoading
         }
 
-        // FASE 3: Observa eventos de geração de relatório
+        // Observa eventos de geração de relatório
         viewModel.generateReport.observe(viewLifecycleOwner) { shouldGenerate ->
             if (shouldGenerate) {
-                // TODO: Aqui poderia abrir a tela de relatório ou baixar o arquivo
                 Toast.makeText(requireContext(), "Relatório salvo em Documentos/GestaoBilhares", Toast.LENGTH_LONG).show()
                 viewModel.reportGenerationCompleted()
             }
@@ -252,8 +256,6 @@ class RoutesFragment : Fragment() {
         // Observa navegação para clientes
         viewModel.navigateToClients.observe(viewLifecycleOwner) { rotaId ->
             rotaId?.let {
-                // FASE 3: Navegar para a tela de clientes da rota com argumento
-                // Usando Bundle temporariamente até que Safe Args gere as classes
                 val bundle = Bundle().apply {
                     putLong("rotaId", it)
                 }

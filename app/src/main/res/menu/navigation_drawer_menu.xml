@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Grupo: Gerenciamento -->
+    <group android:id="@+id/group_management" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_manage_collaborator"
+            android:icon="@drawable/ic_person"
+            android:title="Gerenciar Colaborador" />
+        
+        <item
+            android:id="@+id/nav_manage_expenses"
+            android:icon="@drawable/ic_money"
+            android:title="Gerenciar Despesas" />
+        
+        <item
+            android:id="@+id/nav_manage_tables"
+            android:icon="@drawable/ic_table"
+            android:title="Gerenciar Mesas" />
+    </group>
+
+    <!-- Grupo: Relatórios -->
+    <group android:id="@+id/group_reports" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_management_report"
+            android:icon="@drawable/ic_report"
+            android:title="Relatório Gerencial" />
+    </group>
+
+    <!-- Grupo: Configurações -->
+    <group android:id="@+id/group_settings" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_message_settings"
+            android:icon="@drawable/ic_whatsapp"
+            android:title="Configurações de Mensagens" />
+        
+        <item
+            android:id="@+id/nav_system_settings"
+            android:icon="@drawable/ic_settings"
+            android:title="Configuração do Sistema" />
+    </group>
+
+</menu>

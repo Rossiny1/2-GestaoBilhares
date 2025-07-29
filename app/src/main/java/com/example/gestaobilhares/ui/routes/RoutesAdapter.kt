@@ -60,11 +60,17 @@ class RoutesAdapter(
                     StatusRota.PAUSADA -> "Pausada"
                 }
 
+                // Informações do ciclo atual
+                rotaCiclo.text = rotaResumo.getCicloFormatado()
+
                 // Informações da rota - inclui percentual e total de clientes
                 rotaInfo.text = "${rotaResumo.percentualAcertados}% de ${rotaResumo.clientesAtivos} clientes acertados"
 
                 // Quantidade de mesas da rota
-                rotaTempo.text = "${rotaResumo.quantidadeMesas} mesas"
+                rotaMesas.text = "${rotaResumo.quantidadeMesas} mesas"
+
+                // Quantidade de clientes
+                rotaClientes.text = "${rotaResumo.clientesAtivos} clientes"
 
                 // Pendências
                 rotaPendencias.text = "${rotaResumo.pendencias} pendências"

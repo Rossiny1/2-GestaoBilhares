@@ -113,6 +113,11 @@
     <color name="bottom_nav_selected">#6200EA</color>
     <color name="bottom_nav_unselected">#888888</color>
     
+    <!-- Navigation Drawer -->
+    <color name="navigation_item_color">#FFFFFF</color>
+    <color name="navigation_item_selected">#6200EA</color>
+    <color name="navigation_item_unselected">#B3B3B3</color>
+    
     <!-- Cores para botões -->
     <color name="button_background">#6200EA</color>
     <color name="button_disabled">#444444</color>

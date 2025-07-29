@@ -80,7 +80,9 @@ class RotaRepository(
                         0 -> StatusRota.EM_ANDAMENTO
                         1 -> StatusRota.CONCLUIDA
                         else -> StatusRota.EM_ANDAMENTO
-                    }
+                    },
+                    cicloAtual = rota.cicloAcertoAtual,
+                    dataCiclo = rota.dataInicioCiclo
                 )
             }
         }

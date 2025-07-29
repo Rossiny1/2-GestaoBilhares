@@ -48,6 +48,17 @@
 
         </LinearLayout>
 
+        <!-- Informações do ciclo atual -->
+        <TextView
+            android:id="@+id/rotaCiclo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="1º Ciclo - 15/01/2025"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            tools:text="1º Ciclo - 15/01/2025" />
+
         <!-- Informações da rota -->
         <TextView
             android:id="@+id/rotaInfo"
@@ -59,7 +70,7 @@
             android:textSize="14sp"
             tools:text="78% de 32 clientes acertados" />
 
-        <!-- Status da rota -->
+        <!-- Status da rota com informações detalhadas -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -82,7 +93,7 @@
                     app:tint="@color/text_secondary" />
 
                 <TextView
-                    android:id="@+id/rotaTempo"
+                    android:id="@+id/rotaMesas"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
@@ -90,6 +101,32 @@
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     tools:text="45 mesas" />
+
+            </LinearLayout>
+
+            <!-- Quantidade de clientes -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_people"
+                    app:tint="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/rotaClientes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="32 clientes"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    tools:text="32 clientes" />
 
             </LinearLayout>
 

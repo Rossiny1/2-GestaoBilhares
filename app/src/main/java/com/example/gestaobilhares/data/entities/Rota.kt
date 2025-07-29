@@ -64,8 +64,23 @@ data class RotaResumo(
     val valorAcertado: Double = 0.0,
     val quantidadeMesas: Int = 0,
     val percentualAcertados: Int = 0, // Percentual de clientes que acertaram (0-100)
-    val status: StatusRota = StatusRota.EM_ANDAMENTO
-)
+    val status: StatusRota = StatusRota.EM_ANDAMENTO,
+    val cicloAtual: Int = 1,
+    val dataCiclo: Long? = null
+) {
+    /**
+     * Formata a informação do ciclo atual com data
+     */
+    fun getCicloFormatado(): String {
+        val dataFormatada = if (dataCiclo != null) {
+            val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
+            sdf.format(java.util.Date(dataCiclo))
+        } else {
+            "Data não definida"
+        }
+        return "${cicloAtual}º Ciclo - $dataFormatada"
+    }
+}
 
 /**
  * Enum para representar o status de uma rota

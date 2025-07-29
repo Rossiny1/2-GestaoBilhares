@@ -99,6 +99,7 @@ class RoutesViewModel(
         return EstatisticasGerais(
             totalClientesAtivos = rotas.sumOf { it.clientesAtivos },
             totalPendencias = rotas.sumOf { it.pendencias },
+            totalMesas = rotas.sumOf { it.quantidadeMesas },
             valorTotalAcertado = rotas.sumOf { it.valorAcertado },
             // FASE 3: Calcular apenas valores não finalizados
             valorAcertadoNaoFinalizado = calcularValorAcertadoNaoFinalizado(rotas)
@@ -274,6 +275,7 @@ class RoutesViewModel(
     data class EstatisticasGerais(
         val totalClientesAtivos: Int,
         val totalPendencias: Int,
+        val totalMesas: Int,
         val valorTotalAcertado: Double,
         val valorAcertadoNaoFinalizado: Double // FASE 3: Valores não finalizados
     )
