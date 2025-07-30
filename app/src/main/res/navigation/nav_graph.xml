@@ -89,6 +89,10 @@
         <action
             android:id="@+id/action_clientListFragment_to_expenseRegisterFragment"
             app:destination="@id/expenseRegisterFragment" />
+        <!-- ✅ NOVO: Navegação para gerenciamento de ciclos -->
+        <action
+            android:id="@+id/action_clientListFragment_to_cycleManagementFragment"
+            app:destination="@id/cycleManagementFragment" />
     </fragment>
 
     <!-- FASE 4A: Tela de detalhes do cliente -->
@@ -211,19 +215,23 @@
             android:name="rotaId"
             app:argType="long"
             android:defaultValue="0L" />
-        <!-- Navegação para detalhes do ciclo (futuro) -->
+        <!-- ✅ NOVO: Navegação para gerenciamento de ciclos -->
         <action
-            android:id="@+id/action_cycleHistoryFragment_to_cycleDetailFragment"
-            app:destination="@id/cycleDetailFragment" />
+            android:id="@+id/action_cycleHistoryFragment_to_cycleManagementFragment"
+            app:destination="@id/cycleManagementFragment" />
     </fragment>
 
-    <!-- ✅ FASE 9C: Tela de detalhes do ciclo (placeholder) -->
+    <!-- ✅ NOVO: Tela de gerenciamento de ciclos -->
     <fragment
-        android:id="@+id/cycleDetailFragment"
-        android:name="com.example.gestaobilhares.ui.clients.CycleHistoryFragment"
-        android:label="Detalhes do Ciclo">
+        android:id="@+id/cycleManagementFragment"
+        android:name="com.example.gestaobilhares.ui.cycles.CycleManagementFragment"
+        android:label="Gerenciar Ciclo">
         <argument
             android:name="cicloId"
+            app:argType="long"
+            android:defaultValue="0L" />
+        <argument
+            android:name="rotaId"
             app:argType="long"
             android:defaultValue="0L" />
     </fragment>

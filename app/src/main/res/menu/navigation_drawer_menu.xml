@@ -17,6 +17,11 @@
             android:id="@+id/nav_manage_tables"
             android:icon="@drawable/ic_table"
             android:title="Gerenciar Mesas" />
+        
+        <item
+            android:id="@+id/nav_manage_routes"
+            android:icon="@drawable/ic_route"
+            android:title="Gerenciar Rotas" />
     </group>
 
     <!-- Grupo: Relatórios -->

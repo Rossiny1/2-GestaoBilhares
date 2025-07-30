@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import java.util.Date
 import java.util.Calendar
 import com.example.gestaobilhares.data.repository.ClienteRepository
+import java.time.ZoneId
 
 /**
  * Repositório para operações de ciclos de acerto
@@ -173,7 +174,10 @@ class CicloAcertoRepository(
             val rotaId = it.rotaId
             // Realiza o cálculo final de todos os dados agregados
             val acertos = acertoRepository.buscarPorCicloId(cicloId).first()
+            
+            // ✅ CORRIGIDO: Buscar despesas por cicloId
             val despesas = despesaRepository.buscarPorCicloId(cicloId).first()
+            
             val clientes = clienteRepository.obterClientesPorRota(rotaId).first()
 
             val valorTotalAcertado = acertos.sumOf { a -> a.valorRecebido }

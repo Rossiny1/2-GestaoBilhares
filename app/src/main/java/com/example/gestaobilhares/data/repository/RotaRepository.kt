@@ -1,11 +1,18 @@
 package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.RotaDao
+import com.example.gestaobilhares.data.dao.ClienteDao
+import com.example.gestaobilhares.data.dao.MesaDao
+import com.example.gestaobilhares.data.dao.AcertoDao
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.RotaResumo
 import com.example.gestaobilhares.data.entities.StatusRota
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.runBlocking
 
 /**
  * Repository para gerenciar dados das rotas.
@@ -13,7 +20,10 @@ import kotlinx.coroutines.flow.map
  * Coordena entre o banco de dados local e futuras fontes remotas.
  */
 class RotaRepository(
-    private val rotaDao: RotaDao
+    private val rotaDao: RotaDao,
+    private val clienteDao: ClienteDao? = null,
+    private val mesaDao: MesaDao? = null,
+    private val acertoDao: AcertoDao? = null
 ) {
     
     /**
@@ -32,59 +42,134 @@ class RotaRepository(
     }
     
     /**
-     * Obtém um resumo de todas as rotas com estatísticas simuladas.
-     * TODO: Implementar cálculos reais quando as outras entidades estiverem prontas.
+     * Obtém um resumo de todas as rotas com estatísticas reais.
+     * Calcula dados reais de clientes, mesas e acertos.
      */
     fun getRotasResumo(): Flow<List<RotaResumo>> {
         return getAllRotasAtivas().map { rotas ->
-            rotas.mapIndexed { index, rota ->
-                // Dados simulados até implementarmos os cálculos reais
+            rotas.map { rota ->
+                // Usar dados reais calculados
+                val clientesAtivos = calcularClientesAtivosSync(rota.id)
+                val pendencias = calcularPendenciasSync(rota.id)
+                val valorAcertado = calcularValorAcertadoSync(rota.id)
+                val quantidadeMesas = calcularQuantidadeMesasSync(rota.id)
+                val percentualAcertados = calcularPercentualAcertadosSync(rota.id, clientesAtivos)
+                val status = determinarStatusRota(rota)
+                
                 RotaResumo(
                     rota = rota,
-                    clientesAtivos = when (index % 4) {
-                        0 -> 32
-                        1 -> 28  
-                        2 -> 35
-                        else -> 25
-                    },
-                    pendencias = when (index % 3) {
-                        0 -> 8
-                        1 -> 5
-                        else -> 3
-                    },
-                    valorAcertado = when (index % 5) {
-                        0 -> 2850.50
-                        1 -> 1920.00
-                        2 -> 3210.75
-                        3 -> 1550.25
-                        else -> 2100.00
-                    },
-                    quantidadeMesas = when (index % 6) {
-                        0 -> 45  // Rota com muitas mesas
-                        1 -> 32  // Rota média
-                        2 -> 68  // Rota grande
-                        3 -> 28  // Rota pequena
-                        4 -> 52  // Rota média-grande
-                        else -> 38  // Rota padrão
-                    },
-                    percentualAcertados = when (index % 7) {
-                        0 -> 85  // 85% dos clientes acertaram
-                        1 -> 78  // 78% dos clientes acertaram
-                        2 -> 92  // 92% dos clientes acertaram
-                        3 -> 67  // 67% dos clientes acertaram
-                        4 -> 88  // 88% dos clientes acertaram
-                        5 -> 73  // 73% dos clientes acertaram
-                        else -> 81  // 81% dos clientes acertaram
-                    },
-                    status = when (index % 3) {
-                        0 -> StatusRota.EM_ANDAMENTO
-                        1 -> StatusRota.CONCLUIDA
-                        else -> StatusRota.EM_ANDAMENTO
-                    },
+                    clientesAtivos = clientesAtivos,
+                    pendencias = pendencias,
+                    valorAcertado = valorAcertado,
+                    quantidadeMesas = quantidadeMesas,
+                    percentualAcertados = percentualAcertados,
+                    status = status,
                     cicloAtual = rota.cicloAcertoAtual,
                     dataCiclo = rota.dataInicioCiclo
                 )
             }
+        }
+    }
+    
+    /**
+     * Calcula o número de clientes ativos de uma rota (versão síncrona)
+     */
+    private fun calcularClientesAtivosSync(rotaId: Long): Int {
+        return try {
+            clienteDao?.let { dao ->
+                runBlocking { dao.obterClientesPorRota(rotaId).first().size }
+            } ?: 0
+        } catch (e: Exception) {
+            android.util.Log.e("RotaRepository", "Erro ao calcular clientes ativos: ${e.message}")
+            0
+        }
+    }
+    
+    /**
+     * Calcula o número de pendências de uma rota (versão síncrona)
+     */
+    private fun calcularPendenciasSync(rotaId: Long): Int {
+        return try {
+            clienteDao?.let { dao ->
+                val clientes = runBlocking { dao.obterClientesPorRota(rotaId).first() }
+                clientes.count { it.debitoAtual > 0 }
+            } ?: 0
+        } catch (e: Exception) {
+            android.util.Log.e("RotaRepository", "Erro ao calcular pendências: ${e.message}")
+            0
+        }
+    }
+    
+    /**
+     * Calcula o valor total acertado de uma rota (versão síncrona)
+     */
+    private fun calcularValorAcertadoSync(rotaId: Long): Double {
+        return try {
+            acertoDao?.let { dao ->
+                val clientes = clienteDao?.let { clienteDao ->
+                    runBlocking { clienteDao.obterClientesPorRota(rotaId).first() }
+                } ?: emptyList()
+                val acertos = clientes.flatMap { cliente ->
+                    runBlocking { dao.buscarPorCliente(cliente.id).first() }
+                }
+                acertos.sumOf { it.valorRecebido }
+            } ?: 0.0
+        } catch (e: Exception) {
+            android.util.Log.e("RotaRepository", "Erro ao calcular valor acertado: ${e.message}")
+            0.0
+        }
+    }
+    
+    /**
+     * Calcula a quantidade de mesas de uma rota (versão síncrona)
+     */
+    private fun calcularQuantidadeMesasSync(rotaId: Long): Int {
+        return try {
+            mesaDao?.let { dao ->
+                runBlocking { dao.buscarMesasPorRota(rotaId).first().size }
+            } ?: 0
+        } catch (e: Exception) {
+            android.util.Log.e("RotaRepository", "Erro ao calcular quantidade de mesas: ${e.message}")
+            0
+        }
+    }
+    
+    /**
+     * Calcula o percentual de clientes que acertaram (versão síncrona)
+     */
+    private fun calcularPercentualAcertadosSync(rotaId: Long, totalClientes: Int): Int {
+        return try {
+            if (totalClientes == 0) return 0
+            
+            acertoDao?.let { dao ->
+                val clientes = clienteDao?.let { clienteDao ->
+                    runBlocking { clienteDao.obterClientesPorRota(rotaId).first() }
+                } ?: emptyList()
+                val clientesComAcerto = clientes.count { cliente ->
+                    runBlocking { dao.buscarPorCliente(cliente.id).first().isNotEmpty() }
+                }
+                ((clientesComAcerto.toDouble() / totalClientes) * 100).toInt()
+            } ?: 0
+        } catch (e: Exception) {
+            android.util.Log.e("RotaRepository", "Erro ao calcular percentual acertados: ${e.message}")
+            0
+        }
+    }
+    
+    /**
+     * Determina o status da rota baseado em seus dados
+     */
+    private fun determinarStatusRota(rota: Rota): StatusRota {
+        return try {
+            // Por enquanto, usar lógica simples baseada no ciclo
+            if (rota.cicloAcertoAtual > 0) {
+                StatusRota.EM_ANDAMENTO
+            } else {
+                StatusRota.CONCLUIDA
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("RotaRepository", "Erro ao determinar status: ${e.message}")
+            StatusRota.EM_ANDAMENTO
         }
     }
     

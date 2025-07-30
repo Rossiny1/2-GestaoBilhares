@@ -5,11 +5,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Date
+import kotlinx.coroutines.runBlocking
 
 /**
  * Estatísticas financeiras dos ciclos
@@ -29,13 +32,14 @@ data class CycleStatistics(
  * Factory para criar CycleHistoryViewModel com dependências
  */
 class CycleHistoryViewModelFactory(
-    private val cicloAcertoRepository: CicloAcertoRepository
+    private val cicloAcertoRepository: CicloAcertoRepository,
+    private val appRepository: AppRepository
 ) : ViewModelProvider.Factory {
     
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(CycleHistoryViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return CycleHistoryViewModel(cicloAcertoRepository) as T
+            return CycleHistoryViewModel(cicloAcertoRepository, appRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
@@ -64,7 +68,8 @@ data class CycleHistoryItem(
  * ✅ FASE 9C: HISTÓRICO DE CICLOS E RELATÓRIOS FINANCEIROS
  */
 class CycleHistoryViewModel(
-    private val cicloAcertoRepository: CicloAcertoRepository
+    private val cicloAcertoRepository: CicloAcertoRepository,
+    private val appRepository: AppRepository
 ) : ViewModel() {
     
 
@@ -101,6 +106,10 @@ class CycleHistoryViewModel(
                         clientes.sumOf { it.debitoAtual } // Calcula ao vivo apenas para o ciclo em andamento
                     }
 
+                    // ✅ CORRIGIDO: Calcular despesas reais do ciclo
+                    val despesasCiclo = appRepository.buscarDespesasPorCicloId(ciclo.id).first()
+                    val valorTotalDespesas = despesasCiclo.sumOf { despesa -> despesa.valor }
+
                     CycleHistoryItem(
                         id = ciclo.id,
                         rotaId = ciclo.rotaId,
@@ -108,8 +117,8 @@ class CycleHistoryViewModel(
                         dataInicio = ciclo.dataInicio,
                         dataFim = ciclo.dataFim ?: Date(), // Usar data atual se for nula
                         valorTotalAcertado = ciclo.valorTotalAcertado,
-                        valorTotalDespesas = ciclo.valorTotalDespesas,
-                        lucroLiquido = ciclo.lucroLiquido,
+                        valorTotalDespesas = valorTotalDespesas, // ✅ Usar valor real calculado
+                        lucroLiquido = ciclo.valorTotalAcertado - valorTotalDespesas, // ✅ Recalcular lucro
                         debitoTotal = debitoTotal,
                         clientesAcertados = ciclo.clientesAcertados, // Usar dados já calculados
                         totalClientes = ciclo.totalClientes,       // Usar dados já calculados
@@ -141,7 +150,15 @@ class CycleHistoryViewModel(
 
         val totalCiclos = ciclos.size
         val receitaTotal = ciclos.sumOf { it.valorTotalAcertado }
-        val despesasTotal = ciclos.sumOf { it.valorTotalDespesas }
+        
+        // ✅ CORRIGIDO: Calcular despesas totais reais
+        val despesasTotal = runBlocking {
+            ciclos.sumOf { ciclo ->
+                val despesasCiclo = appRepository.buscarDespesasPorCicloId(ciclo.id).first()
+                despesasCiclo.sumOf { despesa -> despesa.valor }
+            }
+        }
+        
         val lucroLiquido = receitaTotal - despesasTotal
         val lucroMedioPorCiclo = if (totalCiclos > 0) lucroLiquido / totalCiclos else 0.0
         

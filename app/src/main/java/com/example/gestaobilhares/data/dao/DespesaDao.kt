@@ -152,4 +152,10 @@ interface DespesaDao {
      */
     @Query("SELECT * FROM despesas WHERE rotaId = :rotaId AND cicloId = :cicloId ORDER BY dataHora DESC")
     fun buscarPorRotaECicloId(rotaId: Long, cicloId: Long): Flow<List<Despesa>>
+
+    /**
+     * Busca despesas sem cicloId (para debug).
+     */
+    @Query("SELECT * FROM despesas WHERE cicloId IS NULL ORDER BY dataHora DESC")
+    fun buscarSemCicloId(): Flow<List<Despesa>>
 } 

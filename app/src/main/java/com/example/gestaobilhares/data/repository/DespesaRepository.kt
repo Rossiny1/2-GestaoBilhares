@@ -135,6 +135,16 @@ class DespesaRepository(
     }
     
     /**
+     * Busca despesas por rota e cicloId.
+     */
+    fun buscarPorRotaECicloId(rotaId: Long, cicloId: Long) = despesaDao.buscarPorRotaECicloId(rotaId, cicloId)
+
+    /**
+     * Busca despesas sem cicloId (para debug).
+     */
+    fun buscarSemCicloId() = despesaDao.buscarSemCicloId()
+
+    /**
      * Dados mock para desenvolvimento e testes.
      * Remove quando integrar com dados reais.
      */

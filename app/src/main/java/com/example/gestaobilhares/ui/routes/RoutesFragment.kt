@@ -55,7 +55,15 @@ class RoutesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar ViewModel aqui onde o contexto está disponível
-        viewModel = RoutesViewModel(RotaRepository(AppDatabase.getDatabase(requireContext()).rotaDao()))
+        val database = AppDatabase.getDatabase(requireContext())
+        viewModel = RoutesViewModel(
+            RotaRepository(
+                database.rotaDao(),
+                database.clienteDao(),
+                database.mesaDao(),
+                database.acertoDao()
+            )
+        )
         
         setupRecyclerView()
         setupClickListeners()
@@ -102,6 +110,19 @@ class RoutesFragment : Fragment() {
                     Toast.makeText(requireContext(), "Gerenciar Mesas será implementado em breve", Toast.LENGTH_SHORT).show()
                     binding.drawerLayout.closeDrawers()
                     true
+                }
+                R.id.nav_manage_routes -> {
+                    // Navegar para a tela de gerenciamento de rotas
+                    try {
+                        findNavController().navigate(R.id.routeManagementFragment)
+                        binding.drawerLayout.closeDrawers()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao navegar para gerenciamento de rotas: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir gerenciamento de rotas: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
                 }
                 R.id.nav_management_report -> {
                     Toast.makeText(requireContext(), "Relatório Gerencial será implementado em breve", Toast.LENGTH_SHORT).show()

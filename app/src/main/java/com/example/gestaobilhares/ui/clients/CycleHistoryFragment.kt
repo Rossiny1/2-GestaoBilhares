@@ -17,6 +17,7 @@ import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.ui.clients.CycleHistoryItem
@@ -40,7 +41,14 @@ class CycleHistoryFragment : Fragment() {
                 DespesaRepository(AppDatabase.getDatabase(requireContext()).despesaDao()),
                 AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao()),
                 ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
-                AppDatabase.getDatabase(requireContext()).rotaDao() // ✅ NOVO: Para relatórios
+                AppDatabase.getDatabase(requireContext()).rotaDao()
+            ),
+            AppRepository(
+                AppDatabase.getDatabase(requireContext()).clienteDao(),
+                AppDatabase.getDatabase(requireContext()).acertoDao(),
+                AppDatabase.getDatabase(requireContext()).mesaDao(),
+                AppDatabase.getDatabase(requireContext()).rotaDao(),
+                AppDatabase.getDatabase(requireContext()).despesaDao()
             )
         )
     }
@@ -75,11 +83,19 @@ class CycleHistoryFragment : Fragment() {
 
     private fun configurarRecyclerView() {
         cycleAdapter = CycleHistoryAdapter { ciclo ->
-            // ✅ NOVO: Verificar se o ciclo está finalizado para mostrar opção de relatório
-            if (ciclo.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
-                mostrarDialogoRelatorio(ciclo)
-            } else {
-                mostrarFeedback("Apenas ciclos finalizados podem gerar relatórios", Snackbar.LENGTH_SHORT)
+            // Verificar se o ciclo está em andamento ou finalizado
+            when (ciclo.status) {
+                com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO -> {
+                    // Navegar para tela de gerenciamento do ciclo
+                    navegarParaGerenciamentoCiclo(ciclo)
+                }
+                com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO -> {
+                    // Mostrar opção de relatório para ciclos finalizados
+                    mostrarDialogoRelatorio(ciclo)
+                }
+                else -> {
+                    mostrarFeedback("Ciclo ${ciclo.status.name.lowercase()} não pode ser gerenciado", Snackbar.LENGTH_SHORT)
+                }
             }
         }
         
@@ -212,6 +228,22 @@ class CycleHistoryFragment : Fragment() {
                 android.util.Log.e("CycleHistoryFragment", "Erro ao mostrar diálogo de relatório", e)
                 mostrarFeedback("Erro ao carregar dados: ${e.message}", Snackbar.LENGTH_LONG)
             }
+        }
+    }
+
+    /**
+     * Navega para a tela de gerenciamento do ciclo
+     */
+    private fun navegarParaGerenciamentoCiclo(ciclo: CycleHistoryItem) {
+        try {
+            val bundle = Bundle().apply {
+                putLong("cicloId", ciclo.id)
+                putLong("rotaId", rotaId)
+            }
+            findNavController().navigate(R.id.cycleManagementFragment, bundle)
+        } catch (e: Exception) {
+            android.util.Log.e("CycleHistoryFragment", "Erro ao navegar para gerenciamento: ${e.message}", e)
+            mostrarFeedback("Erro ao abrir gerenciamento: ${e.message}", Snackbar.LENGTH_LONG)
         }
     }
 
