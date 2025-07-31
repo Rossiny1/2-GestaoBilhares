@@ -696,7 +696,8 @@ class SettlementFragment : Fragment() {
             clienteId = args.clienteId,
             dadosAcerto = dadosAcerto,
             metodosPagamento = paymentValues,
-            desconto = desconto
+            desconto = desconto,
+            acertoIdParaEdicao = args.acertoIdParaEdicao.takeIf { it != 0L }
         )
     }
 

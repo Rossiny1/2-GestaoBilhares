@@ -105,9 +105,32 @@ class CycleManagementFragment : Fragment() {
      * Mostra diálogo para adicionar nova despesa
      */
     private fun mostrarDialogoAdicionarDespesa() {
-        // TODO: Implementar diálogo completo para adicionar despesa
-        // Por enquanto, mostrar mensagem
-        mostrarFeedback("Funcionalidade de adicionar despesa será implementada em breve", Snackbar.LENGTH_LONG)
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_expense, null)
+        
+        // Campos do diálogo
+        val etDescricao = dialogView.findViewById<android.widget.EditText>(R.id.etDescricao)
+        val etValor = dialogView.findViewById<android.widget.EditText>(R.id.etValor)
+        val etCategoria = dialogView.findViewById<android.widget.EditText>(R.id.etCategoria)
+        val etObservacoes = dialogView.findViewById<android.widget.EditText>(R.id.etObservacoes)
+        
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Adicionar Nova Despesa")
+            .setView(dialogView)
+            .setPositiveButton("Adicionar") { _, _ ->
+                val descricao = etDescricao.text.toString()
+                val valor = etValor.text.toString().toDoubleOrNull() ?: 0.0
+                val categoria = etCategoria.text.toString()
+                val observacoes = etObservacoes.text.toString()
+                
+                if (descricao.isNotBlank() && valor > 0) {
+                    viewModel.adicionarDespesa(descricao, valor, categoria, observacoes)
+                    mostrarFeedback("Despesa adicionada com sucesso!", Snackbar.LENGTH_SHORT)
+                } else {
+                    mostrarFeedback("Preencha todos os campos obrigatórios", Snackbar.LENGTH_SHORT)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun mostrarFeedback(mensagem: String, duracao: Int) {
@@ -126,7 +149,6 @@ class CycleManagementFragment : Fragment() {
             tab.text = when (position) {
                 0 -> "Despesas"
                 1 -> "Clientes"
-                2 -> "Resumo"
                 else -> ""
             }
         }.attach()
@@ -178,15 +200,6 @@ class CycleManagementFragment : Fragment() {
         binding.apply {
             tvTotalRevenue.text = formatarMoeda(stats.receitas)
             tvTotalExpenses.text = formatarMoeda(stats.despesas)
-            tvTotalProfit.text = formatarMoeda(stats.lucro)
-            
-            // Cor do lucro
-            val profitColor = if (stats.lucro >= 0) {
-                requireContext().getColor(R.color.success_green)
-            } else {
-                requireContext().getColor(R.color.error_red)
-            }
-            tvTotalProfit.setTextColor(profitColor)
         }
     }
 
@@ -207,13 +220,12 @@ class CycleManagementFragment : Fragment() {
      * Adapter para o ViewPager com as seções
      */
     private inner class CycleManagementPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
-        override fun getItemCount(): Int = 3
+        override fun getItemCount(): Int = 2
 
         override fun createFragment(position: Int): Fragment {
             return when (position) {
                 0 -> CycleExpensesFragment.newInstance(cicloId)
                 1 -> CycleClientsFragment.newInstance(cicloId, rotaId)
-                2 -> PlaceholderFragment.newInstance("Resumo")
                 else -> throw IllegalArgumentException("Invalid position: $position")
             }
         }

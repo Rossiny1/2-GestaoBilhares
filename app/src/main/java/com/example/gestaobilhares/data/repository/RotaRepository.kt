@@ -87,12 +87,14 @@ class RotaRepository(
     
     /**
      * Calcula o número de pendências de uma rota (versão síncrona)
+     * ✅ CORREÇÃO: Usar mesma lógica do ClientListViewModel (débito > R$300)
      */
     private fun calcularPendenciasSync(rotaId: Long): Int {
         return try {
             clienteDao?.let { dao ->
                 val clientes = runBlocking { dao.obterClientesPorRota(rotaId).first() }
-                clientes.count { it.debitoAtual > 0 }
+                // ✅ CORREÇÃO: Usar mesma lógica do card de progresso
+                clientes.count { it.debitoAtual > 300.0 }
             } ?: 0
         } catch (e: Exception) {
             android.util.Log.e("RotaRepository", "Erro ao calcular pendências: ${e.message}")

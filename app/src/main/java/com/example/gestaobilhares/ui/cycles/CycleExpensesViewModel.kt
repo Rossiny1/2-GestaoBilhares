@@ -108,6 +108,42 @@ class CycleExpensesViewModel(
     }
 
     /**
+     * Edita uma despesa existente
+     */
+    fun editarDespesa(despesaId: Long, descricao: String, valor: Double, categoria: String, observacoes: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _errorMessage.value = null
+
+                // TODO: Implementar edição real quando o repositório estiver pronto
+                android.util.Log.d("CycleExpensesViewModel", "Editando despesa: $despesaId - $descricao - R$ $valor")
+                
+                // Simular edição
+                val despesasAtuais = _despesas.value.toMutableList()
+                val index = despesasAtuais.indexOfFirst { it.id == despesaId }
+                if (index != -1) {
+                    val despesaAtual = despesasAtuais[index]
+                    val despesaEditada = despesaAtual.copy(
+                        descricao = descricao,
+                        valor = valor,
+                        categoria = categoria,
+                        observacoes = observacoes
+                    )
+                    despesasAtuais[index] = despesaEditada
+                    _despesas.value = despesasAtuais
+                }
+
+            } catch (e: Exception) {
+                android.util.Log.e("CycleExpensesViewModel", "Erro ao editar despesa: ${e.message}")
+                _errorMessage.value = "Erro ao editar despesa: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
      * Limpa mensagem de erro
      */
     fun limparErro() {

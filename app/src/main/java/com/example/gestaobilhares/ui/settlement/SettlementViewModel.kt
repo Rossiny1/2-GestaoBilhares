@@ -253,12 +253,13 @@ class SettlementViewModel(
      * @param dadosAcerto Dados principais do acerto
      * @param metodosPagamento Mapa de método para valor recebido
      * @param desconto Valor do desconto aplicado
+     * @param acertoIdParaEdicao ID do acerto sendo editado (null se for novo acerto)
      */
-    fun salvarAcerto(clienteId: Long, dadosAcerto: DadosAcerto, metodosPagamento: Map<String, Double>, desconto: Double = 0.0) {
+    fun salvarAcerto(clienteId: Long, dadosAcerto: DadosAcerto, metodosPagamento: Map<String, Double>, desconto: Double = 0.0, acertoIdParaEdicao: Long? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                Log.d("SettlementViewModel", "Salvando acerto com clienteId=$clienteId, mesas=${dadosAcerto.mesas.map { it.numero }}")
+                Log.d("SettlementViewModel", "Salvando acerto com clienteId=$clienteId, mesas=${dadosAcerto.mesas.map { it.numero }}, modoEdicao=${acertoIdParaEdicao != null}")
                 
                 // Buscar cliente uma única vez
                 val cliente = clienteRepository.obterPorId(clienteId) ?: throw IllegalStateException("Cliente não encontrado para o ID: $clienteId")
@@ -272,15 +273,19 @@ class SettlementViewModel(
                     ultimoCiclo?.id ?: throw IllegalStateException("Nenhum ciclo encontrado para a rota $rotaId.")
                 }
                 
-                android.util.Log.d("DEBUG_DIAG", "[SALVAR_ACERTO] cicloId usado: $cicloId | rotaId: $rotaId | status ciclo ativo: ${cicloAtivo?.status}")
+                android.util.Log.d("DEBUG_DIAG", "[SALVAR_ACERTO] cicloId usado: $cicloId | rotaId: $rotaId | status ciclo ativo: ${cicloAtivo?.status} | modoEdicao: ${acertoIdParaEdicao != null}")
 
-                // ✅ NOVA VALIDAÇÃO: Verificar se já existe acerto para este cliente no ciclo atual
-                val acertoExistente = acertoRepository.verificarAcertoExistente(clienteId, cicloId)
-                if (acertoExistente != null) {
-                    Log.w("SettlementViewModel", "⚠️ ACERTO JÁ EXISTE: Cliente $clienteId já possui acerto (ID: ${acertoExistente.id}) no ciclo $cicloId")
-                    _resultadoSalvamento.value = ResultadoSalvamento.AcertoJaExiste(acertoExistente)
-                    _isLoading.value = false
-                    return@launch
+                // ✅ CORREÇÃO: Validação apenas para novos acertos (não para edição)
+                if (acertoIdParaEdicao == null) {
+                    val acertoExistente = acertoRepository.verificarAcertoExistente(clienteId, cicloId)
+                    if (acertoExistente != null) {
+                        Log.w("SettlementViewModel", "⚠️ ACERTO JÁ EXISTE: Cliente $clienteId já possui acerto (ID: ${acertoExistente.id}) no ciclo $cicloId")
+                        _resultadoSalvamento.value = ResultadoSalvamento.AcertoJaExiste(acertoExistente)
+                        _isLoading.value = false
+                        return@launch
+                    }
+                } else {
+                    Log.d("SettlementViewModel", "✅ Modo edição ativo (acertoId: $acertoIdParaEdicao). Pulando validação de acerto único.")
                 }
 
                 // Calcular valores do acerto
@@ -344,48 +349,93 @@ class SettlementViewModel(
                 android.util.Log.d("SettlementViewModel", "Rota ID do cliente: $rotaId")
                 android.util.Log.d("SettlementViewModel", "Ciclo atual: $cicloId")
                 
-                val acerto = Acerto(
-                    clienteId = clienteId,
-                    colaboradorId = null, // ✅ CORREÇÃO: Usar null para evitar foreign key constraint
-                    periodoInicio = java.util.Date(),
-                    periodoFim = java.util.Date(),
-                    totalMesas = dadosAcerto.mesas.size.toDouble(),
-                    debitoAnterior = debitoAnterior,
-                    valorTotal = valorTotal,
-                    desconto = desconto,
-                    valorComDesconto = valorComDesconto,
-                    valorRecebido = valorRecebido,
-                    debitoAtual = debitoAtual,
-                    status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
-                    observacoes = observacaoParaSalvar,
-                    dataFinalizacao = java.util.Date(), // ✅ CORREÇÃO: Preencher data de finalização
-                    metodosPagamentoJson = metodosPagamentoJson,
-                    // ✅ NOVOS CAMPOS: Resolver problema de dados perdidos
-                    representante = dadosAcerto.representante,
-                    tipoAcerto = dadosAcerto.tipoAcerto,
-                    panoTrocado = dadosAcerto.panoTrocado,
-                    numeroPano = dadosAcerto.numeroPano,
-                    dadosExtrasJson = dadosExtrasJson,
-                    // ✅ CORREÇÃO CRÍTICA: Vínculos com rota e ciclo
-                    rotaId = rotaId,
-                    cicloId = cicloId
-                )
+                // ✅ CORREÇÃO: Lógica diferente para edição vs. novo acerto
+                val acertoId: Long
+                if (acertoIdParaEdicao != null) {
+                    // MODO EDIÇÃO: Atualizar acerto existente
+                    Log.d("SettlementViewModel", "🔄 MODO EDIÇÃO: Atualizando acerto existente ID: $acertoIdParaEdicao")
+                    
+                    // Buscar acerto existente
+                    val acertoExistente = acertoRepository.buscarPorId(acertoIdParaEdicao)
+                    if (acertoExistente == null) {
+                        Log.e("SettlementViewModel", "❌ Acerto para edição não encontrado: ID $acertoIdParaEdicao")
+                        _resultadoSalvamento.value = ResultadoSalvamento.Erro("Acerto para edição não encontrado")
+                        _isLoading.value = false
+                        return@launch
+                    }
+                    
+                    // Atualizar dados do acerto existente
+                    val acertoAtualizado = acertoExistente.copy(
+                        totalMesas = dadosAcerto.mesas.size.toDouble(),
+                        debitoAnterior = debitoAnterior,
+                        valorTotal = valorTotal,
+                        desconto = desconto,
+                        valorComDesconto = valorComDesconto,
+                        valorRecebido = valorRecebido,
+                        debitoAtual = debitoAtual,
+                        observacoes = observacaoParaSalvar,
+                        dataFinalizacao = java.util.Date(),
+                        metodosPagamentoJson = metodosPagamentoJson,
+                        representante = dadosAcerto.representante,
+                        tipoAcerto = dadosAcerto.tipoAcerto,
+                        panoTrocado = dadosAcerto.panoTrocado,
+                        numeroPano = dadosAcerto.numeroPano,
+                        dadosExtrasJson = dadosExtrasJson
+                    )
+                    
+                    acertoRepository.atualizar(acertoAtualizado)
+                    acertoId = acertoIdParaEdicao
+                    Log.d("SettlementViewModel", "✅ Acerto atualizado com sucesso! ID: $acertoId")
+                    
+                } else {
+                    // MODO NOVO ACERTO: Criar novo acerto
+                    Log.d("SettlementViewModel", "🆕 MODO NOVO ACERTO: Criando novo acerto")
+                    
+                    val acerto = Acerto(
+                        clienteId = clienteId,
+                        colaboradorId = null,
+                        periodoInicio = java.util.Date(),
+                        periodoFim = java.util.Date(),
+                        totalMesas = dadosAcerto.mesas.size.toDouble(),
+                        debitoAnterior = debitoAnterior,
+                        valorTotal = valorTotal,
+                        desconto = desconto,
+                        valorComDesconto = valorComDesconto,
+                        valorRecebido = valorRecebido,
+                        debitoAtual = debitoAtual,
+                        status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
+                        observacoes = observacaoParaSalvar,
+                        dataFinalizacao = java.util.Date(),
+                        metodosPagamentoJson = metodosPagamentoJson,
+                        representante = dadosAcerto.representante,
+                        tipoAcerto = dadosAcerto.tipoAcerto,
+                        panoTrocado = dadosAcerto.panoTrocado,
+                        numeroPano = dadosAcerto.numeroPano,
+                        dadosExtrasJson = dadosExtrasJson,
+                        rotaId = rotaId,
+                        cicloId = cicloId
+                    )
+                    
+                    acertoId = acertoRepository.salvarAcerto(acerto)
+                    Log.d("SettlementViewModel", "✅ Novo acerto salvo com ID: $acertoId")
+                }
                 
-                val acertoId = acertoRepository.salvarAcerto(acerto)
-                Log.d("SettlementViewModel", "✅ Acerto salvo com ID: $acertoId")
-
                 // NOVO: Atualizar valores do ciclo após salvar acerto
                 // Buscar todos os acertos e despesas ANTERIORES do ciclo para calcular os totais
                 val acertosAnteriores = acertoRepository.buscarPorRotaECicloId(rotaId, cicloId).first().filter { it.id != acertoId }
                 val despesasDoCiclo = cicloAcertoRepository.buscarDespesasPorCicloId(cicloId)
 
+                // ✅ CORREÇÃO: Verificar se realmente foi salvo
+                val acertoSalvo = acertoRepository.buscarPorId(acertoId)
+                Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Observação no banco após salvamento: '${acertoSalvo?.observacoes}'")
+
                 // Somar os valores anteriores com o valor do acerto ATUAL
-                val valorTotalAcertado = acertosAnteriores.sumOf { it.valorRecebido } + acerto.valorRecebido
+                val valorTotalAcertado = acertosAnteriores.sumOf { it.valorRecebido } + (acertoSalvo?.valorRecebido ?: 0.0)
                 val valorTotalDespesas = despesasDoCiclo.sumOf { it.valor }
-                val clientesAcertados = (acertosAnteriores.map { it.clienteId } + acerto.clienteId).distinct().size
+                val clientesAcertados = (acertosAnteriores.map { it.clienteId } + (acertoSalvo?.clienteId ?: 0L)).distinct().size
                 
                 Log.d("SettlementViewModel", "=== ATUALIZANDO VALORES DO CICLO $cicloId ===")
-                Log.d("SettlementViewModel", "Total Acertado: $valorTotalAcertado (Anteriores: ${acertosAnteriores.sumOf { it.valorRecebido }} + Atual: ${acerto.valorRecebido})")
+                Log.d("SettlementViewModel", "Total Acertado: $valorTotalAcertado (Anteriores: ${acertosAnteriores.sumOf { it.valorRecebido }} + Atual: ${acertoSalvo?.valorRecebido})")
                 Log.d("SettlementViewModel", "Total Despesas: $valorTotalDespesas")
                 Log.d("SettlementViewModel", "Clientes Acertados: $clientesAcertados")
 
@@ -395,10 +445,6 @@ class SettlementViewModel(
                     valorTotalDespesas = valorTotalDespesas,
                     clientesAcertados = clientesAcertados
                 )
-                
-                // ✅ CORREÇÃO: Verificar se realmente foi salvo
-                val acertoSalvo = acertoRepository.buscarPorId(acertoId)
-                Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Observação no banco após salvamento: '${acertoSalvo?.observacoes}'")
                 
                 // ✅ CORREÇÃO CRÍTICA: Salvar dados detalhados de cada mesa do acerto com logs
                 Log.d("SettlementViewModel", "=== SALVANDO MESAS DO ACERTO ===")

@@ -72,14 +72,63 @@ class CycleExpensesFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = CycleExpensesAdapter(
                 onExpenseClick = { despesa ->
-                    // TODO: Implementar edição de despesa
-                    mostrarFeedback("Edição de despesa será implementada em breve", Snackbar.LENGTH_SHORT)
+                    mostrarDialogoEditarDespesa(despesa)
                 },
                 onExpenseDelete = { despesa ->
-                    viewModel.removerDespesa(despesa.id)
+                    mostrarDialogoConfirmarExclusao(despesa)
                 }
             )
         }
+    }
+
+    /**
+     * Mostra diálogo para editar despesa
+     */
+    private fun mostrarDialogoEditarDespesa(despesa: CycleExpenseItem) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_expense, null)
+        
+        // Preencher campos com dados atuais
+        val etDescricao = dialogView.findViewById<android.widget.EditText>(R.id.etDescricao)
+        val etValor = dialogView.findViewById<android.widget.EditText>(R.id.etValor)
+        val etCategoria = dialogView.findViewById<android.widget.EditText>(R.id.etCategoria)
+        val etObservacoes = dialogView.findViewById<android.widget.EditText>(R.id.etObservacoes)
+        
+        etDescricao.setText(despesa.descricao)
+        etValor.setText(String.format("%.2f", despesa.valor))
+        etCategoria.setText(despesa.categoria)
+        etObservacoes.setText(despesa.observacoes)
+        
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Editar Despesa")
+            .setView(dialogView)
+            .setPositiveButton("Salvar") { _, _ ->
+                val novaDescricao = etDescricao.text.toString()
+                val novoValor = etValor.text.toString().toDoubleOrNull() ?: 0.0
+                val novaCategoria = etCategoria.text.toString()
+                val novasObservacoes = etObservacoes.text.toString()
+                
+                if (novaDescricao.isNotBlank() && novoValor > 0) {
+                    viewModel.editarDespesa(despesa.id, novaDescricao, novoValor, novaCategoria, novasObservacoes)
+                } else {
+                    mostrarFeedback("Preencha todos os campos obrigatórios", Snackbar.LENGTH_SHORT)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    /**
+     * Mostra diálogo para confirmar exclusão de despesa
+     */
+    private fun mostrarDialogoConfirmarExclusao(despesa: CycleExpenseItem) {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Confirmar Exclusão")
+            .setMessage("Tem certeza que deseja excluir a despesa '${despesa.descricao}'?")
+            .setPositiveButton("Excluir") { _, _ ->
+                viewModel.removerDespesa(despesa.id)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun setupObservers() {

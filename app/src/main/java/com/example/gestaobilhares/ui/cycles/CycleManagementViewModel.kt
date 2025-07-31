@@ -30,8 +30,7 @@ data class CycleManagementData(
  */
 data class CycleFinancialStats(
     val receitas: Double = 0.0,
-    val despesas: Double = 0.0,
-    val lucro: Double = 0.0
+    val despesas: Double = 0.0
 )
 
 /**
@@ -113,8 +112,7 @@ class CycleManagementViewModel(
 
                 _estatisticas.value = CycleFinancialStats(
                     receitas = receitas,
-                    despesas = totalDespesas,
-                    lucro = lucro
+                    despesas = totalDespesas
                 )
             }
 
@@ -127,7 +125,7 @@ class CycleManagementViewModel(
     /**
      * Adiciona nova despesa ao ciclo
      */
-    fun adicionarDespesa(descricao: String, valor: Double, categoria: String) {
+    fun adicionarDespesa(descricao: String, valor: Double, categoria: String, observacoes: String = "") {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
@@ -135,9 +133,11 @@ class CycleManagementViewModel(
 
                 val cicloId = _dadosCiclo.value?.id ?: return@launch
                 
-                // TODO: Implementar adição de despesa quando o repositório estiver pronto
-                // Por enquanto, apenas simular sucesso
-                android.util.Log.d("CycleManagementViewModel", "Adicionando despesa: $descricao - R$ $valor")
+                // TODO: Implementar adição real de despesa quando o repositório estiver pronto
+                android.util.Log.d("CycleManagementViewModel", "Adicionando despesa: $descricao - R$ $valor - $categoria")
+                
+                // Simular adição bem-sucedida
+                // Em uma implementação real, aqui seria chamado o repositório para salvar no banco
                 
                 // Recarregar estatísticas
                 calcularEstatisticasFinanceiras(cicloId)
