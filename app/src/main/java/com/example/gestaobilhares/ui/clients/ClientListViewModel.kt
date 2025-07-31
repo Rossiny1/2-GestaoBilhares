@@ -285,6 +285,9 @@ class ClientListViewModel(
                 
                 android.util.Log.d("ClientListViewModel", "✅ Ciclo $proximoCiclo iniciado com sucesso - campos reinicializados, pendências mantidas: $pendenciasCicloAnterior")
                 
+                // ✅ NOTIFICAR MUDANÇA DE STATUS para atualização em tempo real
+                notificarMudancaStatusRota(rota.id)
+                
             } catch (e: Exception) {
                 android.util.Log.e("ClientListViewModel", "Erro ao iniciar rota: ${e.message}", e)
                 _errorMessage.value = "Erro ao iniciar rota: ${e.message}"
@@ -303,6 +306,7 @@ class ClientListViewModel(
                 _isLoading.value = true
                 
                 val cicloAtual = _cicloAcertoEntity.value ?: return@launch
+                val rota = _rotaInfo.value ?: return@launch
                 
                 // Centralizar a lógica de finalização no repositório
                 cicloAcertoRepository.finalizarCiclo(cicloAtual.id, Date())
@@ -316,6 +320,9 @@ class ClientListViewModel(
                 _statusRota.value = StatusRota.FINALIZADA
                 
                 android.util.Log.d("ClientListViewModel", "✅ Ciclo ${cicloAtual.numeroCiclo} finalizado com sucesso via repositório")
+                
+                // ✅ NOTIFICAR MUDANÇA DE STATUS para atualização em tempo real
+                notificarMudancaStatusRota(rota.id)
                 
             } catch (e: Exception) {
                 android.util.Log.e("ClientListViewModel", "Erro ao finalizar rota: ${e.message}", e)
@@ -574,6 +581,14 @@ class ClientListViewModel(
             // Esta é a verificação principal para pendências
             debitoAtual > 300.0
         }
+    }
+
+    /**
+     * ✅ NOVO: Notifica mudança de status da rota
+     */
+    private fun notificarMudancaStatusRota(rotaId: Long) {
+        // TODO: Implementar notificação via EventBus ou similar
+        android.util.Log.d("ClientListViewModel", "🔄 Notificando mudança de status da rota: $rotaId")
     }
 
     /**

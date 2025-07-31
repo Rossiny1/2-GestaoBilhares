@@ -61,7 +61,8 @@ class RoutesFragment : Fragment() {
                 database.rotaDao(),
                 database.clienteDao(),
                 database.mesaDao(),
-                database.acertoDao()
+                database.acertoDao(),
+                database.cicloAcertoDao()
             )
         )
         

@@ -52,11 +52,11 @@ class RoutesViewModel(
     val generateReport: LiveData<Boolean> = _generateReport
 
     // Observa as rotas resumo do repository
-    val rotasResumo: LiveData<List<RotaResumo>> = rotaRepository.getRotasResumo().asLiveData()
+    val rotasResumo: LiveData<List<RotaResumo>> = rotaRepository.getRotasResumoComAtualizacaoTempoReal().asLiveData()
 
     // Estatísticas gerais calculadas a partir das rotas
     val estatisticas: LiveData<EstatisticasGerais> = combine(
-        rotaRepository.getRotasResumo()
+        rotaRepository.getRotasResumoComAtualizacaoTempoReal()
     ) { rotas ->
         calcularEstatisticas(rotas.first())
     }.asLiveData()

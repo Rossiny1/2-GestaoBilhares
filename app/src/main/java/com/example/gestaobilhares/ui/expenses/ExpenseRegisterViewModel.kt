@@ -76,10 +76,42 @@ class ExpenseRegisterViewModel(
     }
 
     /**
-     * Define a data selecionada.
+     * ✅ NOVO: Carrega despesa para edição
      */
-    fun setSelectedDate(date: LocalDateTime) {
-        _selectedDate.value = date
+    suspend fun carregarDespesaParaEdicao(despesaId: Long): com.example.gestaobilhares.data.entities.Despesa? {
+        return try {
+            despesaRepository.buscarPorId(despesaId)
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseRegisterViewModel", "Erro ao carregar despesa para edição: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * ✅ NOVO: Define categoria selecionada por nome
+     */
+    fun setSelectedCategory(categoriaNome: String) {
+        viewModelScope.launch {
+            val categoria = categoriaDespesaRepository.buscarPorNome(categoriaNome)
+            _selectedCategory.value = categoria
+        }
+    }
+
+    /**
+     * ✅ NOVO: Define tipo selecionado por nome
+     */
+    fun setSelectedType(tipoNome: String) {
+        viewModelScope.launch {
+            val tipo = tipoDespesaRepository.buscarPorNome(tipoNome)
+            _selectedType.value = tipo
+        }
+    }
+
+    /**
+     * ✅ NOVO: Define data selecionada
+     */
+    fun setSelectedDate(data: java.time.LocalDateTime) {
+        _selectedDate.value = data
     }
 
     /**
@@ -189,13 +221,16 @@ class ExpenseRegisterViewModel(
 
     /**
      * Salva a despesa.
+     * ✅ CORREÇÃO: Suporta edição de despesas existentes
      */
     fun saveExpense(
         rotaId: Long,
         descricao: String,
         valor: Double,
         quantidade: Int = 1,
-        observacoes: String = ""
+        observacoes: String = "",
+        despesaId: Long = 0L,
+        modoEdicao: Boolean = false
     ) {
         viewModelScope.launch {
             try {
@@ -229,23 +264,43 @@ class ExpenseRegisterViewModel(
                 // ✅ CORRIGIDO: Usar ciclo ativo real
                 val cicloId = cicloAtivo.id
 
-                // Criar despesa
-                val despesa = Despesa(
-                    rotaId = rotaId,
-                    descricao = descricao,
-                    valor = valor * quantidade,
-                    categoria = categoria.nome,
-                    tipoDespesa = _selectedType.value?.nome ?: "",
-                    dataHora = _selectedDate.value,
-                    observacoes = observacoes,
-                    criadoPor = "Sistema", // TODO: Pegar usuário atual
-                    cicloId = cicloId
-                )
+                if (modoEdicao && despesaId > 0) {
+                    // ✅ NOVO: Modo de edição - atualizar despesa existente
+                    val despesaExistente = despesaRepository.buscarPorId(despesaId)
+                    if (despesaExistente != null) {
+                        val despesaAtualizada = despesaExistente.copy(
+                            descricao = descricao,
+                            valor = valor * quantidade,
+                            categoria = categoria.nome,
+                            tipoDespesa = _selectedType.value?.nome ?: "",
+                            dataHora = _selectedDate.value,
+                            observacoes = observacoes
+                        )
+                        
+                        despesaRepository.atualizar(despesaAtualizada)
+                        _message.value = "Despesa atualizada com sucesso"
+                        _success.value = true
+                    } else {
+                        _message.value = "Despesa não encontrada"
+                    }
+                } else {
+                    // ✅ NOVO: Modo de criação - criar nova despesa
+                    val despesa = Despesa(
+                        rotaId = rotaId,
+                        descricao = descricao,
+                        valor = valor * quantidade,
+                        categoria = categoria.nome,
+                        tipoDespesa = _selectedType.value?.nome ?: "",
+                        dataHora = _selectedDate.value,
+                        observacoes = observacoes,
+                        criadoPor = "Sistema", // TODO: Pegar usuário atual
+                        cicloId = cicloId
+                    )
 
-                val despesaId = despesaRepository.inserir(despesa)
-                
-                _message.value = "Despesa salva com sucesso"
-                _success.value = true
+                    val novaDespesaId = despesaRepository.inserir(despesa)
+                    _message.value = "Despesa salva com sucesso"
+                    _success.value = true
+                }
                 
             } catch (e: Exception) {
                 _message.value = "Erro ao salvar despesa: ${e.message}"

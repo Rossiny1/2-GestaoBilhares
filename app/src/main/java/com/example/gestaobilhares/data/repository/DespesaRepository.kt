@@ -99,6 +99,31 @@ class DespesaRepository(
     }
 
     /**
+     * ✅ NOVO: Busca uma despesa por ID
+     * @param id ID da despesa
+     * @return Despesa encontrada ou null
+     */
+    suspend fun buscarPorId(id: Long): Despesa? {
+        return if (usarDadosMock) {
+            // ✅ CORREÇÃO: Converter DespesaResumo para Despesa
+            obterDespesasMock().find { it.id == id }?.let { despesaResumo ->
+                Despesa(
+                    id = despesaResumo.id,
+                    rotaId = despesaResumo.rotaId,
+                    descricao = despesaResumo.descricao,
+                    valor = despesaResumo.valor,
+                    categoria = despesaResumo.categoria,
+                    dataHora = despesaResumo.dataHora,
+                    observacoes = despesaResumo.observacoes,
+                    criadoPor = despesaResumo.criadoPor
+                )
+            }
+        } else {
+            despesaDao.buscarPorId(id)
+        }
+    }
+
+    /**
      * Deleta uma despesa.
      * @param despesa Despesa a ser deletada
      */

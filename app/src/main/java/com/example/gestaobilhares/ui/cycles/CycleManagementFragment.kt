@@ -36,9 +36,11 @@ class CycleManagementFragment : Fragment() {
     private val binding get() = _binding!!
     
     private var cicloId: Long = 0L
-    private var rotaId: Long = 0L
+    // ✅ CORREÇÃO: Tornar rotaId público para acesso pelos child fragments
+    var rotaId: Long = 0L
     
-    private val viewModel: CycleManagementViewModel by viewModels {
+    // ✅ NOVO: Expor viewModel para child fragments
+    val viewModel: CycleManagementViewModel by viewModels {
         CycleManagementViewModelFactory(
             CicloAcertoRepository(
                 AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
@@ -102,9 +104,34 @@ class CycleManagementFragment : Fragment() {
     }
 
     /**
-     * Mostra diálogo para adicionar nova despesa
+     * Mostra diálogo para adicionar nova despesa (usando função unificada)
      */
     private fun mostrarDialogoAdicionarDespesa() {
+        // Usar a função unificada do CycleExpensesFragment
+        val expensesFragment = childFragmentManager.fragments
+            .filterIsInstance<CycleExpensesFragment>()
+            .firstOrNull()
+        
+        expensesFragment?.let {
+            it.mostrarDialogoDespesaUnificada()
+        } ?: run {
+            // Fallback se não encontrar o fragment
+            mostrarDialogoDespesaFallback()
+        }
+    }
+
+    /**
+     * Callback para adicionar despesa via CycleExpensesFragment
+     */
+    fun adicionarDespesaViaCallback(descricao: String, valor: Double, categoria: String, observacoes: String) {
+        viewModel.adicionarDespesa(descricao, valor, categoria, observacoes)
+        mostrarFeedback("Despesa adicionada com sucesso!", Snackbar.LENGTH_SHORT)
+    }
+
+    /**
+     * Fallback para adicionar despesa (caso não encontre o fragment)
+     */
+    private fun mostrarDialogoDespesaFallback() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_expense, null)
         
         // Campos do diálogo
@@ -123,8 +150,7 @@ class CycleManagementFragment : Fragment() {
                 val observacoes = etObservacoes.text.toString()
                 
                 if (descricao.isNotBlank() && valor > 0) {
-                    viewModel.adicionarDespesa(descricao, valor, categoria, observacoes)
-                    mostrarFeedback("Despesa adicionada com sucesso!", Snackbar.LENGTH_SHORT)
+                    adicionarDespesaViaCallback(descricao, valor, categoria, observacoes)
                 } else {
                     mostrarFeedback("Preencha todos os campos obrigatórios", Snackbar.LENGTH_SHORT)
                 }

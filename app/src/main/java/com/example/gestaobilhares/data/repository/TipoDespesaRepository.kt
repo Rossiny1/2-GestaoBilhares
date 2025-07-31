@@ -79,6 +79,17 @@ class TipoDespesaRepository(
             tipoDespesaDao.buscarPorId(id)
         }
     }
+
+    /**
+     * ✅ NOVO: Busca um tipo por nome
+     */
+    suspend fun buscarPorNome(nome: String): TipoDespesa? {
+        return if (usarDadosMock) {
+            obterTiposMock().find { it.nome.equals(nome, ignoreCase = true) }
+        } else {
+            tipoDespesaDao.buscarPorNome(nome)
+        }
+    }
     
     /**
      * Insere um novo tipo.

@@ -71,8 +71,57 @@ class ExpenseRegisterFragment : Fragment() {
         setupClickListeners()
         observeViewModel()
         
-        // Definir data atual
-        updateDateDisplay()
+        // ✅ NOVO: Verificar se é modo de edição
+        if (args.modoEdicao && args.despesaId > 0) {
+            carregarDespesaParaEdicao(args.despesaId)
+            // ✅ CORREÇÃO: Usar o título correto do toolbar
+            binding.toolbar.findViewById<android.widget.TextView>(android.R.id.title)?.text = "Editar Despesa"
+        } else {
+            // Definir data atual apenas para nova despesa
+            updateDateDisplay()
+        }
+    }
+
+    /**
+     * ✅ NOVO: Carrega dados da despesa para edição
+     */
+    private fun carregarDespesaParaEdicao(despesaId: Long) {
+        lifecycleScope.launch {
+            try {
+                val despesa = viewModel.carregarDespesaParaEdicao(despesaId)
+                if (despesa != null) {
+                    preencherCamposComDespesa(despesa)
+                } else {
+                    Toast.makeText(requireContext(), "Despesa não encontrada", Toast.LENGTH_SHORT).show()
+                    findNavController().popBackStack()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Erro ao carregar despesa: ${e.message}", Toast.LENGTH_SHORT).show()
+                findNavController().popBackStack()
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVO: Preenche campos com dados da despesa
+     */
+    private fun preencherCamposComDespesa(despesa: com.example.gestaobilhares.data.entities.Despesa) {
+        binding.apply {
+            etDescricao.setText(despesa.descricao)
+            etValorDespesa.setText(String.format("%.2f", despesa.valor))
+            etQuantidade.setText("1") // Por enquanto, sempre 1
+            
+            // Definir data da despesa
+            val dataDespesa = despesa.dataHora
+            viewModel.setSelectedDate(dataDespesa)
+            updateDateDisplay()
+            
+            // Definir categoria e tipo
+            viewModel.setSelectedCategory(despesa.categoria)
+            viewModel.setSelectedType(despesa.tipoDespesa)
+            updateCategoryDisplay()
+            updateTypeDisplay()
+        }
     }
 
     private fun setupUI() {
@@ -399,6 +448,22 @@ class ExpenseRegisterFragment : Fragment() {
         binding.etDataDespesa.setText(currentDate.format(dateFormatter))
     }
 
+    /**
+     * ✅ NOVO: Atualiza a exibição da categoria selecionada
+     */
+    private fun updateCategoryDisplay() {
+        val category = viewModel.selectedCategory.value
+        binding.etCategoriaDespesa.setText(category?.nome ?: "")
+    }
+
+    /**
+     * ✅ NOVO: Atualiza a exibição do tipo selecionado
+     */
+    private fun updateTypeDisplay() {
+        val type = viewModel.selectedType.value
+        binding.etTipoDespesa.setText(type?.nome ?: "")
+    }
+
     private fun saveExpense() {
         val descricao = binding.etDescricao.text.toString().trim()
         val valorText = binding.etValorDespesa.text.toString().trim()
@@ -449,7 +514,9 @@ class ExpenseRegisterFragment : Fragment() {
             descricao = descricao,
             valor = valor,
             quantidade = quantidade,
-            observacoes = "" // TODO: Adicionar campo de observações se necessário
+            observacoes = "", // TODO: Adicionar campo de observações se necessário
+            despesaId = args.despesaId,
+            modoEdicao = args.modoEdicao
         )
     }
 

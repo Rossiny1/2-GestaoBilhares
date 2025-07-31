@@ -234,6 +234,10 @@
             android:name="rotaId"
             app:argType="long"
             android:defaultValue="0L" />
+        <!-- ✅ NOVO: Navegação para cadastro de despesas -->
+        <action
+            android:id="@+id/action_cycleManagementFragment_to_expenseRegisterFragment"
+            app:destination="@id/expenseRegisterFragment" />
     </fragment>
 
     <!-- ✅ NOVO: Tela de cadastro de despesas -->
@@ -245,6 +249,15 @@
             android:name="rotaId"
             app:argType="long"
             android:defaultValue="0L" />
+        <!-- ✅ NOVO: Argumentos para edição de despesa -->
+        <argument
+            android:name="despesaId"
+            app:argType="long"
+            android:defaultValue="0L" />
+        <argument
+            android:name="modoEdicao"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
 
     <!-- Tela de Relatórios -->

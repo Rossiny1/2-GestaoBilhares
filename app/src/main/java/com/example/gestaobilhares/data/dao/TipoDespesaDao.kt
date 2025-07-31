@@ -22,6 +22,9 @@ interface TipoDespesaDao {
     
     @Query("SELECT * FROM tipos_despesa WHERE id = :id")
     suspend fun buscarPorId(id: Long): TipoDespesa?
+
+    @Query("SELECT * FROM tipos_despesa WHERE nome = :nome LIMIT 1")
+    suspend fun buscarPorNome(nome: String): TipoDespesa?
     
     @Query("SELECT * FROM tipos_despesa WHERE categoriaId = :categoriaId AND ativo = 1 ORDER BY nome ASC")
     fun buscarPorCategoria(categoriaId: Long): Flow<List<TipoDespesa>>

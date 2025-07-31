@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Date
 import java.time.ZoneId
+import com.example.gestaobilhares.data.repository.DespesaRepository
+import com.example.gestaobilhares.data.database.AppDatabase
 
 /**
  * Extensão para converter LocalDateTime para Date
@@ -34,7 +36,8 @@ data class CycleExpenseItem(
  * ViewModel para gerenciar despesas do ciclo
  */
 class CycleExpensesViewModel(
-    private val cicloAcertoRepository: CicloAcertoRepository
+    private val cicloAcertoRepository: CicloAcertoRepository,
+    private val despesaRepository: DespesaRepository
 ) : ViewModel() {
 
     private val _despesas = MutableStateFlow<List<CycleExpenseItem>>(emptyList())
@@ -45,6 +48,10 @@ class CycleExpensesViewModel(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    // ✅ NOVO: Evento para notificar mudanças nas despesas
+    private val _despesaModificada = MutableStateFlow<Boolean>(false)
+    val despesaModificada: StateFlow<Boolean> = _despesaModificada.asStateFlow()
 
     /**
      * Carrega despesas do ciclo
@@ -83,6 +90,7 @@ class CycleExpensesViewModel(
 
     /**
      * Remove uma despesa
+     * ✅ CORREÇÃO: Persistir no banco de dados
      */
     fun removerDespesa(despesaId: Long) {
         viewModelScope.launch {
@@ -90,13 +98,20 @@ class CycleExpensesViewModel(
                 _isLoading.value = true
                 _errorMessage.value = null
 
-                // TODO: Implementar remoção real quando o repositório estiver pronto
-                android.util.Log.d("CycleExpensesViewModel", "Removendo despesa: $despesaId")
+                // ✅ CORREÇÃO: Buscar despesa real no banco e remover
+                val despesaExistente = despesaRepository.buscarPorId(despesaId)
                 
-                // Simular remoção
-                val despesasAtuais = _despesas.value.toMutableList()
-                despesasAtuais.removeAll { it.id == despesaId }
-                _despesas.value = despesasAtuais
+                if (despesaExistente != null) {
+                    // Remover despesa do banco
+                    despesaRepository.deletar(despesaExistente)
+                    
+                    // Recarregar lista de despesas
+                    carregarDespesas(despesaExistente.cicloId ?: 0L)
+                    
+                    android.util.Log.d("CycleExpensesViewModel", "✅ Despesa $despesaId removida com sucesso do banco")
+                } else {
+                    _errorMessage.value = "Despesa não encontrada"
+                }
 
             } catch (e: Exception) {
                 android.util.Log.e("CycleExpensesViewModel", "Erro ao remover despesa: ${e.message}")
@@ -109,6 +124,7 @@ class CycleExpensesViewModel(
 
     /**
      * Edita uma despesa existente
+     * ✅ CORREÇÃO: Persistir no banco de dados
      */
     fun editarDespesa(despesaId: Long, descricao: String, valor: Double, categoria: String, observacoes: String) {
         viewModelScope.launch {
@@ -116,22 +132,26 @@ class CycleExpensesViewModel(
                 _isLoading.value = true
                 _errorMessage.value = null
 
-                // TODO: Implementar edição real quando o repositório estiver pronto
-                android.util.Log.d("CycleExpensesViewModel", "Editando despesa: $despesaId - $descricao - R$ $valor")
+                // ✅ CORREÇÃO: Buscar despesa real no banco e atualizar
+                val despesaExistente = despesaRepository.buscarPorId(despesaId)
                 
-                // Simular edição
-                val despesasAtuais = _despesas.value.toMutableList()
-                val index = despesasAtuais.indexOfFirst { it.id == despesaId }
-                if (index != -1) {
-                    val despesaAtual = despesasAtuais[index]
-                    val despesaEditada = despesaAtual.copy(
+                if (despesaExistente != null) {
+                    // Atualizar despesa no banco
+                    val despesaAtualizada = despesaExistente.copy(
                         descricao = descricao,
                         valor = valor,
                         categoria = categoria,
                         observacoes = observacoes
                     )
-                    despesasAtuais[index] = despesaEditada
-                    _despesas.value = despesasAtuais
+                    
+                    despesaRepository.atualizar(despesaAtualizada)
+                    
+                    // Recarregar lista de despesas
+                    carregarDespesas(despesaExistente.cicloId ?: 0L)
+                    
+                    android.util.Log.d("CycleExpensesViewModel", "✅ Despesa $despesaId editada com sucesso no banco")
+                } else {
+                    _errorMessage.value = "Despesa não encontrada"
                 }
 
             } catch (e: Exception) {
@@ -149,18 +169,26 @@ class CycleExpensesViewModel(
     fun limparErro() {
         _errorMessage.value = null
     }
+
+    /**
+     * ✅ NOVO: Limpa notificação de mudança
+     */
+    fun limparNotificacaoMudanca() {
+        _despesaModificada.value = false
+    }
 }
 
 /**
  * Factory para o ViewModel
  */
 class CycleExpensesViewModelFactory(
-    private val cicloAcertoRepository: CicloAcertoRepository
+    private val cicloAcertoRepository: CicloAcertoRepository,
+    private val despesaRepository: DespesaRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(CycleExpensesViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return CycleExpensesViewModel(cicloAcertoRepository) as T
+            return CycleExpensesViewModel(cicloAcertoRepository, despesaRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

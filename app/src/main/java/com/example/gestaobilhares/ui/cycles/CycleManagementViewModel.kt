@@ -132,6 +132,7 @@ class CycleManagementViewModel(
                 _errorMessage.value = null
 
                 val cicloId = _dadosCiclo.value?.id ?: return@launch
+                val rotaId = _dadosCiclo.value?.rotaId ?: return@launch
                 
                 // TODO: Implementar adição real de despesa quando o repositório estiver pronto
                 android.util.Log.d("CycleManagementViewModel", "Adicionando despesa: $descricao - R$ $valor - $categoria")
@@ -139,14 +140,34 @@ class CycleManagementViewModel(
                 // Simular adição bem-sucedida
                 // Em uma implementação real, aqui seria chamado o repositório para salvar no banco
                 
-                // Recarregar estatísticas
+                // ✅ RECARREGAR ESTATÍSTICAS para retroalimentação em tempo real
                 calcularEstatisticasFinanceiras(cicloId)
+                
+                // ✅ NOTIFICAR GLOBALMENTE (para outros componentes)
+                // TODO: Implementar quando tivermos o ID da despesa criada
+                // DespesaChangeNotifier.notificarMudanca(
+                //     DespesaChangeEvent(cicloId, rotaId, TipoMudanca.ADICIONADA)
+                // )
 
             } catch (e: Exception) {
                 android.util.Log.e("CycleManagementViewModel", "Erro ao adicionar despesa: ${e.message}")
                 _errorMessage.value = "Erro ao adicionar despesa: ${e.message}"
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVO: Recarrega estatísticas quando despesas são modificadas
+     */
+    fun recarregarEstatisticas() {
+        viewModelScope.launch {
+            try {
+                val cicloId = _dadosCiclo.value?.id ?: return@launch
+                calcularEstatisticasFinanceiras(cicloId)
+            } catch (e: Exception) {
+                android.util.Log.e("CycleManagementViewModel", "Erro ao recarregar estatísticas: ${e.message}")
             }
         }
     }
