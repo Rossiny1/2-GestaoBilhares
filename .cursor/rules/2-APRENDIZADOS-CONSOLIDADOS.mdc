@@ -34,6 +34,75 @@ C:\Users\Rossiny\AppData\Local\Android\Sdk\platform-tools\adb.exe logcat | finds
 
 ## 🆕 NOVAS REGRAS CRÍTICAS (Janeiro 2025)
 
+### 9. SISTEMA DE ROTAS COM CICLOS REAIS - PADRÃO CORRETO
+**PROBLEMA:** Cards de rotas exibindo ciclos incorretos (usando campo estático)
+**SOLUÇÃO IMPLEMENTADA:**
+```kotlin
+// ✅ FUNÇÃO PARA CALCULAR CICLO ATUAL REAL
+private fun calcularCicloAtualReal(rotaId: Long): Int {
+    return try {
+        // Primeiro, verificar se há ciclo em andamento
+        val cicloAtivo = runBlocking {
+            cicloAcertoDao?.buscarCicloEmAndamento(rotaId)
+        }
+        
+        if (cicloAtivo != null) {
+            // Se há ciclo em andamento, usar o número dele
+            cicloAtivo.numeroCiclo
+        } else {
+            // Se não há ciclo em andamento, buscar o último ciclo finalizado
+            val ultimoCiclo = runBlocking {
+                cicloAcertoDao?.buscarUltimoCicloPorRota(rotaId)
+            }
+            
+            if (ultimoCiclo != null) {
+                // Se há ciclos finalizados, o próximo ciclo seria o último + 1
+                ultimoCiclo.numeroCiclo + 1
+            } else {
+                // Se não há nenhum ciclo, começar do 1
+                1
+            }
+        }
+    } catch (e: Exception) {
+        android.util.Log.e("RotaRepository", "Erro ao calcular ciclo atual: ${e.message}")
+        1
+    }
+}
+
+// ✅ STATUS SIMPLIFICADO - APENAS 2 OPÇÕES
+private fun determinarStatusRota(rota: Rota): StatusRota {
+    return try {
+        val temCicloAtivo = runBlocking {
+            val cicloAtivo = cicloAcertoDao?.buscarCicloEmAndamento(rota.id)
+            cicloAtivo != null
+        }
+        
+        if (temCicloAtivo) {
+            StatusRota.EM_ANDAMENTO
+        } else {
+            StatusRota.FINALIZADA // Sempre finalizada se não há ciclo ativo
+        }
+    } catch (e: Exception) {
+        StatusRota.FINALIZADA
+    }
+}
+```
+
+### 10. INTERFACE CLARA PARA CICLOS - PADRÃO UX
+**SEMPRE usar "Acerto" em vez de "Ciclo" para maior clareza:**
+```kotlin
+// ✅ CORRETO - Interface clara
+fun getCicloFormatado(): String {
+    val dataFormatada = if (dataCiclo != null) {
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
+        sdf.format(Date(dataCiclo))
+    } else {
+        "Data não definida"
+    }
+    return "${cicloAtual}º Acerto - $dataFormatada" // "Acerto" em vez de "Ciclo"
+}
+```
+
 ### 4. RECYCLERVIEW DENTRO DE SCROLLVIEW - SOLUÇÃO OFICIAL
 **PROBLEMA:** RecyclerView dentro de ScrollView não exibe todos os itens
 **SOLUÇÃO OFICIAL ANDROID:**

@@ -40,6 +40,9 @@ class AppRepository(
     suspend fun buscarUltimoAcertoPorCliente(clienteId: Long) = 
         acertoDao.buscarUltimoAcertoPorCliente(clienteId)
     fun obterTodosAcertos() = acertoDao.listarTodos()
+    fun buscarAcertosPorCicloId(cicloId: Long) = acertoDao.buscarPorCicloId(cicloId)
+    fun buscarClientesPorRota(rotaId: Long) = clienteDao.obterClientesPorRota(rotaId)
+    suspend fun buscarRotaPorId(rotaId: Long) = rotaDao.getRotaById(rotaId)
     suspend fun inserirAcerto(acerto: Acerto) = acertoDao.inserir(acerto)
     suspend fun atualizarAcerto(acerto: Acerto) = acertoDao.atualizar(acerto)
     suspend fun deletarAcerto(acerto: Acerto) = acertoDao.deletar(acerto)

@@ -55,9 +55,8 @@ class RoutesAdapter(
                 // Status da rota
                 rotaStatus.text = when (rotaResumo.status) {
                     StatusRota.EM_ANDAMENTO -> "Em andamento"
-                    StatusRota.CONCLUIDA -> "Concluída"
                     StatusRota.FINALIZADA -> "Finalizada"
-                    StatusRota.PAUSADA -> "Pausada"
+                    else -> "Finalizada" // Fallback para qualquer outro status
                 }
 
                 // Informações do ciclo atual

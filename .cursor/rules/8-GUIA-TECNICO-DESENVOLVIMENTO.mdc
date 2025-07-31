@@ -22,7 +22,99 @@ app/src/main/java/com/example/gestaobilhares/
 
 ### **Padrões Arquiteturais Implementados**
 
-#### **1. MVVM Pattern**
+#### **1. Sistema de Rotas com Ciclos Reais**
+```kotlin
+// RotaRepository - Cálculo de ciclos reais
+class RotaRepository(
+    private val rotaDao: RotaDao,
+    private val clienteDao: ClienteDao?,
+    private val mesaDao: MesaDao?,
+    private val acertoDao: AcertoDao?,
+    private val cicloAcertoDao: CicloAcertoDao?
+) {
+    
+    // ✅ FUNÇÃO CRÍTICA: Calcula ciclo atual baseado nos acertos reais
+    private fun calcularCicloAtualReal(rotaId: Long): Int {
+        return try {
+            // Primeiro, verificar se há ciclo em andamento
+            val cicloAtivo = runBlocking {
+                cicloAcertoDao?.buscarCicloEmAndamento(rotaId)
+            }
+            
+            if (cicloAtivo != null) {
+                // Se há ciclo em andamento, usar o número dele
+                cicloAtivo.numeroCiclo
+            } else {
+                // Se não há ciclo em andamento, buscar o último ciclo finalizado
+                val ultimoCiclo = runBlocking {
+                    cicloAcertoDao?.buscarUltimoCicloPorRota(rotaId)
+                }
+                
+                if (ultimoCiclo != null) {
+                    // Se há ciclos finalizados, o próximo ciclo seria o último + 1
+                    ultimoCiclo.numeroCiclo + 1
+                } else {
+                    // Se não há nenhum ciclo, começar do 1
+                    1
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("RotaRepository", "Erro ao calcular ciclo atual: ${e.message}")
+            1
+        }
+    }
+    
+    // ✅ STATUS SIMPLIFICADO: Apenas 2 opções
+    private fun determinarStatusRota(rota: Rota): StatusRota {
+        return try {
+            val temCicloAtivo = runBlocking {
+                val cicloAtivo = cicloAcertoDao?.buscarCicloEmAndamento(rota.id)
+                cicloAtivo != null
+            }
+            
+            if (temCicloAtivo) {
+                StatusRota.EM_ANDAMENTO
+            } else {
+                StatusRota.FINALIZADA // Sempre finalizada se não há ciclo ativo
+            }
+        } catch (e: Exception) {
+            StatusRota.FINALIZADA
+        }
+    }
+    
+    // ✅ FLOW COM DADOS REAIS
+    fun getRotasResumoComAtualizacaoTempoReal(): Flow<List<RotaResumo>> {
+        return getAllRotasAtivas().map { rotas ->
+            rotas.map { rota ->
+                val clientesAtivos = calcularClientesAtivosSync(rota.id)
+                val pendencias = calcularPendenciasSync(rota.id)
+                val valorAcertado = calcularValorAcertadoSync(rota.id)
+                val quantidadeMesas = calcularQuantidadeMesasSync(rota.id)
+                val percentualAcertados = calcularPercentualAcertadosSync(rota.id, clientesAtivos)
+                
+                // ✅ USAR CICLO ATUAL REAL
+                val status = determinarStatusRotaEmTempoReal(rota.id)
+                val cicloAtual = calcularCicloAtualReal(rota.id)
+                val dataCiclo = obterDataCicloAtual(rota.id)
+                
+                RotaResumo(
+                    rota = rota,
+                    clientesAtivos = clientesAtivos,
+                    pendencias = pendencias,
+                    valorAcertado = valorAcertado,
+                    quantidadeMesas = quantidadeMesas,
+                    percentualAcertados = percentualAcertados,
+                    status = status,
+                    cicloAtual = cicloAtual, // ✅ CICLO REAL
+                    dataCiclo = dataCiclo    // ✅ DATA REAL
+                )
+            }
+        }
+    }
+}
+```
+
+#### **2. MVVM Pattern**
 ```kotlin
 // ViewModel - Lógica de Negócio
 @HiltViewModel

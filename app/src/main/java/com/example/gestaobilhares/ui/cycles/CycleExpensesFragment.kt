@@ -27,10 +27,24 @@ import java.util.Locale
  */
 class CycleExpensesFragment : Fragment() {
 
+    companion object {
+        fun newInstance(cicloId: Long, rotaId: Long, isCicloFinalizado: Boolean): CycleExpensesFragment {
+            return CycleExpensesFragment().apply {
+                arguments = Bundle().apply {
+                    putLong("cicloId", cicloId)
+                    putLong("rotaId", rotaId)
+                    putBoolean("isCicloFinalizado", isCicloFinalizado)
+                }
+            }
+        }
+    }
+
     private var _binding: FragmentCycleExpensesBinding? = null
     private val binding get() = _binding!!
     
     private var cicloId: Long = 0L
+    private var rotaId: Long = 0L
+    private var isCicloFinalizado: Boolean = false
     
     private val viewModel: CycleExpensesViewModel by viewModels {
         CycleExpensesViewModelFactory(
@@ -48,6 +62,8 @@ class CycleExpensesFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         cicloId = arguments?.getLong("cicloId", 0L) ?: 0L
+        rotaId = arguments?.getLong("rotaId", 0L) ?: 0L
+        isCicloFinalizado = arguments?.getBoolean("isCicloFinalizado", false) ?: false
     }
 
     override fun onCreateView(
@@ -73,11 +89,16 @@ class CycleExpensesFragment : Fragment() {
         binding.rvExpenses.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = CycleExpensesAdapter(
+                isCicloFinalizado = isCicloFinalizado,
                 onExpenseClick = { despesa ->
-                    mostrarDialogoEditarDespesa(despesa)
+                    if (!isCicloFinalizado) {
+                        mostrarDialogoEditarDespesa(despesa)
+                    }
                 },
                 onExpenseDelete = { despesa ->
-                    mostrarDialogoConfirmarExclusao(despesa)
+                    if (!isCicloFinalizado) {
+                        mostrarDialogoConfirmarExclusao(despesa)
+                    }
                 }
             )
         }
@@ -186,10 +207,8 @@ class CycleExpensesFragment : Fragment() {
                             mostrarFeedback("Despesa editada com sucesso!", Snackbar.LENGTH_SHORT)
                         }
                     } else {
-                        // Chamar callback para adicionar despesa no parent fragment
-                        (parentFragment as? CycleManagementFragment)?.adicionarDespesaViaCallback(
-                            descricao, valor, categoria, observacoes
-                        )
+                        // TODO: Implementar adição de despesa
+                        mostrarFeedback("Funcionalidade de adicionar despesa será implementada em breve", Snackbar.LENGTH_LONG)
                     }
                 } else {
                     mostrarFeedback("Preencha todos os campos obrigatórios", Snackbar.LENGTH_SHORT)
@@ -279,13 +298,5 @@ class CycleExpensesFragment : Fragment() {
         _binding = null
     }
 
-    companion object {
-        fun newInstance(cicloId: Long): CycleExpensesFragment {
-            val fragment = CycleExpensesFragment()
-            val args = Bundle()
-            args.putLong("cicloId", cicloId)
-            fragment.arguments = args
-            return fragment
-        }
-    }
+
 }

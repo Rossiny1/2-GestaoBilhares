@@ -70,6 +70,7 @@ data class RotaResumo(
 ) {
     /**
      * Formata a informação do ciclo atual com data
+     * ✅ CORREÇÃO: Exibe "Acerto" em vez de "Ciclo" para maior clareza
      */
     fun getCicloFormatado(): String {
         val dataFormatada = if (dataCiclo != null) {
@@ -78,7 +79,7 @@ data class RotaResumo(
         } else {
             "Data não definida"
         }
-        return "${cicloAtual}º Ciclo - $dataFormatada"
+        return "${cicloAtual}º Acerto - $dataFormatada"
     }
 }
 

@@ -46,7 +46,7 @@ class RotaRepository(
     /**
      * Obtém um resumo de todas as rotas com estatísticas reais.
      * Calcula dados reais de clientes, mesas e acertos.
-     * ✅ MELHORIA: Atualização em tempo real do status
+     * ✅ CORREÇÃO: Usa ciclo atual real baseado nos acertos
      */
     fun getRotasResumo(): Flow<List<RotaResumo>> {
         return getAllRotasAtivas().map { rotas ->
@@ -59,6 +59,10 @@ class RotaRepository(
                 val percentualAcertados = calcularPercentualAcertadosSync(rota.id, clientesAtivos)
                 val status = determinarStatusRota(rota)
                 
+                // ✅ CORREÇÃO: Usar ciclo atual real baseado nos acertos
+                val cicloAtual = calcularCicloAtualReal(rota.id)
+                val dataCiclo = obterDataCicloAtual(rota.id)
+                
                 RotaResumo(
                     rota = rota,
                     clientesAtivos = clientesAtivos,
@@ -67,15 +71,16 @@ class RotaRepository(
                     quantidadeMesas = quantidadeMesas,
                     percentualAcertados = percentualAcertados,
                     status = status,
-                    cicloAtual = rota.cicloAcertoAtual,
-                    dataCiclo = rota.dataInicioCiclo
+                    cicloAtual = cicloAtual,
+                    dataCiclo = dataCiclo
                 )
             }
         }
     }
 
     /**
-     * ✅ NOVO: Obtém resumo de rotas com atualização em tempo real baseada em mudanças de ciclos
+     * ✅ CORREÇÃO: Obtém resumo de rotas com atualização em tempo real baseada em mudanças de ciclos
+     * Usa ciclo atual real baseado nos acertos
      */
     fun getRotasResumoComAtualizacaoTempoReal(): Flow<List<RotaResumo>> {
         return getAllRotasAtivas().map { rotas ->
@@ -90,6 +95,10 @@ class RotaRepository(
                 // ✅ ATUALIZAÇÃO EM TEMPO REAL: Status baseado no estado atual dos ciclos
                 val status = determinarStatusRotaEmTempoReal(rota.id)
                 
+                // ✅ CORREÇÃO: Usar ciclo atual real baseado nos acertos
+                val cicloAtual = calcularCicloAtualReal(rota.id)
+                val dataCiclo = obterDataCicloAtual(rota.id)
+                
                 RotaResumo(
                     rota = rota,
                     clientesAtivos = clientesAtivos,
@@ -98,8 +107,8 @@ class RotaRepository(
                     quantidadeMesas = quantidadeMesas,
                     percentualAcertados = percentualAcertados,
                     status = status,
-                    cicloAtual = rota.cicloAcertoAtual,
-                    dataCiclo = rota.dataInicioCiclo
+                    cicloAtual = cicloAtual,
+                    dataCiclo = dataCiclo
                 )
             }
         }
@@ -202,14 +211,79 @@ class RotaRepository(
     }
     
     /**
-     * Determina o status da rota baseado em seus dados
-     * ✅ CORREÇÃO: Verificar se há ciclo ativo em andamento
+     * ✅ NOVO: Calcula o ciclo atual real baseado nos acertos existentes
+     */
+    private fun calcularCicloAtualReal(rotaId: Long): Int {
+        return try {
+            // Primeiro, verificar se há ciclo em andamento
+            val cicloAtivo = runBlocking {
+                cicloAcertoDao?.buscarCicloEmAndamento(rotaId)
+            }
+            
+            if (cicloAtivo != null) {
+                // Se há ciclo em andamento, usar o número dele
+                cicloAtivo.numeroCiclo
+            } else {
+                // Se não há ciclo em andamento, buscar o último ciclo finalizado
+                val ultimoCiclo = runBlocking {
+                    cicloAcertoDao?.buscarUltimoCicloPorRota(rotaId)
+                }
+                
+                if (ultimoCiclo != null) {
+                    // Se há ciclos finalizados, o próximo ciclo seria o último + 1
+                    ultimoCiclo.numeroCiclo + 1
+                } else {
+                    // Se não há nenhum ciclo, começar do 1
+                    1
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("RotaRepository", "Erro ao calcular ciclo atual: ${e.message}")
+            1
+        }
+    }
+
+    /**
+     * ✅ NOVO: Obtém a data do ciclo atual real
+     */
+    private fun obterDataCicloAtual(rotaId: Long): Long? {
+        return try {
+            // Primeiro, verificar se há ciclo em andamento
+            val cicloAtivo = runBlocking {
+                cicloAcertoDao?.buscarCicloEmAndamento(rotaId)
+            }
+            
+            if (cicloAtivo != null) {
+                // Se há ciclo em andamento, usar a data de início dele
+                cicloAtivo.dataInicio?.time
+            } else {
+                // Se não há ciclo em andamento, buscar o último ciclo finalizado
+                val ultimoCiclo = runBlocking {
+                    cicloAcertoDao?.buscarUltimoCicloPorRota(rotaId)
+                }
+                
+                if (ultimoCiclo != null) {
+                    // Se há ciclos finalizados, usar a data de início do último
+                    ultimoCiclo.dataInicio?.time
+                } else {
+                    // Se não há nenhum ciclo, retornar null
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("RotaRepository", "Erro ao obter data do ciclo: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * ✅ CORREÇÃO: Determina o status da rota baseado em seus dados
+     * Agora apenas 2 status: EM_ANDAMENTO ou FINALIZADA
      */
     private fun determinarStatusRota(rota: Rota): StatusRota {
         return try {
             // Verificar se há um ciclo em andamento para esta rota
             val temCicloAtivo = runBlocking {
-                // Buscar ciclo em andamento
                 val cicloAtivo = cicloAcertoDao?.buscarCicloEmAndamento(rota.id)
                 cicloAtivo != null
             }
@@ -217,7 +291,7 @@ class RotaRepository(
             if (temCicloAtivo) {
                 StatusRota.EM_ANDAMENTO
             } else {
-                // Verificar se há ciclos finalizados
+                // Se não há ciclo em andamento, verificar se há ciclos finalizados
                 val temCiclosFinalizados = runBlocking {
                     val ciclos = cicloAcertoDao?.listarPorRota(rota.id)?.first() ?: emptyList()
                     ciclos.any { it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO }
@@ -226,17 +300,19 @@ class RotaRepository(
                 if (temCiclosFinalizados) {
                     StatusRota.FINALIZADA
                 } else {
-                    StatusRota.PAUSADA
+                    // Se não há nenhum ciclo, considerar como finalizada (não pausada)
+                    StatusRota.FINALIZADA
                 }
             }
         } catch (e: Exception) {
             android.util.Log.e("RotaRepository", "Erro ao determinar status: ${e.message}")
-            StatusRota.PAUSADA
+            StatusRota.FINALIZADA
         }
     }
 
     /**
-     * ✅ NOVO: Determina o status da rota em tempo real baseado nos ciclos ativos
+     * ✅ CORREÇÃO: Determina o status da rota em tempo real baseado nos ciclos ativos
+     * Agora apenas 2 status: EM_ANDAMENTO ou FINALIZADA
      */
     private fun determinarStatusRotaEmTempoReal(rotaId: Long): StatusRota {
         return try {
@@ -249,7 +325,7 @@ class RotaRepository(
             if (temCicloAtivo) {
                 StatusRota.EM_ANDAMENTO
             } else {
-                // Verificar se há ciclos finalizados
+                // Se não há ciclo em andamento, verificar se há ciclos finalizados
                 val temCiclosFinalizados = runBlocking {
                     val ciclos = cicloAcertoDao?.listarPorRota(rotaId)?.first() ?: emptyList()
                     ciclos.any { it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO }
@@ -258,12 +334,13 @@ class RotaRepository(
                 if (temCiclosFinalizados) {
                     StatusRota.FINALIZADA
                 } else {
-                    StatusRota.PAUSADA
+                    // Se não há nenhum ciclo, considerar como finalizada (não pausada)
+                    StatusRota.FINALIZADA
                 }
             }
         } catch (e: Exception) {
             android.util.Log.e("RotaRepository", "Erro ao determinar status em tempo real: ${e.message}")
-            StatusRota.PAUSADA
+            StatusRota.FINALIZADA
         }
     }
     

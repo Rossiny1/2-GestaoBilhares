@@ -16,6 +16,7 @@ import java.util.Locale
  * Adapter para lista de despesas do ciclo
  */
 class CycleExpensesAdapter(
+    private val isCicloFinalizado: Boolean,
     private val onExpenseClick: (CycleExpenseItem) -> Unit,
     private val onExpenseDelete: (CycleExpenseItem) -> Unit
 ) : ListAdapter<CycleExpenseItem, CycleExpensesAdapter.ExpenseViewHolder>(ExpenseDiffCallback()) {
@@ -33,7 +34,7 @@ class CycleExpensesAdapter(
         holder.bind(getItem(position))
     }
 
-    class ExpenseViewHolder(
+    inner class ExpenseViewHolder(
         private val binding: ItemCycleExpenseBinding,
         private val onExpenseClick: (CycleExpenseItem) -> Unit,
         private val onExpenseDelete: (CycleExpenseItem) -> Unit
@@ -57,13 +58,21 @@ class CycleExpensesAdapter(
                     tvExpenseObservations.visibility = android.view.View.GONE
                 }
 
-                // Click listeners
-                root.setOnClickListener {
-                    onExpenseClick(despesa)
-                }
+                // Click listeners (apenas para ciclos em andamento)
+                if (!isCicloFinalizado) {
+                    root.setOnClickListener {
+                        onExpenseClick(despesa)
+                    }
 
-                btnDeleteExpense.setOnClickListener {
-                    onExpenseDelete(despesa)
+                    btnDeleteExpense.setOnClickListener {
+                        onExpenseDelete(despesa)
+                    }
+                    
+                    btnDeleteExpense.visibility = android.view.View.VISIBLE
+                } else {
+                    root.setOnClickListener(null)
+                    btnDeleteExpense.setOnClickListener(null)
+                    btnDeleteExpense.visibility = android.view.View.GONE
                 }
             }
         }
