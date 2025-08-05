@@ -369,6 +369,30 @@ class ClientDetailViewModel(
             null
         }
     }
+    
+    /**
+     * ✅ NOVO: Busca o ID do ciclo associado a um acerto
+     */
+    suspend fun buscarCicloIdPorAcerto(acertoId: Long): Long? {
+        return try {
+            acertoRepository.buscarCicloIdPorAcerto(acertoId)
+        } catch (e: Exception) {
+            Log.e("ClientDetailViewModel", "Erro ao buscar ciclo ID por acerto: ${e.message}")
+            null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Busca o ID da rota associada a um cliente
+     */
+    suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? {
+        return try {
+            clienteRepository.buscarRotaIdPorCliente(clienteId)
+        } catch (e: Exception) {
+            Log.e("ClientDetailViewModel", "Erro ao buscar rota ID por cliente: ${e.message}")
+            null
+        }
+    }
 }
 
 // Data classes auxiliares - FASE 4A

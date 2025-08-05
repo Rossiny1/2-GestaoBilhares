@@ -213,7 +213,7 @@ class ClientDetailFragment : Fragment() {
 
     private fun setupRecyclerView() {
         settlementHistoryAdapter = SettlementHistoryAdapter { acerto ->
-            // Navegar para detalhes do acerto
+            // ✅ CORREÇÃO: Sempre navegar para detalhes do acerto, independente do status
             val action = ClientDetailFragmentDirections.actionClientDetailFragmentToSettlementDetailFragment(acerto.id)
             findNavController().navigate(action)
         }

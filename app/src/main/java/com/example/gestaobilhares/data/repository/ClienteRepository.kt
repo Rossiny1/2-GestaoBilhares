@@ -120,4 +120,17 @@ class ClienteRepository(
             0.0
         }
     }
+    
+    /**
+     * ✅ NOVO: Busca o ID da rota associada a um cliente
+     */
+    suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? {
+        return try {
+            val cliente = obterPorId(clienteId)
+            cliente?.rotaId
+        } catch (e: Exception) {
+            android.util.Log.e("ClienteRepository", "Erro ao buscar rota ID por cliente: ${e.message}", e)
+            null
+        }
+    }
 } 

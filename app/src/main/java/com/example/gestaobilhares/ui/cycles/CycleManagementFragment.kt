@@ -19,6 +19,7 @@ import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.utils.PdfReportGenerator
+import com.example.gestaobilhares.ui.clients.CycleReportDialog
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -185,37 +186,44 @@ class CycleManagementFragment : Fragment() {
         } else {
             View.GONE
         }
+        
+        // ✅ NOVA LÓGICA: Configurar botão de impressão baseado no status
+        if (dados.status == StatusCicloAcerto.EM_ANDAMENTO) {
+            // Ciclo em andamento - botão desabilitado com tooltip
+            binding.btnPrint.isEnabled = false
+            binding.btnPrint.alpha = 0.5f
+            binding.btnPrint.contentDescription = "Geração de relatório disponível apenas para ciclos finalizados"
+        } else {
+            // Ciclo finalizado - botão habilitado
+            binding.btnPrint.isEnabled = true
+            binding.btnPrint.alpha = 1.0f
+            binding.btnPrint.contentDescription = "Gerar relatório detalhado"
+        }
     }
 
     private fun atualizarEstatisticasFinanceiras(stats: CycleFinancialStats) {
-        binding.tvTotalRecebido.text = currencyFormatter.format(stats.totalRecebido)
-        binding.tvDespesasViagem.text = currencyFormatter.format(stats.despesasViagem)
-        binding.tvSubtotal.text = currencyFormatter.format(stats.subtotal)
-        binding.tvComissaoMotorista.text = currencyFormatter.format(stats.comissaoMotorista)
-        binding.tvComissaoIltair.text = currencyFormatter.format(stats.comissaoIltair)
-        binding.tvSomaPix.text = currencyFormatter.format(stats.somaPix)
-        binding.tvSomaDespesas.text = currencyFormatter.format(stats.somaDespesas)
-        binding.tvCheques.text = currencyFormatter.format(stats.cheques)
-        binding.tvTotalGeral.text = currencyFormatter.format(stats.totalGeral)
+        // Remover referências às views que foram movidas para o CycleSummaryFragment
+        // Essas views agora são atualizadas diretamente no fragment de resumo
     }
 
     private fun atualizarEstatisticasModalidade(stats: PaymentMethodStats) {
-        binding.tvPix.text = currencyFormatter.format(stats.pix)
-        binding.tvCartao.text = currencyFormatter.format(stats.cartao)
-        binding.tvCheque.text = currencyFormatter.format(stats.cheque)
-        binding.tvDinheiro.text = currencyFormatter.format(stats.dinheiro)
-        binding.tvTotalRecebidoModalidade.text = currencyFormatter.format(stats.totalRecebido)
+        // Remover referências às views que foram movidas para o CycleSummaryFragment
+        // Essas views agora são atualizadas diretamente no fragment de resumo
     }
 
     private fun gerarRelatorioPDF() {
         lifecycleScope.launch {
             try {
-                mostrarFeedback("Gerando relatório PDF...", Snackbar.LENGTH_SHORT)
-                
                 // Buscar dados completos
                 val dadosCiclo = viewModel.dadosCiclo.value
                 if (dadosCiclo == null) {
                     mostrarFeedback("Erro: Dados do ciclo não encontrados", Snackbar.LENGTH_LONG)
+                    return@launch
+                }
+                
+                // ✅ NOVA VALIDAÇÃO: Verificar se o ciclo está finalizado
+                if (dadosCiclo.status != StatusCicloAcerto.FINALIZADO) {
+                    mostrarFeedback("A geração de relatório somente é possível após finalizar o acerto.", Snackbar.LENGTH_LONG)
                     return@launch
                 }
                 
@@ -226,20 +234,22 @@ class CycleManagementFragment : Fragment() {
                 val clientes = viewModel.buscarClientesPorRota(dadosCiclo.rotaId)
                 
                 if (ciclo != null && rota != null) {
-                    // Gerar PDF
-                    val pdfGenerator = PdfReportGenerator(requireContext())
-                    val pdfFile = pdfGenerator.generateCycleReport(ciclo, rota, acertos, despesas, clientes)
-                    
-                    // TODO: Implementar compartilhamento do PDF
-                    mostrarFeedback("Relatório PDF gerado com sucesso!", Snackbar.LENGTH_LONG)
-                    
+                    // ✅ NOVA LÓGICA: Mostrar diálogo de relatório em vez de gerar PDF diretamente
+                    val dialog = CycleReportDialog.newInstance(
+                        ciclo = ciclo,
+                        rota = rota,
+                        acertos = acertos,
+                        despesas = despesas,
+                        clientes = clientes
+                    )
+                    dialog.show(parentFragmentManager, "CycleReportDialog")
                 } else {
                     mostrarFeedback("Erro ao carregar dados para o relatório", Snackbar.LENGTH_LONG)
                 }
                 
             } catch (e: Exception) {
-                android.util.Log.e("CycleManagementFragment", "Erro ao gerar relatório: ${e.message}")
-                mostrarFeedback("Erro ao gerar relatório: ${e.message}", Snackbar.LENGTH_LONG)
+                android.util.Log.e("CycleManagementFragment", "Erro ao carregar dados do relatório: ${e.message}")
+                mostrarFeedback("Erro ao carregar dados: ${e.message}", Snackbar.LENGTH_LONG)
             }
         }
     }
@@ -267,7 +277,7 @@ class CycleManagementPagerAdapter(
     private val isCicloFinalizado: Boolean
 ) : FragmentStateAdapter(fragment) {
     
-    override fun getItemCount(): Int = 2
+    override fun getItemCount(): Int = 3
     
     override fun createFragment(position: Int): Fragment {
         return when (position) {
@@ -277,6 +287,11 @@ class CycleManagementPagerAdapter(
                 isCicloFinalizado
             )
             1 -> CycleExpensesFragment.newInstance(
+                cicloId,
+                rotaId,
+                isCicloFinalizado
+            )
+            2 -> CycleSummaryFragment.newInstance(
                 cicloId,
                 rotaId,
                 isCicloFinalizado

@@ -83,15 +83,12 @@ class CycleHistoryFragment : Fragment() {
 
     private fun configurarRecyclerView() {
         cycleAdapter = CycleHistoryAdapter { ciclo ->
-            // Verificar se o ciclo está em andamento ou finalizado
+            // ✅ CORREÇÃO: Todos os ciclos (em andamento e finalizados) navegam para Gerenciar Ciclo
             when (ciclo.status) {
-                com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO -> {
+                com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO,
+                com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO -> {
                     // Navegar para tela de gerenciamento do ciclo
                     navegarParaGerenciamentoCiclo(ciclo)
-                }
-                com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO -> {
-                    // Mostrar opção de relatório para ciclos finalizados
-                    mostrarDialogoRelatorio(ciclo)
                 }
                 else -> {
                     mostrarFeedback("Ciclo ${ciclo.status.name.lowercase()} não pode ser gerenciado", Snackbar.LENGTH_SHORT)

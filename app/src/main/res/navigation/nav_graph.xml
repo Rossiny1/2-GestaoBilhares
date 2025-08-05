@@ -120,6 +120,10 @@
         <action
             android:id="@+id/action_clientDetailFragment_to_clientRegisterFragment"
             app:destination="@id/clientRegisterFragment" />
+        <!-- ✅ NOVA NAVEGAÇÃO: Para gerenciamento de ciclos -->
+        <action
+            android:id="@+id/action_clientDetailFragment_to_cycleManagementFragment"
+            app:destination="@id/cycleManagementFragment" />
     </fragment>
 
     <!-- FASE 4A: Tela de registro de acerto -->

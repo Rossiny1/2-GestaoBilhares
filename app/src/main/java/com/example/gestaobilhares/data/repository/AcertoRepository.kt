@@ -183,4 +183,17 @@ class AcertoRepository(private val acertoDao: AcertoDao, private val clienteDao:
         data class NaoEhUltimoAcerto(val motivo: String) : PermissaoEdicao()
         data class ErroValidacao(val motivo: String) : PermissaoEdicao()
     }
+    
+    /**
+     * ✅ NOVO: Busca o ID do ciclo associado a um acerto
+     */
+    suspend fun buscarCicloIdPorAcerto(acertoId: Long): Long? {
+        return try {
+            val acerto = buscarPorId(acertoId)
+            acerto?.cicloId
+        } catch (e: Exception) {
+            AppLogger.log("AcertoRepo", "Erro ao buscar ciclo ID por acerto: ${e.message}")
+            null
+        }
+    }
 } 
