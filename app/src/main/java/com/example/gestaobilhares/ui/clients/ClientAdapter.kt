@@ -43,14 +43,6 @@ class ClientAdapter(
             // Dados básicos do cliente
             binding.tvClientName.text = cliente.nome
             
-            // Nome fantasia - só exibe se diferente do nome
-            if (!cliente.nomeFantasia.isNullOrBlank() && cliente.nomeFantasia != cliente.nome) {
-                binding.tvBusinessName.text = cliente.nomeFantasia
-                binding.tvBusinessName.visibility = View.VISIBLE
-            } else {
-                binding.tvBusinessName.visibility = View.GONE
-            }
-            
             // Endereço
             binding.tvAddress.text = if (!cliente.endereco.isNullOrBlank()) {
                 "${cliente.endereco}, ${cliente.cidade ?: ""}"
@@ -69,46 +61,69 @@ class ClientAdapter(
             val context = binding.root.context
             val debito = cliente.debitoAtual
             
-            // Calcular dias desde o último acerto (mock por enquanto)
-            val diasSemAcerto = 30 // Será calculado dinamicamente quando integrar com histórico
+            // ✅ CORREÇÃO: Calcular dias desde o último acerto (4 meses = 120 dias)
+            // Por enquanto usando mock, mas será integrado com histórico real
+            val diasSemAcerto = 30 // TODO: Calcular dinamicamente quando integrar com histórico
             
-            val statusColor = when {
-                !cliente.ativo -> context.getColor(R.color.red_600)
-                debito > 300.0 -> context.getColor(R.color.red_600)
-                diasSemAcerto > 90 -> context.getColor(R.color.orange_600)
-                else -> context.getColor(R.color.green_600)
+            // ✅ NOVA LÓGICA: Priorizar status corretamente
+            val statusInfo = when {
+                // 1. Cliente inativo (prioridade máxima)
+                !cliente.ativo -> StatusInfo(
+                    text = "INATIVO",
+                    color = context.getColor(R.color.red_600),
+                    background = R.drawable.rounded_tag_red,
+                    showSpecialTag = false
+                )
+                
+                // 2. Débito alto (prioridade alta)
+                debito > 300.0 -> StatusInfo(
+                    text = "DÉBITO ALTO",
+                    color = context.getColor(R.color.red_600),
+                    background = R.drawable.rounded_tag_red,
+                    showSpecialTag = true
+                )
+                
+                // 3. Em atraso (mais de 4 meses sem acerto)
+                diasSemAcerto > 120 -> StatusInfo(
+                    text = "EM ATRASO",
+                    color = context.getColor(R.color.orange_600),
+                    background = R.drawable.rounded_tag_orange,
+                    showSpecialTag = false
+                )
+                
+                // 4. Em dia (sem débito e acertou nos últimos 4 meses)
+                debito <= 0 && diasSemAcerto <= 120 -> StatusInfo(
+                    text = "EM DIA",
+                    color = context.getColor(R.color.green_600),
+                    background = R.drawable.rounded_tag_green,
+                    showSpecialTag = false
+                )
+                
+                // 5. Caso padrão (com débito mas dentro do prazo)
+                else -> StatusInfo(
+                    text = "COM DÉBITO",
+                    color = context.getColor(R.color.yellow_600),
+                    background = R.drawable.rounded_tag_orange,
+                    showSpecialTag = false
+                )
             }
-            binding.statusBar.setBackgroundColor(statusColor)
             
-            // Tag de status principal
-            when {
-                !cliente.ativo -> {
-                    binding.tvStatusTag.text = "INATIVO"
-                    binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_red)
-                }
-                debito > 300.0 -> {
-                    binding.tvStatusTag.text = "DEVEDOR"
-                    binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_red)
-                }
-                diasSemAcerto > 90 -> {
-                    binding.tvStatusTag.text = "ATENÇÃO"
-                    binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_orange)
-                }
-                else -> {
-                    binding.tvStatusTag.text = "EM DIA"
-                    binding.tvStatusTag.setBackgroundResource(R.drawable.rounded_tag_green)
-                }
-            }
+            // Aplicar configurações de status
+            binding.statusBar.setBackgroundColor(statusInfo.color)
+            binding.tvStatusTag.text = statusInfo.text
+            binding.tvStatusTag.setBackgroundResource(statusInfo.background)
             
-            // Tag especial para débito alto
-            if (debito > 300.0) {
-                binding.tvSpecialTag.text = "ALTO DÉBITO"
-                binding.tvSpecialTag.setBackgroundResource(R.drawable.rounded_tag_red)
-                binding.tvSpecialTag.visibility = View.VISIBLE
-            } else {
-                binding.tvSpecialTag.visibility = View.GONE
-            }
+            // Configurar tag especial de débito alto
+            binding.tvSpecialTag.visibility = if (statusInfo.showSpecialTag) View.VISIBLE else View.GONE
         }
+        
+        // ✅ NOVO: Classe auxiliar para organizar informações de status
+        private data class StatusInfo(
+            val text: String,
+            val color: Int,
+            val background: Int,
+            val showSpecialTag: Boolean
+        )
         
         private fun configurarDebitoAtual(cliente: Cliente) {
             try {
@@ -146,8 +161,6 @@ class ClientAdapter(
                 
                 binding.tvCurrentDebt.setTextColor(debtColor)
                 binding.ivDebtIcon.setColorFilter(debtColor)
-                binding.layoutDebtInfo.backgroundTintList = 
-                    android.content.res.ColorStateList.valueOf(backgroundTint)
                 
                 // O label permanece fixo como "Débito Atual" no layout
                 

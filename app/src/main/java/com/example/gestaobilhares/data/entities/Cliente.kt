@@ -34,17 +34,23 @@ data class Cliente(
     @ColumnInfo(name = "nome_fantasia")
     val nomeFantasia: String? = null,
     
-    @ColumnInfo(name = "cnpj")
-    val cnpj: String? = null,
+    @ColumnInfo(name = "cpf_cnpj")
+    val cpfCnpj: String? = null,
     
     @ColumnInfo(name = "telefone")
     val telefone: String? = null,
+    
+    @ColumnInfo(name = "telefone2")
+    val telefone2: String? = null,
     
     @ColumnInfo(name = "email")
     val email: String? = null,
     
     @ColumnInfo(name = "endereco")
     val endereco: String? = null,
+    
+    @ColumnInfo(name = "bairro")
+    val bairro: String? = null,
     
     @ColumnInfo(name = "cidade")
     val cidade: String? = null,

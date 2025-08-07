@@ -39,7 +39,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Tipo de Mesa"
+            android:text="Tipo"
             android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             android:layout_marginBottom="8dp" />
@@ -49,18 +49,26 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp" />
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/layoutTamanhoMesa"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Tamanho da Mesa"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp" />
-        <Spinner
-            android:id="@+id/spTamanhoMesa"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp" />
+            android:orientation="vertical"
+            android:visibility="gone">
+            
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tamanho da Mesa"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp" />
+            <Spinner
+                android:id="@+id/spTamanhoMesa"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"

@@ -58,22 +58,33 @@ class CycleExpensesAdapter(
                     tvExpenseObservations.visibility = android.view.View.GONE
                 }
 
-                // Click listeners (apenas para ciclos em andamento)
-                if (!isCicloFinalizado) {
-                    root.setOnClickListener {
+                // ✅ NOVA LÓGICA: Sempre permitir clique, mas com feedback visual diferente
+                root.setOnClickListener {
+                    if (!isCicloFinalizado) {
                         onExpenseClick(despesa)
                     }
-
-                    btnDeleteExpense.setOnClickListener {
-                        onExpenseDelete(despesa)
-                    }
-                    
-                    btnDeleteExpense.visibility = android.view.View.VISIBLE
-                } else {
-                    root.setOnClickListener(null)
-                    btnDeleteExpense.setOnClickListener(null)
-                    btnDeleteExpense.visibility = android.view.View.GONE
                 }
+
+                // Botão de exclusão sempre visível e clicável
+                btnDeleteExpense.setOnClickListener {
+                    onExpenseDelete(despesa)
+                }
+                
+                // ✅ NOVO: Feedback visual para ciclos finalizados
+                if (isCicloFinalizado) {
+                    // Ciclo finalizado - botão com aparência desabilitada mas ainda clicável
+                    btnDeleteExpense.alpha = 0.5f
+                    btnDeleteExpense.contentDescription = "Exclusão não permitida - Ciclo finalizado"
+                    // Manter o ícone de exclusão mas com cor mais suave
+                    btnDeleteExpense.setColorFilter(android.graphics.Color.GRAY)
+                } else {
+                    // Ciclo em andamento - botão normal
+                    btnDeleteExpense.alpha = 1.0f
+                    btnDeleteExpense.contentDescription = "Excluir despesa"
+                    btnDeleteExpense.clearColorFilter()
+                }
+                
+                btnDeleteExpense.visibility = android.view.View.VISIBLE
             }
         }
     }

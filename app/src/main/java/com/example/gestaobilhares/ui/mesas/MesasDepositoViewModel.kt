@@ -18,6 +18,7 @@ data class EstatisticasDeposito(
     val mesasPembolim: Int = 0,
     val mesasOutros: Int = 0,
     val mesasPequenas: Int = 0,
+    val mesasMedias: Int = 0,
     val mesasGrandes: Int = 0
 )
 
@@ -49,12 +50,11 @@ class MesasDepositoViewModel(
         val stats = EstatisticasDeposito(
             totalMesas = mesas.size,
             mesasSinuca = mesas.count { it.tipoMesa == TipoMesa.SINUCA },
-            mesasMaquina = mesas.count { it.tipoMesa == TipoMesa.MAQUINA_MUSICA },
+            mesasMaquina = mesas.count { it.tipoMesa == TipoMesa.JUKEBOX },
             mesasPembolim = mesas.count { it.tipoMesa == TipoMesa.PEMBOLIM },
-            mesasOutros = mesas.count { 
-                it.tipoMesa in listOf(TipoMesa.OUTROS, TipoMesa.SNOOKER, TipoMesa.POOL, TipoMesa.BILHAR) 
-            },
+            mesasOutros = mesas.count { it.tipoMesa == TipoMesa.OUTROS },
             mesasPequenas = mesas.count { it.tamanho == TamanhoMesa.PEQUENA },
+            mesasMedias = mesas.count { it.tamanho == TamanhoMesa.MEDIA },
             mesasGrandes = mesas.count { it.tamanho == TamanhoMesa.GRANDE }
         )
         _estatisticas.value = stats

@@ -118,7 +118,7 @@ class CycleManagementFragment : Fragment() {
             tab.text = when (position) {
                 0 -> "Recebimentos"
                 1 -> "Despesas"
-                else -> "Desconhecido"
+                else -> "Resumo"
             }
         }.attach()
     }

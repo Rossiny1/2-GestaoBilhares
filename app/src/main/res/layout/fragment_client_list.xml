@@ -144,28 +144,56 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="8dp">
+                    android:padding="12dp">
 
-                    <!-- Linha 1: Título centralizado + Botão Iniciar -->
+                    <!-- Linha 1: Título centralizado -->
+                    <TextView
+                        android:id="@+id/tvCycleTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="3º Acerto"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Linha 2: Status centralizado -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Status:"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="2dp" />
+
+                        <TextView
+                            android:id="@+id/tvRouteStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Em andamento"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:singleLine="true"
+                            android:ellipsize="end" />
+
+                    </LinearLayout>
+
+                    <!-- Linha 3: Botões lado a lado -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
-
-                        <!-- Título centralizado -->
-                        <TextView
-                            android:id="@+id/tvCycleTitle"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                        android:text="1º Acerto"
-                        android:textColor="?attr/colorPrimary"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                            android:gravity="center"
-                            android:layout_marginTop="8dp" />
+                        android:gravity="center_vertical">
 
                         <!-- Botão Iniciar -->
                         <com.google.android.material.button.MaterialButton
@@ -178,60 +206,23 @@
                             android:textSize="14sp"
                             android:maxLines="2"
                             android:ellipsize="end"
-                        android:gravity="center" />
-                    </LinearLayout>
+                            android:gravity="center"
+                            android:layout_marginEnd="4dp" />
 
-                    <!-- Linha 2: Status + Botão Finalizar -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
-
-                        <!-- Status à esquerda -->
-                        <LinearLayout
+                        <!-- Botão Finalizar -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnFinishRoute"
+                            style="@style/Widget.Material3.Button"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:gravity="center_vertical"
-                            android:paddingEnd="8dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Status:"
-                                android:textColor="?attr/colorOnSurfaceVariant"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/tvRouteStatus"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Em andamento"
-                                    android:textColor="?attr/colorOnSurface"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold"
-                                    android:singleLine="true"
-                                    android:ellipsize="end" />
-
-                            </LinearLayout>
-
-                        <!-- Botão Finalizar à direita -->
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btnFinishRoute"
-                                style="@style/Widget.Material3.Button"
-                                android:layout_width="0dp"
                             android:layout_height="48dp"
-                                android:layout_weight="1"
-                                android:enabled="false"
-                                android:text="Finalizar"
+                            android:layout_weight="1"
+                            android:enabled="false"
+                            android:text="Finalizar"
                             android:textSize="14sp"
                             android:maxLines="2"
                             android:ellipsize="end"
-                            android:gravity="center" />
+                            android:gravity="center"
+                            android:layout_marginStart="4dp" />
 
                     </LinearLayout>
 
@@ -239,320 +230,9 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ✅ FASE 8C: Card de Informações Detalhadas do Ciclo -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cycleInfoCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
-                app:strokeColor="?attr/colorOutline"
-                app:strokeWidth="1dp">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
 
-                    <!-- Título do Card -->
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Progresso do Ciclo"
-                        android:textColor="?attr/colorPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="16dp" />
 
-                    <!-- ✅ NOVO LAYOUT: Grid 2x2 compacto com margens horizontais reduzidas -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginHorizontal="8dp"
-                        android:layout_marginBottom="8dp">
-
-                        <!-- Linha 1: Faturou e Despesas -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginBottom="4dp">
-
-                            <!-- Faturamento -->
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical"
-                                android:gravity="center"
-                                android:background="@drawable/rounded_background"
-                                android:backgroundTint="@color/blue_50"
-                                android:padding="12dp"
-                                android:layout_marginEnd="2dp">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Faturou"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="13sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:id="@+id/tvFaturamento"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="R$ 0,00"
-                                    android:textColor="@color/blue_600"
-                                    android:textSize="15sp"
-                                    android:textStyle="bold"
-                                    android:layout_marginTop="2dp"
-                                    android:singleLine="true"
-                                    android:ellipsize="end" />
-
-                            </LinearLayout>
-
-                            <!-- Despesas -->
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical"
-                                android:gravity="center"
-                                android:background="@drawable/rounded_background"
-                                android:backgroundTint="@color/red_50"
-                                android:padding="12dp"
-                                android:layout_marginStart="2dp">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Despesas"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="13sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:id="@+id/tvDespesas"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="R$ 0,00"
-                                    android:textColor="@color/red_600"
-                                    android:textSize="15sp"
-                                    android:textStyle="bold"
-                                    android:layout_marginTop="2dp"
-                                    android:singleLine="true"
-                                    android:ellipsize="end" />
-
-                            </LinearLayout>
-
-                        </LinearLayout>
-
-                        <!-- Linha 2: % Clientes Acertados e Pendências -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal">
-
-                            <!-- Percentual de Clientes Acertados -->
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical"
-                                android:gravity="center"
-                                android:background="@drawable/rounded_background"
-                                android:backgroundTint="@color/green_50"
-                                android:padding="12dp"
-                                android:layout_marginEnd="2dp">
-
-                                <TextView
-                                    android:id="@+id/tvPercentualAcertados"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0%"
-                                    android:textColor="@color/green_600"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:id="@+id/tvTotalClientes"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="de 0 clientes"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="11sp"
-                                    android:layout_marginTop="1dp" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="acertados"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="11sp" />
-
-                            </LinearLayout>
-
-                            <!-- Pendências -->
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical"
-                                android:gravity="center"
-                                android:background="@drawable/rounded_background"
-                                android:backgroundTint="@color/orange_50"
-                                android:padding="12dp"
-                                android:layout_marginStart="2dp">
-
-                                <TextView
-                                    android:id="@+id/tvPendencias"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0"
-                                    android:textColor="@color/orange_600"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Pendências"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="11sp"
-                                    android:layout_marginTop="1dp" />
-
-                            </LinearLayout>
-
-                        </LinearLayout>
-
-                        <!-- Linha 3: Débito total -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="4dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Débito total"
-                                android:textColor="@color/orange_600"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/tvDebitoTotal"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
-                                android:text="R$ 0,00"
-                                android:textColor="@color/orange_600"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Card de Ações Rápidas -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/quickActionsCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="12dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                app:strokeColor="?attr/colorOutline"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="8dp">
-
-                    <!-- Novo Cliente -->
-                    <LinearLayout
-                        android:id="@+id/btnAddClient"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="?attr/selectableItemBackground"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_marginBottom="4dp"
-                            android:src="@drawable/ic_person"
-                            app:tint="?attr/colorPrimary" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Novo\nCliente"
-                            android:textAlignment="center"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-
-                    </LinearLayout>
-
-                    <!-- Divisor -->
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:layout_marginVertical="4dp"
-                        android:background="?attr/colorOutline" />
-
-                    <!-- Nova Despesa -->
-                    <LinearLayout
-                        android:id="@+id/btnAddExpense"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="?attr/selectableItemBackground"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_marginBottom="4dp"
-                            android:src="@drawable/ic_money"
-                            app:tint="?attr/colorSecondary" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Nova\nDespesa"
-                            android:textAlignment="center"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
 
             <!-- ✅ NOVO: Campo de pesquisa (inicialmente oculto) -->
             <LinearLayout
@@ -708,22 +388,105 @@
 
     </androidx.core.widget.NestedScrollView>
 
+    <!-- FAB Principal -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_logs"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start"
-        android:layout_margin="16dp"
-        android:contentDescription="Ver Logs"
-        android:src="@drawable/ic_build" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add_client"
+        android:id="@+id/fab_main"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:contentDescription="Adicionar Cliente"
-        android:src="@drawable/ic_add" />
+        android:contentDescription="Menu de ações"
+        android:src="@drawable/ic_add"
+        app:fabSize="normal" />
+
+    <!-- Container para FABs expandidos -->
+    <LinearLayout
+        android:id="@+id/fab_expanded_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="80dp"
+        android:orientation="vertical"
+        android:gravity="end"
+        android:visibility="gone">
+
+        <!-- FAB Novo Cliente com Label -->
+        <LinearLayout
+            android:id="@+id/fab_new_client_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="?attr/colorSurface"
+            android:elevation="8dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:alpha="0">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Novo Cliente"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_new_client"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Novo Cliente"
+                android:src="@drawable/ic_person"
+                app:fabSize="mini"
+                app:backgroundTint="?attr/colorPrimary"
+                app:tint="?attr/colorOnPrimary" />
+
+        </LinearLayout>
+
+        <!-- FAB Nova Despesa com Label -->
+        <LinearLayout
+            android:id="@+id/fab_new_expense_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="0dp"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="?attr/colorSurface"
+            android:elevation="8dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:alpha="0">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nova Despesa"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_new_expense"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Nova Despesa"
+                android:src="@drawable/ic_money"
+                app:fabSize="mini"
+                app:backgroundTint="?attr/colorSecondary"
+                app:tint="?attr/colorOnSecondary" />
+
+        </LinearLayout>
+
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout> 

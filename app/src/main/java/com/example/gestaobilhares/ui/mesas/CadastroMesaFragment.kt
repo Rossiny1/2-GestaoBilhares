@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.TipoMesa
@@ -16,6 +17,7 @@ import com.example.gestaobilhares.data.entities.EstadoConservacao
 import com.example.gestaobilhares.databinding.FragmentCadastroMesaBinding
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.database.AppDatabase
+import kotlinx.coroutines.launch
 import java.util.*
 
 // Hilt removido - usando instanciação direta
@@ -43,6 +45,22 @@ class CadastroMesaFragment : Fragment() {
         val tipoAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, tipos)
         tipoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spTipoMesa.adapter = tipoAdapter
+
+        // ✅ NOVO: Listener para mostrar/ocultar campo de tamanho
+        binding.spTipoMesa.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                val tipoSelecionado = TipoMesa.values()[position]
+                if (tipoSelecionado == TipoMesa.SINUCA) {
+                    binding.layoutTamanhoMesa.visibility = android.view.View.VISIBLE
+                } else {
+                    binding.layoutTamanhoMesa.visibility = android.view.View.GONE
+                }
+            }
+
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
+                binding.layoutTamanhoMesa.visibility = android.view.View.GONE
+            }
+        }
 
         // Configurar spinner de tamanhos
         val tamanhos = TamanhoMesa.values().map { formatTamanhoMesa(it) }
@@ -75,26 +93,61 @@ class CadastroMesaFragment : Fragment() {
             } else {
                 binding.tilRelogio.error = null
             }
-            
-            val mesa = Mesa(
-                numero = numero,
-                clienteId = null,
-                fichasInicial = relogio,
-                fichasFinal = relogio,
-                relogioInicial = relogio,
-                relogioFinal = relogio,
-                tipoMesa = TipoMesa.values()[tipoIndex],
-                tamanho = TamanhoMesa.values()[tamanhoIndex],
-                estadoConservacao = EstadoConservacao.values()[estadoIndex],
-                ativa = true,
-                observacoes = binding.etObservacoes.text?.toString()?.takeIf { it.isNotBlank() },
-                dataInstalacao = Date(),
-                dataUltimaLeitura = Date()
-            )
-            
-            viewModel.salvarMesa(mesa)
-            Toast.makeText(requireContext(), "Mesa cadastrada com sucesso!", Toast.LENGTH_SHORT).show()
-            findNavController().popBackStack()
+
+            // ✅ CORREÇÃO: Usar lifecycleScope para evitar crashes
+            lifecycleScope.launch {
+                try {
+                    // ✅ NOVA VALIDAÇÃO: Verificar se número da mesa já existe
+                    viewModel.verificarNumeroMesaExistente(numero) { existe ->
+                        // ✅ VERIFICAÇÃO DE SEGURANÇA: Verificar se o Fragment ainda está ativo
+                        if (!isAdded || _binding == null) {
+                            return@verificarNumeroMesaExistente
+                        }
+                        
+                        if (existe) {
+                            binding.etNumeroMesa.error = "Número de mesa já existe"
+                            return@verificarNumeroMesaExistente
+                        }
+
+                        // ✅ NOVA LÓGICA: Definir tamanho padrão para tipos que não são sinuca
+                        val tipoSelecionado = TipoMesa.values()[tipoIndex]
+                        val tamanhoFinal = if (tipoSelecionado == TipoMesa.SINUCA) {
+                            TamanhoMesa.values()[tamanhoIndex]
+                        } else {
+                            TamanhoMesa.GRANDE // Tamanho padrão para outros tipos
+                        }
+                        
+                        val mesa = Mesa(
+                            numero = numero,
+                            clienteId = null,
+                            fichasInicial = relogio,
+                            fichasFinal = relogio,
+                            relogioInicial = relogio,
+                            relogioFinal = relogio,
+                            tipoMesa = tipoSelecionado,
+                            tamanho = tamanhoFinal,
+                            estadoConservacao = EstadoConservacao.values()[estadoIndex],
+                            ativa = true,
+                            observacoes = binding.etObservacoes.text?.toString()?.takeIf { it.isNotBlank() },
+                            dataInstalacao = Date(),
+                            dataUltimaLeitura = Date()
+                        )
+                        
+                        viewModel.salvarMesa(mesa)
+                        
+                        // ✅ VERIFICAÇÃO FINAL: Verificar se ainda está ativo antes de mostrar Toast
+                        if (isAdded && _binding != null) {
+                            Toast.makeText(requireContext(), "Mesa cadastrada com sucesso!", Toast.LENGTH_SHORT).show()
+                            findNavController().popBackStack()
+                        }
+                    }
+                } catch (e: Exception) {
+                    // ✅ TRATAMENTO DE ERRO: Verificar se ainda está ativo antes de mostrar erro
+                    if (isAdded && _binding != null) {
+                        Toast.makeText(requireContext(), "Erro ao salvar mesa: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
         
         binding.btnCancelar.setOnClickListener {
@@ -105,11 +158,8 @@ class CadastroMesaFragment : Fragment() {
     private fun formatTipoMesa(tipo: TipoMesa): String {
         return when (tipo) {
             TipoMesa.SINUCA -> "Sinuca"
-            TipoMesa.MAQUINA_MUSICA -> "Máquina de Música"
+            TipoMesa.JUKEBOX -> "Jukebox"
             TipoMesa.PEMBOLIM -> "Pembolim"
-            TipoMesa.SNOOKER -> "Snooker"
-            TipoMesa.POOL -> "Pool"
-            TipoMesa.BILHAR -> "Bilhar"
             TipoMesa.OUTROS -> "Outros"
         }
     }
@@ -117,6 +167,7 @@ class CadastroMesaFragment : Fragment() {
     private fun formatTamanhoMesa(tamanho: TamanhoMesa): String {
         return when (tamanho) {
             TamanhoMesa.PEQUENA -> "Pequena"
+            TamanhoMesa.MEDIA -> "Média"
             TamanhoMesa.GRANDE -> "Grande"
         }
     }

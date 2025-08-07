@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="6dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
     app:strokeColor="?attr/colorOutline"
     app:strokeWidth="1dp">
 
@@ -14,14 +14,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="10dp">
+        android:padding="12dp">
 
         <!-- Barra de status lateral -->
         <View
             android:id="@+id/statusBar"
             android:layout_width="4dp"
             android:layout_height="match_parent"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="12dp"
             android:background="@color/green_600" />
 
         <!-- Informações do cliente -->
@@ -31,109 +31,79 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- Nome do cliente -->
+            <!-- Linha 1: Nome do cliente -->
             <TextView
                 android:id="@+id/tvClientName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="?attr/colorOnSurface"
-                android:textSize="15sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:maxLines="2"
+                android:maxLines="1"
                 android:ellipsize="end"
                 tools:text="Bar do João" />
 
-            <!-- Nome fantasia -->
-            <TextView
-                android:id="@+id/tvBusinessName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="14sp"
-                android:visibility="gone"
-                tools:text="João Comércio LTDA" />
-
-            <!-- Endereço -->
+            <!-- Linha 2: Endereço -->
             <TextView
                 android:id="@+id/tvAddress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="2dp"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="13sp"
                 android:maxLines="1"
                 android:ellipsize="end"
                 tools:text="Rua das Palmeiras, 123 - Centro" />
 
-        </LinearLayout>
-
-        <!-- Lado direito: Status e valores -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="end|center_vertical"
-            android:orientation="vertical">
-
-            <!-- Tag de status especial -->
-            <TextView
-                android:id="@+id/tvSpecialTag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="6dp"
-                android:background="@drawable/rounded_tag_red"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="4dp"
-                android:textColor="@color/white"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:visibility="gone"
-                tools:text="ALTO DÉBITO" />
-
-            <!-- Tag de status geral -->
-            <TextView
-                android:id="@+id/tvStatusTag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:background="@drawable/rounded_tag_green"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="4dp"
-                android:textColor="@color/white"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                tools:text="EM DIA" />
-
-            <!-- Débito atual do último acerto -->
+            <!-- Linha 3: Status e Débito em linha única -->
             <LinearLayout
-                android:id="@+id/layoutDebtInfo"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/rounded_background"
-                android:backgroundTint="@color/red_50"
-                android:padding="12dp"
-                android:gravity="center"
-                android:orientation="vertical">
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
+                <!-- Status Tag -->
                 <TextView
+                    android:id="@+id/tvStatusTag"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Débito Atual"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:background="@drawable/rounded_tag_green"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:textColor="@color/white"
                     android:textSize="10sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:layout_marginEnd="8dp"
+                    tools:text="EM DIA" />
 
-                <LinearLayout
+                <!-- Alerta de Débito Alto (quando aplicável) -->
+                <TextView
+                    android:id="@+id/tvSpecialTag"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:background="@drawable/rounded_tag_red"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:textColor="@color/white"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:text="Débito Alto"
+                    android:visibility="gone"
+                    android:layout_marginEnd="8dp" />
+
+                <!-- Débito atual compacto -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="end|center_vertical">
 
                     <ImageView
                         android:id="@+id/ivDebtIcon"
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
                         android:layout_marginEnd="4dp"
                         android:src="@drawable/ic_attach_money"
                         android:tint="@color/red_600" />
@@ -143,7 +113,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/red_600"
-                        android:textSize="16sp"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         tools:text="R$ 45,00" />
 

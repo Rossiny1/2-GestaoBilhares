@@ -52,7 +52,8 @@ class MesasDepositoFragment : Fragment() {
             showTipoAcertoDialog(mesa)
         }
         binding.rvMesasDeposito.adapter = adapter
-        binding.rvMesasDeposito.layoutManager = LinearLayoutManager(requireContext())
+        // ✅ NOVO: Usar GridLayoutManager com 2 colunas
+        binding.rvMesasDeposito.layoutManager = androidx.recyclerview.widget.GridLayoutManager(requireContext(), 2)
     }
 
     private fun setupListeners() {
@@ -62,6 +63,11 @@ class MesasDepositoFragment : Fragment() {
         binding.btnCadastrarMesa.setOnClickListener {
             val action = MesasDepositoFragmentDirections.actionMesasDepositoFragmentToCadastroMesaFragment()
             findNavController().navigate(action)
+        }
+        
+        // ✅ NOVO: Listener para o card Total
+        binding.cardTotal.setOnClickListener {
+            showDetalhesTotalDialog()
         }
     }
 
@@ -94,13 +100,9 @@ class MesasDepositoFragment : Fragment() {
             viewModel.estatisticas.collect { stats ->
                 _binding?.let { binding ->
                     try {
-                        // Atualizar cards de estatísticas
+                        // ✅ ATUALIZADO: Atualizar cards de estatísticas
                         binding.tvTotalMesas.text = stats.totalMesas.toString()
-                        // TODO: Verificar IDs corretos no layout
-                        // binding.tvTotalSinuca.text = stats.mesasSinuca.toString()
-                        // binding.tvTotalMaquinaMusica.text = stats.mesasMaquina.toString()
-                        // binding.tvTotalPequenas.text = stats.mesasPequenas.toString()
-                        // binding.tvTotalGrandes.text = stats.mesasGrandes.toString()
+                        binding.tvTotalJukebox.text = stats.mesasMaquina.toString()
                     } catch (e: Exception) {
                         // Log do erro para debug posterior
                         android.util.Log.e("MesasDepositoFragment", "Erro ao atualizar estatísticas", e)
@@ -138,6 +140,28 @@ class MesasDepositoFragment : Fragment() {
                 }
             }
             .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    /**
+     * ✅ NOVA FUNÇÃO: Mostra diálogo com detalhes do total de mesas
+     */
+    private fun showDetalhesTotalDialog() {
+        val stats = viewModel.estatisticas.value
+        val mensagem = """
+            📊 Detalhamento por Tamanho:
+            
+            🟢 Pequenas: ${stats.mesasPequenas}
+            🟡 Médias: ${stats.mesasMedias}
+            🔴 Grandes: ${stats.mesasGrandes}
+            
+            📋 Total Geral: ${stats.totalMesas} mesas
+        """.trimIndent()
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Detalhes do Total de Mesas")
+            .setMessage(mensagem)
+            .setPositiveButton("OK", null)
             .show()
     }
 

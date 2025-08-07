@@ -164,6 +164,18 @@ class CycleExpensesViewModel(
     }
 
     /**
+     * ✅ NOVO: Busca um ciclo por ID para verificar seu status
+     */
+    suspend fun buscarCicloPorId(cicloId: Long): com.example.gestaobilhares.data.entities.CicloAcertoEntity? {
+        return try {
+            cicloAcertoRepository.buscarCicloPorId(cicloId)
+        } catch (e: Exception) {
+            android.util.Log.e("CycleExpensesViewModel", "Erro ao buscar ciclo por ID: ${e.message}")
+            null
+        }
+    }
+
+    /**
      * Limpa mensagem de erro
      */
     fun limparErro() {

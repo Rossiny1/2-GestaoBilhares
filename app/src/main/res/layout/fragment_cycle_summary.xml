@@ -11,12 +11,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="16dp">
 
         <!-- Resumo por Modalidade de Pagamento -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
             android:layout_marginBottom="16dp"
             app:cardBackgroundColor="@color/card_background_dark"
             app:cardCornerRadius="12dp"
@@ -31,7 +33,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="RESUMO POR MODALIDADE"
+                    android:text="MODALIDADE DE PAGAMENTO"
                     android:textColor="@android:color/white"
                     android:textSize="16sp"
                     android:textStyle="bold"
@@ -184,6 +186,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
             app:cardBackgroundColor="@color/card_background_dark"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp">

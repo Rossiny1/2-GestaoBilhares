@@ -22,6 +22,8 @@ import com.example.gestaobilhares.R
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
+import com.example.gestaobilhares.ui.settlement.BluetoothPrinterHelper
+import androidx.core.app.ActivityCompat
 
 /**
  * Fragment para exibir detalhes de um acerto específico.
@@ -242,20 +244,224 @@ class SettlementDetailFragment : Fragment() {
     private fun imprimirRecibo(settlement: SettlementDetailViewModel.SettlementDetail) {
         lifecycleScope.launch {
             try {
-                val clienteNome = "Cliente" // Usar nome genérico por enquanto
+                // Verificar permissões Bluetooth
+                if (!hasBluetoothPermissions()) {
+                    requestBluetoothPermissions()
+                    return@launch
+                }
                 
-                AppLogger.log("SettlementDetailFragment", "Preparando impressão para $clienteNome")
-                AppLogger.log("SettlementDetailFragment", "Total de mesas: ${settlement.acertoMesas.size}")
-                AppLogger.log("SettlementDetailFragment", "Valor total: R$ ${settlement.valorTotal}")
+                val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+                if (bluetoothAdapter == null) {
+                    android.widget.Toast.makeText(requireContext(), "Bluetooth não disponível neste dispositivo", android.widget.Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 
-                // Simples - apenas mostrar toast por enquanto para testar logs
-                android.widget.Toast.makeText(requireContext(), "Impressão preparada - ver logs", android.widget.Toast.LENGTH_SHORT).show()
+                if (!bluetoothAdapter.isEnabled) {
+                    android.widget.Toast.makeText(requireContext(), "Ative o Bluetooth para imprimir", android.widget.Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                
+                val pairedDevices = bluetoothAdapter.bondedDevices
+                if (pairedDevices.isEmpty()) {
+                    android.widget.Toast.makeText(requireContext(), "Nenhuma impressora Bluetooth pareada", android.widget.Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                
+                // Diálogo de seleção de impressora
+                val deviceList = pairedDevices.toList()
+                val deviceNames = deviceList.map { it.name ?: it.address }.toTypedArray()
+                
+                android.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Selecione a impressora")
+                    .setItems(deviceNames) { _, which ->
+                        val printerDevice = deviceList[which]
+                        imprimirComImpressoraSelecionada(settlement, printerDevice)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
                 
             } catch (e: Exception) {
                 AppLogger.log("SettlementDetailFragment", "Erro ao preparar impressão: ${e.message}")
-                android.widget.Toast.makeText(requireContext(), "Erro ao preparar impressão", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(requireContext(), "Erro ao preparar impressão: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
+    }
+    
+    /**
+     * ✅ NOVA FUNÇÃO: Imprime com a impressora selecionada
+     */
+    private fun imprimirComImpressoraSelecionada(settlement: SettlementDetailViewModel.SettlementDetail, printerDevice: android.bluetooth.BluetoothDevice) {
+        // Mostrar diálogo de loading
+        val loadingDialog = android.app.AlertDialog.Builder(requireContext())
+            .setMessage("Imprimindo recibo...")
+            .setCancelable(false)
+            .create()
+        loadingDialog.show()
+        
+        // Executar impressão em thread separada
+        Thread {
+            var erro: String? = null
+            try {
+                val printerHelper = BluetoothPrinterHelper(printerDevice)
+                if (printerHelper.connect()) {
+                    // Inflar o layout do recibo
+                    val inflater = android.view.LayoutInflater.from(requireContext())
+                    val reciboView = inflater.inflate(com.example.gestaobilhares.R.layout.layout_recibo_impressao, null) as android.view.ViewGroup
+                    
+                    // Preencher campos do recibo
+                    preencherLayoutRecibo(reciboView, settlement)
+                    
+                    // Imprimir
+                    printerHelper.printReciboLayoutBitmap(reciboView)
+                    printerHelper.disconnect()
+                } else {
+                    erro = "Falha ao conectar à impressora"
+                }
+            } catch (e: Exception) {
+                erro = when {
+                    e.message?.contains("socket") == true -> "Impressora desligada ou fora de alcance"
+                    e.message?.contains("broken pipe") == true -> "Falha ao enviar dados. Impressora pode estar desconectada"
+                    else -> "Erro inesperado: ${e.message ?: "Desconhecido"}"
+                }
+            }
+            
+            // Atualizar UI na thread principal
+            requireActivity().runOnUiThread {
+                loadingDialog.dismiss()
+                if (erro == null) {
+                    android.widget.Toast.makeText(requireContext(), "Recibo enviado para impressão!", android.widget.Toast.LENGTH_SHORT).show()
+                } else {
+                    android.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Erro na impressão")
+                        .setMessage(erro)
+                        .setPositiveButton("Tentar novamente") { _, _ ->
+                            imprimirComImpressoraSelecionada(settlement, printerDevice)
+                        }
+                        .setNegativeButton("Cancelar", null)
+                        .show()
+                }
+            }
+        }.start()
+    }
+    
+    /**
+     * ✅ NOVA FUNÇÃO: Preenche o layout do recibo com os dados do acerto
+     */
+    private fun preencherLayoutRecibo(reciboView: android.view.ViewGroup, settlement: SettlementDetailViewModel.SettlementDetail) {
+        val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
+        
+        // Buscar as views do layout
+        val txtTitulo = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtTituloRecibo)
+        val txtClienteValor = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtClienteValor)
+        val txtData = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtData)
+        val txtMesas = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtMesas)
+        val txtFichasJogadas = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtFichasJogadas)
+        val txtDebitoAnterior = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtDebitoAnterior)
+        val txtSubtotalMesas = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtSubtotalMesas)
+        val txtTotal = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtTotal)
+        val txtDesconto = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtDesconto)
+        val txtPagamentos = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtPagamentos)
+        val txtObservacoes = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtObservacoes)
+        
+        // Preencher dados
+        txtTitulo.text = "RECIBO DE ACERTO #${settlement.id.toString().padStart(4, '0')}"
+        txtClienteValor.text = "Cliente: ${settlement.representante ?: "Cliente"}"
+        txtData.text = "Data: ${settlement.date}"
+        
+        // Mesas
+        val mesasText = StringBuilder()
+        var totalFichasJogadas = 0
+        settlement.acertoMesas.forEach { mesa ->
+            val numeroMesa = mesa.mesaId.toString()
+            if (mesa.valorFixo > 0) {
+                mesasText.append("Mesa $numeroMesa: ${formatter.format(mesa.valorFixo)}/mês\n")
+            } else {
+                val fichasJogadas = mesa.relogioFinal - mesa.relogioInicial
+                totalFichasJogadas += fichasJogadas
+                mesasText.append("Mesa $numeroMesa: ${mesa.relogioInicial} → ${mesa.relogioFinal} ($fichasJogadas fichas)\n")
+            }
+        }
+        txtMesas.text = mesasText.toString()
+        
+        if (totalFichasJogadas > 0) {
+            txtFichasJogadas.text = "Total fichas jogadas: $totalFichasJogadas"
+            txtFichasJogadas.visibility = android.view.View.VISIBLE
+        } else {
+            txtFichasJogadas.visibility = android.view.View.GONE
+        }
+        
+        // Valores financeiros
+        if (settlement.debitoAnterior > 0) {
+            txtDebitoAnterior.text = "Débito anterior: ${formatter.format(settlement.debitoAnterior)}"
+            txtDebitoAnterior.visibility = android.view.View.VISIBLE
+        } else {
+            txtDebitoAnterior.visibility = android.view.View.GONE
+        }
+        
+        txtSubtotalMesas.text = "Subtotal mesas: ${formatter.format(settlement.valorTotal)}"
+        txtTotal.text = "Total: ${formatter.format(settlement.valorTotal)}"
+        
+        if (settlement.desconto > 0) {
+            txtDesconto.text = "Desconto: ${formatter.format(settlement.desconto)}"
+            txtDesconto.visibility = android.view.View.VISIBLE
+        } else {
+            txtDesconto.visibility = android.view.View.GONE
+        }
+        
+        // Métodos de pagamento
+        if (settlement.metodosPagamento.isNotEmpty()) {
+            val pagamentosText = StringBuilder("Pagamento:\n")
+            settlement.metodosPagamento.forEach { (metodo, valor) ->
+                pagamentosText.append("$metodo: ${formatter.format(valor)}\n")
+            }
+            txtPagamentos.text = pagamentosText.toString()
+            txtPagamentos.visibility = android.view.View.VISIBLE
+        } else {
+            txtPagamentos.visibility = android.view.View.GONE
+        }
+        
+        // Observações
+        if (settlement.observacoes.isNotBlank()) {
+            txtObservacoes.text = "Obs: ${settlement.observacoes}"
+            txtObservacoes.visibility = android.view.View.VISIBLE
+        } else {
+            txtObservacoes.visibility = android.view.View.GONE
+        }
+        
+        // Ajustar estilos para títulos e valores principais
+        txtTitulo.setTypeface(null, android.graphics.Typeface.BOLD)
+        txtClienteValor.setTypeface(null, android.graphics.Typeface.BOLD)
+        txtMesas.setTypeface(null, android.graphics.Typeface.BOLD)
+        txtPagamentos.setTypeface(null, android.graphics.Typeface.BOLD)
+        txtObservacoes.setTypeface(null, android.graphics.Typeface.BOLD)
+    }
+    
+    /**
+     * ✅ NOVA FUNÇÃO: Verifica permissões Bluetooth
+     */
+    private fun hasBluetoothPermissions(): Boolean {
+        val bluetoothPermissions = arrayOf(
+            android.Manifest.permission.BLUETOOTH,
+            android.Manifest.permission.BLUETOOTH_ADMIN,
+            android.Manifest.permission.BLUETOOTH_CONNECT
+        )
+        
+        return bluetoothPermissions.all {
+            androidx.core.content.ContextCompat.checkSelfPermission(requireContext(), it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+    }
+    
+    /**
+     * ✅ NOVA FUNÇÃO: Solicita permissões Bluetooth
+     */
+    private fun requestBluetoothPermissions() {
+        val bluetoothPermissions = arrayOf(
+            android.Manifest.permission.BLUETOOTH,
+            android.Manifest.permission.BLUETOOTH_ADMIN,
+            android.Manifest.permission.BLUETOOTH_CONNECT
+        )
+        
+        androidx.core.app.ActivityCompat.requestPermissions(requireActivity(), bluetoothPermissions, 1001)
     }
 
     // ✅ NOVA FUNCIONALIDADE: Compartilhar via WhatsApp

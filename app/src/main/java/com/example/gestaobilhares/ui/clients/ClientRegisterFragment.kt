@@ -69,6 +69,11 @@ class ClientRegisterFragment : Fragment() {
         binding.btnSave.setOnClickListener {
             saveClient()
         }
+
+        // ✅ NOVO: Definir data de cadastro atual
+        val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
+            .format(java.util.Date())
+        binding.etClienteDesde.setText(dataAtual)
     }
 
     private fun observeViewModel() {
@@ -199,8 +204,13 @@ class ClientRegisterFragment : Fragment() {
             
             // Obter valores dos campos
             val name = binding.etClientName.text.toString().trim()
+            val cpfCnpj = binding.etCpfCnpj.text.toString().trim()
             val address = binding.etAddress.text.toString().trim()
+            val bairro = binding.etBairro.text.toString().trim()
+            val cidade = binding.etCidade.text.toString().trim()
+            val estado = binding.etEstado.text.toString().trim()
             val phone = binding.etPhone.text.toString().trim()
+            val phone2 = binding.etPhone2.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
             val valorFicha = binding.etValorFicha.text.toString().trim().toDoubleOrNull() ?: 0.0
             val comissaoFicha = binding.etComissaoFicha.text.toString().trim().toDoubleOrNull() ?: 0.0
@@ -233,6 +243,13 @@ class ClientRegisterFragment : Fragment() {
                 binding.etAddress.requestFocus()
                 return
             }
+
+            // ✅ NOVA VALIDAÇÃO: Comissão por ficha é obrigatória
+            if (comissaoFicha <= 0) {
+                binding.etComissaoFicha.error = "Comissão por ficha é obrigatória"
+                binding.etComissaoFicha.requestFocus()
+                return
+            }
             
             // Validação opcional de email
             if (email.isNotEmpty() && !isValidEmail(email)) {
@@ -257,13 +274,18 @@ class ClientRegisterFragment : Fragment() {
             // Criar entidade Cliente
             val cliente = com.example.gestaobilhares.data.entities.Cliente(
                 nome = name,
+                cpfCnpj = if (cpfCnpj.isNotEmpty()) cpfCnpj else null,
                 endereco = address,
-                telefone = phone,
-                email = email,
+                bairro = if (bairro.isNotEmpty()) bairro else null,
+                cidade = if (cidade.isNotEmpty()) cidade else null,
+                estado = if (estado.isNotEmpty()) estado else null,
+                telefone = if (phone.isNotEmpty()) phone else null,
+                telefone2 = if (phone2.isNotEmpty()) phone2 else null,
+                email = if (email.isNotEmpty()) email else null,
                 valorFicha = valorFicha,
                 comissaoFicha = comissaoFicha,
                 numeroContrato = if (numeroContrato.isNotEmpty()) numeroContrato else null,
-                observacoes = observations,
+                observacoes = if (observations.isNotEmpty()) observations else null,
                 rotaId = if (args.rotaId != 0L) args.rotaId else {
                     // ✅ CORREÇÃO: Em modo edição, usar rotaId do cliente existente
                     viewModel.clienteParaEdicao.value?.rotaId ?: 1L
@@ -284,8 +306,13 @@ class ClientRegisterFragment : Fragment() {
     
     private fun clearErrors() {
         binding.etClientName.error = null
+        binding.etCpfCnpj.error = null
         binding.etAddress.error = null
+        binding.etBairro.error = null
+        binding.etCidade.error = null
+        binding.etEstado.error = null
         binding.etPhone.error = null
+        binding.etPhone2.error = null
         binding.etEmail.error = null
         binding.etValorFicha.error = null
         binding.etComissaoFicha.error = null
@@ -323,13 +350,28 @@ class ClientRegisterFragment : Fragment() {
     private fun preencherCamposComDadosCliente(cliente: com.example.gestaobilhares.data.entities.Cliente) {
         binding.apply {
             etClientName.setText(cliente.nome)
+            etCpfCnpj.setText(cliente.cpfCnpj ?: "")
             etAddress.setText(cliente.endereco ?: "")
+            etBairro.setText(cliente.bairro ?: "")
+            etCidade.setText(cliente.cidade ?: "")
+            etEstado.setText(cliente.estado ?: "")
             etPhone.setText(cliente.telefone ?: "")
+            etPhone2.setText(cliente.telefone2 ?: "")
             etEmail.setText(cliente.email ?: "")
             etValorFicha.setText(cliente.valorFicha.toString())
             etComissaoFicha.setText(cliente.comissaoFicha.toString())
             etNumeroContrato.setText(cliente.numeroContrato ?: "")
             etObservations.setText(cliente.observacoes ?: "")
+            
+            // ✅ NOVO: Preencher data de cadastro
+            val dataCadastro = if (cliente.dataCadastro != null) {
+                java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
+                    .format(cliente.dataCadastro)
+            } else {
+                java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
+                    .format(java.util.Date())
+            }
+            etClienteDesde.setText(dataCadastro)
             
             // Alterar título para modo edição
             // TODO: Adicionar TextView para título no layout se não existir

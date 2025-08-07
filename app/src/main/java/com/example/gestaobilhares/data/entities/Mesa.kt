@@ -77,31 +77,28 @@ data class Mesa(
 /**
  * Enum para tipos de mesa
  */
-@Parcelize
-enum class TipoMesa : Parcelable {
+enum class TipoMesa {
     SINUCA,
-    MAQUINA_MUSICA,
+    JUKEBOX,
     PEMBOLIM,
-    SNOOKER,
-    POOL,
-    BILHAR,
     OUTROS
 }
+
+
 
 /**
  * Enum para tamanhos de mesa
  */
-@Parcelize
-enum class TamanhoMesa : Parcelable {
+enum class TamanhoMesa {
     PEQUENA,
+    MEDIA,
     GRANDE
 }
 
 /**
  * Enum para estado de conservação
  */
-@Parcelize
-enum class EstadoConservacao : Parcelable {
+enum class EstadoConservacao {
     OTIMO,
     BOM,
     RUIM

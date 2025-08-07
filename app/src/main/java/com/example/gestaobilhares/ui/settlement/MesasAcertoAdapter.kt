@@ -1,5 +1,7 @@
 package com.example.gestaobilhares.ui.settlement
 
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -10,6 +12,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestaobilhares.data.entities.Mesa
+import com.example.gestaobilhares.data.entities.getDisplayName
 import com.example.gestaobilhares.databinding.ItemMesaAcertoBinding
 import com.example.gestaobilhares.ui.viewmodel.MesaAcertoState
 import java.text.NumberFormat
@@ -23,6 +26,12 @@ class MesasAcertoAdapter(
     // Lista para manter o estado dos campos de entrada de cada mesa
     private val mesaStates = mutableMapOf<Long, MesaAcertoState>()
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+    
+    // ✅ NOVO: Flag para controlar se estamos no processo de binding
+    private var isBinding = false
+    
+    // ✅ NOVO: Handler para agendar notificações de mudança
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
      * ✅ NOVO: Calcula as fichas jogadas considerando reinício do relógio
@@ -82,6 +91,29 @@ class MesasAcertoAdapter(
         return relogioFinal >= relogioInicial
     }
 
+    /**
+     * ✅ NOVO: Método seguro para notificar mudanças no adapter
+     */
+    private fun safeNotifyItemChanged(position: Int) {
+        if (position != RecyclerView.NO_POSITION && !isBinding) {
+            try {
+                notifyItemChanged(position)
+            } catch (e: IllegalStateException) {
+                Log.w("MesasAcertoAdapter", "Tentativa de notificar mudança durante layout, agendando para depois")
+                // Usar Handler para agendar a notificação para depois do layout
+                mainHandler.post {
+                    try {
+                        if (position < itemCount) {
+                            notifyItemChanged(position)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MesasAcertoAdapter", "Erro ao notificar mudança agendada: ${e.message}")
+                    }
+                }
+            }
+        }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MesaAcertoViewHolder {
         val binding = ItemMesaAcertoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return MesaAcertoViewHolder(binding)
@@ -95,10 +127,15 @@ class MesasAcertoAdapter(
     }
 
     override fun onBindViewHolder(holder: MesaAcertoViewHolder, position: Int) {
-        val mesa = getItem(position)
-        Log.d("MesasAcertoAdapter", "Binding mesa na posição $position: Mesa ${mesa.numero} (ID: ${mesa.id})")
-        Log.d("MesasAcertoAdapter", "ViewHolder: ${holder.hashCode()}")
-        holder.bind(mesa)
+        isBinding = true
+        try {
+            val mesa = getItem(position)
+            Log.d("MesasAcertoAdapter", "Binding mesa na posição $position: Mesa ${mesa.numero} (ID: ${mesa.id})")
+            Log.d("MesasAcertoAdapter", "ViewHolder: ${holder.hashCode()}")
+            holder.bind(mesa)
+        } finally {
+            isBinding = false
+        }
     }
 
     override fun submitList(list: List<MesaDTO>?) {
@@ -133,9 +170,11 @@ class MesasAcertoAdapter(
                 )
             }
 
-            // Remover TextWatchers antes de setar texto
+            // ✅ CORREÇÃO: Remover listeners antes de configurar
             binding.etRelogioInicial.removeTextChangedListener(relogioInicialWatcher)
             binding.etRelogioFinal.removeTextChangedListener(relogioFinalWatcher)
+            binding.cbRelogioDefeito.setOnCheckedChangeListener(null)
+            binding.cbRelogioReiniciou.setOnCheckedChangeListener(null)
 
             // Atualizar campos apenas se valor mudou
             val atualInicial = binding.etRelogioInicial.text.toString()
@@ -150,10 +189,12 @@ class MesasAcertoAdapter(
                 binding.etRelogioFinal.setText(novoFinal)
                 binding.etRelogioFinal.setSelection(novoFinal.length)
             }
+            
+            // ✅ CORREÇÃO: Setar checkboxes sem triggerar listeners
             binding.cbRelogioDefeito.isChecked = state.comDefeito
             binding.cbRelogioReiniciou.isChecked = state.relogioReiniciou
 
-            // Adicionar TextWatchers novamente
+            // ✅ CORREÇÃO: Adicionar TextWatchers com verificações de segurança
             relogioInicialWatcher = object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -163,7 +204,7 @@ class MesasAcertoAdapter(
                         state.relogioInicial = valor
                         updateSubtotal(state)
                         onDataChanged()
-                        notifyItemChanged(adapterPosition)
+                        safeNotifyItemChanged(adapterPosition)
                     }
                 }
             }
@@ -176,14 +217,14 @@ class MesasAcertoAdapter(
                         state.relogioFinal = valor
                         updateSubtotal(state)
                         onDataChanged()
-                        notifyItemChanged(adapterPosition)
+                        safeNotifyItemChanged(adapterPosition)
                     }
                 }
             }
             binding.etRelogioInicial.addTextChangedListener(relogioInicialWatcher)
             binding.etRelogioFinal.addTextChangedListener(relogioFinalWatcher)
 
-            // ✅ RESTAURADO: Listeners dos checkboxes que estavam faltando
+            // ✅ CORREÇÃO: Listeners dos checkboxes com verificações de segurança
             binding.cbRelogioDefeito.setOnCheckedChangeListener { _, isChecked ->
                 Log.d("MesasAcertoAdapter", "=== CHECKBOX RELÓGIO COM DEFEITO ===")
                 Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Relógio com defeito = $isChecked")
@@ -204,7 +245,7 @@ class MesasAcertoAdapter(
                     
                     updateSubtotal(state)
                     onDataChanged()
-                    notifyItemChanged(adapterPosition)
+                    safeNotifyItemChanged(adapterPosition)
                 }
             }
             
@@ -216,13 +257,14 @@ class MesasAcertoAdapter(
                     state.relogioReiniciou = isChecked
                     updateSubtotal(state)
                     onDataChanged()
-                    notifyItemChanged(adapterPosition)
+                    safeNotifyItemChanged(adapterPosition)
                 }
             }
 
             // Layouts e textos
-            binding.tvNumeroMesa.text = "Mesa ${mesa.numero}"
-            binding.tvTipoMesa.text = mesa.tipoMesa
+            // ✅ NOVO: Usar o tipo da mesa como título principal
+            binding.tvNumeroMesa.text = "${mesa.tipoMesa.getDisplayName()} ${mesa.numero}"
+            binding.tvTipoMesa.text = mesa.tipoMesa.getDisplayName()
             val isValorFixo = mesa.valorFixo > 0
             if (isValorFixo) {
                 binding.layoutFichas.visibility = View.GONE
@@ -298,7 +340,7 @@ class MesasAcertoAdapter(
                     }
                 }
                 
-                binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(subtotal)
+                binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(state.subtotal)
             }
         }
     }

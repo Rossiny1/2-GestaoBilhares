@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestaobilhares.data.entities.Mesa
+import com.example.gestaobilhares.data.entities.getDisplayName
 import com.example.gestaobilhares.databinding.ItemMesaClienteBinding
 
 class MesasDepositoAdapter(
@@ -38,10 +39,14 @@ class MesasDepositoAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(mesa: Mesa) {
             android.util.Log.d("MesasDepositoAdapter", "🎯 Bind mesa: ${mesa.numero}")
-            binding.tvNumeroMesa.text = "Mesa ${mesa.numero}"
+            
+            // ✅ NOVO: Usar o tipo da mesa como título do card
+            binding.tvMesaLabel.text = mesa.tipoMesa.getDisplayName()
+            binding.tvNumeroMesa.text = mesa.numero
+            
             binding.btnRetirarMesa.visibility = ViewGroup.GONE // Não exibe botão de retirar no depósito
             binding.root.setOnClickListener { onMesaClick(mesa) }
-            android.util.Log.d("MesasDepositoAdapter", "✅ Mesa ${mesa.numero} configurada no ViewHolder")
+            android.util.Log.d("MesasDepositoAdapter", "✅ Mesa ${mesa.numero} configurada no ViewHolder - Tipo: ${mesa.tipoMesa.getDisplayName()}")
         }
     }
 

@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestaobilhares.data.entities.Mesa
+import com.example.gestaobilhares.data.entities.getDisplayName
 import com.example.gestaobilhares.databinding.ItemMesaClienteBinding
 
 /**
@@ -33,7 +34,10 @@ class MesasAdapter(
         private val onRetirarMesa: (Mesa) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(mesa: Mesa) {
-            binding.tvNumeroMesa.text = "Mesa ${mesa.numero}"
+            // ✅ NOVO: Usar o tipo da mesa como título do card
+            binding.tvMesaLabel.text = mesa.tipoMesa.getDisplayName()
+            binding.tvNumeroMesa.text = mesa.numero
+            
             if (mesa.clienteId != null) {
                 binding.btnRetirarMesa.visibility = View.VISIBLE
                 binding.btnRetirarMesa.setOnClickListener { onRetirarMesa(mesa) }

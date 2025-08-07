@@ -110,6 +110,17 @@ class CycleHistoryViewModel(
                     val despesasCiclo = appRepository.buscarDespesasPorCicloId(ciclo.id).first()
                     val valorTotalDespesas = despesasCiclo.sumOf { despesa -> despesa.valor }
 
+                    // ✅ CORREÇÃO: Calcular clientes acertados e total em tempo real para ciclos em andamento
+                    val (clientesAcertados, totalClientes) = if (ciclo.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
+                        // Para ciclos finalizados, usar dados salvos
+                        Pair(ciclo.clientesAcertados, ciclo.totalClientes)
+                    } else {
+                        // Para ciclos em andamento, calcular em tempo real
+                        val clientesAcertadosReal = calcularClientesAcertadosEmTempoReal(ciclo.id, rotaId)
+                        val totalClientesReal = clientes.size
+                        Pair(clientesAcertadosReal, totalClientesReal)
+                    }
+
                     CycleHistoryItem(
                         id = ciclo.id,
                         rotaId = ciclo.rotaId,
@@ -120,8 +131,8 @@ class CycleHistoryViewModel(
                         valorTotalDespesas = valorTotalDespesas, // ✅ Usar valor real calculado
                         lucroLiquido = ciclo.valorTotalAcertado - valorTotalDespesas, // ✅ Recalcular lucro
                         debitoTotal = debitoTotal,
-                        clientesAcertados = ciclo.clientesAcertados, // Usar dados já calculados
-                        totalClientes = ciclo.totalClientes,       // Usar dados já calculados
+                        clientesAcertados = clientesAcertados, // ✅ Usar dados calculados em tempo real
+                        totalClientes = totalClientes,       // ✅ Usar dados calculados em tempo real
                         status = ciclo.status
                     )
                 }
@@ -235,6 +246,14 @@ class CycleHistoryViewModel(
     }
 
     /**
+     * ✅ NOVA FUNÇÃO: Recarrega dados em tempo real (útil após salvar acertos)
+     */
+    fun recarregarDadosTempoReal(rotaId: Long) {
+        android.util.Log.d("CycleHistoryViewModel", "🔄 Recarregando dados em tempo real para rotaId: $rotaId")
+        carregarHistoricoCiclos(rotaId)
+    }
+
+    /**
      * Limpa mensagens de erro
      */
     fun limparErro() {
@@ -298,6 +317,26 @@ class CycleHistoryViewModel(
         } catch (e: Exception) {
             android.util.Log.e("CycleHistoryViewModel", "Erro ao buscar clientes: ${e.message}")
             emptyList()
+        }
+    }
+
+    /**
+     * ✅ NOVA FUNÇÃO: Calcula clientes acertados em tempo real para ciclos em andamento
+     */
+    private suspend fun calcularClientesAcertadosEmTempoReal(cicloId: Long, rotaId: Long): Int {
+        return try {
+            // Buscar acertos reais do banco de dados para este ciclo
+            val acertos = appRepository.buscarAcertosPorCicloId(cicloId).first()
+            
+            // Contar clientes únicos que foram acertados
+            val clientesAcertados = acertos.map { it.clienteId }.distinct()
+            
+            android.util.Log.d("CycleHistoryViewModel", "✅ Clientes acertados em tempo real no ciclo $cicloId: ${clientesAcertados.size}")
+            
+            clientesAcertados.size
+        } catch (e: Exception) {
+            android.util.Log.e("CycleHistoryViewModel", "Erro ao calcular clientes acertados em tempo real: ${e.message}")
+            0
         }
     }
 } 

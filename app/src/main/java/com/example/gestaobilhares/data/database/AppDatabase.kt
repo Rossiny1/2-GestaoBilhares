@@ -27,7 +27,7 @@ import com.example.gestaobilhares.data.entities.*
         CategoriaDespesa::class, // ✅ NOVO: CATEGORIAS DE DESPESAS
         TipoDespesa::class // ✅ NOVO: TIPOS DE DESPESAS
     ],
-    version = 12, // ✅ MIGRATION: Adicionado campo debito_total em ciclos_acerto
+    version = 14, // ✅ MIGRATION: Corrigido schema da tabela clientes
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -107,12 +107,78 @@ abstract class AppDatabase : RoomDatabase() {
                         database.execSQL("ALTER TABLE ciclos_acerto ADD COLUMN debito_total REAL NOT NULL DEFAULT 0.0")
                     }
                 }
+                
+                val MIGRATION_12_13 = object : androidx.room.migration.Migration(12, 13) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Limpar dados das mesas para evitar problemas com enums antigos
+                        database.execSQL("DELETE FROM mesas")
+                    }
+                }
+                
+                val MIGRATION_13_14 = object : androidx.room.migration.Migration(13, 14) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Recriar tabela clientes com schema correto
+                        database.execSQL("""
+                            CREATE TABLE clientes_new (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                nome TEXT NOT NULL,
+                                nome_fantasia TEXT,
+                                cpf_cnpj TEXT,
+                                telefone TEXT,
+                                telefone2 TEXT,
+                                email TEXT,
+                                endereco TEXT,
+                                bairro TEXT,
+                                cidade TEXT,
+                                estado TEXT,
+                                cep TEXT,
+                                rota_id INTEGER NOT NULL,
+                                valor_ficha REAL NOT NULL DEFAULT 0.0,
+                                comissao_ficha REAL NOT NULL DEFAULT 0.0,
+                                numero_contrato TEXT,
+                                debito_anterior REAL NOT NULL DEFAULT 0.0,
+                                debito_atual REAL NOT NULL DEFAULT 0.0,
+                                ativo INTEGER NOT NULL DEFAULT 1,
+                                observacoes TEXT,
+                                data_cadastro INTEGER NOT NULL,
+                                data_ultima_atualizacao INTEGER NOT NULL,
+                                FOREIGN KEY (rota_id) REFERENCES rotas (id) ON DELETE CASCADE
+                            )
+                        """)
+                        
+                        // Copiar dados existentes
+                        database.execSQL("""
+                            INSERT INTO clientes_new (
+                                id, nome, nome_fantasia, cpf_cnpj, telefone, email, 
+                                endereco, cidade, estado, cep, rota_id, valor_ficha, 
+                                comissao_ficha, numero_contrato, debito_anterior, 
+                                debito_atual, ativo, observacoes, data_cadastro, 
+                                data_ultima_atualizacao
+                            )
+                            SELECT 
+                                id, nome, nome_fantasia, cnpj, telefone, email, 
+                                endereco, cidade, estado, cep, rota_id, valor_ficha, 
+                                comissao_ficha, numero_contrato, debito_anterior, 
+                                debito_atual, ativo, observacoes, data_cadastro, 
+                                data_ultima_atualizacao
+                            FROM clientes
+                        """)
+                        
+                        // Remover tabela antiga e renomear nova
+                        database.execSQL("DROP TABLE clientes")
+                        database.execSQL("ALTER TABLE clientes_new RENAME TO clientes")
+                        
+                        // Recriar índice
+                        database.execSQL("CREATE INDEX index_clientes_rota_id ON clientes (rota_id)")
+                    }
+                }
+                
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_11_12)
+                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
                     .build()
                 INSTANCE = instance
                 instance

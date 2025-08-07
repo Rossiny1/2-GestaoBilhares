@@ -96,12 +96,53 @@ class CycleExpensesFragment : Fragment() {
                     }
                 },
                 onExpenseDelete = { despesa ->
-                    if (!isCicloFinalizado) {
-                        mostrarDialogoConfirmarExclusao(despesa)
-                    }
+                    // ✅ NOVA LÓGICA: Verificar status real do ciclo antes de permitir exclusão
+                    verificarEExcluirDespesa(despesa)
                 }
             )
         }
+    }
+    
+    /**
+     * ✅ NOVA FUNÇÃO: Verifica o status real do ciclo e permite ou nega exclusão
+     */
+    private fun verificarEExcluirDespesa(despesa: CycleExpenseItem) {
+        lifecycleScope.launch {
+            try {
+                // Buscar o status real do ciclo
+                val cicloReal = viewModel.buscarCicloPorId(cicloId)
+                
+                if (cicloReal?.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO) {
+                    // Ciclo em andamento - permitir exclusão
+                    mostrarDialogoConfirmarExclusao(despesa)
+                } else {
+                    // Ciclo finalizado - mostrar diálogo explicativo
+                    mostrarDialogoCicloFinalizado()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("CycleExpensesFragment", "Erro ao verificar status do ciclo: ${e.message}")
+                // Em caso de erro, mostrar diálogo explicativo por segurança
+                mostrarDialogoCicloFinalizado()
+            }
+        }
+    }
+    
+    /**
+     * ✅ NOVA FUNÇÃO: Mostra diálogo explicativo para ciclos finalizados
+     */
+    private fun mostrarDialogoCicloFinalizado() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("❌ Exclusão Não Permitida")
+            .setMessage(
+                "Não é possível excluir despesas de um ciclo finalizado.\n\n" +
+                "• Ciclos finalizados são imutáveis para manter a integridade dos dados\n" +
+                "• As despesas fazem parte do histórico oficial do acerto\n" +
+                "• Para correções, entre em contato com o administrador\n\n" +
+                "Status atual: Ciclo Finalizado"
+            )
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton("Entendi", null)
+            .show()
     }
 
     /**

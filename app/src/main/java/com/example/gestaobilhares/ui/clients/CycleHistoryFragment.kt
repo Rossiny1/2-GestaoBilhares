@@ -148,6 +148,17 @@ class CycleHistoryFragment : Fragment() {
                 }
             }
         }
+
+        // ✅ NOVO: Observar evento de acerto salvo para atualizar dados em tempo real
+        findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Boolean>("acerto_salvo")?.observe(
+            viewLifecycleOwner
+        ) { acertoSalvo ->
+            if (acertoSalvo == true) {
+                android.util.Log.d("CycleHistoryFragment", "🔄 Evento acerto_salvo recebido, recarregando dados em tempo real para rotaId=$rotaId")
+                viewModel.recarregarDadosTempoReal(rotaId)
+                findNavController().currentBackStackEntry?.savedStateHandle?.set("acerto_salvo", false)
+            }
+        }
     }
 
     private fun atualizarEstatisticas(stats: CycleStatistics) {

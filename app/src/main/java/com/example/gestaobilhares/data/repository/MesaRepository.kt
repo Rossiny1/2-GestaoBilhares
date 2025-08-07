@@ -61,4 +61,9 @@ class MesaRepository(
      */
     suspend fun obterMesasPorClienteDireto(clienteId: Long): List<Mesa> =
         mesaDao.obterMesasPorClienteDireto(clienteId)
+
+    /**
+     * ✅ NOVA FUNÇÃO: Obtém todas as mesas (disponíveis e em uso)
+     */
+    fun obterTodasMesas(): Flow<List<Mesa>> = mesaDao.obterTodasMesas()
 } 

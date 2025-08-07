@@ -86,7 +86,8 @@ class AcertoMesaDetailAdapter(
             AppLogger.log("AcertoMesaDetailAdapter", "Tipo da mesa: $tipoMesa")
             AppLogger.log("AcertoMesaDetailAdapter", "Subtotal: ${formatter.format(mesa.subtotal)}")
             
-            binding.tvMesaNumero.text = "Mesa $numeroMesa"
+            // ✅ NOVO: Usar o tipo da mesa como título principal
+            binding.tvMesaNumero.text = "${tipoMesa} $numeroMesa"
             binding.tvTipoMesa.text = tipoMesa
 
             if (mesa.valorFixo > 0) {

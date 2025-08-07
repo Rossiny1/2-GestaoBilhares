@@ -163,22 +163,11 @@ class ClientListFragment : Fragment() {
             }
             
             binding.btnFinishRoute.setOnClickListener {
-                viewModel.finalizarRota()
-                mostrarFeedback("Rota finalizada com sucesso!", Snackbar.LENGTH_SHORT)
+                mostrarDialogoConfirmacaoFinalizar()
             }
             
-            // Ações rápidas (substituindo FABs)
-            binding.btnAddClient.setOnClickListener {
-                val action = ClientListFragmentDirections
-                    .actionClientListFragmentToClientRegisterFragment(args.rotaId)
-                findNavController().navigate(action)
-            }
-            
-            binding.btnAddExpense.setOnClickListener {
-                val action = ClientListFragmentDirections
-                    .actionClientListFragmentToExpenseRegisterFragment(args.rotaId)
-                findNavController().navigate(action)
-            }
+            // Configurar FAB expandível
+            configurarFabExpandivel()
             
             // Filtros rápidos
             binding.btnFilterActive.setOnClickListener {
@@ -196,10 +185,7 @@ class ClientListFragment : Fragment() {
                 atualizarEstadoFiltros(binding.btnFilterAll)
             }
 
-            val fabLogs: FloatingActionButton? = view?.findViewById(R.id.fab_logs)
-            fabLogs?.setOnClickListener {
-                findNavController().navigate(R.id.logViewerFragment)
-            }
+
         }
     }
 
@@ -232,6 +218,11 @@ class ClientListFragment : Fragment() {
                 try {
                     cicloEntity?.let { ciclo ->
                         _binding?.tvCycleTitle?.text = "${ciclo.numeroCiclo}º Acerto"
+                        // ✅ NOVO: Tornar o título clicável
+                        // ✅ NOVO: Tornar o título clicável
+                        _binding?.tvCycleTitle?.setOnClickListener {
+                            mostrarDialogoProgressoCiclo()
+                        }
                     }
                 } catch (e: Exception) {
                     android.util.Log.e("ClientListFragment", "Erro ao atualizar ciclo de acerto: ${e.message}")
@@ -243,27 +234,7 @@ class ClientListFragment : Fragment() {
         // lifecycleScope.launch { viewModel.progressoCiclo.collect { ... } }
         // lifecycleScope.launch { viewModel.percentualAcertados.collect { ... } }
         // lifecycleScope.launch { viewModel.totalClientes.collect { ... } }
-        // lifecycleScope.launch { viewModel.faturamento.collect { ... } }
-        // lifecycleScope.launch { viewModel.pendencias.collect { ... } }
-        // lifecycleScope.launch { viewModel.despesas.collect { ... } }
-        // O card de progresso deve ser atualizado apenas via cicloProgressoCard
-        lifecycleScope.launch {
-            viewModel.cicloProgressoCard.collect { card ->
-                try {
-                    card?.let {
-                        val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
-                        _binding?.tvPercentualAcertados?.text = "${it.percentual}%"
-                        _binding?.tvTotalClientes?.text = "de ${it.totalClientes} clientes"
-                        _binding?.tvFaturamento?.text = formatter.format(it.receita)
-                        _binding?.tvDespesas?.text = formatter.format(it.despesas)
-                        _binding?.tvPendencias?.text = it.pendencias.toString()
-                        _binding?.tvDebitoTotal?.text = formatter.format(it.debitoTotal)
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar card de progresso: ${e.message}")
-                }
-            }
-        }
+
         
         // ✅ FASE 9A: Observar clientes com empty state melhorado
         lifecycleScope.launch {
@@ -524,6 +495,68 @@ class ClientListFragment : Fragment() {
                 .show()
         }
     }
+
+    /**
+     * ✅ NOVO: Mostra o diálogo de progresso do ciclo
+     */
+    private fun mostrarDialogoProgressoCiclo() {
+        try {
+            val cicloProgressoCard = viewModel.cicloProgressoCard.value
+            val cicloAtivo = viewModel.cicloAtivo.value
+            val rotaNome = viewModel.rotaInfo.value?.nome ?: "Rota"
+
+            if (cicloProgressoCard != null) {
+                val dialog = CycleProgressDialog(
+                    requireContext(),
+                    cicloProgressoCard,
+                    cicloAtivo,
+                    rotaNome
+                )
+                dialog.show()
+            } else {
+                mostrarFeedback("Dados do ciclo não disponíveis", Snackbar.LENGTH_SHORT)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListFragment", "Erro ao mostrar diálogo de progresso: ${e.message}")
+            mostrarFeedback("Erro ao abrir detalhes do ciclo", Snackbar.LENGTH_SHORT)
+        }
+    }
+
+    /**
+     * ✅ NOVO: Mostra o diálogo de confirmação para finalizar o ciclo
+     */
+    private fun mostrarDialogoConfirmacaoFinalizar() {
+        val cicloAtivo = viewModel.cicloAtivo.value
+        val rotaNome = viewModel.rotaInfo.value?.nome ?: "Rota"
+        
+        val mensagem = if (cicloAtivo != null) {
+            "Tem certeza que deseja finalizar o ${cicloAtivo.numeroCiclo}º Acerto da rota \"$rotaNome\"?\n\n" +
+            "⚠️ ATENÇÃO: Após o fechamento do ciclo:\n" +
+            "• Não será mais possível lançar novos acertos\n" +
+            "• Não será mais possível adicionar despesas\n" +
+            "• O ciclo será marcado como finalizado\n\n" +
+            "Esta ação não pode ser desfeita."
+        } else {
+            "Tem certeza que deseja finalizar o ciclo atual da rota \"$rotaNome\"?\n\n" +
+            "⚠️ ATENÇÃO: Após o fechamento do ciclo:\n" +
+            "• Não será mais possível lançar novos acertos\n" +
+            "• Não será mais possível adicionar despesas\n" +
+            "• O ciclo será marcado como finalizado\n\n" +
+            "Esta ação não pode ser desfeita."
+        }
+
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Confirmar Finalização do Ciclo")
+            .setMessage(mensagem)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton("Sim, Finalizar") { _, _ ->
+                viewModel.finalizarRota()
+                mostrarFeedback("Ciclo finalizado com sucesso!", Snackbar.LENGTH_SHORT)
+            }
+            .setNegativeButton("Cancelar", null)
+            .setCancelable(true)
+            .show()
+    }
     
     private fun mostrarAlertaRotaNaoIniciada() {
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
@@ -531,6 +564,105 @@ class ClientListFragment : Fragment() {
             .setMessage("Para acessar os detalhes do cliente e fazer acertos, é necessário iniciar a rota primeiro.")
             .setPositiveButton("Entendi", null)
             .show()
+    }
+
+    /**
+     * ✅ NOVO: Configura o FAB expandível com animações
+     */
+    private fun configurarFabExpandivel() {
+        _binding?.let { binding ->
+            var isExpanded = false
+            
+            // FAB Principal
+            binding.fabMain.setOnClickListener {
+                if (isExpanded) {
+                    // Recolher FABs
+                    recolherFabMenu(binding)
+                    isExpanded = false
+                } else {
+                    // Expandir FABs
+                    expandirFabMenu(binding)
+                    isExpanded = true
+                }
+            }
+            
+            // Container Novo Cliente
+            binding.fabNewClientContainer.setOnClickListener {
+                val action = ClientListFragmentDirections
+                    .actionClientListFragmentToClientRegisterFragment(args.rotaId)
+                findNavController().navigate(action)
+                // Recolher menu após clicar
+                recolherFabMenu(binding)
+                isExpanded = false
+            }
+            
+            // Container Nova Despesa
+            binding.fabNewExpenseContainer.setOnClickListener {
+                val action = ClientListFragmentDirections
+                    .actionClientListFragmentToExpenseRegisterFragment(args.rotaId)
+                findNavController().navigate(action)
+                // Recolher menu após clicar
+                recolherFabMenu(binding)
+                isExpanded = false
+            }
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Expande o menu FAB com animação
+     */
+    private fun expandirFabMenu(binding: FragmentClientListBinding) {
+        // Mostrar container
+        binding.fabExpandedContainer.visibility = View.VISIBLE
+        
+        // Animar entrada dos containers
+        binding.fabNewClientContainer.alpha = 0f
+        binding.fabNewExpenseContainer.alpha = 0f
+        
+        // Animar "Nova Despesa" primeiro (mais próximo do FAB principal)
+        binding.fabNewExpenseContainer.animate()
+            .alpha(1f)
+            .setDuration(300)
+            .setStartDelay(100)
+            .start()
+            
+        // Animar "Novo Cliente" depois (mais afastado do FAB principal)
+        binding.fabNewClientContainer.animate()
+            .alpha(1f)
+            .setDuration(300)
+            .setStartDelay(200)
+            .start()
+            
+        // Rotacionar ícone do FAB principal
+        binding.fabMain.animate()
+            .rotation(45f)
+            .setDuration(200)
+            .start()
+    }
+    
+    /**
+     * ✅ NOVO: Recolhe o menu FAB com animação
+     */
+    private fun recolherFabMenu(binding: FragmentClientListBinding) {
+        // Animar saída dos containers
+        binding.fabNewClientContainer.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .start()
+            
+        binding.fabNewExpenseContainer.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                binding.fabExpandedContainer.visibility = View.GONE
+            }
+            .start()
+            
+        // Rotacionar ícone do FAB principal de volta
+        binding.fabMain.animate()
+            .rotation(0f)
+            .setDuration(200)
+            .start()
     }
 
     override fun onDestroyView() {

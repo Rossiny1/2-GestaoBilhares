@@ -13,9 +13,9 @@ data class MesaDTO(
     val numero: String,
     val fichasInicial: Int,
     val fichasFinal: Int,
-    val tipoMesa: String,
-    val tamanho: String = "GRANDE",
-    val estadoConservacao: String = "BOM",
+    val tipoMesa: TipoMesa,
+    val tamanho: TamanhoMesa = TamanhoMesa.GRANDE,
+    val estadoConservacao: EstadoConservacao = EstadoConservacao.BOM,
     val ativa: Boolean,
     val valorFixo: Double = 0.0,
     val valorFicha: Double = 0.0,
@@ -32,27 +32,9 @@ data class MesaDTO(
             fichasInicial = fichasInicial,
             fichasFinal = fichasFinal,
             valorFixo = valorFixo,
-            tipoMesa = when (tipoMesa) {
-                "SINUCA" -> TipoMesa.SINUCA
-                "MAQUINA_MUSICA" -> TipoMesa.MAQUINA_MUSICA
-                "PEMBOLIM" -> TipoMesa.PEMBOLIM
-                "SNOOKER" -> TipoMesa.SNOOKER
-                "POOL" -> TipoMesa.POOL
-                "BILHAR" -> TipoMesa.BILHAR
-                "OUTROS" -> TipoMesa.OUTROS
-                else -> TipoMesa.SINUCA
-            },
-            tamanho = when (tamanho) {
-                "PEQUENA" -> TamanhoMesa.PEQUENA
-                "GRANDE" -> TamanhoMesa.GRANDE
-                else -> TamanhoMesa.GRANDE
-            },
-            estadoConservacao = when (estadoConservacao) {
-                "OTIMO" -> EstadoConservacao.OTIMO
-                "BOM" -> EstadoConservacao.BOM
-                "RUIM" -> EstadoConservacao.RUIM
-                else -> EstadoConservacao.BOM
-            }
+            tipoMesa = tipoMesa,
+            tamanho = tamanho,
+            estadoConservacao = estadoConservacao
         )
     }
 } 

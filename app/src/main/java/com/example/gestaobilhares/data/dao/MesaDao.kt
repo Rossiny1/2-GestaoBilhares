@@ -80,4 +80,10 @@ interface MesaDao {
         ORDER BY m.numero ASC
     """)
     fun buscarMesasPorRota(rotaId: Long): Flow<List<Mesa>>
+
+    /**
+     * ✅ NOVA FUNÇÃO: Obtém todas as mesas (disponíveis e em uso)
+     */
+    @Query("SELECT * FROM mesas ORDER BY numero ASC")
+    fun obterTodasMesas(): Flow<List<Mesa>>
 } 
