@@ -436,6 +436,7 @@
             android:paddingVertical="8dp"
             android:clickable="true"
             android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
             android:alpha="0">
 
             <TextView
@@ -455,7 +456,8 @@
                 android:src="@drawable/ic_table"
                 app:fabSize="mini"
                 app:backgroundTint="@color/blue_600"
-                app:tint="@color/white" />
+                app:tint="@color/white"
+                android:clickable="false" />
 
         </LinearLayout>
 
@@ -474,6 +476,7 @@
             android:paddingVertical="8dp"
             android:clickable="true"
             android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
             android:alpha="0">
 
             <TextView
@@ -493,7 +496,8 @@
                 android:src="@drawable/ic_receipt"
                 app:fabSize="mini"
                 app:backgroundTint="@color/green_600"
-                app:tint="@color/white" />
+                app:tint="@color/white"
+                android:clickable="false" />
 
         </LinearLayout>
 

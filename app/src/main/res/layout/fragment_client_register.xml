@@ -170,15 +170,17 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
                         android:hint="Cidade"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         app:boxStrokeColor="?attr/colorPrimary"
                         app:hintTextColor="?attr/colorPrimary">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etCidade"
+                        <AutoCompleteTextView
+                            android:id="@+id/actvCidade"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textCapWords"
-                            android:maxLines="1" />
+                            android:inputType="none"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -188,15 +190,17 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
                         android:hint="Estado"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         app:boxStrokeColor="?attr/colorPrimary"
                         app:hintTextColor="?attr/colorPrimary">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etEstado"
+                        <AutoCompleteTextView
+                            android:id="@+id/actvEstado"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textCapWords"
-                            android:maxLines="1" />
+                            android:inputType="none"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 

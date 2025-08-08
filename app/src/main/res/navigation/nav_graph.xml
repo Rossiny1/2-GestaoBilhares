@@ -104,6 +104,11 @@
             android:name="clienteId"
             app:argType="long"
             android:defaultValue="0L" />
+        <!-- ✅ NOVO: Controla se o diálogo de observações deve ser mostrado -->
+        <argument
+            android:name="mostrarDialogoObservacoes"
+            app:argType="boolean"
+            android:defaultValue="false" />
         <!-- FASE 4A: Navegação para novo acerto -->
         <action
             android:id="@+id/action_clientDetailFragment_to_settlementFragment"

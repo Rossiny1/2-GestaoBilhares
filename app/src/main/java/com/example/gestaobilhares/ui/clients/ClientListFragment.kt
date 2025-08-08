@@ -114,7 +114,10 @@ class ClientListFragment : Fragment() {
             // Verificar se a rota está em andamento antes de permitir navegação
             if (viewModel.podeAcessarCliente()) {
             val action = ClientListFragmentDirections
-                .actionClientListFragmentToClientDetailFragment(cliente.id)
+                .actionClientListFragmentToClientDetailFragment(
+                    clienteId = cliente.id,
+                    mostrarDialogoObservacoes = true
+                )
             findNavController().navigate(action)
             } else {
                 mostrarAlertaRotaNaoIniciada()

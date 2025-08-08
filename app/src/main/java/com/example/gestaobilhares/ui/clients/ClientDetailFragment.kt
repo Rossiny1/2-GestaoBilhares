@@ -78,8 +78,10 @@ class ClientDetailFragment : Fragment() {
             viewModel.loadClientDetails(args.clienteId)
         }
         
-        // ✅ NOVO: Verificar observações do último acerto assim que a tela for carregada
-        verificarObservacoesUltimoAcerto()
+        // ✅ NOVO: Verificar observações do último acerto apenas se vier da tela de clientes da rota
+        if (args.mostrarDialogoObservacoes) {
+            verificarObservacoesUltimoAcerto()
+        }
     }
     
     override fun onResume() {
@@ -95,9 +97,6 @@ class ClientDetailFragment : Fragment() {
         if (viewModel.settlementHistory.value.isEmpty()) {
             viewModel.loadSettlementHistory(args.clienteId)
         }
-        
-        // ✅ NOVO: Verificar observações do último acerto
-        verificarObservacoesUltimoAcerto()
     }
     
     /**

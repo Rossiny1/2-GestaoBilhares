@@ -74,6 +74,9 @@ class ClientRegisterFragment : Fragment() {
         val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
             .format(java.util.Date())
         binding.etClienteDesde.setText(dataAtual)
+
+        // ✅ NOVO: Configurar dropdowns de estado e cidade
+        setupEstadoCidadeDropdowns()
     }
 
     private fun observeViewModel() {
@@ -207,8 +210,8 @@ class ClientRegisterFragment : Fragment() {
             val cpfCnpj = binding.etCpfCnpj.text.toString().trim()
             val address = binding.etAddress.text.toString().trim()
             val bairro = binding.etBairro.text.toString().trim()
-            val cidade = binding.etCidade.text.toString().trim()
-            val estado = binding.etEstado.text.toString().trim()
+            val cidade = binding.actvCidade.text.toString().trim()
+            val estado = binding.actvEstado.text.toString().trim()
             val phone = binding.etPhone.text.toString().trim()
             val phone2 = binding.etPhone2.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
@@ -309,8 +312,8 @@ class ClientRegisterFragment : Fragment() {
         binding.etCpfCnpj.error = null
         binding.etAddress.error = null
         binding.etBairro.error = null
-        binding.etCidade.error = null
-        binding.etEstado.error = null
+        binding.actvCidade.error = null
+        binding.actvEstado.error = null
         binding.etPhone.error = null
         binding.etPhone2.error = null
         binding.etEmail.error = null
@@ -353,8 +356,8 @@ class ClientRegisterFragment : Fragment() {
             etCpfCnpj.setText(cliente.cpfCnpj ?: "")
             etAddress.setText(cliente.endereco ?: "")
             etBairro.setText(cliente.bairro ?: "")
-            etCidade.setText(cliente.cidade ?: "")
-            etEstado.setText(cliente.estado ?: "")
+            actvCidade.setText(cliente.cidade ?: "")
+            actvEstado.setText(cliente.estado ?: "")
             etPhone.setText(cliente.telefone ?: "")
             etPhone2.setText(cliente.telefone2 ?: "")
             etEmail.setText(cliente.email ?: "")
@@ -375,6 +378,48 @@ class ClientRegisterFragment : Fragment() {
             
             // Alterar título para modo edição
             // TODO: Adicionar TextView para título no layout se não existir
+        }
+    }
+
+    /**
+     * ✅ NOVO: Configura os dropdowns de estado e cidade
+     */
+    private fun setupEstadoCidadeDropdowns() {
+        try {
+            // Carregar dados dos estados e cidades
+            val estadosCidades = com.example.gestaobilhares.data.model.EstadosCidades.carregarDados(requireContext())
+            
+            // Configurar adapter para estados
+            val estados = estadosCidades.estados.map { it.nome }.toTypedArray()
+            val estadosAdapter = android.widget.ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                estados
+            )
+            binding.actvEstado.setAdapter(estadosAdapter)
+            
+            // Listener para atualizar cidades quando estado for selecionado
+            binding.actvEstado.setOnItemClickListener { _, _, position, _ ->
+                val estadoSelecionado = estadosCidades.estados[position]
+                val cidadesAdapter = android.widget.ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_dropdown_item_1line,
+                    estadoSelecionado.cidades
+                )
+                binding.actvCidade.setText("") // Limpar cidade atual
+                binding.actvCidade.setAdapter(cidadesAdapter)
+            }
+            
+            // Configurar adapter inicial para cidades (vazio)
+            binding.actvCidade.setAdapter(android.widget.ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                arrayOf<String>()
+            ))
+            
+        } catch (e: Exception) {
+            Log.e("ClientRegisterFragment", "Erro ao configurar dropdowns: ${e.message}")
+            showErrorDialog("Erro ao carregar estados e cidades: ${e.message}")
         }
     }
 
