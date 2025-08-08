@@ -471,24 +471,50 @@ class MesasAcertoAdapter(
     // ✅ NOVO: Métodos para captura de foto
     
     /**
-     * Define foto capturada para uma mesa específica
+     * ✅ NOVO: Define a foto do relógio para uma mesa específica
      */
     fun setFotoRelogio(mesaId: Long, caminhoFoto: String) {
-        val state = mesaStates[mesaId]
-        state?.let {
-            it.fotoRelogioFinal = caminhoFoto
-            it.dataFoto = Date()
-            onFotoCapturada(mesaId, caminhoFoto, it.dataFoto!!)
-            // Encontrar a posição da mesa na lista
-            val position = currentList.indexOfFirst { mesa -> mesa.id == mesaId }
-            if (position != -1) {
-                safeNotifyItemChanged(position)
+        try {
+            Log.d("MesasAcertoAdapter", "Definindo foto para mesa $mesaId: $caminhoFoto")
+            
+            // ✅ CORREÇÃO: Usar post para aguardar o layout ser concluído
+            mainHandler.post {
+                try {
+                    // Atualizar o estado da mesa
+                    val mesaState = mesaStates[mesaId]
+                    if (mesaState != null) {
+                        mesaState.fotoRelogioFinal = caminhoFoto
+                        mesaState.dataFoto = Date()
+                        Log.d("MesasAcertoAdapter", "✅ Estado da mesa atualizado com foto: $caminhoFoto")
+                        Log.d("MesasAcertoAdapter", "✅ Data da foto: ${mesaState.dataFoto}")
+                        
+                        // ✅ CORREÇÃO: Usar safeNotifyItemChanged para evitar crashes
+                        val position = currentList.indexOfFirst { it.id == mesaId }
+                        if (position != -1) {
+                            safeNotifyItemChanged(position)
+                            Log.d("MesasAcertoAdapter", "✅ Item atualizado na posição $position")
+                            
+                            // ✅ NOVO: Verificar se a foto foi salva corretamente
+                            Log.d("MesasAcertoAdapter", "Verificando se foto foi salva...")
+                            Log.d("MesasAcertoAdapter", "Estado da mesa após salvar: fotoRelogioFinal = ${mesaState.fotoRelogioFinal}")
+                            Log.d("MesasAcertoAdapter", "Estado da mesa após salvar: dataFoto = ${mesaState.dataFoto}")
+                        } else {
+                            Log.w("MesasAcertoAdapter", "⚠️ Mesa não encontrada na lista: $mesaId")
+                        }
+                    } else {
+                        Log.w("MesasAcertoAdapter", "⚠️ Estado da mesa não encontrado: $mesaId")
+                    }
+                } catch (e: Exception) {
+                    Log.e("MesasAcertoAdapter", "Erro ao definir foto: ${e.message}", e)
+                }
             }
+        } catch (e: Exception) {
+            Log.e("MesasAcertoAdapter", "Erro crítico ao definir foto: ${e.message}", e)
         }
     }
     
     /**
-     * Método para compatibilidade - atualiza a lista de mesas
+     * ✅ NOVO: Método para compatibilidade - atualiza a lista de mesas
      */
     fun updateMesas(mesas: List<MesaDTO>) {
         submitList(mesas)
@@ -500,13 +526,20 @@ class MesasAcertoAdapter(
      * @param media Média calculada
      */
     fun atualizarMediaMesa(mesaId: Long, media: Double) {
-        val state = mesaStates[mesaId]
-        if (state != null && state.comDefeito) {
-            state.mediaFichasJogadas = media
-            Log.d("MesasAcertoAdapter", "Média atualizada para mesa $mesaId: $media")
-            
-            // Notificar mudança para atualizar a UI
-            onDataChanged()
+        try {
+            val state = mesaStates[mesaId]
+            state?.let {
+                it.mediaFichasJogadas = media
+                Log.d("MesasAcertoAdapter", "Média atualizada para mesa $mesaId: $media")
+                
+                // Encontrar a posição da mesa na lista
+                val position = currentList.indexOfFirst { mesa -> mesa.id == mesaId }
+                if (position != -1) {
+                    safeNotifyItemChanged(position)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("MesasAcertoAdapter", "Erro ao atualizar média: ${e.message}", e)
         }
     }
 }

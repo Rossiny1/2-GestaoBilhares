@@ -83,7 +83,10 @@ class SettlementViewModel(
         val valorFixo: Double = 0.0,
         val tipoMesa: com.example.gestaobilhares.data.entities.TipoMesa,
         val comDefeito: Boolean = false,
-        val relogioReiniciou: Boolean = false
+        val relogioReiniciou: Boolean = false,
+        // ✅ NOVO: Campos para fotos
+        val fotoRelogioFinal: String? = null,
+        val dataFoto: java.util.Date? = null
     )
 
     fun loadClientForSettlement(clienteId: Long) {
@@ -499,7 +502,10 @@ class SettlementViewModel(
                         subtotal = subtotal,
                         comDefeito = mesa.comDefeito,
                         relogioReiniciou = mesa.relogioReiniciou,
-                        observacoes = null
+                        observacoes = null,
+                        // ✅ CORREÇÃO CRÍTICA: Incluir campos de foto
+                        fotoRelogioFinal = mesa.fotoRelogioFinal,
+                        dataFoto = mesa.dataFoto
                     )
                 }
                 

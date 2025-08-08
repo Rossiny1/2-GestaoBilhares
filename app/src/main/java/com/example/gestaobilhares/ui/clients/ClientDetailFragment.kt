@@ -78,10 +78,26 @@ class ClientDetailFragment : Fragment() {
             viewModel.loadClientDetails(args.clienteId)
         }
         
-        // ✅ NOVO: Verificar observações do último acerto apenas se vier da tela de clientes da rota
-        Log.d("ClientDetailFragment", "mostrarDialogoObservacoes: ${args.mostrarDialogoObservacoes}")
+        // ✅ CORREÇÃO OFICIAL: Usar SavedStateHandle para controlar o diálogo de observações
+        // Baseado na documentação oficial do Android Navigation Component
+        val savedStateHandle = findNavController().currentBackStackEntry?.savedStateHandle
+        val shouldShowObservations = savedStateHandle?.getStateFlow("show_observations_dialog", false)
         
-        // Verificar se realmente veio da tela de clientes da rota
+        if (shouldShowObservations != null) {
+            lifecycleScope.launch {
+                shouldShowObservations.collect { shouldShow ->
+                    if (shouldShow) {
+                        Log.d("ClientDetailFragment", "Mostrando diálogo de observações via SavedStateHandle")
+                        verificarObservacoesUltimoAcerto()
+                        // Limpar o flag para evitar que apareça novamente
+                        savedStateHandle["show_observations_dialog"] = false
+                    }
+                }
+            }
+        }
+        
+        // ✅ LEGACY: Manter compatibilidade com o parâmetro de navegação
+        // Mas apenas se não estiver vindo de uma navegação interna
         val previousFragment = findNavController().previousBackStackEntry?.destination?.route
         Log.d("ClientDetailFragment", "Fragmento anterior: $previousFragment")
         
@@ -89,7 +105,7 @@ class ClientDetailFragment : Fragment() {
             Log.d("ClientDetailFragment", "Verificando observações do último acerto - veio da tela de clientes da rota")
             verificarObservacoesUltimoAcerto()
         } else {
-            Log.d("ClientDetailFragment", "Não mostrando diálogo de observações - não veio da tela de clientes da rota ou parâmetro é false")
+            Log.d("ClientDetailFragment", "Não mostrando diálogo de observações - não veio da tela de clientes da rota")
         }
     }
     

@@ -19,7 +19,8 @@ class AcertoMesaDetailAdapter(
     private val tipoAcerto: String = "Presencial",
     private val panoTrocado: Boolean = false,
     private val numeroPano: String? = null,
-    private val mesasCompletas: Map<Long, MesaCompleta> = emptyMap()
+    private val mesasCompletas: Map<Long, MesaCompleta> = emptyMap(),
+    private val onVerFotoRelogio: ((String, Date?) -> Unit)? = null
 ) : RecyclerView.Adapter<AcertoMesaDetailAdapter.AcertoMesaViewHolder>() {
 
     init {
@@ -113,6 +114,25 @@ class AcertoMesaDetailAdapter(
                 "Pano ${numeroPano ?: "N/A"}"
             } else {
                 "Não trocado"
+            }
+            
+            // ✅ NOVO: Configurar botão de visualizar foto do relógio final
+            AppLogger.log("AcertoMesaDetailAdapter", "=== DEBUG FOTO MESA ${mesa.mesaId} ===")
+            AppLogger.log("AcertoMesaDetailAdapter", "Foto relógio final: '${mesa.fotoRelogioFinal}'")
+            AppLogger.log("AcertoMesaDetailAdapter", "Foto é nula? ${mesa.fotoRelogioFinal == null}")
+            AppLogger.log("AcertoMesaDetailAdapter", "Foto está vazia? ${mesa.fotoRelogioFinal?.isEmpty()}")
+            AppLogger.log("AcertoMesaDetailAdapter", "Foto tem conteúdo? ${!mesa.fotoRelogioFinal.isNullOrEmpty()}")
+            
+            if (!mesa.fotoRelogioFinal.isNullOrEmpty()) {
+                AppLogger.log("AcertoMesaDetailAdapter", "✅ Foto encontrada para mesa ${mesa.mesaId}, mostrando botão")
+                binding.layoutFotoRelogio.visibility = View.VISIBLE
+                binding.btnVerFoto.setOnClickListener {
+                    AppLogger.log("AcertoMesaDetailAdapter", "Botão Ver Foto clicado para mesa ${mesa.mesaId}")
+                    onVerFotoRelogio?.invoke(mesa.fotoRelogioFinal!!, mesa.dataFoto)
+                }
+            } else {
+                AppLogger.log("AcertoMesaDetailAdapter", "❌ Nenhuma foto para mesa ${mesa.mesaId}, ocultando botão")
+                binding.layoutFotoRelogio.visibility = View.GONE
             }
             
             AppLogger.log("AcertoMesaDetailAdapter", "Mesa ${mesa.mesaId} configurada com sucesso")

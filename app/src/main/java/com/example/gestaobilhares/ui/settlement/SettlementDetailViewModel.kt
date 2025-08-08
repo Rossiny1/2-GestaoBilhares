@@ -71,6 +71,11 @@ class SettlementDetailViewModel(
                         AppLogger.log("SettlementDetail", "Subtotal: R$ ${acertoMesa.subtotal}")
                         AppLogger.log("SettlementDetail", "Com defeito: ${acertoMesa.comDefeito}")
                         AppLogger.log("SettlementDetail", "Relógio reiniciou: ${acertoMesa.relogioReiniciou}")
+                        // ✅ NOVO: Logs específicos para fotos
+                        AppLogger.log("SettlementDetail", "Foto relógio final: ${acertoMesa.fotoRelogioFinal}")
+                        AppLogger.log("SettlementDetail", "Data da foto: ${acertoMesa.dataFoto}")
+                        AppLogger.log("SettlementDetail", "Foto é nula? ${acertoMesa.fotoRelogioFinal == null}")
+                        AppLogger.log("SettlementDetail", "Foto está vazia? ${acertoMesa.fotoRelogioFinal?.isEmpty()}")
                     }
                     
                     val formatter = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale("pt", "BR"))

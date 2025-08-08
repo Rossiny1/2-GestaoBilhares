@@ -113,12 +113,17 @@ class ClientListFragment : Fragment() {
         clientAdapter = ClientAdapter { cliente ->
             // Verificar se a rota está em andamento antes de permitir navegação
             if (viewModel.podeAcessarCliente()) {
-            val action = ClientListFragmentDirections
-                .actionClientListFragmentToClientDetailFragment(
-                    clienteId = cliente.id,
-                    mostrarDialogoObservacoes = true
-                )
-            findNavController().navigate(action)
+                // ✅ CORREÇÃO OFICIAL: Usar SavedStateHandle para controlar o diálogo de observações
+                // Baseado na documentação oficial do Android Navigation Component
+                val action = ClientListFragmentDirections
+                    .actionClientListFragmentToClientDetailFragment(
+                        clienteId = cliente.id,
+                        mostrarDialogoObservacoes = false // Não usar mais este parâmetro
+                    )
+                findNavController().navigate(action)
+                
+                // Definir o flag no SavedStateHandle do destino
+                findNavController().currentBackStackEntry?.savedStateHandle?.set("show_observations_dialog", true)
             } else {
                 mostrarAlertaRotaNaoIniciada()
             }

@@ -93,16 +93,87 @@ class SettlementFragment : Fragment() {
         ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            // Foto capturada com sucesso
-            currentPhotoUri?.let { uri ->
-                Log.d("SettlementFragment", "Foto capturada com sucesso: $uri")
-                // Salvar a foto no adapter
-                val file = File(uri.path!!)
-                mesasAcertoAdapter.setFotoRelogio(currentMesaId, file.absolutePath)
-                Toast.makeText(requireContext(), "Foto do relógio capturada com sucesso!", Toast.LENGTH_SHORT).show()
+            // ✅ CORREÇÃO: Proteção contra crash após captura de foto
+            try {
+                currentPhotoUri?.let { uri ->
+                    Log.d("SettlementFragment", "Foto capturada com sucesso: $uri")
+                    
+                    // ✅ CORREÇÃO: Usar post para aguardar o layout ser concluído
+                    binding.root.post {
+                        try {
+                            // ✅ CORREÇÃO MELHORADA: Verificar se o arquivo existe e obter caminho real
+                            val caminhoReal = obterCaminhoRealFoto(uri)
+                            if (caminhoReal != null) {
+                                Log.d("SettlementFragment", "Caminho real da foto: $caminhoReal")
+                                mesasAcertoAdapter.setFotoRelogio(currentMesaId, caminhoReal)
+                                Toast.makeText(requireContext(), "Foto do relógio capturada com sucesso!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Log.e("SettlementFragment", "Não foi possível obter o caminho real da foto")
+                                Toast.makeText(requireContext(), "Erro: não foi possível salvar a foto", Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) {
+                            Log.e("SettlementFragment", "Erro ao processar foto: ${e.message}", e)
+                            Toast.makeText(requireContext(), "Erro ao processar foto: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("SettlementFragment", "Erro crítico após captura de foto: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao processar foto capturada", Toast.LENGTH_LONG).show()
             }
         } else {
             Toast.makeText(requireContext(), "Erro ao capturar foto", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Método para obter o caminho real da foto
+     */
+    private fun obterCaminhoRealFoto(uri: Uri): String? {
+        return try {
+            Log.d("SettlementFragment", "Obtendo caminho real para URI: $uri")
+            
+            // Tentativa 1: Converter URI para caminho real via ContentResolver
+            val cursor = requireContext().contentResolver.query(
+                uri, 
+                arrayOf(android.provider.MediaStore.Images.Media.DATA), 
+                null, 
+                null, 
+                null
+            )
+            
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val columnIndex = it.getColumnIndex(android.provider.MediaStore.Images.Media.DATA)
+                    if (columnIndex != -1) {
+                        val path = it.getString(columnIndex)
+                        Log.d("SettlementFragment", "Caminho obtido via cursor: $path")
+                        if (java.io.File(path).exists()) {
+                            return path
+                        }
+                    }
+                }
+            }
+            
+            // Tentativa 2: Se não conseguiu via cursor, tentar copiar para arquivo temporário
+            Log.d("SettlementFragment", "Tentando copiar para arquivo temporário")
+            val inputStream = requireContext().contentResolver.openInputStream(uri)
+            if (inputStream != null) {
+                val tempFile = java.io.File.createTempFile("relogio_foto_", ".jpg", requireContext().cacheDir)
+                tempFile.outputStream().use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+                Log.d("SettlementFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
+                return tempFile.absolutePath
+            }
+            
+            // Tentativa 3: Se ainda não conseguiu, usar o URI como string
+            Log.d("SettlementFragment", "Usando URI como string: $uri")
+            uri.toString()
+            
+        } catch (e: Exception) {
+            Log.e("SettlementFragment", "Erro ao obter caminho real: ${e.message}", e)
+            null
         }
     }
 
@@ -720,7 +791,10 @@ class SettlementFragment : Fragment() {
                 valorFixo = mesaOriginal?.valorFixo ?: 0.0,
                 tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA,
                 comDefeito = mesaState.comDefeito,
-                relogioReiniciou = mesaState.relogioReiniciou
+                relogioReiniciou = mesaState.relogioReiniciou,
+                // ✅ NOVO: Incluir dados de foto
+                fotoRelogioFinal = mesaState.fotoRelogioFinal,
+                dataFoto = mesaState.dataFoto
             )
         }
         

@@ -261,6 +261,39 @@
 
         </LinearLayout>
 
+        <!-- ✅ NOVO: Botão para visualizar foto do relógio final -->
+        <LinearLayout
+            android:id="@+id/layoutFotoRelogio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Foto do Relógio Final"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnVerFoto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ver Foto"
+                android:textSize="12sp"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                app:icon="@drawable/ic_camera"
+                app:iconSize="16dp"
+                app:iconGravity="textStart"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView> 
