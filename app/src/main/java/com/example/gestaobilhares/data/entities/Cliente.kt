@@ -61,6 +61,18 @@ data class Cliente(
     @ColumnInfo(name = "cep")
     val cep: String? = null,
     
+    @ColumnInfo(name = "latitude")
+    val latitude: Double? = null,
+    
+    @ColumnInfo(name = "longitude")
+    val longitude: Double? = null,
+    
+    @ColumnInfo(name = "precisao_gps")
+    val precisaoGps: Float? = null,
+    
+    @ColumnInfo(name = "data_captura_gps")
+    val dataCapturaGps: Date? = null,
+    
     @ColumnInfo(name = "rota_id")
     val rotaId: Long,
     

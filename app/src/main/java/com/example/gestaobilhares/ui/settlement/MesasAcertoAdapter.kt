@@ -1,13 +1,24 @@
 package com.example.gestaobilhares.ui.settlement
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -15,12 +26,17 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.getDisplayName
 import com.example.gestaobilhares.databinding.ItemMesaAcertoBinding
 import com.example.gestaobilhares.ui.viewmodel.MesaAcertoState
+import java.io.File
+import java.io.FileOutputStream
 import java.text.NumberFormat
-import java.util.Locale
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MesasAcertoAdapter(
     private val onDataChanged: () -> Unit,
-    private val onCalcularMedia: (Long) -> Double = { 0.0 }
+    private val onCalcularMedia: (Long) -> Double = { 0.0 },
+    private val onFotoCapturada: (Long, String, Date) -> Unit = { _, _, _ -> },
+    private val onSolicitarCapturaFoto: ((Long) -> Unit)? = null
 ) : ListAdapter<MesaDTO, MesasAcertoAdapter.MesaAcertoViewHolder>(MesaDTODiffCallback()) {
 
     // Lista para manter o estado dos campos de entrada de cada mesa
@@ -32,6 +48,10 @@ class MesasAcertoAdapter(
     
     // ✅ NOVO: Handler para agendar notificações de mudança
     private val mainHandler = Handler(Looper.getMainLooper())
+    
+    // ✅ NOVO: Variáveis para captura de foto
+    private var currentPhotoUri: Uri? = null
+    private var currentMesaId: Long = 0L
 
     /**
      * ✅ NOVO: Calcula as fichas jogadas considerando reinício do relógio
@@ -300,6 +320,74 @@ class MesasAcertoAdapter(
                 binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(subtotal)
                 state.subtotal = subtotal
             }
+            
+            // ✅ NOVO: Configurar botão de câmera
+            binding.btnCameraRelogio.setOnClickListener {
+                capturarFotoRelogio(mesa.id)
+            }
+            
+            // ✅ NOVO: Configurar botão de remover foto
+            binding.btnRemoverFoto.setOnClickListener {
+                removerFotoRelogio(mesa.id)
+            }
+            
+            // ✅ NOVO: Mostrar foto se existir
+            if (state.fotoRelogioFinal != null) {
+                mostrarFotoRelogio(state.fotoRelogioFinal!!, state.dataFoto)
+            } else {
+                binding.layoutFotoRelogio.visibility = View.GONE
+            }
+        }
+        
+        /**
+         * Captura foto do relógio final da mesa
+         */
+        private fun capturarFotoRelogio(mesaId: Long) {
+            currentMesaId = mesaId
+            // Notificar o Fragment sobre a necessidade de capturar foto
+            Log.d("MesasAcertoAdapter", "Solicitando captura de foto para mesa ID: $mesaId")
+            
+            // Usar o callback
+            onSolicitarCapturaFoto?.invoke(mesaId)
+        }
+        
+        /**
+         * Remove foto do relógio final da mesa
+         */
+        private fun removerFotoRelogio(mesaId: Long) {
+            val state = mesaStates[mesaId]
+            state?.let {
+                it.fotoRelogioFinal = null
+                it.dataFoto = null
+                binding.layoutFotoRelogio.visibility = View.GONE
+                onDataChanged()
+                safeNotifyItemChanged(adapterPosition)
+            }
+        }
+        
+        /**
+         * Mostra foto do relógio final da mesa
+         */
+        private fun mostrarFotoRelogio(caminhoFoto: String, dataFoto: Date?) {
+            try {
+                val file = File(caminhoFoto)
+                if (file.exists()) {
+                    val bitmap = BitmapFactory.decodeFile(caminhoFoto)
+                    binding.ivFotoRelogio.setImageBitmap(bitmap)
+                    binding.layoutFotoRelogio.visibility = View.VISIBLE
+                    
+                    // Mostrar data da foto
+                    dataFoto?.let {
+                        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
+                        binding.tvDataFoto.text = "Capturada em: ${dateFormat.format(it)}"
+                    }
+                } else {
+                    binding.layoutFotoRelogio.visibility = View.GONE
+                }
+            } catch (e: Exception) {
+                Log.e("MesasAcertoAdapter", "Erro ao carregar foto: ${e.message}")
+                binding.layoutFotoRelogio.visibility = View.GONE
+            }
         }
 
         private fun updateSubtotal(state: MesaAcertoState) {
@@ -379,7 +467,26 @@ class MesasAcertoAdapter(
         }
         return mesaStates.values.toList()
     }
-
+    
+    // ✅ NOVO: Métodos para captura de foto
+    
+    /**
+     * Define foto capturada para uma mesa específica
+     */
+    fun setFotoRelogio(mesaId: Long, caminhoFoto: String) {
+        val state = mesaStates[mesaId]
+        state?.let {
+            it.fotoRelogioFinal = caminhoFoto
+            it.dataFoto = Date()
+            onFotoCapturada(mesaId, caminhoFoto, it.dataFoto!!)
+            // Encontrar a posição da mesa na lista
+            val position = currentList.indexOfFirst { mesa -> mesa.id == mesaId }
+            if (position != -1) {
+                safeNotifyItemChanged(position)
+            }
+        }
+    }
+    
     /**
      * Método para compatibilidade - atualiza a lista de mesas
      */

@@ -2,6 +2,7 @@ package com.example.gestaobilhares.ui.viewmodel
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import java.util.Date
 
 /**
  * Data class para representar o estado de uma mesa durante o processo de acerto.
@@ -19,5 +20,7 @@ data class MesaAcertoState(
     var comDefeito: Boolean = false,
     var relogioReiniciou: Boolean = false,
     var fichasJogadas: Int = 0,
-    var mediaFichasJogadas: Double = 0.0
+    var mediaFichasJogadas: Double = 0.0,
+    var fotoRelogioFinal: String? = null,
+    var dataFoto: Date? = null
 ) : Parcelable 

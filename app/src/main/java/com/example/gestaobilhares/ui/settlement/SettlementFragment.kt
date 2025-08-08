@@ -1,8 +1,14 @@
 package com.example.gestaobilhares.ui.settlement
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -11,6 +17,9 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -35,6 +44,7 @@ import android.widget.Toast
 import com.example.gestaobilhares.data.entities.Mesa
 import android.util.Log
 import com.example.gestaobilhares.ui.settlement.MesaDTO
+import com.example.gestaobilhares.ui.settlement.MesasAcertoAdapter
 import com.example.gestaobilhares.ui.clients.AcertoResumo
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.withTimeoutOrNull
@@ -42,8 +52,11 @@ import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.io.File
+import java.io.FileOutputStream
 import java.text.NumberFormat
-import java.util.Locale
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlinx.coroutines.launch
 
 /**
@@ -60,6 +73,38 @@ class SettlementFragment : Fragment() {
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
     private lateinit var mesasAcertoAdapter: MesasAcertoAdapter
     private var paymentValues: MutableMap<String, Double> = mutableMapOf()
+    
+    // ✅ NOVO: Variáveis para captura de foto
+    private var currentPhotoUri: Uri? = null
+    private var currentMesaId: Long = 0L
+    
+    // ✅ NOVO: Launcher para captura de foto
+    private val cameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            abrirCamera()
+        } else {
+            Toast.makeText(requireContext(), "Permissão de câmera necessária para capturar foto", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    private val cameraLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            // Foto capturada com sucesso
+            currentPhotoUri?.let { uri ->
+                Log.d("SettlementFragment", "Foto capturada com sucesso: $uri")
+                // Salvar a foto no adapter
+                val file = File(uri.path!!)
+                mesasAcertoAdapter.setFotoRelogio(currentMesaId, file.absolutePath)
+                Toast.makeText(requireContext(), "Foto do relógio capturada com sucesso!", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(requireContext(), "Erro ao capturar foto", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -311,6 +356,14 @@ class SettlementFragment : Fragment() {
                 
                 // Retornar 0 temporariamente - será atualizado pelo cálculo assíncrono
                 0.0
+            },
+            onFotoCapturada = { mesaId, caminhoFoto, dataFoto ->
+                // ✅ NOVO: Callback quando foto é capturada
+                Log.d("SettlementFragment", "Foto capturada para mesa $mesaId: $caminhoFoto")
+                // Aqui você pode fazer qualquer processamento adicional se necessário
+            },
+            onSolicitarCapturaFoto = { mesaId ->
+                solicitarCapturaFoto(mesaId)
             }
         )
         
@@ -849,6 +902,78 @@ class SettlementFragment : Fragment() {
 
     // ✅ REMOVIDO: Função duplicada mostrarDialogoResumo() 
     // Agora usa apenas mostrarDialogoResumoComAcerto() que pega dados reais do banco
+    
+    // ✅ NOVO: Métodos para captura de foto
+    
+    /**
+     * Solicita captura de foto do relógio para uma mesa específica
+     */
+    fun solicitarCapturaFoto(mesaId: Long) {
+        currentMesaId = mesaId
+        Log.d("SettlementFragment", "Solicitando captura de foto para mesa ID: $mesaId")
+        
+        // Verificar permissão de câmera
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                abrirCamera()
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
+                mostrarDialogoExplicacaoPermissao()
+            }
+            else -> {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
+    
+    /**
+     * Abre a câmera para capturar foto
+     */
+    private fun abrirCamera() {
+        try {
+            // Criar arquivo temporário para a foto
+            val photoFile = criarArquivoFoto()
+            currentPhotoUri = FileProvider.getUriForFile(
+                requireContext(),
+                "${requireContext().packageName}.fileprovider",
+                photoFile
+            )
+            
+            // Lançar intent da câmera
+            cameraLauncher.launch(currentPhotoUri!!)
+            
+        } catch (e: Exception) {
+            Log.e("SettlementFragment", "Erro ao abrir câmera: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao abrir câmera: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    /**
+     * Cria um arquivo temporário para a foto
+     */
+    private fun criarArquivoFoto(): File {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val imageFileName = "RELOGIOMESA_${currentMesaId}_${timeStamp}"
+        val storageDir = requireContext().getExternalFilesDir(null)
+        return File.createTempFile(imageFileName, ".jpg", storageDir)
+    }
+    
+    /**
+     * Mostra diálogo explicando por que a permissão de câmera é necessária
+     */
+    private fun mostrarDialogoExplicacaoPermissao() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Permissão de Câmera")
+            .setMessage("A permissão de câmera é necessária para capturar fotos do relógio final das mesas. Isso ajuda a documentar o estado do equipamento.")
+            .setPositiveButton("Permitir") { _, _ ->
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()

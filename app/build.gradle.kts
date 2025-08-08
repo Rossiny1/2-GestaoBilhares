@@ -75,4 +75,7 @@ dependencies {
     
     // ✅ NOVO: Dependências para compartilhamento e permissões
     implementation("androidx.activity:activity-ktx:1.8.2")
+    
+    // ✅ NOVO: Dependência para geolocalização
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 } 

@@ -72,6 +72,12 @@ data class AcertoMesa(
     @ColumnInfo(name = "observacoes")
     val observacoes: String? = null,
     
+    @ColumnInfo(name = "foto_relogio_final")
+    val fotoRelogioFinal: String? = null,
+    
+    @ColumnInfo(name = "data_foto")
+    val dataFoto: Date? = null,
+    
     @ColumnInfo(name = "data_criacao")
     val dataCriacao: Date = Date()
 ) 

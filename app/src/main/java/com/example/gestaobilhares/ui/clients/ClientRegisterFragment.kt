@@ -1,9 +1,15 @@
 package com.example.gestaobilhares.ui.clients
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -12,8 +18,15 @@ import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.databinding.FragmentClientRegisterBinding
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.ClienteRepository
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import android.util.Log
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Fragment para cadastro de novos clientes
@@ -26,6 +39,27 @@ class ClientRegisterFragment : Fragment() {
 
     private lateinit var viewModel: ClientRegisterViewModel
     private val args: ClientRegisterFragmentArgs by navArgs()
+    
+    // ✅ NOVO: Variáveis para Geolocalização
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var currentLatitude: Double? = null
+    private var currentLongitude: Double? = null
+    private var currentAccuracy: Float? = null
+    private var locationCaptureTime: Date? = null
+    
+    // Launcher para solicitar permissões de localização
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        
+        if (fineLocationGranted || coarseLocationGranted) {
+            capturarLocalizacao()
+        } else {
+            mostrarDialogoPermissaoNegada()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,6 +75,9 @@ class ClientRegisterFragment : Fragment() {
         
         // Inicializar ViewModel aqui onde o contexto está disponível
         viewModel = ClientRegisterViewModel(ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()))
+        
+        // ✅ NOVO: Inicializar cliente de localização
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         
         setupUI()
         observeViewModel()
@@ -68,6 +105,11 @@ class ClientRegisterFragment : Fragment() {
         // Botão salvar
         binding.btnSave.setOnClickListener {
             saveClient()
+        }
+        
+        // ✅ NOVO: Botão capturar localização
+        binding.btnCaptureLocation.setOnClickListener {
+            solicitarLocalizacao()
         }
 
         // ✅ NOVO: Definir data de cadastro atual
@@ -285,6 +327,11 @@ class ClientRegisterFragment : Fragment() {
                 telefone = if (phone.isNotEmpty()) phone else null,
                 telefone2 = if (phone2.isNotEmpty()) phone2 else null,
                 email = if (email.isNotEmpty()) email else null,
+                // ✅ NOVO: Dados de geolocalização
+                latitude = currentLatitude,
+                longitude = currentLongitude,
+                precisaoGps = currentAccuracy,
+                dataCapturaGps = locationCaptureTime,
                 valorFicha = valorFicha,
                 comissaoFicha = comissaoFicha,
                 numeroContrato = if (numeroContrato.isNotEmpty()) numeroContrato else null,
@@ -376,6 +423,24 @@ class ClientRegisterFragment : Fragment() {
             }
             etClienteDesde.setText(dataCadastro)
             
+            // ✅ NOVO: Carregar dados de geolocalização se existirem
+            if (cliente.latitude != null && cliente.longitude != null) {
+                currentLatitude = cliente.latitude
+                currentLongitude = cliente.longitude
+                currentAccuracy = cliente.precisaoGps
+                locationCaptureTime = cliente.dataCapturaGps
+                
+                // Simular localização para atualizar UI
+                val mockLocation = android.location.Location("saved").apply {
+                    latitude = cliente.latitude
+                    longitude = cliente.longitude
+                    if (cliente.precisaoGps != null) {
+                        accuracy = cliente.precisaoGps
+                    }
+                }
+                atualizarUILocalizacao(mockLocation)
+            }
+            
             // Alterar título para modo edição
             // TODO: Adicionar TextView para título no layout se não existir
         }
@@ -443,6 +508,186 @@ class ClientRegisterFragment : Fragment() {
             Log.e("ClientRegisterFragment", "Erro ao configurar dropdowns: ${e.message}")
             showErrorDialog("Erro ao carregar estados e cidades: ${e.message}")
         }
+    }
+    
+    // ✅ NOVO: Funções de Geolocalização
+    
+    /**
+     * Solicita permissões de localização e inicia captura de GPS
+     */
+    private fun solicitarLocalizacao() {
+        when {
+            // Verificar se já temos permissões
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                capturarLocalizacao()
+            }
+            
+            // Mostrar explicação se necessário
+            shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> {
+                mostrarDialogoExplicacaoPermissao()
+            }
+            
+            // Solicitar permissões
+            else -> {
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+        }
+    }
+    
+    /**
+     * Captura a localização atual do dispositivo
+     */
+    private fun capturarLocalizacao() {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        
+        // Mostrar loading
+        binding.btnCaptureLocation.isEnabled = false
+        binding.btnCaptureLocation.text = "Capturando..."
+        binding.tvLocationStatus.text = "Obtendo localização..."
+        
+        try {
+            val cancellationToken = CancellationTokenSource()
+            
+            fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                cancellationToken.token
+            ).addOnSuccessListener { location: Location? ->
+                binding.btnCaptureLocation.isEnabled = true
+                binding.btnCaptureLocation.text = "Capturar"
+                
+                if (location != null) {
+                    // Salvar coordenadas
+                    currentLatitude = location.latitude
+                    currentLongitude = location.longitude
+                    currentAccuracy = location.accuracy
+                    locationCaptureTime = Date()
+                    
+                    // Atualizar UI
+                    atualizarUILocalizacao(location)
+                    
+                    Log.d("Geolocation", "Localização capturada: ${location.latitude}, ${location.longitude}")
+                } else {
+                    binding.tvLocationStatus.text = "Não foi possível obter localização"
+                    Toast.makeText(
+                        requireContext(),
+                        "Não foi possível obter sua localização. Verifique se o GPS está ativado.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }.addOnFailureListener { exception ->
+                binding.btnCaptureLocation.isEnabled = true
+                binding.btnCaptureLocation.text = "Capturar"
+                binding.tvLocationStatus.text = "Erro ao capturar"
+                
+                Log.e("Geolocation", "Erro ao capturar localização", exception)
+                Toast.makeText(
+                    requireContext(),
+                    "Erro ao capturar localização: ${exception.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        } catch (e: Exception) {
+            binding.btnCaptureLocation.isEnabled = true
+            binding.btnCaptureLocation.text = "Capturar"
+            binding.tvLocationStatus.text = "Erro inesperado"
+            
+            Log.e("Geolocation", "Erro inesperado", e)
+            Toast.makeText(
+                requireContext(),
+                "Erro inesperado: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+    
+    /**
+     * Atualiza a interface com os dados da localização capturada
+     */
+    private fun atualizarUILocalizacao(location: Location) {
+        // Atualizar status
+        binding.tvLocationStatus.text = "Localização capturada com sucesso"
+        
+        // Mostrar coordenadas
+        binding.layoutCoordinates.visibility = View.VISIBLE
+        
+        // Formatar coordenadas
+        val latFormatted = String.format("%.6f", location.latitude)
+        val longFormatted = String.format("%.6f", location.longitude)
+        binding.tvCoordinates.text = "Lat: $latFormatted, Long: $longFormatted"
+        
+        // Mostrar precisão
+        val accuracyText = if (location.accuracy < 10) {
+            "Precisão: ±${String.format("%.1f", location.accuracy)}m (Excelente)"
+        } else if (location.accuracy < 50) {
+            "Precisão: ±${String.format("%.1f", location.accuracy)}m (Boa)"
+        } else {
+            "Precisão: ±${String.format("%.1f", location.accuracy)}m (Regular)"
+        }
+        binding.tvLocationAccuracy.text = accuracyText
+        
+        // Mostrar data/hora da captura
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
+        binding.tvLocationTime.text = "Capturada em: ${dateFormat.format(Date())}"
+        
+        // Atualizar texto do botão
+        binding.btnCaptureLocation.text = "Recapturar"
+    }
+    
+    /**
+     * Mostra diálogo explicando por que precisamos da permissão
+     */
+    private fun mostrarDialogoExplicacaoPermissao() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Permissão de Localização")
+            .setMessage("Para cadastrar a localização exata onde a mesa será instalada, precisamos acessar o GPS do seu dispositivo.\n\nIsso nos ajuda a:")
+            .setMessage("• Localizar rapidamente o cliente\n• Otimizar rotas de coleta\n• Melhorar o atendimento\n\nSua localização será usada apenas para este cadastro.")
+            .setPositiveButton("Permitir") { _, _ ->
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+            .setNegativeButton("Agora não", null)
+            .show()
+    }
+    
+    /**
+     * Mostra diálogo quando a permissão é negada
+     */
+    private fun mostrarDialogoPermissaoNegada() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Permissão Necessária")
+            .setMessage("Para capturar a localização, é necessário permitir o acesso ao GPS.\n\nVocê pode ativar nas configurações do aplicativo.")
+            .setPositiveButton("Configurações") { _, _ ->
+                // Aqui poderia abrir as configurações do app
+                Toast.makeText(
+                    requireContext(),
+                    "Ative a permissão de localização nas configurações",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     override fun onDestroyView() {

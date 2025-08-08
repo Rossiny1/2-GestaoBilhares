@@ -79,8 +79,17 @@ class ClientDetailFragment : Fragment() {
         }
         
         // ✅ NOVO: Verificar observações do último acerto apenas se vier da tela de clientes da rota
-        if (args.mostrarDialogoObservacoes) {
+        Log.d("ClientDetailFragment", "mostrarDialogoObservacoes: ${args.mostrarDialogoObservacoes}")
+        
+        // Verificar se realmente veio da tela de clientes da rota
+        val previousFragment = findNavController().previousBackStackEntry?.destination?.route
+        Log.d("ClientDetailFragment", "Fragmento anterior: $previousFragment")
+        
+        if (args.mostrarDialogoObservacoes && previousFragment == "clientListFragment") {
+            Log.d("ClientDetailFragment", "Verificando observações do último acerto - veio da tela de clientes da rota")
             verificarObservacoesUltimoAcerto()
+        } else {
+            Log.d("ClientDetailFragment", "Não mostrando diálogo de observações - não veio da tela de clientes da rota ou parâmetro é false")
         }
     }
     

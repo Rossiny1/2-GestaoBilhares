@@ -166,12 +166,12 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="3º Acerto"
-                                android:textColor="?attr/colorPrimary"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:gravity="center" />
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="center" />
 
-                        </LinearLayout>
+                    </LinearLayout>
 
                         <!-- Coluna 2: Status -->
                         <LinearLayout
@@ -195,13 +195,13 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Em andamento"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:singleLine="true"
-                                android:ellipsize="end" />
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold"
+                                    android:singleLine="true"
+                                    android:ellipsize="end" />
 
-                        </LinearLayout>
+                            </LinearLayout>
 
                     </LinearLayout>
 
@@ -227,18 +227,18 @@
                             android:layout_marginEnd="4dp" />
 
                         <!-- Botão Finalizar -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnFinishRoute"
-                            style="@style/Widget.Material3.Button"
-                            android:layout_width="0dp"
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnFinishRoute"
+                                style="@style/Widget.Material3.Button"
+                                android:layout_width="0dp"
                             android:layout_height="48dp"
-                            android:layout_weight="1"
-                            android:enabled="false"
-                            android:text="Finalizar"
+                                android:layout_weight="1"
+                                android:enabled="false"
+                                android:text="Finalizar"
                             android:textSize="14sp"
                             android:maxLines="2"
                             android:ellipsize="end"
-                            android:gravity="center"
+                                android:gravity="center"
                             android:layout_marginStart="4dp" />
 
                     </LinearLayout>

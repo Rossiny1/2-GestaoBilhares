@@ -27,7 +27,7 @@ import com.example.gestaobilhares.data.entities.*
         CategoriaDespesa::class, // ✅ NOVO: CATEGORIAS DE DESPESAS
         TipoDespesa::class // ✅ NOVO: TIPOS DE DESPESAS
     ],
-    version = 14, // ✅ MIGRATION: Corrigido schema da tabela clientes
+    version = 16, // ✅ MIGRATION: Adicionados campos de foto do relógio na tabela acerto_mesas
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -173,12 +173,30 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
                 
+                val MIGRATION_14_15 = object : androidx.room.migration.Migration(14, 15) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Adicionar campos de geolocalização na tabela clientes
+                        database.execSQL("ALTER TABLE clientes ADD COLUMN latitude REAL")
+                        database.execSQL("ALTER TABLE clientes ADD COLUMN longitude REAL")
+                        database.execSQL("ALTER TABLE clientes ADD COLUMN precisao_gps REAL")
+                        database.execSQL("ALTER TABLE clientes ADD COLUMN data_captura_gps INTEGER")
+                    }
+                }
+                
+                val MIGRATION_15_16 = object : androidx.room.migration.Migration(15, 16) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Adicionar campos de foto do relógio na tabela acerto_mesas
+                        database.execSQL("ALTER TABLE acerto_mesas ADD COLUMN foto_relogio_final TEXT")
+                        database.execSQL("ALTER TABLE acerto_mesas ADD COLUMN data_foto INTEGER")
+                    }
+                }
+                
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
+                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
                     .build()
                 INSTANCE = instance
                 instance
