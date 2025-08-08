@@ -665,10 +665,14 @@ class SettlementDetailFragment : Fragment() {
                     val acertoCompleto = viewModel.buscarAcertoPorId(args.acertoId)
                     
                     if (acertoCompleto != null) {
+                        // Criar array vazio de MesaDTO já que estamos editando um acerto existente
+                        val mesasDTO = emptyArray<MesaDTO>()
+                        
                         val action = SettlementDetailFragmentDirections
                             .actionSettlementDetailFragmentToSettlementFragment(
                                 clienteId = acertoCompleto.clienteId,
-                                acertoIdParaEdicao = args.acertoId
+                                acertoIdParaEdicao = args.acertoId,
+                                mesasDTO = mesasDTO
                             )
                         findNavController().navigate(action)
                     } else {

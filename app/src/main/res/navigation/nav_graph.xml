@@ -140,6 +140,10 @@
             android:name="acertoIdParaEdicao"
             app:argType="long"
             android:defaultValue="0L" />
+        <!-- ✅ NOVO PARÂMETRO: Array de MesaDTO -->
+        <argument
+            android:name="mesasDTO"
+            app:argType="com.example.gestaobilhares.ui.settlement.MesaDTO[]" />
     </fragment>
 
     <!-- FASE 4B: Tela de cadastro de cliente -->

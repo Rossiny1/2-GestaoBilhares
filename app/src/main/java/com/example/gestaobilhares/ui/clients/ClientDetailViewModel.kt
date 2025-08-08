@@ -393,6 +393,18 @@ class ClientDetailViewModel(
             null
         }
     }
+    
+    /**
+     * ✅ NOVO: Busca o último acerto de um cliente com observações
+     */
+    suspend fun buscarUltimoAcerto(clienteId: Long): Acerto? {
+        return try {
+            acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
+        } catch (e: Exception) {
+            Log.e("ClientDetailViewModel", "Erro ao buscar último acerto: ${e.message}")
+            null
+        }
+    }
 }
 
 // Data classes auxiliares - FASE 4A

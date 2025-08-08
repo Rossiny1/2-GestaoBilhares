@@ -80,7 +80,7 @@ class ClientAdapter(
                     text = "DÉBITO ALTO",
                     color = context.getColor(R.color.red_600),
                     background = R.drawable.rounded_tag_red,
-                    showSpecialTag = true
+                    showSpecialTag = false
                 )
                 
                 // 3. Em atraso (mais de 4 meses sem acerto)

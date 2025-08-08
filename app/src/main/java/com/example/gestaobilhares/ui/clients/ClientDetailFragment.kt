@@ -67,23 +67,19 @@ class ClientDetailFragment : Fragment() {
             AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao())
         )
         
-        setupUI()
+        // Inicializar views e configurar listeners
         setupRecyclerView()
+        setupMesasSection()
+        setupUI() // Movido para depois da inicialização das outras views
         observeViewModel()
         
         // Carregar dados do cliente apenas se não estiverem carregados
         if (viewModel.clientDetails.value == null) {
-        viewModel.loadClientDetails(args.clienteId)
+            viewModel.loadClientDetails(args.clienteId)
         }
         
-        setupMesasSection()
-        // Desabilitar botão até mesas carregarem
-        binding.btnNewSettlement.isEnabled = false
-        lifecycleScope.launch {
-            viewModel.mesasCliente.collect { mesas ->
-                binding.btnNewSettlement.isEnabled = mesas.isNotEmpty()
-            }
-        }
+        // ✅ NOVO: Verificar observações do último acerto assim que a tela for carregada
+        verificarObservacoesUltimoAcerto()
     }
     
     override fun onResume() {
@@ -99,8 +95,188 @@ class ClientDetailFragment : Fragment() {
         if (viewModel.settlementHistory.value.isEmpty()) {
             viewModel.loadSettlementHistory(args.clienteId)
         }
+        
+        // ✅ NOVO: Verificar observações do último acerto
+        verificarObservacoesUltimoAcerto()
     }
     
+    /**
+     * ✅ NOVO: Configura o FAB expandível com animações
+     */
+    private fun configurarFabExpandivel() {
+        binding.fabMain.setOnClickListener {
+            if (binding.fabExpandedContainer.visibility == View.VISIBLE) {
+                recolherFabMenu()
+            } else {
+                expandirFabMenu()
+            }
+        }
+        
+        // Configurar clicks dos FABs expandidos
+        binding.fabAddTableContainer.setOnClickListener {
+            // ✅ IMPLEMENTADO: Navegar para tela Depósito Mesas
+            try {
+                val action = ClientDetailFragmentDirections
+                    .actionClientDetailFragmentToMesasDepositoFragment(args.clienteId)
+                findNavController().navigate(action)
+                Log.d("ClientDetailFragment", "Navegando para Depósito Mesas - Cliente ID: ${args.clienteId}")
+            } catch (e: Exception) {
+                Log.e("ClientDetailFragment", "Erro ao navegar para Depósito Mesas: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao abrir Depósito Mesas: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+            recolherFabMenu()
+        }
+        
+        binding.fabNewSettlementContainer.setOnClickListener {
+            // ✅ IMPLEMENTADO: Navegar para tela de Novo Acerto
+            try {
+                val mesasAtivas = viewModel.mesasCliente.value
+                Log.d("NovoAcerto", "Mesas ativas encontradas: ${mesasAtivas.size}")
+                
+                if (mesasAtivas.isEmpty()) {
+                    Toast.makeText(requireContext(), "Este cliente não possui mesas ativas para acerto.", Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
+                
+                // Obter dados do cliente para incluir nos MesaDTOs
+                val cliente = viewModel.clientDetails.value
+                val valorFicha = cliente?.valorFicha ?: 0.0
+                val comissaoFicha = cliente?.comissaoFicha ?: 0.0
+                
+                val mesasDTO = mesasAtivas.map { mesa ->
+                    Log.d("NovoAcerto", "Convertendo mesa ${mesa.numero} - ID: ${mesa.id}")
+                    MesaDTO(
+                        id = mesa.id,
+                        numero = mesa.numero,
+                        fichasInicial = mesa.fichasInicial ?: 0,
+                        fichasFinal = mesa.fichasFinal ?: 0,
+                        tipoMesa = mesa.tipoMesa,
+                        ativa = mesa.ativa,
+                        valorFixo = mesa.valorFixo ?: 0.0,
+                        valorFicha = valorFicha,
+                        comissaoFicha = comissaoFicha
+                    )
+                }.toTypedArray()
+                
+                Log.d("NovoAcerto", "Enviando ${mesasDTO.size} mesas para SettlementFragment")
+                Log.d("NovoAcerto", "Mesas: ${mesasDTO.joinToString { "Mesa ${it.numero} (ID: ${it.id})" }}")
+                Log.d("NovoAcerto", "Valor Ficha: $valorFicha, Comissão Ficha: $comissaoFicha")
+                
+                // Criar o bundle com os dados necessários
+                val action = ClientDetailFragmentDirections
+                    .actionClientDetailFragmentToSettlementFragment(
+                        clienteId = args.clienteId,
+                        mesasDTO = mesasDTO
+                    )
+                findNavController().navigate(action)
+                Log.d("ClientDetailFragment", "Navegando para Novo Acerto - Cliente ID: ${args.clienteId} com ${mesasDTO.size} mesas")
+            } catch (e: Exception) {
+                Log.e("ClientDetailFragment", "Erro ao navegar para SettlementFragment: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao abrir tela de acerto: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+            recolherFabMenu()
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Expande o menu FAB com animações
+     */
+    private fun expandirFabMenu() {
+        binding.fabExpandedContainer.visibility = View.VISIBLE
+        
+        // Animar FAB principal
+        binding.fabMain.animate()
+            .rotation(45f)
+            .setDuration(200)
+            .start()
+        
+        // Animar FABs expandidos
+        binding.fabAddTableContainer.animate()
+            .alpha(1f)
+            .translationY(-16f)
+            .setDuration(200)
+            .start()
+        
+        binding.fabNewSettlementContainer.animate()
+            .alpha(1f)
+            .translationY(-32f)
+            .setDuration(200)
+            .setStartDelay(50)
+            .start()
+    }
+    
+    /**
+     * ✅ NOVO: Recolhe o menu FAB com animações
+     */
+    private fun recolherFabMenu() {
+        // Verificar se o binding ainda é válido
+        val currentBinding = _binding
+        if (currentBinding == null) {
+            Log.d("ClientDetailFragment", "Binding é nulo, ignorando animação")
+            return
+        }
+        
+        // Animar FAB principal
+        currentBinding.fabMain.animate()
+            .rotation(0f)
+            .setDuration(200)
+            .start()
+        
+        // Animar FABs expandidos
+        currentBinding.fabAddTableContainer.animate()
+            .alpha(0f)
+            .translationY(0f)
+            .setDuration(200)
+            .withEndAction {
+                // Verificar novamente se o binding ainda é válido
+                _binding?.fabExpandedContainer?.visibility = View.GONE
+            }
+            .start()
+        
+        currentBinding.fabNewSettlementContainer.animate()
+            .alpha(0f)
+            .translationY(0f)
+            .setDuration(200)
+            .setStartDelay(50)
+            .start()
+    }
+
+    /**
+     * ✅ NOVO: Verifica se há observações no último acerto e mostra diálogo se necessário
+     */
+    private fun verificarObservacoesUltimoAcerto() {
+        lifecycleScope.launch {
+            try {
+                val ultimoAcerto = viewModel.buscarUltimoAcerto(args.clienteId)
+                ultimoAcerto?.let { acerto ->
+                    if (!acerto.observacoes.isNullOrBlank()) {
+                        Log.d("ClientDetailFragment", "Observações encontradas no último acerto: ${acerto.observacoes}")
+                        mostrarDialogoObservacoes(acerto.observacoes)
+                    } else {
+                        Log.d("ClientDetailFragment", "Nenhuma observação no último acerto")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ClientDetailFragment", "Erro ao verificar observações do último acerto: ${e.message}", e)
+            }
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Mostra diálogo com observações do último acerto
+     */
+    private fun mostrarDialogoObservacoes(observacoes: String) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Observações do Último Acerto")
+            .setMessage(observacoes)
+            .setPositiveButton("Confirmar Leitura") { dialog, _ ->
+                dialog.dismiss()
+                Log.d("ClientDetailFragment", "Diálogo de observações fechado pelo usuário")
+            }
+            .setCancelable(false)
+            .show()
+    }
+
     /**
      * Verifica se há um novo acerto salvo no cache temporário e recarrega o histórico
      */
@@ -138,53 +314,7 @@ class ClientDetailFragment : Fragment() {
         binding.btnBack.setOnClickListener {
             findNavController().popBackStack()
         }
-        
-        // Botão Novo Acerto - CORRIGIDO: Navegação simplificada para evitar crash
-        binding.btnNewSettlement.setOnClickListener {
-            try {
-                val mesasAtivas = viewModel.mesasCliente.value
-                Log.d("NovoAcerto", "Mesas ativas encontradas: ${mesasAtivas.size}")
-                
-                if (mesasAtivas.isEmpty()) {
-                    Toast.makeText(requireContext(), "Este cliente não possui mesas ativas para acerto.", Toast.LENGTH_LONG).show()
-                    return@setOnClickListener
-                }
-                
-                // Obter dados do cliente para incluir nos MesaDTOs
-                val cliente = viewModel.clientDetails.value
-                val valorFicha = cliente?.valorFicha ?: 0.0
-                val comissaoFicha = cliente?.comissaoFicha ?: 0.0
-                
-                val mesasDTO = mesasAtivas.map { mesa ->
-                    Log.d("NovoAcerto", "Convertendo mesa ${mesa.numero} - ID: ${mesa.id}")
-                    MesaDTO(
-                        id = mesa.id,
-                        numero = mesa.numero,
-                        fichasInicial = mesa.fichasInicial ?: 0,
-                        fichasFinal = mesa.fichasFinal ?: 0,
-                        tipoMesa = mesa.tipoMesa,
-                        ativa = mesa.ativa,
-                        valorFixo = mesa.valorFixo ?: 0.0,
-                        valorFicha = valorFicha,
-                        comissaoFicha = comissaoFicha
-                    )
-                }.toTypedArray()
-                
-                Log.d("NovoAcerto", "Enviando ${mesasDTO.size} mesas para SettlementFragment")
-                Log.d("NovoAcerto", "Mesas: ${mesasDTO.joinToString { "Mesa ${it.numero} (ID: ${it.id})" }}")
-                Log.d("NovoAcerto", "Valor Ficha: $valorFicha, Comissão Ficha: $comissaoFicha")
-                
-                val action = ClientDetailFragmentDirections
-                    .actionClientDetailFragmentToSettlementFragment(
-                        args.clienteId
-                    )
-                findNavController().navigate(action)
-            } catch (e: Exception) {
-                Log.e("ClientDetailFragment", "Erro ao navegar para SettlementFragment: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao abrir tela de acerto: ${e.message}", Toast.LENGTH_LONG).show()
-            }
-        }
-        
+
         // Botões de contato
         binding.fabWhatsApp.setOnClickListener {
             val cliente = viewModel.clientDetails.value
@@ -200,15 +330,21 @@ class ClientDetailFragment : Fragment() {
             }
         }
         
-        // Botão editar cliente - ✅ CORRIGIDO: Passar clienteId para edição
+        // Botão editar cliente
         binding.fabEdit.setOnClickListener {
             val action = ClientDetailFragmentDirections
                 .actionClientDetailFragmentToClientRegisterFragment(
                     rotaId = 0L, // Não precisa da rota para edição
-                    clienteId = args.clienteId // ✅ Passar ID do cliente para edição
+                    clienteId = args.clienteId
                 )
             findNavController().navigate(action)
         }
+        
+        // ✅ NOVO: Configurar FAB expandível
+        configurarFabExpandivel()
+        
+        // ✅ NOVO: Configurar visibilidade inicial do FAB expandido
+        binding.fabExpandedContainer.visibility = View.GONE
     }
 
     private fun setupRecyclerView() {
@@ -234,10 +370,7 @@ class ClientDetailFragment : Fragment() {
         val gridLayoutManager = GridLayoutManager(requireContext(), 2)
         binding.rvMesasCliente.layoutManager = gridLayoutManager
         binding.rvMesasCliente.adapter = mesasAdapter
-        binding.btnAdicionarMesa.setOnClickListener {
-            val action = ClientDetailFragmentDirections.actionClientDetailFragmentToMesasDepositoFragment(args.clienteId)
-            findNavController().navigate(action)
-        }
+
         lifecycleScope.launch {
             viewModel.mesasCliente.collect { mesas ->
                 mesasAdapter.submitList(mesas)
@@ -285,7 +418,8 @@ class ClientDetailFragment : Fragment() {
                                 }.toTypedArray()
                                 
                                 val action = ClientDetailFragmentDirections.actionClientDetailFragmentToSettlementFragment(
-                                    args.clienteId
+                                    clienteId = args.clienteId,
+                                    mesasDTO = mesasDTO
                                 )
                                 findNavController().navigate(action)
                             }
@@ -372,25 +506,6 @@ class ClientDetailFragment : Fragment() {
                 tvClientCurrentDebt.setTextColor(debtColor)
             }
             Log.d("ClientDetailFragment", "Débito atual exibido na tela: R$ ${client.debitoAtual}")
-            
-            // Observação do cliente
-            if (viewModel.isAdminUser()) {
-                etObservations.visibility = View.VISIBLE
-                tvObservations.visibility = View.GONE
-                etObservations.setText(client.observacoes)
-                etObservations.setOnFocusChangeListener { _, hasFocus ->
-                    if (!hasFocus) {
-                        val novaObs = etObservations.text.toString()
-                        if (novaObs != client.observacoes) {
-                            viewModel.salvarObservacaoCliente(client.id, novaObs)
-                        }
-                    }
-                }
-            } else {
-                etObservations.visibility = View.GONE
-                tvObservations.visibility = View.VISIBLE
-                tvObservations.text = client.observacoes
-            }
         }
     }
 

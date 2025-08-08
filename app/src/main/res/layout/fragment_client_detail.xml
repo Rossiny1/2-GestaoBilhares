@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
-    android:fillViewport="true">
+    android:background="?attr/colorSurface">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/colorSurface"
+        android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -263,115 +268,9 @@
 
         </FrameLayout>
 
-        <!-- Botão Novo Acerto -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            app:strokeColor="@color/purple_600"
-            app:strokeWidth="1dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
 
-                <!-- Título e Botão Novo Aberto na mesma linha -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="12dp">
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Novo Acerto"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:gravity="start" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnNewSettlement"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Novo Acerto"
-                        android:textColor="@color/white"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        app:backgroundTint="@color/purple_600"
-                        app:cornerRadius="12dp"
-                        app:icon="@drawable/ic_add"
-                        app:iconTint="@color/white" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Seção Observações -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            app:strokeColor="@color/purple_600"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Observações"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
-
-                <EditText
-                    android:id="@+id/etObservations"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/rounded_tag_gray"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="14sp"
-                    android:hint="Observações do cliente"
-                    android:visibility="gone"
-                    android:inputType="textMultiLine"
-                    android:minLines="2"
-                    android:maxLines="4"
-                    android:padding="12dp" />
-
-                <TextView
-                    android:id="@+id/tvObservations"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/rounded_tag_gray"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="14sp"
-                    android:visibility="gone"
-                    android:minLines="2"
-                    android:maxLines="4"
-                    android:padding="12dp"
-                    tools:text="Cliente preferencial - Pagamento sempre em dia" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
 
         <!-- Seção Mesas do Cliente -->
         <com.google.android.material.card.MaterialCardView
@@ -390,33 +289,15 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
-        <LinearLayout
+        <!-- Título Mesas do Cliente em linha única -->
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
-
-            <TextView
-                        android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                android:text="Mesas do Cliente"
-                android:textColor="?attr/colorOnSurface"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAdicionarMesa"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Adicionar Mesa"
-                android:icon="@drawable/ic_add"
-                        android:textSize="14sp"
-                        app:cornerRadius="12dp"
-                        style="@style/Widget.Material3.Button.OutlinedButton" />
-
-        </LinearLayout>
+            android:text="Mesas do Cliente"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvMesasCliente"
@@ -513,4 +394,109 @@
 
     </LinearLayout>
 
-</ScrollView> 
+    </ScrollView>
+
+    <!-- FAB Principal -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="Menu de ações"
+        android:src="@drawable/ic_add"
+        app:backgroundTint="@color/yellow_600"
+        app:tint="@color/white"
+        app:fabSize="normal" />
+
+    <!-- Container para FABs expandidos -->
+    <LinearLayout
+        android:id="@+id/fab_expanded_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="80dp"
+        android:orientation="vertical"
+        android:gravity="end"
+        android:visibility="gone">
+
+        <!-- FAB Adicionar Mesa com Label -->
+        <LinearLayout
+            android:id="@+id/fab_add_table_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="?attr/colorSurface"
+            android:elevation="8dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:alpha="0">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Adicionar Mesa"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_add_table"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Adicionar Mesa"
+                android:src="@drawable/ic_table"
+                app:fabSize="mini"
+                app:backgroundTint="@color/blue_600"
+                app:tint="@color/white" />
+
+        </LinearLayout>
+
+        <!-- FAB Novo Acerto com Label -->
+        <LinearLayout
+            android:id="@+id/fab_new_settlement_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="0dp"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="?attr/colorSurface"
+            android:elevation="8dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:alpha="0">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Novo Acerto"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_new_settlement"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Novo Acerto"
+                android:src="@drawable/ic_receipt"
+                app:fabSize="mini"
+                app:backgroundTint="@color/green_600"
+                app:tint="@color/white" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout> 
