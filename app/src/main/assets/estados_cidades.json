@@ -1,131 +1,52 @@
 {
     "estados": [
         {
-            "sigla": "AC",
-            "nome": "Acre",
-            "cidades": [
-                "Rio Branco",
-                "Cruzeiro do Sul",
-                "Sena Madureira",
-                "Tarauacá",
-                "Feijó"
-            ]
-        },
-        {
-            "sigla": "AL",
-            "nome": "Alagoas",
-            "cidades": [
-                "Maceió",
-                "Arapiraca",
-                "Rio Largo",
-                "Palmeira dos Índios",
-                "Penedo"
-            ]
-        },
-        {
-            "sigla": "AP",
-            "nome": "Amapá",
-            "cidades": [
-                "Macapá",
-                "Santana",
-                "Laranjal do Jari",
-                "Oiapoque",
-                "Mazagão"
-            ]
-        },
-        {
-            "sigla": "AM",
-            "nome": "Amazonas",
-            "cidades": [
-                "Manaus",
-                "Parintins",
-                "Itacoatiara",
-                "Manacapuru",
-                "Coari"
-            ]
-        },
-        {
             "sigla": "BA",
             "nome": "Bahia",
             "cidades": [
-                "Salvador",
-                "Feira de Santana",
-                "Vitória da Conquista",
+                "Alagoinhas",
+                "Amargosa",
+                "Barreiras",
+                "Bom Jesus da Lapa",
+                "Brumado",
+                "Caetité",
                 "Camaçari",
-                "Itabuna"
-            ]
-        },
-        {
-            "sigla": "CE",
-            "nome": "Ceará",
-            "cidades": [
-                "Fortaleza",
-                "Caucaia",
-                "Juazeiro do Norte",
-                "Maracanaú",
-                "Sobral"
-            ]
-        },
-        {
-            "sigla": "DF",
-            "nome": "Distrito Federal",
-            "cidades": [
-                "Brasília"
-            ]
-        },
-        {
-            "sigla": "ES",
-            "nome": "Espírito Santo",
-            "cidades": [
-                "Vitória",
-                "Vila Velha",
-                "Cariacica",
-                "Serra",
-                "Linhares"
-            ]
-        },
-        {
-            "sigla": "GO",
-            "nome": "Goiás",
-            "cidades": [
-                "Goiânia",
-                "Aparecida de Goiânia",
-                "Anápolis",
-                "Rio Verde",
-                "Luziânia"
-            ]
-        },
-        {
-            "sigla": "MA",
-            "nome": "Maranhão",
-            "cidades": [
-                "São Luís",
-                "Imperatriz",
-                "São José de Ribamar",
-                "Timon",
-                "Caxias"
-            ]
-        },
-        {
-            "sigla": "MT",
-            "nome": "Mato Grosso",
-            "cidades": [
-                "Cuiabá",
-                "Várzea Grande",
-                "Rondonópolis",
-                "Sinop",
-                "Tangará da Serra"
-            ]
-        },
-        {
-            "sigla": "MS",
-            "nome": "Mato Grosso do Sul",
-            "cidades": [
-                "Campo Grande",
-                "Dourados",
-                "Três Lagoas",
-                "Corumbá",
-                "Ponta Porã"
+                "Candeias",
+                "Casa Nova",
+                "Conceição do Coité",
+                "Cruz das Almas",
+                "Dias d'Ávila",
+                "Eunápolis",
+                "Feira de Santana",
+                "Guanambi",
+                "Ilhéus",
+                "Ipirá",
+                "Irecê",
+                "Itabuna",
+                "Itamaraju",
+                "Itapetinga",
+                "Jacobina",
+                "Jequié",
+                "Juazeiro",
+                "Lauro de Freitas",
+                "Livramento de Nossa Senhora",
+                "Luís Eduardo Magalhães",
+                "Madre de Deus",
+                "Mata de São João",
+                "Paratinga",
+                "Paulo Afonso",
+                "Porto Seguro",
+                "Ribeira do Pombal",
+                "Salvador",
+                "Santo Antônio de Jesus",
+                "Seabra",
+                "Senhor do Bonfim",
+                "Simões Filho",
+                "Teixeira de Freitas",
+                "Una",
+                "Valença",
+                "Vitória da Conquista",
+                "Xique-Xique"
             ]
         },
         {
@@ -221,227 +142,6 @@
                 "Varginha",
                 "Vespasiano",
                 "Viçosa"
-            ]
-        },
-        {
-            "sigla": "PA",
-            "nome": "Pará",
-            "cidades": [
-                "Belém",
-                "Ananindeua",
-                "Santarém",
-                "Marabá",
-                "Castanhal"
-            ]
-        },
-        {
-            "sigla": "PB",
-            "nome": "Paraíba",
-            "cidades": [
-                "João Pessoa",
-                "Campina Grande",
-                "Santa Rita",
-                "Patos",
-                "Bayeux"
-            ]
-        },
-        {
-            "sigla": "PR",
-            "nome": "Paraná",
-            "cidades": [
-                "Curitiba",
-                "Londrina",
-                "Maringá",
-                "Ponta Grossa",
-                "Cascavel"
-            ]
-        },
-        {
-            "sigla": "PE",
-            "nome": "Pernambuco",
-            "cidades": [
-                "Recife",
-                "Jaboatão dos Guararapes",
-                "Olinda",
-                "Caruaru",
-                "Petrolina"
-            ]
-        },
-        {
-            "sigla": "PI",
-            "nome": "Piauí",
-            "cidades": [
-                "Teresina",
-                "Parnaíba",
-                "Picos",
-                "Piripiri",
-                "Floriano"
-            ]
-        },
-        {
-            "sigla": "RJ",
-            "nome": "Rio de Janeiro",
-            "cidades": [
-                "Rio de Janeiro",
-                "São Gonçalo",
-                "Duque de Caxias",
-                "Nova Iguaçu",
-                "Niterói"
-            ]
-        },
-        {
-            "sigla": "RN",
-            "nome": "Rio Grande do Norte",
-            "cidades": [
-                "Natal",
-                "Mossoró",
-                "Parnamirim",
-                "São Gonçalo do Amarante",
-                "Macaíba"
-            ]
-        },
-        {
-            "sigla": "RS",
-            "nome": "Rio Grande do Sul",
-            "cidades": [
-                "Porto Alegre",
-                "Caxias do Sul",
-                "Pelotas",
-                "Canoas",
-                "Santa Maria"
-            ]
-        },
-        {
-            "sigla": "RO",
-            "nome": "Rondônia",
-            "cidades": [
-                "Porto Velho",
-                "Ji-Paraná",
-                "Ariquemes",
-                "Vilhena",
-                "Cacoal"
-            ]
-        },
-        {
-            "sigla": "RR",
-            "nome": "Roraima",
-            "cidades": [
-                "Boa Vista",
-                "Caracaraí",
-                "Rorainópolis",
-                "Alto Alegre",
-                "Mucajaí"
-            ]
-        },
-        {
-            "sigla": "SC",
-            "nome": "Santa Catarina",
-            "cidades": [
-                "Florianópolis",
-                "Joinville",
-                "Blumenau",
-                "São José",
-                "Criciúma"
-            ]
-        },
-        {
-            "sigla": "SP",
-            "nome": "São Paulo",
-            "cidades": [
-                "Adamantina",
-                "Americana",
-                "Araçatuba",
-                "Araraquara",
-                "Araras",
-                "Assis",
-                "Atibaia",
-                "Barretos",
-                "Barueri",
-                "Bauru",
-                "Botucatu",
-                "Bragança Paulista",
-                "Campinas",
-                "Campos do Jordão",
-                "Caraguatatuba",
-                "Carapicuíba",
-                "Catanduva",
-                "Cotia",
-                "Cruzeiro",
-                "Diadema",
-                "Franca",
-                "Franco da Rocha",
-                "Guaratinguetá",
-                "Guarujá",
-                "Guarulhos",
-                "Hortolândia",
-                "Indaiatuba",
-                "Itanhaém",
-                "Itapetininga",
-                "Itaquaquecetuba",
-                "Itu",
-                "Jaboticabal",
-                "Jacareí",
-                "Jandira",
-                "Jaú",
-                "Jundiaí",
-                "Limeira",
-                "Lins",
-                "Marília",
-                "Matão",
-                "Mauá",
-                "Mogi das Cruzes",
-                "Mogi Guaçu",
-                "Mogi Mirim",
-                "Osasco",
-                "Ourinhos",
-                "Paulínia",
-                "Peruíbe",
-                "Piracicaba",
-                "Presidente Prudente",
-                "Ribeirão Preto",
-                "Rio Claro",
-                "Salto",
-                "Santa Bárbara d'Oeste",
-                "Santana de Parnaíba",
-                "Santo André",
-                "Santos",
-                "São Bernardo do Campo",
-                "São Caetano do Sul",
-                "São Carlos",
-                "São José do Rio Preto",
-                "São José dos Campos",
-                "São Paulo",
-                "São Vicente",
-                "Sorocaba",
-                "Sumaré",
-                "Suzano",
-                "Taboão da Serra",
-                "Taubaté",
-                "Valinhos",
-                "Vinhedo",
-                "Votuporanga"
-            ]
-        },
-        {
-            "sigla": "SE",
-            "nome": "Sergipe",
-            "cidades": [
-                "Aracaju",
-                "Nossa Senhora do Socorro",
-                "Lagarto",
-                "Itabaiana",
-                "São Cristóvão"
-            ]
-        },
-        {
-            "sigla": "TO",
-            "nome": "Tocantins",
-            "cidades": [
-                "Palmas",
-                "Araguaína",
-                "Gurupi",
-                "Porto Nacional",
-                "Paraíso do Tocantins"
             ]
         }
     ]
