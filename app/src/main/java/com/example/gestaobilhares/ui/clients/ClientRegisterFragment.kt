@@ -401,13 +401,26 @@ class ClientRegisterFragment : Fragment() {
             // Listener para atualizar cidades quando estado for selecionado
             binding.actvEstado.setOnItemClickListener { _, _, position, _ ->
                 val estadoSelecionado = estadosCidades.estados[position]
+                
+                // Criar adapter com filtro para as cidades
                 val cidadesAdapter = android.widget.ArrayAdapter(
                     requireContext(),
                     android.R.layout.simple_dropdown_item_1line,
-                    estadoSelecionado.cidades
+                    estadoSelecionado.cidades.sorted() // Ordenar alfabeticamente
                 )
+                
                 binding.actvCidade.setText("") // Limpar cidade atual
                 binding.actvCidade.setAdapter(cidadesAdapter)
+                
+                // Configurar comportamento de digitação
+                binding.actvCidade.threshold = 1 // Mostrar sugestões a partir do primeiro caractere
+                binding.actvCidade.setOnFocusChangeListener { _, hasFocus ->
+                    if (hasFocus) {
+                        binding.actvCidade.showDropDown()
+                    }
+                }
+                
+                Log.d("ClientRegisterFragment", "Estado selecionado: ${estadoSelecionado.nome}, ${estadoSelecionado.cidades.size} cidades carregadas")
             }
             
             // Configurar adapter inicial para cidades (vazio)
@@ -416,6 +429,15 @@ class ClientRegisterFragment : Fragment() {
                 android.R.layout.simple_dropdown_item_1line,
                 arrayOf<String>()
             ))
+            
+            // Configurar comportamento do campo de cidade
+            binding.actvCidade.setOnClickListener {
+                if (binding.actvEstado.text.toString().isNotEmpty()) {
+                    binding.actvCidade.showDropDown()
+                } else {
+                    showErrorDialog("Selecione primeiro um estado")
+                }
+            }
             
         } catch (e: Exception) {
             Log.e("ClientRegisterFragment", "Erro ao configurar dropdowns: ${e.message}")
