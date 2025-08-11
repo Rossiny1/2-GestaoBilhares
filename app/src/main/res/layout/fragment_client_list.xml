@@ -306,33 +306,33 @@
                     android:padding="4dp">
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnFilterActive"
+                        android:id="@+id/btnFilterAcertados"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="0dp"
                         android:layout_height="40dp"
                         android:layout_weight="1"
-                        android:text="Ativos"
+                        android:text="Acertados"
                         android:textColor="?attr/colorPrimary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnFilterDebtors"
+                        android:id="@+id/btnFilterNaoAcertados"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="0dp"
                         android:layout_height="40dp"
                         android:layout_weight="1"
-                        android:text="Devedores"
+                        android:text="Não Acertados"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="13sp" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnFilterAll"
+                        android:id="@+id/btnFilterPendencias"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="0dp"
                         android:layout_height="40dp"
                         android:layout_weight="1"
-                        android:text="Todos"
+                        android:text="Pendências"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="13sp" />
 
@@ -443,6 +443,7 @@
             android:paddingVertical="8dp"
             android:clickable="true"
             android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
             android:alpha="0">
 
             <TextView
@@ -462,7 +463,8 @@
                 android:src="@drawable/ic_person"
                 app:fabSize="mini"
                 app:backgroundTint="?attr/colorPrimary"
-                app:tint="?attr/colorOnPrimary" />
+                app:tint="?attr/colorOnPrimary"
+                android:clickable="false" />
 
         </LinearLayout>
 
@@ -481,6 +483,7 @@
             android:paddingVertical="8dp"
             android:clickable="true"
             android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
             android:alpha="0">
 
             <TextView
@@ -500,7 +503,8 @@
                 android:src="@drawable/ic_money"
                 app:fabSize="mini"
                 app:backgroundTint="?attr/colorSecondary"
-                app:tint="?attr/colorOnSecondary" />
+                app:tint="?attr/colorOnSecondary"
+                android:clickable="false" />
 
         </LinearLayout>
 

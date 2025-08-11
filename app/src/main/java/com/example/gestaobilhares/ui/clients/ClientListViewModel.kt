@@ -31,7 +31,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
  * Filtros disponíveis para a lista de clientes
  */
 enum class FiltroCliente {
-    TODOS, ATIVOS, DEVEDORES
+    TODOS, ACERTADOS, NAO_ACERTADOS, PENDENCIAS
 }
 
 /**
@@ -80,7 +80,7 @@ class ClientListViewModel(
     val pendencias: StateFlow<Int> = _pendencias.asStateFlow()
 
     private val _clientesTodos = MutableStateFlow<List<Cliente>>(emptyList())
-    private val _filtroAtual = MutableStateFlow(FiltroCliente.ATIVOS)
+    private val _filtroAtual = MutableStateFlow(FiltroCliente.ACERTADOS)
     
     // ✅ FASE 9B: Lista de clientes filtrados
     private val _clientes = MutableStateFlow<List<Cliente>>(emptyList())
@@ -235,8 +235,15 @@ class ClientListViewModel(
      * ✅ FASE 9B: Aplica filtro à lista de clientes com filtros combinados
      */
     fun aplicarFiltro(filtro: FiltroCliente) {
-        _filtroAtual.value = filtro
-        aplicarFiltrosCombinados()
+        viewModelScope.launch {
+            try {
+                _filtroAtual.value = filtro
+                aplicarFiltrosCombinados()
+            } catch (e: Exception) {
+                android.util.Log.e("ClientListViewModel", "Erro ao aplicar filtro: ${e.message}")
+                _errorMessage.value = "Erro ao aplicar filtro: ${e.message}"
+            }
+        }
     }
 
     /**
@@ -401,6 +408,11 @@ class ClientListViewModel(
 
     // ✅ FASE 9B: Estado de busca atual
     private val _buscaAtual = MutableStateFlow("")
+    
+    // ✅ NOVO: Variáveis para pesquisa avançada
+    private val _searchType = MutableStateFlow<SearchType?>(null)
+    private val _searchCriteria = MutableStateFlow("")
+    private val _isAdvancedSearch = MutableStateFlow(false)
     val buscaAtual: StateFlow<String> = _buscaAtual.asStateFlow()
 
     /**
@@ -410,6 +422,9 @@ class ClientListViewModel(
         viewModelScope.launch {
             try {
                 _buscaAtual.value = query
+                _isAdvancedSearch.value = false
+                _searchType.value = null
+                _searchCriteria.value = ""
                 aplicarFiltrosCombinados()
             } catch (e: Exception) {
                 android.util.Log.e("ClientListViewModel", "Erro na busca: ${e.message}")
@@ -419,29 +434,197 @@ class ClientListViewModel(
     }
 
     /**
+     * ✅ NOVO: Pesquisa avançada de clientes por tipo e critério
+     */
+    fun pesquisarAvancada(searchType: SearchType, criteria: String) {
+        viewModelScope.launch {
+            try {
+                _searchType.value = searchType
+                _searchCriteria.value = criteria
+                _isAdvancedSearch.value = true
+                _buscaAtual.value = ""
+                aplicarFiltrosCombinados()
+            } catch (e: Exception) {
+                android.util.Log.e("ClientListViewModel", "Erro na pesquisa avançada: ${e.message}")
+                _errorMessage.value = "Erro na pesquisa avançada: ${e.message}"
+            }
+        }
+    }
+
+    /**
      * ✅ FASE 9B: Aplica filtro à lista de clientes com filtros combinados
      */
-    private fun aplicarFiltrosCombinados() {
+    private suspend fun aplicarFiltrosCombinados() {
         val query = _buscaAtual.value.trim()
-        val filtro = _filtroAtual.value ?: FiltroCliente.TODOS
+        val filtro = _filtroAtual.value ?: FiltroCliente.ACERTADOS
         val todos = _clientesTodos.value
+        val isAdvancedSearch = _isAdvancedSearch.value ?: false
+        val searchType = _searchType.value
+        val searchCriteria = _searchCriteria.value.trim()
         
-        // Primeiro filtrar por status
+        // Primeiro filtrar por status de acerto
         val filtradosPorStatus = when (filtro) {
             FiltroCliente.TODOS -> todos
-            FiltroCliente.ATIVOS -> todos.filter { it.ativo }
-            FiltroCliente.DEVEDORES -> todos.filter { it.debitoAnterior > 100.0 }
+            FiltroCliente.ACERTADOS -> filtrarClientesAcertados(todos)
+            FiltroCliente.NAO_ACERTADOS -> filtrarClientesNaoAcertados(todos)
+            FiltroCliente.PENDENCIAS -> filtrarClientesPendencias(todos)
         }
         
-        // Depois filtrar por busca
-        val resultadoFinal = if (query.isBlank()) {
-            filtradosPorStatus
-        } else {
-            filtradosPorStatus.filter { it.nome.contains(query, ignoreCase = true) }
+        // Depois filtrar por busca (normal ou avançada)
+        val resultadoFinal = when {
+            isAdvancedSearch && searchCriteria.isNotBlank() -> {
+                filtrarPorPesquisaAvancada(filtradosPorStatus, searchType!!, searchCriteria)
+            }
+            query.isNotBlank() -> {
+                filtradosPorStatus.filter { it.nome.contains(query, ignoreCase = true) }
+            }
+            else -> filtradosPorStatus
         }
         
         // Atualizar lista filtrada
         _clientes.value = resultadoFinal
+    }
+
+    /**
+     * ✅ NOVO: Filtra clientes acertados no ciclo atual
+     */
+    private suspend fun filtrarClientesAcertados(clientes: List<Cliente>): List<Cliente> {
+        val clientesAcertados = mutableListOf<Cliente>()
+        val cicloId = _cicloAcertoEntity.value?.id ?: -1L
+        
+        for (cliente in clientes) {
+            if (clienteFoiAcertadoNoCiclo(cliente.id, cicloId)) {
+                clientesAcertados.add(cliente)
+            }
+        }
+        
+        return clientesAcertados
+    }
+
+    /**
+     * ✅ NOVO: Filtra clientes não acertados no ciclo atual
+     */
+    private suspend fun filtrarClientesNaoAcertados(clientes: List<Cliente>): List<Cliente> {
+        val clientesNaoAcertados = mutableListOf<Cliente>()
+        val cicloId = _cicloAcertoEntity.value?.id ?: -1L
+        
+        for (cliente in clientes) {
+            if (!clienteFoiAcertadoNoCiclo(cliente.id, cicloId)) {
+                clientesNaoAcertados.add(cliente)
+            }
+        }
+        
+        return clientesNaoAcertados
+    }
+
+    /**
+     * ✅ NOVO: Filtra clientes com pendências (débito > 300 e não acertado há mais de 4 meses)
+     */
+    private suspend fun filtrarClientesPendencias(clientes: List<Cliente>): List<Cliente> {
+        val clientesPendencias = mutableListOf<Cliente>()
+        
+        for (cliente in clientes) {
+            if (clienteTemPendencias(cliente.id)) {
+                clientesPendencias.add(cliente)
+            }
+        }
+        
+        return clientesPendencias
+    }
+
+    /**
+     * ✅ NOVO: Verifica se o cliente foi acertado no ciclo especificado
+     */
+    private suspend fun clienteFoiAcertadoNoCiclo(clienteId: Long, cicloId: Long): Boolean {
+        return try {
+            if (cicloId == -1L) return false
+            
+            val acertos = appRepository.buscarAcertosPorCicloId(cicloId).first()
+            acertos.any { it.clienteId == clienteId }
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListViewModel", "Erro ao verificar acerto do cliente: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * ✅ NOVO: Verifica se o cliente tem pendências (débito > 300 e não acertado há mais de 4 meses)
+     */
+    private suspend fun clienteTemPendencias(clienteId: Long): Boolean {
+        return try {
+            // Buscar o cliente com débito atual
+            val cliente = appRepository.obterClientePorId(clienteId) ?: return false
+            
+            // Verificar se tem débito > 300
+            if (cliente.debitoAtual <= 300.0) return false
+            
+            // Buscar último acerto do cliente
+            val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(clienteId)
+            
+            if (ultimoAcerto == null) {
+                // Se nunca foi acertado, considerar como pendência
+                return true
+            }
+            
+            // Calcular diferença em meses
+            val dataAtual = java.util.Date()
+            val dataUltimoAcerto = ultimoAcerto.dataAcerto
+            val diffEmMeses = ((dataAtual.time - dataUltimoAcerto.time) / (1000L * 60 * 60 * 24 * 30)).toInt()
+            
+            // Retornar true se não foi acertado há mais de 4 meses
+            diffEmMeses > 4
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListViewModel", "Erro ao verificar pendências do cliente: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * ✅ NOVO: Verifica se o cliente tem mesas vinculadas
+     */
+    private suspend fun temMesasVinculadas(clienteId: Long): Boolean {
+        return try {
+            val mesas = appRepository.obterMesasPorCliente(clienteId).first()
+            mesas.isNotEmpty()
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListViewModel", "Erro ao verificar mesas vinculadas: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * ✅ NOVO: Filtra clientes por pesquisa avançada
+     */
+    private suspend fun filtrarPorPesquisaAvancada(
+        clientes: List<Cliente>, 
+        searchType: SearchType, 
+        criteria: String
+    ): List<Cliente> {
+        return when (searchType) {
+            SearchType.NOME_CLIENTE -> {
+                clientes.filter { it.nome.contains(criteria, ignoreCase = true) }
+            }
+            SearchType.NUMERO_MESA -> {
+                val clientesComMesas = mutableListOf<Cliente>()
+                for (cliente in clientes) {
+                    val mesas = appRepository.obterMesasPorCliente(cliente.id).first()
+                    if (mesas.any { it.numero.contains(criteria, ignoreCase = true) }) {
+                        clientesComMesas.add(cliente)
+                    }
+                }
+                clientesComMesas
+            }
+            SearchType.CIDADE -> {
+                clientes.filter { cliente ->
+                    cliente.cidade?.contains(criteria, ignoreCase = true) == true
+                }
+            }
+            SearchType.CPF -> {
+                clientes.filter { cliente ->
+                    cliente.cpfCnpj?.contains(criteria, ignoreCase = true) == true
+                }
+            }
+        }
     }
 
     /**
@@ -451,6 +634,9 @@ class ClientListViewModel(
         viewModelScope.launch {
             try {
                 _buscaAtual.value = ""
+                _isAdvancedSearch.value = false
+                _searchType.value = null
+                _searchCriteria.value = ""
                 aplicarFiltrosCombinados()
             } catch (e: Exception) {
                 android.util.Log.e("ClientListViewModel", "Erro ao limpar busca: ${e.message}")
@@ -464,7 +650,7 @@ class ClientListViewModel(
      * ✅ FASE 9A: Obtém o filtro atual para uso na UI
      */
     fun getFiltroAtual(): FiltroCliente {
-        return _filtroAtual.value ?: FiltroCliente.TODOS
+        return _filtroAtual.value ?: FiltroCliente.ACERTADOS
     }
 
     /**

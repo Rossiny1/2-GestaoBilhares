@@ -142,14 +142,14 @@ class ClientListFragment : Fragment() {
                 findNavController().popBackStack()
             }
             
-            // ✅ FASE 8C: Botão buscar - ativar/desativar busca
+            // ✅ NOVO: Botão buscar - abrir diálogo de pesquisa avançada
             binding.btnSearch.setOnClickListener {
-                toggleBusca()
+                mostrarDialogoPesquisaAvancada()
             }
             
             // Botão filtrar
             binding.btnFilter.setOnClickListener {
-                // TODO: Implementar filtro
+                mostrarDialogoFiltros()
             }
             
             // ✅ NOVO: Botão de relatórios de ciclos
@@ -178,19 +178,19 @@ class ClientListFragment : Fragment() {
             configurarFabExpandivel()
             
             // Filtros rápidos
-            binding.btnFilterActive.setOnClickListener {
-                viewModel.aplicarFiltro(FiltroCliente.ATIVOS)
-                atualizarEstadoFiltros(binding.btnFilterActive)
+            binding.btnFilterAcertados.setOnClickListener {
+                viewModel.aplicarFiltro(FiltroCliente.ACERTADOS)
+                atualizarEstadoFiltros(binding.btnFilterAcertados)
             }
             
-            binding.btnFilterDebtors.setOnClickListener {
-                viewModel.aplicarFiltro(FiltroCliente.DEVEDORES)
-                atualizarEstadoFiltros(binding.btnFilterDebtors)
+            binding.btnFilterNaoAcertados.setOnClickListener {
+                viewModel.aplicarFiltro(FiltroCliente.NAO_ACERTADOS)
+                atualizarEstadoFiltros(binding.btnFilterNaoAcertados)
             }
             
-            binding.btnFilterAll.setOnClickListener {
-                viewModel.aplicarFiltro(FiltroCliente.TODOS)
-                atualizarEstadoFiltros(binding.btnFilterAll)
+            binding.btnFilterPendencias.setOnClickListener {
+                viewModel.aplicarFiltro(FiltroCliente.PENDENCIAS)
+                atualizarEstadoFiltros(binding.btnFilterPendencias)
             }
 
 
@@ -349,7 +349,7 @@ class ClientListFragment : Fragment() {
             val textColorNormal = context.getColor(R.color.purple_600)
             
             // Resetar todos os botões
-            listOf(binding.btnFilterActive, binding.btnFilterDebtors, binding.btnFilterAll).forEach { btn ->
+            listOf(binding.btnFilterAcertados, binding.btnFilterNaoAcertados, binding.btnFilterPendencias).forEach { btn ->
                 btn.setBackgroundColor(corNormal)
                 btn.setTextColor(textColorNormal)
             }
@@ -444,16 +444,22 @@ class ClientListFragment : Fragment() {
                 val filtroAtual = viewModel.getFiltroAtual()
                 
                 when {
-                    filtroAtual == FiltroCliente.DEVEDORES -> {
-                        binding.ivEmptyStateIcon.setImageResource(R.drawable.ic_money)
-                        binding.tvEmptyStateTitle.text = "Nenhum devedor encontrado"
+                    filtroAtual == FiltroCliente.PENDENCIAS -> {
+                        binding.ivEmptyStateIcon.setImageResource(R.drawable.ic_warning)
+                        binding.tvEmptyStateTitle.text = "Nenhuma pendência encontrada"
                         binding.tvEmptyStateMessage.text = "Todos os clientes estão em dia!"
                         binding.btnEmptyStateAction.visibility = View.GONE
                     }
-                    filtroAtual == FiltroCliente.ATIVOS -> {
-                        binding.ivEmptyStateIcon.setImageResource(R.drawable.ic_user)
-                        binding.tvEmptyStateTitle.text = "Nenhum cliente ativo"
-                        binding.tvEmptyStateMessage.text = "Todos os clientes estão inativos."
+                    filtroAtual == FiltroCliente.ACERTADOS -> {
+                        binding.ivEmptyStateIcon.setImageResource(R.drawable.ic_check)
+                        binding.tvEmptyStateTitle.text = "Nenhum cliente acertado"
+                        binding.tvEmptyStateMessage.text = "Nenhum cliente foi acertado neste ciclo."
+                        binding.btnEmptyStateAction.visibility = View.GONE
+                    }
+                    filtroAtual == FiltroCliente.NAO_ACERTADOS -> {
+                        binding.ivEmptyStateIcon.setImageResource(R.drawable.ic_pending)
+                        binding.tvEmptyStateTitle.text = "Nenhum cliente pendente"
+                        binding.tvEmptyStateMessage.text = "Todos os clientes foram acertados neste ciclo."
                         binding.btnEmptyStateAction.visibility = View.GONE
                     }
                     else -> {
@@ -671,6 +677,56 @@ class ClientListFragment : Fragment() {
             .rotation(0f)
             .setDuration(200)
             .start()
+    }
+
+    /**
+     * ✅ NOVO: Mostra o diálogo de filtros de clientes
+     */
+    private fun mostrarDialogoFiltros() {
+        try {
+            val filtroAtual = viewModel.getFiltroAtual()
+            ClientFilterDialog.show(
+                context = requireContext(),
+                currentFilter = filtroAtual,
+                onFilterSelected = { filtroSelecionado ->
+                    viewModel.aplicarFiltro(filtroSelecionado)
+                    mostrarFeedback("Filtro aplicado: ${getNomeFiltro(filtroSelecionado)}", Snackbar.LENGTH_SHORT)
+                }
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListFragment", "Erro ao mostrar diálogo de filtros: ${e.message}")
+            mostrarFeedback("Erro ao abrir filtros: ${e.message}", Snackbar.LENGTH_LONG)
+        }
+    }
+
+    /**
+     * ✅ NOVO: Mostra o diálogo de pesquisa avançada
+     */
+    private fun mostrarDialogoPesquisaAvancada() {
+        try {
+            AdvancedSearchDialog.show(
+                context = requireContext(),
+                onSearch = { searchType, criteria ->
+                    viewModel.pesquisarAvancada(searchType, criteria)
+                    mostrarFeedback("Pesquisa: ${searchType.displayName} - $criteria", Snackbar.LENGTH_SHORT)
+                }
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListFragment", "Erro ao mostrar diálogo de pesquisa: ${e.message}")
+            mostrarFeedback("Erro ao abrir pesquisa: ${e.message}", Snackbar.LENGTH_LONG)
+        }
+    }
+
+    /**
+     * ✅ NOVO: Retorna o nome amigável do filtro
+     */
+    private fun getNomeFiltro(filtro: FiltroCliente): String {
+        return when (filtro) {
+            FiltroCliente.ACERTADOS -> "Acertados"
+            FiltroCliente.NAO_ACERTADOS -> "Não Acertados"
+            FiltroCliente.TODOS -> "Todos"
+            FiltroCliente.PENDENCIAS -> "Pendências"
+        }
     }
 
     override fun onDestroyView() {
