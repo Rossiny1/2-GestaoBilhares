@@ -20,6 +20,8 @@ import com.example.gestaobilhares.data.entities.*
         Cliente::class,
         Mesa::class,
         Colaborador::class,
+        MetaColaborador::class, // ✅ NOVO: METAS DOS COLABORADORES
+        ColaboradorRota::class, // ✅ NOVO: VINCULAÇÃO COLABORADOR-ROTA
         Acerto::class,
         Despesa::class,
         AcertoMesa::class,
@@ -27,7 +29,7 @@ import com.example.gestaobilhares.data.entities.*
         CategoriaDespesa::class, // ✅ NOVO: CATEGORIAS DE DESPESAS
         TipoDespesa::class // ✅ NOVO: TIPOS DE DESPESAS
     ],
-    version = 19, // ✅ MIGRATION: Correção dos nomes das colunas de foto
+    version = 21, // ✅ MIGRATION: Corrigindo valores padrão da tabela colaboradores
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -50,9 +52,9 @@ abstract class AppDatabase : RoomDatabase() {
     
     /**
      * DAO para operações com colaboradores.
-     * TODO: Implementar ColaboradorDao na próxima fase
+     * ✅ IMPLEMENTADO: ColaboradorDao com metas e rotas
      */
-    // abstract fun colaboradorDao(): ColaboradorDao
+    abstract fun colaboradorDao(): com.example.gestaobilhares.data.dao.ColaboradorDao
     
     /**
      * DAO para operações com acertos.
@@ -284,12 +286,128 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
                 
+                val MIGRATION_19_20 = object : androidx.room.migration.Migration(19, 20) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Migration para adicionar novas colunas na tabela colaboradores
+                        try {
+                            // Adicionar novas colunas na tabela colaboradores
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN data_nascimento INTEGER")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN endereco TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN bairro TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN cidade TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN estado TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN cep TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN rg TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN orgao_emissor TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN estado_civil TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN nome_mae TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN nome_pai TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN foto_perfil TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN aprovado INTEGER DEFAULT 0")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN data_aprovacao INTEGER")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN aprovado_por TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN google_id TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN senha_temporaria TEXT")
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN data_ultima_atualizacao INTEGER")
+                            
+                            // Criar tabela de metas dos colaboradores
+                            database.execSQL("""
+                                CREATE TABLE IF NOT EXISTS metas_colaborador (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    colaborador_id INTEGER NOT NULL,
+                                    tipo_meta TEXT NOT NULL,
+                                    valor_meta REAL NOT NULL,
+                                    periodo_inicio INTEGER NOT NULL,
+                                    periodo_fim INTEGER NOT NULL,
+                                    valor_atual REAL NOT NULL DEFAULT 0.0,
+                                    ativo INTEGER NOT NULL DEFAULT 1,
+                                    data_criacao INTEGER NOT NULL
+                                )
+                            """)
+                            
+                            // Criar tabela de vinculação colaborador-rota
+                            database.execSQL("""
+                                CREATE TABLE IF NOT EXISTS colaborador_rotas (
+                                    colaborador_id INTEGER NOT NULL,
+                                    rota_id INTEGER NOT NULL,
+                                    responsavel_principal INTEGER NOT NULL DEFAULT 0,
+                                    data_vinculacao INTEGER NOT NULL,
+                                    PRIMARY KEY(colaborador_id, rota_id)
+                                )
+                            """)
+                            
+                            android.util.Log.d("Migration", "Migration 19_20 executada com sucesso")
+                            
+                        } catch (e: Exception) {
+                            // Se houver erro, apenas logar e continuar
+                            android.util.Log.w("Migration", "Erro na migration 19_20: ${e.message}")
+                        }
+                    }
+                }
+                
+                val MIGRATION_20_21 = object : androidx.room.migration.Migration(20, 21) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Migration para corrigir valores padrão da tabela colaboradores
+                        try {
+                            // Recriar tabela colaboradores com valores padrão corretos
+                            database.execSQL("""
+                                CREATE TABLE IF NOT EXISTS colaboradores_temp (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    nome TEXT NOT NULL,
+                                    email TEXT NOT NULL,
+                                    telefone TEXT,
+                                    cpf TEXT,
+                                    nivel_acesso TEXT NOT NULL DEFAULT 'USER',
+                                    ativo INTEGER NOT NULL DEFAULT 1,
+                                    firebase_uid TEXT,
+                                    data_cadastro INTEGER NOT NULL,
+                                    data_ultimo_acesso INTEGER,
+                                    data_nascimento INTEGER,
+                                    endereco TEXT,
+                                    bairro TEXT,
+                                    cidade TEXT,
+                                    estado TEXT,
+                                    cep TEXT,
+                                    rg TEXT,
+                                    orgao_emissor TEXT,
+                                    estado_civil TEXT,
+                                    nome_mae TEXT,
+                                    nome_pai TEXT,
+                                    foto_perfil TEXT,
+                                    aprovado INTEGER NOT NULL DEFAULT 0,
+                                    data_aprovacao INTEGER,
+                                    aprovado_por TEXT,
+                                    google_id TEXT,
+                                    senha_temporaria TEXT,
+                                    data_ultima_atualizacao INTEGER NOT NULL DEFAULT 0
+                                )
+                            """)
+                            
+                            // Copiar dados existentes
+                            database.execSQL("""
+                                INSERT OR IGNORE INTO colaboradores_temp 
+                                SELECT * FROM colaboradores
+                            """)
+                            
+                            // Substituir tabela original
+                            database.execSQL("DROP TABLE IF EXISTS colaboradores")
+                            database.execSQL("ALTER TABLE colaboradores_temp RENAME TO colaboradores")
+                            
+                            android.util.Log.d("Migration", "Migration 20_21 executada com sucesso")
+                            
+                        } catch (e: Exception) {
+                            // Se houver erro, apenas logar e continuar
+                            android.util.Log.w("Migration", "Erro na migration 20_21: ${e.message}")
+                        }
+                    }
+                }
+                
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19)
+                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21)
                     .fallbackToDestructiveMigration() // ✅ NOVO: Permite recriar banco em caso de erro de migration
                     .build()
                 INSTANCE = instance

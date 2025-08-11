@@ -56,7 +56,8 @@ class CycleManagementFragment : Fragment() {
                 AppDatabase.getDatabase(requireContext()).acertoDao(),
                 AppDatabase.getDatabase(requireContext()).mesaDao(),
                 AppDatabase.getDatabase(requireContext()).rotaDao(),
-                AppDatabase.getDatabase(requireContext()).despesaDao()
+                AppDatabase.getDatabase(requireContext()).despesaDao(),
+                AppDatabase.getDatabase(requireContext()).colaboradorDao()
             )
         )
     }

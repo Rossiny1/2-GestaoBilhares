@@ -48,6 +48,22 @@
         <!-- Navegação de volta para rotas já está implícita com o botão voltar -->
     </fragment>
 
+    <!-- ✅ NOVO: Tela de gerenciamento de colaboradores -->
+    <fragment
+        android:id="@+id/colaboradorManagementFragment"
+        android:name="com.example.gestaobilhares.ui.colaboradores.ColaboradorManagementFragment"
+        android:label="Gerenciar Colaboradores">
+        <!-- Navegação de volta para rotas já está implícita com o botão voltar -->
+    </fragment>
+
+    <!-- ✅ NOVO: Tela de cadastro/edição de colaboradores -->
+    <fragment
+        android:id="@+id/colaboradorRegisterFragment"
+        android:name="com.example.gestaobilhares.ui.colaboradores.ColaboradorRegisterFragment"
+        android:label="Cadastrar Colaborador">
+        <!-- Navegação de volta para gerenciamento de colaboradores já está implícita com o botão voltar -->
+    </fragment>
+
     <!-- Tela de histórico de despesas -->
     <fragment
         android:id="@+id/expenseHistoryFragment"
