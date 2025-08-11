@@ -98,9 +98,17 @@ class RoutesFragment : Fragment() {
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_manage_collaborator -> {
-                    Toast.makeText(requireContext(), "Gerenciar Colaborador será implementado em breve", Toast.LENGTH_SHORT).show()
-                    binding.drawerLayout.closeDrawers()
-                    true
+                    // Navegar para a tela de gerenciamento de colaboradores
+                    try {
+                        findNavController().navigate(R.id.colaboradorManagementFragment)
+                        binding.drawerLayout.closeDrawers()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao navegar para gerenciamento de colaboradores: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir gerenciamento de colaboradores: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
                 }
                 R.id.nav_manage_expenses -> {
                     Toast.makeText(requireContext(), "Gerenciar Despesas será implementado em breve", Toast.LENGTH_SHORT).show()

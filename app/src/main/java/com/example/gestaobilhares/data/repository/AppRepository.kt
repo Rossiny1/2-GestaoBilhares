@@ -15,7 +15,7 @@ class AppRepository(
     private val mesaDao: MesaDao,
     private val rotaDao: RotaDao,
     private val despesaDao: DespesaDao,
-    private val colaboradorDao: ColaboradorDao? = null
+    private val colaboradorDao: ColaboradorDao
 ) {
     
     // ==================== CLIENTE ====================
@@ -120,10 +120,59 @@ class AppRepository(
     
     fun obterTodosColaboradores() = colaboradorDao?.obterTodos() ?: flowOf(emptyList())
     fun obterColaboradoresAtivos() = colaboradorDao?.obterAtivos() ?: flowOf(emptyList())
+    fun obterColaboradoresAprovados() = colaboradorDao?.obterAprovados() ?: flowOf(emptyList())
+    fun obterColaboradoresPendentesAprovacao() = colaboradorDao?.obterPendentesAprovacao() ?: flowOf(emptyList())
+    fun obterColaboradoresPorNivelAcesso(nivelAcesso: NivelAcesso) = colaboradorDao?.obterPorNivelAcesso(nivelAcesso) ?: flowOf(emptyList())
+    
     suspend fun obterColaboradorPorId(id: Long) = colaboradorDao?.obterPorId(id)
     suspend fun obterColaboradorPorEmail(email: String) = colaboradorDao?.obterPorEmail(email)
+    suspend fun obterColaboradorPorFirebaseUid(firebaseUid: String) = colaboradorDao?.obterPorFirebaseUid(firebaseUid)
+    suspend fun obterColaboradorPorGoogleId(googleId: String) = colaboradorDao?.obterPorGoogleId(googleId)
+    
     suspend fun inserirColaborador(colaborador: Colaborador) = colaboradorDao?.inserir(colaborador) ?: 0L
     suspend fun atualizarColaborador(colaborador: Colaborador) = colaboradorDao?.atualizar(colaborador)
     suspend fun deletarColaborador(colaborador: Colaborador) = colaboradorDao?.deletar(colaborador)
+    
+    suspend fun aprovarColaborador(colaboradorId: Long, dataAprovacao: java.util.Date, aprovadoPor: String) = 
+        colaboradorDao?.aprovarColaborador(colaboradorId, dataAprovacao, aprovadoPor)
+    suspend fun alterarStatusColaborador(colaboradorId: Long, ativo: Boolean) = 
+        colaboradorDao?.alterarStatus(colaboradorId, ativo)
+    suspend fun atualizarUltimoAcessoColaborador(colaboradorId: Long, dataUltimoAcesso: java.util.Date) = 
+        colaboradorDao?.atualizarUltimoAcesso(colaboradorId, dataUltimoAcesso)
+    
     suspend fun contarColaboradoresAtivos() = colaboradorDao?.contarAtivos() ?: 0
+    suspend fun contarColaboradoresPendentesAprovacao() = colaboradorDao?.contarPendentesAprovacao() ?: 0
+    
+    // ==================== META COLABORADOR ====================
+    
+    fun obterMetasPorColaborador(colaboradorId: Long) = colaboradorDao?.obterMetasPorColaborador(colaboradorId) ?: flowOf(emptyList())
+    suspend fun obterMetaAtual(colaboradorId: Long, tipoMeta: TipoMeta) = colaboradorDao?.obterMetaAtual(colaboradorId, tipoMeta)
+    suspend fun inserirMeta(meta: MetaColaborador) = colaboradorDao?.inserirMeta(meta) ?: 0L
+    suspend fun atualizarMeta(meta: MetaColaborador) = colaboradorDao?.atualizarMeta(meta)
+    suspend fun deletarMeta(meta: MetaColaborador) = colaboradorDao?.deletarMeta(meta)
+    suspend fun atualizarValorAtualMeta(metaId: Long, valorAtual: Double) = colaboradorDao?.atualizarValorAtual(metaId, valorAtual)
+    suspend fun desativarMetasColaborador(colaboradorId: Long) = colaboradorDao?.desativarMetasColaborador(colaboradorId)
+    
+    // ==================== COLABORADOR ROTA ====================
+    
+    fun obterRotasPorColaborador(colaboradorId: Long) = colaboradorDao?.obterRotasPorColaborador(colaboradorId) ?: flowOf(emptyList())
+    fun obterColaboradoresPorRota(rotaId: Long) = colaboradorDao?.obterColaboradoresPorRota(rotaId) ?: flowOf(emptyList())
+    suspend fun obterRotaPrincipal(colaboradorId: Long) = colaboradorDao?.obterRotaPrincipal(colaboradorId)
+    suspend fun inserirColaboradorRota(colaboradorRota: ColaboradorRota) = colaboradorDao?.inserirColaboradorRota(colaboradorRota)
+    suspend fun deletarColaboradorRota(colaboradorRota: ColaboradorRota) = colaboradorDao?.deletarColaboradorRota(colaboradorRota)
+    suspend fun deletarTodasRotasColaborador(colaboradorId: Long) = colaboradorDao?.deletarTodasRotasColaborador(colaboradorId)
+    suspend fun removerResponsavelPrincipal(colaboradorId: Long) = colaboradorDao?.removerResponsavelPrincipal(colaboradorId)
+    suspend fun definirResponsavelPrincipal(colaboradorId: Long, rotaId: Long) = colaboradorDao?.definirResponsavelPrincipal(colaboradorId, rotaId)
+    
+    // Métodos auxiliares para vinculação de colaborador com rotas
+    suspend fun removerRotasColaborador(colaboradorId: Long) = colaboradorDao?.deletarTodasRotasColaborador(colaboradorId)
+    suspend fun vincularColaboradorRota(colaboradorId: Long, rotaId: Long, responsavelPrincipal: Boolean, dataVinculacao: java.util.Date) {
+        val colaboradorRota = ColaboradorRota(
+            colaboradorId = colaboradorId,
+            rotaId = rotaId,
+            responsavelPrincipal = responsavelPrincipal,
+            dataVinculacao = dataVinculacao
+        )
+        colaboradorDao?.inserirColaboradorRota(colaboradorRota)
+    }
 } 

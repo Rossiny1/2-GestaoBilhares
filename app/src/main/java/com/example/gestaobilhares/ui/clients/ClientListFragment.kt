@@ -75,7 +75,7 @@ class ClientListFragment : Fragment() {
                 database.mesaDao(),
                 database.rotaDao(),
                 database.despesaDao(),
-                null // ColaboradorDao não implementado ainda
+                database.colaboradorDao()
             )
         )
         
