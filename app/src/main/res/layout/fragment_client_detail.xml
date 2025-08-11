@@ -146,63 +146,31 @@
 
                 </LinearLayout>
 
-                <!-- Stats Cards com altura mínima garantida -->
+                <!-- Stats Cards melhorados -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:minHeight="80dp">
+                    android:layout_marginTop="16dp"
+                    android:minHeight="60dp">
 
+                    <!-- Card Última Visita -->
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="8dp"
+                        android:layout_marginEnd="8dp"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="6dp"
+                        app:strokeColor="?attr/colorPrimary"
+                        app:strokeWidth="1dp"
                         app:cardBackgroundColor="@color/white">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:orientation="vertical"
-                            android:padding="16dp"
-                            android:gravity="center">
-
-                        <TextView
-                            android:id="@+id/tvActiveTables"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                                android:textColor="?attr/colorPrimary"
-                                android:textSize="20sp"
-                            android:textStyle="bold"
-                                tools:text="2" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Mesas Ativas"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:layout_marginHorizontal="4dp"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="8dp"
-                        app:cardBackgroundColor="@color/white">
-
-                        <LinearLayout
-                        android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:orientation="vertical"
-                            android:padding="16dp"
+                            android:padding="12dp"
                             android:gravity="center">
 
                             <TextView
@@ -210,36 +178,39 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:textColor="?attr/colorPrimary"
-                                android:textSize="14sp"
-                        android:textStyle="bold"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
                                 tools:text="15/05/2024" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Última Visita"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="12sp" />
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="11sp"
+                                android:layout_marginTop="2dp" />
 
                         </LinearLayout>
 
                     </com.google.android.material.card.MaterialCardView>
 
-                    <!-- ✅ NOVO: Card Débito Atual -->
+                    <!-- Card Débito Atual -->
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="8dp"
+                        android:layout_marginStart="8dp"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="6dp"
+                        app:strokeColor="@color/red_500"
+                        app:strokeWidth="1dp"
                         app:cardBackgroundColor="@color/white">
 
                         <LinearLayout
-                        android:layout_width="match_parent"
+                            android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:orientation="vertical"
-                            android:padding="16dp"
+                            android:padding="12dp"
                             android:gravity="center">
 
                             <TextView
@@ -247,16 +218,17 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:textColor="@color/red_600"
-                                android:textSize="14sp"
-                        android:textStyle="bold"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
                                 tools:text="R$ 450,00" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Débito Atual"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="12sp" />
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="11sp"
+                                android:layout_marginTop="2dp" />
 
                         </LinearLayout>
 
@@ -290,14 +262,52 @@
                 android:padding="20dp">
 
         <!-- Título Mesas do Cliente em linha única -->
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Mesas do Cliente"
                 android:textColor="?attr/colorOnSurface"
-                        android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp" />
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Total de mesas ativas com ícone -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/rounded_background_primary"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_sinuca"
+                    android:contentDescription="Ícone de sinuca"
+                    app:tint="?attr/colorOnPrimary" />
+
+                <TextView
+                    android:id="@+id/tvTotalMesasAtivas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="0"
+                    android:textColor="?attr/colorOnPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvMesasCliente"

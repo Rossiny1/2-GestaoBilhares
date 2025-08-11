@@ -65,9 +65,9 @@ class MesasDepositoFragment : Fragment() {
             findNavController().navigate(action)
         }
         
-        // ✅ NOVO: Listener para o card Total
-        binding.cardTotal.setOnClickListener {
-            showDetalhesTotalDialog()
+        // ✅ NOVO: Listener para o card Sinuca
+        binding.cardSinuca.setOnClickListener {
+            showDetalhesSinucaDialog()
         }
     }
 
@@ -100,9 +100,10 @@ class MesasDepositoFragment : Fragment() {
             viewModel.estatisticas.collect { stats ->
                 _binding?.let { binding ->
                     try {
-                        // ✅ ATUALIZADO: Atualizar cards de estatísticas
-                        binding.tvTotalMesas.text = stats.totalMesas.toString()
+                        // ✅ ATUALIZADO: Atualizar cards de estatísticas por tipo
+                        binding.tvTotalSinuca.text = stats.mesasSinuca.toString()
                         binding.tvTotalJukebox.text = stats.mesasMaquina.toString()
+                        binding.tvTotalPembolim.text = stats.mesasPembolim.toString()
                     } catch (e: Exception) {
                         // Log do erro para debug posterior
                         android.util.Log.e("MesasDepositoFragment", "Erro ao atualizar estatísticas", e)
@@ -144,22 +145,28 @@ class MesasDepositoFragment : Fragment() {
     }
 
     /**
-     * ✅ NOVA FUNÇÃO: Mostra diálogo com detalhes do total de mesas
+     * ✅ NOVA FUNÇÃO: Mostra diálogo com detalhes das mesas de sinuca
      */
-    private fun showDetalhesTotalDialog() {
-        val stats = viewModel.estatisticas.value
+    private fun showDetalhesSinucaDialog() {
+        val mesas = viewModel.mesasDisponiveis.value
+        val mesasSinuca = mesas.filter { it.tipoMesa == com.example.gestaobilhares.data.entities.TipoMesa.SINUCA }
+        
+        val pequenas = mesasSinuca.count { it.tamanho == com.example.gestaobilhares.data.entities.TamanhoMesa.PEQUENA }
+        val medias = mesasSinuca.count { it.tamanho == com.example.gestaobilhares.data.entities.TamanhoMesa.MEDIA }
+        val grandes = mesasSinuca.count { it.tamanho == com.example.gestaobilhares.data.entities.TamanhoMesa.GRANDE }
+        
         val mensagem = """
-            📊 Detalhamento por Tamanho:
+            📊 Detalhamento das Mesas de Sinuca:
             
-            🟢 Pequenas: ${stats.mesasPequenas}
-            🟡 Médias: ${stats.mesasMedias}
-            🔴 Grandes: ${stats.mesasGrandes}
+            🟢 Pequenas: $pequenas
+            🟡 Médias: $medias
+            🔴 Grandes: $grandes
             
-            📋 Total Geral: ${stats.totalMesas} mesas
+            📋 Total Sinuca: ${mesasSinuca.size} mesas
         """.trimIndent()
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Detalhes do Total de Mesas")
+            .setTitle("Detalhes das Mesas de Sinuca")
             .setMessage(mensagem)
             .setPositiveButton("OK", null)
             .show()

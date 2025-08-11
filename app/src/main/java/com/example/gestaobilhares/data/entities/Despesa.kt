@@ -5,6 +5,7 @@ import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
 import java.time.LocalDateTime
+import java.util.Date
 
 /**
  * Entidade que representa uma despesa no banco de dados.
@@ -59,7 +60,11 @@ data class Despesa(
     val criadoPor: String = "", // ID do colaborador
     
     // NOVO: VÍNCULO COM CICLO DE ACERTO (id do ciclo)
-    val cicloId: Long? = null
+    val cicloId: Long? = null,
+    
+    // ✅ NOVO: CAMPOS PARA FOTO DO COMPROVANTE
+    val fotoComprovante: String? = null,
+    val dataFotoComprovante: Date? = null
 )
 
 /**

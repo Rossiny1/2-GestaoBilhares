@@ -1,11 +1,17 @@
 package com.example.gestaobilhares.ui.expenses
 
 import android.app.DatePickerDialog
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -18,7 +24,9 @@ import com.example.gestaobilhares.data.repository.*
 import com.example.gestaobilhares.databinding.FragmentExpenseRegisterBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
+import java.io.File
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -40,6 +48,57 @@ class ExpenseRegisterFragment : Fragment() {
     
     // Formatador de data
     private val dateFormatter = DateTimeFormatter.ofPattern("dd 'de' MMM 'de' yyyy", Locale("pt", "BR"))
+    
+    // ✅ NOVO: Propriedades para captura de foto do comprovante
+    private var currentPhotoUri: Uri? = null
+    private var fotoComprovantePath: String? = null
+    private var dataFotoComprovante: Date? = null
+    
+    // ✅ NOVO: Launchers para câmera e permissões
+    private val cameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            abrirCamera()
+        } else {
+            mostrarDialogoExplicacaoPermissao()
+        }
+    }
+    
+    private val cameraLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            try {
+                currentPhotoUri?.let { uri ->
+                    Log.d("ExpenseRegisterFragment", "Foto do comprovante capturada com sucesso: $uri")
+                    binding.root.post {
+                        try {
+                            val caminhoReal = obterCaminhoRealFoto(uri)
+                            if (caminhoReal != null) {
+                                Log.d("ExpenseRegisterFragment", "Caminho real da foto: $caminhoReal")
+                                fotoComprovantePath = caminhoReal
+                                dataFotoComprovante = Date()
+                                mostrarFotoComprovante(caminhoReal, dataFotoComprovante)
+                                Toast.makeText(requireContext(), "Foto do comprovante capturada com sucesso!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Log.e("ExpenseRegisterFragment", "Não foi possível obter o caminho real da foto")
+                                Toast.makeText(requireContext(), "Erro: não foi possível salvar a foto", Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) {
+                            Log.e("ExpenseRegisterFragment", "Erro ao processar foto: ${e.message}", e)
+                            Toast.makeText(requireContext(), "Erro ao processar foto: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ExpenseRegisterFragment", "Erro crítico após captura de foto: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao processar foto capturada", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            Toast.makeText(requireContext(), "Erro ao capturar foto", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -121,6 +180,13 @@ class ExpenseRegisterFragment : Fragment() {
             viewModel.setSelectedType(despesa.tipoDespesa)
             updateCategoryDisplay()
             updateTypeDisplay()
+            
+            // ✅ NOVO: Carregar foto do comprovante se existir
+            if (!despesa.fotoComprovante.isNullOrEmpty()) {
+                fotoComprovantePath = despesa.fotoComprovante
+                dataFotoComprovante = despesa.dataFotoComprovante
+                mostrarFotoComprovante(despesa.fotoComprovante, despesa.dataFotoComprovante)
+            }
         }
     }
 
@@ -174,6 +240,15 @@ class ExpenseRegisterFragment : Fragment() {
         }
         binding.etTipoDespesa.setOnClickListener {
             showTypeSelectionDialog()
+        }
+
+        // ✅ NOVO: Botões de foto do comprovante
+        binding.btnCameraComprovante.setOnClickListener {
+            solicitarCapturaFotoComprovante()
+        }
+        
+        binding.btnRemoverFotoComprovante.setOnClickListener {
+            removerFotoComprovante()
         }
 
         // Botões de ação
@@ -516,8 +591,136 @@ class ExpenseRegisterFragment : Fragment() {
             quantidade = quantidade,
             observacoes = "", // TODO: Adicionar campo de observações se necessário
             despesaId = args.despesaId,
-            modoEdicao = args.modoEdicao
+            modoEdicao = args.modoEdicao,
+            fotoComprovante = fotoComprovantePath,
+            dataFotoComprovante = dataFotoComprovante
         )
+    }
+    
+    // ✅ NOVO: Métodos para captura de foto do comprovante
+    
+    private fun solicitarCapturaFotoComprovante() {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(
+                requireContext(),
+                android.Manifest.permission.CAMERA
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            abrirCamera()
+        } else {
+            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+        }
+    }
+    
+    private fun abrirCamera() {
+        try {
+            val photoFile = criarArquivoFoto()
+            currentPhotoUri = FileProvider.getUriForFile(
+                requireContext(),
+                "com.example.gestaobilhares.fileprovider",
+                photoFile
+            )
+            cameraLauncher.launch(currentPhotoUri)
+        } catch (e: Exception) {
+            Log.e("ExpenseRegisterFragment", "Erro ao abrir câmera: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao abrir câmera: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun criarArquivoFoto(): File {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val imageFileName = "COMPROVANTE_${timeStamp}_"
+        val storageDir = requireContext().getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(imageFileName, ".jpg", storageDir)
+    }
+    
+    private fun obterCaminhoRealFoto(uri: Uri): String? {
+        return try {
+            Log.d("ExpenseRegisterFragment", "Obtendo caminho real para URI: $uri")
+            val cursor = requireContext().contentResolver.query(
+                uri, arrayOf(MediaStore.Images.Media.DATA), null, null, null
+            )
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val columnIndex = it.getColumnIndex(MediaStore.Images.Media.DATA)
+                    if (columnIndex != -1) {
+                        val path = it.getString(columnIndex)
+                        Log.d("ExpenseRegisterFragment", "Caminho obtido via cursor: $path")
+                        if (File(path).exists()) {
+                            return path
+                        }
+                    }
+                }
+            }
+            val inputStream = requireContext().contentResolver.openInputStream(uri)
+            if (inputStream != null) {
+                val tempFile = File.createTempFile("comprovante_foto_", ".jpg", requireContext().cacheDir)
+                tempFile.outputStream().use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+                Log.d("ExpenseRegisterFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
+                return tempFile.absolutePath
+            }
+            uri.toString()
+        } catch (e: Exception) {
+            Log.e("ExpenseRegisterFragment", "Erro ao obter caminho real: ${e.message}", e)
+            null
+        }
+    }
+    
+    private fun mostrarFotoComprovante(caminhoFoto: String, dataFoto: Date?) {
+        try {
+            val file = File(caminhoFoto)
+            if (file.exists()) {
+                val bitmap = android.graphics.BitmapFactory.decodeFile(caminhoFoto)
+                binding.ivFotoComprovante.setImageBitmap(bitmap)
+                
+                // Formatar e exibir data da foto
+                val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
+                val dataFormatada = dataFoto?.let { dateFormat.format(it) } ?: "Data não disponível"
+                binding.tvDataFotoComprovante.text = "Data: $dataFormatada"
+                
+                // Mostrar layout da foto
+                binding.layoutFotoComprovante.visibility = View.VISIBLE
+                
+                Log.d("ExpenseRegisterFragment", "✅ Foto do comprovante exibida com sucesso: $caminhoFoto")
+            } else {
+                Log.e("ExpenseRegisterFragment", "❌ Arquivo de foto não existe: $caminhoFoto")
+                Toast.makeText(requireContext(), "Arquivo de foto não encontrado", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Log.e("ExpenseRegisterFragment", "Erro ao mostrar foto: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao exibir foto: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun removerFotoComprovante() {
+        try {
+            // Limpar dados da foto
+            fotoComprovantePath = null
+            dataFotoComprovante = null
+            currentPhotoUri = null
+            
+            // Limpar UI
+            binding.ivFotoComprovante.setImageDrawable(null)
+            binding.tvDataFotoComprovante.text = "Data: --/--/---- --:--"
+            binding.layoutFotoComprovante.visibility = View.GONE
+            
+            Log.d("ExpenseRegisterFragment", "✅ Foto do comprovante removida com sucesso")
+            Toast.makeText(requireContext(), "Foto do comprovante removida", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e("ExpenseRegisterFragment", "Erro ao remover foto: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao remover foto: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun mostrarDialogoExplicacaoPermissao() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Permissão Necessária")
+            .setMessage("Para capturar fotos do comprovante, é necessário permitir o acesso à câmera. Por favor, conceda a permissão nas configurações do aplicativo.")
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 
     override fun onDestroyView() {

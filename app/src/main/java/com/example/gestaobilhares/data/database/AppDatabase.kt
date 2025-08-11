@@ -27,7 +27,7 @@ import com.example.gestaobilhares.data.entities.*
         CategoriaDespesa::class, // ✅ NOVO: CATEGORIAS DE DESPESAS
         TipoDespesa::class // ✅ NOVO: TIPOS DE DESPESAS
     ],
-    version = 16, // ✅ MIGRATION: Adicionados campos de foto do relógio na tabela acerto_mesas
+    version = 19, // ✅ MIGRATION: Correção dos nomes das colunas de foto
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -191,12 +191,106 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
                 
+                val MIGRATION_16_17 = object : androidx.room.migration.Migration(16, 17) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Adicionar campos de foto do comprovante na tabela despesas
+                        database.execSQL("ALTER TABLE despesas ADD COLUMN fotoComprovante TEXT")
+                        database.execSQL("ALTER TABLE despesas ADD COLUMN dataFotoComprovante INTEGER")
+                    }
+                }
+                
+                val MIGRATION_17_18 = object : androidx.room.migration.Migration(17, 18) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Migration para corrigir problemas de integridade do schema
+                        // Recriar tabelas se necessário para garantir consistência
+                        try {
+                            // Verificar se a tabela clientes tem todos os campos necessários
+                            database.execSQL("""
+                                CREATE TABLE IF NOT EXISTS clientes_temp (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    nome TEXT NOT NULL,
+                                    nome_fantasia TEXT,
+                                    cpf_cnpj TEXT,
+                                    telefone TEXT,
+                                    telefone2 TEXT,
+                                    email TEXT,
+                                    endereco TEXT,
+                                    bairro TEXT,
+                                    cidade TEXT,
+                                    estado TEXT,
+                                    cep TEXT,
+                                    rota_id INTEGER NOT NULL,
+                                    valor_ficha REAL NOT NULL DEFAULT 0.0,
+                                    comissao_ficha REAL NOT NULL DEFAULT 0.0,
+                                    numero_contrato TEXT,
+                                    debito_anterior REAL NOT NULL DEFAULT 0.0,
+                                    debito_atual REAL NOT NULL DEFAULT 0.0,
+                                    ativo INTEGER NOT NULL DEFAULT 1,
+                                    observacoes TEXT,
+                                    data_cadastro INTEGER NOT NULL,
+                                    data_ultima_atualizacao INTEGER NOT NULL,
+                                    latitude REAL,
+                                    longitude REAL,
+                                    precisao_gps REAL,
+                                    data_captura_gps INTEGER,
+                                    FOREIGN KEY (rota_id) REFERENCES rotas (id) ON DELETE CASCADE
+                                )
+                            """)
+                            
+                            // Copiar dados existentes se a tabela original existir
+                            database.execSQL("""
+                                INSERT OR IGNORE INTO clientes_temp 
+                                SELECT * FROM clientes
+                            """)
+                            
+                            // Substituir tabela original
+                            database.execSQL("DROP TABLE IF EXISTS clientes")
+                            database.execSQL("ALTER TABLE clientes_temp RENAME TO clientes")
+                            
+                            // Recriar índices
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_clientes_rota_id ON clientes (rota_id)")
+                            
+                        } catch (e: Exception) {
+                            // Se houver erro, apenas logar e continuar
+                            android.util.Log.w("Migration", "Erro na migration 17_18: ${e.message}")
+                        }
+                    }
+                }
+                
+                val MIGRATION_18_19 = object : androidx.room.migration.Migration(18, 19) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Migration para corrigir os nomes das colunas de foto na tabela despesas
+                        try {
+                            // Verificar se as colunas com nomes incorretos existem
+                            val cursor = database.query("PRAGMA table_info(despesas)")
+                            val columnNames = mutableListOf<String>()
+                            while (cursor.moveToNext()) {
+                                columnNames.add(cursor.getString(1)) // nome da coluna
+                            }
+                            cursor.close()
+                            
+                            // Se existem colunas com nomes incorretos, corrigir
+                            if (columnNames.contains("foto_comprovante") && !columnNames.contains("fotoComprovante")) {
+                                // Renomear colunas incorretas para corretas
+                                database.execSQL("ALTER TABLE despesas RENAME COLUMN foto_comprovante TO fotoComprovante")
+                                database.execSQL("ALTER TABLE despesas RENAME COLUMN data_foto_comprovante TO dataFotoComprovante")
+                                android.util.Log.d("Migration", "Colunas de foto renomeadas com sucesso")
+                            }
+                            
+                        } catch (e: Exception) {
+                            // Se houver erro, apenas logar e continuar
+                            android.util.Log.w("Migration", "Erro na migration 18_19: ${e.message}")
+                        }
+                    }
+                }
+                
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
+                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19)
+                    .fallbackToDestructiveMigration() // ✅ NOVO: Permite recriar banco em caso de erro de migration
                     .build()
                 INSTANCE = instance
                 instance

@@ -230,7 +230,9 @@ class ExpenseRegisterViewModel(
         quantidade: Int = 1,
         observacoes: String = "",
         despesaId: Long = 0L,
-        modoEdicao: Boolean = false
+        modoEdicao: Boolean = false,
+        fotoComprovante: String? = null,
+        dataFotoComprovante: Date? = null
     ) {
         viewModelScope.launch {
             try {
@@ -274,7 +276,9 @@ class ExpenseRegisterViewModel(
                             categoria = categoria.nome,
                             tipoDespesa = _selectedType.value?.nome ?: "",
                             dataHora = _selectedDate.value,
-                            observacoes = observacoes
+                            observacoes = observacoes,
+                            fotoComprovante = fotoComprovante,
+                            dataFotoComprovante = dataFotoComprovante
                         )
                         
                         despesaRepository.atualizar(despesaAtualizada)
@@ -294,7 +298,9 @@ class ExpenseRegisterViewModel(
                         dataHora = _selectedDate.value,
                         observacoes = observacoes,
                         criadoPor = "Sistema", // TODO: Pegar usuário atual
-                        cicloId = cicloId
+                        cicloId = cicloId,
+                        fotoComprovante = fotoComprovante,
+                        dataFotoComprovante = dataFotoComprovante
                     )
 
                     val novaDespesaId = despesaRepository.inserir(despesa)

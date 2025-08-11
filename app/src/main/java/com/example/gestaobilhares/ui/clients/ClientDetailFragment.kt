@@ -291,7 +291,7 @@ class ClientDetailFragment : Fragment() {
      */
     private fun mostrarDialogoObservacoes(observacoes: String) {
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Observações do Último Acerto")
+            .setTitle("Observação:")
             .setMessage(observacoes)
             .setPositiveButton("Confirmar Leitura") { dialog, _ ->
                 dialog.dismiss()
@@ -500,11 +500,26 @@ class ClientDetailFragment : Fragment() {
                     Log.d("ClientDetailFragment", "Acerto $index: ID=${acerto.id}, Data=${acerto.data}, Valor=${acerto.valorTotal}, Status=${acerto.status}")
                 }
                 settlementHistoryAdapter.submitList(settlements)
-                Log.d("ClientDetailFragment", "Lista enviada para adapter: ${settlements.size} itens")
             }
         }
         
-
+        // ✅ NOVO: Observer para atualizar o total de mesas ativas
+        lifecycleScope.launch {
+            viewModel.mesasCliente.collect { mesas ->
+                Log.d("ClientDetailFragment", "=== MESAS ATUALIZADAS ===")
+                Log.d("ClientDetailFragment", "Total de mesas: ${mesas.size}")
+                
+                // Filtrar apenas mesas ativas
+                val mesasAtivas = mesas.filter { it.ativa }
+                Log.d("ClientDetailFragment", "Mesas ativas: ${mesasAtivas.size}")
+                
+                // Atualizar o contador de mesas ativas
+                binding.tvTotalMesasAtivas.text = mesasAtivas.size.toString()
+                
+                // Atualizar o adapter das mesas
+                mesasAdapter.submitList(mesas)
+            }
+        }
     }
 
     private fun updateClientUI(client: ClienteResumo) {
@@ -512,7 +527,6 @@ class ClientDetailFragment : Fragment() {
             tvClientName.text = client.nome
             tvClientAddress.text = client.endereco
             tvLastVisit.text = client.ultimaVisita
-            tvActiveTables.text = client.mesasAtivas.toString()
             
             // ✅ CORREÇÃO CRÍTICA: Exibir débito atual sincronizado
             val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
