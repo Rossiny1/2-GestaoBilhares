@@ -135,6 +135,18 @@ class AppRepository(
     
     suspend fun aprovarColaborador(colaboradorId: Long, dataAprovacao: java.util.Date, aprovadoPor: String) = 
         colaboradorDao?.aprovarColaborador(colaboradorId, dataAprovacao, aprovadoPor)
+    
+    suspend fun aprovarColaboradorComCredenciais(
+        colaboradorId: Long,
+        email: String,
+        senha: String,
+        nivelAcesso: NivelAcesso,
+        observacoes: String,
+        dataAprovacao: java.util.Date,
+        aprovadoPor: String
+    ) = colaboradorDao?.aprovarColaboradorComCredenciais(
+        colaboradorId, email, senha, nivelAcesso, observacoes, dataAprovacao, aprovadoPor
+    )
     suspend fun alterarStatusColaborador(colaboradorId: Long, ativo: Boolean) = 
         colaboradorDao?.alterarStatus(colaboradorId, ativo)
     suspend fun atualizarUltimoAcessoColaborador(colaboradorId: Long, dataUltimoAcesso: java.util.Date) = 

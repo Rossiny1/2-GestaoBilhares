@@ -168,6 +168,43 @@ class ColaboradorManagementViewModel(
             }
         }
     }
+
+    /**
+     * Aprova um colaborador com credenciais de acesso
+     */
+    fun aprovarColaboradorComCredenciais(
+        colaboradorId: Long,
+        email: String,
+        senha: String,
+        nivelAcesso: NivelAcesso,
+        observacoes: String,
+        aprovadoPor: String
+    ) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                
+                // Atualizar colaborador com credenciais e aprovação
+                appRepository.aprovarColaboradorComCredenciais(
+                    colaboradorId = colaboradorId,
+                    email = email,
+                    senha = senha,
+                    nivelAcesso = nivelAcesso,
+                    observacoes = observacoes,
+                    dataAprovacao = java.util.Date(),
+                    aprovadoPor = aprovadoPor
+                )
+                
+                _message.value = "Colaborador aprovado com credenciais geradas!"
+                carregarDados() // Recarregar dados
+                
+            } catch (e: Exception) {
+                _errorMessage.value = "Erro ao aprovar colaborador: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
     
     /**
      * Ativa/desativa um colaborador

@@ -90,6 +90,12 @@ data class Colaborador(
     @ColumnInfo(name = "senha_temporaria")
     val senhaTemporaria: String? = null,
     
+    @ColumnInfo(name = "email_acesso")
+    val emailAcesso: String? = null,
+    
+    @ColumnInfo(name = "observacoes")
+    val observacoes: String? = null,
+    
     // Datas
     @ColumnInfo(name = "data_cadastro")
     val dataCadastro: Date = Date(),

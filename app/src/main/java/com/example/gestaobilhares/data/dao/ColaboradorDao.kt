@@ -52,6 +52,17 @@ interface ColaboradorDao {
     @Query("UPDATE colaboradores SET aprovado = 1, data_aprovacao = :dataAprovacao, aprovado_por = :aprovadoPor WHERE id = :colaboradorId")
     suspend fun aprovarColaborador(colaboradorId: Long, dataAprovacao: java.util.Date, aprovadoPor: String)
     
+    @Query("UPDATE colaboradores SET aprovado = 1, data_aprovacao = :dataAprovacao, aprovado_por = :aprovadoPor, email_acesso = :email, senha_temporaria = :senha, nivel_acesso = :nivelAcesso, observacoes = :observacoes WHERE id = :colaboradorId")
+    suspend fun aprovarColaboradorComCredenciais(
+        colaboradorId: Long,
+        email: String,
+        senha: String,
+        nivelAcesso: NivelAcesso,
+        observacoes: String,
+        dataAprovacao: java.util.Date,
+        aprovadoPor: String
+    )
+    
     @Query("UPDATE colaboradores SET ativo = :ativo WHERE id = :colaboradorId")
     suspend fun alterarStatus(colaboradorId: Long, ativo: Boolean)
     
