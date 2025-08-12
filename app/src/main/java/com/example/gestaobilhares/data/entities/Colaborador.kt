@@ -132,11 +132,11 @@ data class MetaColaborador(
     @ColumnInfo(name = "valor_meta")
     val valorMeta: Double,
     
-    @ColumnInfo(name = "periodo_inicio")
-    val periodoInicio: Date,
+    @ColumnInfo(name = "ciclo_id")
+    val cicloId: Long, // ID do ciclo de acerto
     
-    @ColumnInfo(name = "periodo_fim")
-    val periodoFim: Date,
+    @ColumnInfo(name = "rota_id")
+    val rotaId: Long? = null, // Rota específica (opcional - null = todas as rotas)
     
     @ColumnInfo(name = "valor_atual")
     val valorAtual: Double = 0.0,
@@ -153,7 +153,7 @@ data class MetaColaborador(
  */
 enum class TipoMeta {
     FATURAMENTO,           // Meta de faturamento em R$
-    CLIENTES_ACERTADOS,    // Meta de quantidade de clientes acertados
+    CLIENTES_ACERTADOS,    // Meta de percentual de clientes acertados (%)
     MESAS_LOCADAS,         // Meta de quantidade de mesas locadas
     TICKET_MEDIO           // Meta de ticket médio por mesa
 }

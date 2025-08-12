@@ -80,7 +80,7 @@ interface ColaboradorDao {
     @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND ativo = 1 ORDER BY data_criacao DESC")
     fun obterMetasPorColaborador(colaboradorId: Long): Flow<List<MetaColaborador>>
     
-    @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND tipo_meta = :tipoMeta AND ativo = 1 ORDER BY periodo_inicio DESC LIMIT 1")
+    @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND tipo_meta = :tipoMeta AND ativo = 1 ORDER BY data_criacao DESC LIMIT 1")
     suspend fun obterMetaAtual(colaboradorId: Long, tipoMeta: TipoMeta): MetaColaborador?
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -97,6 +97,15 @@ interface ColaboradorDao {
     
     @Query("UPDATE metas_colaborador SET ativo = 0 WHERE colaborador_id = :colaboradorId")
     suspend fun desativarMetasColaborador(colaboradorId: Long)
+    
+    @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND ciclo_id = :cicloId AND ativo = 1")
+    fun obterMetasPorCiclo(colaboradorId: Long, cicloId: Long): Flow<List<MetaColaborador>>
+    
+    @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND rota_id = :rotaId AND ativo = 1")
+    fun obterMetasPorRota(colaboradorId: Long, rotaId: Long): Flow<List<MetaColaborador>>
+    
+    @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND ciclo_id = :cicloId AND rota_id = :rotaId AND ativo = 1")
+    fun obterMetasPorCicloERota(colaboradorId: Long, cicloId: Long, rotaId: Long): Flow<List<MetaColaborador>>
     
     // ==================== COLABORADOR ROTA ====================
     

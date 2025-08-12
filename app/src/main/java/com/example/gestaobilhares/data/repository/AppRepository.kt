@@ -15,7 +15,8 @@ class AppRepository(
     private val mesaDao: MesaDao,
     private val rotaDao: RotaDao,
     private val despesaDao: DespesaDao,
-    private val colaboradorDao: ColaboradorDao
+    private val colaboradorDao: ColaboradorDao,
+    private val cicloAcertoDao: CicloAcertoDao
 ) {
     
     // ==================== CLIENTE ====================
@@ -187,4 +188,8 @@ class AppRepository(
         )
         colaboradorDao?.inserirColaboradorRota(colaboradorRota)
     }
+    
+    // ==================== CICLO ACERTO ====================
+    
+    fun obterTodosCiclos() = cicloAcertoDao.listarTodos()
 } 

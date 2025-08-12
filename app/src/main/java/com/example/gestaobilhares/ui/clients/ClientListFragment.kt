@@ -75,7 +75,8 @@ class ClientListFragment : Fragment() {
                 database.mesaDao(),
                 database.rotaDao(),
                 database.despesaDao(),
-                database.colaboradorDao()
+                database.colaboradorDao(),
+                database.cicloAcertoDao()
             )
         )
         

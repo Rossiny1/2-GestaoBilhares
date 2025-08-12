@@ -33,8 +33,8 @@ class ColaboradorMetasFragment : Fragment() {
 
     private lateinit var appRepository: AppRepository
     private var colaboradorId: Long? = null
-    private var periodoInicio: Date? = null
-    private var periodoFim: Date? = null
+    private var cicloSelecionado: Long? = null
+    private var rotaSelecionada: Long? = null
 
     // Formatadores de data
     private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
@@ -54,7 +54,7 @@ class ColaboradorMetasFragment : Fragment() {
         setupRepository()
         setupToolbar()
         setupDropdowns()
-        setupDatePickers()
+        setupCiclosERotas()
         setupClickListeners()
         
         // Verificar se é edição
@@ -72,7 +72,8 @@ class ColaboradorMetasFragment : Fragment() {
             database.mesaDao(),
             database.rotaDao(),
             database.despesaDao(),
-            database.colaboradorDao()
+            database.colaboradorDao(),
+            database.cicloAcertoDao()
         )
     }
 
@@ -94,7 +95,7 @@ class ColaboradorMetasFragment : Fragment() {
         val tiposMeta = TipoMeta.values().map { 
             when (it) {
                 TipoMeta.FATURAMENTO -> "Faturamento (R$)"
-                TipoMeta.CLIENTES_ACERTADOS -> "Clientes Acertados"
+                TipoMeta.CLIENTES_ACERTADOS -> "Clientes Acertados (%)"
                 TipoMeta.MESAS_LOCADAS -> "Mesas Locadas"
                 TipoMeta.TICKET_MEDIO -> "Ticket Médio por Mesa (R$)"
             }
@@ -102,47 +103,66 @@ class ColaboradorMetasFragment : Fragment() {
         
         val tiposAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, tiposMeta)
         binding.autoCompleteTipoMeta.setAdapter(tiposAdapter)
+        
+        // Configurar listener para mudar hint do valor da meta
+        binding.autoCompleteTipoMeta.setOnItemClickListener { _, _, position, _ ->
+            val tipoSelecionado = TipoMeta.values()[position]
+            when (tipoSelecionado) {
+                TipoMeta.CLIENTES_ACERTADOS -> {
+                    binding.tilValorMeta.hint = "Percentual de Clientes Acertados (%)"
+                }
+                TipoMeta.FATURAMENTO -> {
+                    binding.tilValorMeta.hint = "Valor da Meta (R$)"
+                }
+                TipoMeta.MESAS_LOCADAS -> {
+                    binding.tilValorMeta.hint = "Quantidade de Mesas"
+                }
+                TipoMeta.TICKET_MEDIO -> {
+                    binding.tilValorMeta.hint = "Ticket Médio (R$)"
+                }
+            }
+        }
     }
 
-    private fun setupDatePickers() {
-        binding.editTextPeriodoInicio.setOnClickListener {
-            val calendar = Calendar.getInstance()
-            
-            val datePickerDialog = DatePickerDialog(
-                requireContext(),
-                { _, year, month, dayOfMonth ->
-                    val selectedDate = Calendar.getInstance().apply {
-                        set(year, month, dayOfMonth)
-                    }.time
-                    periodoInicio = selectedDate
-                    binding.editTextPeriodoInicio.setText(dateFormatter.format(selectedDate))
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            )
-            
-            datePickerDialog.show()
-        }
-
-        binding.editTextPeriodoFim.setOnClickListener {
-            val calendar = Calendar.getInstance()
-            
-            val datePickerDialog = DatePickerDialog(
-                requireContext(),
-                { _, year, month, dayOfMonth ->
-                    val selectedDate = Calendar.getInstance().apply {
-                        set(year, month, dayOfMonth)
-                    }.time
-                    periodoFim = selectedDate
-                    binding.editTextPeriodoFim.setText(dateFormatter.format(selectedDate))
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            )
-            
-            datePickerDialog.show()
+    private fun setupCiclosERotas() {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // Carregar ciclos
+                val ciclos = withContext(Dispatchers.IO) {
+                    appRepository.obterTodosCiclos().first()
+                }
+                
+                val ciclosAdapter = ArrayAdapter(
+                    requireContext(), 
+                    android.R.layout.simple_dropdown_item_1line, 
+                    ciclos.map { "Ciclo ${it.id} - ${dateFormatter.format(it.dataInicio)} a ${dateFormatter.format(it.dataFim)}" }
+                )
+                binding.autoCompleteCiclo.setAdapter(ciclosAdapter)
+                
+                // Carregar rotas
+                val rotas = withContext(Dispatchers.IO) {
+                    appRepository.obterTodasRotas().first()
+                }
+                
+                val rotasAdapter = ArrayAdapter(
+                    requireContext(), 
+                    android.R.layout.simple_dropdown_item_1line, 
+                    listOf("Todas as Rotas") + rotas.map { it.nome }
+                )
+                binding.autoCompleteRota.setAdapter(rotasAdapter)
+                
+                // Configurar listeners
+                binding.autoCompleteCiclo.setOnItemClickListener { _, _, position, _ ->
+                    cicloSelecionado = ciclos[position].id
+                }
+                
+                binding.autoCompleteRota.setOnItemClickListener { _, _, position, _ ->
+                    rotaSelecionada = if (position == 0) null else rotas[position - 1].id
+                }
+                
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Erro ao carregar ciclos e rotas: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -188,13 +208,8 @@ class ColaboradorMetasFragment : Fragment() {
             return
         }
         
-        if (periodoInicio == null || periodoFim == null) {
-            Toast.makeText(requireContext(), "Defina o período da meta", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        if (periodoFim!!.before(periodoInicio)) {
-            Toast.makeText(requireContext(), "O período final deve ser posterior ao inicial", Toast.LENGTH_SHORT).show()
+        if (cicloSelecionado == null) {
+            Toast.makeText(requireContext(), "Selecione um ciclo", Toast.LENGTH_SHORT).show()
             return
         }
         
@@ -207,7 +222,7 @@ class ColaboradorMetasFragment : Fragment() {
         // Converter texto para enum
         val tipoMeta = when (tipoMetaText) {
             "Faturamento (R$)" -> TipoMeta.FATURAMENTO
-            "Clientes Acertados" -> TipoMeta.CLIENTES_ACERTADOS
+            "Clientes Acertados (%)" -> TipoMeta.CLIENTES_ACERTADOS
             "Mesas Locadas" -> TipoMeta.MESAS_LOCADAS
             "Ticket Médio por Mesa (R$)" -> TipoMeta.TICKET_MEDIO
             else -> {
@@ -222,8 +237,8 @@ class ColaboradorMetasFragment : Fragment() {
                     colaboradorId = colaboradorId ?: 0,
                     tipoMeta = tipoMeta,
                     valorMeta = valorMeta,
-                    periodoInicio = periodoInicio!!,
-                    periodoFim = periodoFim!!,
+                    cicloId = cicloSelecionado!!,
+                    rotaId = rotaSelecionada,
                     valorAtual = 0.0,
                     ativo = true
                 )

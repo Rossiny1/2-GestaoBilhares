@@ -47,6 +47,12 @@ interface CicloAcertoDao {
     fun listarPorRota(rotaId: Long): Flow<List<CicloAcertoEntity>>
     
     /**
+     * Lista todos os ciclos disponíveis.
+     */
+    @Query("SELECT * FROM ciclos_acerto ORDER BY ano DESC, numero_ciclo DESC")
+    fun listarTodos(): Flow<List<CicloAcertoEntity>>
+    
+    /**
      * Lista todos os ciclos de um ano específico.
      */
     @Query("SELECT * FROM ciclos_acerto WHERE ano = :ano ORDER BY rota_id, numero_ciclo DESC")

@@ -29,7 +29,7 @@ import com.example.gestaobilhares.data.entities.*
         CategoriaDespesa::class, // ✅ NOVO: CATEGORIAS DE DESPESAS
         TipoDespesa::class // ✅ NOVO: TIPOS DE DESPESAS
     ],
-    version = 23, // ✅ MIGRATION: Adicionando coluna observacoes na tabela colaboradores
+    version = 25, // ✅ MIGRATION: Corrigindo tabela metas_colaborador
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -434,12 +434,116 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
                 
+                val MIGRATION_23_24 = object : androidx.room.migration.Migration(23, 24) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Migration para atualizar tabela metas_colaborador
+                        try {
+                            // Criar tabela temporária com nova estrutura
+                            database.execSQL("""
+                                CREATE TABLE metas_colaborador_temp (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    colaborador_id INTEGER NOT NULL,
+                                    tipo_meta TEXT NOT NULL,
+                                    valor_meta REAL NOT NULL,
+                                    ciclo_id INTEGER NOT NULL,
+                                    rota_id INTEGER,
+                                    valor_atual REAL NOT NULL DEFAULT 0.0,
+                                    ativo INTEGER NOT NULL DEFAULT 1,
+                                    data_criacao INTEGER NOT NULL
+                                )
+                            """)
+                            
+                            // Copiar dados existentes (se houver)
+                            database.execSQL("""
+                                INSERT INTO metas_colaborador_temp (id, colaborador_id, tipo_meta, valor_meta, ciclo_id, rota_id, valor_atual, ativo, data_criacao)
+                                SELECT id, colaborador_id, tipo_meta, valor_meta, 
+                                       (SELECT id FROM ciclos_acerto WHERE ativo = 1 LIMIT 1) as ciclo_id,
+                                       NULL as rota_id,
+                                       valor_atual, ativo, data_criacao
+                                FROM metas_colaborador
+                            """)
+                            
+                            // Remover tabela antiga
+                            database.execSQL("DROP TABLE metas_colaborador")
+                            
+                            // Renomear tabela temporária
+                            database.execSQL("ALTER TABLE metas_colaborador_temp RENAME TO metas_colaborador")
+                            
+                            android.util.Log.d("Migration", "Migration 23_24 executada com sucesso")
+                            
+                        } catch (e: Exception) {
+                            // Se houver erro, apenas logar
+                            android.util.Log.e("Migration", "Erro na migration 23_24: ${e.message}")
+                        }
+                    }
+                }
+                
+                val MIGRATION_24_25 = object : androidx.room.migration.Migration(24, 25) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Migration para corrigir tabela metas_colaborador se a anterior falhou
+                        try {
+                            // Verificar se a tabela tem a estrutura correta
+                            val cursor = database.query("PRAGMA table_info(metas_colaborador)")
+                            val columns = mutableListOf<String>()
+                            while (cursor.moveToNext()) {
+                                columns.add(cursor.getString(1)) // nome da coluna
+                            }
+                            cursor.close()
+                            
+                            // Se ainda tem periodo_inicio e periodo_fim, corrigir
+                            if (columns.contains("periodo_inicio") || columns.contains("periodo_fim")) {
+                                android.util.Log.d("Migration", "Corrigindo estrutura da tabela metas_colaborador")
+                                
+                                // Criar tabela temporária com estrutura correta
+                                database.execSQL("""
+                                    CREATE TABLE metas_colaborador_temp (
+                                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                        colaborador_id INTEGER NOT NULL,
+                                        tipo_meta TEXT NOT NULL,
+                                        valor_meta REAL NOT NULL,
+                                        ciclo_id INTEGER NOT NULL,
+                                        rota_id INTEGER,
+                                        valor_atual REAL NOT NULL DEFAULT 0.0,
+                                        ativo INTEGER NOT NULL DEFAULT 1,
+                                        data_criacao INTEGER NOT NULL
+                                    )
+                                """)
+                                
+                                // Tentar copiar dados existentes
+                                try {
+                                    database.execSQL("""
+                                        INSERT INTO metas_colaborador_temp (id, colaborador_id, tipo_meta, valor_meta, ciclo_id, rota_id, valor_atual, ativo, data_criacao)
+                                        SELECT id, colaborador_id, tipo_meta, valor_meta, 
+                                               (SELECT id FROM ciclos_acerto WHERE ativo = 1 LIMIT 1) as ciclo_id,
+                                               NULL as rota_id,
+                                               valor_atual, ativo, data_criacao
+                                        FROM metas_colaborador
+                                    """)
+                                } catch (e: Exception) {
+                                    android.util.Log.w("Migration", "Não foi possível copiar dados existentes: ${e.message}")
+                                }
+                                
+                                // Remover tabela antiga
+                                database.execSQL("DROP TABLE metas_colaborador")
+                                
+                                // Renomear tabela temporária
+                                database.execSQL("ALTER TABLE metas_colaborador_temp RENAME TO metas_colaborador")
+                            }
+                            
+                            android.util.Log.d("Migration", "Migration 24_25 executada com sucesso")
+                            
+                        } catch (e: Exception) {
+                            android.util.Log.e("Migration", "Erro na migration 24_25: ${e.message}")
+                        }
+                    }
+                }
+                
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23)
+                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25)
                     .fallbackToDestructiveMigration() // ✅ NOVO: Permite recriar banco em caso de erro de migration
                     .build()
                 INSTANCE = instance

@@ -50,7 +50,8 @@ class ColaboradorManagementFragment : Fragment() {
             mesaDao = database.mesaDao(),
             rotaDao = database.rotaDao(),
             despesaDao = database.despesaDao(),
-            colaboradorDao = database.colaboradorDao()
+            colaboradorDao = database.colaboradorDao(),
+            cicloAcertoDao = database.cicloAcertoDao()
         )
         viewModel = ColaboradorManagementViewModel(appRepository)
         

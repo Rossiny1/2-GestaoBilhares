@@ -96,7 +96,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Card de Período -->
+            <!-- Card de Ciclo e Rota -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -113,47 +113,43 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Período da Meta"
+                        android:text="Ciclo e Rota"
                         android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:layout_marginBottom="16dp" />
 
-                    <!-- Período Início -->
+                    <!-- Ciclo -->
                     <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilPeriodoInicio"
+                        android:id="@+id/tilCiclo"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
-                        android:hint="Data de Início"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                        android:hint="Ciclo de Acerto"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editTextPeriodoInicio"
+                        <AutoCompleteTextView
+                            android:id="@+id/autoCompleteCiclo"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="none"
-                            android:focusable="false"
-                            android:clickable="true" />
+                            android:inputType="none" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Período Fim -->
+                    <!-- Rota (Opcional) -->
                     <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilPeriodoFim"
+                        android:id="@+id/tilRota"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
-                        android:hint="Data de Fim"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                        android:hint="Rota Específica (Opcional)"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editTextPeriodoFim"
+                        <AutoCompleteTextView
+                            android:id="@+id/autoCompleteRota"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="none"
-                            android:focusable="false"
-                            android:clickable="true" />
+                            android:inputType="none" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
