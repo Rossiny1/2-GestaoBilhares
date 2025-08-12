@@ -61,7 +61,21 @@
         android:id="@+id/colaboradorRegisterFragment"
         android:name="com.example.gestaobilhares.ui.colaboradores.ColaboradorRegisterFragment"
         android:label="Cadastrar Colaborador">
-        <!-- Navegação de volta para gerenciamento de colaboradores já está implícita com o botão voltar -->
+        <!-- Navegação para metas do colaborador -->
+        <action
+            android:id="@+id/action_colaboradorRegisterFragment_to_colaboradorMetasFragment"
+            app:destination="@id/colaboradorMetasFragment" />
+    </fragment>
+
+    <!-- ✅ NOVO: Tela de metas dos colaboradores -->
+    <fragment
+        android:id="@+id/colaboradorMetasFragment"
+        android:name="com.example.gestaobilhares.ui.colaboradores.ColaboradorMetasFragment"
+        android:label="Metas do Colaborador">
+        <argument
+            android:name="colaborador_id"
+            app:argType="long"
+            android:defaultValue="0L" />
     </fragment>
 
     <!-- Tela de histórico de despesas -->

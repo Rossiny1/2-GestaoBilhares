@@ -145,6 +145,15 @@ class ColaboradorRegisterFragment : Fragment() {
         binding.btnSalvar.setOnClickListener {
             salvarColaborador()
         }
+        
+        binding.btnMetas.setOnClickListener {
+            if (colaboradorId != null) {
+                val bundle = Bundle().apply {
+                    putLong("colaborador_id", colaboradorId!!)
+                }
+                findNavController().navigate(R.id.colaboradorMetasFragment, bundle)
+            }
+        }
     }
 
     private fun setupRotasSelector() {
@@ -254,6 +263,9 @@ class ColaboradorRegisterFragment : Fragment() {
                     // Atualizar texto das rotas
                     setupRotasSelector()
                     atualizarTextoRotasSelecionadas()
+                    
+                    // Mostrar botão de metas para colaboradores existentes
+                    binding.btnMetas.visibility = View.VISIBLE
                     
                 } ?: run {
                     Toast.makeText(requireContext(), "Colaborador não encontrado", Toast.LENGTH_SHORT).show()
