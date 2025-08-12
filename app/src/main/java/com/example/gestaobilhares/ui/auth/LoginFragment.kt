@@ -90,10 +90,27 @@ class LoginFragment : Fragment() {
     
     /**
      * Inicia o processo de login com Google
+     * Sempre força a seleção de conta para permitir múltiplos usuários no mesmo dispositivo
      */
     private fun signInWithGoogle() {
-        val signInIntent = googleSignInClient.signInIntent
-        startActivityForResult(signInIntent, RC_SIGN_IN)
+        // Verificar se já há uma conta logada no Google
+        val account = GoogleSignIn.getLastSignedInAccount(requireContext())
+        
+        if (account != null) {
+            // Se há uma conta logada, fazer sign out para forçar seleção
+            googleSignInClient.signOut().addOnCompleteListener {
+                android.util.Log.d("LoginFragment", "Sign out realizado - forçando seleção de conta")
+                
+                // Agora iniciar o processo de sign in que sempre mostrará a seleção de conta
+                val signInIntent = googleSignInClient.signInIntent
+                startActivityForResult(signInIntent, RC_SIGN_IN)
+            }
+        } else {
+            // Se não há conta logada, iniciar diretamente
+            android.util.Log.d("LoginFragment", "Nenhuma conta Google logada - iniciando seleção")
+            val signInIntent = googleSignInClient.signInIntent
+            startActivityForResult(signInIntent, RC_SIGN_IN)
+        }
     }
     
     /**
