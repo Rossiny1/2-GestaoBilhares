@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Arquivos temporários do Google Drive
+.tmp.driveupload/
+*.tmp.driveupload
