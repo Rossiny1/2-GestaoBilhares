@@ -250,14 +250,22 @@ class ColaboradorManagementFragment : Fragment() {
     }
 
     private fun aprovarColaborador(colaborador: Colaborador) {
-        AlertDialog.Builder(requireContext(), R.style.DarkDialogTheme)
-            .setTitle("Aprovar Colaborador")
-            .setMessage("Tem certeza que deseja aprovar o colaborador \"${colaborador.nome}\"?")
-            .setPositiveButton("Aprovar") { _, _ ->
-                viewModel.aprovarColaborador(colaborador.id, "Admin") // TODO: Pegar usuário atual
+        // Usar o novo diálogo de aprovação com credenciais
+        val approvalDialog = ColaboradorApprovalDialog(
+            context = requireContext(),
+            colaborador = colaborador,
+            onApprovalConfirmed = { email, senha, nivelAcesso, observacoes ->
+                viewModel.aprovarColaboradorComCredenciais(
+                    colaboradorId = colaborador.id,
+                    email = email,
+                    senha = senha,
+                    nivelAcesso = nivelAcesso,
+                    observacoes = observacoes,
+                    aprovadoPor = "Admin" // TODO: Pegar usuário atual
+                )
             }
-            .setNegativeButton("Cancelar", null)
-            .show()
+        )
+        approvalDialog.show()
     }
 
     private fun confirmarExclusao(colaborador: Colaborador) {

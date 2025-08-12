@@ -29,7 +29,7 @@ import com.example.gestaobilhares.data.entities.*
         CategoriaDespesa::class, // ✅ NOVO: CATEGORIAS DE DESPESAS
         TipoDespesa::class // ✅ NOVO: TIPOS DE DESPESAS
     ],
-    version = 21, // ✅ MIGRATION: Corrigindo valores padrão da tabela colaboradores
+    version = 23, // ✅ MIGRATION: Adicionando coluna observacoes na tabela colaboradores
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -402,12 +402,44 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
                 
+                val MIGRATION_21_22 = object : androidx.room.migration.Migration(21, 22) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Migration para adicionar coluna email_acesso na tabela colaboradores
+                        try {
+                            // Adicionar coluna email_acesso
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN email_acesso TEXT")
+                            
+                            android.util.Log.d("Migration", "Migration 21_22 executada com sucesso")
+                            
+                        } catch (e: Exception) {
+                            // Se houver erro, apenas logar e continuar
+                            android.util.Log.w("Migration", "Erro na migration 21_22: ${e.message}")
+                        }
+                    }
+                }
+                
+                val MIGRATION_22_23 = object : androidx.room.migration.Migration(22, 23) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        // Migration para adicionar coluna observacoes na tabela colaboradores
+                        try {
+                            // Adicionar coluna observacoes
+                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN observacoes TEXT")
+                            
+                            android.util.Log.d("Migration", "Migration 22_23 executada com sucesso")
+                            
+                        } catch (e: Exception) {
+                            // Se houver erro, apenas logar e continuar
+                            android.util.Log.w("Migration", "Erro na migration 22_23: ${e.message}")
+                        }
+                    }
+                }
+                
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21)
+                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23)
                     .fallbackToDestructiveMigration() // ✅ NOVO: Permite recriar banco em caso de erro de migration
                     .build()
                 INSTANCE = instance

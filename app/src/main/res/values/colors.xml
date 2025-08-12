@@ -127,4 +127,10 @@
     <color name="colorPrimaryDark">@color/primary_purple_dark</color>
     <color name="colorAccent">@color/accent_purple</color>
     <color name="colorOnSurface">#212121</color>
+    
+    <!-- Cores para o sistema de colaboradores -->
+    <color name="primary">@color/primary_purple</color>
+    <color name="background">@color/background_primary</color>
+    <color name="surface">@color/surface_primary</color>
+    <color name="onSurfaceVariant">@color/on_surface_variant</color>
 </resources>
