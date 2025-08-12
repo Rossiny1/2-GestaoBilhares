@@ -324,6 +324,9 @@
         <action
             android:id="@+id/action_reportsFragment_to_colaboradorPerformanceFragment"
             app:destination="@id/colaboradorPerformanceFragment" />
+        <action
+            android:id="@+id/action_reportsFragment_to_relatorioClientesFragment"
+            app:destination="@id/relatorioClientesFragment" />
     </fragment>
 
     <!-- Relatório Consolidado por Ciclo -->
@@ -355,6 +358,12 @@
         android:id="@+id/colaboradorPerformanceFragment"
         android:name="com.example.gestaobilhares.ui.reports.ColaboradorPerformanceFragment"
         android:label="Performance dos Colaboradores" />
+
+    <!-- Relatório de Clientes -->
+    <fragment
+        android:id="@+id/relatorioClientesFragment"
+        android:name="com.example.gestaobilhares.ui.reports.RelatorioClientesFragment"
+        android:label="Relatório de Clientes" />
 
     <!-- MainFragment mantido para compatibilidade, será removido futuramente -->
     <fragment

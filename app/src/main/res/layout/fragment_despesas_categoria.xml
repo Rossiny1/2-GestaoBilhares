@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary_dark"
-        app:elevation="0dp">
+        app:elevation="4dp">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
@@ -39,7 +39,7 @@
                     android:layout_weight="1"
                     android:text="Despesas por Categoria"
                     android:textColor="@android:color/white"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <ImageButton
@@ -47,7 +47,7 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Filtros"
+                    android:contentDescription="Filtrar"
                     android:src="@drawable/ic_filter"
                     android:tint="@android:color/white" />
 
@@ -74,79 +74,40 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/card_background"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
+                app:cardBackgroundColor="@color/surface_primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp"
+                app:strokeColor="@color/accent_primary"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:text="Filtros"
+                        android:layout_marginBottom="16dp"
+                        android:text="Filtros de Período"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
-                    <!-- Filtro de Ciclo -->
+                    <!-- Período -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:hint="Ciclo"
-                        app:boxBackgroundColor="@color/background_secondary"
-                        app:boxCornerRadiusBottomEnd="8dp"
-                        app:boxCornerRadiusBottomStart="8dp"
-                        app:boxCornerRadiusTopEnd="8dp"
-                        app:boxCornerRadiusTopStart="8dp"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
-
-                        <AutoCompleteTextView
-                            android:id="@+id/spinnerCiclo"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="none"
-                            android:text="Selecionar Ciclo" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Filtro de Rota -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:hint="Rota"
-                        app:boxBackgroundColor="@color/background_secondary"
-                        app:boxCornerRadiusBottomEnd="8dp"
-                        app:boxCornerRadiusBottomStart="8dp"
-                        app:boxCornerRadiusTopEnd="8dp"
-                        app:boxCornerRadiusTopStart="8dp"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
-
-                        <AutoCompleteTextView
-                            android:id="@+id/spinnerRota"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="none"
-                            android:text="Todas as Rotas" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Filtro de Período -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
                         android:hint="Período"
-                        app:boxBackgroundColor="@color/background_secondary"
-                        app:boxCornerRadiusBottomEnd="8dp"
-                        app:boxCornerRadiusBottomStart="8dp"
-                        app:boxCornerRadiusTopEnd="8dp"
-                        app:boxCornerRadiusTopStart="8dp"
+                        app:boxBackgroundColor="@color/surface_secondary"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:hintTextColor="@color/accent_primary"
+                        app:boxStrokeColor="@color/accent_primary"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
                         <AutoCompleteTextView
@@ -154,7 +115,32 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="none"
-                            android:text="Últimos 30 dias" />
+                            android:text="Último Mês"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Ano -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Ano"
+                        app:boxBackgroundColor="@color/surface_secondary"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:hintTextColor="@color/accent_primary"
+                        app:boxStrokeColor="@color/accent_primary"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/spinnerAno"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            android:text="2025"
+                            android:textColor="@color/text_primary" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -162,28 +148,30 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Estatísticas Gerais -->
+            <!-- Resumo Geral -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/card_background"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
+                app:cardBackgroundColor="@color/surface_primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp"
+                app:strokeColor="@color/accent_primary"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
+                        android:layout_marginBottom="20dp"
                         android:text="Resumo Geral"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <GridLayout
@@ -197,7 +185,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_columnWeight="1"
-                            android:layout_margin="8dp"
+                            android:layout_margin="6dp"
                             android:background="@drawable/rounded_background_primary"
                             android:gravity="center"
                             android:orientation="vertical"
@@ -215,38 +203,10 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
                                 android:text="Total Despesas"
                                 android:textColor="@android:color/white"
-                                android:textSize="12sp" />
-
-                        </LinearLayout>
-
-                        <!-- Categorias -->
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:layout_margin="8dp"
-                            android:background="@drawable/rounded_background_primary"
-                            android:gravity="center"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-
-                            <TextView
-                                android:id="@+id/txtTotalCategorias"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textColor="@android:color/white"
-                                android:textSize="18sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Categorias"
-                                android:textColor="@android:color/white"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
 
                         </LinearLayout>
 
@@ -255,7 +215,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_columnWeight="1"
-                            android:layout_margin="8dp"
+                            android:layout_margin="6dp"
                             android:background="@drawable/rounded_background_primary"
                             android:gravity="center"
                             android:orientation="vertical"
@@ -273,38 +233,70 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
                                 android:text="Média/Categoria"
                                 android:textColor="@android:color/white"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
 
                         </LinearLayout>
 
-                        <!-- Maior Categoria -->
+                        <!-- Categoria Maior -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_columnWeight="1"
-                            android:layout_margin="8dp"
+                            android:layout_margin="6dp"
                             android:background="@drawable/rounded_background_primary"
                             android:gravity="center"
                             android:orientation="vertical"
                             android:padding="16dp">
 
                             <TextView
-                                android:id="@+id/txtMaiorCategoria"
+                                android:id="@+id/txtCategoriaMaior"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="R$ 0,00"
+                                android:text="Combustível"
                                 android:textColor="@android:color/white"
-                                android:textSize="18sp"
+                                android:textSize="16sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Maior Categoria"
+                                android:layout_marginTop="4dp"
+                                android:text="Maior Despesa"
                                 android:textColor="@android:color/white"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
+
+                        </LinearLayout>
+
+                        <!-- Categoria Menor -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:layout_margin="6dp"
+                            android:background="@drawable/rounded_background_primary"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:id="@+id/txtCategoriaMenor"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Manutenção"
+                                android:textColor="@android:color/white"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Menor Despesa"
+                                android:textColor="@android:color/white"
+                                android:textSize="13sp" />
 
                         </LinearLayout>
 
@@ -314,27 +306,29 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Lista de Despesas por Categoria -->
+            <!-- Lista de Categorias -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/card_background"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
+                app:cardBackgroundColor="@color/surface_primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp"
+                app:strokeColor="@color/accent_primary"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
+                        android:layout_marginBottom="20dp"
                         android:text="Despesas por Categoria"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <androidx.recyclerview.widget.RecyclerView
@@ -354,7 +348,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="32dp"
-                android:visibility="gone" />
+                android:visibility="gone"
+                android:indeterminateTint="@color/accent_primary" />
 
         </LinearLayout>
 
