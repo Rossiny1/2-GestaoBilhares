@@ -11,8 +11,7 @@ import com.example.gestaobilhares.databinding.FragmentReportsBinding
 import com.google.android.material.snackbar.Snackbar
 
 /**
- * Fragment básico para tela de Relatórios.
- * Implementação temporária para evitar crash na navegação.
+ * Fragment para tela de Relatórios com navegação para relatórios consolidados.
  */
 class ReportsFragment : Fragment() {
     
@@ -39,7 +38,7 @@ class ReportsFragment : Fragment() {
             findNavController().popBackStack()
         }
         
-        // Botões de relatório (implementação básica)
+        // Botões de relatório básicos (implementação temporária)
         binding.btnRelatorioRotas.setOnClickListener {
             Snackbar.make(binding.root, "Relatório de Rotas será implementado em breve", Snackbar.LENGTH_SHORT).show()
         }
@@ -58,6 +57,23 @@ class ReportsFragment : Fragment() {
         
         binding.btnRelatorioDespesas.setOnClickListener {
             Snackbar.make(binding.root, "Relatório de Despesas será implementado em breve", Snackbar.LENGTH_SHORT).show()
+        }
+        
+        // Novos botões de relatórios consolidados
+        binding.btnRelatorioConsolidadoCiclo.setOnClickListener {
+            findNavController().navigate(R.id.action_reportsFragment_to_relatorioConsolidadoCicloFragment)
+        }
+        
+        binding.btnRelatorioAnualConsolidado.setOnClickListener {
+            findNavController().navigate(R.id.action_reportsFragment_to_relatorioAnualConsolidadoFragment)
+        }
+        
+        binding.btnDashboardGeral.setOnClickListener {
+            findNavController().navigate(R.id.action_reportsFragment_to_dashboardGeralFragment)
+        }
+        
+        binding.btnRelatorioColaboradores.setOnClickListener {
+            findNavController().navigate(R.id.action_reportsFragment_to_colaboradorPerformanceFragment)
         }
     }
     
