@@ -48,7 +48,7 @@ class ReportsFragment : Fragment() {
             android.util.Log.d("ReportsFragment", "btnRelatorioConsolidadoCiclo: ${binding.btnRelatorioConsolidadoCiclo != null}")
             android.util.Log.d("ReportsFragment", "btnRelatorioAnualConsolidado: ${binding.btnRelatorioAnualConsolidado != null}")
             android.util.Log.d("ReportsFragment", "btnDashboardGeral: ${binding.btnDashboardGeral != null}")
-            android.util.Log.d("ReportsFragment", "btnRelatorioColaboradores: ${binding.btnRelatorioColaboradores != null}")
+            android.util.Log.d("ReportsFragment", "btnRelatorioPerformance: ${binding.btnRelatorioPerformance != null}")
         } catch (e: Exception) {
             android.util.Log.e("ReportsFragment", "Erro ao verificar botões: ${e.message}", e)
         }
@@ -76,8 +76,8 @@ class ReportsFragment : Fragment() {
             android.util.Log.d("ReportsFragment", "Botão Relatório Clientes clicado")
             android.widget.Toast.makeText(requireContext(), "Relatório Clientes - Teste", android.widget.Toast.LENGTH_SHORT).show()
             try {
-                findNavController().navigate(R.id.action_reportsFragment_to_colaboradorPerformanceFragment)
-                android.util.Log.d("ReportsFragment", "Navegação para Performance Colaboradores bem-sucedida")
+                findNavController().navigate(R.id.action_reportsFragment_to_relatorioClientesFragment)
+                android.util.Log.d("ReportsFragment", "Navegação para Relatório Clientes bem-sucedida")
             } catch (e: Exception) {
                 android.util.Log.e("ReportsFragment", "Erro na navegação: ${e.message}", e)
                 android.widget.Toast.makeText(requireContext(), "Erro na navegação: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
@@ -145,7 +145,7 @@ class ReportsFragment : Fragment() {
             }
         }
         
-        binding.btnRelatorioColaboradores.setOnClickListener {
+        binding.btnRelatorioPerformance.setOnClickListener {
             android.util.Log.d("ReportsFragment", "Botão Performance Colaboradores clicado")
             try {
                 findNavController().navigate(R.id.action_reportsFragment_to_colaboradorPerformanceFragment)

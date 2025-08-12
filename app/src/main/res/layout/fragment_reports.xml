@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary_dark"
-        app:elevation="0dp">
+        app:elevation="4dp">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
@@ -37,7 +37,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Relatórios"
+                    android:text="Relatórios Gerenciais"
                     android:textColor="@android:color/white"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -64,11 +64,19 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="8dp"
                 android:text="Selecione o tipo de relatório"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:text="Acesse relatórios detalhados e dashboards de performance"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
 
             <!-- Grid de Relatórios -->
             <GridLayout
@@ -81,37 +89,47 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnRelatorioRotas"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="140dp"
                     android:layout_columnWeight="1"
-                    android:layout_margin="8dp"
+                    android:layout_margin="6dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
-                    app:cardBackgroundColor="@color/card_background"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="4dp">
+                    app:cardBackgroundColor="@color/surface_primary"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:strokeColor="@color/accent_primary"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:src="@drawable/ic_route"
                             android:tint="@color/accent_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="12dp"
                             android:text="Rotas"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Análise por rota"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
 
                     </LinearLayout>
 
@@ -121,37 +139,47 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnRelatorioClientes"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="140dp"
                     android:layout_columnWeight="1"
-                    android:layout_margin="8dp"
+                    android:layout_margin="6dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
-                    app:cardBackgroundColor="@color/card_background"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="4dp">
+                    app:cardBackgroundColor="@color/surface_primary"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:strokeColor="@color/accent_primary"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:src="@drawable/ic_clients"
                             android:tint="@color/accent_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="12dp"
                             android:text="Clientes"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Base de clientes"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
 
                     </LinearLayout>
 
@@ -161,37 +189,47 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnRelatorioAcertos"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="140dp"
                     android:layout_columnWeight="1"
-                    android:layout_margin="8dp"
+                    android:layout_margin="6dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
-                    app:cardBackgroundColor="@color/card_background"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="4dp">
+                    app:cardBackgroundColor="@color/surface_primary"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:strokeColor="@color/accent_primary"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:src="@drawable/ic_attach_money"
                             android:tint="@color/accent_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="12dp"
                             android:text="Acertos"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Transações"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
 
                     </LinearLayout>
 
@@ -201,37 +239,47 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnRelatorioFinanceiro"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="140dp"
                     android:layout_columnWeight="1"
-                    android:layout_margin="8dp"
+                    android:layout_margin="6dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
-                    app:cardBackgroundColor="@color/card_background"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="4dp">
+                    app:cardBackgroundColor="@color/surface_primary"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:strokeColor="@color/accent_primary"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:src="@drawable/ic_money"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_attach_money"
                             android:tint="@color/accent_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="12dp"
                             android:text="Financeiro"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Resultados"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
 
                     </LinearLayout>
 
@@ -241,81 +289,94 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnRelatorioDespesas"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="140dp"
                     android:layout_columnWeight="1"
-                    android:layout_margin="8dp"
+                    android:layout_margin="6dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
-                    app:cardBackgroundColor="@color/card_background"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="4dp">
+                    app:cardBackgroundColor="@color/surface_primary"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:strokeColor="@color/accent_primary"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:src="@drawable/ic_receipt"
                             android:tint="@color/accent_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="12dp"
                             android:text="Despesas"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Por categoria"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
 
                     </LinearLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Relatório de Performance dos Colaboradores -->
+                <!-- Relatório de Performance -->
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/btnRelatorioColaboradores"
+                    android:id="@+id/btnRelatorioPerformance"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="140dp"
                     android:layout_columnWeight="1"
-                    android:layout_margin="8dp"
+                    android:layout_margin="6dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
-                    app:cardBackgroundColor="@color/card_background"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="4dp">
+                    app:cardBackgroundColor="@color/surface_primary"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:strokeColor="@color/accent_primary"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:src="@drawable/ic_person"
                             android:tint="@color/accent_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="12dp"
                             android:text="Performance"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
                             android:text="Colaboradores"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
@@ -328,41 +389,44 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnRelatorioConsolidadoCiclo"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="140dp"
                     android:layout_columnWeight="1"
-                    android:layout_margin="8dp"
+                    android:layout_margin="6dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
-                    app:cardBackgroundColor="@color/card_background"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="4dp">
+                    app:cardBackgroundColor="@color/surface_primary"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:strokeColor="@color/accent_primary"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:src="@drawable/ic_assessment"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_bar_chart"
                             android:tint="@color/accent_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="12dp"
                             android:text="Consolidado"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
                             android:text="por Ciclo"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
@@ -375,41 +439,44 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnRelatorioAnualConsolidado"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="140dp"
                     android:layout_columnWeight="1"
-                    android:layout_margin="8dp"
+                    android:layout_margin="6dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
-                    app:cardBackgroundColor="@color/card_background"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="4dp">
+                    app:cardBackgroundColor="@color/surface_primary"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:strokeColor="@color/accent_primary"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:src="@drawable/ic_calendar_today"
                             android:tint="@color/accent_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="12dp"
                             android:text="Anual"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
                             android:text="Consolidado"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
@@ -422,41 +489,44 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnDashboardGeral"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="140dp"
                     android:layout_columnWeight="1"
-                    android:layout_margin="8dp"
+                    android:layout_margin="6dp"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
-                    app:cardBackgroundColor="@color/card_background"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="4dp">
+                    app:cardBackgroundColor="@color/surface_primary"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:strokeColor="@color/accent_primary"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:src="@drawable/ic_dashboard"
                             android:tint="@color/accent_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="12dp"
                             android:text="Dashboard"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
                             android:text="Geral"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
@@ -473,7 +543,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:gravity="center"
-                android:text="Os relatórios serão implementados nas próximas versões do aplicativo."
+                android:text="Relatórios baseados em dados reais dos ciclos e rotas"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
 

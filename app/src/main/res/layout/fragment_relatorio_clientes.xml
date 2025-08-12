@@ -37,7 +37,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Performance dos Colaboradores"
+                    android:text="Relatório de Clientes"
                     android:textColor="@android:color/white"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -99,9 +99,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:columnCount="2"
-                        android:rowCount="2">
+                        android:rowCount="3">
 
-                        <!-- Total de Colaboradores -->
+                        <!-- Total de Clientes -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -113,7 +113,7 @@
                             android:padding="16dp">
 
                             <TextView
-                                android:id="@+id/txtTotalColaboradores"
+                                android:id="@+id/txtTotalClientes"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="0"
@@ -131,7 +131,7 @@
 
                         </LinearLayout>
 
-                        <!-- Colaboradores Ativos -->
+                        <!-- Clientes Ativos -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -143,7 +143,7 @@
                             android:padding="16dp">
 
                             <TextView
-                                android:id="@+id/txtColaboradoresAtivos"
+                                android:id="@+id/txtClientesAtivos"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="0"
@@ -161,7 +161,7 @@
 
                         </LinearLayout>
 
-                        <!-- Meta Atingida -->
+                        <!-- Clientes em Débito -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -173,37 +173,7 @@
                             android:padding="16dp">
 
                             <TextView
-                                android:id="@+id/txtMetaAtingida"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0%"
-                                android:textColor="@color/accent_primary"
-                                android:textSize="24sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="Meta Atingida"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="12sp" />
-
-                        </LinearLayout>
-
-                        <!-- Pendentes Aprovação -->
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:layout_margin="6dp"
-                            android:background="@drawable/bg_stat_card"
-                            android:gravity="center"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-
-                            <TextView
-                                android:id="@+id/txtPendentesAprovacao"
+                                android:id="@+id/txtClientesDebito"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="0"
@@ -215,7 +185,97 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
-                                android:text="Pendentes"
+                                android:text="Em Débito"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                        <!-- Mesas Locadas -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:layout_margin="6dp"
+                            android:background="@drawable/bg_stat_card"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:id="@+id/txtMesasLocadas"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textColor="@color/accent_primary"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Mesas Locadas"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                        <!-- Ticket Médio -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:layout_margin="6dp"
+                            android:background="@drawable/bg_stat_card"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:id="@+id/txtTicketMedio"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="R$ 0"
+                                android:textColor="@color/success_green"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Ticket Médio"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                        <!-- Taxa de Conversão -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:layout_margin="6dp"
+                            android:background="@drawable/bg_stat_card"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:id="@+id/txtTaxaConversao"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0%"
+                                android:textColor="@color/accent_primary"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Taxa Conversão"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp" />
 
@@ -314,7 +374,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Lista de Performance dos Colaboradores -->
+            <!-- Lista de Clientes -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -334,13 +394,13 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="20dp"
-                        android:text="Performance por Colaborador"
+                        android:text="Lista de Clientes"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recyclerViewColaboradores"
+                        android:id="@+id/recyclerViewClientes"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:nestedScrollingEnabled="false" />
