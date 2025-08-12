@@ -19,13 +19,6 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-    
-    // Configuração temporária para pular testes unitários
-    testOptions {
-        unitTests {
-            isIncludeAndroidResources = false
-        }
-    }
 
     buildTypes {
         release {
@@ -61,24 +54,10 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     
-    // ✅ NOVO: Google Sign-In
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
-    
     // Dependencies removidas - Hilt não é mais usado
     
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     implementation("com.google.code.gson:gson:2.10.1")
-    
-    // ✅ NOVO: Dependências para geração de PDF
-    implementation("com.itextpdf:kernel:7.1.16")
-    implementation("com.itextpdf:io:7.1.16")
-    implementation("com.itextpdf:layout:7.1.16")
-    
-    // ✅ NOVO: Dependências para compartilhamento e permissões
-    implementation("androidx.activity:activity-ktx:1.8.2")
-    
-    // ✅ NOVO: Dependência para geolocalização
-    implementation("com.google.android.gms:play-services-location:21.0.1")
 } 
