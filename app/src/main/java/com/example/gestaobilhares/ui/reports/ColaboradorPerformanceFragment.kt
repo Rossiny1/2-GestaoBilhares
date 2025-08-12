@@ -57,7 +57,7 @@ class ColaboradorPerformanceFragment : Fragment() {
         adapter = ColaboradorPerformanceAdapter { colaborador ->
             // Navegar para detalhes do colaborador
             // TODO: Implementar navegação para detalhes
-            Toast.makeText(requireContext(), "Detalhes de ${colaborador.nome}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Detalhes de ${colaborador.colaborador.nome}", Toast.LENGTH_SHORT).show()
         }
         
         binding.recyclerViewColaboradores.apply {
@@ -83,14 +83,14 @@ class ColaboradorPerformanceFragment : Fragment() {
             val cicloAdapter = ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
-                ciclos.map { "Ciclo ${it.numero} - ${it.periodo}" }
+                ciclos.map { "Ciclo ${it.numero} - ${it.descricao}" }
             )
             binding.spinnerCiclo.setAdapter(cicloAdapter)
             
             // Selecionar primeiro ciclo por padrão
             if (ciclos.isNotEmpty()) {
                 binding.spinnerCiclo.setText(cicloAdapter.getItem(0), false)
-                viewModel.selecionarCiclo(ciclos[0].id)
+                viewModel.selecionarCiclo(ciclos[0].numero.toLong())
             }
         }
         
@@ -112,7 +112,7 @@ class ColaboradorPerformanceFragment : Fragment() {
         binding.spinnerCiclo.setOnItemClickListener { _, _, position, _ ->
             val ciclos = viewModel.ciclos.value
             if (ciclos != null && position < ciclos.size) {
-                viewModel.selecionarCiclo(ciclos[position].id)
+                viewModel.selecionarCiclo(ciclos[position].numero.toLong())
             }
         }
         
