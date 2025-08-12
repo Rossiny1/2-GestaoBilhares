@@ -94,9 +94,9 @@ class ColaboradorPerformanceViewModel : ViewModel() {
             
             // Dados mock para demonstração
             val ciclosMock = listOf(
-                CicloInfo(1L, 1, "01/01/2025 - 31/01/2025"),
-                CicloInfo(2L, 2, "01/02/2025 - 28/02/2025"),
-                CicloInfo(3L, 3, "01/03/2025 - 31/03/2025")
+                CicloInfo(1, "01/01/2025 - 31/01/2025"),
+                CicloInfo(2, "01/02/2025 - 28/02/2025"),
+                CicloInfo(3, "01/03/2025 - 31/03/2025")
             )
             _ciclos.value = ciclosMock
             
@@ -113,9 +113,30 @@ class ColaboradorPerformanceViewModel : ViewModel() {
             
             // Dados mock para demonstração
             val rotasMock = listOf(
-                Rota(1L, "Rota Zona Sul", "Zona Sul da cidade", true, Date(), Date()),
-                Rota(2L, "Rota Zona Norte", "Zona Norte da cidade", true, Date(), Date()),
-                Rota(3L, "Rota Centro", "Centro da cidade", true, Date(), Date())
+                Rota(
+                    id = 1L,
+                    nome = "Rota Zona Sul",
+                    descricao = "Zona Sul da cidade",
+                    ativa = true,
+                    dataCriacao = System.currentTimeMillis(),
+                    dataAtualizacao = System.currentTimeMillis()
+                ),
+                Rota(
+                    id = 2L,
+                    nome = "Rota Zona Norte",
+                    descricao = "Zona Norte da cidade",
+                    ativa = true,
+                    dataCriacao = System.currentTimeMillis(),
+                    dataAtualizacao = System.currentTimeMillis()
+                ),
+                Rota(
+                    id = 3L,
+                    nome = "Rota Centro",
+                    descricao = "Centro da cidade",
+                    ativa = true,
+                    dataCriacao = System.currentTimeMillis(),
+                    dataAtualizacao = System.currentTimeMillis()
+                )
             )
             _rotas.value = rotasMock
             
@@ -191,9 +212,15 @@ class ColaboradorPerformanceViewModel : ViewModel() {
                     id = 1L,
                     nome = "João Silva",
                     email = "joao@email.com",
+                    telefone = "11999999999",
+                    cpf = "12345678901",
+                    dataNascimento = Date(),
+                    endereco = "Rua A, 123",
                     nivelAcesso = NivelAcesso.USER,
                     ativo = true,
-                    aprovado = true
+                    aprovado = true,
+                    dataAprovacao = Date(),
+                    dataCadastro = Date()
                 ),
                 faturamentoMeta = 15000.0,
                 faturamentoRealizado = 14250.0,
@@ -214,9 +241,15 @@ class ColaboradorPerformanceViewModel : ViewModel() {
                     id = 2L,
                     nome = "Maria Santos",
                     email = "maria@email.com",
+                    telefone = "11888888888",
+                    cpf = "98765432109",
+                    dataNascimento = Date(),
+                    endereco = "Rua B, 456",
                     nivelAcesso = NivelAcesso.USER,
                     ativo = true,
-                    aprovado = true
+                    aprovado = true,
+                    dataAprovacao = Date(),
+                    dataCadastro = Date()
                 ),
                 faturamentoMeta = 12000.0,
                 faturamentoRealizado = 10800.0,
@@ -242,12 +275,6 @@ class ColaboradorPerformanceViewModel : ViewModel() {
 }
 
 // ==================== DATA CLASSES ====================
-
-data class CicloInfo(
-    val id: Long,
-    val numero: Int,
-    val periodo: String
-)
 
 data class EstatisticasGerais(
     val totalColaboradores: Int,

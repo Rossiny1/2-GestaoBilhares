@@ -133,4 +133,8 @@
     <color name="background">@color/background_primary</color>
     <color name="surface">@color/surface_primary</color>
     <color name="onSurfaceVariant">@color/on_surface_variant</color>
+    
+    <!-- Cores para relatórios -->
+    <color name="background_secondary">#F5F5F5</color>
+    <color name="input_background">#FFFFFF</color>
 </resources>

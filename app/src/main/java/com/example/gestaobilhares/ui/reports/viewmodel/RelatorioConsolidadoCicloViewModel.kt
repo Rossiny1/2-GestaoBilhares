@@ -174,7 +174,14 @@ class RelatorioConsolidadoCicloViewModel : ViewModel() {
             // Dados mock para demonstração
             val detalhamentoMock = listOf(
                 DetalhamentoRota(
-                    rota = Rota(1L, "Rota Zona Sul", "Zona Sul da cidade", true, Date(), Date()),
+                    rota = Rota(
+                        id = 1L,
+                        nome = "Rota Zona Sul",
+                        descricao = "Zona Sul da cidade",
+                        ativa = true,
+                        dataCriacao = System.currentTimeMillis(),
+                        dataAtualizacao = System.currentTimeMillis()
+                    ),
                     faturamentoAtual = 45000.0,
                     faturamentoComparacao = 42000.0,
                     variacaoFaturamento = 7.14,
@@ -186,7 +193,14 @@ class RelatorioConsolidadoCicloViewModel : ViewModel() {
                     variacaoMesas = 9.38
                 ),
                 DetalhamentoRota(
-                    rota = Rota(2L, "Rota Zona Norte", "Zona Norte da cidade", true, Date(), Date()),
+                    rota = Rota(
+                        id = 2L,
+                        nome = "Rota Zona Norte",
+                        descricao = "Zona Norte da cidade",
+                        ativa = true,
+                        dataCriacao = System.currentTimeMillis(),
+                        dataAtualizacao = System.currentTimeMillis()
+                    ),
                     faturamentoAtual = 38000.0,
                     faturamentoComparacao = 35000.0,
                     variacaoFaturamento = 8.57,
@@ -198,7 +212,14 @@ class RelatorioConsolidadoCicloViewModel : ViewModel() {
                     variacaoMesas = 12.0
                 ),
                 DetalhamentoRota(
-                    rota = Rota(3L, "Rota Centro", "Centro da cidade", true, Date(), Date()),
+                    rota = Rota(
+                        id = 3L,
+                        nome = "Rota Centro",
+                        descricao = "Centro da cidade",
+                        ativa = true,
+                        dataCriacao = System.currentTimeMillis(),
+                        dataAtualizacao = System.currentTimeMillis()
+                    ),
                     faturamentoAtual = 67000.0,
                     faturamentoComparacao = 73000.0,
                     variacaoFaturamento = -8.22,

@@ -81,7 +81,7 @@ class RelatorioConsolidadoCicloFragment : Fragment() {
             
             // Selecionar primeiro ciclo por padrão
             if (ciclos.isNotEmpty()) {
-                binding.spinnerCiclo.setText(cicloAdapter.getItem(0), false)
+                binding.spinnerCiclo.setText(cicloAdapter.getItem(0) ?: "", false)
                 viewModel.selecionarCiclo(ciclos[0].numero)
             }
         }
