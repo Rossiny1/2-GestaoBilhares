@@ -134,9 +134,18 @@ class RoutesFragment : Fragment() {
                     }
                 }
                 R.id.nav_management_report -> {
-                    Toast.makeText(requireContext(), "Relatório Gerencial será implementado em breve", Toast.LENGTH_SHORT).show()
-                    binding.drawerLayout.closeDrawers()
-                    true
+                    try {
+                        android.util.Log.d("RoutesFragment", "Navegando para relatórios via drawer")
+                        findNavController().navigate(R.id.reportsFragment)
+                        android.util.Log.d("RoutesFragment", "Navegação para relatórios via drawer concluída")
+                        binding.drawerLayout.closeDrawers()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao navegar para relatórios via drawer: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir relatórios: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
                 }
                 R.id.nav_message_settings -> {
                     Toast.makeText(requireContext(), "Configurações de Mensagens será implementado em breve", Toast.LENGTH_SHORT).show()
@@ -219,7 +228,9 @@ class RoutesFragment : Fragment() {
                 }
                 R.id.navigation_relatorios -> {
                     try {
+                        android.util.Log.d("RoutesFragment", "Navegando para relatórios")
                         findNavController().navigate(R.id.reportsFragment)
+                        android.util.Log.d("RoutesFragment", "Navegação para relatórios concluída")
                         true
                     } catch (e: Exception) {
                         Log.e("RoutesFragment", "Erro ao navegar para relatórios: ${e.message}", e)

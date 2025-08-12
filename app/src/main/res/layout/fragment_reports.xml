@@ -75,7 +75,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:columnCount="2"
-                android:rowCount="5"> <!-- Changed from 4 to 5 -->
+                android:rowCount="5">
 
                 <!-- Relatório de Rotas -->
                 <com.google.android.material.card.MaterialCardView
