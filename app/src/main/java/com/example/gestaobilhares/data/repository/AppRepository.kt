@@ -3,6 +3,7 @@ package com.example.gestaobilhares.data.repository
 import com.example.gestaobilhares.data.dao.*
 import com.example.gestaobilhares.data.entities.*
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
 
 /**
  * ✅ REPOSITORY CONSOLIDADO - AppRepository
@@ -192,4 +193,173 @@ class AppRepository(
     // ==================== CICLO ACERTO ====================
     
     fun obterTodosCiclos() = cicloAcertoDao.listarTodos()
+    
+    // ==================== MÉTODOS PARA RELATÓRIOS ====================
+    
+    // Métodos para relatórios de despesas
+    suspend fun getDespesasPorCiclo(cicloId: Long, rotaId: Long): List<DespesaRelatorio> {
+        return try {
+	            val despesas = if (rotaId == 0L) {
+	                despesaDao.buscarPorCicloId(cicloId).first()
+	            } else {
+	                despesaDao.buscarPorRotaECicloId(rotaId, cicloId).first()
+	            }
+	            // Evita chamar função suspend dentro de map
+	            val rotasMap = rotaDao.getAllRotas().first().associateBy { it.id }
+	            
+	            despesas.map { despesa ->
+	                val rotaNome = rotasMap[despesa.rotaId]?.nome ?: "Rota não encontrada"
+	                DespesaRelatorio(
+	                    id = despesa.id,
+	                    descricao = despesa.descricao,
+	                    valor = despesa.valor,
+	                    categoria = despesa.categoria,
+	                    data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+	                    rota = rotaNome,
+	                    observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
+	                )
+	            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    suspend fun getDespesasConsolidadasCiclos(numeroCiclo: Int, ano: Int, rotaId: Long): List<DespesaRelatorio> {
+	        return try {
+            // Buscar todos os ciclos do mesmo número no ano
+            val ciclos = cicloAcertoDao.listarTodos().first()
+                .filter { it.numeroCiclo == numeroCiclo && it.dataInicio.year == ano }
+            
+            val despesas = mutableListOf<DespesaRelatorio>()
+            
+            for (ciclo in ciclos) {
+                val despesasCiclo = if (rotaId == 0L) {
+                    despesaDao.buscarPorCicloId(ciclo.id).first()
+                } else {
+                    despesaDao.buscarPorRotaECicloId(rotaId, ciclo.id).first()
+                }
+	                // Evita função suspend dentro de map
+	                val rotasMap = rotaDao.getAllRotas().first().associateBy { it.id }
+	                
+	                despesas.addAll(despesasCiclo.map { despesa ->
+	                    val rotaNome = rotasMap[despesa.rotaId]?.nome ?: "Rota não encontrada"
+	                    DespesaRelatorio(
+	                        id = despesa.id,
+	                        descricao = despesa.descricao,
+	                        valor = despesa.valor,
+	                        categoria = despesa.categoria,
+	                        data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+	                        rota = rotaNome,
+	                        observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
+	                    )
+	                })
+            }
+            
+            despesas
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    suspend fun getDespesasPorAno(ano: Int, rotaId: Long): List<DespesaRelatorio> {
+	        return try {
+            val dataInicio = java.time.LocalDateTime.of(ano, 1, 1, 0, 0)
+            val dataFim = java.time.LocalDateTime.of(ano, 12, 31, 23, 59)
+            
+	            val despesas: List<Despesa> = if (rotaId == 0L) {
+	                // Converte DespesaResumo -> Despesa para unificar o tipo
+	                despesaDao.buscarPorPeriodo(dataInicio, dataFim).first().map { it.despesa }
+	            } else {
+	                despesaDao.buscarPorRotaEPeriodo(rotaId, dataInicio, dataFim)
+	            }
+            
+	            // Evita chamar função suspend dentro de map
+	            val rotasMap = rotaDao.getAllRotas().first().associateBy { it.id }
+	            
+	            despesas.map { despesa ->
+	                val rotaNome = rotasMap[despesa.rotaId]?.nome ?: "Rota não encontrada"
+	                DespesaRelatorio(
+	                    id = despesa.id,
+	                    descricao = despesa.descricao,
+	                    valor = despesa.valor,
+	                    categoria = despesa.categoria,
+	                    data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+	                    rota = rotaNome,
+	                    observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
+	                )
+	            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    suspend fun getCategoriasDespesas(): List<String> {
+        return try {
+            val despesas = despesaDao.buscarTodasComRota().first()
+            despesas.map { it.categoria }.distinct().sorted()
+        } catch (e: Exception) {
+            listOf("Combustível", "Alimentação", "Transporte", "Manutenção", "Materiais", "Outros")
+        }
+    }
+    
+    // Métodos para relatórios gerais
+    suspend fun getCiclos(): List<CicloInfo> {
+        return try {
+            val ciclos = cicloAcertoDao.listarTodos().first()
+            ciclos.map { ciclo ->
+                CicloInfo(
+                    numero = ciclo.numeroCiclo,
+                    descricao = "${ciclo.numeroCiclo} Ciclo - ${ciclo.dataInicio.year}"
+                )
+            }.distinctBy { it.numero }.sortedBy { it.numero }
+        } catch (e: Exception) {
+            (1..12).map { CicloInfo(it, "$it Ciclo") }
+        }
+    }
+    
+    suspend fun getRotas(): List<Rota> {
+        return try {
+            val rotas = rotaDao.getAllRotas().first()
+            rotas
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    // Data class para relatórios
+    data class DespesaRelatorio(
+        val id: Long,
+        val descricao: String,
+        val valor: Double,
+        val categoria: String,
+        val data: String,
+        val rota: String,
+        val observacoes: String?
+    )
+    
+    data class CicloInfo(
+        val numero: Int,
+        val descricao: String
+    )
+    
+    // Métodos stub para sincronização
+    suspend fun syncRotas(rotas: List<Rota>) {
+        // TODO: Implementar lógica de sincronização de rotas
+        println("Sincronizando rotas (stub): ${rotas.size} rotas")
+    }
+
+    suspend fun syncClientes(clientes: List<Cliente>) {
+        // TODO: Implementar lógica de sincronização de clientes
+        println("Sincronizando clientes (stub): ${clientes.size} clientes")
+    }
+
+    suspend fun syncAcertos(acertos: List<Acerto>) {
+        // TODO: Implementar lógica de sincronização de acertos
+        println("Sincronizando acertos (stub): ${acertos.size} acertos")
+    }
+
+    suspend fun syncColaboradores(colaboradores: List<Colaborador>) {
+        // TODO: Implementar lógica de sincronização de colaboradores
+        println("Sincronizando colaboradores (stub): ${colaboradores.size} colaboradores")
+    }
 } 
