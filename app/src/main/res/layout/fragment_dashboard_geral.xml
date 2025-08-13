@@ -226,6 +226,15 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/txtDeltaFaturamento"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="+0.0%"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp" />
+
+                            <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
@@ -316,6 +325,15 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/txtDeltaTicket"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="+0.0%"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp" />
+
+                            <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
@@ -346,6 +364,15 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/txtDeltaAcertos"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="+0.0%"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp" />
+
+                            <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
@@ -374,6 +401,15 @@
                                 android:textColor="@android:color/white"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/txtDeltaConversao"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="+0.0%"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"

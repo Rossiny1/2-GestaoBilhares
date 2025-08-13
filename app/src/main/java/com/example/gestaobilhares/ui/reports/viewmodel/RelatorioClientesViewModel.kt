@@ -3,18 +3,20 @@ package com.example.gestaobilhares.ui.reports.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.repository.AppRepository.CicloInfo
 import com.example.gestaobilhares.data.repository.AppRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import java.text.NumberFormat
 import java.util.*
 
-class RelatorioClientesViewModel(
+@HiltViewModel
+class RelatorioClientesViewModel @Inject constructor(
     private val repository: AppRepository
 ) : ViewModel() {
 
@@ -90,18 +92,14 @@ class RelatorioClientesViewModel(
                 
                 // Carregar clientes da rota
                 val clientesRota = repository.obterClientesPorRota(rotaSelecionada).first()
-                // Pré-carregar mesas por cliente para contagem
-                val mesasPorCliente: Map<Long, Int> = clientesRota.associate { cliente ->
-                    val mesas = repository.obterMesasPorCliente(cliente.id).first()
-                    cliente.id to mesas.size
-                }
-                // Último acerto por cliente (data formatada), se existir
+                val clienteIds = clientesRota.map { it.id }
+                // Pré-carregar mesas por cliente para contagem (consulta em lote)
+                val counts = repository.contarMesasAtivasPorClientes(clienteIds)
+                val mesasPorCliente: Map<Long, Int> = counts.associate { it.clienteId to it.total }
+                // Último acerto por cliente (consulta em lote)
                 val dateFmt = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
-                val ultimoAcertoPorCliente: Map<Long, String?> = clientesRota.associate { cliente ->
-                    val ultimo = repository.buscarUltimoAcertoPorCliente(cliente.id)
-                    val dataStr = ultimo?.dataAcerto?.let { dateFmt.format(ultimo.dataAcerto) }
-                    cliente.id to dataStr
-                }
+                val ultimos = repository.buscarUltimosAcertosPorClientes(clienteIds)
+                val ultimoAcertoPorCliente: Map<Long, String?> = ultimos.associate { ac -> ac.clienteId to dateFmt.format(ac.dataAcerto) }
                 
                 // Calcular estatísticas
                 val estatisticas = calcularEstatisticas(clientesRota)
@@ -223,17 +221,4 @@ class RelatorioClientesViewModel(
     }
 }
 
-/**
- * Factory para criar RelatorioClientesViewModel com o AppRepository injetado
- */
-class RelatorioClientesViewModelFactory(
-    private val repository: AppRepository
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(RelatorioClientesViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return RelatorioClientesViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
+// Factory removida (Hilt injeta o ViewModel)

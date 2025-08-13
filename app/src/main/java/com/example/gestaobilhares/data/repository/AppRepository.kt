@@ -52,6 +52,8 @@ class AppRepository(
         acertoDao.buscarUltimoAcertoPorMesa(mesaId)
     suspend fun buscarObservacaoUltimoAcerto(clienteId: Long) = 
         acertoDao.buscarObservacaoUltimoAcerto(clienteId)
+    suspend fun buscarUltimosAcertosPorClientes(clienteIds: List<Long>) =
+        acertoDao.buscarUltimosAcertosPorClientes(clienteIds)
     
     // ==================== MESA ====================
     
@@ -74,6 +76,8 @@ class AppRepository(
     suspend fun obterMesasPorClienteDireto(clienteId: Long) = 
         mesaDao.obterMesasPorClienteDireto(clienteId)
     fun buscarMesasPorRota(rotaId: Long) = mesaDao.buscarMesasPorRota(rotaId)
+    suspend fun contarMesasAtivasPorClientes(clienteIds: List<Long>) =
+        mesaDao.contarMesasAtivasPorClientes(clienteIds)
     
     // ==================== ROTA ====================
     

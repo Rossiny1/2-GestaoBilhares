@@ -3,11 +3,12 @@ package com.example.gestaobilhares.ui.reports.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.database.AppDatabase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -17,7 +18,8 @@ import java.util.*
  * ViewModel para relatório consolidado por ciclo com comparação entre anos.
  * Permite comparar o mesmo ciclo de anos diferentes (ex: 1º ciclo 2024 vs 1º ciclo 2025).
  */
-class RelatorioConsolidadoCicloViewModel(
+@HiltViewModel
+class RelatorioConsolidadoCicloViewModel @Inject constructor(
     private val appRepository: AppRepository,
     private val database: AppDatabase
 ) : ViewModel() {
@@ -231,19 +233,6 @@ class RelatorioConsolidadoCicloViewModel(
     
     fun formatarMoeda(valor: Double): String {
         return "R$ ${String.format("%.2f", valor).replace(".", ",")}"
-    }
-}
-
-class RelatorioConsolidadoCicloViewModelFactory(
-    private val appRepository: AppRepository,
-    private val database: AppDatabase
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(RelatorioConsolidadoCicloViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return RelatorioConsolidadoCicloViewModel(appRepository, database) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 

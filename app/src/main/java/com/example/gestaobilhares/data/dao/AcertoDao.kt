@@ -30,6 +30,23 @@ interface AcertoDao {
     @Query("SELECT observacoes FROM acertos WHERE cliente_id = :clienteId ORDER BY data_acerto DESC LIMIT 1")
     suspend fun buscarObservacaoUltimoAcerto(clienteId: Long): String?
 
+    /**
+     * Busca o último acerto por cliente para uma lista de clientes (consulta em lote)
+     */
+    @Query(
+        """
+        SELECT a.* FROM acertos a
+        INNER JOIN (
+            SELECT cliente_id, MAX(data_acerto) AS max_data
+            FROM acertos
+            WHERE cliente_id IN (:clienteIds)
+            GROUP BY cliente_id
+        ) ult ON a.cliente_id = ult.cliente_id AND a.data_acerto = ult.max_data
+        WHERE a.cliente_id IN (:clienteIds)
+        """
+    )
+    suspend fun buscarUltimosAcertosPorClientes(clienteIds: List<Long>): List<Acerto>
+
     @Update
     suspend fun atualizar(acerto: Acerto)
 

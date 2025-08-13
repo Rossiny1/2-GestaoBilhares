@@ -5,6 +5,7 @@ plugins {
     id("androidx.navigation.safeargs.kotlin")
     id("kotlin-kapt")
     id("kotlin-parcelize")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -81,4 +82,8 @@ dependencies {
     
     // ✅ NOVO: Dependência para geolocalização
     implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // Hilt (DI)
+    implementation("com.google.dagger:hilt-android:2.51")
+    kapt("com.google.dagger:hilt-android-compiler:2.51")
 } 

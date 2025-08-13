@@ -86,4 +86,20 @@ interface MesaDao {
      */
     @Query("SELECT * FROM mesas ORDER BY numero ASC")
     fun obterTodasMesas(): Flow<List<Mesa>>
+
+    /**
+     * Retorna a contagem de mesas ativas por lista de clientes (consulta em lote)
+     */
+    @Query("""
+        SELECT cliente_id AS clienteId, COUNT(*) AS total
+        FROM mesas
+        WHERE ativa = 1 AND cliente_id IN (:clienteIds)
+        GROUP BY cliente_id
+    """)
+    suspend fun contarMesasAtivasPorClientes(clienteIds: List<Long>): List<MesaCountCliente>
 } 
+
+data class MesaCountCliente(
+    val clienteId: Long,
+    val total: Int
+)

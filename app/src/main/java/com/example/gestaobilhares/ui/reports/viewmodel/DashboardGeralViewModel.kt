@@ -3,7 +3,6 @@ package com.example.gestaobilhares.ui.reports.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.entities.Rota
@@ -14,7 +13,11 @@ import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Calendar
 
-class DashboardGeralViewModel(
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class DashboardGeralViewModel @Inject constructor(
     private val appRepository: AppRepository,
     private val cicloRepo: CicloAcertoRepository,
     private val database: AppDatabase
@@ -26,7 +29,11 @@ class DashboardGeralViewModel(
         val mesasAtivas: Int = 0,
         val ticketMedio: Double = 0.0,
         val acertosRealizados: Int = 0,
-        val taxaConversao: Double = 0.0
+        val taxaConversao: Double = 0.0,
+        val deltaFaturamentoPercent: Double = 0.0,
+        val deltaTicketMedioPercent: Double = 0.0,
+        val deltaAcertosPercent: Double = 0.0,
+        val deltaTaxaConversaoPercent: Double = 0.0
     )
 
     private val _metrics = MutableLiveData<Metrics>()
@@ -60,11 +67,15 @@ class DashboardGeralViewModel(
 
                 // Agregadores globais
                 var faturamentoTotal = 0.0
+                var faturamentoTotalComp = 0.0
                 var totalClientes = 0
                 var mesasAtivas = 0
                 var acertosRealizados = 0
+                var acertosRealizadosComp = 0
                 var somaTickets = 0.0
                 var contTickets = 0
+                var somaTicketsComp = 0.0
+                var contTicketsComp = 0
 
                 val detalhamento = mutableListOf<DetalhamentoRota>()
 
@@ -90,19 +101,28 @@ class DashboardGeralViewModel(
 
                     // Acertos realizados no ciclo
                     val acertosCiclo = if (ciclo != null) database.acertoDao().buscarPorCicloId(ciclo.id).first() else emptyList()
+                    val acertosCicloComp = if (cicloComp != null) database.acertoDao().buscarPorCicloId(cicloComp.id).first() else emptyList()
                     val acertosRealizadosRota = acertosCiclo.size
+                    val acertosRealizadosRotaComp = acertosCicloComp.size
 
                     // Ticket médio da rota: faturamento / max(clientesAcertados,1)
                     val ticketMedioRota = if (clientesAcertados > 0) faturamentoRota / clientesAcertados else 0.0
 
                     // Variáveis globais
                     faturamentoTotal += faturamentoRota
+                    faturamentoTotalComp += faturamentoComp
                     totalClientes += totalClientesRota
                     mesasAtivas += mesasAtivasRota
                     acertosRealizados += acertosRealizadosRota
+                    acertosRealizadosComp += acertosRealizadosRotaComp
                     if (ticketMedioRota > 0) {
                         somaTickets += ticketMedioRota
                         contTickets += 1
+                    }
+                    val ticketMedioRotaComp = if (clientesComp > 0) faturamentoComp / clientesComp else 0.0
+                    if (ticketMedioRotaComp > 0) {
+                        somaTicketsComp += ticketMedioRotaComp
+                        contTicketsComp += 1
                     }
 
                     // Detalhamento por rota (sem comparação por ano aqui)
@@ -121,9 +141,17 @@ class DashboardGeralViewModel(
                 }
 
                 val ticketMedioGlobal = if (contTickets > 0) somaTickets / contTickets else 0.0
+                val ticketMedioGlobalComp = if (contTicketsComp > 0) somaTicketsComp / contTicketsComp else 0.0
                 // Taxa de conversão: média ponderada não trivial; usamos (soma clientesAcertados) / totalClientes
                 val clientesAcertadosSoma = detalhamento.sumOf { it.clientesAtual }
                 val taxaConversao = if (totalClientes > 0) (clientesAcertadosSoma.toDouble() / totalClientes) * 100.0 else 0.0
+                val clientesAcertadosSomaComp = detalhamento.sumOf { it.clientesComparacao }
+                val taxaConversaoComp = if (totalClientes > 0) (clientesAcertadosSomaComp.toDouble() / totalClientes) * 100.0 else 0.0
+
+                val deltaFaturamento = calcularVariacao(faturamentoTotal, faturamentoTotalComp)
+                val deltaTicket = calcularVariacao(ticketMedioGlobal, ticketMedioGlobalComp)
+                val deltaAcertos = calcularVariacao(acertosRealizados.toDouble(), acertosRealizadosComp.toDouble())
+                val deltaConversao = calcularVariacao(taxaConversao, taxaConversaoComp)
 
                 _metrics.value = Metrics(
                     faturamentoTotal = faturamentoTotal,
@@ -131,7 +159,11 @@ class DashboardGeralViewModel(
                     mesasAtivas = mesasAtivas,
                     ticketMedio = ticketMedioGlobal,
                     acertosRealizados = acertosRealizados,
-                    taxaConversao = taxaConversao
+                    taxaConversao = taxaConversao,
+                    deltaFaturamentoPercent = deltaFaturamento,
+                    deltaTicketMedioPercent = deltaTicket,
+                    deltaAcertosPercent = deltaAcertos,
+                    deltaTaxaConversaoPercent = deltaConversao
                 )
 
                 _detalhamentoRotas.value = detalhamento.sortedByDescending { it.faturamentoAtual }
@@ -147,19 +179,3 @@ class DashboardGeralViewModel(
         return if (valorComparacao > 0.0) ((valorAtual - valorComparacao) / valorComparacao) * 100.0 else 0.0
     }
 }
-
-class DashboardGeralViewModelFactory(
-    private val appRepository: AppRepository,
-    private val cicloRepo: CicloAcertoRepository,
-    private val database: AppDatabase
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(DashboardGeralViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return DashboardGeralViewModel(appRepository, cicloRepo, database) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
-
-

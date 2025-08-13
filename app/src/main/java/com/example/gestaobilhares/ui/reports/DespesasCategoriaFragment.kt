@@ -6,38 +6,23 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
+import dagger.hilt.android.AndroidEntryPoint
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentDespesasCategoriaBinding
 import com.example.gestaobilhares.ui.reports.viewmodel.DespesasCategoriaViewModel
-import com.example.gestaobilhares.ui.reports.viewmodel.DespesasCategoriaViewModelFactory
-import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.AppRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /**
  * Fragment para relatório de despesas por categoria.
  */
+@AndroidEntryPoint
 class DespesasCategoriaFragment : Fragment() {
     
     private var _binding: FragmentDespesasCategoriaBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: DespesasCategoriaViewModel by viewModels {
-        val database = AppDatabase.getDatabase(requireContext())
-        DespesasCategoriaViewModelFactory(
-            AppRepository(
-                database.clienteDao(),
-                database.acertoDao(),
-                database.mesaDao(),
-                database.rotaDao(),
-                database.despesaDao(),
-                database.colaboradorDao(),
-                database.cicloAcertoDao()
-            )
-        )
-    }
+    private val viewModel: DespesasCategoriaViewModel by viewModels()
     
     override fun onCreateView(
         inflater: LayoutInflater,
