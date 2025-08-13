@@ -7,10 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
+import dagger.hilt.android.AndroidEntryPoint
 import androidx.fragment.app.viewModels
-import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.ui.reports.viewmodel.RelatorioClientesViewModelFactory
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentRelatorioClientesBinding
@@ -19,25 +17,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.text.NumberFormat
 import java.util.*
 
+@AndroidEntryPoint
 class RelatorioClientesFragment : Fragment() {
 
     private var _binding: FragmentRelatorioClientesBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: RelatorioClientesViewModel by viewModels {
-        val database = AppDatabase.getDatabase(requireContext())
-        RelatorioClientesViewModelFactory(
-            AppRepository(
-                database.clienteDao(),
-                database.acertoDao(),
-                database.mesaDao(),
-                database.rotaDao(),
-                database.despesaDao(),
-                database.colaboradorDao(),
-                database.cicloAcertoDao()
-            )
-        )
-    }
+    private val viewModel: RelatorioClientesViewModel by viewModels()
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
     override fun onCreateView(

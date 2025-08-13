@@ -5,42 +5,24 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import dagger.hilt.android.AndroidEntryPoint
 import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.databinding.FragmentDashboardGeralBinding
 import android.widget.ArrayAdapter
 import androidx.fragment.app.viewModels
-import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.DespesaRepository
-import com.example.gestaobilhares.data.repository.AcertoRepository
-import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.ui.reports.viewmodel.DashboardGeralViewModel
-import com.example.gestaobilhares.ui.reports.viewmodel.DashboardGeralViewModelFactory
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.ui.reports.adapter.DetalhamentoRotasAdapter
 
 /**
  * Fragment para dashboard geral.
  */
+@AndroidEntryPoint
 class DashboardGeralFragment : Fragment() {
     
     private var _binding: FragmentDashboardGeralBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: DashboardGeralViewModel by viewModels {
-        val db = AppDatabase.getDatabase(requireContext())
-        val appRepo = AppRepository(
-            db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(), db.colaboradorDao(), db.cicloAcertoDao()
-        )
-        val cicloRepo = CicloAcertoRepository(
-            db.cicloAcertoDao(),
-            DespesaRepository(db.despesaDao()),
-            AcertoRepository(db.acertoDao(), db.clienteDao()),
-            ClienteRepository(db.clienteDao()),
-            db.rotaDao()
-        )
-        DashboardGeralViewModelFactory(appRepo, cicloRepo, db)
-    }
+	private val viewModel: DashboardGeralViewModel by viewModels()
     private lateinit var rotasAdapter: DetalhamentoRotasAdapter
     
     override fun onCreateView(
@@ -65,6 +47,16 @@ class DashboardGeralFragment : Fragment() {
             binding.txtTicketMedio.text = currency.format(m.ticketMedio)
             binding.txtAcertosRealizados.text = m.acertosRealizados.toString()
             binding.txtTaxaConversao.text = "${String.format("%.1f", m.taxaConversao)}%"
+            // Mostrar variações (%), com cor verde se >=0, vermelha se <0
+            fun colorForDelta(delta: Double): Int = if (delta >= 0.0) android.graphics.Color.parseColor("#4CAF50") else android.graphics.Color.parseColor("#F44336")
+            binding.txtDeltaFaturamento.text = "${if (m.deltaFaturamentoPercent>=0) "+" else ""}${String.format("%.1f", m.deltaFaturamentoPercent)}%"
+            binding.txtDeltaFaturamento.setTextColor(colorForDelta(m.deltaFaturamentoPercent))
+            binding.txtDeltaTicket.text = "${if (m.deltaTicketMedioPercent>=0) "+" else ""}${String.format("%.1f", m.deltaTicketMedioPercent)}%"
+            binding.txtDeltaTicket.setTextColor(colorForDelta(m.deltaTicketMedioPercent))
+            binding.txtDeltaAcertos.text = "${if (m.deltaAcertosPercent>=0) "+" else ""}${String.format("%.1f", m.deltaAcertosPercent)}%"
+            binding.txtDeltaAcertos.setTextColor(colorForDelta(m.deltaAcertosPercent))
+            binding.txtDeltaConversao.text = "${if (m.deltaTaxaConversaoPercent>=0) "+" else ""}${String.format("%.1f", m.deltaTaxaConversaoPercent)}%"
+            binding.txtDeltaConversao.setTextColor(colorForDelta(m.deltaTaxaConversaoPercent))
         }
         viewModel.detalhamentoRotas.observe(viewLifecycleOwner) { lista ->
             rotasAdapter.submitList(lista)

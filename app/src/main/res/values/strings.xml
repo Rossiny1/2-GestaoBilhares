@@ -1,6 +1,21 @@
 <resources>
     <string name="app_name">GestaoBilhares</string>
     <string name="voltar">Voltar</string>
+    <!-- Dashboard / Relatórios -->
+    <string name="filtros_ciclo">Filtros de Ciclo</string>
+    <string name="label_ciclo">Ciclo</string>
+    <string name="label_ano_base">Ano (Base)</string>
+    <string name="label_ano_comparacao">Ano (Comparação)</string>
+    <string name="metricas_principais">Métricas Principais</string>
+    <string name="faturamento_total">Faturamento Total</string>
+    <string name="total_clientes">Total de Clientes</string>
+    <string name="mesas_ativas">Mesas Ativas</string>
+    <string name="ticket_medio">Ticket Médio</string>
+    <string name="acertos_realizados">Acertos Realizados</string>
+    <string name="taxa_conversao">Taxa de Conversão</string>
+    <string name="todas">Todas</string>
+    <string name="todas_as_rotas">Todas as Rotas</string>
+    <string name="todas_as_categorias">Todas as Categorias</string>
     <string-array name="tipos_acerto">
         <item>Presencial</item>
         <item>por WhatsApp</item>

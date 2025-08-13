@@ -3,16 +3,18 @@ package com.example.gestaobilhares.ui.reports.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.repository.AppRepository.CicloInfo
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.repository.AppRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
 
-class DespesasCategoriaViewModel(
+@HiltViewModel
+class DespesasCategoriaViewModel @Inject constructor(
     private val repository: AppRepository
 ) : ViewModel() {
 
@@ -267,21 +269,6 @@ class DespesasCategoriaViewModel(
         val rota: String,
         val observacoes: String?
     )
-}
-
-/**
- * Factory para criar DespesasCategoriaViewModel com dependências necessárias
- */
-class DespesasCategoriaViewModelFactory(
-    private val repository: AppRepository
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(DespesasCategoriaViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return DespesasCategoriaViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
 }
 
 // Usar o tipo do AppRepository

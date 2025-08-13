@@ -7,34 +7,25 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import dagger.hilt.android.AndroidEntryPoint
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentRelatorioConsolidadoCicloBinding
 import com.example.gestaobilhares.ui.reports.viewmodel.RelatorioConsolidadoCicloViewModel
-import com.example.gestaobilhares.ui.reports.viewmodel.RelatorioConsolidadoCicloViewModelFactory
-import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.reports.adapter.DetalhamentoRotasAdapter
 
 /**
  * Fragment para relatório consolidado por ciclo com comparação entre anos.
  * Permite comparar o mesmo ciclo de anos diferentes (ex: 1º ciclo 2024 vs 1º ciclo 2025).
  */
+@AndroidEntryPoint
 class RelatorioConsolidadoCicloFragment : Fragment() {
     
     private var _binding: FragmentRelatorioConsolidadoCicloBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: RelatorioConsolidadoCicloViewModel by viewModels {
-        val db = AppDatabase.getDatabase(requireContext())
-        RelatorioConsolidadoCicloViewModelFactory(
-            AppRepository(
-                db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(), db.colaboradorDao(), db.cicloAcertoDao()
-            ),
-            db
-        )
-    }
+    private val viewModel: RelatorioConsolidadoCicloViewModel by viewModels()
     private lateinit var adapter: DetalhamentoRotasAdapter
     
     override fun onCreateView(

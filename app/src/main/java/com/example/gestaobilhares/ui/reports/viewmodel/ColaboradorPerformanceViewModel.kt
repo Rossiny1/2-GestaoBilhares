@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.database.AppDatabase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
@@ -16,9 +18,11 @@ import java.util.*
  * ViewModel para relatório de performance dos colaboradores.
  * Baseado em ciclos e rotas com métricas detalhadas.
  */
-class ColaboradorPerformanceViewModel : ViewModel() {
-    
-    private lateinit var appRepository: AppRepository
+@HiltViewModel
+class ColaboradorPerformanceViewModel @Inject constructor(
+    private val appRepository: AppRepository,
+    private val database: AppDatabase
+) : ViewModel() {
     
     // ==================== DADOS OBSERVÁVEIS ====================
     

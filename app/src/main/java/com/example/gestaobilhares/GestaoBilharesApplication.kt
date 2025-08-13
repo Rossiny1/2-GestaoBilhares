@@ -1,12 +1,14 @@
 package com.example.gestaobilhares
 
 import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 import com.google.firebase.FirebaseApp
 
 /**
  * Application class principal do app.
  * Inicializa Firebase e configurações básicas.
  */
+@HiltAndroidApp
 class GestaoBilharesApplication : Application() {
     
     override fun onCreate() {

@@ -7,7 +7,8 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
+import dagger.hilt.android.AndroidEntryPoint
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
@@ -19,12 +20,13 @@ import com.example.gestaobilhares.ui.reports.adapter.ColaboradorPerformanceAdapt
  * Fragment para relatório de performance dos colaboradores.
  * Baseado em ciclos e rotas com métricas detalhadas.
  */
+@AndroidEntryPoint
 class ColaboradorPerformanceFragment : Fragment() {
     
     private var _binding: FragmentColaboradorPerformanceBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var viewModel: ColaboradorPerformanceViewModel
+    private val viewModel: ColaboradorPerformanceViewModel by viewModels()
     private lateinit var adapter: ColaboradorPerformanceAdapter
     
     override fun onCreateView(
@@ -49,9 +51,7 @@ class ColaboradorPerformanceFragment : Fragment() {
         viewModel.carregarDados()
     }
     
-    private fun setupViewModel() {
-        viewModel = ViewModelProvider(this)[ColaboradorPerformanceViewModel::class.java]
-    }
+    private fun setupViewModel() { /* Hilt injeta via by viewModels() */ }
     
     private fun setupRecyclerView() {
         adapter = ColaboradorPerformanceAdapter { colaborador ->
