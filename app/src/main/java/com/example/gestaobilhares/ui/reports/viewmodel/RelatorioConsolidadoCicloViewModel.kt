@@ -3,9 +3,12 @@ package com.example.gestaobilhares.ui.reports.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.data.database.AppDatabase
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -14,9 +17,10 @@ import java.util.*
  * ViewModel para relatório consolidado por ciclo com comparação entre anos.
  * Permite comparar o mesmo ciclo de anos diferentes (ex: 1º ciclo 2024 vs 1º ciclo 2025).
  */
-class RelatorioConsolidadoCicloViewModel : ViewModel() {
-    
-    private lateinit var appRepository: AppRepository
+class RelatorioConsolidadoCicloViewModel(
+    private val appRepository: AppRepository,
+    private val database: AppDatabase
+) : ViewModel() {
     
     // ==================== DADOS OBSERVÁVEIS ====================
     
@@ -55,16 +59,7 @@ class RelatorioConsolidadoCicloViewModel : ViewModel() {
     
     // ==================== INICIALIZAÇÃO ====================
     
-    init {
-        setupRepository()
-        carregarDadosIniciais()
-    }
-    
-    private fun setupRepository() {
-        // TODO: Injetar via Hilt ou Dagger
-        // Por enquanto, criar manualmente
-        // appRepository = AppRepository(...)
-    }
+    init { carregarDadosIniciais() }
     
     // ==================== CARREGAMENTO DE DADOS ====================
     
@@ -98,25 +93,9 @@ class RelatorioConsolidadoCicloViewModel : ViewModel() {
     
     private suspend fun carregarCiclos() {
         try {
-            // TODO: Implementar quando AppRepository estiver disponível
-            // val ciclos = appRepository.obterCiclosDisponiveis().first()
-            
-            // Dados mock para demonstração
-            val ciclosMock = listOf(
-                CicloInfo(1, "1º Ciclo"),
-                CicloInfo(2, "2º Ciclo"),
-                CicloInfo(3, "3º Ciclo"),
-                CicloInfo(4, "4º Ciclo"),
-                CicloInfo(5, "5º Ciclo"),
-                CicloInfo(6, "6º Ciclo"),
-                CicloInfo(7, "7º Ciclo"),
-                CicloInfo(8, "8º Ciclo"),
-                CicloInfo(9, "9º Ciclo"),
-                CicloInfo(10, "10º Ciclo"),
-                CicloInfo(11, "11º Ciclo"),
-                CicloInfo(12, "12º Ciclo")
-            )
-            _ciclos.value = ciclosMock
+            val ciclosRepo = appRepository.getCiclos()
+            val ciclosVm = ciclosRepo.map { CicloInfo(it.numero, "${it.numero}º Acerto") }
+            _ciclos.value = ciclosVm
             
         } catch (e: Exception) {
             android.util.Log.e("RelatorioConsolidadoCicloViewModel", "Erro ao carregar ciclos: ${e.message}")
@@ -125,13 +104,8 @@ class RelatorioConsolidadoCicloViewModel : ViewModel() {
     
     private suspend fun carregarAnos() {
         try {
-            // TODO: Implementar quando AppRepository estiver disponível
-            // val anos = appRepository.obterAnosDisponiveis().first()
-            
-            // Dados mock para demonstração
-            val anoAtual = Calendar.getInstance().get(Calendar.YEAR)
-            val anosMock = (anoAtual - 5..anoAtual).toList().reversed()
-            _anos.value = anosMock
+            val anos = database.cicloAcertoDao().listarAnosDisponiveis().first().sortedDescending()
+            _anos.value = anos
             
         } catch (e: Exception) {
             android.util.Log.e("RelatorioConsolidadoCicloViewModel", "Erro ao carregar anos: ${e.message}")
@@ -140,26 +114,25 @@ class RelatorioConsolidadoCicloViewModel : ViewModel() {
     
     private suspend fun carregarDadosCiclo(ciclo: Int, ano: Int) {
         try {
-            // TODO: Implementar quando AppRepository estiver disponível
-            // val dados = appRepository.obterDadosCicloAno(ciclo, ano).first()
-            
-            // Dados mock para demonstração
-            val dadosMock = DadosCicloAno(
+            val ciclosAno = database.cicloAcertoDao().listarPorAno(ano).first()
+                .filter { it.numeroCiclo == ciclo }
+            val faturamento = ciclosAno.sumOf { it.valorTotalAcertado }
+            val clientesAcertados = ciclosAno.sumOf { it.clientesAcertados }
+            val rotas = appRepository.obterTodasRotas().first()
+            val totalClientesAll = rotas.sumOf { rota -> appRepository.obterClientesPorRota(rota.id).first().size }
+            val totalMesasAll = rotas.sumOf { rota -> appRepository.buscarMesasPorRota(rota.id).first().size }
+            val ticketMedio = if (clientesAcertados > 0) faturamento / clientesAcertados else 0.0
+            val dados = DadosCicloAno(
                 ciclo = ciclo,
                 ano = ano,
-                faturamento = 150000.0 + (Math.random() * 50000).toDouble(),
-                clientesAcertados = 80 + (Math.random() * 20).toInt(),
-                mesasLocadas = 120 + (Math.random() * 30).toInt(),
-                ticketMedio = 150.0 + (Math.random() * 50).toDouble(),
-                totalClientes = 100 + (Math.random() * 20).toInt(),
-                totalMesas = 150 + (Math.random() * 30).toInt()
+                faturamento = faturamento,
+                clientesAcertados = clientesAcertados,
+                mesasLocadas = totalMesasAll,
+                ticketMedio = ticketMedio,
+                totalClientes = totalClientesAll,
+                totalMesas = totalMesasAll
             )
-            
-            if (ano == anoBase) {
-                _dadosAnoBase.value = dadosMock
-            } else {
-                _dadosAnoComparacao.value = dadosMock
-            }
+            if (ano == anoBase) _dadosAnoBase.value = dados else _dadosAnoComparacao.value = dados
             
         } catch (e: Exception) {
             android.util.Log.e("RelatorioConsolidadoCicloViewModel", "Erro ao carregar dados do ciclo: ${e.message}")
@@ -168,70 +141,38 @@ class RelatorioConsolidadoCicloViewModel : ViewModel() {
     
     private suspend fun carregarDetalhamentoRotas() {
         try {
-            // TODO: Implementar quando AppRepository estiver disponível
-            // val detalhamento = appRepository.obterDetalhamentoRotasCiclo(cicloSelecionado, anoBase, anoComparacao).first()
-            
-            // Dados mock para demonstração
-            val detalhamentoMock = listOf(
+            val rotas = appRepository.obterTodasRotas().first()
+            val dao = database.cicloAcertoDao()
+            val atualAnoList = dao.listarPorAno(anoBase).first().filter { it.numeroCiclo == cicloSelecionado }
+            val compAnoList = dao.listarPorAno(anoComparacao).first().filter { it.numeroCiclo == cicloSelecionado }
+
+            val detalhamento = rotas.map { rota ->
+                val cicloAtual = atualAnoList.firstOrNull { it.rotaId == rota.id }
+                val cicloComp = compAnoList.firstOrNull { it.rotaId == rota.id }
+                val faturAtual = cicloAtual?.valorTotalAcertado ?: 0.0
+                val faturComp = cicloComp?.valorTotalAcertado ?: 0.0
+                val clientesAtual = cicloAtual?.clientesAcertados ?: 0
+                val clientesComp = cicloComp?.clientesAcertados ?: 0
+                val mesasAtual = appRepository.buscarMesasPorRota(rota.id).first().size
+                val mesasComp = mesasAtual
+                val variacaoFatur = calcularVariacao(faturAtual, faturComp)
+                val variacaoClientes = calcularVariacao(clientesAtual.toDouble(), clientesComp.toDouble())
+                val variacaoMesas = calcularVariacao(mesasAtual.toDouble(), mesasComp.toDouble())
                 DetalhamentoRota(
-                    rota = Rota(
-                        id = 1L,
-                        nome = "Rota Zona Sul",
-                        descricao = "Zona Sul da cidade",
-                        ativa = true,
-                        dataCriacao = System.currentTimeMillis(),
-                        dataAtualizacao = System.currentTimeMillis()
-                    ),
-                    faturamentoAtual = 45000.0,
-                    faturamentoComparacao = 42000.0,
-                    variacaoFaturamento = 7.14,
-                    clientesAtual = 25,
-                    clientesComparacao = 23,
-                    variacaoClientes = 8.70,
-                    mesasAtual = 35,
-                    mesasComparacao = 32,
-                    variacaoMesas = 9.38
-                ),
-                DetalhamentoRota(
-                    rota = Rota(
-                        id = 2L,
-                        nome = "Rota Zona Norte",
-                        descricao = "Zona Norte da cidade",
-                        ativa = true,
-                        dataCriacao = System.currentTimeMillis(),
-                        dataAtualizacao = System.currentTimeMillis()
-                    ),
-                    faturamentoAtual = 38000.0,
-                    faturamentoComparacao = 35000.0,
-                    variacaoFaturamento = 8.57,
-                    clientesAtual = 20,
-                    clientesComparacao = 18,
-                    variacaoClientes = 11.11,
-                    mesasAtual = 28,
-                    mesasComparacao = 25,
-                    variacaoMesas = 12.0
-                ),
-                DetalhamentoRota(
-                    rota = Rota(
-                        id = 3L,
-                        nome = "Rota Centro",
-                        descricao = "Centro da cidade",
-                        ativa = true,
-                        dataCriacao = System.currentTimeMillis(),
-                        dataAtualizacao = System.currentTimeMillis()
-                    ),
-                    faturamentoAtual = 67000.0,
-                    faturamentoComparacao = 73000.0,
-                    variacaoFaturamento = -8.22,
-                    clientesAtual = 35,
-                    clientesComparacao = 39,
-                    variacaoClientes = -10.26,
-                    mesasAtual = 57,
-                    mesasComparacao = 63,
-                    variacaoMesas = -9.52
+                    rota = rota,
+                    faturamentoAtual = faturAtual,
+                    faturamentoComparacao = faturComp,
+                    variacaoFaturamento = variacaoFatur,
+                    clientesAtual = clientesAtual,
+                    clientesComparacao = clientesComp,
+                    variacaoClientes = variacaoClientes,
+                    mesasAtual = mesasAtual,
+                    mesasComparacao = mesasComp,
+                    variacaoMesas = variacaoMesas
                 )
-            )
-            _detalhamentoRotas.value = detalhamentoMock
+            }.sortedByDescending { it.faturamentoAtual }
+
+            _detalhamentoRotas.value = detalhamento
             
         } catch (e: Exception) {
             android.util.Log.e("RelatorioConsolidadoCicloViewModel", "Erro ao carregar detalhamento: ${e.message}")
@@ -290,6 +231,19 @@ class RelatorioConsolidadoCicloViewModel : ViewModel() {
     
     fun formatarMoeda(valor: Double): String {
         return "R$ ${String.format("%.2f", valor).replace(".", ",")}"
+    }
+}
+
+class RelatorioConsolidadoCicloViewModelFactory(
+    private val appRepository: AppRepository,
+    private val database: AppDatabase
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(RelatorioConsolidadoCicloViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return RelatorioConsolidadoCicloViewModel(appRepository, database) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 

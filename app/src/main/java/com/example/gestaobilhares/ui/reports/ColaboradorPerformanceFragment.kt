@@ -83,7 +83,7 @@ class ColaboradorPerformanceFragment : Fragment() {
             val cicloAdapter = ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
-                ciclos.map { "Ciclo ${it.numero} - ${it.descricao}" }
+                ciclos.map { "${it.numero}\u00BA Acerto" }
             )
             binding.spinnerCiclo.setAdapter(cicloAdapter)
             
@@ -99,11 +99,11 @@ class ColaboradorPerformanceFragment : Fragment() {
             val rotaAdapter = ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
-                listOf("Todas as Rotas") + rotas.map { it.nome }
+                listOf("Todas") + rotas.map { it.nome }
             )
             binding.spinnerRota.setAdapter(rotaAdapter)
             
-            // Selecionar "Todas as Rotas" por padrão
+            // Selecionar "Todas" por padrão
             binding.spinnerRota.setText(rotaAdapter.getItem(0), false)
             viewModel.selecionarRota(null) // null = todas as rotas
         }

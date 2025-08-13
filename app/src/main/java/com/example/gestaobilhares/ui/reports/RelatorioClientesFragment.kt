@@ -118,7 +118,7 @@ class RelatorioClientesFragment : Fragment() {
         val cicloAdapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
-            ArrayList(ciclos.map { "Ciclo ${it.numero} - ${it.descricao}" })
+            ArrayList(ciclos.map { "${it.numero}\u00BA Acerto" })
         )
         binding.spinnerCiclo.setAdapter(cicloAdapter)
         
@@ -133,20 +133,21 @@ class RelatorioClientesFragment : Fragment() {
     }
 
     private fun setupRotaSpinner(rotas: List<com.example.gestaobilhares.data.entities.Rota>) {
-        val rotaAdapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_dropdown_item_1line,
-            ArrayList(rotas.map { it.nome })
-        )
+        val labels = listOf("Todas") + rotas.map { it.nome }
+        val rotaAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, ArrayList(labels))
         binding.spinnerRota.setAdapter(rotaAdapter)
-        
-        if (rotas.isNotEmpty()) {
-            binding.spinnerRota.setText(rotaAdapter.getItem(0), false)
-            viewModel.selecionarRota(rotas[0].id)
-        }
+
+        // Padrão: Todas
+        binding.spinnerRota.setText(rotaAdapter.getItem(0), false)
+        viewModel.selecionarRota(0)
 
         binding.spinnerRota.setOnItemClickListener { _, _, position, _ ->
-            viewModel.selecionarRota(rotas[position].id)
+            if (position == 0) {
+                viewModel.selecionarRota(0)
+            } else {
+                val rota = rotas.getOrNull(position - 1)
+                if (rota != null) viewModel.selecionarRota(rota.id)
+            }
         }
     }
 

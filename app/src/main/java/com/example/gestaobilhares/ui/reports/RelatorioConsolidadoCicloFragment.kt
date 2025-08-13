@@ -7,11 +7,14 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentRelatorioConsolidadoCicloBinding
 import com.example.gestaobilhares.ui.reports.viewmodel.RelatorioConsolidadoCicloViewModel
+import com.example.gestaobilhares.ui.reports.viewmodel.RelatorioConsolidadoCicloViewModelFactory
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.reports.adapter.DetalhamentoRotasAdapter
 
 /**
@@ -23,7 +26,15 @@ class RelatorioConsolidadoCicloFragment : Fragment() {
     private var _binding: FragmentRelatorioConsolidadoCicloBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var viewModel: RelatorioConsolidadoCicloViewModel
+    private val viewModel: RelatorioConsolidadoCicloViewModel by viewModels {
+        val db = AppDatabase.getDatabase(requireContext())
+        RelatorioConsolidadoCicloViewModelFactory(
+            AppRepository(
+                db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(), db.colaboradorDao(), db.cicloAcertoDao()
+            ),
+            db
+        )
+    }
     private lateinit var adapter: DetalhamentoRotasAdapter
     
     override fun onCreateView(
@@ -45,9 +56,7 @@ class RelatorioConsolidadoCicloFragment : Fragment() {
         observeData()
     }
     
-    private fun setupViewModel() {
-        viewModel = ViewModelProvider(this)[RelatorioConsolidadoCicloViewModel::class.java]
-    }
+    private fun setupViewModel() { /* viewModel via factory acima */ }
     
     private fun setupRecyclerView() {
         adapter = DetalhamentoRotasAdapter()
@@ -75,7 +84,7 @@ class RelatorioConsolidadoCicloFragment : Fragment() {
             val cicloAdapter = ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
-                ciclos.map { it.descricao }
+                ciclos.map { "${it.numero}\u00BA Acerto" }
             )
             binding.spinnerCiclo.setAdapter(cicloAdapter)
             
