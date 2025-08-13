@@ -144,7 +144,7 @@ class DespesasCategoriaFragment : Fragment() {
         
         // Observar ciclos
         viewModel.ciclos.observe(viewLifecycleOwner) { ciclos ->
-            val ciclosList = ciclos.map { "${it.numero}º Ciclo" }
+            val ciclosList = ciclos.map { "${it.numero}\u00BA Acerto" }
             val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, ciclosList)
             binding.spinnerCiclo.setAdapter(adapter)
         }
@@ -158,7 +158,7 @@ class DespesasCategoriaFragment : Fragment() {
         
         // Observar rotas
         viewModel.rotas.observe(viewLifecycleOwner) { rotas ->
-            val rotasList = listOf("Todas as Rotas") + rotas.map { it.nome }
+            val rotasList = listOf("Todas") + rotas.map { it.nome }
             val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, rotasList)
             binding.spinnerRota.setAdapter(adapter)
         }

@@ -90,6 +90,18 @@ class RelatorioClientesViewModel(
                 
                 // Carregar clientes da rota
                 val clientesRota = repository.obterClientesPorRota(rotaSelecionada).first()
+                // Pré-carregar mesas por cliente para contagem
+                val mesasPorCliente: Map<Long, Int> = clientesRota.associate { cliente ->
+                    val mesas = repository.obterMesasPorCliente(cliente.id).first()
+                    cliente.id to mesas.size
+                }
+                // Último acerto por cliente (data formatada), se existir
+                val dateFmt = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
+                val ultimoAcertoPorCliente: Map<Long, String?> = clientesRota.associate { cliente ->
+                    val ultimo = repository.buscarUltimoAcertoPorCliente(cliente.id)
+                    val dataStr = ultimo?.dataAcerto?.let { dateFmt.format(ultimo.dataAcerto) }
+                    cliente.id to dataStr
+                }
                 
                 // Calcular estatísticas
                 val estatisticas = calcularEstatisticas(clientesRota)
@@ -102,9 +114,9 @@ class RelatorioClientesViewModel(
                          nome = cliente.nome,
                          endereco = cliente.endereco ?: "",
                          telefone = cliente.telefone ?: "",
-                         mesasLocadas = 0, // TODO: Implementar contagem de mesas
+                         mesasLocadas = mesasPorCliente[cliente.id] ?: 0,
                          debitoTotal = cliente.debitoAtual,
-                         ultimoAcerto = null, // TODO: Implementar último acerto
+                         ultimoAcerto = ultimoAcertoPorCliente[cliente.id],
                          status = determinarStatusCliente(cliente)
                      )
                  }
@@ -122,7 +134,7 @@ class RelatorioClientesViewModel(
          val totalClientes = clientes.size
          val clientesAtivos = clientes.count { it.debitoAtual > 0 || it.ativo }
          val clientesDebito = clientes.count { it.debitoAtual > 0 }
-         val totalMesasLocadas = 0 // TODO: Implementar contagem de mesas
+         val totalMesasLocadas = 0
          val ticketMedio = if (clientesAtivos > 0) {
              clientes.filter { it.debitoAtual > 0 || it.ativo }
                  .map { it.debitoAtual }

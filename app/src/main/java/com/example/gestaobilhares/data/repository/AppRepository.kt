@@ -199,33 +199,33 @@ class AppRepository(
     // Métodos para relatórios de despesas
     suspend fun getDespesasPorCiclo(cicloId: Long, rotaId: Long): List<DespesaRelatorio> {
         return try {
-	            val despesas = if (rotaId == 0L) {
-	                despesaDao.buscarPorCicloId(cicloId).first()
-	            } else {
-	                despesaDao.buscarPorRotaECicloId(rotaId, cicloId).first()
-	            }
+            val despesas = if (rotaId == 0L) {
+                despesaDao.buscarPorCicloId(cicloId).first()
+            } else {
+                despesaDao.buscarPorRotaECicloId(rotaId, cicloId).first()
+            }
 	            // Evita chamar função suspend dentro de map
 	            val rotasMap = rotaDao.getAllRotas().first().associateBy { it.id }
-	            
-	            despesas.map { despesa ->
+            
+            despesas.map { despesa ->
 	                val rotaNome = rotasMap[despesa.rotaId]?.nome ?: "Rota não encontrada"
-	                DespesaRelatorio(
-	                    id = despesa.id,
-	                    descricao = despesa.descricao,
-	                    valor = despesa.valor,
-	                    categoria = despesa.categoria,
-	                    data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                DespesaRelatorio(
+                    id = despesa.id,
+                    descricao = despesa.descricao,
+                    valor = despesa.valor,
+                    categoria = despesa.categoria,
+                    data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
 	                    rota = rotaNome,
-	                    observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
-	                )
-	            }
+                    observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
+                )
+            }
         } catch (e: Exception) {
             emptyList()
         }
     }
     
     suspend fun getDespesasConsolidadasCiclos(numeroCiclo: Int, ano: Int, rotaId: Long): List<DespesaRelatorio> {
-	        return try {
+        return try {
             // Buscar todos os ciclos do mesmo número no ano
             val ciclos = cicloAcertoDao.listarTodos().first()
                 .filter { it.numeroCiclo == numeroCiclo && it.dataInicio.year == ano }
@@ -240,19 +240,19 @@ class AppRepository(
                 }
 	                // Evita função suspend dentro de map
 	                val rotasMap = rotaDao.getAllRotas().first().associateBy { it.id }
-	                
-	                despesas.addAll(despesasCiclo.map { despesa ->
+                
+                despesas.addAll(despesasCiclo.map { despesa ->
 	                    val rotaNome = rotasMap[despesa.rotaId]?.nome ?: "Rota não encontrada"
-	                    DespesaRelatorio(
-	                        id = despesa.id,
-	                        descricao = despesa.descricao,
-	                        valor = despesa.valor,
-	                        categoria = despesa.categoria,
-	                        data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    DespesaRelatorio(
+                        id = despesa.id,
+                        descricao = despesa.descricao,
+                        valor = despesa.valor,
+                        categoria = despesa.categoria,
+                        data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
 	                        rota = rotaNome,
-	                        observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
-	                    )
-	                })
+                        observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
+                    )
+                })
             }
             
             despesas
@@ -262,32 +262,32 @@ class AppRepository(
     }
     
     suspend fun getDespesasPorAno(ano: Int, rotaId: Long): List<DespesaRelatorio> {
-	        return try {
+        return try {
             val dataInicio = java.time.LocalDateTime.of(ano, 1, 1, 0, 0)
             val dataFim = java.time.LocalDateTime.of(ano, 12, 31, 23, 59)
             
 	            val despesas: List<Despesa> = if (rotaId == 0L) {
 	                // Converte DespesaResumo -> Despesa para unificar o tipo
 	                despesaDao.buscarPorPeriodo(dataInicio, dataFim).first().map { it.despesa }
-	            } else {
-	                despesaDao.buscarPorRotaEPeriodo(rotaId, dataInicio, dataFim)
-	            }
+            } else {
+                despesaDao.buscarPorRotaEPeriodo(rotaId, dataInicio, dataFim)
+            }
             
 	            // Evita chamar função suspend dentro de map
 	            val rotasMap = rotaDao.getAllRotas().first().associateBy { it.id }
-	            
-	            despesas.map { despesa ->
+            
+            despesas.map { despesa ->
 	                val rotaNome = rotasMap[despesa.rotaId]?.nome ?: "Rota não encontrada"
-	                DespesaRelatorio(
-	                    id = despesa.id,
-	                    descricao = despesa.descricao,
-	                    valor = despesa.valor,
-	                    categoria = despesa.categoria,
-	                    data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                DespesaRelatorio(
+                    id = despesa.id,
+                    descricao = despesa.descricao,
+                    valor = despesa.valor,
+                    categoria = despesa.categoria,
+                    data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
 	                    rota = rotaNome,
-	                    observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
-	                )
-	            }
+                    observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
+                )
+            }
         } catch (e: Exception) {
             emptyList()
         }

@@ -90,17 +90,17 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:text="Filtros de Período"
+                        android:text="Filtros de Ciclo"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
-                    <!-- Período -->
+                    <!-- Ciclo -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:hint="Período"
+                        android:hint="Ciclo"
                         app:boxBackgroundColor="@color/surface_secondary"
                         app:boxCornerRadiusBottomEnd="12dp"
                         app:boxCornerRadiusBottomStart="12dp"
@@ -111,20 +111,20 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
                         <AutoCompleteTextView
-                            android:id="@+id/spinnerPeriodo"
+                            android:id="@+id/spinnerCiclo"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="none"
-                            android:text="Último Mês"
+                            android:text="1º Acerto"
                             android:textColor="@color/text_primary" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Ano -->
+                    <!-- Ano Base -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Ano"
+                        android:hint="Ano (Base)"
                         app:boxBackgroundColor="@color/surface_secondary"
                         app:boxCornerRadiusBottomEnd="12dp"
                         app:boxCornerRadiusBottomStart="12dp"
@@ -135,11 +135,36 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
                         <AutoCompleteTextView
-                            android:id="@+id/spinnerAno"
+                            android:id="@+id/spinnerAnoBase"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="none"
                             android:text="2025"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Ano Comparação -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Ano (Comparação)"
+                        app:boxBackgroundColor="@color/surface_secondary"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:hintTextColor="@color/accent_primary"
+                        app:boxStrokeColor="@color/accent_primary"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/spinnerAnoComparacao"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            android:text="2024"
                             android:textColor="@color/text_primary" />
 
                     </com.google.android.material.textfield.TextInputLayout>
