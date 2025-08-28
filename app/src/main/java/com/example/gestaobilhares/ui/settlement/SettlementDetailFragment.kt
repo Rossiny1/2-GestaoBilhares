@@ -559,7 +559,9 @@ class SettlementDetailFragment : Fragment() {
         if (settlement.debitoAnterior > 0) {
             texto.append("• Débito anterior: ${formatter.format(settlement.debitoAnterior)}\n")
         }
-        texto.append("• Valor total: ${formatter.format(settlement.valorTotal)}\n")
+        texto.append("• Total das mesas: ${formatter.format(settlement.valorTotal)}\n")
+        val valorTotal = settlement.valorTotal + settlement.debitoAnterior
+        texto.append("• Valor total: ${formatter.format(valorTotal)}\n")
         if (settlement.desconto > 0) {
             texto.append("• Desconto: ${formatter.format(settlement.desconto)}\n")
         }

@@ -324,16 +324,18 @@ class SettlementSummaryDialog : DialogFragment() {
         
         texto.append("• Total das mesas: ${formatter.format(valorTotalMesas)}\n")
         
+        val valorTotal = valorTotalMesas + debitoAnterior
+        texto.append("• Valor total: ${formatter.format(valorTotal)}\n")
+        
         if (desconto > 0) {
             texto.append("• Desconto: ${formatter.format(desconto)}\n")
         }
         
-        val valorTotal = valorTotalMesas + debitoAnterior
-        texto.append("• *Valor total: ${formatter.format(valorTotal)}*\n")
         if (metodosPagamento.isNotEmpty()) {
             val valorRecebido = metodosPagamento.values.sum()
             texto.append("• Valor recebido: ${formatter.format(valorRecebido)}\n")
         }
+        
         if (debitoAtual > 0) {
             texto.append("• Débito atual: ${formatter.format(debitoAtual)}\n")
         }
