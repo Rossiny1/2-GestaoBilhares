@@ -191,7 +191,8 @@ class SettlementSummaryDialog : DialogFragment() {
                                 val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
                                 txtDebitoAnterior.text = formatter.format(debitoAnterior)
                                 txtSubtotalMesas.text = formatter.format(valorTotalMesas)
-                                txtTotal.text = formatter.format(total)
+                                val valorTotal = valorTotalMesas + debitoAnterior
+                                txtTotal.text = formatter.format(valorTotal)
                                 txtDesconto.text = formatter.format(desconto)
                                 txtValorRecebido.text = formatter.format(metodosPagamento.values.sum())
                                 txtDebitoAtual.text = formatter.format(debitoAtual)
@@ -302,20 +303,19 @@ class SettlementSummaryDialog : DialogFragment() {
         texto.append("\n*Total de fichas jogadas: $totalFichasJogadas*\n\n")
 
         texto.append("💰 *RESUMO FINANCEIRO:*\n")
-        
-        // ✅ CORREÇÃO: Reorganizar campos conforme solicitado - Débito anterior primeiro
+
         if (debitoAnterior > 0) {
             texto.append("• Débito anterior: ${formatter.format(debitoAnterior)}\n")
         }
-        
-        // ✅ CORREÇÃO: Usar valor total das mesas do banco de dados
+
         texto.append("• Total das mesas: ${formatter.format(valorTotalMesas)}\n")
-        
+
         if (desconto > 0) {
             texto.append("• Desconto: ${formatter.format(desconto)}\n")
         }
-        
-        texto.append("• *Valor total: ${formatter.format(total)}*\n")
+
+        val valorTotal = valorTotalMesas + debitoAnterior
+        texto.append("• *Valor total: ${formatter.format(valorTotal)}*\n")
         if (metodosPagamento.isNotEmpty()) {
             val valorRecebido = metodosPagamento.values.sum()
             texto.append("• Valor recebido: ${formatter.format(valorRecebido)}\n")
@@ -437,10 +437,11 @@ class SettlementSummaryDialog : DialogFragment() {
         }
         texto.append("Total fichas: $totalFichasJogadas\n")
         texto.append("\nRESUMO:\n")
-        if (debitoAnterior > 0) texto.append("Débito ant.: ${formatter.format(debitoAnterior)}\n")
-        texto.append("Total mesas: ${formatter.format(valorTotalMesas)}\n")
+        if (debitoAnterior > 0) texto.append("Débito anterior: ${formatter.format(debitoAnterior)}\n")
+        texto.append("Total das mesas: ${formatter.format(valorTotalMesas)}\n")
         if (desconto > 0) texto.append("Desconto: ${formatter.format(desconto)}\n")
-        texto.append("Valor total: ${formatter.format(total)}\n")
+        val valorTotal = valorTotalMesas + debitoAnterior
+        texto.append("Valor total: ${formatter.format(valorTotal)}\n")
         if (metodosPagamento.isNotEmpty()) {
             val valorRecebido = metodosPagamento.values.sum()
             texto.append("Recebido: ${formatter.format(valorRecebido)}\n")

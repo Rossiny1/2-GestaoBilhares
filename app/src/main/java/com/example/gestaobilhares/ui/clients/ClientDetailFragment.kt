@@ -526,6 +526,25 @@ class ClientDetailFragment : Fragment() {
         binding.apply {
             tvClientName.text = client.nome
             tvClientAddress.text = client.endereco
+            tvClientAddress.setOnClickListener {
+                try {
+                    val lat = client.latitude
+                    val lon = client.longitude
+                    if (lat != null && lon != null) {
+                        val uri = android.net.Uri.parse("google.navigation:q=$lat,$lon")
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
+                        intent.setPackage("com.google.android.apps.maps")
+                        startActivity(intent)
+                    } else {
+                        // Fallback: abrir busca por endereço
+                        val uri = android.net.Uri.parse("geo:0,0?q=" + java.net.URLEncoder.encode(client.endereco, "UTF-8"))
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
+                        startActivity(intent)
+                    }
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(requireContext(), "Não foi possível abrir o Maps", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
             tvLastVisit.text = client.ultimaVisita
             
             // ✅ CORREÇÃO CRÍTICA: Exibir débito atual sincronizado
