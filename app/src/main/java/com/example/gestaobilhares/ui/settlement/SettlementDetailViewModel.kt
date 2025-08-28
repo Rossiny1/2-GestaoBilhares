@@ -17,7 +17,8 @@ import com.google.gson.reflect.TypeToken
 
 class SettlementDetailViewModel(
     private val acertoRepository: AcertoRepository,
-    private val acertoMesaRepository: AcertoMesaRepository
+    private val acertoMesaRepository: AcertoMesaRepository,
+    private val clienteRepository: com.example.gestaobilhares.data.repository.ClienteRepository
 ) : ViewModel() {
 
     private val _settlementDetail = MutableLiveData<SettlementDetail?>()
@@ -114,6 +115,16 @@ class SettlementDetailViewModel(
                     AppLogger.log("SettlementDetail", "Métodos de pagamento: $metodosPagamento")
                     AppLogger.log("SettlementDetail", "Data finalização: ${acerto.dataFinalizacao}")
 
+                    // ✅ NOVO: Carregar dados do cliente
+                    val cliente = clienteRepository.obterPorId(acerto.clienteId)
+                    val clienteNome = cliente?.nome ?: "Cliente #${acerto.clienteId}"
+                    val clienteTelefone = cliente?.telefone
+                    
+                    AppLogger.log("SettlementDetail", "=== DADOS DO CLIENTE ===")
+                    AppLogger.log("SettlementDetail", "Cliente ID: ${acerto.clienteId}")
+                    AppLogger.log("SettlementDetail", "Nome do cliente: $clienteNome")
+                    AppLogger.log("SettlementDetail", "Telefone do cliente: $clienteTelefone")
+                    
                     val settlementDetail = SettlementDetail(
                         id = acerto.id,
                         date = dataFormatada,
@@ -132,7 +143,10 @@ class SettlementDetailViewModel(
                         panoTrocado = acerto.panoTrocado,
                         numeroPano = acerto.numeroPano,
                         metodosPagamento = metodosPagamento,
-                        dataFinalizacao = acerto.dataFinalizacao
+                        dataFinalizacao = acerto.dataFinalizacao,
+                        // ✅ NOVOS DADOS: Dados do cliente
+                        clienteNome = clienteNome,
+                        clienteTelefone = clienteTelefone
                     )
                     
                     _settlementDetail.value = settlementDetail
@@ -169,7 +183,10 @@ class SettlementDetailViewModel(
         val panoTrocado: Boolean,
         val numeroPano: String?,
         val metodosPagamento: Map<String, Double>,
-        val dataFinalizacao: Date?
+        val dataFinalizacao: Date?,
+        // ✅ NOVOS CAMPOS: Dados do cliente
+        val clienteNome: String,
+        val clienteTelefone: String?
     )
 
     /**

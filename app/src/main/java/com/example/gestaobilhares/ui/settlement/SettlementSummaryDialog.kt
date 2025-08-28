@@ -39,6 +39,7 @@ class SettlementSummaryDialog : DialogFragment() {
     companion object {
         fun newInstance(
             clienteNome: String,
+            clienteTelefone: String?,
             mesas: List<Mesa>,
             total: Double,
             metodosPagamento: Map<String, Double>,
@@ -50,6 +51,7 @@ class SettlementSummaryDialog : DialogFragment() {
         ): SettlementSummaryDialog {
             val args = Bundle().apply {
                 putString("clienteNome", clienteNome)
+                putString("clienteTelefone", clienteTelefone)
                 putParcelableArrayList("mesas", ArrayList(mesas))
                 putDouble("total", total)
                 putSerializable("metodosPagamento", HashMap(metodosPagamento))
@@ -68,6 +70,7 @@ class SettlementSummaryDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val view = LayoutInflater.from(context).inflate(R.layout.dialog_settlement_summary, null)
         val clienteNome = arguments?.getString("clienteNome") ?: ""
+        val clienteTelefone = arguments?.getString("clienteTelefone")
         val mesas = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             arguments?.getParcelableArrayList("mesas", Mesa::class.java) ?: emptyList<Mesa>()
         } else {
@@ -103,8 +106,19 @@ class SettlementSummaryDialog : DialogFragment() {
         }
         view.findViewById<TextView>(R.id.tvResumoMesas).text = mesasDetalhes.toString()
         
-        // Total formatado
-        view.findViewById<TextView>(R.id.tvResumoTotal).text = formatter.format(total)
+        // ✅ RESUMO FINANCEIRO COMPLETO (igual ao recibo impresso)
+        view.findViewById<TextView>(R.id.tvResumoDebitoAnterior).text = formatter.format(debitoAnterior)
+        view.findViewById<TextView>(R.id.tvResumoTotalMesas).text = formatter.format(valorTotalMesas)
+        
+        val valorTotalCalculado = valorTotalMesas + debitoAnterior
+        view.findViewById<TextView>(R.id.tvResumoTotal).text = formatter.format(valorTotalCalculado)
+        
+        view.findViewById<TextView>(R.id.tvResumoDesconto).text = formatter.format(desconto)
+        
+        val valorRecebido = metodosPagamento.values.sum()
+        view.findViewById<TextView>(R.id.tvResumoValorRecebido).text = formatter.format(valorRecebido)
+        
+        view.findViewById<TextView>(R.id.tvResumoDebitoAtual).text = formatter.format(debitoAtual)
         
         // Métodos de pagamento formatados
         val pagamentosText = if (metodosPagamento.isNotEmpty()) {
@@ -258,7 +272,7 @@ class SettlementSummaryDialog : DialogFragment() {
         // Botão WhatsApp
         view.findViewById<MaterialButton>(R.id.btnWhatsapp).setOnClickListener {
             val textoCompleto = gerarTextoResumo(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual, debitoAnterior, desconto, valorTotalMesas)
-            enviarViaWhatsApp(textoCompleto)
+            enviarViaWhatsAppDireto(clienteTelefone, textoCompleto)
             dismiss()
             acertoCompartilhadoListener?.onAcertoCompartilhado()
         }
@@ -303,17 +317,17 @@ class SettlementSummaryDialog : DialogFragment() {
         texto.append("\n*Total de fichas jogadas: $totalFichasJogadas*\n\n")
 
         texto.append("💰 *RESUMO FINANCEIRO:*\n")
-
+        
         if (debitoAnterior > 0) {
             texto.append("• Débito anterior: ${formatter.format(debitoAnterior)}\n")
         }
-
+        
         texto.append("• Total das mesas: ${formatter.format(valorTotalMesas)}\n")
-
+        
         if (desconto > 0) {
             texto.append("• Desconto: ${formatter.format(desconto)}\n")
         }
-
+        
         val valorTotal = valorTotalMesas + debitoAnterior
         texto.append("• *Valor total: ${formatter.format(valorTotal)}*\n")
         if (metodosPagamento.isNotEmpty()) {
@@ -343,58 +357,98 @@ class SettlementSummaryDialog : DialogFragment() {
     }
     
     /**
-     * ✅ CORRIGIDO: Envia o resumo via WhatsApp nativo
-     * Usa a mesma estratégia robusta do ClientDetailFragment
+     * ✅ SOLUÇÃO DEFINITIVA: Abre WhatsApp diretamente com o número do cliente
+     * Baseado na documentação oficial WhatsApp e Android Intents
+     * ELIMINA COMPLETAMENTE o seletor de apps
      */
-    private fun enviarViaWhatsApp(texto: String) {
+    private fun enviarViaWhatsAppDireto(telefone: String?, texto: String) {
+        if (telefone.isNullOrEmpty()) {
+            android.widget.Toast.makeText(requireContext(), "Cliente não possui telefone cadastrado", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+        
         try {
-            // ✅ ESTRATÉGIA 1: Tentar WhatsApp nativo primeiro
-            try {
-                val intentWhatsApp = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, texto)
-                    setPackage("com.whatsapp")
-                }
-                
-                if (intentWhatsApp.resolveActivity(requireActivity().packageManager) != null) {
-                    startActivity(intentWhatsApp)
-                    Log.d("SettlementSummaryDialog", "✅ WhatsApp nativo aberto com sucesso")
-                    return
-                }
-            } catch (e: Exception) {
-                Log.d("SettlementSummaryDialog", "WhatsApp nativo não disponível: ${e.message}")
+            // Limpar formatação do telefone
+            val numeroLimpo = telefone.replace(Regex("[^0-9]"), "")
+            
+            // Adicionar código do país se necessário (Brasil +55)
+            val numeroCompleto = if (numeroLimpo.length == 11) {
+                "55$numeroLimpo" // Adiciona código do Brasil
+            } else if (numeroLimpo.length == 10) {
+                "55$numeroLimpo" // Adiciona código do Brasil
+            } else {
+                numeroLimpo
             }
             
-            // ✅ ESTRATÉGIA 2: Tentar WhatsApp Business
+            Log.d("SettlementSummaryDialog", "Número original: $telefone")
+            Log.d("SettlementSummaryDialog", "Número limpo: $numeroLimpo")
+            Log.d("SettlementSummaryDialog", "Número completo: $numeroCompleto")
+            
+            // ✅ ESTRATÉGIA 1: Esquema nativo whatsapp://send (FORÇA direcionamento direto)
             try {
-                val intentBusiness = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, texto)
-                    setPackage("com.whatsapp.w4b")
+                val uri = android.net.Uri.parse("whatsapp://send?phone=$numeroCompleto&text=${android.net.Uri.encode(texto)}")
+                val intentWhatsApp = Intent(Intent.ACTION_VIEW, uri).apply {
+                    // ✅ CRÍTICO: Força o direcionamento direto sem seletor
+                    setPackage("com.whatsapp")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
                 }
                 
-                if (intentBusiness.resolveActivity(requireActivity().packageManager) != null) {
-                    startActivity(intentBusiness)
-                    Log.d("SettlementSummaryDialog", "✅ WhatsApp Business aberto com sucesso")
-                    return
+                startActivity(intentWhatsApp)
+                Log.d("SettlementSummaryDialog", "✅ WhatsApp aberto diretamente via esquema nativo")
+                return
+            } catch (e: Exception) {
+                Log.d("SettlementSummaryDialog", "Esquema nativo não funcionou: ${e.message}")
+            }
+            
+            // ✅ ESTRATÉGIA 2: URL wa.me (funciona mesmo sem app instalado)
+            try {
+                val url = "https://wa.me/$numeroCompleto?text=${android.net.Uri.encode(texto)}"
+                val intentUrl = Intent(Intent.ACTION_VIEW).apply {
+                    data = android.net.Uri.parse(url)
+                    // ✅ CRÍTICO: Força o direcionamento direto
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
                 }
+                
+                startActivity(intentUrl)
+                Log.d("SettlementSummaryDialog", "✅ WhatsApp aberto via URL wa.me")
+                return
+            } catch (e: Exception) {
+                Log.d("SettlementSummaryDialog", "URL wa.me não funcionou: ${e.message}")
+            }
+            
+            // ✅ ESTRATÉGIA 3: Tentar WhatsApp Business via esquema nativo
+            try {
+                val uri = android.net.Uri.parse("whatsapp://send?phone=$numeroCompleto&text=${android.net.Uri.encode(texto)}")
+                val intentBusiness = Intent(Intent.ACTION_VIEW, uri).apply {
+                    setPackage("com.whatsapp.w4b")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                }
+                
+                startActivity(intentBusiness)
+                Log.d("SettlementSummaryDialog", "✅ WhatsApp Business aberto via esquema nativo")
+                return
             } catch (e: Exception) {
                 Log.d("SettlementSummaryDialog", "WhatsApp Business não disponível: ${e.message}")
             }
             
-            // ✅ ESTRATÉGIA 3: Compartilhamento genérico
+            // ✅ ESTRATÉGIA 4: Intent direto com ACTION_SEND mas SEM chooser
             try {
-                val intentGeneric = Intent(Intent.ACTION_SEND).apply {
+                val intentDirect = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
                     putExtra(Intent.EXTRA_TEXT, texto)
+                    setPackage("com.whatsapp")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
                 }
                 
-                val chooser = Intent.createChooser(intentGeneric, "Compartilhar resumo do acerto")
-                startActivity(chooser)
-                Log.d("SettlementSummaryDialog", "✅ Compartilhamento genérico aberto")
+                startActivity(intentDirect)
+                Log.d("SettlementSummaryDialog", "✅ WhatsApp aberto via intent direto")
                 return
             } catch (e: Exception) {
-                Log.d("SettlementSummaryDialog", "Compartilhamento genérico falhou: ${e.message}")
+                Log.d("SettlementSummaryDialog", "Intent direto falhou: ${e.message}")
             }
             
             // ✅ ÚLTIMA OPÇÃO: Mostrar mensagem de erro
@@ -403,8 +457,15 @@ class SettlementSummaryDialog : DialogFragment() {
             
         } catch (e: Exception) {
             Log.e("SettlementSummaryDialog", "Erro geral ao abrir WhatsApp: ${e.message}", e)
-            android.widget.Toast.makeText(requireContext(), "Erro ao compartilhar: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(requireContext(), "Erro ao abrir WhatsApp: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
         }
+    }
+
+    /**
+     * ✅ MANTIDO: Método original para compatibilidade
+     */
+    private fun enviarViaWhatsApp(texto: String) {
+        enviarViaWhatsAppDireto(null, texto)
     }
 
     /**

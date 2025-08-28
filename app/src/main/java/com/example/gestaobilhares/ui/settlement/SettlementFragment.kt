@@ -942,32 +942,36 @@ class SettlementFragment : Fragment() {
                 // ✅ CORREÇÃO: Usar valor total das mesas do banco de dados
                 val valorTotalMesas = acerto.valorTotal
                 
-                val dialog = SettlementSummaryDialog.newInstance(
-                    clienteNome = viewModel.clientName.value,
-                    mesas = mesasComNumerosReais,
-                    total = acerto.valorTotal,
-                    metodosPagamento = metodosPagamento,
-                    observacao = acerto.observacoes,
-                    debitoAtual = acerto.debitoAtual,
-                    debitoAnterior = debitoAnterior,
-                    desconto = desconto,
-                    valorTotalMesas = valorTotalMesas // ✅ CORREÇÃO: Passar valor total das mesas do banco
-                )
-                dialog.acertoCompartilhadoListener = object : SettlementSummaryDialog.OnAcertoCompartilhadoListener {
-                    override fun onAcertoCompartilhado() {
-                        // ✅ CORREÇÃO: Notificar ClientDetailFragment via cache seguro
-                        val sharedPref = requireActivity().getSharedPreferences("acerto_temp", android.content.Context.MODE_PRIVATE)
-                        with(sharedPref.edit()) {
-                            putLong("cliente_id", args.clienteId)
-                            putBoolean("acerto_salvo", true)
-                            putLong("novo_acerto_id", acertoId)
-                            apply()
+                // ✅ NOVO: Carregar dados do cliente para obter o telefone
+                viewModel.carregarDadosCliente(args.clienteId) { cliente ->
+                    val dialog = SettlementSummaryDialog.newInstance(
+                        clienteNome = viewModel.clientName.value,
+                        clienteTelefone = cliente?.telefone,
+                        mesas = mesasComNumerosReais,
+                        total = acerto.valorTotal,
+                        metodosPagamento = metodosPagamento,
+                        observacao = acerto.observacoes,
+                        debitoAtual = acerto.debitoAtual,
+                        debitoAnterior = debitoAnterior,
+                        desconto = desconto,
+                        valorTotalMesas = valorTotalMesas // ✅ CORREÇÃO: Passar valor total das mesas do banco
+                    )
+                    dialog.acertoCompartilhadoListener = object : SettlementSummaryDialog.OnAcertoCompartilhadoListener {
+                        override fun onAcertoCompartilhado() {
+                            // ✅ CORREÇÃO: Notificar ClientDetailFragment via cache seguro
+                            val sharedPref = requireActivity().getSharedPreferences("acerto_temp", android.content.Context.MODE_PRIVATE)
+                            with(sharedPref.edit()) {
+                                putLong("cliente_id", args.clienteId)
+                                putBoolean("acerto_salvo", true)
+                                putLong("novo_acerto_id", acertoId)
+                                apply()
+                            }
+                            // Voltar para tela Detalhes do Cliente
+                            findNavController().popBackStack(R.id.clientDetailFragment, false)
                         }
-                        // Voltar para tela Detalhes do Cliente
-                        findNavController().popBackStack(R.id.clientDetailFragment, false)
                     }
+                    dialog.show(parentFragmentManager, "SettlementSummaryDialog")
                 }
-                dialog.show(parentFragmentManager, "SettlementSummaryDialog")
             } else {
                 Toast.makeText(requireContext(), "Erro ao carregar acerto salvo", Toast.LENGTH_LONG).show()
             }

@@ -1,5 +1,6 @@
 package com.example.gestaobilhares.ui.settlement
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -66,7 +67,10 @@ class SettlementDetailFragment : Fragment() {
         // Inicializar ViewModel onde o contexto está disponível
         viewModel = SettlementDetailViewModel(
             AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao()),
-            AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao())
+            AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao()),
+            com.example.gestaobilhares.data.repository.ClienteRepository(
+                AppDatabase.getDatabase(requireContext()).clienteDao()
+            )
         )
     }
 
@@ -505,13 +509,15 @@ class SettlementDetailFragment : Fragment() {
     private fun compartilharViaWhatsApp(settlement: SettlementDetailViewModel.SettlementDetail) {
         lifecycleScope.launch {
             try {
-                val clienteNome = "Cliente" // Usar nome genérico por enquanto
+                // ✅ NOVO: Usar dados reais do cliente
+                val clienteNome = settlement.clienteNome
+                val clienteTelefone = settlement.clienteTelefone
                 
                 // Gerar texto do resumo
                 val textoResumo = gerarTextoResumo(settlement, clienteNome)
                 
-                // Enviar via WhatsApp
-                enviarViaWhatsApp(textoResumo)
+                // ✅ NOVO: Enviar via WhatsApp direto com telefone do cliente
+                enviarViaWhatsAppDireto(clienteTelefone, textoResumo)
                 
             } catch (e: Exception) {
                 AppLogger.log("SettlementDetailFragment", "Erro ao compartilhar via WhatsApp: ${e.message}")
@@ -582,24 +588,116 @@ class SettlementDetailFragment : Fragment() {
         return texto.toString()
     }
 
-    private fun enviarViaWhatsApp(texto: String) {
-        try {
-            val intent = android.content.Intent(android.content.Intent.ACTION_SEND)
-            intent.type = "text/plain"
-            intent.putExtra(android.content.Intent.EXTRA_TEXT, texto)
-            intent.setPackage("com.whatsapp")
-            
-            if (intent.resolveActivity(requireContext().packageManager) != null) {
-                startActivity(intent)
-            } else {
-                // Fallback para qualquer app de compartilhamento
-                val shareIntent = android.content.Intent.createChooser(intent, "Compartilhar via")
-                startActivity(shareIntent)
-            }
-        } catch (e: Exception) {
-            AppLogger.log("SettlementDetailFragment", "Erro ao enviar via WhatsApp: ${e.message}")
-            android.widget.Toast.makeText(requireContext(), "Erro ao abrir WhatsApp", android.widget.Toast.LENGTH_SHORT).show()
+    /**
+     * ✅ SOLUÇÃO DEFINITIVA: Abre WhatsApp diretamente com o número do cliente
+     * Baseado na documentação oficial WhatsApp e Android Intents
+     * ELIMINA COMPLETAMENTE o seletor de apps
+     */
+    private fun enviarViaWhatsAppDireto(telefone: String?, texto: String) {
+        if (telefone.isNullOrEmpty()) {
+            android.widget.Toast.makeText(requireContext(), "Cliente não possui telefone cadastrado", android.widget.Toast.LENGTH_SHORT).show()
+            return
         }
+        
+        try {
+            // Limpar formatação do telefone
+            val numeroLimpo = telefone.replace(Regex("[^0-9]"), "")
+            
+            // Adicionar código do país se necessário (Brasil +55)
+            val numeroCompleto = if (numeroLimpo.length == 11) {
+                "55$numeroLimpo" // Adiciona código do Brasil
+            } else if (numeroLimpo.length == 10) {
+                "55$numeroLimpo" // Adiciona código do Brasil
+            } else {
+                numeroLimpo
+            }
+            
+            AppLogger.log("SettlementDetailFragment", "Número original: $telefone")
+            AppLogger.log("SettlementDetailFragment", "Número limpo: $numeroLimpo")
+            AppLogger.log("SettlementDetailFragment", "Número completo: $numeroCompleto")
+            
+            // ✅ ESTRATÉGIA 1: Esquema nativo whatsapp://send (FORÇA direcionamento direto)
+            try {
+                val uri = android.net.Uri.parse("whatsapp://send?phone=$numeroCompleto&text=${android.net.Uri.encode(texto)}")
+                val intentWhatsApp = Intent(Intent.ACTION_VIEW, uri).apply {
+                    // ✅ CRÍTICO: Força o direcionamento direto sem seletor
+                    setPackage("com.whatsapp")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                }
+                
+                startActivity(intentWhatsApp)
+                AppLogger.log("SettlementDetailFragment", "✅ WhatsApp aberto diretamente via esquema nativo")
+                return
+            } catch (e: Exception) {
+                AppLogger.log("SettlementDetailFragment", "Esquema nativo não funcionou: ${e.message}")
+            }
+            
+            // ✅ ESTRATÉGIA 2: URL wa.me (funciona mesmo sem app instalado)
+            try {
+                val url = "https://wa.me/$numeroCompleto?text=${android.net.Uri.encode(texto)}"
+                val intentUrl = Intent(Intent.ACTION_VIEW).apply {
+                    data = android.net.Uri.parse(url)
+                    // ✅ CRÍTICO: Força o direcionamento direto
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                }
+                
+                startActivity(intentUrl)
+                AppLogger.log("SettlementDetailFragment", "✅ WhatsApp aberto via URL wa.me")
+                return
+            } catch (e: Exception) {
+                AppLogger.log("SettlementDetailFragment", "URL wa.me não funcionou: ${e.message}")
+            }
+            
+            // ✅ ESTRATÉGIA 3: Tentar WhatsApp Business via esquema nativo
+            try {
+                val uri = android.net.Uri.parse("whatsapp://send?phone=$numeroCompleto&text=${android.net.Uri.encode(texto)}")
+                val intentBusiness = Intent(Intent.ACTION_VIEW, uri).apply {
+                    setPackage("com.whatsapp.w4b")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                }
+                
+                startActivity(intentBusiness)
+                AppLogger.log("SettlementDetailFragment", "✅ WhatsApp Business aberto via esquema nativo")
+                return
+            } catch (e: Exception) {
+                AppLogger.log("SettlementDetailFragment", "WhatsApp Business não disponível: ${e.message}")
+            }
+            
+            // ✅ ESTRATÉGIA 4: Intent direto com ACTION_SEND mas SEM chooser
+            try {
+                val intentDirect = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, texto)
+                    setPackage("com.whatsapp")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                }
+                
+                startActivity(intentDirect)
+                AppLogger.log("SettlementDetailFragment", "✅ WhatsApp aberto via intent direto")
+                return
+            } catch (e: Exception) {
+                AppLogger.log("SettlementDetailFragment", "Intent direto falhou: ${e.message}")
+            }
+            
+            // ✅ ÚLTIMA OPÇÃO: Mostrar mensagem de erro
+            android.widget.Toast.makeText(requireContext(), "Não foi possível abrir o WhatsApp. Verifique se está instalado.", android.widget.Toast.LENGTH_LONG).show()
+            AppLogger.log("SettlementDetailFragment", "❌ Todas as estratégias falharam")
+            
+        } catch (e: Exception) {
+            AppLogger.log("SettlementDetailFragment", "Erro geral ao abrir WhatsApp: ${e.message}")
+            android.widget.Toast.makeText(requireContext(), "Erro ao abrir WhatsApp: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * ✅ MANTIDO: Método original para compatibilidade
+     */
+    private fun enviarViaWhatsApp(texto: String) {
+        enviarViaWhatsAppDireto(null, texto)
     }
 
     /**
