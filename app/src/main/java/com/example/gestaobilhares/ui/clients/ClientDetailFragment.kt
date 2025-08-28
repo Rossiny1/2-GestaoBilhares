@@ -582,8 +582,9 @@ class ClientDetailFragment : Fragment() {
     }
 
     /**
-     * ✅ CORRIGIDO: Abre WhatsApp nativo com o número do cliente
-     * Baseado na documentação oficial Android e WhatsApp Business API
+     * ✅ SOLUÇÃO DEFINITIVA: Abre WhatsApp diretamente com o número do cliente
+     * Baseado na documentação oficial WhatsApp e Android Intents
+     * ELIMINA COMPLETAMENTE o seletor de apps
      */
     private fun abrirWhatsApp(telefone: String) {
         if (telefone.isEmpty()) {
@@ -611,69 +612,71 @@ class ClientDetailFragment : Fragment() {
             // ✅ CORREÇÃO: Mensagem padrão para contato
             val mensagem = "Olá! Entro em contato sobre suas mesas de bilhar."
             
-            // ✅ ESTRATÉGIA 1: Tentar WhatsApp nativo primeiro
+            // ✅ ESTRATÉGIA 1: Esquema nativo whatsapp://send (FORÇA direcionamento direto)
             try {
-                val intentWhatsApp = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, mensagem)
+                val uri = android.net.Uri.parse("whatsapp://send?phone=$numeroCompleto&text=${android.net.Uri.encode(mensagem)}")
+                val intentWhatsApp = Intent(Intent.ACTION_VIEW, uri).apply {
+                    // ✅ CRÍTICO: Força o direcionamento direto sem seletor
                     setPackage("com.whatsapp")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
                 }
                 
-                if (intentWhatsApp.resolveActivity(requireActivity().packageManager) != null) {
-                    startActivity(intentWhatsApp)
-                    Log.d("ClientDetailFragment", "✅ WhatsApp nativo aberto com sucesso")
-                    return
-                }
+                startActivity(intentWhatsApp)
+                Log.d("ClientDetailFragment", "✅ WhatsApp aberto diretamente via esquema nativo")
+                return
             } catch (e: Exception) {
-                Log.d("ClientDetailFragment", "WhatsApp nativo não disponível: ${e.message}")
+                Log.d("ClientDetailFragment", "Esquema nativo não funcionou: ${e.message}")
             }
             
-            // ✅ ESTRATÉGIA 2: Tentar WhatsApp Business
-            try {
-                val intentBusiness = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, mensagem)
-                    setPackage("com.whatsapp.w4b")
-                }
-                
-                if (intentBusiness.resolveActivity(requireActivity().packageManager) != null) {
-                    startActivity(intentBusiness)
-                    Log.d("ClientDetailFragment", "✅ WhatsApp Business aberto com sucesso")
-                    return
-                }
-            } catch (e: Exception) {
-                Log.d("ClientDetailFragment", "WhatsApp Business não disponível: ${e.message}")
-            }
-            
-            // ✅ ESTRATÉGIA 3: Usar URL wa.me (funciona mesmo sem app instalado)
+            // ✅ ESTRATÉGIA 2: URL wa.me (funciona mesmo sem app instalado)
             try {
                 val url = "https://wa.me/$numeroCompleto?text=${android.net.Uri.encode(mensagem)}"
                 val intentUrl = Intent(Intent.ACTION_VIEW).apply {
                     data = android.net.Uri.parse(url)
+                    // ✅ CRÍTICO: Força o direcionamento direto
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
                 }
                 
-                if (intentUrl.resolveActivity(requireActivity().packageManager) != null) {
-                    startActivity(intentUrl)
-                    Log.d("ClientDetailFragment", "✅ WhatsApp aberto via URL")
-                    return
-                }
+                startActivity(intentUrl)
+                Log.d("ClientDetailFragment", "✅ WhatsApp aberto via URL wa.me")
+                return
             } catch (e: Exception) {
                 Log.d("ClientDetailFragment", "URL wa.me não funcionou: ${e.message}")
             }
             
-            // ✅ ESTRATÉGIA 4: Compartilhamento genérico
+            // ✅ ESTRATÉGIA 3: Tentar WhatsApp Business via esquema nativo
             try {
-                val intentGeneric = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, "$mensagem\n\nContato: $telefone")
+                val uri = android.net.Uri.parse("whatsapp://send?phone=$numeroCompleto&text=${android.net.Uri.encode(mensagem)}")
+                val intentBusiness = Intent(Intent.ACTION_VIEW, uri).apply {
+                    setPackage("com.whatsapp.w4b")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
                 }
                 
-                val chooser = Intent.createChooser(intentGeneric, "Compartilhar via WhatsApp")
-                startActivity(chooser)
-                Log.d("ClientDetailFragment", "✅ Compartilhamento genérico aberto")
+                startActivity(intentBusiness)
+                Log.d("ClientDetailFragment", "✅ WhatsApp Business aberto via esquema nativo")
                 return
             } catch (e: Exception) {
-                Log.d("ClientDetailFragment", "Compartilhamento genérico falhou: ${e.message}")
+                Log.d("ClientDetailFragment", "WhatsApp Business não disponível: ${e.message}")
+            }
+            
+            // ✅ ESTRATÉGIA 4: Intent direto com ACTION_SEND mas SEM chooser
+            try {
+                val intentDirect = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, mensagem)
+                    setPackage("com.whatsapp")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+                }
+                
+                startActivity(intentDirect)
+                Log.d("ClientDetailFragment", "✅ WhatsApp aberto via intent direto")
+                return
+            } catch (e: Exception) {
+                Log.d("ClientDetailFragment", "Intent direto falhou: ${e.message}")
             }
             
             // ✅ ÚLTIMA OPÇÃO: Mostrar mensagem de erro
