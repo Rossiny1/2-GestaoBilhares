@@ -462,12 +462,12 @@ class ClientListViewModel(
         val searchType = _searchType.value
         val searchCriteria = _searchCriteria.value.trim()
         
-        // Primeiro filtrar por status de acerto
+        // ✅ CORREÇÃO: Filtro PENDENCIAS agora é inclusivo - mostra todos os clientes com pendências
         val filtradosPorStatus = when (filtro) {
             FiltroCliente.TODOS -> todos
             FiltroCliente.ACERTADOS -> filtrarClientesAcertados(todos)
             FiltroCliente.NAO_ACERTADOS -> filtrarClientesNaoAcertados(todos)
-            FiltroCliente.PENDENCIAS -> filtrarClientesPendencias(todos)
+            FiltroCliente.PENDENCIAS -> filtrarClientesPendenciasInclusivo(todos)
         }
         
         // Depois filtrar por busca (normal ou avançada)
@@ -533,6 +533,33 @@ class ClientListViewModel(
     }
 
     /**
+     * ✅ CORREÇÃO: Filtra clientes com pendências de forma INCLUSIVA
+     * Mostra TODOS os clientes que têm pendências, independentemente de estarem acertados ou não
+     */
+    private suspend fun filtrarClientesPendenciasInclusivo(clientes: List<Cliente>): List<Cliente> {
+        val clientesPendencias = mutableListOf<Cliente>()
+        
+        android.util.Log.d("ClientListViewModel", "🔍 Iniciando filtro PEND inclusivo para ${clientes.size} clientes")
+        
+        for (cliente in clientes) {
+            // ✅ DEBUG: Log para verificar o débito de cada cliente
+            android.util.Log.d("ClientListViewModel", "Verificando cliente ${cliente.nome}: débitoAtual = R$ ${cliente.debitoAtual}")
+            
+            // ✅ CRITÉRIO INCLUSIVO: Se o cliente tem pendências, incluir independente do status de acerto
+            if (clienteTemPendencias(cliente.id)) {
+                clientesPendencias.add(cliente)
+                android.util.Log.d("ClientListViewModel", "✅ Cliente ${cliente.nome} adicionado ao filtro PEND")
+            } else {
+                android.util.Log.d("ClientListViewModel", "❌ Cliente ${cliente.nome} NÃO adicionado ao filtro PEND")
+            }
+        }
+        
+        android.util.Log.d("ClientListViewModel", "✅ Filtro PEND inclusivo: ${clientesPendencias.size} clientes com pendências encontrados")
+        
+        return clientesPendencias
+    }
+
+    /**
      * ✅ NOVO: Verifica se o cliente foi acertado no ciclo especificado
      */
     private suspend fun clienteFoiAcertadoNoCiclo(clienteId: Long, cicloId: Long): Boolean {
@@ -548,31 +575,41 @@ class ClientListViewModel(
     }
 
     /**
-     * ✅ NOVO: Verifica se o cliente tem pendências (débito > 300 e não acertado há mais de 4 meses)
+     * ✅ CORREÇÃO: Verifica se o cliente tem pendências (débito > 300 OU não acertado há mais de 4 meses)
      */
     private suspend fun clienteTemPendencias(clienteId: Long): Boolean {
         return try {
             // Buscar o cliente com débito atual
             val cliente = appRepository.obterClientePorId(clienteId) ?: return false
             
-            // Verificar se tem débito > 300
-            if (cliente.debitoAtual <= 300.0) return false
+            // ✅ DEBUG: Log para verificar o débito do cliente
+            android.util.Log.d("ClientListViewModel", "Verificando pendências - Cliente ${cliente.nome}: débitoAtual = R$ ${cliente.debitoAtual}")
             
-            // Buscar último acerto do cliente
+            // ✅ CRITÉRIO 1: Débito > R$300
+            val temDebitoAlto = cliente.debitoAtual > 300.0
+            
+            // ✅ CRITÉRIO 2: Não acertado há mais de 4 meses
             val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(clienteId)
-            
-            if (ultimoAcerto == null) {
-                // Se nunca foi acertado, considerar como pendência
-                return true
+            val semAcertoRecente = when {
+                ultimoAcerto == null -> true // Se nunca foi acertado, considerar como pendência
+                else -> {
+                    val dataAtual = java.util.Date()
+                    val dataUltimoAcerto = ultimoAcerto.dataAcerto
+                    val diffEmMeses = ((dataAtual.time - dataUltimoAcerto.time) / (1000L * 60 * 60 * 24 * 30)).toInt()
+                    diffEmMeses > 4
+                }
             }
             
-            // Calcular diferença em meses
-            val dataAtual = java.util.Date()
-            val dataUltimoAcerto = ultimoAcerto.dataAcerto
-            val diffEmMeses = ((dataAtual.time - dataUltimoAcerto.time) / (1000L * 60 * 60 * 24 * 30)).toInt()
+            // ✅ RETORNAR TRUE se atender QUALQUER UM dos critérios
+            val temPendencia = temDebitoAlto || semAcertoRecente
             
-            // Retornar true se não foi acertado há mais de 4 meses
-            diffEmMeses > 4
+            android.util.Log.d("ClientListViewModel", "Cliente ${cliente.nome}: temDebitoAlto=$temDebitoAlto, semAcertoRecente=$semAcertoRecente, temPendencia=$temPendencia")
+            
+            if (temPendencia) {
+                android.util.Log.d("ClientListViewModel", "✅ Cliente ${cliente.nome} tem pendência: Débito=R$${cliente.debitoAtual}, SemAcertoRecente=$semAcertoRecente")
+            }
+            
+            temPendencia
         } catch (e: Exception) {
             android.util.Log.e("ClientListViewModel", "Erro ao verificar pendências do cliente: ${e.message}")
             false

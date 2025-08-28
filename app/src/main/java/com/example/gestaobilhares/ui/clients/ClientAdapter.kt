@@ -132,11 +132,16 @@ class ClientAdapter(
                 // ✅ CORREÇÃO: Usar o débito atual da tabela clientes (atualizado após cada acerto)
                 val debitoAtual = cliente.debitoAtual
                 
+                // ✅ DEBUG: Log para verificar o débito recebido
+                android.util.Log.d("ClientAdapter", "Cliente ${cliente.nome}: débitoAtual = R$ $debitoAtual")
+                
                 // Se não há débito, mostrar "Sem Débito"
                 if (debitoAtual <= 0) {
                     binding.tvCurrentDebt.text = "Sem Débito"
+                    android.util.Log.d("ClientAdapter", "Cliente ${cliente.nome}: exibindo 'Sem Débito'")
                 } else {
                     binding.tvCurrentDebt.text = String.format("R$ %.2f", debitoAtual)
+                    android.util.Log.d("ClientAdapter", "Cliente ${cliente.nome}: exibindo débito R$ $debitoAtual")
                 }
                 
                 // Configurar cores baseadas no valor do débito
