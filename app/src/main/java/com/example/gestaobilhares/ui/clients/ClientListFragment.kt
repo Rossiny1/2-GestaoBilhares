@@ -721,14 +721,14 @@ class ClientListFragment : Fragment() {
     /**
      * ✅ NOVO: Retorna o nome amigável do filtro
      */
-    private fun getNomeFiltro(filtro: FiltroCliente): String {
-        return when (filtro) {
-            FiltroCliente.ACERTADOS -> "Pago"
-            FiltroCliente.NAO_ACERTADOS -> "Em aberto"
-            FiltroCliente.TODOS -> "Todos"
-            FiltroCliente.PENDENCIAS -> "Pend"
+            private fun getNomeFiltro(filtro: FiltroCliente): String {
+            return when (filtro) {
+                FiltroCliente.ACERTADOS -> "Pago"
+                FiltroCliente.NAO_ACERTADOS -> "Em aberto"
+                FiltroCliente.TODOS -> "Todos"
+                FiltroCliente.PENDENCIAS -> "Pendências"
+            }
         }
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()
