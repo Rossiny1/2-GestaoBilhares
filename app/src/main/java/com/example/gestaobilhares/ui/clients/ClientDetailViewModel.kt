@@ -128,6 +128,8 @@ class ClientDetailViewModel(
                         ultimaVisita = ultimaVisita,
                         observacoes = observacaoExibir,
                         debitoAtual = debitoAtualReal, // ✅ CORREÇÃO: Usar débito atual do último acerto
+                        latitude = it.latitude,
+                        longitude = it.longitude,
                         diasSemAcerto = if (ultimoAcerto != null) {
                             val hoje = java.time.LocalDate.now()
                             val dataUltimoAcerto = ultimoAcerto.dataAcerto.toInstant()
@@ -419,6 +421,8 @@ data class ClienteResumo(
     val ultimaVisita: String,
     val observacoes: String,
     val debitoAtual: Double = 0.0, // ✅ ADICIONADO: Campo para débito atual sincronizado
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val diasSemAcerto: Int = 0 // ✅ ADICIONADO: Campo para dias sem acerto
 )
 

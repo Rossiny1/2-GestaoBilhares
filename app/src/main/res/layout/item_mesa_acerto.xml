@@ -176,7 +176,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:text="Relógio com Defeito (usar média)" />
+                android:text="Relógio defeito /Trocado" />
 
             <!-- Checkbox Relógio Reiniciou -->
             <CheckBox

@@ -107,8 +107,8 @@ class ClientRegisterFragment : Fragment() {
             saveClient()
         }
         
-        // ✅ NOVO: Botão capturar localização
-        binding.btnCaptureLocation.setOnClickListener {
+        // ✅ NOVO: End icon do campo endereço aciona captura de localização
+        binding.tilAddress.setEndIconOnClickListener {
             solicitarLocalizacao()
         }
 
@@ -558,10 +558,8 @@ class ClientRegisterFragment : Fragment() {
             return
         }
         
-        // Mostrar loading
-        binding.btnCaptureLocation.isEnabled = false
-        binding.btnCaptureLocation.text = "Capturando..."
-        binding.tvLocationStatus.text = "Obtendo localização..."
+        // Mostrar loading leve via Toast
+        Toast.makeText(requireContext(), "Capturando localização...", Toast.LENGTH_SHORT).show()
         
         try {
             val cancellationToken = CancellationTokenSource()
@@ -570,9 +568,6 @@ class ClientRegisterFragment : Fragment() {
                 Priority.PRIORITY_HIGH_ACCURACY,
                 cancellationToken.token
             ).addOnSuccessListener { location: Location? ->
-                binding.btnCaptureLocation.isEnabled = true
-                binding.btnCaptureLocation.text = "Capturar"
-                
                 if (location != null) {
                     // Salvar coordenadas
                     currentLatitude = location.latitude
@@ -581,11 +576,12 @@ class ClientRegisterFragment : Fragment() {
                     locationCaptureTime = Date()
                     
                     // Atualizar UI
-                    atualizarUILocalizacao(location)
+                    // Feedback de sucesso
+                    Toast.makeText(requireContext(), "Localização realizada com sucesso", Toast.LENGTH_LONG).show()
                     
                     Log.d("Geolocation", "Localização capturada: ${location.latitude}, ${location.longitude}")
                 } else {
-                    binding.tvLocationStatus.text = "Não foi possível obter localização"
+                    // Feedback de erro
                     Toast.makeText(
                         requireContext(),
                         "Não foi possível obter sua localização. Verifique se o GPS está ativado.",
@@ -593,10 +589,6 @@ class ClientRegisterFragment : Fragment() {
                     ).show()
                 }
             }.addOnFailureListener { exception ->
-                binding.btnCaptureLocation.isEnabled = true
-                binding.btnCaptureLocation.text = "Capturar"
-                binding.tvLocationStatus.text = "Erro ao capturar"
-                
                 Log.e("Geolocation", "Erro ao capturar localização", exception)
                 Toast.makeText(
                     requireContext(),
@@ -605,10 +597,6 @@ class ClientRegisterFragment : Fragment() {
                 ).show()
             }
         } catch (e: Exception) {
-            binding.btnCaptureLocation.isEnabled = true
-            binding.btnCaptureLocation.text = "Capturar"
-            binding.tvLocationStatus.text = "Erro inesperado"
-            
             Log.e("Geolocation", "Erro inesperado", e)
             Toast.makeText(
                 requireContext(),
@@ -622,33 +610,7 @@ class ClientRegisterFragment : Fragment() {
      * Atualiza a interface com os dados da localização capturada
      */
     private fun atualizarUILocalizacao(location: Location) {
-        // Atualizar status
-        binding.tvLocationStatus.text = "Localização capturada com sucesso"
-        
-        // Mostrar coordenadas
-        binding.layoutCoordinates.visibility = View.VISIBLE
-        
-        // Formatar coordenadas
-        val latFormatted = String.format("%.6f", location.latitude)
-        val longFormatted = String.format("%.6f", location.longitude)
-        binding.tvCoordinates.text = "Lat: $latFormatted, Long: $longFormatted"
-        
-        // Mostrar precisão
-        val accuracyText = if (location.accuracy < 10) {
-            "Precisão: ±${String.format("%.1f", location.accuracy)}m (Excelente)"
-        } else if (location.accuracy < 50) {
-            "Precisão: ±${String.format("%.1f", location.accuracy)}m (Boa)"
-        } else {
-            "Precisão: ±${String.format("%.1f", location.accuracy)}m (Regular)"
-        }
-        binding.tvLocationAccuracy.text = accuracyText
-        
-        // Mostrar data/hora da captura
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
-        binding.tvLocationTime.text = "Capturada em: ${dateFormat.format(Date())}"
-        
-        // Atualizar texto do botão
-        binding.btnCaptureLocation.text = "Recapturar"
+        // Método mantido apenas para futura UI; agora feedback é via Toast e campos internos
     }
     
     /**

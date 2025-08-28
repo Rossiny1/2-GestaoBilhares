@@ -152,11 +152,11 @@
         <TextView android:id="@+id/txtDebitoAnterior" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="R$ 0,00" android:textStyle="bold|italic" android:textColor="#000000" android:textSize="7sp" />
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Subtotal mesas: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total das mesas: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
         <TextView android:id="@+id/txtSubtotalMesas" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="R$ 0,00" android:textStyle="bold|italic" android:textColor="#000000" android:textSize="7sp" />
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Valor total: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
         <TextView android:id="@+id/txtTotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="R$ 0,00" android:textStyle="bold|italic" android:textColor="#000000" android:textSize="7sp" />
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
