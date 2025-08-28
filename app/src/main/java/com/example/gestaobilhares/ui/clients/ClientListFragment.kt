@@ -453,14 +453,14 @@ class ClientListFragment : Fragment() {
                     }
                     filtroAtual == FiltroCliente.ACERTADOS -> {
                         binding.ivEmptyStateIcon.setImageResource(R.drawable.ic_check)
-                        binding.tvEmptyStateTitle.text = "Nenhum cliente acertado"
-                        binding.tvEmptyStateMessage.text = "Nenhum cliente foi acertado neste ciclo."
+                        binding.tvEmptyStateTitle.text = "Nenhum cliente pago"
+                        binding.tvEmptyStateMessage.text = "Nenhum cliente foi pago neste ciclo."
                         binding.btnEmptyStateAction.visibility = View.GONE
                     }
                     filtroAtual == FiltroCliente.NAO_ACERTADOS -> {
                         binding.ivEmptyStateIcon.setImageResource(R.drawable.ic_pending)
-                        binding.tvEmptyStateTitle.text = "Nenhum cliente pendente"
-                        binding.tvEmptyStateMessage.text = "Todos os clientes foram acertados neste ciclo."
+                        binding.tvEmptyStateTitle.text = "Nenhum cliente em aberto"
+                        binding.tvEmptyStateMessage.text = "Todos os clientes foram pagos neste ciclo."
                         binding.btnEmptyStateAction.visibility = View.GONE
                     }
                     else -> {
@@ -723,10 +723,10 @@ class ClientListFragment : Fragment() {
      */
     private fun getNomeFiltro(filtro: FiltroCliente): String {
         return when (filtro) {
-            FiltroCliente.ACERTADOS -> "Acertados"
-            FiltroCliente.NAO_ACERTADOS -> "Não Acertados"
+            FiltroCliente.ACERTADOS -> "Pago"
+            FiltroCliente.NAO_ACERTADOS -> "Em aberto"
             FiltroCliente.TODOS -> "Todos"
-            FiltroCliente.PENDENCIAS -> "Pendências"
+            FiltroCliente.PENDENCIAS -> "Pend"
         }
     }
 

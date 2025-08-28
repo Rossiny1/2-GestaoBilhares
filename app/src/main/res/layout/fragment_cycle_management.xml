@@ -93,61 +93,55 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- Conteúdo principal -->
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="16dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout
+        <!-- Seções de conteúdo -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="16dp">
+            android:layout_marginBottom="16dp"
+            app:tabBackground="@color/card_background_dark"
+            app:tabIndicatorColor="@color/primary_purple"
+            app:tabSelectedTextColor="@color/primary_purple"
+            app:tabTextColor="@color/text_secondary"
+            app:tabMode="fixed"
+            app:tabGravity="fill">
 
-            <!-- Seções de conteúdo -->
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tabLayout"
-                android:layout_width="match_parent"
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:tabBackground="@color/card_background_dark"
-                app:tabIndicatorColor="@color/primary_purple"
-                app:tabSelectedTextColor="@color/primary_purple"
-                app:tabTextColor="@color/text_secondary"
-                app:tabMode="fixed"
-                app:tabGravity="fill">
+                android:layout_weight="1"
+                android:text="Recebimentos" />
 
-                <com.google.android.material.tabs.TabItem
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Recebimentos" />
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Despesas" />
 
-                <com.google.android.material.tabs.TabItem
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Despesas" />
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Resumo" />
 
-                <com.google.android.material.tabs.TabItem
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Resumo" />
+        </com.google.android.material.tabs.TabLayout>
 
-            </com.google.android.material.tabs.TabLayout>
+        <!-- ViewPager para as seções -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-            <!-- ViewPager para as seções -->
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/viewPager"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
-        </LinearLayout>
-
-    </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
 
     <!-- Botão flutuante para adicionar despesa (apenas para ciclos em andamento) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton

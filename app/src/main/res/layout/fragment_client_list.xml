@@ -311,7 +311,7 @@
                         android:layout_width="0dp"
                         android:layout_height="40dp"
                         android:layout_weight="1"
-                        android:text="Acertados"
+                        android:text="Pago"
                         android:textColor="?attr/colorPrimary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -322,7 +322,7 @@
                         android:layout_width="0dp"
                         android:layout_height="40dp"
                         android:layout_weight="1"
-                        android:text="Não Acertados"
+                        android:text="Em aberto"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="13sp" />
 
@@ -332,7 +332,7 @@
                         android:layout_width="0dp"
                         android:layout_height="40dp"
                         android:layout_weight="1"
-                        android:text="Pendências"
+                        android:text="Pend"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="13sp" />
 
