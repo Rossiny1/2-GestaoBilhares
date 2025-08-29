@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Cores principais do tema -->
-    <color name="primary_purple">#6200EA</color>
-    <color name="primary_purple_dark">#3700B3</color>
-    <color name="accent_purple">#BB86FC</color>
-    <color name="accent_primary">#BB86FC</color>
-    <color name="accent_primary_alpha">#33BB86FC</color>
-    <color name="accent_color">#BB86FC</color>
+    <!-- 🎨 NOVA PALETA PROFISSIONAL - Excelente Contraste e Visibilidade -->
+    
+    <!-- Cores Primárias Profissionais -->
+    <color name="primary_blue">#1E88E5</color>           <!-- Azul profissional confiável -->
+    <color name="primary_blue_dark">#1565C0</color>      <!-- Azul escuro para contraste -->
+    <color name="primary_blue_light">#42A5F5</color>     <!-- Azul claro para destaques -->
+    
+    <!-- Cores de Destaque com Alto Contraste -->
+    <color name="accent_teal">#00BCD4</color>            <!-- Teal moderno e visível -->
+    <color name="accent_primary">#00BCD4</color>         <!-- Cor principal de destaque -->
+    <color name="accent_primary_alpha">#3300BCD4</color> <!-- Versão com transparência -->
+    <color name="accent_color">#00BCD4</color>           <!-- Alias para compatibilidade -->
+    
+    <!-- Cores Secundárias Profissionais -->
+    <color name="secondary_slate">#455A64</color>        <!-- Cinza azulado elegante -->
+    <color name="secondary_slate_light">#607D8B</color>  <!-- Cinza azulado claro -->
     
     <!-- Cores Material Design -->
     <color name="purple_50">#F3E5F5</color>
@@ -14,6 +23,11 @@
     <color name="purple_500">#FF6200EA</color>
     <color name="purple_600">#6200EA</color>
     <color name="purple_700">#3700B3</color>
+    
+    <!-- ✅ COMPATIBILIDADE - Manter referência antiga -->
+    <color name="primary_purple">@color/primary_blue</color>
+    <color name="primary_purple_dark">@color/primary_blue_dark</color>
+    <color name="accent_purple">@color/accent_teal</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     
@@ -22,54 +36,63 @@
     <color name="white">#FFFFFFFF</color>
     <color name="transparent">#00FFFFFF</color>
     
-    <!-- Cores de fundo -->
-    <color name="background_primary">#121212</color>
-    <color name="background_dark">#121212</color>
-    <color name="background_light">#FAFAFA</color>
-    <color name="surface_primary">#1E1E1E</color>
-    <color name="surface_secondary">#2C2C2C</color>
-    <color name="surface_dark">#1E1E1E</color>
-    <color name="surface_variant">#F3F3F3</color>
-    <color name="card_background">#FFFFFF</color>
-    <color name="card_background_dark">#2C2C2C</color>
-    <color name="card_stroke">#22000000</color>
+    <!-- 🌙 FUNDOS OTIMIZADOS - Excelente Legibilidade -->
+    <color name="background_primary">#0F1419</color>     <!-- Fundo principal mais suave -->
+    <color name="background_dark">#0F1419</color>        <!-- Fundo escuro consistente -->
+    <color name="background_light">#FAFAFA</color>       <!-- Fundo claro (modo claro futuro) -->
     
-    <!-- Cores de texto -->
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#B3B3B3</color>
-    <color name="text_disabled">#666666</color>
-    <color name="on_surface_variant">#6C757D</color>
+    <!-- Superfícies com Melhor Contraste -->
+    <color name="surface_primary">#1A202C</color>        <!-- Superfície principal mais clara -->
+    <color name="surface_secondary">#2D3748</color>      <!-- Superfície secundária contrastante -->
+    <color name="surface_dark">#1A202C</color>           <!-- Superfície escura consistente -->
+    <color name="surface_variant">#F7FAFC</color>        <!-- Variante clara otimizada -->
+    <color name="surface_elevated">#2D3748</color>       <!-- Superfície elevada para cards -->
     
-    <!-- Cores verdes -->
-    <color name="green_50">#E8F5E8</color>
-    <color name="green_100">#C8E6C9</color>
-    <color name="green_200">#C8E6C9</color>
-    <color name="green_500">#4CAF50</color>
-    <color name="green_600">#43A047</color>
-    <color name="green_700">#388E3C</color>
-    <color name="success_green">#4CAF50</color>
-    <color name="success">#4CAF50</color>
+    <!-- Cards com Excelente Visibilidade -->
+    <color name="card_background">#FFFFFF</color>        <!-- Card claro -->
+    <color name="card_background_dark">#2D3748</color>   <!-- Card escuro com melhor contraste -->
+    <color name="card_stroke">#4A5568</color>            <!-- Borda mais visível -->
+    <color name="card_stroke_light">#E2E8F0</color>      <!-- Borda clara -->
     
-    <!-- Cores vermelhas -->
-    <color name="red_50">#FFEBEE</color>
-    <color name="red_100">#FFCDD2</color>
-    <color name="red_500">#F44336</color>
-    <color name="red_600">#E53935</color>
-    <color name="red_700">#D32F2F</color>
-    <color name="error_red">#F44336</color>
-    <color name="error_color">#F44336</color>
-    <color name="error">#F44336</color>
+    <!-- 📝 TEXTOS OTIMIZADOS - Máxima Legibilidade -->
+    <color name="text_primary">#F7FAFC</color>           <!-- Texto principal - branco suave -->
+    <color name="text_secondary">#CBD5E0</color>         <!-- Texto secundário - cinza claro -->
+    <color name="text_tertiary">#A0AEC0</color>          <!-- Texto terciário - cinza médio -->
+    <color name="text_disabled">#718096</color>          <!-- Texto desabilitado - mais visível -->
+    <color name="text_on_primary">#FFFFFF</color>        <!-- Texto sobre cor primária -->
+    <color name="text_on_surface">#F7FAFC</color>        <!-- Texto sobre superfície -->
+    <color name="on_surface_variant">#A0AEC0</color>     <!-- Variante melhorada -->
     
-    <!-- Cores laranja -->
-    <color name="orange_50">#FFF3E0</color>
-    <color name="orange_100">#FFE0B2</color>
-    <color name="orange_200">#FFE0B2</color>
-    <color name="orange_300">#FFB74D</color>
-    <color name="orange_500">#FF9800</color>
-    <color name="orange_600">#FB8C00</color>
-    <color name="orange_700">#F57C00</color>
-    <color name="warning_orange">#FF9800</color>
-    <color name="warning">#FF9800</color>
+    <!-- ✅ CORES DE SUCESSO - Alto Contraste -->
+    <color name="green_50">#F0FDF4</color>              <!-- Verde muito claro -->
+    <color name="green_100">#DCFCE7</color>             <!-- Verde claro -->
+    <color name="green_200">#BBF7D0</color>             <!-- Verde médio claro -->
+    <color name="green_500">#10B981</color>             <!-- Verde vibrante -->
+    <color name="green_600">#059669</color>             <!-- Verde escuro -->
+    <color name="green_700">#047857</color>             <!-- Verde muito escuro -->
+    <color name="success_green">#10B981</color>         <!-- Sucesso otimizado -->
+    <color name="success">#10B981</color>               <!-- Alias para sucesso -->
+    
+    <!-- ❌ CORES DE ERRO - Alto Contraste -->
+    <color name="red_50">#FEF2F2</color>                <!-- Vermelho muito claro -->
+    <color name="red_100">#FEE2E2</color>               <!-- Vermelho claro -->
+    <color name="red_500">#EF4444</color>               <!-- Vermelho vibrante -->
+    <color name="red_600">#DC2626</color>               <!-- Vermelho escuro -->
+    <color name="red_700">#B91C1C</color>               <!-- Vermelho muito escuro -->
+    <color name="error_red">#EF4444</color>             <!-- Erro otimizado -->
+    <color name="error_color">#EF4444</color>           <!-- Cor de erro -->
+    <color name="error">#EF4444</color>                 <!-- Alias para erro -->
+    
+    <!-- ⚠️ CORES DE AVISO - Alto Contraste -->
+    <color name="orange_50">#FFFBEB</color>             <!-- Laranja muito claro -->
+    <color name="orange_100">#FEF3C7</color>            <!-- Laranja claro -->
+    <color name="orange_200">#FDE68A</color>            <!-- Laranja médio claro -->
+    <color name="orange_300">#FCD34D</color>            <!-- Laranja médio -->
+    <color name="orange_500">#F59E0B</color>            <!-- Laranja vibrante -->
+    <color name="orange_600">#D97706</color>            <!-- Laranja escuro -->
+    <color name="orange_700">#B45309</color>            <!-- Laranja muito escuro -->
+    <color name="warning_orange">#F59E0B</color>        <!-- Aviso otimizado -->
+    <color name="warning">#F59E0B</color>               <!-- Alias para aviso -->
     
     <!-- Cores amarelas -->
     <color name="yellow_50">#FFFDE7</color>
@@ -83,7 +106,6 @@
     <color name="blue_600">#1E88E5</color>
     <color name="blue_700">#1976D2</color>
     <color name="info">#2196F3</color>
-    <color name="primary_blue">#1976D2</color>
     
     <!-- Cores cinzas -->
     <color name="gray_50">#FAFAFA</color>
@@ -110,23 +132,29 @@
     
 
     
-    <!-- Navigation Drawer -->
-    <color name="navigation_item_color">#FFFFFF</color>
-    <color name="navigation_item_selected">#6200EA</color>
-    <color name="navigation_item_unselected">#B3B3B3</color>
+    <!-- 🧭 NAVIGATION DRAWER PROFISSIONAL -->
+    <color name="navigation_item_color">@color/text_primary</color>
+    <color name="navigation_item_selected">@color/primary_blue</color>
+    <color name="navigation_item_unselected">@color/text_secondary</color>
+    <color name="navigation_background">@color/surface_primary</color>
     
-    <!-- Cores para botões -->
-    <color name="button_background">#6200EA</color>
-    <color name="button_disabled">#444444</color>
+    <!-- 🔘 BOTÕES PROFISSIONAIS - Alto Contraste -->
+    <color name="button_primary">@color/primary_blue</color>
+    <color name="button_secondary">@color/accent_teal</color>
+    <color name="button_success">@color/success_green</color>
+    <color name="button_warning">@color/warning_orange</color>
+    <color name="button_error">@color/error_red</color>
+    <color name="button_disabled">#4A5568</color>          <!-- Mais visível -->
+    <color name="button_background">@color/primary_blue</color>  <!-- Compatibilidade -->
     
-    <!-- Compatibilidade com Material Design -->
-    <color name="colorPrimary">@color/primary_purple</color>
-    <color name="colorPrimaryDark">@color/primary_purple_dark</color>
-    <color name="colorAccent">@color/accent_purple</color>
-    <color name="colorOnSurface">#212121</color>
+    <!-- 🎨 COMPATIBILIDADE MATERIAL DESIGN - Atualizada -->
+    <color name="colorPrimary">@color/primary_blue</color>
+    <color name="colorPrimaryDark">@color/primary_blue_dark</color>
+    <color name="colorAccent">@color/accent_teal</color>
+    <color name="colorOnSurface">@color/text_on_surface</color>
     
-    <!-- Cores para o sistema de colaboradores -->
-    <color name="primary">@color/primary_purple</color>
+    <!-- 👥 SISTEMA DE COLABORADORES - Atualizado -->
+    <color name="primary">@color/primary_blue</color>
     <color name="background">@color/background_primary</color>
     <color name="surface">@color/surface_primary</color>
     <color name="onSurfaceVariant">@color/on_surface_variant</color>

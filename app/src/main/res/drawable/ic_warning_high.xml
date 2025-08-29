@@ -2,9 +2,20 @@
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
-    android:viewportHeight="24"
-    android:tint="?attr/colorError">
-  <path
-      android:fillColor="@android:color/white"
-      android:pathData="M1,21h22L12,2 1,21zM13,18h-2v-2h2v2zM13,14h-2v-4h2v4z"/>
-</vector> 
+    android:viewportHeight="24">
+    
+    <!-- Ícone de aviso simples -->
+    <path
+        android:fillColor="@color/warning_orange"
+        android:pathData="M12,2 L22,20 L2,20 Z" />
+    
+    <!-- Exclamação -->
+    <path
+        android:fillColor="@color/text_on_primary"
+        android:pathData="M11,7 L13,7 L13,13 L11,13 Z" />
+    
+    <path
+        android:fillColor="@color/text_on_primary"
+        android:pathData="M11,15 L13,15 L13,17 L11,17 Z" />
+        
+</vector>
