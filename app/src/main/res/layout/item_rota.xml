@@ -14,7 +14,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:background="@drawable/card_billiard_background">
 
         <!-- Header com nome da rota e status -->
         <LinearLayout
@@ -42,7 +43,7 @@
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="4dp"
                 android:text="Em andamento"
-                android:textColor="@color/primary_blue"
+                android:textColor="@color/accent_teal"
                 android:textSize="12sp"
                 tools:text="Em andamento" />
 

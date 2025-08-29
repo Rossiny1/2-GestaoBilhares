@@ -35,7 +35,7 @@
     
     <!-- 🔘 BOTÕES PADRONIZADOS -->
     <style name="AppButton" parent="Widget.Material3.Button">
-        <item name="android:background">@drawable/button_professional</item>
+        <item name="backgroundTint">@color/accent_teal</item>
         <item name="android:textColor">@color/text_on_primary</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textStyle">bold</item>

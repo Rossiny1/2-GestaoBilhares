@@ -32,7 +32,7 @@
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:padding="20dp"
-                    android:background="@color/surface_primary"
+                    android:background="@drawable/background_billiard_hall"
                     android:layout_margin="16dp"
                     android:elevation="6dp">
 
@@ -42,7 +42,7 @@
                         android:layout_height="48dp"
                         android:layout_marginEnd="16dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:src="@drawable/ic_menu"
+                        android:src="@drawable/ic_menu_billiard"
                         android:contentDescription="Abrir Menu"
                         app:tint="@color/accent_primary" />
 
