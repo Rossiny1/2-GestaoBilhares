@@ -108,10 +108,7 @@
     <color name="primary_600">#5300D4</color>
     <color name="divider_color">#333333</color>
     
-    <!-- Bottom Navigation -->
-    <color name="bottom_nav_background">#1F1F1F</color>
-    <color name="bottom_nav_selected">#6200EA</color>
-    <color name="bottom_nav_unselected">#888888</color>
+
     
     <!-- Navigation Drawer -->
     <color name="navigation_item_color">#FFFFFF</color>

@@ -86,7 +86,7 @@
                     <!-- Card Mesas -->
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
-                        android:layout_height="90dp"
+                        android:layout_height="100dp"
                         android:layout_weight="1.0"
                         android:layout_marginEnd="6dp"
                         app:cardBackgroundColor="@color/surface_primary"
@@ -99,44 +99,30 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:orientation="vertical"
-                            android:padding="16dp"
+                            android:padding="12dp"
                             android:gravity="center_vertical">
 
-                            <LinearLayout
+                            <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical">
-
-                                <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
-                                    android:src="@drawable/ic_table"
-                                    app:tint="@color/accent_primary" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:layout_marginStart="6dp"
-                                    android:text="Mesas"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold"
-                                    android:maxLines="1"
-                                    android:ellipsize="none" />
-
-                            </LinearLayout>
+                                android:text="Mesas"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:maxLines="1"
+                                android:ellipsize="none" />
 
                             <TextView
                                 android:id="@+id/totalMesasCount"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
                                 android:text="0"
                                 android:textColor="@color/accent_primary"
                                 android:textSize="20sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:gravity="center" />
 
                         </LinearLayout>
 
@@ -145,7 +131,7 @@
                     <!-- Card Clientes -->
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
-                        android:layout_height="90dp"
+                        android:layout_height="100dp"
                         android:layout_weight="1.0"
                         android:layout_marginHorizontal="6dp"
                         app:cardBackgroundColor="@color/surface_primary"
@@ -158,44 +144,30 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:orientation="vertical"
-                            android:padding="16dp"
+                            android:padding="12dp"
                             android:gravity="center_vertical">
 
-                            <LinearLayout
+                            <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical">
-
-                                <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
-                                    android:src="@drawable/ic_people"
-                                    app:tint="@color/accent_primary" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:layout_marginStart="6dp"
-                                    android:text="Clientes"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold"
-                                    android:maxLines="1"
-                                    android:ellipsize="none" />
-
-                            </LinearLayout>
+                                android:text="Clientes"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:maxLines="1"
+                                android:ellipsize="none" />
 
                             <TextView
                                 android:id="@+id/totalClientesCount"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
                                 android:text="0"
                                 android:textColor="@color/accent_primary"
                                 android:textSize="20sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:gravity="center" />
 
                         </LinearLayout>
 
@@ -204,7 +176,7 @@
                     <!-- Card Pendências -->
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
-                        android:layout_height="90dp"
+                        android:layout_height="100dp"
                         android:layout_weight="1.0"
                         android:layout_marginStart="6dp"
                         app:cardBackgroundColor="@color/surface_primary"
@@ -217,44 +189,30 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:orientation="vertical"
-                            android:padding="16dp"
+                            android:padding="12dp"
                             android:gravity="center_vertical">
 
-                            <LinearLayout
+                            <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical">
-
-                                <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
-                                    android:src="@drawable/ic_pending"
-                                    app:tint="@color/warning_orange" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:layout_marginStart="6dp"
-                                    android:text="Pendências"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold"
-                                    android:maxLines="1"
-                                    android:ellipsize="none" />
-
-                            </LinearLayout>
+                                android:text="Pendências"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:maxLines="1"
+                                android:ellipsize="none" />
 
                             <TextView
                                 android:id="@+id/totalPendenciasCount"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
                                 android:text="0"
                                 android:textColor="@color/warning_orange"
                                 android:textSize="20sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:gravity="center" />
 
                         </LinearLayout>
 
@@ -322,16 +280,7 @@
             app:tint="@android:color/white"
             app:fabSize="mini" />
 
-        <!-- Bottom Navigation -->
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNavigation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            app:backgroundTint="@color/surface_primary"
-            app:itemIconTint="@color/bottom_nav_item_color"
-            app:itemTextColor="@color/bottom_nav_item_color"
-            app:menu="@menu/bottom_navigation_menu" />
+
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

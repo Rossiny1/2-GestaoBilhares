@@ -69,7 +69,6 @@ class RoutesFragment : Fragment() {
         setupRecyclerView()
         setupClickListeners()
         setupNavigationDrawer()
-        setupBottomNavigation()
         observeViewModel()
     }
 
@@ -206,42 +205,7 @@ class RoutesFragment : Fragment() {
             .show()
     }
 
-    /**
-     * Configura a navegação inferior.
-     */
-    private fun setupBottomNavigation() {
-        binding.bottomNavigation.selectedItemId = R.id.navigation_rotas
-        
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.navigation_rotas -> {
-                    // Já estamos na tela de rotas
-                    true
-                }
-                R.id.navigation_acertos -> {
-                    Toast.makeText(requireContext(), "Acertos será implementado em breve", Toast.LENGTH_SHORT).show()
-                    false
-                }
-                R.id.navigation_cadastros -> {
-                    Toast.makeText(requireContext(), "Cadastros será implementado em breve", Toast.LENGTH_SHORT).show()
-                    false
-                }
-                R.id.navigation_relatorios -> {
-                    try {
-                        android.util.Log.d("RoutesFragment", "Navegando para relatórios")
-                        findNavController().navigate(R.id.reportsFragment)
-                        android.util.Log.d("RoutesFragment", "Navegação para relatórios concluída")
-                        true
-                    } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao navegar para relatórios: ${e.message}", e)
-                        Toast.makeText(requireContext(), "Erro ao abrir relatórios: ${e.message}", Toast.LENGTH_SHORT).show()
-                        false
-                    }
-                }
-                else -> false
-            }
-        }
-    }
+
 
     /**
      * Observa as mudanças no ViewModel e atualiza a UI.

@@ -393,14 +393,7 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Bottom Navigation -->
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNavigation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorSurface"
-            app:elevation="8dp"
-            app:menu="@menu/bottom_navigation_menu" />
+
 
     </LinearLayout>
 
