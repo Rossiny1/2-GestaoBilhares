@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 🎱 FUNDO TEMÁTICO DE SALÃO DE BILHAR -->
+<!-- 🎱 FUNDO TEMÁTICO DE SALÃO DE BILHAR COM MESA -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     
     <!-- Fundo base escuro -->
@@ -11,6 +11,13 @@
                 android:endColor="#2D3748"
                 android:angle="135"
                 android:type="linear" />
+        </shape>
+    </item>
+    
+    <!-- Mesa de bilhar vetorial -->
+    <item android:gravity="center">
+        <shape android:shape="rectangle">
+            <solid android:color="#0A0D4F3C" />
         </shape>
     </item>
     
@@ -29,7 +36,7 @@
     <!-- Overlay escuro para legibilidade -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#CC000000" />
+            <solid android:color="#AA000000" />
         </shape>
     </item>
     
