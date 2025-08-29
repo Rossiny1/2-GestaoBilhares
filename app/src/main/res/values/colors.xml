@@ -17,17 +17,21 @@
     <color name="secondary_slate">#455A64</color>        <!-- Cinza azulado elegante -->
     <color name="secondary_slate_light">#607D8B</color>  <!-- Cinza azulado claro -->
     
-    <!-- Cores Material Design -->
-    <color name="purple_50">#F3E5F5</color>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EA</color>
-    <color name="purple_600">#6200EA</color>
-    <color name="purple_700">#3700B3</color>
+    <!-- 🎱 CORES TEMÁTICAS DE BILHAR -->
+    <color name="billiard_green">#0D4F3C</color>        <!-- Verde feltro tradicional -->
+    <color name="billiard_green_light">#10B981</color>  <!-- Verde bilhar claro -->
+    <color name="billiard_gold">#D4AF37</color>         <!-- Dourado para detalhes -->
+    <color name="billiard_mahogany">#8B4513</color>     <!-- Mogno das bordas -->
     
-    <!-- ✅ COMPATIBILIDADE - Manter referência antiga -->
-    <color name="primary_purple">@color/primary_blue</color>
+    <!-- ✅ COMPATIBILIDADE - Redirecionando roxo para teal -->
+    <color name="primary_purple">@color/accent_teal</color>
     <color name="primary_purple_dark">@color/primary_blue_dark</color>
     <color name="accent_purple">@color/accent_teal</color>
+    <color name="purple_50">@color/billiard_green</color>
+    <color name="purple_200">@color/accent_teal</color>
+    <color name="purple_500">@color/accent_teal</color>
+    <color name="purple_600">@color/accent_teal</color>
+    <color name="purple_700">@color/primary_blue_dark</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     
@@ -124,10 +128,10 @@
     <color name="black_overlay">#66000000</color>
     <color name="white_overlay">#66FFFFFF</color>
     
-    <!-- Cores específicas do app -->
-    <color name="primary_dark">#4A148C</color>
-    <color name="accent_light">#E1BEE7</color>
-    <color name="primary_600">#5300D4</color>
+    <!-- 🎯 CORES ESPECÍFICAS DO APP - TEMA BILHAR -->
+    <color name="primary_dark">@color/primary_blue_dark</color>
+    <color name="accent_light">@color/billiard_green_light</color>
+    <color name="primary_600">@color/primary_blue</color>
     <color name="divider_color">#333333</color>
     
 
