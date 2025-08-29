@@ -348,12 +348,13 @@
                     <TextView
                         android:id="@+id/tvRepresentante"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="48dp"
                         android:text="Usuário Logado"
                         android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp"
-                        android:background="@drawable/rounded_tag_gray"
-                        android:padding="8dp"
+                        android:background="@drawable/rounded_background"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="16dp"
                         android:layout_marginBottom="8dp" />
 
                     <!-- Checkbox Pano trocado -->
@@ -401,7 +402,9 @@
                         android:inputType="textMultiLine"
                         android:minLines="2"
                         android:maxLines="4"
-                        android:background="@drawable/rounded_tag_gray"
+                        android:background="@drawable/rounded_background"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="12dp"
                         android:layout_marginBottom="8dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

@@ -215,33 +215,33 @@
                         <!-- Botão Iniciar -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnStartRoute"
-                            style="@style/Widget.Material3.Button.TonalButton"
+                            style="@style/Widget.Material3.Button.TextButton"
                             android:layout_width="0dp"
                             android:layout_height="48dp"
                             android:layout_weight="1"
                             android:text="Iniciar"
+                            android:textColor="@color/primary_blue"
                             android:textSize="14sp"
                             android:maxLines="2"
                             android:ellipsize="end"
                             android:gravity="center"
-                            android:layout_marginEnd="4dp"
-                            app:backgroundTint="@color/accent_teal" />
+                            android:layout_marginEnd="4dp" />
 
                         <!-- Botão Finalizar -->
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btnFinishRoute"
-                                style="@style/Widget.Material3.Button"
+                                style="@style/Widget.Material3.Button.TextButton"
                                 android:layout_width="0dp"
                             android:layout_height="48dp"
                                 android:layout_weight="1"
                                 android:enabled="false"
                                 android:text="Finalizar"
+                                android:textColor="@color/primary_blue"
                             android:textSize="14sp"
                             android:maxLines="2"
                             android:ellipsize="end"
                                 android:gravity="center"
-                            android:layout_marginStart="4dp"
-                            app:backgroundTint="@color/accent_teal" />
+                            android:layout_marginStart="4dp" />
 
                     </LinearLayout>
 

@@ -43,7 +43,7 @@
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:src="@drawable/ic_menu_billiard"
                         android:contentDescription="Abrir Menu"
-                        app:tint="@color/accent_primary" />
+                        app:tint="@color/primary_blue" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -61,7 +61,7 @@
                         android:layout_marginEnd="16dp"
                         android:src="@drawable/ic_search"
                         android:contentDescription="Pesquisar"
-                        app:tint="@color/accent_primary" />
+                        app:tint="@color/primary_blue" />
 
                     <ImageView
                         android:id="@+id/filterButton"
@@ -70,7 +70,7 @@
                         android:layout_marginEnd="16dp"
                         android:src="@drawable/ic_filter"
                         android:contentDescription="Filtrar"
-                        app:tint="@color/accent_primary" />
+                        app:tint="@color/primary_blue" />
 
                 </LinearLayout>
 
@@ -91,7 +91,7 @@
                         app:cardBackgroundColor="@color/surface_primary"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="6dp"
-                        app:strokeColor="@color/accent_primary"
+                        app:strokeColor="@color/primary_blue"
                         app:strokeWidth="1dp">
 
                         <LinearLayout
@@ -118,7 +118,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
                                 android:text="0"
-                                android:textColor="@color/accent_primary"
+                                android:textColor="@color/primary_blue"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
                                 android:gravity="center" />
@@ -136,7 +136,7 @@
                         app:cardBackgroundColor="@color/surface_primary"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="6dp"
-                        app:strokeColor="@color/accent_primary"
+                        app:strokeColor="@color/primary_blue"
                         app:strokeWidth="1dp">
 
                         <LinearLayout
@@ -163,7 +163,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
                                 android:text="0"
-                                android:textColor="@color/accent_primary"
+                                android:textColor="@color/primary_blue"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
                                 android:gravity="center" />
@@ -181,7 +181,7 @@
                         app:cardBackgroundColor="@color/surface_primary"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="6dp"
-                        app:strokeColor="@color/accent_primary"
+                        app:strokeColor="@color/primary_blue"
                         app:strokeWidth="1dp">
 
                         <LinearLayout

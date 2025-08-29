@@ -10,14 +10,6 @@
     android:orientation="horizontal"
     android:padding="12dp">
 
-    <!-- Radio Button -->
-    <RadioButton
-        android:id="@+id/rbCategory"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
-        android:buttonTint="?attr/colorPrimary" />
-
     <!-- Nome da categoria -->
     <TextView
         android:id="@+id/tvCategoryName"

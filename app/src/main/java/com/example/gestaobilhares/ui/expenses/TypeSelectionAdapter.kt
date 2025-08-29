@@ -43,7 +43,6 @@ class TypeSelectionAdapter(
 
         fun bind(tipo: TipoDespesa) {
             binding.tvCategoryName.text = tipo.nome
-            binding.rbCategory.isChecked = false // Sempre começa desmarcado
         }
     }
 

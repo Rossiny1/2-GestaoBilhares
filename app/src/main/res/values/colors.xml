@@ -3,7 +3,7 @@
     <!-- 🎨 NOVA PALETA PROFISSIONAL - Excelente Contraste e Visibilidade -->
     
     <!-- Cores Primárias Profissionais -->
-    <color name="primary_blue">#1E88E5</color>           <!-- Azul profissional confiável -->
+    <color name="primary_blue">#00BCD4</color>           <!-- Azul teal como no status Finalizada -->
     <color name="primary_blue_dark">#1565C0</color>      <!-- Azul escuro para contraste -->
     <color name="primary_blue_light">#42A5F5</color>     <!-- Azul claro para destaques -->
     

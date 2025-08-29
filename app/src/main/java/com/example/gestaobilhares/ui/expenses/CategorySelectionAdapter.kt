@@ -45,7 +45,6 @@ class CategorySelectionAdapter(
 
         fun bind(categoria: CategoriaDespesa) {
             binding.tvCategoryName.text = categoria.nome
-            binding.rbCategory.isChecked = false // Sempre começa desmarcado
         }
     }
 

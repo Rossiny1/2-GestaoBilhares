@@ -6,15 +6,15 @@
     
     <!-- Menu hamburger estilizado com tema bilhar -->
     <path
-        android:fillColor="@color/accent_teal"
+        android:fillColor="@color/primary_blue"
         android:pathData="M3,6 L21,6 L21,8 L3,8 Z" />
     
     <path
-        android:fillColor="@color/accent_teal"
+        android:fillColor="@color/primary_blue"
         android:pathData="M3,11 L21,11 L21,13 L3,13 Z" />
     
     <path
-        android:fillColor="@color/accent_teal"
+        android:fillColor="@color/primary_blue"
         android:pathData="M3,16 L21,16 L21,18 L3,18 Z" />
     
     <!-- Pequeno acento em forma de bola -->

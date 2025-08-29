@@ -16,6 +16,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -39,7 +41,6 @@ import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.entities.Acerto
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import android.widget.LinearLayout
 import android.widget.Toast
 import com.example.gestaobilhares.data.entities.Mesa
 import android.util.Log
@@ -379,7 +380,7 @@ class SettlementFragment : Fragment() {
         }
         setupPaymentMethod()
         setupCalculationListeners()
-        binding.tvRepresentante.text = "Administrador"
+        preencherNomeRepresentante()
         binding.cbPanoTrocado.setOnCheckedChangeListener { _, isChecked ->
             binding.etNumeroPano.visibility = if (isChecked) View.VISIBLE else View.GONE
         }
@@ -463,6 +464,35 @@ class SettlementFragment : Fragment() {
             Log.d("SettlementFragment", "Post executado - RecyclerView atualizado")
             Log.d("SettlementFragment", "ItemCount após post: ${mesasAcertoAdapter.itemCount}")
             binding.rvMesasAcerto.invalidate()
+        }
+    }
+    
+    private fun preencherNomeRepresentante() {
+        try {
+            // Tentar obter o nome do usuário logado das SharedPreferences
+            val sharedPref = requireActivity().getSharedPreferences("user_session", android.content.Context.MODE_PRIVATE)
+            val nomeUsuario = sharedPref.getString("user_name", null)
+            
+            if (!nomeUsuario.isNullOrEmpty()) {
+                binding.tvRepresentante.text = nomeUsuario
+                Log.d("SettlementFragment", "Nome do representante preenchido: $nomeUsuario")
+            } else {
+                // Fallback: tentar obter do Firebase Auth
+                val firebaseUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                val nomeFirebase = firebaseUser?.displayName
+                
+                if (!nomeFirebase.isNullOrEmpty()) {
+                    binding.tvRepresentante.text = nomeFirebase
+                    Log.d("SettlementFragment", "Nome do representante obtido do Firebase: $nomeFirebase")
+                } else {
+                    // Último fallback: nome padrão
+                    binding.tvRepresentante.text = "Usuário Logado"
+                    Log.d("SettlementFragment", "Usando nome padrão para representante")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SettlementFragment", "Erro ao obter nome do representante: ${e.message}")
+            binding.tvRepresentante.text = "Usuário Logado"
         }
     }
     
@@ -636,45 +666,71 @@ class SettlementFragment : Fragment() {
     }
 
     private fun showPaymentValuesDialog(selected: List<String>) {
-        val layout = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(32, 16, 32, 16)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_payment_values, null)
+        val containerInputs = dialogView.findViewById<LinearLayout>(R.id.containerPaymentInputs)
+        val tvTotalInformado = dialogView.findViewById<TextView>(R.id.tvTotalInformado)
+        val tvDialogSubtitle = dialogView.findViewById<TextView>(R.id.tvDialogSubtitle)
+        
+        // Atualizar subtitle baseado na quantidade de métodos
+        tvDialogSubtitle.text = if (selected.size == 1) {
+            "Informe o valor recebido em ${selected[0]}"
+        } else {
+            "Informe o valor recebido em cada método de pagamento"
         }
         
-        // Adicionar título explicativo
-        val titleText = TextView(requireContext()).apply {
-            text = if (selected.size == 1) {
-                "Informe o valor recebido"
-            } else {
-                "Informe o valor de cada método"
+        val paymentInputs = mutableMapOf<String, com.google.android.material.textfield.TextInputEditText>()
+        val moneyWatchers = mutableMapOf<String, com.example.gestaobilhares.utils.MoneyTextWatcher>()
+        
+        // Criar inputs para cada método de pagamento
+        selected.forEach { metodo ->
+            val itemView = layoutInflater.inflate(R.layout.item_payment_method_input, containerInputs, false)
+            val tvMethodName = itemView.findViewById<TextView>(R.id.tvPaymentMethodName)
+            val ivPaymentIcon = itemView.findViewById<ImageView>(R.id.ivPaymentIcon)
+            val etPaymentValue = itemView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etPaymentValue)
+            
+            // Configurar nome do método
+            tvMethodName.text = metodo
+            
+            // Configurar ícone baseado no método
+            val iconRes = when (metodo.lowercase()) {
+                "pix" -> R.drawable.ic_money // Usar ic_money como fallback
+                "dinheiro" -> R.drawable.ic_money
+                "cartão débito", "cartão crédito" -> R.drawable.ic_money
+                "cheque" -> R.drawable.ic_money
+                else -> R.drawable.ic_money
             }
-            textSize = 16f
-            setTextColor(resources.getColor(com.google.android.material.R.color.material_on_surface_emphasis_high_type, null))
-            setPadding(0, 0, 0, 16)
-        }
-        layout.addView(titleText)
-        
-        val editTexts = selected.associateWith { metodo ->
-            EditText(requireContext()).apply {
-                hint = if (selected.size == 1) {
-                    "Valor recebido"
-                } else {
-                    "Valor para $metodo"
-                }
-                inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-                // Pré-preencher com valor existente se houver
-                val valorExistente = paymentValues[metodo]
-                if (valorExistente != null && valorExistente > 0) {
-                    setText(String.format("%.2f", valorExistente))
-                }
-                layout.addView(this)
+            ivPaymentIcon.setImageResource(iconRes)
+            
+            // Configurar formatação monetária
+            val moneyWatcher = com.example.gestaobilhares.utils.MoneyTextWatcher(etPaymentValue)
+            etPaymentValue.addTextChangedListener(moneyWatcher)
+            
+            // Pré-preencher com valor existente se houver
+            val valorExistente = paymentValues[metodo]
+            if (valorExistente != null && valorExistente > 0) {
+                moneyWatcher.setValue(valorExistente)
             }
+            
+            // Listener para atualizar total em tempo real
+            etPaymentValue.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: Editable?) {
+                    updateTotalDisplay(paymentInputs, moneyWatchers, tvTotalInformado)
+                }
+            })
+            
+            paymentInputs[metodo] = etPaymentValue
+            moneyWatchers[metodo] = moneyWatcher
+            containerInputs.addView(itemView)
         }
         
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Métodos de Pagamento")
-            .setView(layout)
-            .setPositiveButton("OK") { _, _ ->
+        // Atualizar total inicial
+        updateTotalDisplay(paymentInputs, moneyWatchers, tvTotalInformado)
+        
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .setPositiveButton("✅ Confirmar") { _, _ ->
                 Log.d("SettlementFragment", "=== PROCESSANDO MÉTODOS DE PAGAMENTO ===")
                 
                 paymentValues.clear()
@@ -682,10 +738,9 @@ class SettlementFragment : Fragment() {
                 var valoresValidos = true
                 
                 selected.forEach { metodo ->
-                    val valorTexto = editTexts[metodo]?.text.toString().trim()
-                    val valor = valorTexto.toDoubleOrNull() ?: 0.0
+                    val valor = moneyWatchers[metodo]?.getValue() ?: 0.0
                     
-                    Log.d("SettlementFragment", "Método: $metodo - Texto: '$valorTexto' -> Valor: R$ $valor")
+                    Log.d("SettlementFragment", "Método: $metodo -> Valor: R$ $valor")
                     
                     if (valor < 0) {
                         Log.w("SettlementFragment", "⚠️ Valor negativo detectado para $metodo: R$ $valor")
@@ -698,7 +753,6 @@ class SettlementFragment : Fragment() {
                 
                 if (!valoresValidos) {
                     Log.w("SettlementFragment", "⚠️ Alguns valores são inválidos")
-                    // Continuar mesmo assim, mas registrar no log
                 }
                 
                 Log.d("SettlementFragment", "Total informado: R$ $totalInformado")
@@ -728,8 +782,25 @@ class SettlementFragment : Fragment() {
                 
                 Log.d("SettlementFragment", "✅ Métodos de pagamento processados - Total: R$ $totalInformado")
             }
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton("❌ Cancelar", null)
             .show()
+    }
+    
+    /**
+     * Atualiza o display do total em tempo real no diálogo de métodos de pagamento
+     */
+    private fun updateTotalDisplay(
+        paymentInputs: Map<String, com.google.android.material.textfield.TextInputEditText>,
+        moneyWatchers: Map<String, com.example.gestaobilhares.utils.MoneyTextWatcher>,
+        tvTotalInformado: TextView
+    ) {
+        try {
+            val total = moneyWatchers.values.sumOf { it.getValue() }
+            tvTotalInformado.text = com.example.gestaobilhares.utils.MoneyTextWatcher.formatValue(total)
+        } catch (e: Exception) {
+            Log.e("SettlementFragment", "Erro ao atualizar total: ${e.message}")
+            tvTotalInformado.text = "R$ 0,00"
+        }
     }
 
     private fun salvarAcertoComCamposExtras() {
@@ -741,7 +812,8 @@ class SettlementFragment : Fragment() {
         
         // ✅ CORREÇÃO: Validar dados ANTES de desabilitar o botão
         if (!mesasAcertoAdapter.isDataValid()) {
-            Toast.makeText(requireContext(), "Verifique os valores das mesas. O relógio final deve ser maior ou igual ao inicial.", Toast.LENGTH_LONG).show()
+            val errorMessage = mesasAcertoAdapter.getValidationErrorMessage()
+            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show()
             return
         }
         
