@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 👤 CARD CLIENTE PROFISSIONAL -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/AppCard"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:strokeColor="?attr/colorOutline"
-    app:strokeWidth="1dp">
+    android:layout_height="wrap_content">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,13 +13,13 @@
         android:orientation="horizontal"
         android:padding="12dp">
 
-        <!-- Barra de status lateral -->
+        <!-- 🎯 Barra de status lateral temática -->
         <View
             android:id="@+id/statusBar"
             android:layout_width="4dp"
             android:layout_height="match_parent"
             android:layout_marginEnd="12dp"
-            android:background="@color/green_600" />
+            android:background="@drawable/status_indicator_success" />
 
         <!-- Informações do cliente -->
         <LinearLayout
@@ -36,8 +33,7 @@
                 android:id="@+id/tvClientName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="16sp"
+                style="@style/AppText.Body"
                 android:textStyle="bold"
                 android:maxLines="1"
                 android:ellipsize="end"
@@ -49,8 +45,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="13sp"
+                style="@style/AppText.Caption"
                 android:maxLines="1"
                 android:ellipsize="end"
                 tools:text="Rua das Palmeiras, 123 - Centro" />
@@ -101,11 +96,11 @@
 
                     <ImageView
                         android:id="@+id/ivDebtIcon"
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:layout_marginEnd="4dp"
-                        android:src="@drawable/ic_attach_money"
-                        android:tint="@color/red_600" />
+                        android:src="@drawable/ic_billiard_balls"
+                        android:tint="@color/error_red" />
 
                     <TextView
                         android:id="@+id/tvCurrentDebt"

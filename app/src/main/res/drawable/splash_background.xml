@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 🎨 FUNDO SPLASH TEMÁTICO -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Fundo gradiente -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="@color/background_primary"
+                android:endColor="@color/surface_primary"
+                android:angle="135"
+                android:type="linear" />
+        </shape>
+    </item>
+    
+    <!-- Padrão sutil removido para evitar problemas de compilação -->
+    
+</layer-list>
