@@ -6,28 +6,28 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp"
-    android:background="@drawable/rounded_background"
-    android:backgroundTint="?attr/colorSurface">
+    android:background="@drawable/card_billiard_background">
 
     <!-- Título do Diálogo -->
     <TextView
         android:id="@+id/tvDialogTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Progresso do Ciclo"
-        android:textColor="?attr/colorPrimary"
-        android:textSize="20sp"
+        android:text="🎱 Progresso do Ciclo"
+        android:textColor="@color/billiard_green_light"
+        android:textSize="22sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginBottom="20dp" />
+        android:layout_marginBottom="20dp"
+        android:drawableStart="@drawable/ic_billiard_table"
+        android:drawablePadding="8dp" />
 
     <!-- Informações do Ciclo -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/rounded_background"
-        android:backgroundTint="?attr/colorPrimaryContainer"
+        android:background="@drawable/card_billiard_theme"
         android:padding="16dp"
         android:layout_marginBottom="16dp">
 
@@ -36,7 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="4º Acerto - Zona Sul"
-            android:textColor="?attr/colorOnPrimaryContainer"
+            android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:textStyle="bold"
             android:gravity="center"
@@ -47,7 +47,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="15/01/2025 - 31/01/2025"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:gravity="center" />
 
@@ -74,16 +74,15 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/rounded_background"
-                android:backgroundTint="?attr/colorPrimaryContainer"
+                android:background="@drawable/card_billiard_background"
                 android:padding="16dp"
                 android:layout_marginEnd="4dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Faturamento"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:text="💰 Faturamento"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
@@ -92,7 +91,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="R$ 0,00"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="@color/billiard_green_light"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginTop="4dp" />
@@ -106,16 +105,15 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/rounded_background"
-                android:backgroundTint="?attr/colorErrorContainer"
+                android:background="@drawable/card_billiard_background"
                 android:padding="16dp"
                 android:layout_marginStart="4dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Despesas"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:text="💸 Despesas"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
@@ -124,7 +122,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="R$ 0,00"
-                    android:textColor="?attr/colorError"
+                    android:textColor="@color/error_red"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginTop="4dp" />
@@ -146,8 +144,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/rounded_background"
-                android:backgroundTint="?attr/colorTertiaryContainer"
+                android:background="@drawable/card_billiard_background"
                 android:padding="16dp"
                 android:layout_marginEnd="4dp"
                 android:minHeight="120dp">
@@ -155,8 +152,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Clientes Acertados"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:text="🎯 Clientes Acertados"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:gravity="center" />
@@ -166,7 +163,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0%"
-                    android:textColor="?attr/colorTertiary"
+                    android:textColor="@color/accent_teal"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginTop="4dp"
@@ -191,8 +188,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/rounded_background"
-                android:backgroundTint="?attr/colorSecondaryContainer"
+                android:background="@drawable/card_billiard_background"
                 android:padding="16dp"
                 android:layout_marginStart="4dp"
                 android:minHeight="120dp">
@@ -200,7 +196,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Pendências"
+                    android:text="⚠️ Pendências"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="14sp"
                     android:textStyle="bold"
@@ -228,15 +224,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/rounded_background"
-        android:backgroundTint="?attr/colorSurfaceVariant"
+        android:background="@drawable/card_billiard_background"
         android:padding="16dp"
         android:layout_marginBottom="20dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Débito Total"
+            android:text="💳 Débito Total"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="14sp"
             android:textStyle="bold"
@@ -247,7 +242,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="R$ 0,00"
-            android:textColor="?attr/colorError"
+            android:textColor="@color/error_red"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginTop="4dp"
@@ -263,6 +258,6 @@
         android:text="Fechar"
         android:textSize="16sp"
         app:cornerRadius="12dp"
-        style="@style/Widget.Material3.Button" />
+        style="@style/AppButton" />
 
 </LinearLayout>
