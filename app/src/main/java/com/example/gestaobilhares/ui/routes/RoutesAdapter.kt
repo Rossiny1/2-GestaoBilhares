@@ -68,9 +68,6 @@ class RoutesAdapter(
                 // Quantidade de mesas da rota
                 rotaMesas.text = "${rotaResumo.quantidadeMesas} mesas"
 
-                // Quantidade de clientes
-                rotaClientes.text = "${rotaResumo.clientesAtivos} clientes"
-
                 // Pendências
                 rotaPendencias.text = "${rotaResumo.pendencias} pendências"
 
