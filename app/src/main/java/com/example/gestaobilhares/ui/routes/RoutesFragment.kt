@@ -1,12 +1,10 @@
 package com.example.gestaobilhares.ui.routes
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -170,15 +168,9 @@ class RoutesFragment : Fragment() {
             binding.drawerLayout.openDrawer(binding.navigationView)
         }
 
-        // Botão de adicionar rota (FAB) - com controle de acesso
-        binding.addRouteFab.setOnClickListener {
-            viewModel.showAddRouteDialog()
-        }
 
-        // Botão de relatório de fechamento
-        binding.reportFab.setOnClickListener {
-            showReportConfirmationDialog()
-        }
+
+
 
         // Botão de pesquisa
         binding.searchButton.setOnClickListener {
@@ -191,19 +183,7 @@ class RoutesFragment : Fragment() {
         }
     }
 
-    /**
-     * Mostra diálogo de confirmação para geração de relatório.
-     */
-    private fun showReportConfirmationDialog() {
-        AlertDialog.Builder(requireContext(), R.style.DarkDialogTheme)
-            .setTitle("Gerar Relatório de Fechamento")
-            .setMessage("Deseja gerar o relatório de fechamento das rotas? Esta ação pode demorar alguns minutos.")
-            .setPositiveButton("Gerar") { _, _ ->
-                viewModel.generateRouteClosureReport()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
+
 
 
 
@@ -223,24 +203,9 @@ class RoutesFragment : Fragment() {
             binding.totalPendenciasCount.text = stats.totalPendencias.toString()
         }
 
-        // Observa controle de acesso admin
-        viewModel.isAdmin.observe(viewLifecycleOwner) { isAdmin ->
-            binding.addRouteFab.visibility = if (isAdmin) View.VISIBLE else View.GONE
-        }
 
-        // Observa estado de loading
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.reportFab.isEnabled = !isLoading
-            binding.addRouteFab.isEnabled = !isLoading
-        }
 
-        // Observa eventos de geração de relatório
-        viewModel.generateReport.observe(viewLifecycleOwner) { shouldGenerate ->
-            if (shouldGenerate) {
-                Toast.makeText(requireContext(), "Relatório salvo em Documentos/GestaoBilhares", Toast.LENGTH_LONG).show()
-                viewModel.reportGenerationCompleted()
-            }
-        }
+
 
         // Observa mensagens de erro
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
@@ -269,44 +234,10 @@ class RoutesFragment : Fragment() {
             }
         }
 
-        // Observa quando mostrar diálogo de nova rota
-        viewModel.showAddRouteDialog.observe(viewLifecycleOwner) { show ->
-            if (show) {
-                showAddRouteDialog()
-            }
-        }
+
     }
 
-    /**
-     * Mostra diálogo para adicionar nova rota.
-     */
-    private fun showAddRouteDialog() {
-        val editText = EditText(requireContext()).apply {
-            hint = "Nome da rota"
-            setPadding(50, 30, 50, 30)
-        }
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Nova Rota")
-            .setMessage("Digite o nome da nova rota:")
-            .setView(editText)
-            .setPositiveButton("Criar") { _, _ ->
-                val nome = editText.text.toString().trim()
-                if (nome.isNotEmpty()) {
-                    viewModel.addNewRoute(nome)
-                } else {
-                    Toast.makeText(requireContext(), "Nome não pode estar vazio", Toast.LENGTH_SHORT).show()
-                }
-                viewModel.hideAddRouteDialog()
-            }
-            .setNegativeButton("Cancelar") { _, _ ->
-                viewModel.hideAddRouteDialog()
-            }
-            .setOnCancelListener {
-                viewModel.hideAddRouteDialog()
-            }
-            .show()
-    }
 
     /**
      * Limpa o binding quando o fragment é destruído.

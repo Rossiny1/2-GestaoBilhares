@@ -39,17 +39,9 @@ class RoutesViewModel(
     private val _navigateToClients = MutableLiveData<Long?>()
     val navigateToClients: LiveData<Long?> = _navigateToClients
 
-    // LiveData privado para mostrar diálogo de nova rota
-    private val _showAddRouteDialog = MutableLiveData<Boolean>()
-    val showAddRouteDialog: LiveData<Boolean> = _showAddRouteDialog
 
-    // FASE 3: Controle de acesso administrativo
-    private val _isAdmin = MutableLiveData<Boolean>()
-    val isAdmin: LiveData<Boolean> = _isAdmin
 
-    // FASE 3: Eventos para geração de relatório
-    private val _generateReport = MutableLiveData<Boolean>()
-    val generateReport: LiveData<Boolean> = _generateReport
+
 
     // Observa as rotas resumo do repository
     val rotasResumo: LiveData<List<RotaResumo>> = rotaRepository.getRotasResumoComAtualizacaoTempoReal().asLiveData()
@@ -64,32 +56,6 @@ class RoutesViewModel(
     init {
         // Insere rotas de exemplo se necessário
         inserirRotasExemploSeNecessario()
-        
-        // FASE 3: Verifica se o usuário é admin
-        checkAdminAccess()
-    }
-
-    /**
-     * FASE 3: Verifica se o usuário atual tem acesso administrativo.
-     * Por enquanto simula verificação. Na implementação final,
-     * deve verificar no banco de dados pelo Firebase UID.
-     */
-    private fun checkAdminAccess() {
-        viewModelScope.launch {
-            try {
-                // TODO: Implementar verificação real com Firebase UID
-                // Por enquanto, assume que tem acesso admin para demonstração
-                // Em produção, fazer:
-                // val currentUser = FirebaseAuth.getInstance().currentUser
-                // val colaborador = colaboradorRepository.getByFirebaseUid(currentUser?.uid)
-                // _isAdmin.value = colaborador?.nivelAcesso == NivelAcesso.ADMIN
-                
-                _isAdmin.value = true // Temporário para demonstração
-            } catch (e: Exception) {
-                _isAdmin.value = false
-                _errorMessage.value = "Erro ao verificar permissões: ${e.message}"
-            }
-        }
     }
 
     /**
@@ -132,113 +98,11 @@ class RoutesViewModel(
         _navigateToClients.value = null
     }
 
-    /**
-     * Mostra o diálogo para adicionar nova rota.
-     * FASE 3: Verifica se o usuário é admin antes de permitir.
-     */
-    fun showAddRouteDialog() {
-        if (_isAdmin.value == true) {
-            _showAddRouteDialog.value = true
-        } else {
-            _errorMessage.value = "Apenas administradores podem adicionar rotas"
-        }
-    }
 
-    /**
-     * Esconde o diálogo de adicionar rota.
-     */
-    fun hideAddRouteDialog() {
-        _showAddRouteDialog.value = false
-    }
 
-    /**
-     * FASE 3: Inicia a geração de relatório de fechamento de rota.
-     */
-    fun generateRouteClosureReport() {
-        viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                _errorMessage.value = null
-                
-                // ✅ CORREÇÃO: Implementar relatório visual em vez de PDF
-                // Buscar dados das rotas para o relatório
-                val rotas = rotaRepository.getRotasResumo().first()
-                
-                if (rotas.isEmpty()) {
-                    _errorMessage.value = "Nenhuma rota encontrada para gerar relatório"
-                    return@launch
-                }
-                
-                // Simular processamento do relatório visual
-                kotlinx.coroutines.delay(1000) // Processamento mais rápido
-                
-                // Calcular estatísticas do relatório
-                val totalClientes = rotas.sumOf { it.clientesAtivos }
-                val totalPendencias = rotas.sumOf { it.pendencias }
-                val valorTotal = rotas.sumOf { it.valorAcertado }
-                
-                // Gerar relatório visual (não PDF)
-                val relatorioInfo = """
-                    RELATÓRIO DE FECHAMENTO
-                    
-                    Total de Rotas: ${rotas.size}
-                    Clientes Ativos: $totalClientes
-                    Pendências: $totalPendencias
-                    Valor Total: R$ ${String.format("%.2f", valorTotal)}
-                    
-                    Gerado em: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale("pt", "BR")).format(java.util.Date())}
-                """.trimIndent()
-                
-                _successMessage.value = "Relatório visual gerado com sucesso!"
-                _generateReport.value = true
-                
-            } catch (e: Exception) {
-                _errorMessage.value = "Erro ao gerar relatório: ${e.message}"
-                e.printStackTrace() // Log para debug
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
 
-    /**
-     * FASE 3: Limpa o estado de geração de relatório.
-     */
-    fun reportGenerationCompleted() {
-        _generateReport.value = false
-    }
 
-    /**
-     * Adiciona uma nova rota.
-     */
-    fun addNewRoute(nome: String, descricao: String = "", cor: String = "#6200EA") {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
 
-            try {
-                val novaRota = Rota(
-                    nome = nome.trim(),
-                    descricao = descricao.trim(),
-                    cor = cor,
-                    ativa = true
-                )
-
-                val rotaId = rotaRepository.insertRota(novaRota)
-                
-                if (rotaId != null) {
-                    _successMessage.value = "Rota '$nome' criada com sucesso!"
-                    hideAddRouteDialog()
-                } else {
-                    _errorMessage.value = "Já existe uma rota com esse nome!"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Erro ao criar rota: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
 
     /**
      * Limpa mensagens de erro e sucesso.

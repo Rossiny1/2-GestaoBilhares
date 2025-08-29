@@ -253,35 +253,6 @@
 
         </androidx.core.widget.NestedScrollView>
 
-        <!-- Botão flutuante para adicionar nova rota -->
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/addRouteFab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
-            android:layout_marginBottom="160dp"
-            android:src="@drawable/ic_add"
-            android:contentDescription="Adicionar Rota"
-            app:backgroundTint="@color/accent_primary"
-            app:tint="@android:color/white" />
-
-        <!-- Botão de relatório de fechamento -->
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/reportFab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
-            android:layout_marginBottom="96dp"
-            android:src="@drawable/ic_report"
-            android:contentDescription="Gerar Relatório de Fechamento"
-            app:backgroundTint="@color/success_green"
-            app:tint="@android:color/white"
-            app:fabSize="mini" />
-
-
-
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <!-- Navigation Drawer -->
