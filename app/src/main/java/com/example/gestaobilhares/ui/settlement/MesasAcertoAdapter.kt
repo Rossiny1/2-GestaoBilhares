@@ -203,6 +203,12 @@ class MesasAcertoAdapter(
                 binding.etRelogioInicial.setText(novoInicial)
                 binding.etRelogioInicial.setSelection(novoInicial.length)
             }
+            
+            // ✅ NOVO: Bloquear edição do campo relógio inicial
+            binding.etRelogioInicial.isFocusable = false
+            binding.etRelogioInicial.isClickable = false
+            binding.etRelogioInicial.isLongClickable = false
+            binding.etRelogioInicial.keyListener = null
             val atualFinal = binding.etRelogioFinal.text.toString()
             val novoFinal = if (state.relogioFinal > 0) state.relogioFinal.toString() else ""
             if (atualFinal != novoFinal) {
@@ -222,7 +228,8 @@ class MesasAcertoAdapter(
                     val valor = s.toString().toIntOrNull() ?: 0
                     if (state.relogioInicial != valor) {
                         state.relogioInicial = valor
-                        updateSubtotal(state)
+                        // Recalcular subtotal
+                        state.subtotal = calcularSubtotalMesa(state, mesa)
                         onDataChanged()
                         safeNotifyItemChanged(adapterPosition)
                     }
@@ -235,7 +242,8 @@ class MesasAcertoAdapter(
                     val valor = s.toString().toIntOrNull() ?: 0
                     if (state.relogioFinal != valor) {
                         state.relogioFinal = valor
-                        updateSubtotal(state)
+                        // Recalcular subtotal
+                        state.subtotal = calcularSubtotalMesa(state, mesa)
                         onDataChanged()
                         safeNotifyItemChanged(adapterPosition)
                     }
@@ -244,12 +252,21 @@ class MesasAcertoAdapter(
             binding.etRelogioInicial.addTextChangedListener(relogioInicialWatcher)
             binding.etRelogioFinal.addTextChangedListener(relogioFinalWatcher)
 
-            // ✅ CORREÇÃO: Listeners dos checkboxes com verificações de segurança
+            // ✅ CORREÇÃO: Listeners dos checkboxes com seleção exclusiva e validação de foto
             binding.cbRelogioDefeito.setOnCheckedChangeListener { _, isChecked ->
                 Log.d("MesasAcertoAdapter", "=== CHECKBOX RELÓGIO COM DEFEITO ===")
                 Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Relógio com defeito = $isChecked")
                 
                 if (state.comDefeito != isChecked) {
+                    // ✅ NOVO: Seleção exclusiva - desmarcar o outro checkbox se este for marcado
+                    if (isChecked && state.relogioReiniciou) {
+                        binding.cbRelogioReiniciou.setOnCheckedChangeListener(null)
+                        binding.cbRelogioReiniciou.isChecked = false
+                        state.relogioReiniciou = false
+                        // Reconfigurar listener
+                        setupRelogioReiniciouListener(binding, mesa, state, adapterPosition)
+                    }
+                    
                     state.comDefeito = isChecked
                     
                     if (isChecked) {
@@ -263,23 +280,14 @@ class MesasAcertoAdapter(
                         Log.d("MesasAcertoAdapter", "Média limpa para mesa ${mesa.numero}")
                     }
                     
-                    updateSubtotal(state)
+                    // Recalcular subtotal
+                    state.subtotal = calcularSubtotalMesa(state, mesa)
                     onDataChanged()
                     safeNotifyItemChanged(adapterPosition)
                 }
             }
             
-            binding.cbRelogioReiniciou.setOnCheckedChangeListener { _, isChecked ->
-                Log.d("MesasAcertoAdapter", "=== CHECKBOX RELÓGIO REINICIOU ===")
-                Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Relógio reiniciou = $isChecked")
-                
-                if (state.relogioReiniciou != isChecked) {
-                    state.relogioReiniciou = isChecked
-                    updateSubtotal(state)
-                    onDataChanged()
-                    safeNotifyItemChanged(adapterPosition)
-                }
-            }
+            setupRelogioReiniciouListener(binding, mesa, state, adapterPosition)
 
             // Layouts e textos
             // ✅ NOVO: Usar o tipo da mesa como título principal
@@ -446,17 +454,128 @@ class MesasAcertoAdapter(
         return subtotal
     }
 
+    // ✅ NOVO: Função para calcular subtotal de uma mesa
+    private fun calcularSubtotalMesa(state: MesaAcertoState, mesa: MesaDTO): Double {
+        return if (mesa.valorFixo > 0) {
+            // Mesa de valor fixo
+            mesa.valorFixo
+        } else {
+            // Mesa de fichas jogadas
+            if (state.comDefeito && state.mediaFichasJogadas > 0) {
+                state.mediaFichasJogadas * mesa.comissaoFicha
+            } else {
+                val fichasJogadas = maxOf(0, state.relogioFinal - state.relogioInicial)
+                state.fichasJogadas = fichasJogadas
+                fichasJogadas * mesa.comissaoFicha
+            }
+        }
+    }
+    
+    // ✅ NOVO: Função auxiliar para configurar listener do checkbox "Relógio Reiniciou"
+    private fun setupRelogioReiniciouListener(
+        binding: ItemMesaAcertoBinding,
+        mesa: MesaDTO,
+        state: MesaAcertoState,
+        adapterPosition: Int
+    ) {
+        binding.cbRelogioReiniciou.setOnCheckedChangeListener { _, isChecked ->
+            Log.d("MesasAcertoAdapter", "=== CHECKBOX RELÓGIO REINICIOU ===")
+            Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Relógio reiniciou = $isChecked")
+            
+            if (state.relogioReiniciou != isChecked) {
+                // ✅ NOVO: Seleção exclusiva - desmarcar o outro checkbox se este for marcado
+                if (isChecked && state.comDefeito) {
+                    binding.cbRelogioDefeito.setOnCheckedChangeListener(null)
+                    binding.cbRelogioDefeito.isChecked = false
+                    state.comDefeito = false
+                    state.mediaFichasJogadas = 0.0
+                    // Reconfigurar listener do defeito
+                    binding.cbRelogioDefeito.setOnCheckedChangeListener { _, isChecked2 ->
+                        if (state.comDefeito != isChecked2) {
+                            if (isChecked2 && state.relogioReiniciou) {
+                                binding.cbRelogioReiniciou.setOnCheckedChangeListener(null)
+                                binding.cbRelogioReiniciou.isChecked = false
+                                state.relogioReiniciou = false
+                                setupRelogioReiniciouListener(binding, mesa, state, adapterPosition)
+                            }
+                            
+                            state.comDefeito = isChecked2
+                            
+                            if (isChecked2) {
+                                val media = onCalcularMedia(mesa.id)
+                                state.mediaFichasJogadas = media
+                            } else {
+                                state.mediaFichasJogadas = 0.0
+                            }
+                            
+                            // Recalcular subtotal
+                            state.subtotal = calcularSubtotalMesa(state, mesa)
+                            onDataChanged()
+                            safeNotifyItemChanged(adapterPosition)
+                        }
+                    }
+                }
+                
+                state.relogioReiniciou = isChecked
+                // Recalcular subtotal
+                state.subtotal = calcularSubtotalMesa(state, mesa)
+                onDataChanged()
+                safeNotifyItemChanged(adapterPosition)
+            }
+        }
+    }
+
     fun isDataValid(): Boolean {
         return mesaStates.values.all { state ->
             val mesa = currentList.find { it.id == state.mesaId }
-            if (mesa?.valorFixo ?: 0.0 > 0) {
+            
+            // Validação básica existente
+            val validacaoBasica = if (mesa?.valorFixo ?: 0.0 > 0) {
                 true
             } else if (state.comDefeito && state.mediaFichasJogadas > 0) {
                 true
             } else {
                 validarRelogioFinal(state.relogioInicial, state.relogioFinal, state.comDefeito, state.relogioReiniciou)
             }
+            
+            // ✅ NOVO: Validação de foto obrigatória quando checkbox marcado
+            val fotoObrigatoria = if (state.comDefeito || state.relogioReiniciou) {
+                // Se algum checkbox está marcado, foto é obrigatória
+                !state.fotoRelogioFinal.isNullOrEmpty()
+            } else {
+                // Se nenhum checkbox está marcado, foto não é obrigatória
+                true
+            }
+            
+            validacaoBasica && fotoObrigatoria
         }
+    }
+    
+    // ✅ NOVO: Função para obter mensagem de erro específica
+    fun getValidationErrorMessage(): String {
+        mesaStates.values.forEach { state ->
+            val mesa = currentList.find { it.id == state.mesaId }
+            
+            // Verificar validação básica
+            val validacaoBasica = if (mesa?.valorFixo ?: 0.0 > 0) {
+                true
+            } else if (state.comDefeito && state.mediaFichasJogadas > 0) {
+                true
+            } else {
+                validarRelogioFinal(state.relogioInicial, state.relogioFinal, state.comDefeito, state.relogioReiniciou)
+            }
+            
+            if (!validacaoBasica) {
+                return "Mesa ${mesa?.numero ?: state.mesaId}: Relógio final deve ser maior ou igual ao inicial"
+            }
+            
+            // Verificar foto obrigatória
+            if ((state.comDefeito || state.relogioReiniciou) && state.fotoRelogioFinal.isNullOrEmpty()) {
+                val problema = if (state.comDefeito) "relógio com defeito" else "relógio reiniciou"
+                return "Mesa ${mesa?.numero ?: state.mesaId}: É obrigatório tirar foto quando '$problema' está selecionado"
+            }
+        }
+        return "Dados válidos"
     }
 
     fun getMesasAcerto(): List<MesaAcertoState> {

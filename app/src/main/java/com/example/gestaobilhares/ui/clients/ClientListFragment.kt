@@ -321,21 +321,49 @@ class ClientListFragment : Fragment() {
                     binding.tvRouteStatus.text = "Em Andamento"
                     binding.btnStartRoute.isEnabled = false
                     binding.btnFinishRoute.isEnabled = true
+                    atualizarEstadoBotoesRota(binding.btnFinishRoute, binding.btnStartRoute)
                 }
                 StatusRota.FINALIZADA -> {
                     binding.tvRouteStatus.text = "Finalizada"
                     binding.btnStartRoute.isEnabled = true
                     binding.btnFinishRoute.isEnabled = false
+                    atualizarEstadoBotoesRota(binding.btnStartRoute, binding.btnFinishRoute)
                 }
                 StatusRota.PAUSADA -> {
                     binding.tvRouteStatus.text = "Não Iniciada"
                     binding.btnStartRoute.isEnabled = true
                     binding.btnFinishRoute.isEnabled = false
+                    atualizarEstadoBotoesRota(binding.btnStartRoute, binding.btnFinishRoute)
                 }
                 else -> {
                     binding.tvRouteStatus.text = "Não Iniciada"
                     binding.btnStartRoute.isEnabled = true
                     binding.btnFinishRoute.isEnabled = false
+                    atualizarEstadoBotoesRota(binding.btnStartRoute, binding.btnFinishRoute)
+                }
+            }
+        }
+    }
+    
+    private fun atualizarEstadoBotoesRota(botaoAtivo: com.google.android.material.button.MaterialButton?, botaoInativo: com.google.android.material.button.MaterialButton?) {
+        _binding?.let { binding ->
+            val context = requireContext()
+            val corSelecionada = context.getColor(R.color.primary_blue)
+            val corNormal = context.getColor(android.R.color.transparent)
+            val textColorSelected = context.getColor(R.color.white)
+            val textColorNormal = context.getColor(R.color.primary_blue)
+            
+            // Resetar ambos os botões para estado normal
+            listOf(binding.btnStartRoute, binding.btnFinishRoute).forEach { btn ->
+                btn.setBackgroundColor(corNormal)
+                btn.setTextColor(textColorNormal)
+            }
+            
+            // Destacar o botão ativo (habilitado)
+            botaoAtivo?.let { btn ->
+                if (btn.isEnabled) {
+                    btn.setBackgroundColor(corSelecionada)
+                    btn.setTextColor(textColorSelected)
                 }
             }
         }

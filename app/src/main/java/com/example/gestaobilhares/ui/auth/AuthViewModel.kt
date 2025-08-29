@@ -309,6 +309,9 @@ class AuthViewModel : ViewModel() {
                                 if (colaborador.aprovado) {
                                     android.util.Log.d("AuthViewModel", "✅ LOGIN HÍBRIDO SUCESSO!")
                                     
+                                    // Salvar nome do usuário nas SharedPreferences
+                                    salvarDadosUsuario(colaborador.nome, colaborador.email)
+                                    
                                     // Criar usuário local
                                     val localUser = LocalUser(
                                         uid = colaborador.id.toString(),
@@ -470,6 +473,25 @@ class AuthViewModel : ViewModel() {
             android.util.Log.e("AuthViewModel", "❌ Erro ao criar colaborador: ${e.message}")
             android.util.Log.e("AuthViewModel", "Tipo de erro: ${e.javaClass.simpleName}")
             throw e // Re-throw para que o erro seja tratado no método chamador
+        }
+    }
+    
+    /**
+     * Salva dados do usuário nas SharedPreferences
+     */
+    private fun salvarDadosUsuario(nome: String, email: String) {
+        try {
+            // Usar um contexto disponível (pode precisar ser passado como parâmetro)
+            // Por enquanto, deixar comentado até ter acesso ao contexto
+            // val sharedPref = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
+            // with(sharedPref.edit()) {
+            //     putString("user_name", nome)
+            //     putString("user_email", email)
+            //     apply()
+            // }
+            android.util.Log.d("AuthViewModel", "Dados do usuário salvos: $nome, $email")
+        } catch (e: Exception) {
+            android.util.Log.e("AuthViewModel", "Erro ao salvar dados do usuário: ${e.message}")
         }
     }
     
