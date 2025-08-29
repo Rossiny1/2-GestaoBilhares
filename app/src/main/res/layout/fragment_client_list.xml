@@ -166,7 +166,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="3º Acerto"
-                        android:textColor="?attr/colorPrimary"
+                        android:textColor="@color/accent_teal"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:gravity="center" />
@@ -224,7 +224,8 @@
                             android:maxLines="2"
                             android:ellipsize="end"
                             android:gravity="center"
-                            android:layout_marginEnd="4dp" />
+                            android:layout_marginEnd="4dp"
+                            app:backgroundTint="@color/accent_teal" />
 
                         <!-- Botão Finalizar -->
                             <com.google.android.material.button.MaterialButton
@@ -239,7 +240,8 @@
                             android:maxLines="2"
                             android:ellipsize="end"
                                 android:gravity="center"
-                            android:layout_marginStart="4dp" />
+                            android:layout_marginStart="4dp"
+                            app:backgroundTint="@color/accent_teal" />
 
                     </LinearLayout>
 
