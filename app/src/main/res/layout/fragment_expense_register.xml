@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light">
+    android:background="@color/background_dark">
 
     <!-- Header com botão voltar -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/primary_blue"
+        android:background="@drawable/background_billiard_hall"
         app:elevation="0dp">
 
         <androidx.appcompat.widget.Toolbar
@@ -38,16 +38,16 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:layout_marginStart="8dp"
-                    android:src="@drawable/ic_money"
-                    app:tint="@android:color/white" />
+                    android:src="@drawable/ic_billiard_cue"
+                    app:tint="@color/billiard_gold" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="12dp"
-                    android:text="Nova Despesa"
-                    android:textColor="@android:color/white"
+                    android:text="💸 Nova Despesa"
+                    android:textColor="@color/text_on_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -76,22 +76,23 @@
                 android:layout_marginBottom="16dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp"
-                app:strokeColor="?attr/colorOutline"
-                app:strokeWidth="1dp">
+                app:cardBackgroundColor="@color/card_background_dark"
+                style="@style/AppCard">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="20dp"
+                    android:background="@drawable/card_billiard_background">
 
                     <!-- Data da Despesa -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Data da Despesa"
-                        android:textColor="?attr/colorOnSurface"
+                        android:text="📅 Data da Despesa"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -119,8 +120,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Categoria da Despesa"
-                        android:textColor="?attr/colorOnSurface"
+                        android:text="📂 Categoria da Despesa"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -148,8 +149,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Tipo da Despesa"
-                        android:textColor="?attr/colorOnSurface"
+                        android:text="🏷️ Tipo da Despesa"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -177,8 +178,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Descrição"
-                        android:textColor="?attr/colorOnSurface"
+                        android:text="📝 Descrição"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -204,8 +205,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Quantidade"
-                        android:textColor="?attr/colorOnSurface"
+                        android:text="🔢 Quantidade"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -231,8 +232,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Valor da Despesa"
-                        android:textColor="?attr/colorOnSurface"
+                        android:text="💰 Valor da Despesa"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -258,8 +259,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="Foto do Comprovante"
-                        android:textColor="?attr/colorOnSurface"
+                        android:text="📸 Foto do Comprovante"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -277,7 +278,7 @@
                             android:layout_height="48dp"
                             android:layout_marginEnd="12dp"
                             android:icon="@drawable/ic_camera"
-                            app:iconTint="?attr/colorPrimary" />
+                            app:iconTint="@color/accent_teal" />
 
                         <TextView
                             android:layout_width="0dp"
@@ -365,21 +366,22 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCancelar"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/AppButton.Secondary"
                     android:layout_width="0dp"
                     android:layout_height="56dp"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:text="Cancelar"
+                    android:text="❌ Cancelar"
                     android:textSize="16sp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSalvar"
+                    style="@style/AppButton"
                     android:layout_width="0dp"
                     android:layout_height="56dp"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:text="Salvar"
+                    android:text="💾 Salvar"
                     android:textSize="16sp" />
 
             </LinearLayout>

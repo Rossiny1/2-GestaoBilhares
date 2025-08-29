@@ -378,11 +378,7 @@ class ExpenseRegisterFragment : Fragment() {
             }
         })
 
-        // Configurar botão "Novo"
-        dialogView.findViewById<View>(R.id.btnNewCategory).setOnClickListener {
-            dialog.dismiss()
-            showCreateCategoryDialog()
-        }
+        // Botão "Novo" removido - funcionalidade movida para menu principal
 
         // Configurar botões de ação
         dialogView.findViewById<View>(R.id.btnClear).setOnClickListener {
@@ -451,11 +447,7 @@ class ExpenseRegisterFragment : Fragment() {
             }
         })
 
-        // Configurar botão "Novo"
-        dialogView.findViewById<View>(R.id.btnNewCategory).setOnClickListener {
-            dialog.dismiss()
-            showCreateTypeDialog(selectedCategory.id)
-        }
+        // Botão "Novo" removido - funcionalidade movida para menu principal
 
         // Configurar botões de ação
         dialogView.findViewById<View>(R.id.btnClear).setOnClickListener {
@@ -471,52 +463,9 @@ class ExpenseRegisterFragment : Fragment() {
         dialog.show()
     }
 
-    private fun showCreateCategoryDialog() {
-        val dialogView = LayoutInflater.from(requireContext())
-            .inflate(android.R.layout.simple_list_item_1, null)
-        
-        val editText = com.google.android.material.textfield.TextInputEditText(requireContext()).apply {
-            hint = "Nome da categoria"
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
+    // Função removida - criação de categoria movida para menu principal
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Nova Categoria")
-            .setView(editText)
-            .setPositiveButton("Criar") { _, _ ->
-                val nome = editText.text.toString().trim()
-                if (nome.isNotEmpty()) {
-                    viewModel.createCategory(nome)
-                }
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
-
-    private fun showCreateTypeDialog(categoriaId: Long) {
-        val editText = com.google.android.material.textfield.TextInputEditText(requireContext()).apply {
-            hint = "Nome do tipo"
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Novo Tipo")
-            .setView(editText)
-            .setPositiveButton("Criar") { _, _ ->
-                val nome = editText.text.toString().trim()
-                if (nome.isNotEmpty()) {
-                    viewModel.createType(categoriaId, nome)
-                }
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
+    // Função removida - criação de tipo movida para menu principal
 
     private fun updateDateDisplay() {
         val currentDate = viewModel.selectedDate.value
