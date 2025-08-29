@@ -6,14 +6,16 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="8dp"
     android:layout_marginVertical="4dp"
-    app:cardBackgroundColor="@color/surface_primary"
+    app:cardBackgroundColor="@color/card_background_dark"
+    style="@style/AppCard"
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:background="@drawable/card_billiard_background">
 
         <!-- Ícone da categoria -->
         <ImageView
