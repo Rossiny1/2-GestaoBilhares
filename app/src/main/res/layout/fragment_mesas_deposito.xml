@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
+    android:background="@color/background_dark"
     android:fillViewport="true">
 
     <LinearLayout
@@ -17,7 +17,7 @@
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
+            android:background="@drawable/background_billiard_hall"
             app:elevation="0dp">
 
             <LinearLayout
@@ -41,8 +41,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:paddingStart="12dp"
-                    android:text="Depósito Mesas"
-                    android:textColor="?attr/colorOnPrimary"
+                    android:text="🎱 Depósito Mesas"
+                    android:textColor="@color/text_on_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:maxLines="1"

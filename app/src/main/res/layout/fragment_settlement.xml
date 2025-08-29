@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface">
+    android:background="@color/background_dark">
 
     <!-- Header -->
     <LinearLayout
         android:id="@+id/headerLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
+        android:background="@drawable/background_billiard_hall"
         android:elevation="4dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -35,8 +35,8 @@
             android:layout_weight="1"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
-            android:text="Acerto"
-            android:textColor="?attr/colorOnPrimary"
+            android:text="🎯 Acerto"
+            android:textColor="@color/text_on_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
