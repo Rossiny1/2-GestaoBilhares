@@ -6,14 +6,15 @@
     android:layout_margin="6dp"
     app:cardCornerRadius="10dp"
     app:cardElevation="2dp"
-    app:cardBackgroundColor="@color/card_background_dark"
-    style="@style/AppCard">
+    app:strokeColor="@color/purple_600"
+    app:strokeWidth="1dp"
+    android:background="@android:color/holo_blue_light">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="6dp"
-        android:background="@drawable/card_billiard_background">
+        android:background="@android:color/white">
 
         <!-- Ícone da lixeira no canto superior direito -->
         <ImageButton
