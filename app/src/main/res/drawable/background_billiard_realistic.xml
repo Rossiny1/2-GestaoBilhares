@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Fundo completamente escuro -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#000000" />
+        </shape>
+    </item>
+    
+    <!-- Primeira luminária pendente (centro) -->
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="600dp"
+                android:centerX="0.5"
+                android:centerY="0.2"
+                android:startColor="#40FFFFFF"
+                android:centerColor="#20FFFFFF"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+    
+    <!-- Segunda luminária pendente (esquerda) -->
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="500dp"
+                android:centerX="0.25"
+                android:centerY="0.18"
+                android:startColor="#40FFFFFF"
+                android:centerColor="#20FFFFFF"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+    
+    <!-- Terceira luminária pendente (direita) -->
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="500dp"
+                android:centerX="0.75"
+                android:centerY="0.18"
+                android:startColor="#40FFFFFF"
+                android:centerColor="#20FFFFFF"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+    
+    <!-- Mesa de bilhar principal (verde vibrante) -->
+    <item android:top="300dp" android:bottom="200dp" android:left="60dp" android:right="60dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#2E7D32" /> <!-- Verde vibrante da mesa -->
+            <corners android:radius="16dp" />
+            <stroke android:width="6dp" android:color="#3E2723" /> <!-- Borda marrom escura -->
+        </shape>
+    </item>
+    
+    <!-- Borda dourada da mesa -->
+    <item android:top="306dp" android:bottom="206dp" android:left="66dp" android:right="66dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#D4AF37" /> <!-- Dourado -->
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+    
+    <!-- Superfície da mesa (verde mais claro) -->
+    <item android:top="312dp" android:bottom="212dp" android:left="72dp" android:right="72dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#4CAF50" /> <!-- Verde da superfície -->
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    
+    <!-- Reflexo na mesa -->
+    <item android:top="320dp" android:bottom="220dp" android:left="80dp" android:right="80dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="90"
+                android:startColor="#00000000"
+                android:centerColor="#15FFFFFF"
+                android:endColor="#00000000" />
+            <corners android:radius="4dp" />
+        </shape>
+    </item>
+    
+    <!-- Bolas de bilhar em triângulo (primeira linha) -->
+    <item android:top="350dp" android:left="200dp">
+        <shape android:shape="oval">
+            <size android:width="20dp" android:height="20dp" />
+            <solid android:color="#F44336" /> <!-- Vermelho -->
+        </shape>
+    </item>
+    
+    <!-- Segunda linha do triângulo -->
+    <item android:top="370dp" android:left="190dp">
+        <shape android:shape="oval">
+            <size android:width="20dp" android:height="20dp" />
+            <solid android:color="#4CAF50" /> <!-- Verde -->
+        </shape>
+    </item>
+    
+    <item android:top="370dp" android:left="210dp">
+        <shape android:shape="oval">
+            <size android:width="20dp" android:height="20dp" />
+            <solid android:color="#FF9800" /> <!-- Laranja -->
+        </shape>
+    </item>
+    
+    <!-- Terceira linha do triângulo -->
+    <item android:top="390dp" android:left="180dp">
+        <shape android:shape="oval">
+            <size android:width="20dp" android:height="20dp" />
+            <solid android:color="#9C27B0" /> <!-- Roxo -->
+        </shape>
+    </item>
+    
+    <item android:top="390dp" android:left="200dp">
+        <shape android:shape="oval">
+            <size android:width="20dp" android:height="20dp" />
+            <solid android:color="#FFEB3B" /> <!-- Amarelo -->
+        </shape>
+    </item>
+    
+    <item android:top="390dp" android:left="220dp">
+        <shape android:shape="oval">
+            <size android:width="20dp" android:height="20dp" />
+            <solid android:color="#2196F3" /> <!-- Azul -->
+        </shape>
+    </item>
+    
+    <!-- Quarta linha do triângulo -->
+    <item android:top="410dp" android:left="170dp">
+        <shape android:shape="oval">
+            <size android:width="20dp" android:height="20dp" />
+            <solid android:color="#795548" /> <!-- Marrom -->
+        </shape>
+    </item>
+    
+    <item android:top="410dp" android:left="190dp">
+        <shape android:shape="oval">
+            <size android:width="20dp" android:height="20dp" />
+            <solid android:color="#607D8B" /> <!-- Cinza -->
+        </shape>
+    </item>
+    
+    <item android:top="410dp" android:left="210dp">
+        <shape android:shape="oval">
+            <size android:width="20dp" android:height="20dp" />
+            <solid android:color="#E91E63" /> <!-- Rosa -->
+        </shape>
+    </item>
+    
+    <item android:top="410dp" android:left="230dp">
+        <shape android:shape="oval">
+            <size android:width="20dp" android:height="20dp" />
+            <solid android:color="#00BCD4" /> <!-- Ciano -->
+        </shape>
+    </item>
+    
+    <!-- Reflexos nas bolas -->
+    <item android:top="352dp" android:left="202dp">
+        <shape android:shape="oval">
+            <size android:width="6dp" android:height="6dp" />
+            <solid android:color="#80FFFFFF" />
+        </shape>
+    </item>
+    
+    <item android:top="372dp" android:left="192dp">
+        <shape android:shape="oval">
+            <size android:width="6dp" android:height="6dp" />
+            <solid android:color="#80FFFFFF" />
+        </shape>
+    </item>
+    
+    <item android:top="372dp" android:left="212dp">
+        <shape android:shape="oval">
+            <size android:width="6dp" android:height="6dp" />
+            <solid android:color="#80FFFFFF" />
+        </shape>
+    </item>
+    
+    <item android:top="392dp" android:left="182dp">
+        <shape android:shape="oval">
+            <size android:width="6dp" android:height="6dp" />
+            <solid android:color="#80FFFFFF" />
+        </shape>
+    </item>
+    
+    <item android:top="392dp" android:left="202dp">
+        <shape android:shape="oval">
+            <size android:width="6dp" android:height="6dp" />
+            <solid android:color="#80FFFFFF" />
+        </shape>
+    </item>
+    
+    <item android:top="392dp" android:left="222dp">
+        <shape android:shape="oval">
+            <size android:width="6dp" android:height="6dp" />
+            <solid android:color="#80FFFFFF" />
+        </shape>
+    </item>
+    
+    <item android:top="412dp" android:left="172dp">
+        <shape android:shape="oval">
+            <size android:width="6dp" android:height="6dp" />
+            <solid android:color="#80FFFFFF" />
+        </shape>
+    </item>
+    
+    <item android:top="412dp" android:left="192dp">
+        <shape android:shape="oval">
+            <size android:width="6dp" android:height="6dp" />
+            <solid android:color="#80FFFFFF" />
+        </shape>
+    </item>
+    
+    <item android:top="412dp" android:left="212dp">
+        <shape android:shape="oval">
+            <size android:width="6dp" android:height="6dp" />
+            <solid android:color="#80FFFFFF" />
+        </shape>
+    </item>
+    
+    <item android:top="412dp" android:left="232dp">
+        <shape android:shape="oval">
+            <size android:width="6dp" android:height="6dp" />
+            <solid android:color="#80FFFFFF" />
+        </shape>
+    </item>
+    
+</layer-list>

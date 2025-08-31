@@ -15,25 +15,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Mesa de bilhar como imagem de fundo -->
-    <ImageView
+    <!-- Background realista da mesa de bilhar -->
+    <View
         android:id="@+id/bgBilliardTable"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/bg_billiard_table"
-        android:alpha="0.15"
+        android:background="@drawable/background_billiard_realistic"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Overlay com gradiente para contraste -->
+    <!-- Overlay escuro para melhorar legibilidade -->
     <View
         android:id="@+id/overlay"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@drawable/background_billiard_hall"
+        android:background="#CC000000"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -107,10 +107,30 @@ class RoutesFragment : Fragment() {
                         false
                     }
                 }
-                R.id.nav_manage_expenses -> {
-                    Toast.makeText(requireContext(), "Gerenciar Despesas será implementado em breve", Toast.LENGTH_SHORT).show()
-                    binding.drawerLayout.closeDrawers()
-                    true
+
+                R.id.nav_expense_categories -> {
+                    try {
+                        findNavController().navigate(R.id.expenseCategoriesFragment)
+                        binding.drawerLayout.closeDrawers()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao navegar para categorias de despesa: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir categorias de despesa: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
+                }
+                R.id.nav_expense_types -> {
+                    try {
+                        findNavController().navigate(R.id.expenseTypesFragment)
+                        binding.drawerLayout.closeDrawers()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao navegar para tipos de despesa: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir tipos de despesa: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
                 }
                 R.id.nav_manage_tables -> {
                     Toast.makeText(requireContext(), "Gerenciar Mesas será implementado em breve", Toast.LENGTH_SHORT).show()

@@ -12,7 +12,7 @@ class TipoDespesaRepository(
 ) {
     
     // Flag para usar dados mock durante desenvolvimento
-    private val usarDadosMock = true
+    private val usarDadosMock = false
     
     /**
      * Busca todos os tipos ativos.
