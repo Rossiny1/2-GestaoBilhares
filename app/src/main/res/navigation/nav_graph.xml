@@ -365,6 +365,18 @@
         android:name="com.example.gestaobilhares.ui.reports.RelatorioClientesFragment"
         android:label="Relatório de Clientes" />
 
+    <!-- Tela de Categorias de Despesa -->
+    <fragment
+        android:id="@+id/expenseCategoriesFragment"
+        android:name="com.example.gestaobilhares.ui.expenses.ExpenseCategoriesFragment"
+        android:label="Categorias de Despesa" />
+
+    <!-- Tela de Tipos de Despesa -->
+    <fragment
+        android:id="@+id/expenseTypesFragment"
+        android:name="com.example.gestaobilhares.ui.expenses.ExpenseTypesFragment"
+        android:label="Tipos de Despesa" />
+
     <!-- MainFragment mantido para compatibilidade, será removido futuramente -->
     <fragment
         android:id="@+id/mainFragment"

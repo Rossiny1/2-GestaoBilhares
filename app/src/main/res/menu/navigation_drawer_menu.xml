@@ -9,9 +9,13 @@
             android:title="Gerenciar Colaborador" />
         
         <item
-            android:id="@+id/nav_manage_expenses"
-            android:icon="@drawable/ic_money"
-            android:title="Gerenciar Despesas" />
+            android:id="@+id/nav_expense_categories"
+            android:icon="@drawable/ic_category"
+            android:title="Categorias de Despesa" />
+        <item
+            android:id="@+id/nav_expense_types"
+            android:icon="@drawable/ic_type"
+            android:title="Tipos de Despesa" />
         
         <item
             android:id="@+id/nav_manage_tables"

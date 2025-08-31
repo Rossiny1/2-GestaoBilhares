@@ -12,7 +12,7 @@ class CategoriaDespesaRepository(
 ) {
     
     // Flag para usar dados mock durante desenvolvimento
-    private val usarDadosMock = true
+    private val usarDadosMock = false
     
     /**
      * Busca todas as categorias ativas.

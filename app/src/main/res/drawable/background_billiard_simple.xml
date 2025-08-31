@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Fundo escuro base -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#0A0A0A" />
+        </shape>
+    </item>
+    
+    <!-- Gradiente radial principal para simular iluminação -->
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="500dp"
+                android:centerX="0.5"
+                android:centerY="0.4"
+                android:startColor="#2A1A1A1A"
+                android:centerColor="#1A2A2A2A"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+    
+    <!-- Mesa de bilhar centralizada -->
+    <item android:top="250dp" android:bottom="250dp" android:left="80dp" android:right="80dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#1B5E20" />
+            <corners android:radius="12dp" />
+            <stroke android:width="4dp" android:color="#3E2723" />
+        </shape>
+    </item>
+    
+    <!-- Reflexo sutil na mesa -->
+    <item android:top="260dp" android:bottom="260dp" android:left="90dp" android:right="90dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="90"
+                android:startColor="#00000000"
+                android:centerColor="#15FFFFFF"
+                android:endColor="#00000000" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    
+    <!-- Algumas bolas de bilhar para dar vida -->
+    <item android:top="320dp" android:left="150dp">
+        <shape android:shape="oval">
+            <size android:width="16dp" android:height="16dp" />
+            <solid android:color="#F44336" />
+        </shape>
+    </item>
+    
+    <item android:top="340dp" android:left="170dp">
+        <shape android:shape="oval">
+            <size android:width="16dp" android:height="16dp" />
+            <solid android:color="#4CAF50" />
+        </shape>
+    </item>
+    
+    <item android:top="360dp" android:left="190dp">
+        <shape android:shape="oval">
+            <size android:width="16dp" android:height="16dp" />
+            <solid android:color="#FF9800" />
+        </shape>
+    </item>
+    
+    <item android:top="380dp" android:left="210dp">
+        <shape android:shape="oval">
+            <size android:width="16dp" android:height="16dp" />
+            <solid android:color="#9C27B0" />
+        </shape>
+    </item>
+    
+    <item android:top="400dp" android:left="230dp">
+        <shape android:shape="oval">
+            <size android:width="16dp" android:height="16dp" />
+            <solid android:color="#FFEB3B" />
+        </shape>
+    </item>
+    
+</layer-list>
