@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@drawable/card_billiard_background"
+        android:background="@drawable/settlement_history_card_background"
         android:padding="16dp">
 
         <!-- Ícone de arrastar -->

@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp"
-    android:background="@drawable/card_billiard_background">
+    android:background="@drawable/settlement_history_card_background">
 
     <!-- Título do Diálogo -->
     <TextView
@@ -74,7 +74,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/card_billiard_background"
+                android:background="@drawable/settlement_history_card_background"
                 android:padding="16dp"
                 android:layout_marginEnd="4dp">
 
@@ -105,7 +105,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/card_billiard_background"
+                android:background="@drawable/settlement_history_card_background"
                 android:padding="16dp"
                 android:layout_marginStart="4dp">
 
@@ -144,7 +144,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/card_billiard_background"
+                android:background="@drawable/settlement_history_card_background"
                 android:padding="16dp"
                 android:layout_marginEnd="4dp"
                 android:minHeight="120dp">
@@ -188,7 +188,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/card_billiard_background"
+                android:background="@drawable/settlement_history_card_background"
                 android:padding="16dp"
                 android:layout_marginStart="4dp"
                 android:minHeight="120dp">
@@ -224,7 +224,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/card_billiard_background"
+        android:background="@drawable/settlement_history_card_background"
         android:padding="16dp"
         android:layout_marginBottom="20dp">
 
