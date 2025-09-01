@@ -29,6 +29,10 @@ import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.AcertoMesaRepository
+import com.example.gestaobilhares.data.repository.RotaRepository
+import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.data.repository.DespesaRepository
+import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 
 /**
  * Fragment para exibir detalhes do cliente e histórico de acertos
@@ -44,6 +48,10 @@ class ClientDetailFragment : Fragment() {
     
     private lateinit var settlementHistoryAdapter: SettlementHistoryAdapter
     private lateinit var mesasAdapter: MesasAdapter
+    
+    // Repositórios para verificação de status da rota
+    private lateinit var rotaRepository: RotaRepository
+    private lateinit var cicloAcertoRepository: CicloAcertoRepository
 
     private val REQUEST_CODE_NOVO_ACERTO = 1001
 
@@ -59,12 +67,23 @@ class ClientDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // Inicializar ViewModel aqui onde o contexto está disponível
+        // Inicializar ViewModel e repositórios aqui onde o contexto está disponível
+        val database = AppDatabase.getDatabase(requireContext())
         viewModel = ClientDetailViewModel(
-            ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
-            MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao()),
-            AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao()),
-            AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao())
+            ClienteRepository(database.clienteDao()),
+            MesaRepository(database.mesaDao()),
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
+            AcertoMesaRepository(database.acertoMesaDao())
+        )
+        
+        // Inicializar repositórios para verificação de rota
+        rotaRepository = RotaRepository(database.rotaDao())
+        cicloAcertoRepository = CicloAcertoRepository(
+            database.cicloAcertoDao(),
+            DespesaRepository(database.despesaDao()),
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
+            ClienteRepository(database.clienteDao()),
+            database.rotaDao()
         )
         
         // Inicializar views e configurar listeners
@@ -152,54 +171,96 @@ class ClientDetailFragment : Fragment() {
         }
         
         binding.fabNewSettlementContainer.setOnClickListener {
-            // ✅ IMPLEMENTADO: Navegar para tela de Novo Acerto
-            try {
-                val mesasAtivas = viewModel.mesasCliente.value
-                Log.d("NovoAcerto", "Mesas ativas encontradas: ${mesasAtivas.size}")
-                
-                if (mesasAtivas.isEmpty()) {
-                    Toast.makeText(requireContext(), "Este cliente não possui mesas ativas para acerto.", Toast.LENGTH_LONG).show()
-                    return@setOnClickListener
+            // ✅ NOVO: Verificar se a rota está em andamento antes de permitir novo acerto
+            lifecycleScope.launch {
+                try {
+                    // Obter dados do cliente para verificar a rota
+                    val cliente = viewModel.clientDetails.value
+                    if (cliente == null) {
+                        Toast.makeText(requireContext(), "Erro: dados do cliente não carregados.", Toast.LENGTH_LONG).show()
+                        recolherFabMenu()
+                        return@launch
+                    }
+                    
+                    // Verificar se existe ciclo em andamento para a rota do cliente
+                    val rotaId = viewModel.buscarRotaIdPorCliente(cliente.id)
+                    if (rotaId == null) {
+                        Toast.makeText(requireContext(), "Erro: não foi possível obter a rota do cliente.", Toast.LENGTH_LONG).show()
+                        recolherFabMenu()
+                        return@launch
+                    }
+                    
+                    val cicloEmAndamento = cicloAcertoRepository.buscarCicloAtivo(rotaId)
+                    
+                    if (cicloEmAndamento == null || cicloEmAndamento.status != StatusCicloAcerto.EM_ANDAMENTO) {
+                        // Mostrar diálogo de rota não iniciada
+                        mostrarAlertaRotaNaoIniciada()
+                        recolherFabMenu()
+                        return@launch
+                    }
+                    
+                    // Verificar se há mesas ativas
+                    val mesasAtivas = viewModel.mesasCliente.value
+                    Log.d("NovoAcerto", "Mesas ativas encontradas: ${mesasAtivas.size}")
+                    
+                    if (mesasAtivas.isEmpty()) {
+                        Toast.makeText(requireContext(), "Este cliente não possui mesas ativas para acerto.", Toast.LENGTH_LONG).show()
+                        recolherFabMenu()
+                        return@launch
+                    }
+                    
+                    // Obter dados do cliente para incluir nos MesaDTOs
+                    val valorFicha = cliente.valorFicha ?: 0.0
+                    val comissaoFicha = cliente.comissaoFicha ?: 0.0
+                    
+                    val mesasDTO = mesasAtivas.map { mesa ->
+                        Log.d("NovoAcerto", "Convertendo mesa ${mesa.numero} - ID: ${mesa.id}")
+                        MesaDTO(
+                            id = mesa.id,
+                            numero = mesa.numero,
+                            fichasInicial = mesa.fichasInicial ?: 0,
+                            fichasFinal = mesa.fichasFinal ?: 0,
+                            tipoMesa = mesa.tipoMesa,
+                            ativa = mesa.ativa,
+                            valorFixo = mesa.valorFixo ?: 0.0,
+                            valorFicha = valorFicha,
+                            comissaoFicha = comissaoFicha
+                        )
+                    }.toTypedArray()
+                    
+                    Log.d("NovoAcerto", "Enviando ${mesasDTO.size} mesas para SettlementFragment")
+                    Log.d("NovoAcerto", "Mesas: ${mesasDTO.joinToString { "Mesa ${it.numero} (ID: ${it.id})" }}")
+                    Log.d("NovoAcerto", "Valor Ficha: $valorFicha, Comissão Ficha: $comissaoFicha")
+                    
+                    // Navegar para tela de acerto
+                    val action = ClientDetailFragmentDirections
+                        .actionClientDetailFragmentToSettlementFragment(
+                            clienteId = args.clienteId,
+                            mesasDTO = mesasDTO
+                        )
+                    findNavController().navigate(action)
+                    Log.d("ClientDetailFragment", "Navegando para Novo Acerto - Cliente ID: ${args.clienteId} com ${mesasDTO.size} mesas")
+                    
+                } catch (e: Exception) {
+                    Log.e("ClientDetailFragment", "Erro ao verificar status da rota: ${e.message}", e)
+                    Toast.makeText(requireContext(), "Erro ao verificar status da rota: ${e.message}", Toast.LENGTH_LONG).show()
                 }
-                
-                // Obter dados do cliente para incluir nos MesaDTOs
-                val cliente = viewModel.clientDetails.value
-                val valorFicha = cliente?.valorFicha ?: 0.0
-                val comissaoFicha = cliente?.comissaoFicha ?: 0.0
-                
-                val mesasDTO = mesasAtivas.map { mesa ->
-                    Log.d("NovoAcerto", "Convertendo mesa ${mesa.numero} - ID: ${mesa.id}")
-                    MesaDTO(
-                        id = mesa.id,
-                        numero = mesa.numero,
-                        fichasInicial = mesa.fichasInicial ?: 0,
-                        fichasFinal = mesa.fichasFinal ?: 0,
-                        tipoMesa = mesa.tipoMesa,
-                        ativa = mesa.ativa,
-                        valorFixo = mesa.valorFixo ?: 0.0,
-                        valorFicha = valorFicha,
-                        comissaoFicha = comissaoFicha
-                    )
-                }.toTypedArray()
-                
-                Log.d("NovoAcerto", "Enviando ${mesasDTO.size} mesas para SettlementFragment")
-                Log.d("NovoAcerto", "Mesas: ${mesasDTO.joinToString { "Mesa ${it.numero} (ID: ${it.id})" }}")
-                Log.d("NovoAcerto", "Valor Ficha: $valorFicha, Comissão Ficha: $comissaoFicha")
-                
-                // Criar o bundle com os dados necessários
-                val action = ClientDetailFragmentDirections
-                    .actionClientDetailFragmentToSettlementFragment(
-                        clienteId = args.clienteId,
-                        mesasDTO = mesasDTO
-                    )
-                findNavController().navigate(action)
-                Log.d("ClientDetailFragment", "Navegando para Novo Acerto - Cliente ID: ${args.clienteId} com ${mesasDTO.size} mesas")
-            } catch (e: Exception) {
-                Log.e("ClientDetailFragment", "Erro ao navegar para SettlementFragment: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao abrir tela de acerto: ${e.message}", Toast.LENGTH_LONG).show()
+                recolherFabMenu()
             }
-            recolherFabMenu()
         }
+    }
+    
+    /**
+     * ✅ NOVO: Mostra alerta quando a rota não está em andamento
+     */
+    private fun mostrarAlertaRotaNaoIniciada() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Novo Acerto Não Permitido")
+            .setMessage("Para realizar acertos, a rota deve estar com status 'Em Andamento'. Inicie a rota primeiro na tela de clientes.")
+            .setPositiveButton("Entendi", null)
+            .setIcon(android.R.drawable.ic_dialog_info)
+            .setCancelable(true)
+            .show()
     }
     
     /**
