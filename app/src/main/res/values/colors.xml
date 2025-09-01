@@ -52,6 +52,11 @@
     <color name="surface_variant">#F7FAFC</color>        <!-- Variante clara otimizada -->
     <color name="surface_elevated">#2D3748</color>       <!-- Superfície elevada para cards -->
     
+    <!-- 🎨 SUPERFÍCIES TRANSPARENTES TEMÁTICAS -->
+    <color name="surface_card_transparent">#B32D3748</color>    <!-- 70% transparência tema -->
+    <color name="surface_card_light">#CC2D3748</color>          <!-- 80% opacidade tema -->
+    <color name="surface_glass">#4D1A202C</color>               <!-- Efeito vidro 30% -->
+    
     <!-- Cards com Excelente Visibilidade -->
     <color name="card_background">#FFFFFF</color>        <!-- Card claro -->
     <color name="card_background_dark">#2D3748</color>   <!-- Card escuro com melhor contraste -->
