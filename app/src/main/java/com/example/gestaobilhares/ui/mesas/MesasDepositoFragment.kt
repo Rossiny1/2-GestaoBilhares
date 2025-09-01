@@ -14,7 +14,9 @@ import com.example.gestaobilhares.databinding.FragmentMesasDepositoBinding
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.utils.UserSessionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import android.widget.Toast
 import kotlinx.coroutines.launch
 
 // Hilt removido - usando instanciação direta
@@ -24,6 +26,7 @@ class MesasDepositoFragment : Fragment() {
     private lateinit var viewModel: MesasDepositoViewModel
     private val args: MesasDepositoFragmentArgs by navArgs()
     private lateinit var adapter: MesasDepositoAdapter
+    private lateinit var userSessionManager: UserSessionManager
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -34,9 +37,14 @@ class MesasDepositoFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // Inicializar gerenciador de sessão
+        userSessionManager = UserSessionManager.getInstance(requireContext())
+        
         viewModel = MesasDepositoViewModel(MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao()))
         setupRecyclerView()
         setupListeners()
+        setupAccessControl()
         observeViewModel()
         viewModel.loadMesasDisponiveis()
     }
@@ -61,6 +69,12 @@ class MesasDepositoFragment : Fragment() {
             findNavController().popBackStack()
         }
         binding.btnCadastrarMesa.setOnClickListener {
+            // ✅ NOVO: Verificar permissão antes de navegar
+            if (!userSessionManager.canManageTables()) {
+                Toast.makeText(requireContext(), "Acesso negado: Apenas administradores podem cadastrar mesas", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
             val action = MesasDepositoFragmentDirections.actionMesasDepositoFragmentToCadastroMesaFragment()
             findNavController().navigate(action)
         }
@@ -69,6 +83,20 @@ class MesasDepositoFragment : Fragment() {
         binding.cardSinuca.setOnClickListener {
             showDetalhesSinucaDialog()
         }
+    }
+    
+    /**
+     * ✅ NOVO: Configura controle de acesso baseado no nível do usuário
+     */
+    private fun setupAccessControl() {
+        val canManageTables = userSessionManager.canManageTables()
+        
+        // Ocultar botão "Cadastrar Mesa" para usuários USER
+        binding.btnCadastrarMesa.visibility = if (canManageTables) View.VISIBLE else View.GONE
+        
+        android.util.Log.d("MesasDepositoFragment", 
+            "🔒 Controle de acesso aplicado - Usuário: ${userSessionManager.getCurrentUserName()}, " +
+            "Pode gerenciar mesas: $canManageTables, Botão visível: ${binding.btnCadastrarMesa.visibility == View.VISIBLE}")
     }
 
     private fun observeViewModel() {

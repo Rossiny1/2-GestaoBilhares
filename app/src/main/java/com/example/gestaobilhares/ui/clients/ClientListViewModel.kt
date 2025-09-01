@@ -81,6 +81,7 @@ class ClientListViewModel(
 
     private val _clientesTodos = MutableStateFlow<List<Cliente>>(emptyList())
     private val _filtroAtual = MutableStateFlow(FiltroCliente.ACERTADOS)
+    val filtroAtual: StateFlow<FiltroCliente> = _filtroAtual.asStateFlow()
     
     // ✅ FASE 9B: Lista de clientes filtrados
     private val _clientes = MutableStateFlow<List<Cliente>>(emptyList())

@@ -14,6 +14,7 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRoutesBinding
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.RotaRepository
+import com.example.gestaobilhares.utils.UserSessionManager
 import com.google.android.material.navigation.NavigationView
 import java.text.NumberFormat
 import java.util.Locale
@@ -39,6 +40,9 @@ class RoutesFragment : Fragment() {
 
     // Formatador de moeda
     private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+    
+    // Gerenciador de sessão do usuário
+    private lateinit var userSessionManager: UserSessionManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -52,6 +56,9 @@ class RoutesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        // Inicializar gerenciador de sessão primeiro
+        userSessionManager = UserSessionManager.getInstance(requireContext())
+        
         // Inicializar ViewModel aqui onde o contexto está disponível
         val database = AppDatabase.getDatabase(requireContext())
         viewModel = RoutesViewModel(
@@ -61,7 +68,8 @@ class RoutesFragment : Fragment() {
                 database.mesaDao(),
                 database.acertoDao(),
                 database.cicloAcertoDao()
-            )
+            ),
+            userSessionManager
         )
         
         setupRecyclerView()
@@ -88,13 +96,34 @@ class RoutesFragment : Fragment() {
     }
 
     /**
-     * Configura o Navigation Drawer.
+     * Configura o Navigation Drawer com controle de acesso baseado no nível do usuário.
      */
     private fun setupNavigationDrawer() {
+        // ✅ NOVO: Controlar visibilidade do menu baseado no nível do usuário
+        val menu = binding.navigationView.menu
+        val hasMenuAccess = userSessionManager.hasMenuAccess()
+        
+        // Ocultar menu completo para usuários USER
+        if (!hasMenuAccess) {
+            binding.navigationView.visibility = View.GONE
+            binding.btnMenu.visibility = View.GONE
+            android.util.Log.d("RoutesFragment", "🔒 Menu oculto para usuário: ${userSessionManager.getCurrentUserName()}")
+            return
+        }
+        
+        android.util.Log.d("RoutesFragment", "🔓 Menu disponível para ADMIN: ${userSessionManager.getCurrentUserName()}")
+        
         // Configurar listener do menu lateral
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_manage_collaborator -> {
+                    // Verificar permissão para gerenciar colaboradores
+                    if (!userSessionManager.canManageCollaborators()) {
+                        Toast.makeText(requireContext(), "Acesso negado: Apenas administradores podem gerenciar colaboradores", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        return@setNavigationItemSelectedListener false
+                    }
+                    
                     // Navegar para a tela de gerenciamento de colaboradores
                     try {
                         findNavController().navigate(R.id.colaboradorManagementFragment)
@@ -133,11 +162,25 @@ class RoutesFragment : Fragment() {
                     }
                 }
                 R.id.nav_manage_tables -> {
+                    // Verificar permissão para gerenciar mesas
+                    if (!userSessionManager.canManageTables()) {
+                        Toast.makeText(requireContext(), "Acesso negado: Apenas administradores podem gerenciar mesas", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        return@setNavigationItemSelectedListener false
+                    }
+                    
                     Toast.makeText(requireContext(), "Gerenciar Mesas será implementado em breve", Toast.LENGTH_SHORT).show()
                     binding.drawerLayout.closeDrawers()
                     true
                 }
                 R.id.nav_manage_routes -> {
+                    // Verificar permissão para gerenciar rotas
+                    if (!userSessionManager.canManageRoutes()) {
+                        Toast.makeText(requireContext(), "Acesso negado: Apenas administradores podem gerenciar rotas", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        return@setNavigationItemSelectedListener false
+                    }
+                    
                     // Navegar para a tela de gerenciamento de rotas
                     try {
                         findNavController().navigate(R.id.routeManagementFragment)
