@@ -22,7 +22,7 @@
         android:padding="16dp"
         android:visibility="visible"
         android:minHeight="100dp"
-        android:background="@drawable/card_billiard_background">
+        android:background="@drawable/settlement_history_card_background">
 
         <!-- Header do acerto -->
         <LinearLayout
