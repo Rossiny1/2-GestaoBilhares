@@ -15,27 +15,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Background realista da mesa de bilhar -->
-    <View
+    <!-- Background com imagem real da mesa de bilhar -->
+    <ImageView
         android:id="@+id/bgBilliardTable"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@drawable/background_billiard_realistic"
+        android:src="@drawable/bg_pool_table_real"
+        android:scaleType="centerCrop"
+        android:contentDescription="Mesa de bilhar"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Overlay escuro para melhorar legibilidade -->
-    <View
-        android:id="@+id/overlay"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="#CC000000"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+    <!-- Overlay removido para mostrar a imagem completa -->
 
     <!-- Container principal -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -49,59 +42,29 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Logo centralizado com tema bilhar -->
+        <!-- Logo da empresa (maior e mais próximo) -->
         <ImageView
             android:id="@+id/logoImage"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@drawable/ic_billiard_balls"
-            android:background="@drawable/card_billiard_background"
-            android:padding="20dp"
-            android:layout_marginBottom="24dp"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:src="@drawable/logo_bilhar2"
+            android:scaleType="centerInside"
+            android:layout_marginTop="60dp"
+            android:layout_marginBottom="16dp"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/statusLayout"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Status de conexão -->
-        <LinearLayout
-            android:id="@+id/statusLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginBottom="16dp"
-            app:layout_constraintTop_toBottomOf="@id/logoImage"
-            app:layout_constraintBottom_toTopOf="@id/emailLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <ImageView
-                android:id="@+id/statusIcon"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/ic_wifi"
-                android:layout_marginEnd="8dp" />
-
-            <TextView
-                android:id="@+id/statusText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Online"
-                android:textColor="#4CAF50"
-                android:textSize="12sp" />
-
-        </LinearLayout>
+        <!-- Status removido do topo, será adicionado no final -->
 
         <!-- Email -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/emailLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/AppTextInputLogin"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             app:hintEnabled="false"
-            app:boxBackgroundColor="@color/surface_elevated"
-            app:boxStrokeColor="@color/primary_blue"
             app:layout_constraintTop_toBottomOf="@id/logoImage"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -113,18 +76,18 @@
                 android:hint="Email"
                 android:inputType="textEmailAddress"
                 android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary" />
+                android:textColorHint="@color/text_secondary"
+                android:textColorHighlight="@color/primary_blue"
+                android:importantForAutofill="no" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Senha -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/passwordLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/AppTextInputLogin"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:hint="Senha"
-            app:boxBackgroundColor="@color/surface_elevated"
-            app:boxStrokeColor="@color/primary_blue"
             app:endIconMode="password_toggle"
             app:layout_constraintTop_toBottomOf="@id/emailLayout"
             app:layout_constraintStart_toStartOf="parent"
@@ -137,7 +100,9 @@
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
                 android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary" />
+                android:textColorHint="@color/text_secondary"
+                android:textColorHighlight="@color/primary_blue"
+                android:importantForAutofill="no" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Lembrar-me e Esqueceu a senha -->
@@ -178,19 +143,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Separador -->
-        <TextView
-            android:id="@+id/separatorText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ou"
-            android:textColor="#99FFFFFF"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@id/loginButton"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <!-- Botão Google Sign-In -->
+        <!-- Botão Google Sign-In (aproximado do botão Entrar) -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/googleSignInButton"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -199,14 +152,16 @@
             android:text="Entrar com Google"
             android:textAllCaps="false"
             android:textColor="@color/text_primary"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             app:cornerRadius="12dp"
-            app:strokeColor="#6C63FF"
+            app:strokeColor="@color/primary_blue"
             app:icon="@drawable/ic_google"
             app:iconTint="#fff"
-            app:layout_constraintTop_toBottomOf="@id/separatorText"
+            app:layout_constraintTop_toBottomOf="@id/loginButton"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Status removido conforme solicitado -->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
