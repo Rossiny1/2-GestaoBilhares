@@ -205,6 +205,17 @@ class ClientListFragment : Fragment() {
             }
         }
         
+        // ✅ NOVO: Observar mudanças no filtro atual para sincronizar estado visual
+        lifecycleScope.launch {
+            viewModel.filtroAtual.collect { filtroAtual ->
+                try {
+                    sincronizarEstadoVisualFiltros(filtroAtual)
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientListFragment", "Erro ao sincronizar filtros: ${e.message}")
+                }
+            }
+        }
+        
         // Observar status da rota
         lifecycleScope.launch {
             viewModel.statusRota.collect { status ->
@@ -367,20 +378,37 @@ class ClientListFragment : Fragment() {
     private fun atualizarEstadoFiltros(botaoSelecionado: com.google.android.material.button.MaterialButton) {
         _binding?.let { binding ->
             val context = requireContext()
-            val corSelecionada = context.getColor(R.color.purple_600)
+            val corSelecionada = context.getColor(R.color.primary_blue)
             val corNormal = context.getColor(android.R.color.transparent)
             val textColorSelected = context.getColor(R.color.white)
-            val textColorNormal = context.getColor(R.color.purple_600)
+            val textColorNormal = context.getColor(R.color.text_secondary)
             
-            // Resetar todos os botões
+            // Resetar todos os botões para estado normal
             listOf(binding.btnFilterAcertados, binding.btnFilterNaoAcertados, binding.btnFilterPendencias).forEach { btn ->
                 btn.setBackgroundColor(corNormal)
                 btn.setTextColor(textColorNormal)
+                btn.strokeColor = context.getColorStateList(R.color.text_secondary)
             }
             
-            // Destacar o selecionado
+            // Destacar apenas o botão selecionado
             botaoSelecionado.setBackgroundColor(corSelecionada)
             botaoSelecionado.setTextColor(textColorSelected)
+            botaoSelecionado.strokeColor = context.getColorStateList(R.color.primary_blue)
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Sincroniza o estado visual dos filtros com o filtro ativo no ViewModel
+     */
+    private fun sincronizarEstadoVisualFiltros(filtroAtual: FiltroCliente?) {
+        _binding?.let { binding ->
+            val botaoAtivo = when (filtroAtual) {
+                FiltroCliente.ACERTADOS -> binding.btnFilterAcertados
+                FiltroCliente.NAO_ACERTADOS -> binding.btnFilterNaoAcertados
+                FiltroCliente.PENDENCIAS -> binding.btnFilterPendencias
+                else -> binding.btnFilterAcertados // Padrão
+            }
+            atualizarEstadoFiltros(botaoAtivo)
         }
     }
     

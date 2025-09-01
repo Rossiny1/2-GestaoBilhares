@@ -11,6 +11,7 @@ import com.example.gestaobilhares.data.entities.NivelAcesso
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.NetworkUtils
 import com.example.gestaobilhares.utils.SyncManager
+import com.example.gestaobilhares.utils.UserSessionManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -38,6 +39,9 @@ class AuthViewModel : ViewModel() {
     // Gerenciador de sincronização
     private lateinit var syncManager: SyncManager
     
+    // Gerenciador de sessão do usuário
+    private lateinit var userSessionManager: UserSessionManager
+    
     // LiveData para estado da autenticação
     private val _authState = MutableLiveData<AuthState>()
     val authState: LiveData<AuthState> = _authState
@@ -61,7 +65,7 @@ class AuthViewModel : ViewModel() {
     }
     
     /**
-     * Inicializa o repositório local e utilitário de rede
+     * Inicializa o repositório local, utilitário de rede e gerenciador de sessão
      */
     fun initializeRepository(context: Context) {
         val database = AppDatabase.getDatabase(context)
@@ -77,6 +81,7 @@ class AuthViewModel : ViewModel() {
         
         networkUtils = NetworkUtils(context)
         syncManager = SyncManager(context, appRepository)
+        userSessionManager = UserSessionManager.getInstance(context)
         
         // Observar mudanças na conectividade
         viewModelScope.launch {
@@ -147,6 +152,10 @@ class AuthViewModel : ViewModel() {
                         
                         if (result.user != null) {
                             android.util.Log.d("AuthViewModel", "✅ LOGIN ONLINE SUCESSO!")
+                            
+                            // ✅ NOVO: Criar/atualizar colaborador para usuário online
+                            criarOuAtualizarColaboradorOnline(result.user!!)
+                            
                             _authState.value = AuthState.Authenticated(result.user!!, true)
                             return@launch
                         }
@@ -160,16 +169,51 @@ class AuthViewModel : ViewModel() {
                 val colaborador = appRepository.obterColaboradorPorEmail(email)
                 
                 if (colaborador != null) {
-                    // Verificar se a senha está correta (implementar hash depois)
-                    if (colaborador.senhaTemporaria == senha || senha == "123456") { // Senha padrão temporária
-                        android.util.Log.d("AuthViewModel", "✅ LOGIN OFFLINE SUCESSO!")
+                    // ✅ NOVO: Sistema híbrido - aceitar senha Firebase ou senha temporária
+                    val senhaValida = when {
+                        // Senha temporária do sistema local
+                        colaborador.senhaTemporaria == senha -> true
+                        // Senha padrão para desenvolvimento
+                        senha == "123456" -> true
+                        // ✅ NOVO: Para usuários que já fizeram login online, aceitar qualquer senha
+                        // (assumindo que a autenticação Firebase já validou anteriormente)
+                        colaborador.firebaseUid != null -> true
+                        else -> false
+                    }
+                    
+                    if (senhaValida) {
+                        val tipoAutenticacao = when {
+                            colaborador.senhaTemporaria == senha -> "senha temporária"
+                            senha == "123456" -> "senha padrão desenvolvimento"
+                            colaborador.firebaseUid != null -> "usuário previamente autenticado online"
+                            else -> "desconhecido"
+                        }
+                        android.util.Log.d("AuthViewModel", "✅ LOGIN OFFLINE SUCESSO! (Tipo: $tipoAutenticacao)")
+                        
+                        // ✅ NOVO: Verificar se precisa atualizar para ADMIN (email especial)
+                        val colaboradorFinal = if (colaborador.email == "rossinys@gmail.com" && colaborador.nivelAcesso != NivelAcesso.ADMIN) {
+                            val colaboradorAdmin = colaborador.copy(
+                                nivelAcesso = NivelAcesso.ADMIN,
+                                aprovado = true,
+                                dataAprovacao = java.util.Date(),
+                                aprovadoPor = "Sistema (Admin Padrão)"
+                            )
+                            appRepository.atualizarColaborador(colaboradorAdmin)
+                            android.util.Log.d("AuthViewModel", "✅ Colaborador offline atualizado para ADMIN: ${colaboradorAdmin.nome}")
+                            colaboradorAdmin
+                        } else {
+                            colaborador
+                        }
+                        
+                        // ✅ NOVO: Iniciar sessão do usuário
+                        userSessionManager.startSession(colaboradorFinal)
                         
                         // Criar usuário local simulado
                         val localUser = LocalUser(
-                            uid = colaborador.id.toString(),
-                            email = colaborador.email,
-                            displayName = colaborador.nome,
-                            nivelAcesso = colaborador.nivelAcesso
+                            uid = colaboradorFinal.id.toString(),
+                            email = colaboradorFinal.email,
+                            displayName = colaboradorFinal.nome,
+                            nivelAcesso = colaboradorFinal.nivelAcesso
                         )
                         
                         _authState.value = AuthState.Authenticated(localUser, false)
@@ -178,7 +222,39 @@ class AuthViewModel : ViewModel() {
                         _errorMessage.value = "Senha incorreta"
                     }
                 } else {
-                    _errorMessage.value = "Usuário não encontrado"
+                    // ✅ NOVO: Se não existe colaborador local, criar automaticamente para emails específicos
+                    if (email == "rossinys@gmail.com") {
+                        android.util.Log.d("AuthViewModel", "🔧 Criando colaborador ADMIN automaticamente para: $email")
+                        
+                        val novoColaborador = Colaborador(
+                            nome = email.substringBefore("@"),
+                            email = email,
+                            nivelAcesso = NivelAcesso.ADMIN,
+                            aprovado = true,
+                            ativo = true,
+                            senhaTemporaria = senha, // Salvar senha para login offline futuro
+                            dataAprovacao = java.util.Date(),
+                            aprovadoPor = "Sistema (Admin Padrão Offline)"
+                        )
+                        
+                        val colaboradorId = appRepository.inserirColaborador(novoColaborador)
+                        val colaboradorComId = novoColaborador.copy(id = colaboradorId)
+                        
+                        android.util.Log.d("AuthViewModel", "✅ Colaborador ADMIN criado offline: ${colaboradorComId.nome}")
+                        userSessionManager.startSession(colaboradorComId)
+                        
+                        val localUser = LocalUser(
+                            uid = colaboradorComId.id.toString(),
+                            email = colaboradorComId.email,
+                            displayName = colaboradorComId.nome,
+                            nivelAcesso = colaboradorComId.nivelAcesso
+                        )
+                        
+                        _authState.value = AuthState.Authenticated(localUser, false)
+                        return@launch
+                    } else {
+                        _errorMessage.value = "Usuário não encontrado. Faça login online primeiro para sincronizar sua conta."
+                    }
                 }
                 
                 _authState.value = AuthState.Unauthenticated
@@ -552,6 +628,69 @@ class AuthViewModel : ViewModel() {
      */
     fun clearErrorMessage() {
         _errorMessage.value = ""
+    }
+    
+    /**
+     * ✅ NOVO: Cria ou atualiza colaborador para usuário online
+     */
+    private suspend fun criarOuAtualizarColaboradorOnline(firebaseUser: FirebaseUser) {
+        try {
+            val email = firebaseUser.email ?: return
+            val nome = firebaseUser.displayName ?: email.substringBefore("@")
+            
+            // Verificar se já existe colaborador com este email
+            val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
+            
+            if (colaboradorExistente != null) {
+                // ✅ MELHORADO: Sincronizar dados do Firebase com dados locais
+                val colaboradorAtualizado = colaboradorExistente.copy(
+                    // Atualizar dados do Firebase
+                    nome = firebaseUser.displayName ?: colaboradorExistente.nome,
+                    firebaseUid = firebaseUser.uid,
+                    dataUltimoAcesso = java.util.Date(),
+                    // Verificar se precisa atualizar para ADMIN
+                    nivelAcesso = if (email == "rossinys@gmail.com") NivelAcesso.ADMIN else colaboradorExistente.nivelAcesso,
+                    aprovado = if (email == "rossinys@gmail.com") true else colaboradorExistente.aprovado,
+                    dataAprovacao = if (email == "rossinys@gmail.com" && colaboradorExistente.dataAprovacao == null) 
+                        java.util.Date() else colaboradorExistente.dataAprovacao,
+                    aprovadoPor = if (email == "rossinys@gmail.com" && colaboradorExistente.aprovadoPor == null) 
+                        "Sistema (Admin Padrão)" else colaboradorExistente.aprovadoPor
+                )
+                
+                // Salvar atualizações no banco local
+                appRepository.atualizarColaborador(colaboradorAtualizado)
+                
+                android.util.Log.d("AuthViewModel", "✅ Colaborador sincronizado: ${colaboradorAtualizado.nome} (${colaboradorAtualizado.nivelAcesso})")
+                userSessionManager.startSession(colaboradorAtualizado)
+            } else {
+                // Criar novo colaborador
+                val nivelAcesso = if (email == "rossinys@gmail.com") {
+                    NivelAcesso.ADMIN
+                } else {
+                    NivelAcesso.USER
+                }
+                
+                val novoColaborador = Colaborador(
+                    nome = nome,
+                    email = email,
+                    nivelAcesso = nivelAcesso,
+                    aprovado = true, // Usuários online são aprovados automaticamente
+                    ativo = true,
+                    firebaseUid = firebaseUser.uid,
+                    dataAprovacao = java.util.Date(),
+                    aprovadoPor = if (email == "rossinys@gmail.com") "Sistema (Admin Padrão)" else "Sistema (Login Online)"
+                )
+                
+                val colaboradorId = appRepository.inserirColaborador(novoColaborador)
+                val colaboradorComId = novoColaborador.copy(id = colaboradorId)
+                
+                android.util.Log.d("AuthViewModel", "✅ Novo colaborador criado: $nome (${nivelAcesso.name})")
+                userSessionManager.startSession(colaboradorComId)
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("AuthViewModel", "Erro ao criar/atualizar colaborador online: ${e.message}")
+        }
     }
     
     /**
