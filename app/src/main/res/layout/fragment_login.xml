@@ -77,8 +77,9 @@
                 android:inputType="textEmailAddress"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
-                android:textColorHighlight="@color/primary_blue"
-                android:importantForAutofill="no" />
+                android:background="@drawable/login_field_background"
+                android:importantForAutofill="no"
+                android:autofilledHighlight="@android:color/transparent" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Senha -->
@@ -101,8 +102,9 @@
                 android:inputType="textPassword"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
-                android:textColorHighlight="@color/primary_blue"
-                android:importantForAutofill="no" />
+                android:background="@drawable/login_field_background"
+                android:importantForAutofill="no"
+                android:autofilledHighlight="@android:color/transparent" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Lembrar-me e Esqueceu a senha -->
