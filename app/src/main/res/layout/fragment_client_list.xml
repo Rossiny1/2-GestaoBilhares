@@ -144,7 +144,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="12dp">
+                    android:padding="12dp"
+                    android:background="@drawable/settlement_history_card_background">
 
                     <!-- Linha 1: Título e Status lado a lado -->
                     <LinearLayout
@@ -305,7 +306,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="4dp">
+                    android:padding="4dp"
+                    android:background="@drawable/settlement_history_card_background">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnFilterAcertados"

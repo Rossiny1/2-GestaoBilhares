@@ -11,7 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="12dp">
+        android:padding="12dp"
+        android:background="@drawable/settlement_history_card_background">
 
         <!-- 🎯 Barra de status lateral temática -->
         <View
