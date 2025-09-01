@@ -127,6 +127,18 @@
         <item name="hintTextColor">@color/text_secondary</item>
     </style>
     
+    <!-- 🔐 CAMPOS DE LOGIN SEM EFEITO DE AUTOPREENCHIMENTO -->
+    <style name="AppTextInputLogin" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/surface_elevated</item>
+        <item name="boxStrokeColor">@color/primary_blue</item>
+        <item name="boxStrokeWidth">2dp</item>
+        <item name="android:textColorHint">@color/text_secondary</item>
+        <item name="hintTextColor">@color/primary_blue</item>
+        <item name="android:textColorHighlight">@color/primary_blue</item>
+        <item name="colorControlActivated">@color/primary_blue</item>
+        <item name="colorControlHighlight">@color/primary_blue</item>
+    </style>
+    
     <!-- 📊 PROGRESS E LOADING -->
     <style name="AppProgressBar" parent="Widget.Material3.CircularProgressIndicator">
         <item name="indicatorColor">@color/primary_blue</item>

@@ -195,16 +195,10 @@ class LoginFragment : Fragment() {
             }
         })
         
-        // Observa estado de conexão
+        // Observa estado de conexão (status removido da UI conforme solicitado)
         authViewModel.isOnline.observe(viewLifecycleOwner, Observer { isOnline ->
-            if (isOnline) {
-                binding.statusText.text = "Online"
-                binding.statusText.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
-                binding.statusIcon.setImageResource(android.R.drawable.ic_menu_share)
-            } else {
-                binding.statusText.text = "Offline"
-                binding.statusText.setTextColor(resources.getColor(android.R.color.holo_orange_dark, null))
-                binding.statusIcon.setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+            if (!isOnline) {
+                // Apenas mostrar toast quando estiver offline
                 Toast.makeText(requireContext(), "Modo offline ativo", Toast.LENGTH_SHORT).show()
             }
         })
