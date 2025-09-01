@@ -127,16 +127,14 @@
         <item name="hintTextColor">@color/text_secondary</item>
     </style>
     
-    <!-- 🔐 CAMPOS DE LOGIN SEM EFEITO DE AUTOPREENCHIMENTO -->
+    <!-- 🔐 CAMPOS DE LOGIN SEM MUDANÇA DE COR -->
     <style name="AppTextInputLogin" parent="Widget.Material3.TextInputLayout.OutlinedBox">
-        <item name="boxBackgroundColor">@color/surface_elevated</item>
+        <item name="boxBackgroundColor">@android:color/transparent</item>
         <item name="boxStrokeColor">@color/primary_blue</item>
         <item name="boxStrokeWidth">2dp</item>
         <item name="android:textColorHint">@color/text_secondary</item>
         <item name="hintTextColor">@color/primary_blue</item>
-        <item name="android:textColorHighlight">@color/primary_blue</item>
-        <item name="colorControlActivated">@color/primary_blue</item>
-        <item name="colorControlHighlight">@color/primary_blue</item>
+        <item name="boxBackgroundMode">outline</item>
     </style>
     
     <!-- 📊 PROGRESS E LOADING -->
