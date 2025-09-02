@@ -39,6 +39,12 @@
         <action
             android:id="@+id/action_routesFragment_to_cycleHistoryFragment"
             app:destination="@id/cycleHistoryFragment" />
+        <!-- ✅ NOVO: Navegação de volta para login (logout) -->
+        <action
+            android:id="@+id/action_routesFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/routesFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment

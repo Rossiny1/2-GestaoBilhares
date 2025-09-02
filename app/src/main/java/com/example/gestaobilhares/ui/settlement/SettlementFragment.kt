@@ -469,13 +469,13 @@ class SettlementFragment : Fragment() {
     
     private fun preencherNomeRepresentante() {
         try {
-            // Tentar obter o nome do usuário logado das SharedPreferences
-            val sharedPref = requireActivity().getSharedPreferences("user_session", android.content.Context.MODE_PRIVATE)
-            val nomeUsuario = sharedPref.getString("user_name", null)
+            // ✅ CORREÇÃO: Usar UserSessionManager em vez de SharedPreferences direto
+            val userSessionManager = com.example.gestaobilhares.utils.UserSessionManager.getInstance(requireContext())
+            val nomeUsuario = userSessionManager.getCurrentUserName()
             
-            if (!nomeUsuario.isNullOrEmpty()) {
+            if (nomeUsuario.isNotEmpty()) {
                 binding.tvRepresentante.text = nomeUsuario
-                Log.d("SettlementFragment", "Nome do representante preenchido: $nomeUsuario")
+                Log.d("SettlementFragment", "✅ Nome do representante preenchido via UserSessionManager: $nomeUsuario")
             } else {
                 // Fallback: tentar obter do Firebase Auth
                 val firebaseUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser

@@ -26,7 +26,7 @@ class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
-    private val authViewModel = AuthViewModel()
+    private lateinit var authViewModel: AuthViewModel
     
     // Google Sign-In
     private lateinit var googleSignInClient: GoogleSignInClient
@@ -43,6 +43,9 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // ✅ CORREÇÃO: Inicializar ViewModel corretamente
+        authViewModel = AuthViewModel()
+        
         // Inicializar repositório local
         authViewModel.initializeRepository(requireContext())
         
@@ -90,26 +93,23 @@ class LoginFragment : Fragment() {
     
     /**
      * Inicia o processo de login com Google
-     * Sempre força a seleção de conta para permitir múltiplos usuários no mesmo dispositivo
+     * ✅ CORREÇÃO: SEMPRE forçar seleção de conta para permitir múltiplos usuários
      */
     private fun signInWithGoogle() {
-        // Verificar se já há uma conta logada no Google
-        val account = GoogleSignIn.getLastSignedInAccount(requireContext())
+        android.util.Log.d("LoginFragment", "=== INICIANDO GOOGLE SIGN-IN ===")
         
-        if (account != null) {
-            // Se há uma conta logada, fazer sign out para forçar seleção
-            googleSignInClient.signOut().addOnCompleteListener {
-                android.util.Log.d("LoginFragment", "Sign out realizado - forçando seleção de conta")
-                
-                // Agora iniciar o processo de sign in que sempre mostrará a seleção de conta
+        // ✅ CORREÇÃO CRÍTICA: SEMPRE fazer sign out primeiro para forçar seleção de conta
+        // Isso garante que o usuário SEMPRE veja a tela de seleção de conta
+        googleSignInClient.signOut().addOnCompleteListener {
+            android.util.Log.d("LoginFragment", "✅ Sign out realizado - forçando seleção de conta")
+            
+            // Aguardar um pouco para garantir que o sign out foi processado
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                // Agora iniciar o processo de sign in que SEMPRE mostrará a seleção de conta
                 val signInIntent = googleSignInClient.signInIntent
                 startActivityForResult(signInIntent, RC_SIGN_IN)
-            }
-        } else {
-            // Se não há conta logada, iniciar diretamente
-            android.util.Log.d("LoginFragment", "Nenhuma conta Google logada - iniciando seleção")
-            val signInIntent = googleSignInClient.signInIntent
-            startActivityForResult(signInIntent, RC_SIGN_IN)
+                android.util.Log.d("LoginFragment", "✅ Intent de seleção de conta iniciado")
+            }, 500) // Aguardar 500ms
         }
     }
     
@@ -119,16 +119,27 @@ class LoginFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         
-        android.util.Log.d("LoginFragment", "onActivityResult: requestCode=$requestCode, resultCode=$resultCode")
-        
-        if (requestCode == RC_SIGN_IN) {
-            try {
-                android.util.Log.d("LoginFragment", "Processando resultado do Google Sign-In...")
+                        android.util.Log.d("LoginFragment", "onActivityResult: requestCode=$requestCode, resultCode=$resultCode")
+                
+                if (requestCode == RC_SIGN_IN) {
+                    try {
+                                        android.util.Log.d("LoginFragment", "=== PROCESSANDO RESULTADO DO GOOGLE SIGN-IN ===")
                 
                 val task = GoogleSignIn.getSignedInAccountFromIntent(data)
                 val account = task.getResult(ApiException::class.java)
                 
-                android.util.Log.d("LoginFragment", "Conta obtida: ${account.email}")
+                android.util.Log.d("LoginFragment", "✅ CONTA SELECIONADA:")
+                android.util.Log.d("LoginFragment", "   Email: ${account.email}")
+                android.util.Log.d("LoginFragment", "   Nome: ${account.displayName}")
+                android.util.Log.d("LoginFragment", "   ID: ${account.id}")
+                
+                // ✅ NOVO: Verificar se é uma conta diferente da anterior
+                val lastAccount = GoogleSignIn.getLastSignedInAccount(requireContext())
+                if (lastAccount != null && lastAccount.email != account.email) {
+                    android.util.Log.d("LoginFragment", "🔄 CONTA DIFERENTE SELECIONADA!")
+                    android.util.Log.d("LoginFragment", "   Conta anterior: ${lastAccount.email}")
+                    android.util.Log.d("LoginFragment", "   Nova conta: ${account.email}")
+                }
                 
                 // Chamar o ViewModel para processar o login
                 authViewModel.signInWithGoogle(account)
