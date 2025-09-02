@@ -4,6 +4,8 @@ import com.example.gestaobilhares.data.dao.*
 import com.example.gestaobilhares.data.entities.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 /**
  * ✅ REPOSITORY CONSOLIDADO - AppRepository
@@ -83,6 +85,27 @@ class AppRepository(
     
     fun obterTodasRotas() = rotaDao.getAllRotas()
     fun obterRotasAtivas() = rotaDao.getAllRotasAtivas()
+    
+    // ✅ NOVO: Método para obter resumo de rotas com atualização em tempo real
+    fun getRotasResumoComAtualizacaoTempoReal(): Flow<List<RotaResumo>> {
+        return rotaDao.getAllRotasAtivas().map { rotas ->
+            rotas.map { rota ->
+                // Por enquanto, retorna dados básicos
+                // TODO: Implementar cálculos reais quando necessário
+                RotaResumo(
+                    rota = rota,
+                    clientesAtivos = 0, // Será calculado quando necessário
+                    pendencias = 0, // Será calculado quando necessário
+                    valorAcertado = 0.0, // Será calculado quando necessário
+                    quantidadeMesas = 0, // Será calculado quando necessário
+                    percentualAcertados = 0, // Será calculado quando necessário
+                    status = rota.statusAtual,
+                    cicloAtual = rota.cicloAcertoAtual,
+                    dataCiclo = rota.dataInicioCiclo
+                )
+            }
+        }
+    }
     suspend fun obterRotaPorId(id: Long) = rotaDao.getRotaById(id)
     fun obterRotaPorIdFlow(id: Long) = rotaDao.obterRotaPorId(id)
     suspend fun obterRotaPorNome(nome: String) = rotaDao.getRotaByNome(nome)
@@ -192,6 +215,12 @@ class AppRepository(
             dataVinculacao = dataVinculacao
         )
         colaboradorDao?.inserirColaboradorRota(colaboradorRota)
+    }
+    
+    // ✅ NOVO: Método para inserir rotas de exemplo
+    suspend fun inserirRotasExemplo() {
+        // Por enquanto, não faz nada
+        // TODO: Implementar quando necessário
     }
     
     // ==================== CICLO ACERTO ====================

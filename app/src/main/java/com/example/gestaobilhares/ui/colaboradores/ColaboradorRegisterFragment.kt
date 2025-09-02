@@ -195,6 +195,7 @@ class ColaboradorRegisterFragment : Fragment() {
                         }
                     }
                     .setPositiveButton("Confirmar") { _, _ ->
+                        android.util.Log.d("ColaboradorRegister", "🔍 Rotas selecionadas após confirmação: $rotasSelecionadas")
                         atualizarTextoRotasSelecionadas()
                     }
                     .setNegativeButton("Cancelar", null)
@@ -254,12 +255,24 @@ class ColaboradorRegisterFragment : Fragment() {
                     // Preencher configurações
                     binding.etNivelAcesso.setText(col.nivelAcesso.name)
                     
+                    // ✅ NOVO: Logs para debug do carregamento
+                    android.util.Log.d("ColaboradorRegister", "=== CARREGANDO ROTAS VINCULADAS ===")
+                    android.util.Log.d("ColaboradorRegister", "ID do colaborador: $id")
+                    
                     // Carregar rotas vinculadas
                     val rotasVinculadas = withContext(Dispatchers.IO) {
                         appRepository.obterRotasPorColaborador(id).first()
                     }
+                    
+                    android.util.Log.d("ColaboradorRegister", "🔍 Rotas vinculadas encontradas: ${rotasVinculadas.size}")
+                    rotasVinculadas.forEach { colaboradorRota ->
+                        android.util.Log.d("ColaboradorRegister", "   - Rota ID: ${colaboradorRota.rotaId}")
+                    }
+                    
                     rotasSelecionadas.clear()
                     rotasSelecionadas.addAll(rotasVinculadas.map { it.rotaId })
+                    
+                    android.util.Log.d("ColaboradorRegister", "🔍 Rotas selecionadas após carregamento: $rotasSelecionadas")
                     
                     // Atualizar texto das rotas
                     setupRotasSelector()
@@ -322,19 +335,43 @@ class ColaboradorRegisterFragment : Fragment() {
                     }
                 }
                 
+                // ✅ NOVO: Logs detalhados para debug
+                android.util.Log.d("ColaboradorRegister", "=== SALVANDO VINCULAÇÕES DE ROTAS ===")
+                android.util.Log.d("ColaboradorRegister", "ID do colaborador: $idSalvo")
+                android.util.Log.d("ColaboradorRegister", "Rotas selecionadas: $rotasSelecionadas")
+                
                 // Salvar vinculações de rotas
                 withContext(Dispatchers.IO) {
-                    // Remover vinculações antigas
-                    appRepository.removerRotasColaborador(idSalvo)
-                    
-                    // Adicionar novas vinculações
-                    rotasSelecionadas.forEach { rotaId ->
-                        appRepository.vincularColaboradorRota(
-                            colaboradorId = idSalvo,
-                            rotaId = rotaId,
-                            responsavelPrincipal = false,
-                            dataVinculacao = Date()
-                        )
+                    try {
+                        // Remover vinculações antigas
+                        android.util.Log.d("ColaboradorRegister", "🔍 Removendo vinculações antigas...")
+                        appRepository.removerRotasColaborador(idSalvo)
+                        android.util.Log.d("ColaboradorRegister", "✅ Vinculações antigas removidas")
+                        
+                        // Adicionar novas vinculações
+                        android.util.Log.d("ColaboradorRegister", "🔍 Adicionando novas vinculações...")
+                        rotasSelecionadas.forEach { rotaId ->
+                            android.util.Log.d("ColaboradorRegister", "   Vinculando rota ID: $rotaId")
+                            appRepository.vincularColaboradorRota(
+                                colaboradorId = idSalvo,
+                                rotaId = rotaId,
+                                responsavelPrincipal = false,
+                                dataVinculacao = Date()
+                            )
+                            android.util.Log.d("ColaboradorRegister", "   ✅ Rota $rotaId vinculada")
+                        }
+                        
+                        // ✅ NOVO: Verificar se as vinculações foram salvas
+                        val rotasVerificadas = appRepository.obterRotasPorColaborador(idSalvo).first()
+                        android.util.Log.d("ColaboradorRegister", "🔍 Verificando vinculações salvas...")
+                        android.util.Log.d("ColaboradorRegister", "   Total de rotas vinculadas: ${rotasVerificadas.size}")
+                        rotasVerificadas.forEach { colaboradorRota ->
+                            android.util.Log.d("ColaboradorRegister", "   - Rota ID: ${colaboradorRota.rotaId}")
+                        }
+                        
+                    } catch (e: Exception) {
+                        android.util.Log.e("ColaboradorRegister", "❌ Erro ao salvar vinculações: ${e.message}", e)
+                        throw e
                     }
                 }
                 

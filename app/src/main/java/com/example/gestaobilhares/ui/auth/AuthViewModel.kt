@@ -162,6 +162,13 @@ class AuthViewModel : ViewModel() {
                             // ✅ NOVO: Criar/atualizar colaborador para usuário online
                             criarOuAtualizarColaboradorOnline(result.user!!)
                             
+                            // ✅ NOVO: Verificar se a sessão foi iniciada corretamente
+                            val nomeSessao = userSessionManager.getCurrentUserName()
+                            val idSessao = userSessionManager.getCurrentUserId()
+                            android.util.Log.d("AuthViewModel", "🔍 Verificação da sessão online:")
+                            android.util.Log.d("AuthViewModel", "   Nome na sessão: $nomeSessao")
+                            android.util.Log.d("AuthViewModel", "   ID na sessão: $idSessao")
+                            
                             _authState.value = AuthState.Authenticated(result.user!!, true)
                             return@launch
                         }
@@ -172,9 +179,19 @@ class AuthViewModel : ViewModel() {
                 
                 // Se online falhou ou está offline, tentar login local
                 android.util.Log.d("AuthViewModel", "Tentando login offline...")
+                android.util.Log.d("AuthViewModel", "Email para busca: $email")
+                
                 val colaborador = appRepository.obterColaboradorPorEmail(email)
                 
+                android.util.Log.d("AuthViewModel", "🔍 Colaborador encontrado: ${colaborador?.nome ?: "NÃO ENCONTRADO"}")
                 if (colaborador != null) {
+                    android.util.Log.d("AuthViewModel", "   ID: ${colaborador.id}")
+                    android.util.Log.d("AuthViewModel", "   Email: ${colaborador.email}")
+                    android.util.Log.d("AuthViewModel", "   Nível: ${colaborador.nivelAcesso}")
+                    android.util.Log.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
+                    android.util.Log.d("AuthViewModel", "   Senha temporária: ${colaborador.senhaTemporaria}")
+                    android.util.Log.d("AuthViewModel", "   Firebase UID: ${colaborador.firebaseUid}")
+                
                     // ✅ NOVO: Sistema híbrido - aceitar senha Firebase ou senha temporária
                     val senhaValida = when {
                         // Senha temporária do sistema local
@@ -186,6 +203,13 @@ class AuthViewModel : ViewModel() {
                         colaborador.firebaseUid != null -> true
                         else -> false
                     }
+                    
+                    android.util.Log.d("AuthViewModel", "🔍 Validação de senha:")
+                    android.util.Log.d("AuthViewModel", "   Senha fornecida: $senha")
+                    android.util.Log.d("AuthViewModel", "   Senha temporária: ${colaborador.senhaTemporaria}")
+                    android.util.Log.d("AuthViewModel", "   Senha padrão: 123456")
+                    android.util.Log.d("AuthViewModel", "   Firebase UID presente: ${colaborador.firebaseUid != null}")
+                    android.util.Log.d("AuthViewModel", "   Senha válida: $senhaValida")
                     
                     if (senhaValida) {
                         val tipoAutenticacao = when {
@@ -211,8 +235,20 @@ class AuthViewModel : ViewModel() {
                             colaborador
                         }
                         
+                        android.util.Log.d("AuthViewModel", "🔍 Iniciando sessão para: ${colaboradorFinal.nome}")
+                        android.util.Log.d("AuthViewModel", "   ID: ${colaboradorFinal.id}")
+                        android.util.Log.d("AuthViewModel", "   Email: ${colaboradorFinal.email}")
+                        
                         // ✅ NOVO: Iniciar sessão do usuário
+                        android.util.Log.d("AuthViewModel", "🔍 Iniciando sessão offline para: ${colaboradorFinal.nome}")
                         userSessionManager.startSession(colaboradorFinal)
+                        
+                        // ✅ NOVO: Verificar se a sessão foi iniciada corretamente
+                        val nomeSessao = userSessionManager.getCurrentUserName()
+                        val idSessao = userSessionManager.getCurrentUserId()
+                        android.util.Log.d("AuthViewModel", "🔍 Verificação da sessão:")
+                        android.util.Log.d("AuthViewModel", "   Nome na sessão: $nomeSessao")
+                        android.util.Log.d("AuthViewModel", "   ID na sessão: $idSessao")
                         
                         // Criar usuário local simulado
                         val localUser = LocalUser(
@@ -391,8 +427,19 @@ class AuthViewModel : ViewModel() {
                                 if (colaborador.aprovado) {
                                     android.util.Log.d("AuthViewModel", "✅ LOGIN HÍBRIDO SUCESSO!")
                                     
-                                    // Salvar nome do usuário nas SharedPreferences
-                                    salvarDadosUsuario(colaborador.nome, colaborador.email)
+                                    // ✅ NOVO: Iniciar sessão do usuário
+                                    android.util.Log.d("AuthViewModel", "🔍 Iniciando sessão Google para: ${colaborador.nome}")
+                                    userSessionManager.startSession(colaborador)
+                                    
+                                    // ✅ NOVO: Verificar se a sessão foi iniciada corretamente
+                                    val nomeSessao = userSessionManager.getCurrentUserName()
+                                    val idSessao = userSessionManager.getCurrentUserId()
+                                    android.util.Log.d("AuthViewModel", "🔍 Verificação da sessão Google:")
+                                    android.util.Log.d("AuthViewModel", "   Nome na sessão: $nomeSessao")
+                                    android.util.Log.d("AuthViewModel", "   ID na sessão: $idSessao")
+                                    
+                                    // ✅ REMOVIDO: salvarDadosUsuario não estava funcionando
+                                    // O UserSessionManager já salva os dados corretamente
                                     
                                     // Criar usuário local
                                     val localUser = LocalUser(
@@ -452,6 +499,17 @@ class AuthViewModel : ViewModel() {
                     // Verificar se está aprovado
                     if (colaborador.aprovado) {
                         android.util.Log.d("AuthViewModel", "✅ LOGIN OFFLINE SUCESSO!")
+                        
+                        // ✅ NOVO: Iniciar sessão do usuário
+                        android.util.Log.d("AuthViewModel", "🔍 Iniciando sessão Google offline para: ${colaborador.nome}")
+                        userSessionManager.startSession(colaborador)
+                        
+                        // ✅ NOVO: Verificar se a sessão foi iniciada corretamente
+                        val nomeSessao = userSessionManager.getCurrentUserName()
+                        val idSessao = userSessionManager.getCurrentUserId()
+                        android.util.Log.d("AuthViewModel", "🔍 Verificação da sessão Google offline:")
+                        android.util.Log.d("AuthViewModel", "   Nome na sessão: $nomeSessao")
+                        android.util.Log.d("AuthViewModel", "   ID na sessão: $idSessao")
                         
                         // Criar usuário local
                         val localUser = LocalUser(
@@ -545,10 +603,20 @@ class AuthViewModel : ViewModel() {
             )
             
             val colaboradorId = appRepository.inserirColaborador(colaborador)
+            val colaboradorComId = colaborador.copy(id = colaboradorId)
+            
             android.util.Log.d("AuthViewModel", "✅ Colaborador criado automaticamente com ID: $colaboradorId")
             android.util.Log.d("AuthViewModel", "Nome: ${colaborador.nome}")
             android.util.Log.d("AuthViewModel", "Email: ${colaborador.email}")
             android.util.Log.d("AuthViewModel", "Aprovado: ${colaborador.aprovado}")
+            
+            // ✅ CORREÇÃO: NÃO iniciar sessão para usuários não aprovados
+            android.util.Log.d("AuthViewModel", "⚠️ Usuário não aprovado - sessão NÃO será iniciada")
+            android.util.Log.d("AuthViewModel", "   Nome: ${colaboradorComId.nome}")
+            android.util.Log.d("AuthViewModel", "   Email: ${colaboradorComId.email}")
+            android.util.Log.d("AuthViewModel", "   Aprovado: ${colaboradorComId.aprovado}")
+            android.util.Log.d("AuthViewModel", "   Status: Aguardando aprovação do administrador")
+            
             android.util.Log.d("AuthViewModel", "=== FIM CRIAÇÃO COLABORADOR ===")
             
         } catch (e: Exception) {
@@ -558,24 +626,8 @@ class AuthViewModel : ViewModel() {
         }
     }
     
-    /**
-     * Salva dados do usuário nas SharedPreferences
-     */
-    private fun salvarDadosUsuario(nome: String, email: String) {
-        try {
-            // Usar um contexto disponível (pode precisar ser passado como parâmetro)
-            // Por enquanto, deixar comentado até ter acesso ao contexto
-            // val sharedPref = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
-            // with(sharedPref.edit()) {
-            //     putString("user_name", nome)
-            //     putString("user_email", email)
-            //     apply()
-            // }
-            android.util.Log.d("AuthViewModel", "Dados do usuário salvos: $nome, $email")
-        } catch (e: Exception) {
-            android.util.Log.e("AuthViewModel", "Erro ao salvar dados do usuário: ${e.message}")
-        }
-    }
+    // ✅ REMOVIDO: Método salvarDadosUsuario não estava funcionando
+    // O UserSessionManager já salva os dados corretamente
     
     /**
      * Função para logout
