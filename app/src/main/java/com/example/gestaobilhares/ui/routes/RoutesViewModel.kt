@@ -7,7 +7,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.RotaResumo
-import com.example.gestaobilhares.data.repository.RotaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.UserSessionManager
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  * ✅ NOVO: Controle de acesso baseado em nível de usuário e rotas responsáveis.
  */
 class RoutesViewModel(
-    private val rotaRepository: RotaRepository,
+    private val appRepository: AppRepository,
     private val userSessionManager: UserSessionManager
 ) : ViewModel() {
 
@@ -52,11 +52,11 @@ class RoutesViewModel(
     val rotasResumo: LiveData<List<RotaResumo>> = _rotasResumoFiltradas
     
     // Observa as rotas resumo do repository e aplica filtro de acesso
-    private val rotasResumoOriginal: LiveData<List<RotaResumo>> = rotaRepository.getRotasResumoComAtualizacaoTempoReal().asLiveData()
+    private val rotasResumoOriginal: LiveData<List<RotaResumo>> = appRepository.getRotasResumoComAtualizacaoTempoReal().asLiveData()
 
     // Estatísticas gerais calculadas a partir das rotas
     val estatisticas: LiveData<EstatisticasGerais> = combine(
-        rotaRepository.getRotasResumoComAtualizacaoTempoReal()
+        appRepository.getRotasResumoComAtualizacaoTempoReal()
     ) { rotas ->
         calcularEstatisticas(rotas.first())
     }.asLiveData()
@@ -78,10 +78,12 @@ class RoutesViewModel(
         val isAdmin = userSessionManager.isAdmin()
         val userName = userSessionManager.getCurrentUserName()
         val userEmail = userSessionManager.getCurrentUserEmail()
+        val userId = userSessionManager.getCurrentUserId()
         
         android.util.Log.d("RoutesViewModel", "🔍 Aplicando filtro de rotas:")
         android.util.Log.d("RoutesViewModel", "   Usuário: $userName")
         android.util.Log.d("RoutesViewModel", "   Email: $userEmail")
+        android.util.Log.d("RoutesViewModel", "   ID: $userId")
         android.util.Log.d("RoutesViewModel", "   É Admin: $isAdmin")
         android.util.Log.d("RoutesViewModel", "   Total de rotas: ${rotas.size}")
         
@@ -90,10 +92,34 @@ class RoutesViewModel(
             _rotasResumoFiltradas.value = rotas
             android.util.Log.d("RoutesViewModel", "✅ ADMIN - Mostrando todas as ${rotas.size} rotas")
         } else {
-            // USER vê apenas rotas onde é responsável
-            // Por enquanto, mostrar todas até implementar busca de rotas responsáveis
-            _rotasResumoFiltradas.value = rotas
-            android.util.Log.d("RoutesViewModel", "⚠️ USER - Mostrando todas as rotas (filtro de responsabilidade não implementado)")
+            // ✅ IMPLEMENTADO: USER vê apenas rotas onde é responsável
+            viewModelScope.launch {
+                try {
+                    // Buscar rotas onde o usuário é responsável
+                    val rotasResponsavel = appRepository.obterRotasPorColaborador(userId).first()
+                    
+                    android.util.Log.d("RoutesViewModel", "🔍 Buscando rotas responsável para usuário $userId")
+                    
+                    // Filtrar apenas as rotas onde o usuário é responsável
+                    val rotasFiltradas = rotas.filter { rotaResumo ->
+                        rotasResponsavel.any { colaboradorRota ->
+                            colaboradorRota.rotaId == rotaResumo.rota.id
+                        }
+                    }
+                    
+                    android.util.Log.d("RoutesViewModel", "✅ USER - Mostrando ${rotasFiltradas.size} rotas responsável:")
+                    rotasFiltradas.forEach { rotaResumo ->
+                        android.util.Log.d("RoutesViewModel", "   - ${rotaResumo.rota.nome}")
+                    }
+                    
+                    _rotasResumoFiltradas.value = rotasFiltradas
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("RoutesViewModel", "Erro ao filtrar rotas por responsabilidade: ${e.message}", e)
+                    // Em caso de erro, mostrar todas as rotas (fallback)
+                    _rotasResumoFiltradas.value = rotas
+                }
+            }
         }
     }
     
@@ -165,7 +191,7 @@ class RoutesViewModel(
     private fun inserirRotasExemploSeNecessario() {
         viewModelScope.launch {
             try {
-                rotaRepository.inserirRotasExemplo()
+                appRepository.inserirRotasExemplo()
             } catch (e: Exception) {
                 // Ignora erros ao inserir dados de exemplo
             }

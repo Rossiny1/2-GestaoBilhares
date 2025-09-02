@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRoutesBinding
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.RotaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.UserSessionManager
 import com.google.android.material.navigation.NavigationView
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -64,11 +64,13 @@ class RoutesFragment : Fragment() {
         // Inicializar ViewModel aqui onde o contexto está disponível
         val database = AppDatabase.getDatabase(requireContext())
         viewModel = RoutesViewModel(
-            RotaRepository(
-                database.rotaDao(),
+            AppRepository(
                 database.clienteDao(),
-                database.mesaDao(),
                 database.acertoDao(),
+                database.mesaDao(),
+                database.rotaDao(),
+                database.despesaDao(),
+                database.colaboradorDao(),
                 database.cicloAcertoDao()
             ),
             userSessionManager

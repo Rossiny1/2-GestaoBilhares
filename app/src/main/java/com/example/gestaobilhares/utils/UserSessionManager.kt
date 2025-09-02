@@ -187,10 +187,10 @@ class UserSessionManager private constructor(context: Context) {
     
     /**
      * Verifica se o usuário tem permissão para acessar o menu principal
-     * ✅ CORREÇÃO: USER aprovado também deve ter acesso ao menu (com funcionalidades limitadas)
+     * ✅ CORREÇÃO: Apenas ADMIN pode acessar o menu principal
      */
     fun hasMenuAccess(): Boolean {
-        return isApproved() // Tanto ADMIN quanto USER aprovados têm acesso ao menu
+        return isAdmin() && isApproved() // Apenas ADMIN aprovado tem acesso ao menu
     }
     
     /**
