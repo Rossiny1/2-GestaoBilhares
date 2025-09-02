@@ -49,4 +49,12 @@
             android:title="Configuração do Sistema" />
     </group>
 
+    <!-- ✅ NOVO: Grupo de Sessão -->
+    <group android:id="@+id/group_session" android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/ic_logout"
+            android:title="Sair da Conta" />
+    </group>
+
 </menu>

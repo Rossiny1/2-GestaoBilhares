@@ -68,6 +68,8 @@ class AuthViewModel : ViewModel() {
      * Inicializa o repositório local, utilitário de rede e gerenciador de sessão
      */
     fun initializeRepository(context: Context) {
+        android.util.Log.d("AuthViewModel", "=== INICIANDO REPOSITÓRIO ===")
+        
         val database = AppDatabase.getDatabase(context)
         appRepository = AppRepository(
             database.clienteDao(),
@@ -82,6 +84,10 @@ class AuthViewModel : ViewModel() {
         networkUtils = NetworkUtils(context)
         syncManager = SyncManager(context, appRepository)
         userSessionManager = UserSessionManager.getInstance(context)
+        
+        android.util.Log.d("AuthViewModel", "✅ Repositório local inicializado")
+        android.util.Log.d("AuthViewModel", "✅ UserSessionManager inicializado: ${userSessionManager != null}")
+        android.util.Log.d("AuthViewModel", "✅ NetworkUtils inicializado: ${networkUtils != null}")
         
         // Observar mudanças na conectividade
         viewModelScope.launch {
@@ -642,25 +648,38 @@ class AuthViewModel : ViewModel() {
             val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
             
             if (colaboradorExistente != null) {
-                // ✅ MELHORADO: Sincronizar dados do Firebase com dados locais
-                val colaboradorAtualizado = colaboradorExistente.copy(
-                    // Atualizar dados do Firebase
-                    nome = firebaseUser.displayName ?: colaboradorExistente.nome,
-                    firebaseUid = firebaseUser.uid,
-                    dataUltimoAcesso = java.util.Date(),
-                    // Verificar se precisa atualizar para ADMIN
-                    nivelAcesso = if (email == "rossinys@gmail.com") NivelAcesso.ADMIN else colaboradorExistente.nivelAcesso,
-                    aprovado = if (email == "rossinys@gmail.com") true else colaboradorExistente.aprovado,
-                    dataAprovacao = if (email == "rossinys@gmail.com" && colaboradorExistente.dataAprovacao == null) 
-                        java.util.Date() else colaboradorExistente.dataAprovacao,
-                    aprovadoPor = if (email == "rossinys@gmail.com" && colaboradorExistente.aprovadoPor == null) 
-                        "Sistema (Admin Padrão)" else colaboradorExistente.aprovadoPor
-                )
+                // ✅ CORREÇÃO CRÍTICA: Manter nível de acesso original, exceto para admin especial
+                val colaboradorAtualizado = if (email == "rossinys@gmail.com") {
+                    // Apenas para o admin especial - forçar ADMIN
+                    colaboradorExistente.copy(
+                        nome = firebaseUser.displayName ?: colaboradorExistente.nome,
+                        firebaseUid = firebaseUser.uid,
+                        dataUltimoAcesso = java.util.Date(),
+                        nivelAcesso = NivelAcesso.ADMIN,
+                        aprovado = true,
+                        dataAprovacao = colaboradorExistente.dataAprovacao ?: java.util.Date(),
+                        aprovadoPor = colaboradorExistente.aprovadoPor ?: "Sistema (Admin Padrão)"
+                    )
+                } else {
+                    // ✅ CORREÇÃO: Para outros usuários, MANTER nível de acesso original
+                    colaboradorExistente.copy(
+                        nome = firebaseUser.displayName ?: colaboradorExistente.nome,
+                        firebaseUid = firebaseUser.uid,
+                        dataUltimoAcesso = java.util.Date()
+                        // NÃO alterar nivelAcesso, aprovado, etc. para usuários normais
+                    )
+                }
                 
                 // Salvar atualizações no banco local
                 appRepository.atualizarColaborador(colaboradorAtualizado)
                 
-                android.util.Log.d("AuthViewModel", "✅ Colaborador sincronizado: ${colaboradorAtualizado.nome} (${colaboradorAtualizado.nivelAcesso})")
+                android.util.Log.d("AuthViewModel", "✅ Colaborador sincronizado:")
+                android.util.Log.d("AuthViewModel", "   Nome: ${colaboradorAtualizado.nome}")
+                android.util.Log.d("AuthViewModel", "   Email: ${colaboradorAtualizado.email}")
+                android.util.Log.d("AuthViewModel", "   Nível: ${colaboradorAtualizado.nivelAcesso}")
+                android.util.Log.d("AuthViewModel", "   Aprovado: ${colaboradorAtualizado.aprovado}")
+                android.util.Log.d("AuthViewModel", "   É admin especial: ${email == "rossinys@gmail.com"}")
+                
                 userSessionManager.startSession(colaboradorAtualizado)
             } else {
                 // Criar novo colaborador

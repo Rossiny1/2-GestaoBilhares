@@ -75,9 +75,26 @@ class RoutesViewModel(
      * ✅ NOVO: Aplica filtro de acesso às rotas baseado no nível do usuário
      */
     private fun aplicarFiltroAcesso(rotas: List<RotaResumo>) {
-        _rotasResumoFiltradas.value = rotas // Por enquanto, mostrar todas as rotas
-        // TODO: Implementar filtro após resolver dependência de contexto
-        android.util.Log.d("RoutesViewModel", "🔍 Mostrando ${rotas.size} rotas para ${userSessionManager.getCurrentUserName()}")
+        val isAdmin = userSessionManager.isAdmin()
+        val userName = userSessionManager.getCurrentUserName()
+        val userEmail = userSessionManager.getCurrentUserEmail()
+        
+        android.util.Log.d("RoutesViewModel", "🔍 Aplicando filtro de rotas:")
+        android.util.Log.d("RoutesViewModel", "   Usuário: $userName")
+        android.util.Log.d("RoutesViewModel", "   Email: $userEmail")
+        android.util.Log.d("RoutesViewModel", "   É Admin: $isAdmin")
+        android.util.Log.d("RoutesViewModel", "   Total de rotas: ${rotas.size}")
+        
+        if (isAdmin) {
+            // Admin vê todas as rotas
+            _rotasResumoFiltradas.value = rotas
+            android.util.Log.d("RoutesViewModel", "✅ ADMIN - Mostrando todas as ${rotas.size} rotas")
+        } else {
+            // USER vê apenas rotas onde é responsável
+            // Por enquanto, mostrar todas até implementar busca de rotas responsáveis
+            _rotasResumoFiltradas.value = rotas
+            android.util.Log.d("RoutesViewModel", "⚠️ USER - Mostrando todas as rotas (filtro de responsabilidade não implementado)")
+        }
     }
     
     /**

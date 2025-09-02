@@ -16,6 +16,8 @@ import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.RotaRepository
 import com.example.gestaobilhares.utils.UserSessionManager
 import com.google.android.material.navigation.NavigationView
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -216,6 +218,44 @@ class RoutesFragment : Fragment() {
                     Toast.makeText(requireContext(), "Configuração do Sistema será implementado em breve", Toast.LENGTH_SHORT).show()
                     binding.drawerLayout.closeDrawers()
                     true
+                }
+                R.id.nav_logout -> {
+                    // ✅ NOVO: Implementar logout completo
+                    android.util.Log.d("RoutesFragment", "=== INICIANDO LOGOUT ===")
+                    android.util.Log.d("RoutesFragment", "Usuário atual: ${userSessionManager.getCurrentUserName()}")
+                    
+                    try {
+                        // 1. Fazer logout do Google Sign-In
+                        val googleSignInClient = GoogleSignIn.getClient(requireActivity(), 
+                            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                .requestIdToken("1089459035145-d55o1h307gaedp4v03cuchr6s6nn2lhg.apps.googleusercontent.com")
+                                .requestEmail()
+                                .build())
+                        
+                        googleSignInClient.signOut().addOnCompleteListener {
+                            android.util.Log.d("RoutesFragment", "✅ Google Sign-Out realizado")
+                            
+                            // 2. Encerrar sessão local
+                            userSessionManager.endSession()
+                            android.util.Log.d("RoutesFragment", "✅ Sessão local encerrada")
+                            
+                            // 3. Fechar drawer
+                            binding.drawerLayout.closeDrawers()
+                            
+                            // 4. Mostrar mensagem de sucesso
+                            Toast.makeText(requireContext(), "Logout realizado com sucesso!", Toast.LENGTH_SHORT).show()
+                            
+                            // 5. Navegar de volta para login
+                            findNavController().navigate(R.id.action_routesFragment_to_loginFragment)
+                        }
+                        
+                        true
+                    } catch (e: Exception) {
+                        android.util.Log.e("RoutesFragment", "Erro no logout: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao fazer logout: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
                 }
                 else -> false
             }
