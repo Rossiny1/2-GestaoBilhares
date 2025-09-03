@@ -58,12 +58,12 @@ class LimpezaBancoDados(private val context: Context) {
                 
                 for (acerto in acertosCliente) {
                     // 2.2 Remover mesas do acerto
-                    val mesasAcerto = acertoMesaDao.obterMesasPorAcerto(acerto.id)
+                    val mesasAcerto = acertoMesaDao.buscarPorAcertoId(acerto.id)
                     println("   🎯 Mesas do acerto ${acerto.id}: ${mesasAcerto.size}")
                     
                     // 2.3 Remover vinculações acerto-mesa
                     for (acertoMesa in mesasAcerto) {
-                        acertoMesaDao.deletarAcertoMesa(acertoMesa)
+                        acertoMesaDao.deletar(acertoMesa)
                         println("     🗑️ AcertoMesa removido: ${acertoMesa.id}")
                     }
                     
@@ -73,7 +73,7 @@ class LimpezaBancoDados(private val context: Context) {
                 }
                 
                 // 2.5 Remover mesas do cliente
-                val mesasCliente = mesaDao.obterMesasPorCliente(cliente.id)
+                val mesasCliente = mesaDao.obterMesasPorClienteDireto(cliente.id)
                 println("   🎯 Mesas do cliente: ${mesasCliente.size}")
                 
                 for (mesa in mesasCliente) {
@@ -90,7 +90,7 @@ class LimpezaBancoDados(private val context: Context) {
             println("📊 Resumo:")
             println("   - Clientes removidos: ${clientesEncontrados.size}")
             println("   - Total de acertos removidos: ${clientesEncontrados.sumOf { cliente -> acertoDao.buscarPorCliente(cliente.id).first().size }}")
-            println("   - Total de mesas removidas: ${clientesEncontrados.sumOf { cliente -> mesaDao.obterMesasPorCliente(cliente.id).size }}")
+            println("   - Total de mesas removidas: ${clientesEncontrados.sumOf { cliente -> mesaDao.obterMesasPorClienteDireto(cliente.id).size }}")
             
         } catch (e: Exception) {
             println("❌ ERRO durante a limpeza: ${e.message}")

@@ -4,31 +4,24 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import dagger.hilt.android.AndroidEntryPoint
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentColaboradorPerformanceBinding
-import com.example.gestaobilhares.ui.reports.viewmodel.ColaboradorPerformanceViewModel
 import com.example.gestaobilhares.ui.reports.adapter.ColaboradorPerformanceAdapter
+import com.example.gestaobilhares.ui.reports.viewmodel.ColaboradorPerformanceViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
-/**
- * Fragment para relatório de performance dos colaboradores.
- * Baseado em ciclos e rotas com métricas detalhadas.
- */
 @AndroidEntryPoint
 class ColaboradorPerformanceFragment : Fragment() {
-    
+
     private var _binding: FragmentColaboradorPerformanceBinding? = null
     private val binding get() = _binding!!
     
     private val viewModel: ColaboradorPerformanceViewModel by viewModels()
     private lateinit var adapter: ColaboradorPerformanceAdapter
-    
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -37,123 +30,102 @@ class ColaboradorPerformanceFragment : Fragment() {
         _binding = FragmentColaboradorPerformanceBinding.inflate(inflater, container, false)
         return binding.root
     }
-    
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        setupViewModel()
-        setupRecyclerView()
-        setupToolbar()
-        setupFilters()
-        observeData()
-        
-        // Carregar dados iniciais
-        viewModel.carregarDados()
+        setupUI()
+        setupObservers()
+        // Carregar dados iniciais via método público
+        viewModel.aplicarFiltros()
     }
-    
-    private fun setupViewModel() { /* Hilt injeta via by viewModels() */ }
-    
-    private fun setupRecyclerView() {
-        adapter = ColaboradorPerformanceAdapter { colaborador ->
-            // Navegar para detalhes do colaborador
-            // TODO: Implementar navegação para detalhes
-            Toast.makeText(requireContext(), "Detalhes de ${colaborador.colaborador.nome}", Toast.LENGTH_SHORT).show()
-        }
-        
-        binding.recyclerViewColaboradores.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@ColaboradorPerformanceFragment.adapter
-        }
-    }
-    
-    private fun setupToolbar() {
+
+    private fun setupUI() {
+        // Configurar botão voltar
         binding.btnBack.setOnClickListener {
-            findNavController().navigateUp()
+            findNavController().popBackStack()
         }
-        
+
+        // Configurar botão de filtro
         binding.btnFilter.setOnClickListener {
-            // TODO: Implementar filtros avançados
-            Toast.makeText(requireContext(), "Filtros avançados em breve", Toast.LENGTH_SHORT).show()
+            showFilterDialog()
         }
+
+        // Configurar RecyclerView - SEM REATRIBUIÇÃO
+        binding.recyclerViewColaboradores.layoutManager = LinearLayoutManager(requireContext())
+        adapter = ColaboradorPerformanceAdapter()
+        binding.recyclerViewColaboradores.adapter = adapter
+
+        // Configurar spinners
+        configurarSpinners()
     }
-    
-    private fun setupFilters() {
-        // Setup do spinner de ciclos
+
+    private fun configurarSpinners() {
+        // Configurar spinner de ciclos
+        val ciclos = viewModel.ciclos.value ?: emptyList()
+        val ciclosAdapter = android.widget.ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            ciclos.map { it.descricao }
+        )
+        ciclosAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerCiclo.setAdapter(ciclosAdapter)
+
+        // Configurar spinner de rotas
+        val rotas = viewModel.rotas.value ?: emptyList()
+        val rotasAdapter = android.widget.ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            rotas.map { it.nome }
+        )
+        rotasAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerRota.setAdapter(rotasAdapter)
+    }
+
+    private fun setupObservers() {
+        // Observar ciclos
         viewModel.ciclos.observe(viewLifecycleOwner) { ciclos ->
-            val cicloAdapter = ArrayAdapter(
-                requireContext(),
-                android.R.layout.simple_dropdown_item_1line,
-                ciclos.map { "${it.numero}\u00BA Acerto" }
-            )
-            binding.spinnerCiclo.setAdapter(cicloAdapter)
-            
-            // Selecionar primeiro ciclo por padrão
-            if (ciclos.isNotEmpty()) {
-                binding.spinnerCiclo.setText(cicloAdapter.getItem(0), false)
-                viewModel.selecionarCiclo(ciclos[0].numero.toLong())
-            }
+            configurarSpinners()
         }
-        
-        // Setup do spinner de rotas
+
+        // Observar rotas
         viewModel.rotas.observe(viewLifecycleOwner) { rotas ->
-            val rotaAdapter = ArrayAdapter(
-                requireContext(),
-                android.R.layout.simple_dropdown_item_1line,
-                listOf("Todas") + rotas.map { it.nome }
-            )
-            binding.spinnerRota.setAdapter(rotaAdapter)
-            
-            // Selecionar "Todas" por padrão
-            binding.spinnerRota.setText(rotaAdapter.getItem(0), false)
-            viewModel.selecionarRota(null) // null = todas as rotas
+            configurarSpinners()
         }
-        
-        // Listeners dos spinners
-        binding.spinnerCiclo.setOnItemClickListener { _, _, position, _ ->
-            val ciclos = viewModel.ciclos.value
-            if (ciclos != null && position < ciclos.size) {
-                viewModel.selecionarCiclo(ciclos[position].numero.toLong())
+
+        // Observar dados de performance
+        viewModel.performanceData.observe(viewLifecycleOwner) { performanceData ->
+            if (performanceData.isNotEmpty()) {
+                adapter.submitList(performanceData)
+                binding.recyclerViewColaboradores.visibility = View.VISIBLE
+            } else {
+                binding.recyclerViewColaboradores.visibility = View.GONE
             }
         }
-        
-        binding.spinnerRota.setOnItemClickListener { _, _, position, _ ->
-            val rotas = viewModel.rotas.value
-            if (position == 0) {
-                // "Todas as Rotas"
-                viewModel.selecionarRota(null)
-            } else if (rotas != null && position - 1 < rotas.size) {
-                viewModel.selecionarRota(rotas[position - 1].id)
-            }
+
+        // Observar estatísticas
+        viewModel.estatisticas.observe(viewLifecycleOwner) { estatisticas ->
+            binding.txtTotalColaboradores.text = estatisticas.totalColaboradores.toString()
+            binding.txtColaboradoresAtivos.text = estatisticas.colaboradoresAtivos.toString()
+            binding.txtMetaAtingida.text = "${String.format("%.1f", (estatisticas.colaboradoresAtivos.toDouble() / estatisticas.totalColaboradores) * 100)}%"
+            binding.txtPendentesAprovacao.text = (estatisticas.totalColaboradores - estatisticas.colaboradoresAtivos).toString()
         }
-    }
-    
-    private fun observeData() {
-        // Estatísticas gerais
-        viewModel.estatisticasGerais.observe(viewLifecycleOwner) { stats ->
-            binding.txtTotalColaboradores.text = stats.totalColaboradores.toString()
-            binding.txtColaboradoresAtivos.text = stats.colaboradoresAtivos.toString()
-            binding.txtMetaAtingida.text = "${stats.percentualMetaAtingida}%"
-            binding.txtPendentesAprovacao.text = stats.pendentesAprovacao.toString()
-        }
-        
-        // Lista de performance
-        viewModel.colaboradoresPerformance.observe(viewLifecycleOwner) { colaboradores ->
-            adapter.submitList(colaboradores)
-        }
-        
-        // Loading
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        }
-        
-        // Mensagens de erro
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            if (message.isNotEmpty()) {
-                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+
+        // Observar erros
+        viewModel.error.observe(viewLifecycleOwner) { error ->
+            if (error.isNotEmpty()) {
+                android.widget.Toast.makeText(requireContext(), error, android.widget.Toast.LENGTH_LONG).show()
             }
         }
     }
-    
+
+    private fun showFilterDialog() {
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Filtros Avançados")
+            .setMessage("Funcionalidade em desenvolvimento")
+            .setPositiveButton("OK", null)
+            .show()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

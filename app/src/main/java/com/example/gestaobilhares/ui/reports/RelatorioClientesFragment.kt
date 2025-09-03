@@ -70,12 +70,12 @@ class RelatorioClientesFragment : Fragment() {
 
         // Observar ciclos
         viewModel.ciclos.observe(viewLifecycleOwner) { ciclos ->
-            setupCicloSpinner(ciclos)
+            configurarSpinners()
         }
 
         // Observar rotas
         viewModel.rotas.observe(viewLifecycleOwner) { rotas ->
-            setupRotaSpinner(rotas)
+            configurarSpinners()
         }
 
         // Observar loading
@@ -100,41 +100,26 @@ class RelatorioClientesFragment : Fragment() {
         binding.txtTaxaConversao.text = String.format("%.1f%%", estatisticas.taxaConversao)
     }
 
-    private fun setupCicloSpinner(ciclos: List<com.example.gestaobilhares.data.repository.AppRepository.CicloInfo>) {
-        val cicloAdapter = ArrayAdapter(
+    private fun configurarSpinners() {
+        // Configurar spinner de ciclos
+        val ciclos = viewModel.ciclos.value ?: emptyList()
+        val ciclosAdapter = ArrayAdapter(
             requireContext(),
-            android.R.layout.simple_dropdown_item_1line,
-            ArrayList(ciclos.map { "${it.numero}\u00BA Acerto" })
+            android.R.layout.simple_spinner_item,
+            ciclos.map { it.descricao }
         )
-        binding.spinnerCiclo.setAdapter(cicloAdapter)
-        
-        if (ciclos.isNotEmpty()) {
-            binding.spinnerCiclo.setText(cicloAdapter.getItem(0), false)
-            viewModel.selecionarCiclo(ciclos[0].numero.toLong())
-        }
+        ciclosAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerCiclo.setAdapter(ciclosAdapter)
 
-        binding.spinnerCiclo.setOnItemClickListener { _, _, position, _ ->
-            viewModel.selecionarCiclo(ciclos[position].numero.toLong())
-        }
-    }
-
-    private fun setupRotaSpinner(rotas: List<com.example.gestaobilhares.data.entities.Rota>) {
-        val labels = listOf("Todas") + rotas.map { it.nome }
-        val rotaAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, ArrayList(labels))
-        binding.spinnerRota.setAdapter(rotaAdapter)
-
-        // Padrão: Todas
-        binding.spinnerRota.setText(rotaAdapter.getItem(0), false)
-        viewModel.selecionarRota(0)
-
-        binding.spinnerRota.setOnItemClickListener { _, _, position, _ ->
-            if (position == 0) {
-                viewModel.selecionarRota(0)
-            } else {
-                val rota = rotas.getOrNull(position - 1)
-                if (rota != null) viewModel.selecionarRota(rota.id)
-            }
-        }
+        // Configurar spinner de rotas
+        val rotas = viewModel.rotas.value ?: emptyList()
+        val rotasAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            rotas.map { it.nome }
+        )
+        rotasAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerRota.setAdapter(rotasAdapter)
     }
 
     private fun showFilterDialog() {

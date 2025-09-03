@@ -314,16 +314,7 @@
         android:id="@+id/reportsFragment"
         android:name="com.example.gestaobilhares.ui.reports.ReportsFragment"
         android:label="Relatórios">
-        <!-- Navegação para relatórios consolidados -->
-        <action
-            android:id="@+id/action_reportsFragment_to_relatorioConsolidadoCicloFragment"
-            app:destination="@id/relatorioConsolidadoCicloFragment" />
-        <action
-            android:id="@+id/action_reportsFragment_to_relatorioAnualConsolidadoFragment"
-            app:destination="@id/relatorioAnualConsolidadoFragment" />
-        <action
-            android:id="@+id/action_reportsFragment_to_dashboardGeralFragment"
-            app:destination="@id/dashboardGeralFragment" />
+        <!-- Navegação para relatórios específicos -->
         <action
             android:id="@+id/action_reportsFragment_to_despesasCategoriaFragment"
             app:destination="@id/despesasCategoriaFragment" />
@@ -335,23 +326,7 @@
             app:destination="@id/relatorioClientesFragment" />
     </fragment>
 
-    <!-- Relatório Consolidado por Ciclo -->
-    <fragment
-        android:id="@+id/relatorioConsolidadoCicloFragment"
-        android:name="com.example.gestaobilhares.ui.reports.RelatorioConsolidadoCicloFragment"
-        android:label="Relatório Consolidado por Ciclo" />
 
-    <!-- Relatório Anual Consolidado -->
-    <fragment
-        android:id="@+id/relatorioAnualConsolidadoFragment"
-        android:name="com.example.gestaobilhares.ui.reports.RelatorioAnualConsolidadoFragment"
-        android:label="Relatório Anual Consolidado" />
-
-    <!-- Dashboard Geral -->
-    <fragment
-        android:id="@+id/dashboardGeralFragment"
-        android:name="com.example.gestaobilhares.ui.reports.DashboardGeralFragment"
-        android:label="Dashboard Geral" />
 
     <!-- Relatório de Despesas por Categoria -->
     <fragment

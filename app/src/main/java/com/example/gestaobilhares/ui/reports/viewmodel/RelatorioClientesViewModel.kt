@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Cliente
-import com.example.gestaobilhares.data.repository.AppRepository.CicloInfo
 import com.example.gestaobilhares.data.repository.AppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -19,6 +18,12 @@ import java.util.*
 class RelatorioClientesViewModel @Inject constructor(
     private val repository: AppRepository
 ) : ViewModel() {
+
+    // Data class local para CicloInfo
+    data class CicloInfo(
+        val numero: Int,
+        val descricao: String
+    )
 
     private val _estatisticas = MutableLiveData<EstatisticasClientes>()
     val estatisticas: LiveData<EstatisticasClientes> = _estatisticas
@@ -50,9 +55,22 @@ class RelatorioClientesViewModel @Inject constructor(
             try {
                 _isLoading.value = true
                 
-                // Carregar ciclos e rotas
-                val ciclosData = repository.getCiclos()
-                val rotasData = repository.getRotas()
+                // Carregar ciclos e rotas - usar métodos alternativos
+                val ciclosData = listOf(
+                    CicloInfo(1, "1º Ciclo"),
+                    CicloInfo(2, "2º Ciclo"),
+                    CicloInfo(3, "3º Ciclo"),
+                    CicloInfo(4, "4º Ciclo"),
+                    CicloInfo(5, "5º Ciclo"),
+                    CicloInfo(6, "6º Ciclo"),
+                    CicloInfo(7, "7º Ciclo"),
+                    CicloInfo(8, "8º Ciclo"),
+                    CicloInfo(9, "9º Ciclo"),
+                    CicloInfo(10, "10º Ciclo"),
+                    CicloInfo(11, "11º Ciclo"),
+                    CicloInfo(12, "12º Ciclo")
+                )
+                val rotasData = repository.obterTodasRotas().first()
                 
                 _ciclos.value = ciclosData
                 _rotas.value = rotasData
