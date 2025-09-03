@@ -326,6 +326,13 @@
             app:destination="@id/relatorioClientesFragment" />
     </fragment>
 
+    <!-- ✅ NOVO: Tela de Dashboard -->
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name="com.example.gestaobilhares.ui.dashboard.DashboardFragment"
+        android:label="Dashboard"
+        tools:layout="@layout/fragment_dashboard" />
+
 
 
     <!-- Relatório de Despesas por Categoria -->
