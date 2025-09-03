@@ -124,7 +124,10 @@ class DespesasCategoriaFragment : Fragment() {
     private fun setupObservers() {
         // Observar estatísticas
         viewModel.estatisticas.observe(viewLifecycleOwner) { estatisticas ->
-            updateEstatisticas(estatisticas)
+            binding.txtTotalDespesas.text = formatarMoeda(estatisticas.totalDespesas)
+            binding.txtMediaCategoria.text = formatarMoeda(estatisticas.mediaPorCategoria)
+            binding.txtCategoriaMaior.text = estatisticas.categoriaMaior
+            binding.txtCategoriaMenor.text = estatisticas.categoriaMenor
         }
         
         // Observar ciclos
@@ -200,7 +203,12 @@ class DespesasCategoriaFragment : Fragment() {
             .setPositiveButton("OK") { _, _ -> }
             .show()
     }
-    
+
+    private fun formatarMoeda(valor: Double): String {
+        val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
+        return formatter.format(valor)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

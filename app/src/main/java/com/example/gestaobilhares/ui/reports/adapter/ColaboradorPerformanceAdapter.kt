@@ -6,15 +6,13 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestaobilhares.databinding.ItemColaboradorPerformanceBinding
-import com.example.gestaobilhares.ui.reports.viewmodel.ColaboradorPerformance
-import com.example.gestaobilhares.ui.reports.viewmodel.StatusPerformance
+import com.example.gestaobilhares.ui.reports.viewmodel.ColaboradorPerformanceViewModel.PerformanceColaborador
+import java.text.NumberFormat
+import java.util.*
 
-/**
- * Adapter para listar performance dos colaboradores.
- */
-class ColaboradorPerformanceAdapter(
-    private val onItemClick: (ColaboradorPerformance) -> Unit
-) : ListAdapter<ColaboradorPerformance, ColaboradorPerformanceAdapter.ViewHolder>(ColaboradorPerformanceDiffCallback()) {
+class ColaboradorPerformanceAdapter : ListAdapter<PerformanceColaborador, ColaboradorPerformanceAdapter.ViewHolder>(PerformanceDiffCallback()) {
+
+    private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemColaboradorPerformanceBinding.inflate(
@@ -22,77 +20,45 @@ class ColaboradorPerformanceAdapter(
             parent,
             false
         )
-        return ViewHolder(binding, onItemClick)
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    class ViewHolder(
-        private val binding: ItemColaboradorPerformanceBinding,
-        private val onItemClick: (ColaboradorPerformance) -> Unit
+    inner class ViewHolder(
+        private val binding: ItemColaboradorPerformanceBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: ColaboradorPerformance) {
+        fun bind(colaborador: PerformanceColaborador) {
             binding.apply {
-                // Nome do colaborador
-                txtNomeColaborador.text = item.colaborador.nome
-
-                // Rotas responsáveis (mock por enquanto)
-                txtRotasResponsaveis.text = "Rotas: Zona Sul, Zona Norte"
-
-                // Métricas
-                txtFaturamento.text = formatarMoeda(item.faturamentoRealizado)
-                txtClientesAcertados.text = "${item.clientesAcertadosRealizado.toInt()}/${item.clientesAcertadosMeta.toInt()}"
-                txtMesasLocadas.text = "${item.mesasLocadasRealizado}/${item.mesasLocadasMeta}"
-                txtTicketMedio.text = formatarMoeda(item.ticketMedioRealizado)
-
-                // Percentuais
-                txtPercentualClientes.text = "${String.format("%.1f", item.percentualClientesAcertados)}%"
-                txtPercentualMesas.text = "${String.format("%.1f", item.percentualMesasLocadas)}%"
-
-                // Status de performance
-                txtStatusPerformance.text = item.statusGeral.name
-                txtStatusPerformance.setTextColor(getColorStatus(item.statusGeral))
-
-                // Progresso das metas
-                progressBarFaturamento.progress = item.percentualFaturamento.toInt()
-                progressBarClientes.progress = item.percentualClientesAcertados.toInt()
-                progressBarMesas.progress = item.percentualMesasLocadas.toInt()
-
-                // Click listener
-                root.setOnClickListener {
-                    onItemClick(item)
+                txtNomeColaborador.text = colaborador.nome
+                txtFaturamento.text = formatter.format(colaborador.faturamento)
+                txtClientesAcertados.text = colaborador.clientesAcertados.toString()
+                txtMesasLocadas.text = colaborador.mesasLocadas.toString()
+                txtStatusPerformance.text = colaborador.status
+                
+                // Definir cor do status baseado no texto
+                val statusColor = when (colaborador.status.lowercase()) {
+                    "excelente" -> android.graphics.Color.parseColor("#4CAF50")
+                    "bom" -> android.graphics.Color.parseColor("#8BC34A")
+                    "regular" -> android.graphics.Color.parseColor("#FF9800")
+                    "ruim" -> android.graphics.Color.parseColor("#F44336")
+                    else -> android.graphics.Color.parseColor("#9E9E9E")
                 }
-            }
-        }
-
-        private fun formatarMoeda(valor: Double): String {
-            return "R$ ${String.format("%.2f", valor).replace(".", ",")}"
-        }
-
-        private fun getColorStatus(status: StatusPerformance): Int {
-            return when (status) {
-                StatusPerformance.EXCELENTE -> android.graphics.Color.parseColor("#4CAF50") // Verde
-                StatusPerformance.BOM -> android.graphics.Color.parseColor("#2196F3") // Azul
-                StatusPerformance.REGULAR -> android.graphics.Color.parseColor("#FF9800") // Laranja
-                StatusPerformance.RUIM -> android.graphics.Color.parseColor("#F44336") // Vermelho
-                StatusPerformance.PENDENTE -> android.graphics.Color.parseColor("#9E9E9E") // Cinza
+                txtStatusPerformance.setTextColor(statusColor)
             }
         }
     }
-}
 
-/**
- * DiffUtil para otimizar atualizações da lista.
- */
-class ColaboradorPerformanceDiffCallback : DiffUtil.ItemCallback<ColaboradorPerformance>() {
-    override fun areItemsTheSame(oldItem: ColaboradorPerformance, newItem: ColaboradorPerformance): Boolean {
-        return oldItem.colaborador.id == newItem.colaborador.id
-    }
+    private class PerformanceDiffCallback : DiffUtil.ItemCallback<PerformanceColaborador>() {
+        override fun areItemsTheSame(oldItem: PerformanceColaborador, newItem: PerformanceColaborador): Boolean {
+            return oldItem.id == newItem.id
+        }
 
-    override fun areContentsTheSame(oldItem: ColaboradorPerformance, newItem: ColaboradorPerformance): Boolean {
-        return oldItem == newItem
+        override fun areContentsTheSame(oldItem: PerformanceColaborador, newItem: PerformanceColaborador): Boolean {
+            return oldItem == newItem
+        }
     }
 }
