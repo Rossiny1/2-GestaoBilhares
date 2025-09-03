@@ -211,6 +211,18 @@ class RoutesFragment : Fragment() {
                         false
                     }
                 }
+                R.id.nav_dashboard -> {
+                    try {
+                        findNavController().navigate(R.id.dashboardFragment)
+                        binding.drawerLayout.closeDrawers()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao navegar para dashboard: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir dashboard: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
+                }
                 R.id.nav_message_settings -> {
                     Toast.makeText(requireContext(), "Configurações de Mensagens será implementado em breve", Toast.LENGTH_SHORT).show()
                     binding.drawerLayout.closeDrawers()

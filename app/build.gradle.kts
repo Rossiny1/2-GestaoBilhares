@@ -83,6 +83,9 @@ dependencies {
     // ✅ NOVO: Dependência para geolocalização
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
+    // ✅ NOVO: Gráficos (MPAndroidChart)
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
     // Hilt (DI)
     implementation("com.google.dagger:hilt-android:2.51")
     kapt("com.google.dagger:hilt-android-compiler:2.51")

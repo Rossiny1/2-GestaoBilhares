@@ -31,6 +31,10 @@
     <!-- Grupo: Relatórios -->
     <group android:id="@+id/group_reports" android:checkableBehavior="single">
         <item
+            android:id="@+id/nav_dashboard"
+            android:icon="@drawable/ic_dashboard"
+            android:title="Dashboard" />
+        <item
             android:id="@+id/nav_management_report"
             android:icon="@drawable/ic_report"
             android:title="Relatório Gerencial" />
