@@ -48,8 +48,27 @@ class DashboardFragment : Fragment() {
             val labels = ciclos.map { it.descricao }
             val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, labels)
             binding.spinnerCiclo.setAdapter(adapter)
+            binding.spinnerCiclo.threshold = 0
+            // Define texto inicial (ex.: "Todos") sem disparar listener
+            if (labels.isNotEmpty()) {
+                binding.spinnerCiclo.setText(labels.first(), false)
+            }
+            binding.spinnerCiclo.setOnClickListener { binding.spinnerCiclo.showDropDown() }
             binding.spinnerCiclo.setOnItemClickListener { _, _, pos, _ ->
                 viewModel.selecionarCiclo(pos)
+            }
+        }
+
+        viewModel.anos.observe(viewLifecycleOwner) { anos ->
+            val labels = anos.map { it.toString() }
+            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, labels)
+            binding.spinnerAno.setAdapter(adapter)
+            binding.spinnerAno.threshold = 0
+            // Define ano atual como texto inicial
+            binding.spinnerAno.setText(labels.firstOrNull() ?: "", false)
+            binding.spinnerAno.setOnClickListener { binding.spinnerAno.showDropDown() }
+            binding.spinnerAno.setOnItemClickListener { _, _, pos, _ ->
+                viewModel.selecionarAno(pos)
             }
         }
 

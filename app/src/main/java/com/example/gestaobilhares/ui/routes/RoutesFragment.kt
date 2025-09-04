@@ -223,6 +223,18 @@ class RoutesFragment : Fragment() {
                         false
                     }
                 }
+                R.id.nav_closure_report -> {
+                    try {
+                        findNavController().navigate(R.id.closureReportFragment)
+                        binding.drawerLayout.closeDrawers()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao navegar para fechamento: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir fechamento: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
+                }
                 R.id.nav_message_settings -> {
                     Toast.makeText(requireContext(), "Configurações de Mensagens será implementado em breve", Toast.LENGTH_SHORT).show()
                     binding.drawerLayout.closeDrawers()

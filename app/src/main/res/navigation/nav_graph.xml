@@ -333,6 +333,13 @@
         android:label="Dashboard"
         tools:layout="@layout/fragment_dashboard" />
 
+    <!-- ✅ NOVO: Tela de Fechamento -->
+    <fragment
+        android:id="@+id/closureReportFragment"
+        android:name="com.example.gestaobilhares.ui.reports.ClosureReportFragment"
+        android:label="Fechamento"
+        tools:layout="@layout/fragment_closure_report" />
+
 
 
     <!-- Relatório de Despesas por Categoria -->
