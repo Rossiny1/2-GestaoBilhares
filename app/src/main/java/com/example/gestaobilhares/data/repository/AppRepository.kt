@@ -19,7 +19,8 @@ class AppRepository(
     private val rotaDao: RotaDao,
     private val despesaDao: DespesaDao,
     private val colaboradorDao: ColaboradorDao,
-    private val cicloAcertoDao: CicloAcertoDao
+    private val cicloAcertoDao: CicloAcertoDao,
+    private val acertoMesaDao: com.example.gestaobilhares.data.dao.AcertoMesaDao
 ) {
     
     // ==================== CLIENTE ====================
@@ -267,10 +268,12 @@ class AppRepository(
         return try {
             val acertos = buscarAcertosPorCicloId(cicloId).first()
             if (acertos.isEmpty()) return 0
-            val acertoIds = acertos.map { it.id }
-            // Precisa do DAO AcertoMesa para contar mesas distintas por acerto
-            // Como não temos aqui, estimativa via MesaDao por rota não é precisa.
-            0
+            val mesas = mutableSetOf<Long>()
+            for (acerto in acertos) {
+                val itens = acertoMesaDao.buscarPorAcertoId(acerto.id)
+                itens.forEach { mesas.add(it.mesaId) }
+            }
+            mesas.size
         } catch (e: Exception) { 0 }
     }
     

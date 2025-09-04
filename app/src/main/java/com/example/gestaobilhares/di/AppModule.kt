@@ -32,6 +32,7 @@ object AppModule {
     @Provides fun provideDespesaDao(db: AppDatabase): DespesaDao = db.despesaDao()
     @Provides fun provideColaboradorDao(db: AppDatabase): ColaboradorDao = db.colaboradorDao()
     @Provides fun provideCicloAcertoDao(db: AppDatabase): CicloAcertoDao = db.cicloAcertoDao()
+    @Provides fun provideAcertoMesaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.AcertoMesaDao = db.acertoMesaDao()
 
     @Provides
     @Singleton
@@ -42,7 +43,8 @@ object AppModule {
         rotaDao: RotaDao,
         despesaDao: DespesaDao,
         colaboradorDao: ColaboradorDao,
-        cicloAcertoDao: CicloAcertoDao
+        cicloAcertoDao: CicloAcertoDao,
+        acertoMesaDao: com.example.gestaobilhares.data.dao.AcertoMesaDao
     ): AppRepository = AppRepository(
         clienteDao,
         acertoDao,
@@ -50,7 +52,8 @@ object AppModule {
         rotaDao,
         despesaDao,
         colaboradorDao,
-        cicloAcertoDao
+        cicloAcertoDao,
+        acertoMesaDao
     )
 
     // Repositories
