@@ -14,14 +14,14 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:title="Dashboard"
+            android:title="Fechamento"
             app:navigationIcon="@drawable/ic_arrow_back" />
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardResumo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -69,7 +69,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -77,32 +76,45 @@
                 android:padding="12dp">
 
                 <TextView
+                    android:id="@+id/txtTitulo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Faturamento por Rota (Ciclo Atual)"
+                    android:text="Resumo"
                     android:textStyle="bold" />
 
-                <com.github.mikephil.charting.charts.PieChart
-                    android:id="@+id/chartFaturamentoRotas"
-                    android:layout_width="match_parent"
-                    android:layout_height="300dp"
-                    android:layout_marginTop="8dp" />
-
                 <TextView
-                    android:id="@+id/txtTotalFaturamento"
+                    android:id="@+id/txtFaturamentoTotal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Total: R$ 0,00" />
+                    android:text="Faturamento Total: R$ 0,00" />
+
+                <TextView
+                    android:id="@+id/txtDespesasTotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Despesas Total: R$ 0,00" />
+
+                <TextView
+                    android:id="@+id/txtLucroLiquido"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lucro Líquido: R$ 0,00" />
 
             </LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnResumoDetalhe"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|bottom"
+                android:layout_margin="8dp"
+                android:text="Ver Detalhes" />
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -112,21 +124,13 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Despesas por Categoria (Ciclo Atual)"
+                    android:text="Detalhamento por Rota"
                     android:textStyle="bold" />
 
-                <com.github.mikephil.charting.charts.PieChart
-                    android:id="@+id/chartDespesasCategorias"
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerDetalhes"
                     android:layout_width="match_parent"
-                    android:layout_height="300dp"
-                    android:layout_marginTop="8dp" />
-
-                <TextView
-                    android:id="@+id/txtTotalDespesas"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Total: R$ 0,00" />
+                    android:layout_height="wrap_content" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
