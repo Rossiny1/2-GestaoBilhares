@@ -79,7 +79,8 @@ class ColaboradorRegisterFragment : Fragment() {
             database.rotaDao(),
             database.despesaDao(),
             database.colaboradorDao(),
-            database.cicloAcertoDao()
+            database.cicloAcertoDao(),
+            database.acertoMesaDao()
         )
     }
 

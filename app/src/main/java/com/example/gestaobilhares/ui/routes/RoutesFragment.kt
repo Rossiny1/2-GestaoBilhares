@@ -10,6 +10,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.core.content.ContextCompat
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import android.text.style.LeadingMarginSpan
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRoutesBinding
 import com.example.gestaobilhares.data.database.AppDatabase
@@ -71,7 +75,8 @@ class RoutesFragment : Fragment() {
                 database.rotaDao(),
                 database.despesaDao(),
                 database.colaboradorDao(),
-                database.cicloAcertoDao()
+                database.cicloAcertoDao(),
+                database.acertoMesaDao()
             ),
             userSessionManager
         )
@@ -80,6 +85,9 @@ class RoutesFragment : Fragment() {
         setupClickListeners()
         setupNavigationDrawer()
         observeViewModel()
+
+        // Submenu de despesas começa recolhido
+        collapseExpenseSubmenu()
     }
 
     /**
@@ -176,6 +184,27 @@ class RoutesFragment : Fragment() {
                     Toast.makeText(requireContext(), "Gerenciar Mesas será implementado em breve", Toast.LENGTH_SHORT).show()
                     binding.drawerLayout.closeDrawers()
                     true
+                }
+                R.id.nav_expense_management -> {
+                    // Expandir/colapsar sem fechar o drawer
+                    toggleExpenseSubmenu()
+                    // Não fechar o drawer
+                    true
+                }
+                R.id.nav_expense_quick_add -> {
+                    try {
+                        // Navegar para registro de despesa sem rota (rotaId=0L)
+                        findNavController().navigate(R.id.expenseRegisterFragment, Bundle().apply {
+                            putLong("rotaId", 0L)
+                        })
+                        binding.drawerLayout.closeDrawers()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao abrir +Despesa: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir +Despesa: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
                 }
                 R.id.nav_manage_routes -> {
                     // Verificar permissão para gerenciar rotas
@@ -285,6 +314,39 @@ class RoutesFragment : Fragment() {
                 }
                 else -> false
             }
+        }
+
+        // Estilizar inicialmente o submenu recolhido
+        collapseExpenseSubmenu()
+        styleExpenseSubmenu()
+    }
+
+    private fun toggleExpenseSubmenu() {
+        val menu = binding.navigationView.menu
+        val ids = listOf(R.id.nav_expense_categories, R.id.nav_expense_types, R.id.nav_expense_quick_add)
+        val visible = !menu.findItem(R.id.nav_expense_categories).isVisible
+        ids.forEach { id -> menu.findItem(id).isVisible = visible }
+        styleExpenseSubmenu()
+    }
+
+    private fun collapseExpenseSubmenu() {
+        val menu = binding.navigationView.menu
+        listOf(R.id.nav_expense_categories, R.id.nav_expense_types, R.id.nav_expense_quick_add).forEach { id ->
+            menu.findItem(id).isVisible = false
+        }
+    }
+
+    private fun styleExpenseSubmenu() {
+        val menu = binding.navigationView.menu
+        val colorWhite = ContextCompat.getColor(requireContext(), android.R.color.white)
+        val indentPx = (24 * resources.displayMetrics.density).toInt()
+        listOf(R.id.nav_expense_categories, R.id.nav_expense_types, R.id.nav_expense_quick_add).forEach { id ->
+            val item = menu.findItem(id)
+            val title = item.title?.toString() ?: return@forEach
+            val ss = SpannableString(title)
+            ss.setSpan(ForegroundColorSpan(colorWhite), 0, ss.length, 0)
+            ss.setSpan(LeadingMarginSpan.Standard(indentPx, indentPx), 0, ss.length, 0)
+            item.title = ss
         }
     }
 

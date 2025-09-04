@@ -44,7 +44,9 @@ class ClosureReportFragment : Fragment() {
 
         setupObservers()
 
-        binding.btnResumoDetalhe.setOnClickListener { mostrarDialogoResumoDetalhe() }
+        // Garantir clique tanto no card de filtros quanto no card de dados
+        binding.cardResumo.setOnClickListener { mostrarDialogoResumoDetalhe() }
+        binding.cardResumoDados?.setOnClickListener { mostrarDialogoResumoDetalhe() }
     }
 
     private fun setupObservers() {

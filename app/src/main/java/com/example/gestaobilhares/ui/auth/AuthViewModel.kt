@@ -78,7 +78,8 @@ class AuthViewModel : ViewModel() {
             database.rotaDao(),
             database.despesaDao(),
             database.colaboradorDao(),
-            database.cicloAcertoDao()
+            database.cicloAcertoDao(),
+            database.acertoMesaDao()
         )
         
         networkUtils = NetworkUtils(context)

@@ -66,6 +66,7 @@
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardResumoDados"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp">
@@ -101,14 +102,7 @@
                     android:text="Lucro Líquido: R$ 0,00" />
 
             </LinearLayout>
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnResumoDetalhe"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end|bottom"
-                android:layout_margin="8dp"
-                android:text="Ver Detalhes" />
+            
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView

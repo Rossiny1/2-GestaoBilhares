@@ -7,6 +7,10 @@
             android:id="@+id/nav_manage_collaborator"
             android:icon="@drawable/ic_person"
             android:title="Gerenciar Colaborador" />
+        <item
+            android:id="@+id/nav_expense_management"
+            android:icon="@drawable/ic_money"
+            android:title="Gerenciamento de Despesa" />
         
         <item
             android:id="@+id/nav_expense_categories"
@@ -16,6 +20,10 @@
             android:id="@+id/nav_expense_types"
             android:icon="@drawable/ic_type"
             android:title="Tipos de Despesa" />
+        <item
+            android:id="@+id/nav_expense_quick_add"
+            android:icon="@drawable/ic_add"
+            android:title="+ Despesa" />
         
         <item
             android:id="@+id/nav_manage_tables"
