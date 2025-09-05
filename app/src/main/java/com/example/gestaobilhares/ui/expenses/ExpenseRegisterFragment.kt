@@ -191,6 +191,17 @@ class ExpenseRegisterFragment : Fragment() {
     }
 
     private fun setupUI() {
+        // Mostrar/ocultar seleção de ciclo para fluxo global (+ despesa do gerenciamento)
+        if (args.rotaId == 0L) {
+            binding.tvCicloLabel.visibility = View.VISIBLE
+            binding.tilCiclo.visibility = View.VISIBLE
+            // Carregar ciclos
+            viewModel.loadAllCycles()
+        } else {
+            binding.tvCicloLabel.visibility = View.GONE
+            binding.tilCiclo.visibility = View.GONE
+        }
+
         // Configurar campo de valor
         binding.etValorDespesa.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -232,6 +243,14 @@ class ExpenseRegisterFragment : Fragment() {
         }
         binding.etCategoriaDespesa.setOnClickListener {
             showCategorySelectionDialog()
+        }
+
+        // Campo de ciclo (apenas no fluxo global)
+        binding.tilCiclo.setEndIconOnClickListener {
+            if (args.rotaId == 0L) showCycleSelectionDialog()
+        }
+        binding.etCiclo.setOnClickListener {
+            if (args.rotaId == 0L) showCycleSelectionDialog()
         }
 
         // Campo de tipo
@@ -313,6 +332,17 @@ class ExpenseRegisterFragment : Fragment() {
                 binding.etTipoDespesa.setText(type?.nome ?: "")
             }
         }
+
+        // Atualizar exibição do ciclo selecionado
+        lifecycleScope.launch {
+            viewModel.selectedCycle.collect { ciclo ->
+                val binding = _binding ?: return@collect
+                if (args.rotaId == 0L) {
+                    val texto = if (ciclo != null) "${ciclo.ano} - ${ciclo.numeroCiclo}º (Rota #${ciclo.rotaId})" else ""
+                    binding.etCiclo.setText(texto)
+                }
+            }
+        }
     }
 
     private fun showDatePicker() {
@@ -332,6 +362,78 @@ class ExpenseRegisterFragment : Fragment() {
             month,
             day
         ).show()
+    }
+
+    private fun showCycleSelectionDialog() {
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_select_category, null)
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialogView.findViewById<android.widget.TextView>(R.id.tvTitle).text = "Selecione o Ciclo"
+
+        val recyclerView = dialogView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvCategories)
+        recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
+
+        val adapter = object : androidx.recyclerview.widget.ListAdapter<com.example.gestaobilhares.data.entities.CicloAcertoEntity, androidx.recyclerview.widget.RecyclerView.ViewHolder>(
+            object : androidx.recyclerview.widget.DiffUtil.ItemCallback<com.example.gestaobilhares.data.entities.CicloAcertoEntity>() {
+                override fun areItemsTheSame(oldItem: com.example.gestaobilhares.data.entities.CicloAcertoEntity, newItem: com.example.gestaobilhares.data.entities.CicloAcertoEntity): Boolean = oldItem.id == newItem.id
+                override fun areContentsTheSame(oldItem: com.example.gestaobilhares.data.entities.CicloAcertoEntity, newItem: com.example.gestaobilhares.data.entities.CicloAcertoEntity): Boolean = oldItem == newItem
+            }
+        ) {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder {
+                val v = LayoutInflater.from(parent.context).inflate(R.layout.item_expense_category, parent, false)
+                return object : androidx.recyclerview.widget.RecyclerView.ViewHolder(v) {}
+            }
+
+            override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
+                val ciclo = currentList[position]
+                val title = holder.itemView.findViewById<android.widget.TextView>(R.id.tvCategoryName)
+                val subtitle = holder.itemView.findViewById<android.widget.TextView>(R.id.tvTypeCount)
+                title.text = "${ciclo.ano} - ${ciclo.numeroCiclo}º"
+                subtitle.text = "Rota #${ciclo.rotaId} • Status: ${ciclo.status}"
+                holder.itemView.setOnClickListener {
+                    viewModel.setSelectedCycle(ciclo)
+                    dialog.dismiss()
+                }
+            }
+        }
+
+        recyclerView.adapter = adapter
+
+        // Coletar ciclos
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.cycles.collect { lista ->
+                adapter.submitList(lista)
+            }
+        }
+
+        // Pesquisa
+        val searchEditText = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etSearch)
+        searchEditText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val query = s.toString().lowercase()
+                viewLifecycleOwner.lifecycleScope.launch {
+                    viewModel.cycles.collect { lista ->
+                        val filtered = lista.filter { (it.ano.toString() + " " + it.numeroCiclo).lowercase().contains(query) }
+                        adapter.submitList(filtered)
+                    }
+                }
+            }
+        })
+
+        dialogView.findViewById<View>(R.id.btnClear).setOnClickListener {
+            viewModel.setSelectedCycle(null)
+            dialog.dismiss()
+        }
+        dialogView.findViewById<View>(R.id.btnDone).setOnClickListener { dialog.dismiss() }
+
+        dialog.show()
     }
 
     private fun showCategorySelectionDialog() {

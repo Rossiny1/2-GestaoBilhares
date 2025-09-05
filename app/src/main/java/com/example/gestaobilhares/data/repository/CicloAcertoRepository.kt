@@ -156,6 +156,13 @@ class CicloAcertoRepository(
     }
 
     /**
+     * ✅ NOVO: Lista todos os ciclos existentes (todas as rotas)
+     */
+    fun listarTodosCiclos(): Flow<List<CicloAcertoEntity>> {
+        return cicloAcertoDao.listarTodos()
+    }
+
+    /**
      * Busca ciclos por status
      */
     suspend fun buscarCiclosPorStatus(

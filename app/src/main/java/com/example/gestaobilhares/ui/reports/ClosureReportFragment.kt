@@ -83,10 +83,8 @@ class ClosureReportFragment : Fragment() {
 
     private fun mostrarDialogoResumoDetalhe() {
         val resumo = viewModel.resumo.value ?: return
-        // Estima total de mesas: conta mesas únicas a partir dos acertos do período selecionado
-        // Para simplificação e evitar N chamadas, pedimos ao VM um cálculo pronto no LiveData (poderia ser refinado depois)
         viewModel.detalhes.value?.let { linhas ->
-            val totalMesas = calcularTotalMesasEstimado()
+            val totalMesas = viewModel.totalMesasLocadas.value ?: 0
             val faturamentoTotal = resumo.faturamentoTotal
             val despesasTotal = resumo.despesasTotal
             val lucro = resumo.lucroLiquido
@@ -109,14 +107,7 @@ class ClosureReportFragment : Fragment() {
         }
     }
 
-    private fun calcularTotalMesasEstimado(): Int {
-        // Estratégia: contar mesas distintas a partir de acertos do período
-        // Para evitar dependências profundas, pedimos acertos via VM por ano/ciclo no futuro.
-        // Aqui, usamos o faturamento por rota como proxy e retornamos pelo menos 1 mesa se houve faturamento.
-        val linhas = viewModel.detalhes.value ?: return 0
-        // Proxy simples: cada rota com faturamento > 0 conta pelo menos 1 mesa
-        return linhas.count { it.faturamento > 0.0 }.coerceAtLeast(0)
-    }
+    // Removido cálculo estimado para evitar erros: usamos valor real do ViewModel
 
     private class DetalheAdapter(private val moeda: NumberFormat) : RecyclerView.Adapter<DetalheVH>() {
         private val itens = mutableListOf<ClosureReportViewModel.LinhaDetalhe>()
