@@ -53,6 +53,12 @@ class ExpenseRegisterViewModel(
     private val _types = MutableStateFlow<List<TipoDespesa>>(emptyList())
     val types: StateFlow<List<TipoDespesa>> = _types.asStateFlow()
 
+    // ✅ NOVO: seleção/listagem de ciclos para fluxo global sem rota
+    private val _cycles = MutableStateFlow<List<CicloAcertoEntity>>(emptyList())
+    val cycles: StateFlow<List<CicloAcertoEntity>> = _cycles.asStateFlow()
+    private val _selectedCycle = MutableStateFlow<CicloAcertoEntity?>(null)
+    val selectedCycle: StateFlow<CicloAcertoEntity?> = _selectedCycle.asStateFlow()
+
     // Formatador de data
     private val dateFormatter = DateTimeFormatter.ofPattern("dd 'de' MMM 'de' yyyy", Locale("pt", "BR"))
 
@@ -73,6 +79,25 @@ class ExpenseRegisterViewModel(
                 _message.value = "Erro ao carregar categorias: ${e.message}"
             }
         }
+    }
+
+    /**
+     * ✅ NOVO: Carregar todos os ciclos (todas as rotas) quando necessário
+     */
+    fun loadAllCycles() {
+        viewModelScope.launch {
+            try {
+                cicloAcertoRepository.listarTodosCiclos().collect { lista ->
+                    _cycles.value = lista
+                }
+            } catch (e: Exception) {
+                _message.value = "Erro ao carregar ciclos: ${e.message}"
+            }
+        }
+    }
+
+    fun setSelectedCycle(ciclo: CicloAcertoEntity?) {
+        _selectedCycle.value = ciclo
     }
 
     /**
@@ -237,13 +262,26 @@ class ExpenseRegisterViewModel(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-
-                // ✅ NOVO: Validar se o ciclo está em andamento
-                val cicloAtivo = cicloAcertoRepository.buscarCicloAtivo(rotaId)
-                
-                if (cicloAtivo == null || cicloAtivo.status != StatusCicloAcerto.EM_ANDAMENTO) {
-                    _message.value = "Não é possível cadastrar despesas. O ciclo de acerto não está em andamento."
-                    return@launch
+                val cicloAtivo = if (rotaId == 0L) {
+                    // Fluxo global: exige seleção de ciclo manual
+                    val selecionado = _selectedCycle.value
+                    if (selecionado == null) {
+                        _message.value = "Selecione um ciclo para lançar a despesa."
+                        return@launch
+                    }
+                    if (selecionado.status != StatusCicloAcerto.EM_ANDAMENTO) {
+                        _message.value = "O ciclo selecionado não está em andamento."
+                        return@launch
+                    }
+                    selecionado
+                } else {
+                    // Fluxo normal por rota
+                    val ativo = cicloAcertoRepository.buscarCicloAtivo(rotaId)
+                    if (ativo == null || ativo.status != StatusCicloAcerto.EM_ANDAMENTO) {
+                        _message.value = "Não é possível cadastrar despesas. O ciclo de acerto não está em andamento."
+                        return@launch
+                    }
+                    ativo
                 }
 
                 // Validações
@@ -265,6 +303,7 @@ class ExpenseRegisterViewModel(
 
                 // ✅ CORRIGIDO: Usar ciclo ativo real
                 val cicloId = cicloAtivo.id
+                val rotaParaLancamento = if (rotaId == 0L) cicloAtivo.rotaId else rotaId
 
                 if (modoEdicao && despesaId > 0) {
                     // ✅ NOVO: Modo de edição - atualizar despesa existente
@@ -277,6 +316,8 @@ class ExpenseRegisterViewModel(
                             tipoDespesa = _selectedType.value?.nome ?: "",
                             dataHora = _selectedDate.value,
                             observacoes = observacoes,
+                            cicloId = cicloId,
+                            rotaId = rotaParaLancamento,
                             fotoComprovante = fotoComprovante,
                             dataFotoComprovante = dataFotoComprovante
                         )
@@ -290,7 +331,7 @@ class ExpenseRegisterViewModel(
                 } else {
                     // ✅ NOVO: Modo de criação - criar nova despesa
                     val despesa = Despesa(
-                        rotaId = rotaId,
+                        rotaId = rotaParaLancamento,
                         descricao = descricao,
                         valor = valor * quantidade,
                         categoria = categoria.nome,

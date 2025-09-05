@@ -115,6 +115,38 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- Seleção de Ciclo (apenas no fluxo + Despesa do Gerenciamento) -->
+                    <TextView
+                        android:id="@+id/tvCicloLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="🔁 Ciclo"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilCiclo"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:hint="Selecione o ciclo"
+                        app:endIconDrawable="@drawable/ic_chevron_right"
+                        app:endIconMode="custom"
+                        android:visibility="gone">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etCiclo"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="false"
+                            android:inputType="none" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
                     <!-- Categoria da Despesa -->
                     <TextView
                         android:layout_width="wrap_content"

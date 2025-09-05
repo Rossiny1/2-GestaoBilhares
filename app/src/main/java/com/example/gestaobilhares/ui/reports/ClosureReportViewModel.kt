@@ -34,6 +34,10 @@ class ClosureReportViewModel @Inject constructor(
     private val _detalhes = MutableLiveData<List<LinhaDetalhe>>()
     val detalhes: LiveData<List<LinhaDetalhe>> = _detalhes
 
+    // ✅ NOVO: total de mesas locadas reais no período selecionado
+    private val _totalMesasLocadas = MutableLiveData<Int>()
+    val totalMesasLocadas: LiveData<Int> = _totalMesasLocadas
+
     private var anoSelecionado: Int = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
     private var cicloSelecionado: CicloInfo = CicloInfo(0L, 0, "Todos")
 
@@ -112,6 +116,16 @@ class ClosureReportViewModel @Inject constructor(
             val totalDespesas = detalhes.sumOf { it.despesas }
             _detalhes.value = detalhes
             _resumo.value = Resumo(totalFaturamento, totalDespesas, totalFaturamento - totalDespesas)
+
+            // ✅ NOVO: calcular total de mesas locadas reais (distintas) no período
+            val cicloIds = if (cicloSelecionado.numero == 0) {
+                repository.obterTodosCiclos().first().filter { it.ano == anoSelecionado }.map { it.id }
+            } else {
+                repository.obterTodosCiclos().first()
+                    .filter { it.ano == anoSelecionado && it.numeroCiclo == cicloSelecionado.numero }
+                    .map { it.id }
+            }
+            _totalMesasLocadas.value = repository.contarMesasPorCiclos(cicloIds)
         }
     }
 }

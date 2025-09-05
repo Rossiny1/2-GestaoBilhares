@@ -276,6 +276,22 @@ class AppRepository(
             mesas.size
         } catch (e: Exception) { 0 }
     }
+
+    // ✅ NOVO: contar mesas distintas a partir de vários ciclos
+    suspend fun contarMesasPorCiclos(cicloIds: List<Long>): Int {
+        return try {
+            if (cicloIds.isEmpty()) return 0
+            val mesas = mutableSetOf<Long>()
+            for (cicloId in cicloIds) {
+                val acertos = buscarAcertosPorCicloId(cicloId).first()
+                for (acerto in acertos) {
+                    val itens = acertoMesaDao.buscarPorAcertoId(acerto.id)
+                    itens.forEach { mesas.add(it.mesaId) }
+                }
+            }
+            mesas.size
+        } catch (e: Exception) { 0 }
+    }
     
     // ==================== COLABORADOR ====================
     
