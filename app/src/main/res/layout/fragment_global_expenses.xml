@@ -59,8 +59,29 @@
                         android:layout_marginBottom="12dp" />
 
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilYearSelection"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:hint="Ano"
+                        app:startIconDrawable="@drawable/ic_calendar_today"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etYearSelection"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:inputType="number"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilCycleSelection"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
                         android:hint="Selecionar Ciclo"
                         app:startIconDrawable="@drawable/ic_calendar_today"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">

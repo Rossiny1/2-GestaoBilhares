@@ -60,6 +60,11 @@ class GlobalExpensesFragment : Fragment() {
             findNavController().navigateUp()
         }
 
+        // Configurar campo de ano
+        binding.etYearSelection.setOnClickListener {
+            showYearSelectionDialog()
+        }
+
         // Configurar botão de filtro por ciclo
         binding.etCycleSelection.setOnClickListener {
             showCycleSelectionDialog()
@@ -90,10 +95,15 @@ class GlobalExpensesFragment : Fragment() {
             }
         }
 
+        // Observar ano selecionado
+        viewModel.selectedYear.observe(viewLifecycleOwner) { year ->
+            binding.etYearSelection.setText(year.toString())
+        }
+
         // Observar ciclo selecionado
         viewModel.selectedCycle.observe(viewLifecycleOwner) { cycle ->
             val cycleText = if (cycle != null) {
-                "${cycle.numeroCiclo}º Acerto - ${cycle.ano}"
+                "${cycle.numeroCiclo}º Acerto"
             } else {
                 "Selecionar Ciclo"
             }
@@ -139,6 +149,24 @@ class GlobalExpensesFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = globalExpensesAdapter
         }
+    }
+
+    private fun showYearSelectionDialog() {
+        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+        val years = (currentYear - 5..currentYear + 1).toList()
+        
+        val yearArray = years.map { it.toString() }.toTypedArray()
+        val currentYearIndex = years.indexOf(currentYear)
+        
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Selecionar Ano")
+            .setSingleChoiceItems(yearArray, currentYearIndex) { dialog, which ->
+                val selectedYear = years[which]
+                viewModel.setSelectedYear(selectedYear)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun showCycleSelectionDialog() {
