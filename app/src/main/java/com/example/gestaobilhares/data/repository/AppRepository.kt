@@ -297,6 +297,55 @@ class AppRepository(
         } catch (e: Exception) { 0 }
     }
     
+    // ✅ NOVO: calcular comissões de motorista e Iltair por ciclo
+    suspend fun calcularComissoesPorCiclo(cicloId: Long): Pair<Double, Double> {
+        val acertos = buscarAcertosPorCicloId(cicloId).first()
+        val despesas = buscarDespesasPorCicloId(cicloId).first()
+        
+        val totalRecebido = acertos.sumOf { it.valorRecebido }
+        val despesasViagem = despesas.filter { it.categoria.equals("Viagem", ignoreCase = true) }.sumOf { it.valor }
+        val subtotal = totalRecebido - despesasViagem
+        
+        val comissaoMotorista = subtotal * 0.03 // 3% do subtotal
+        val comissaoIltair = totalRecebido * 0.02 // 2% do faturamento total
+        
+        return Pair(comissaoMotorista, comissaoIltair)
+    }
+    
+    // ✅ NOVO: calcular comissões por ano e número de ciclo
+    suspend fun calcularComissoesPorAnoECiclo(ano: Int, numeroCiclo: Int): Pair<Double, Double> {
+        val ciclos = obterTodosCiclos().first()
+            .filter { it.ano == ano && it.numeroCiclo == numeroCiclo }
+        
+        var totalComissaoMotorista = 0.0
+        var totalComissaoIltair = 0.0
+        
+        for (ciclo in ciclos) {
+            val (comissaoMotorista, comissaoIltair) = calcularComissoesPorCiclo(ciclo.id)
+            totalComissaoMotorista += comissaoMotorista
+            totalComissaoIltair += comissaoIltair
+        }
+        
+        return Pair(totalComissaoMotorista, totalComissaoIltair)
+    }
+    
+    // ✅ NOVO: calcular comissões por ano (todos os ciclos)
+    suspend fun calcularComissoesPorAno(ano: Int): Pair<Double, Double> {
+        val ciclos = obterTodosCiclos().first()
+            .filter { it.ano == ano }
+        
+        var totalComissaoMotorista = 0.0
+        var totalComissaoIltair = 0.0
+        
+        for (ciclo in ciclos) {
+            val (comissaoMotorista, comissaoIltair) = calcularComissoesPorCiclo(ciclo.id)
+            totalComissaoMotorista += comissaoMotorista
+            totalComissaoIltair += comissaoIltair
+        }
+        
+        return Pair(totalComissaoMotorista, totalComissaoIltair)
+    }
+    
     // ==================== COLABORADOR ====================
     
     fun obterTodosColaboradores() = colaboradorDao?.obterTodos() ?: flowOf(emptyList())
