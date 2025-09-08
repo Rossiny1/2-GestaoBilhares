@@ -89,7 +89,30 @@
         android:id="@+id/expenseHistoryFragment"
         android:name="com.example.gestaobilhares.ui.expenses.ExpenseHistoryFragment"
         android:label="Histórico de Despesas">
-        <!-- Navegação de volta para rotas já está implícita com o botão voltar -->
+        <!-- Navegação para despesas globais -->
+        <action
+            android:id="@+id/action_expenseHistoryFragment_to_globalExpensesFragment"
+            app:destination="@id/globalExpensesFragment" />
+    </fragment>
+
+    <!-- Tela de despesas globais -->
+    <fragment
+        android:id="@+id/globalExpensesFragment"
+        android:name="com.example.gestaobilhares.ui.expenses.GlobalExpensesFragment"
+        android:label="Despesas Globais">
+        <!-- Navegação para cadastro de despesa global -->
+        <action
+            android:id="@+id/action_globalExpensesFragment_to_expenseRegisterFragment"
+            app:destination="@id/expenseRegisterFragment">
+            <argument
+                android:name="rotaId"
+                app:argType="long"
+                android:defaultValue="0L" />
+            <argument
+                android:name="isGlobalExpense"
+                app:argType="boolean"
+                android:defaultValue="true" />
+        </action>
     </fragment>
 
     <!-- Tela de diagnóstico da impressora -->
