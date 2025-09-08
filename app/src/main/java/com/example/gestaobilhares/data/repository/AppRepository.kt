@@ -81,6 +81,7 @@ class AppRepository(
     fun buscarMesasPorRota(rotaId: Long) = mesaDao.buscarMesasPorRota(rotaId)
     suspend fun contarMesasAtivasPorClientes(clienteIds: List<Long>) =
         mesaDao.contarMesasAtivasPorClientes(clienteIds)
+    fun obterTodasMesas() = mesaDao.obterTodasMesas()
     
     // ==================== ROTA ====================
     

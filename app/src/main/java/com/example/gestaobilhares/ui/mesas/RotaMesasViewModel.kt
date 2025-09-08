@@ -1,0 +1,64 @@
+package com.example.gestaobilhares.ui.mesas
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.gestaobilhares.data.entities.Mesa
+import com.example.gestaobilhares.data.entities.TipoMesa
+import com.example.gestaobilhares.data.repository.AppRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+data class EstatisticasRota(
+    val totalSinuca: Int = 0,
+    val totalJukebox: Int = 0,
+    val totalPembolim: Int = 0
+)
+
+@HiltViewModel
+class RotaMesasViewModel @Inject constructor(
+    private val repository: AppRepository
+) : ViewModel() {
+
+    private val _mesasRota = MutableStateFlow<List<Mesa>>(emptyList())
+    val mesasRota: StateFlow<List<Mesa>> = _mesasRota.asStateFlow()
+
+    private val _estatisticas = MutableStateFlow(EstatisticasRota())
+    val estatisticas: StateFlow<EstatisticasRota> = _estatisticas.asStateFlow()
+
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
+    fun loadMesasRota(rotaId: Long) {
+        viewModelScope.launch {
+            _loading.value = true
+            try {
+                // Carregar todas as mesas da rota específica
+                // Por enquanto, todas as mesas são consideradas do depósito
+                // TODO: Implementar lógica para associar mesas às rotas
+                val todasMesas = repository.obterTodasMesas().first()
+                val mesasDaRota = todasMesas.filter { mesa: Mesa -> mesa.clienteId == null } // Apenas mesas no depósito
+
+                _mesasRota.value = mesasDaRota
+
+                // Calcular estatísticas
+                val stats = EstatisticasRota(
+                    totalSinuca = mesasDaRota.count { mesa: Mesa -> mesa.tipoMesa == TipoMesa.SINUCA },
+                    totalJukebox = mesasDaRota.count { mesa: Mesa -> mesa.tipoMesa == TipoMesa.JUKEBOX },
+                    totalPembolim = mesasDaRota.count { mesa: Mesa -> mesa.tipoMesa == TipoMesa.PEMBOLIM }
+                )
+
+                _estatisticas.value = stats
+
+            } catch (e: Exception) {
+                // Log error
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+}
