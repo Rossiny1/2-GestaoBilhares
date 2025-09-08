@@ -4,6 +4,8 @@ import com.example.gestaobilhares.data.dao.ClienteDao
 import com.example.gestaobilhares.data.entities.Cliente
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Repository para operações relacionadas a clientes
@@ -11,7 +13,8 @@ import kotlinx.coroutines.flow.first
  * Implementa o padrão Repository para abstrair a camada de dados
  * e fornecer uma interface limpa para os ViewModels.
  */
-class ClienteRepository(
+@Singleton
+class ClienteRepository @Inject constructor(
     private val clienteDao: ClienteDao
 ) {
 

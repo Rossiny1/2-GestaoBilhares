@@ -29,7 +29,7 @@ import com.example.gestaobilhares.data.entities.*
         CategoriaDespesa::class, // ✅ NOVO: CATEGORIAS DE DESPESAS
         TipoDespesa::class // ✅ NOVO: TIPOS DE DESPESAS
     ],
-    version = 25, // ✅ MIGRATION: Corrigindo tabela metas_colaborador
+    version = 26, // ✅ MIGRATION: adicionar origemLancamento/cicloAno/cicloNumero em despesas
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -538,12 +538,33 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
                 
+                val MIGRATION_25_26 = object : androidx.room.migration.Migration(25, 26) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            // Adicionar novas colunas
+                            database.execSQL("ALTER TABLE despesas ADD COLUMN origemLancamento TEXT NOT NULL DEFAULT 'ROTA'")
+                            database.execSQL("ALTER TABLE despesas ADD COLUMN cicloAno INTEGER")
+                            database.execSQL("ALTER TABLE despesas ADD COLUMN cicloNumero INTEGER")
+                            
+                            // Criar índices para as novas colunas
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_origemLancamento ON despesas (origemLancamento)")
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_cicloAno ON despesas (cicloAno)")
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_cicloNumero ON despesas (cicloNumero)")
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_cicloAno_cicloNumero ON despesas (cicloAno, cicloNumero)")
+                            
+                            android.util.Log.d("Migration", "Migration 25_26 executada com sucesso")
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 25_26: ${e.message}")
+                        }
+                    }
+                }
+                
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25)
+                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26)
                     .fallbackToDestructiveMigration() // ✅ NOVO: Permite recriar banco em caso de erro de migration
                     .build()
                 INSTANCE = instance

@@ -24,6 +24,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import java.text.NumberFormat
 import java.util.Locale
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Fragment que exibe a tela de rotas.
@@ -32,14 +33,15 @@ import java.util.Locale
  * 
  * FASE 4: Inclui Navigation Drawer, dados reais e menu lateral.
  */
+@AndroidEntryPoint
 class RoutesFragment : Fragment() {
 
     // ViewBinding para acessar as views de forma type-safe
     private var _binding: FragmentRoutesBinding? = null
     private val binding get() = _binding!!
 
-    // ViewModel instanciado diretamente
-    private lateinit var viewModel: RoutesViewModel
+    // ViewModel com Hilt
+    private val viewModel: RoutesViewModel by viewModels()
 
     // Adapter para a lista de rotas
     private lateinit var routesAdapter: RoutesAdapter
@@ -64,22 +66,6 @@ class RoutesFragment : Fragment() {
         
         // Inicializar gerenciador de sessão primeiro
         userSessionManager = UserSessionManager.getInstance(requireContext())
-        
-        // Inicializar ViewModel aqui onde o contexto está disponível
-        val database = AppDatabase.getDatabase(requireContext())
-        viewModel = RoutesViewModel(
-            AppRepository(
-                database.clienteDao(),
-                database.acertoDao(),
-                database.mesaDao(),
-                database.rotaDao(),
-                database.despesaDao(),
-                database.colaboradorDao(),
-                database.cicloAcertoDao(),
-                database.acertoMesaDao()
-            ),
-            userSessionManager
-        )
         
         setupRecyclerView()
         setupClickListeners()

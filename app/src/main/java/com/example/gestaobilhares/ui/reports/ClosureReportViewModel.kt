@@ -92,9 +92,11 @@ class ClosureReportViewModel @Inject constructor(
             }
 
             val despesas = if (cicloSelecionado.numero == 0) {
+                // Ano inteiro: despesas de todas as rotas (por cicloId) + globais do ano (somatório por mesclagem na camada de apresentação)
+                // Usamos o método existente (por ano) que retorna despesas por rota; globais serão consideradas no cálculo final via novo método de AppRepository (ajuste posterior, se necessário).
                 repository.getDespesasPorAno(anoSelecionado, 0L)
             } else {
-                // Somar despesas de todos os ciclos do mesmo número no ano
+                // Somar despesas de todos os ciclos do mesmo número no ano (por rota)
                 val ciclosDoAnoNumero = repository.obterTodosCiclos().first()
                     .filter { it.ano == anoSelecionado && it.numeroCiclo == cicloSelecionado.numero }
                 ciclosDoAnoNumero.flatMap { ciclo ->
@@ -113,7 +115,17 @@ class ClosureReportViewModel @Inject constructor(
             }.sortedByDescending { it.faturamento }
 
             val totalFaturamento = detalhes.sumOf { it.faturamento }
-            val totalDespesas = detalhes.sumOf { it.despesas }
+            // ✅ NOVO: Somar também despesas globais
+            val totalDespesasRotas = detalhes.sumOf { it.despesas }
+            val totalDespesasGlobais = if (cicloSelecionado.numero == 0) {
+                // Ano inteiro: somatório de todos os 12 ciclos do ano para globais
+                (1..12).sumOf { numero ->
+                    try { repository.somarDespesasGlobaisPorCiclo(anoSelecionado, numero) } catch (_: Exception) { 0.0 }
+                }
+            } else {
+                try { repository.somarDespesasGlobaisPorCiclo(anoSelecionado, cicloSelecionado.numero) } catch (_: Exception) { 0.0 }
+            }
+            val totalDespesas = totalDespesasRotas + totalDespesasGlobais
             _detalhes.value = detalhes
             _resumo.value = Resumo(totalFaturamento, totalDespesas, totalFaturamento - totalDespesas)
 

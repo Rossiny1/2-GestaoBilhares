@@ -9,8 +9,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AcertoRepository(private val acertoDao: AcertoDao, private val clienteDao: ClienteDao) {
+@Singleton
+class AcertoRepository @Inject constructor(
+    private val acertoDao: AcertoDao, 
+    private val clienteDao: ClienteDao
+) {
 
     /**
      * ✅ NOVA FUNCIONALIDADE: Verifica se já existe acerto para cliente no ciclo atual

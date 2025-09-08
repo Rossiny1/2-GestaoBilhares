@@ -18,12 +18,15 @@ import kotlinx.coroutines.flow.first
 import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /**
  * ViewModel para SettlementFragment
  * FASE 4A - Implementação básica para desbloqueio
  */
-class SettlementViewModel(
+@HiltViewModel
+class SettlementViewModel @Inject constructor(
     private val mesaRepository: MesaRepository,
     private val clienteRepository: ClienteRepository,
     private val acertoRepository: AcertoRepository,

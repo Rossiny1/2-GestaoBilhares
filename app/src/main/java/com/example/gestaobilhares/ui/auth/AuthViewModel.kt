@@ -19,13 +19,16 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Date
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /**
  * ViewModel responsável pela lógica de autenticação híbrida (Firebase + Local).
  * Implementa padrão MVVM para separar lógica de negócio da UI.
  * Suporta autenticação online (Firebase) e offline (Room Database).
  */
-class AuthViewModel : ViewModel() {
+@HiltViewModel
+class AuthViewModel @Inject constructor() : ViewModel() {
     
     // Instância do Firebase Auth
     private val firebaseAuth = FirebaseAuth.getInstance()

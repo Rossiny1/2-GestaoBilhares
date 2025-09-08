@@ -3,11 +3,14 @@ package com.example.gestaobilhares.data.repository
 import com.example.gestaobilhares.data.dao.CategoriaDespesaDao
 import com.example.gestaobilhares.data.entities.*
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Repository para gerenciar categorias de despesas.
  */
-class CategoriaDespesaRepository(
+@Singleton
+class CategoriaDespesaRepository @Inject constructor(
     private val categoriaDespesaDao: CategoriaDespesaDao
 ) {
     

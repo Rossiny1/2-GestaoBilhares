@@ -263,6 +263,10 @@ class AppRepository(
     fun buscarDespesasPorCicloId(cicloId: Long) = despesaDao.buscarPorCicloId(cicloId)
     fun buscarDespesasPorRotaECicloId(rotaId: Long, cicloId: Long) = despesaDao.buscarPorRotaECicloId(rotaId, cicloId)
 
+    // ✅ NOVO: despesas globais
+    suspend fun buscarDespesasGlobaisPorCiclo(ano: Int, numero: Int): List<Despesa> = despesaDao.buscarGlobaisPorCiclo(ano, numero)
+    suspend fun somarDespesasGlobaisPorCiclo(ano: Int, numero: Int): Double = despesaDao.somarGlobaisPorCiclo(ano, numero)
+
     // ✅ NOVO: obter mesas por ciclo (a partir dos acertos do ciclo)
     suspend fun contarMesasPorCiclo(cicloId: Long): Int {
         return try {

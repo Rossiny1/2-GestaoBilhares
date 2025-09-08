@@ -26,6 +26,8 @@ import java.util.Calendar
 import java.util.Date
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /**
  * Filtros disponíveis para a lista de clientes
@@ -39,7 +41,8 @@ enum class FiltroCliente {
  * ✅ FASE 8C: Integração com sistema de ciclo de acerto real
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class ClientListViewModel(
+@HiltViewModel
+class ClientListViewModel @Inject constructor(
     private val clienteRepository: ClienteRepository,
     private val rotaRepository: RotaRepository,
     private val cicloAcertoRepository: CicloAcertoRepository,

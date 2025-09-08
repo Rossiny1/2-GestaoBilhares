@@ -49,7 +49,7 @@ interface DespesaDao {
      * @param rotaId ID da rota
      * @return Flow com lista de despesas da rota
      */
-    @Query("SELECT * FROM despesas WHERE rotaId = :rotaId ORDER BY dataHora DESC")
+    @Query("SELECT * FROM despesas WHERE rotaId = :rotaId AND origemLancamento = 'ROTA' ORDER BY dataHora DESC")
     fun buscarPorRota(rotaId: Long): Flow<List<Despesa>>
 
     /**
@@ -98,7 +98,7 @@ interface DespesaDao {
      * @param rotaId ID da rota
      * @return O valor total das despesas da rota
      */
-    @Query("SELECT COALESCE(SUM(valor), 0.0) FROM despesas WHERE rotaId = :rotaId")
+    @Query("SELECT COALESCE(SUM(valor), 0.0) FROM despesas WHERE rotaId = :rotaId AND origemLancamento = 'ROTA'")
     suspend fun calcularTotalPorRota(rotaId: Long): Double
 
     /**
@@ -125,7 +125,7 @@ interface DespesaDao {
      */
     @Query("""
         SELECT * FROM despesas 
-        WHERE rotaId = :rotaId AND dataHora BETWEEN :dataInicio AND :dataFim 
+        WHERE rotaId = :rotaId AND origemLancamento = 'ROTA' AND dataHora BETWEEN :dataInicio AND :dataFim 
         ORDER BY dataHora DESC
     """)
     suspend fun buscarPorRotaEPeriodo(
@@ -158,4 +158,16 @@ interface DespesaDao {
      */
     @Query("SELECT * FROM despesas WHERE cicloId IS NULL ORDER BY dataHora DESC")
     fun buscarSemCicloId(): Flow<List<Despesa>>
+
+    /**
+     * ✅ NOVO: Buscar despesas globais (origemLancamento='GLOBAL') por ano e número do ciclo
+     */
+    @Query("SELECT * FROM despesas WHERE origemLancamento = 'GLOBAL' AND cicloAno = :ano AND cicloNumero = :numero ORDER BY dataHora DESC")
+    suspend fun buscarGlobaisPorCiclo(ano: Int, numero: Int): List<Despesa>
+
+    /**
+     * ✅ NOVO: Somar despesas globais por ano e número do ciclo
+     */
+    @Query("SELECT COALESCE(SUM(valor), 0.0) FROM despesas WHERE origemLancamento = 'GLOBAL' AND cicloAno = :ano AND cicloNumero = :numero")
+    suspend fun somarGlobaisPorCiclo(ano: Int, numero: Int): Double
 } 
