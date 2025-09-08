@@ -5,12 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestaobilhares.databinding.FragmentClosureReportBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.text.NumberFormat
 import java.util.Locale
@@ -43,6 +45,7 @@ class ClosureReportFragment : Fragment() {
         binding.recyclerDetalhes.adapter = adapter
 
         setupObservers()
+        setupClickListeners()
 
         // Garantir clique tanto no card de filtros quanto no card de dados
         binding.cardResumo.setOnClickListener { mostrarDialogoResumoDetalhe() }
@@ -60,14 +63,14 @@ class ClosureReportFragment : Fragment() {
             binding.spinnerAno.setOnItemClickListener { _, _, pos, _ -> viewModel.selecionarAno(pos) }
         }
 
-        viewModel.ciclos.observe(viewLifecycleOwner) { ciclos ->
-            val labels = ciclos.map { it.descricao }
+        viewModel.acertos.observe(viewLifecycleOwner) { acertos ->
+            val labels = acertos.map { it.descricao }
             val a = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, labels)
             binding.spinnerCiclo.setAdapter(a)
             binding.spinnerCiclo.setText(labels.firstOrNull() ?: "", false)
             binding.spinnerCiclo.threshold = 0
             binding.spinnerCiclo.setOnClickListener { binding.spinnerCiclo.showDropDown() }
-            binding.spinnerCiclo.setOnItemClickListener { _, _, pos, _ -> viewModel.selecionarCiclo(pos) }
+            binding.spinnerCiclo.setOnItemClickListener { _, _, pos, _ -> viewModel.selecionarAcerto(pos) }
         }
 
         viewModel.resumo.observe(viewLifecycleOwner) { r ->
@@ -83,6 +86,61 @@ class ClosureReportFragment : Fragment() {
         }
     }
 
+    private fun setupClickListeners() {
+        binding.btnGenerateReport.setOnClickListener {
+            showReportOptionsDialog()
+        }
+    }
+
+    private fun showReportOptionsDialog() {
+        val resumo = viewModel.resumo.value
+        val detalhes = viewModel.detalhes.value
+        val totalMesas = viewModel.totalMesasLocadas.value ?: 0
+        val anoSelecionado = viewModel.anos.value?.firstOrNull() ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+        val acertoSelecionado = viewModel.acertos.value?.firstOrNull()
+
+        if (resumo == null || detalhes == null) {
+            Toast.makeText(requireContext(), "Nenhum dado disponível para gerar relatório", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val options = arrayOf("Relatório por Acerto", "Relatório Anual")
+        
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Tipo de Relatório")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        // Relatório por acerto
+                        val numeroAcerto = acertoSelecionado?.numero ?: 1
+                        val dialog = ClosureReportDialog.newInstance(
+                            anoSelecionado,
+                            numeroAcerto,
+                            resumo,
+                            detalhes,
+                            totalMesas,
+                            false
+                        )
+                        dialog.show(parentFragmentManager, "ClosureReportDialog")
+                    }
+                    1 -> {
+                        // Relatório anual
+                        val dialog = ClosureReportDialog.newInstance(
+                            anoSelecionado,
+                            0,
+                            resumo,
+                            detalhes,
+                            totalMesas,
+                            true
+                        )
+                        dialog.show(parentFragmentManager, "ClosureReportDialog")
+                    }
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
     private fun mostrarDialogoResumoDetalhe() {
         val resumo = viewModel.resumo.value ?: return
         viewModel.detalhes.value?.let { linhas ->
@@ -92,13 +150,18 @@ class ClosureReportFragment : Fragment() {
             val lucro = resumo.lucroLiquido
             val lucroRossiny = resumo.lucroRossiny
             val lucroPetrina = resumo.lucroPetrina
+            val despesasRotas = resumo.despesasRotas
+            val despesasGlobais = resumo.despesasGlobais
+            val comissaoMotorista = resumo.comissaoMotorista
+            val comissaoIltair = resumo.comissaoIltair
+            
             val faturamentoPorMesa = if (totalMesas > 0) faturamentoTotal / totalMesas else 0.0
             val lucroPorMesa = if (totalMesas > 0) lucro / totalMesas else 0.0
             val despesaPorMesa = if (totalMesas > 0) despesasTotal / totalMesas else 0.0
             val margem = if (faturamentoTotal > 0) (lucro / faturamentoTotal) * 100.0 else 0.0
 
             com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Resumo do Ciclo")
+                .setTitle("Resumo do Acerto")
                 .setMessage(
                     "Total de mesas: $totalMesas\n" +
                     "Faturamento por mesa: ${moeda.format(faturamentoPorMesa)}\n" +
@@ -106,9 +169,11 @@ class ClosureReportFragment : Fragment() {
                     "Despesa por mesa: ${moeda.format(despesaPorMesa)}\n" +
                     "Margem líquida: ${String.format(Locale("pt", "BR"), "%.1f%%", margem)}\n\n" +
                     "Composição das Despesas:\n" +
-                    "• Despesas de Rotas: ${moeda.format(despesasTotal)}\n" +
-                    "• Comissão Motorista (3%): Incluída\n" +
-                    "• Comissão Iltair (2%): Incluída\n\n" +
+                    "• Despesas Rota: ${moeda.format(despesasRotas)}\n" +
+                    "• Despesas Globais: ${moeda.format(despesasGlobais)}\n" +
+                    "• Comissão Motorista (3%): ${moeda.format(comissaoMotorista)}\n" +
+                    "• Comissão Iltair (2%): ${moeda.format(comissaoIltair)}\n" +
+                    "• Total Despesas: ${moeda.format(despesasTotal)}\n\n" +
                     "Distribuição do Lucro:\n" +
                     "Lucro Rossiny (60%): ${moeda.format(lucroRossiny)}\n" +
                     "Lucro Petrina (40%): ${moeda.format(lucroPetrina)}"
