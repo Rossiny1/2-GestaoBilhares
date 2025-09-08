@@ -35,7 +35,12 @@ import java.util.Date
         Index(value = ["rotaId"]),
         // Novo: índice para cicloId
         Index(value = ["cicloId"]),
-        Index(value = ["rotaId", "cicloId"]) // Índice composto para queries eficientes
+        Index(value = ["rotaId", "cicloId"]), // Índice composto para queries eficientes
+        // Índices novos para globais
+        Index(value = ["origemLancamento"]),
+        Index(value = ["cicloAno"]),
+        Index(value = ["cicloNumero"]),
+        Index(value = ["cicloAno", "cicloNumero"]) 
     ]
 )
 data class Despesa(
@@ -61,6 +66,13 @@ data class Despesa(
     
     // NOVO: VÍNCULO COM CICLO DE ACERTO (id do ciclo)
     val cicloId: Long? = null,
+    
+    // ✅ NOVO: Origem do lançamento (ROTA ou GLOBAL)
+    val origemLancamento: String = "ROTA",
+    
+    // ✅ NOVO: Identificação de ciclo global por ano/número
+    val cicloAno: Int? = null,
+    val cicloNumero: Int? = null,
     
     // ✅ NOVO: CAMPOS PARA FOTO DO COMPROVANTE
     val fotoComprovante: String? = null,

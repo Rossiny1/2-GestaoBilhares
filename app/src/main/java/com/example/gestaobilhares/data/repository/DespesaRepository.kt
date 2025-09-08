@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Repository para gerenciar despesas.
@@ -13,7 +15,8 @@ import java.time.LocalDateTime
  * 
  * @property despesaDao DAO para operações no banco de dados
  */
-class DespesaRepository(
+@Singleton
+class DespesaRepository @Inject constructor(
     private val despesaDao: DespesaDao
 ) {
     
@@ -168,6 +171,16 @@ class DespesaRepository(
      * Busca despesas sem cicloId (para debug).
      */
     fun buscarSemCicloId() = despesaDao.buscarSemCicloId()
+
+    // ✅ NOVO: Despesas globais por ciclo (ano, número)
+    suspend fun buscarGlobaisPorCiclo(ano: Int, numero: Int): List<Despesa> {
+        return if (usarDadosMock) emptyList() else despesaDao.buscarGlobaisPorCiclo(ano, numero)
+    }
+
+    // ✅ NOVO: Soma de despesas globais por ciclo (ano, número)
+    suspend fun somarGlobaisPorCiclo(ano: Int, numero: Int): Double {
+        return if (usarDadosMock) 0.0 else despesaDao.somarGlobaisPorCiclo(ano, numero)
+    }
 
     /**
      * Dados mock para desenvolvimento e testes.

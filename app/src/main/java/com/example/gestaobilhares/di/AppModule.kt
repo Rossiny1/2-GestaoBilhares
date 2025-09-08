@@ -9,6 +9,7 @@ import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
+import com.example.gestaobilhares.utils.UserSessionManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,6 +34,8 @@ object AppModule {
     @Provides fun provideColaboradorDao(db: AppDatabase): ColaboradorDao = db.colaboradorDao()
     @Provides fun provideCicloAcertoDao(db: AppDatabase): CicloAcertoDao = db.cicloAcertoDao()
     @Provides fun provideAcertoMesaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.AcertoMesaDao = db.acertoMesaDao()
+    @Provides fun provideCategoriaDespesaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.CategoriaDespesaDao = db.categoriaDespesaDao()
+    @Provides fun provideTipoDespesaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.TipoDespesaDao = db.tipoDespesaDao()
 
     @Provides
     @Singleton
@@ -91,6 +94,11 @@ object AppModule {
         clienteRepository = clienteRepository,
         rotaDao = rotaDao
     )
+
+    @Provides
+    @Singleton
+    fun provideUserSessionManager(@ApplicationContext context: Context): UserSessionManager =
+        UserSessionManager.getInstance(context)
 }
 
 

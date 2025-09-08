@@ -101,19 +101,24 @@ class ExpenseCategoriesFragment : Fragment() {
 
     private fun loadCategories() {
         // Carregar categorias do banco de dados
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
+                if (!isAdded || context == null) return@launch
+                
                 val database = AppDatabase.getDatabase(requireContext())
                 val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao())
                 
                 categoriaRepository.buscarAtivas().collect { categorias ->
+                    if (!isAdded) return@collect
                     categories.clear()
                     categories.addAll(categorias)
                     updateUI()
                 }
             } catch (e: Exception) {
                 Log.e("ExpenseCategoriesFragment", "Erro ao carregar categorias: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao carregar categorias: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (isAdded && context != null) {
+                    Toast.makeText(requireContext(), "Erro ao carregar categorias: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -139,8 +144,10 @@ class ExpenseCategoriesFragment : Fragment() {
     }
 
     private fun addCategory(name: String) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
+                if (!isAdded || context == null) return@launch
+                
                 val database = AppDatabase.getDatabase(requireContext())
                 val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao())
                 
@@ -152,24 +159,30 @@ class ExpenseCategoriesFragment : Fragment() {
                 
                 val categoriaId = categoriaRepository.criarCategoria(novaCategoria)
                 
-                Snackbar.make(
-                    binding.root,
-                    "Categoria '$name' adicionada com sucesso!",
-                    Snackbar.LENGTH_SHORT
-                ).show()
-                
-                // Recarregar categorias
-                loadCategories()
+                if (isAdded && context != null) {
+                    Snackbar.make(
+                        binding.root,
+                        "Categoria '$name' adicionada com sucesso!",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                    
+                    // Recarregar categorias
+                    loadCategories()
+                }
             } catch (e: Exception) {
                 Log.e("ExpenseCategoriesFragment", "Erro ao adicionar categoria: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao adicionar categoria: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (isAdded && context != null) {
+                    Toast.makeText(requireContext(), "Erro ao adicionar categoria: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
     private fun updateCategory(category: CategoriaDespesa, newName: String) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
+                if (!isAdded || context == null) return@launch
+                
                 val database = AppDatabase.getDatabase(requireContext())
                 val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao())
                 
@@ -182,40 +195,50 @@ class ExpenseCategoriesFragment : Fragment() {
                 
                 categoriaRepository.editarCategoria(edicaoCategoria)
                 
-                Snackbar.make(
-                    binding.root,
-                    "Categoria atualizada para '$newName'!",
-                    Snackbar.LENGTH_SHORT
-                ).show()
-                
-                // Recarregar categorias
-                loadCategories()
+                if (isAdded && context != null) {
+                    Snackbar.make(
+                        binding.root,
+                        "Categoria atualizada para '$newName'!",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                    
+                    // Recarregar categorias
+                    loadCategories()
+                }
             } catch (e: Exception) {
                 Log.e("ExpenseCategoriesFragment", "Erro ao atualizar categoria: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao atualizar categoria: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (isAdded && context != null) {
+                    Toast.makeText(requireContext(), "Erro ao atualizar categoria: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
     private fun deleteCategory(category: CategoriaDespesa) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
+                if (!isAdded || context == null) return@launch
+                
                 val database = AppDatabase.getDatabase(requireContext())
                 val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao())
                 
                 categoriaRepository.deletar(category)
                 
-                Snackbar.make(
-                    binding.root,
-                    "Categoria '${category.nome}' removida!",
-                    Snackbar.LENGTH_LONG
-                ).show()
-                
-                // Recarregar categorias
-                loadCategories()
+                if (isAdded && context != null) {
+                    Snackbar.make(
+                        binding.root,
+                        "Categoria '${category.nome}' removida!",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                    
+                    // Recarregar categorias
+                    loadCategories()
+                }
             } catch (e: Exception) {
                 Log.e("ExpenseCategoriesFragment", "Erro ao deletar categoria: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao deletar categoria: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (isAdded && context != null) {
+                    Toast.makeText(requireContext(), "Erro ao deletar categoria: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

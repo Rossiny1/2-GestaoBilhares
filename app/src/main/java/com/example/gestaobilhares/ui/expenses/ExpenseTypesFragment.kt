@@ -105,27 +105,36 @@ class ExpenseTypesFragment : Fragment() {
 
         private fun loadData() {
         // Carregar dados do banco de dados
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
+                if (!isAdded || context == null) return@launch
+                
                 val database = AppDatabase.getDatabase(requireContext())
                 val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao())
                 val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao())
                 
-                // Carregar categorias
-                categoriaRepository.buscarAtivas().collect { categorias ->
-                    categories.clear()
-                    categories.addAll(categorias)
+                // Carregar categorias e tipos em paralelo
+                launch {
+                    categoriaRepository.buscarAtivas().collect { categorias ->
+                        if (!isAdded) return@collect
+                        categories.clear()
+                        categories.addAll(categorias)
+                    }
                 }
                 
-                // Carregar tipos
-                tipoRepository.buscarAtivosComCategoria().collect { tipos ->
-                    types.clear()
-                    types.addAll(tipos)
-                    updateUI()
+                launch {
+                    tipoRepository.buscarAtivosComCategoria().collect { tipos ->
+                        if (!isAdded) return@collect
+                        types.clear()
+                        types.addAll(tipos)
+                        updateUI()
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("ExpenseTypesFragment", "Erro ao carregar dados: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao carregar dados: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (isAdded && context != null) {
+                    Toast.makeText(requireContext(), "Erro ao carregar dados: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -153,8 +162,10 @@ class ExpenseTypesFragment : Fragment() {
     }
 
     private fun addType(name: String, categoryId: Long) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
+                if (!isAdded || context == null) return@launch
+                
                 val database = AppDatabase.getDatabase(requireContext())
                 val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao())
                 
@@ -167,24 +178,30 @@ class ExpenseTypesFragment : Fragment() {
                 
                 val tipoId = tipoRepository.criarTipo(novoTipo)
                 
-                Snackbar.make(
-                    binding.root,
-                    "Tipo '$name' adicionado com sucesso!",
-                    Snackbar.LENGTH_SHORT
-                ).show()
-                
-                // Recarregar dados
-                loadData()
+                if (isAdded && context != null) {
+                    Snackbar.make(
+                        binding.root,
+                        "Tipo '$name' adicionado com sucesso!",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                    
+                    // Recarregar dados
+                    loadData()
+                }
             } catch (e: Exception) {
                 Log.e("ExpenseTypesFragment", "Erro ao adicionar tipo: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao adicionar tipo: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (isAdded && context != null) {
+                    Toast.makeText(requireContext(), "Erro ao adicionar tipo: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
     private fun updateType(type: TipoDespesaComCategoria, newName: String, categoryId: Long) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
+                if (!isAdded || context == null) return@launch
+                
                 val database = AppDatabase.getDatabase(requireContext())
                 val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao())
                 
@@ -198,40 +215,50 @@ class ExpenseTypesFragment : Fragment() {
                 
                 tipoRepository.editarTipo(edicaoTipo)
                 
-                Snackbar.make(
-                    binding.root,
-                    "Tipo atualizado para '$newName'!",
-                    Snackbar.LENGTH_SHORT
-                ).show()
-                
-                // Recarregar dados
-                loadData()
+                if (isAdded && context != null) {
+                    Snackbar.make(
+                        binding.root,
+                        "Tipo atualizado para '$newName'!",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                    
+                    // Recarregar dados
+                    loadData()
+                }
             } catch (e: Exception) {
                 Log.e("ExpenseTypesFragment", "Erro ao atualizar tipo: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao atualizar tipo: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (isAdded && context != null) {
+                    Toast.makeText(requireContext(), "Erro ao atualizar tipo: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
     private fun deleteType(type: TipoDespesaComCategoria) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
+                if (!isAdded || context == null) return@launch
+                
                 val database = AppDatabase.getDatabase(requireContext())
                 val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao())
                 
                 tipoRepository.deletar(type.tipoDespesa)
                 
-                Snackbar.make(
-                    binding.root,
-                    "Tipo '${type.nome}' removido!",
-                    Snackbar.LENGTH_LONG
-                ).show()
-                
-                // Recarregar dados
-                loadData()
+                if (isAdded && context != null) {
+                    Snackbar.make(
+                        binding.root,
+                        "Tipo '${type.nome}' removido!",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                    
+                    // Recarregar dados
+                    loadData()
+                }
             } catch (e: Exception) {
                 Log.e("ExpenseTypesFragment", "Erro ao deletar tipo: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao deletar tipo: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (isAdded && context != null) {
+                    Toast.makeText(requireContext(), "Erro ao deletar tipo: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

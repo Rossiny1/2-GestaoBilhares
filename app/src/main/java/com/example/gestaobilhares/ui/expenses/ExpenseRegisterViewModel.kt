@@ -9,12 +9,15 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /**
  * ViewModel para o cadastro de despesas.
  * Gerencia o estado da tela de cadastro e integra com o ciclo de acertos.
  */
-class ExpenseRegisterViewModel(
+@HiltViewModel
+class ExpenseRegisterViewModel @Inject constructor(
     private val despesaRepository: DespesaRepository,
     private val categoriaDespesaRepository: CategoriaDespesaRepository,
     private val tipoDespesaRepository: TipoDespesaRepository,
@@ -263,14 +266,10 @@ class ExpenseRegisterViewModel(
             try {
                 _isLoading.value = true
                 val cicloAtivo = if (rotaId == 0L) {
-                    // Fluxo global: exige seleção de ciclo manual
+                    // Fluxo global: seleção do ciclo apenas para ler ano/número; não usamos cicloId na gravação
                     val selecionado = _selectedCycle.value
                     if (selecionado == null) {
                         _message.value = "Selecione um ciclo para lançar a despesa."
-                        return@launch
-                    }
-                    if (selecionado.status != StatusCicloAcerto.EM_ANDAMENTO) {
-                        _message.value = "O ciclo selecionado não está em andamento."
                         return@launch
                     }
                     selecionado
@@ -302,8 +301,10 @@ class ExpenseRegisterViewModel(
                 }
 
                 // ✅ CORRIGIDO: Usar ciclo ativo real
-                val cicloId = cicloAtivo.id
+                val cicloId = if (rotaId == 0L) null else cicloAtivo.id
                 val rotaParaLancamento = if (rotaId == 0L) cicloAtivo.rotaId else rotaId
+                val cicloAno = cicloAtivo.ano
+                val cicloNumero = cicloAtivo.numeroCiclo
 
                 if (modoEdicao && despesaId > 0) {
                     // ✅ NOVO: Modo de edição - atualizar despesa existente
@@ -317,6 +318,9 @@ class ExpenseRegisterViewModel(
                             dataHora = _selectedDate.value,
                             observacoes = observacoes,
                             cicloId = cicloId,
+                            origemLancamento = if (rotaId == 0L) "GLOBAL" else "ROTA",
+                            cicloAno = if (rotaId == 0L) cicloAno else despesaExistente.cicloAno,
+                            cicloNumero = if (rotaId == 0L) cicloNumero else despesaExistente.cicloNumero,
                             rotaId = rotaParaLancamento,
                             fotoComprovante = fotoComprovante,
                             dataFotoComprovante = dataFotoComprovante
@@ -340,6 +344,9 @@ class ExpenseRegisterViewModel(
                         observacoes = observacoes,
                         criadoPor = "Sistema", // TODO: Pegar usuário atual
                         cicloId = cicloId,
+                        origemLancamento = if (rotaId == 0L) "GLOBAL" else "ROTA",
+                        cicloAno = if (rotaId == 0L) cicloAno else null,
+                        cicloNumero = if (rotaId == 0L) cicloNumero else null,
                         fotoComprovante = fotoComprovante,
                         dataFotoComprovante = dataFotoComprovante
                     )
