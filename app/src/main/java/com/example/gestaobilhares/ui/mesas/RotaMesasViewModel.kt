@@ -37,11 +37,15 @@ class RotaMesasViewModel @Inject constructor(
         viewModelScope.launch {
             _loading.value = true
             try {
-                // Carregar todas as mesas da rota específica
-                // Por enquanto, todas as mesas são consideradas do depósito
-                // TODO: Implementar lógica para associar mesas às rotas
-                val todasMesas = repository.obterTodasMesas().first()
-                val mesasDaRota = todasMesas.filter { mesa: Mesa -> mesa.clienteId == null } // Apenas mesas no depósito
+                // Carregar mesas específicas da rota via JOIN com clientes
+                // Isso garante que apenas mesas associadas a clientes daquela rota apareçam
+                val mesasDaRota = repository.buscarMesasPorRota(rotaId).first()
+
+                android.util.Log.d("RotaMesasViewModel", "=== MESAS DA ROTA $rotaId ===")
+                android.util.Log.d("RotaMesasViewModel", "Encontradas ${mesasDaRota.size} mesas para a rota")
+                mesasDaRota.forEach { mesa ->
+                    android.util.Log.d("RotaMesasViewModel", "Mesa: ${mesa.numero} | ID: ${mesa.id} | ClienteId: ${mesa.clienteId}")
+                }
 
                 _mesasRota.value = mesasDaRota
 
@@ -52,10 +56,12 @@ class RotaMesasViewModel @Inject constructor(
                     totalPembolim = mesasDaRota.count { mesa: Mesa -> mesa.tipoMesa == TipoMesa.PEMBOLIM }
                 )
 
+                android.util.Log.d("RotaMesasViewModel", "Estatísticas: Sinuca=${stats.totalSinuca}, Jukebox=${stats.totalJukebox}, Pembolim=${stats.totalPembolim}")
+
                 _estatisticas.value = stats
 
             } catch (e: Exception) {
-                // Log error
+                android.util.Log.e("RotaMesasViewModel", "Erro ao carregar mesas da rota: ${e.message}", e)
             } finally {
                 _loading.value = false
             }
