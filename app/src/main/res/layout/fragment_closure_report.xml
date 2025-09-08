@@ -101,6 +101,22 @@
                     android:layout_height="wrap_content"
                     android:text="Lucro Líquido: R$ 0,00" />
 
+                <TextView
+                    android:id="@+id/txtLucroRossiny"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lucro Rossiny: R$ 0,00"
+                    android:textColor="@color/primary_blue"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtLucroPetrina"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lucro Petrina: R$ 0,00"
+                    android:textColor="@color/primary_blue"
+                    android:textStyle="bold" />
+
             </LinearLayout>
             
         </com.google.android.material.card.MaterialCardView>

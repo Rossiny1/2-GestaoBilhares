@@ -20,7 +20,13 @@ class ClosureReportViewModel @Inject constructor(
 
     data class CicloInfo(val id: Long, val numero: Int, val descricao: String)
     data class LinhaDetalhe(val rota: String, val faturamento: Double, val despesas: Double, val lucro: Double)
-    data class Resumo(val faturamentoTotal: Double, val despesasTotal: Double, val lucroLiquido: Double)
+    data class Resumo(
+        val faturamentoTotal: Double, 
+        val despesasTotal: Double, 
+        val lucroLiquido: Double,
+        val lucroRossiny: Double,
+        val lucroPetrina: Double
+    )
 
     private val moeda = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
@@ -125,9 +131,22 @@ class ClosureReportViewModel @Inject constructor(
             } else {
                 try { repository.somarDespesasGlobaisPorCiclo(anoSelecionado, cicloSelecionado.numero) } catch (_: Exception) { 0.0 }
             }
-            val totalDespesas = totalDespesasRotas + totalDespesasGlobais
+            // ✅ NOVO: Calcular comissões de motorista e Iltair
+            val (totalComissaoMotorista, totalComissaoIltair) = if (cicloSelecionado.numero == 0) {
+                // Ano inteiro: somar comissões de todos os ciclos do ano
+                repository.calcularComissoesPorAno(anoSelecionado)
+            } else {
+                // Ciclo específico: somar comissões de todos os ciclos com mesmo número no ano
+                repository.calcularComissoesPorAnoECiclo(anoSelecionado, cicloSelecionado.numero)
+            }
+            
+            val totalDespesas = totalDespesasRotas + totalDespesasGlobais + totalComissaoMotorista + totalComissaoIltair
+            val lucroLiquido = totalFaturamento - totalDespesas
+            val lucroRossiny = lucroLiquido * 0.6
+            val lucroPetrina = lucroLiquido * 0.4
+            
             _detalhes.value = detalhes
-            _resumo.value = Resumo(totalFaturamento, totalDespesas, totalFaturamento - totalDespesas)
+            _resumo.value = Resumo(totalFaturamento, totalDespesas, lucroLiquido, lucroRossiny, lucroPetrina)
 
             // ✅ NOVO: calcular total de mesas locadas reais (distintas) no período
             val cicloIds = if (cicloSelecionado.numero == 0) {

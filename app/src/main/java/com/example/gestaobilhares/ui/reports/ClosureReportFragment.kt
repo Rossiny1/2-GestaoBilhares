@@ -74,6 +74,8 @@ class ClosureReportFragment : Fragment() {
             binding.txtFaturamentoTotal.text = "Faturamento Total: ${moeda.format(r.faturamentoTotal)}"
             binding.txtDespesasTotal.text = "Despesas Total: ${moeda.format(r.despesasTotal)}"
             binding.txtLucroLiquido.text = "Lucro Líquido: ${moeda.format(r.lucroLiquido)}"
+            binding.txtLucroRossiny.text = "Lucro Rossiny: ${moeda.format(r.lucroRossiny)}"
+            binding.txtLucroPetrina.text = "Lucro Petrina: ${moeda.format(r.lucroPetrina)}"
         }
 
         viewModel.detalhes.observe(viewLifecycleOwner) { linhas ->
@@ -88,6 +90,8 @@ class ClosureReportFragment : Fragment() {
             val faturamentoTotal = resumo.faturamentoTotal
             val despesasTotal = resumo.despesasTotal
             val lucro = resumo.lucroLiquido
+            val lucroRossiny = resumo.lucroRossiny
+            val lucroPetrina = resumo.lucroPetrina
             val faturamentoPorMesa = if (totalMesas > 0) faturamentoTotal / totalMesas else 0.0
             val lucroPorMesa = if (totalMesas > 0) lucro / totalMesas else 0.0
             val despesaPorMesa = if (totalMesas > 0) despesasTotal / totalMesas else 0.0
@@ -100,7 +104,14 @@ class ClosureReportFragment : Fragment() {
                     "Faturamento por mesa: ${moeda.format(faturamentoPorMesa)}\n" +
                     "Lucro por mesa: ${moeda.format(lucroPorMesa)}\n" +
                     "Despesa por mesa: ${moeda.format(despesaPorMesa)}\n" +
-                    "Margem líquida: ${String.format(Locale("pt", "BR"), "%.1f%%", margem)}"
+                    "Margem líquida: ${String.format(Locale("pt", "BR"), "%.1f%%", margem)}\n\n" +
+                    "Composição das Despesas:\n" +
+                    "• Despesas de Rotas: ${moeda.format(despesasTotal)}\n" +
+                    "• Comissão Motorista (3%): Incluída\n" +
+                    "• Comissão Iltair (2%): Incluída\n\n" +
+                    "Distribuição do Lucro:\n" +
+                    "Lucro Rossiny (60%): ${moeda.format(lucroRossiny)}\n" +
+                    "Lucro Petrina (40%): ${moeda.format(lucroPetrina)}"
                 )
                 .setPositiveButton("OK", null)
                 .show()
