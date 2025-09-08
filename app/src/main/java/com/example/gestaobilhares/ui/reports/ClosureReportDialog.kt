@@ -83,11 +83,11 @@ class ClosureReportDialog : DialogFragment() {
     }
 
     private fun setupUI() {
-        val title = if (isAnnualReport) {
-            "Relatório Anual - $anoSelecionado"
-        } else {
-            "Relatório do ${numeroAcerto}º Acerto"
-        }
+                val title = if (isAnnualReport) {
+                    "Relatório Anual - $anoSelecionado"
+                } else {
+                    "Relatório do ${numeroAcerto}º Acerto - $anoSelecionado"
+                }
         
         binding.tvTitle.text = title
         
