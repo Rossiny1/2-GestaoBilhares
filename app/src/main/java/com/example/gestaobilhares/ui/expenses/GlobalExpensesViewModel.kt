@@ -36,6 +36,9 @@ class GlobalExpensesViewModel @Inject constructor(
     private val _selectedCycle = MutableLiveData<CicloAcertoEntity?>()
     val selectedCycle: LiveData<CicloAcertoEntity?> = _selectedCycle
 
+    private val _selectedYear = MutableLiveData<Int>()
+    val selectedYear: LiveData<Int> = _selectedYear
+
     private val _totalExpenses = MutableLiveData<Double>()
     val totalExpenses: LiveData<Double> = _totalExpenses
 
@@ -49,6 +52,8 @@ class GlobalExpensesViewModel @Inject constructor(
     val errorMessage: LiveData<String?> = _errorMessage
 
     init {
+        // Inicializar com o ano atual
+        _selectedYear.value = Calendar.getInstance().get(Calendar.YEAR)
         loadAvailableCycles()
         loadAllGlobalExpenses()
     }
@@ -59,10 +64,37 @@ class GlobalExpensesViewModel @Inject constructor(
     private fun loadAvailableCycles() {
         viewModelScope.launch {
             try {
-                // Buscar ciclos finalizados de todas as rotas
-                // Como não temos um método específico para buscar todos os ciclos, vamos usar uma abordagem diferente
-                // Por enquanto, vamos deixar a lista vazia e implementar uma solução mais robusta depois
-                _availableCycles.value = emptyList()
+                val currentYear = _selectedYear.value ?: Calendar.getInstance().get(Calendar.YEAR)
+                
+                // Buscar ciclos de todas as rotas para o ano atual
+                // Vamos criar uma lista de ciclos baseada nos números de ciclo disponíveis
+                val cycles = mutableListOf<CicloAcertoEntity>()
+                
+                // Criar ciclos de 1 a 12 para o ano atual (assumindo que podem existir até 12 ciclos por ano)
+                for (numeroCiclo in 1..12) {
+                    val ciclo = CicloAcertoEntity(
+                        id = 0L, // ID temporário
+                        rotaId = 0L, // Rota global
+                        numeroCiclo = numeroCiclo,
+                        ano = currentYear,
+                        dataInicio = java.util.Date(),
+                        dataFim = java.util.Date(),
+                        status = com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO,
+                        totalClientes = 0,
+                        clientesAcertados = 0,
+                        valorTotalAcertado = 0.0,
+                        valorTotalDespesas = 0.0,
+                        lucroLiquido = 0.0,
+                        debitoTotal = 0.0,
+                        observacoes = "Ciclo global $numeroCiclo",
+                        criadoPor = "Sistema",
+                        dataCriacao = java.util.Date(),
+                        dataAtualizacao = java.util.Date()
+                    )
+                    cycles.add(ciclo)
+                }
+                
+                _availableCycles.value = cycles
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar ciclos: ${e.message}"
             }
@@ -78,12 +110,19 @@ class GlobalExpensesViewModel @Inject constructor(
                 _isLoading.value = true
                 _selectedCycle.value = null
                 
-                val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-                // Buscar despesas globais de todos os ciclos do ano atual
-                val expenses = despesaRepository.buscarGlobaisPorCiclo(currentYear, 1) // Temporário - buscar do primeiro ciclo
+                val currentYear = _selectedYear.value ?: Calendar.getInstance().get(Calendar.YEAR)
                 
-                _globalExpenses.value = expenses
-                updateSummary(expenses)
+                // Buscar todas as despesas globais do ano atual
+                val allExpenses = mutableListOf<Despesa>()
+                
+                // Buscar despesas de todos os ciclos do ano atual
+                for (numeroCiclo in 1..12) {
+                    val expenses = despesaRepository.buscarGlobaisPorCiclo(currentYear, numeroCiclo)
+                    allExpenses.addAll(expenses)
+                }
+                
+                _globalExpenses.value = allExpenses
+                updateSummary(allExpenses)
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar despesas: ${e.message}"
             } finally {
@@ -168,5 +207,14 @@ class GlobalExpensesViewModel @Inject constructor(
      */
     fun hasActiveFilter(): Boolean {
         return _selectedCycle.value != null
+    }
+
+    /**
+     * Atualiza o ano selecionado
+     */
+    fun setSelectedYear(year: Int) {
+        _selectedYear.value = year
+        loadAvailableCycles()
+        loadAllGlobalExpenses()
     }
 }
