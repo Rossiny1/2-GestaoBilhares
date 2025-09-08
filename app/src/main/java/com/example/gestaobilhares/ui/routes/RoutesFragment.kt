@@ -179,10 +179,8 @@ class RoutesFragment : Fragment() {
                 }
                 R.id.nav_expense_quick_add -> {
                     try {
-                        // Navegar para registro de despesa sem rota (rotaId=0L)
-                        findNavController().navigate(R.id.expenseRegisterFragment, Bundle().apply {
-                            putLong("rotaId", 0L)
-                        })
+                        // Navegar para tela de despesas globais
+                        findNavController().navigate(R.id.globalExpensesFragment)
                         binding.drawerLayout.closeDrawers()
                         true
                     } catch (e: Exception) {

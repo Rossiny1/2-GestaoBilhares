@@ -171,4 +171,10 @@
     <!-- Cores para relatórios -->
     <color name="background_secondary">#F5F5F5</color>
     <color name="input_background">#FFFFFF</color>
+    
+    <!-- Cores adicionais para despesas globais -->
+    <color name="primary_color">@color/primary_blue</color>
+    <color name="primary_light">@color/primary_blue_light</color>
+    <color name="success_color">@color/success_green</color>
+    <color name="success_light">@color/green_100</color>
 </resources>
