@@ -18,22 +18,26 @@ class ClosureReportViewModel @Inject constructor(
     private val repository: AppRepository
 ) : ViewModel() {
 
-    data class CicloInfo(val id: Long, val numero: Int, val descricao: String)
+    data class AcertoInfo(val id: Long, val numero: Int, val descricao: String)
     data class LinhaDetalhe(val rota: String, val faturamento: Double, val despesas: Double, val lucro: Double)
     data class Resumo(
         val faturamentoTotal: Double, 
         val despesasTotal: Double, 
         val lucroLiquido: Double,
         val lucroRossiny: Double,
-        val lucroPetrina: Double
-    )
+        val lucroPetrina: Double,
+        val despesasRotas: Double,
+        val despesasGlobais: Double,
+        val comissaoMotorista: Double,
+        val comissaoIltair: Double
+    ) : java.io.Serializable
 
     private val moeda = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
     private val _anos = MutableLiveData<List<Int>>()
     val anos: LiveData<List<Int>> = _anos
-    private val _ciclos = MutableLiveData<List<CicloInfo>>()
-    val ciclos: LiveData<List<CicloInfo>> = _ciclos
+    private val _acertos = MutableLiveData<List<AcertoInfo>>()
+    val acertos: LiveData<List<AcertoInfo>> = _acertos
 
     private val _resumo = MutableLiveData<Resumo>()
     val resumo: LiveData<Resumo> = _resumo
@@ -45,14 +49,14 @@ class ClosureReportViewModel @Inject constructor(
     val totalMesasLocadas: LiveData<Int> = _totalMesasLocadas
 
     private var anoSelecionado: Int = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
-    private var cicloSelecionado: CicloInfo = CicloInfo(0L, 0, "Todos")
+    private var acertoSelecionado: AcertoInfo = AcertoInfo(0L, 0, "Todos")
 
     init {
         viewModelScope.launch {
             val anosDisponiveis = repository.obterTodosCiclos().first().map { it.ano }.distinct().sortedDescending()
             _anos.value = if (anosDisponiveis.isEmpty()) listOf(anoSelecionado) else anosDisponiveis
-            val ciclos = listOf(CicloInfo(0L, 0, "Todos")) + (1..12).map { n -> CicloInfo(n.toLong(), n, "${n}º Ciclo") }
-            _ciclos.value = ciclos
+            val acertos = listOf(AcertoInfo(0L, 0, "Todos")) + (1..12).map { n -> AcertoInfo(n.toLong(), n, "${n}º Acerto") }
+            _acertos.value = acertos
             calcular()
         }
     }
@@ -65,10 +69,10 @@ class ClosureReportViewModel @Inject constructor(
         }
     }
 
-    fun selecionarCiclo(pos: Int) {
-        val lista = _ciclos.value ?: return
+    fun selecionarAcerto(pos: Int) {
+        val lista = _acertos.value ?: return
         if (pos in lista.indices) {
-            cicloSelecionado = lista[pos]
+            acertoSelecionado = lista[pos]
             calcular()
         }
     }
@@ -78,7 +82,7 @@ class ClosureReportViewModel @Inject constructor(
             val rotas: List<Rota> = repository.obterTodasRotas().first()
             val rotaNomePorId = rotas.associateBy({ it.id }, { it.nome })
 
-            val acertos = if (cicloSelecionado.numero == 0) {
+            val acertos = if (acertoSelecionado.numero == 0) {
                 repository.obterTodosAcertos().first().filter { ac ->
                     val cal = java.util.Calendar.getInstance()
                     cal.time = ac.dataAcerto
@@ -87,7 +91,7 @@ class ClosureReportViewModel @Inject constructor(
             } else {
                 // Todos os acertos dos ciclos com mesmo número no ano selecionado, para todas as rotas
                 val ciclosDoAnoNumero = repository.obterTodosCiclos().first()
-                    .filter { it.ano == anoSelecionado && it.numeroCiclo == cicloSelecionado.numero }
+                    .filter { it.ano == anoSelecionado && it.numeroCiclo == acertoSelecionado.numero }
                 ciclosDoAnoNumero.flatMap { ciclo ->
                     repository.buscarAcertosPorCicloId(ciclo.id).first()
                 }
@@ -97,14 +101,14 @@ class ClosureReportViewModel @Inject constructor(
                 lista.sumOf { it.valorRecebido }
             }
 
-            val despesas = if (cicloSelecionado.numero == 0) {
+            val despesas = if (acertoSelecionado.numero == 0) {
                 // Ano inteiro: despesas de todas as rotas (por cicloId) + globais do ano (somatório por mesclagem na camada de apresentação)
                 // Usamos o método existente (por ano) que retorna despesas por rota; globais serão consideradas no cálculo final via novo método de AppRepository (ajuste posterior, se necessário).
                 repository.getDespesasPorAno(anoSelecionado, 0L)
             } else {
                 // Somar despesas de todos os ciclos do mesmo número no ano (por rota)
                 val ciclosDoAnoNumero = repository.obterTodosCiclos().first()
-                    .filter { it.ano == anoSelecionado && it.numeroCiclo == cicloSelecionado.numero }
+                    .filter { it.ano == anoSelecionado && it.numeroCiclo == acertoSelecionado.numero }
                 ciclosDoAnoNumero.flatMap { ciclo ->
                     repository.getDespesasPorCiclo(ciclo.id, 0L)
                 }
@@ -123,21 +127,21 @@ class ClosureReportViewModel @Inject constructor(
             val totalFaturamento = detalhes.sumOf { it.faturamento }
             // ✅ NOVO: Somar também despesas globais
             val totalDespesasRotas = detalhes.sumOf { it.despesas }
-            val totalDespesasGlobais = if (cicloSelecionado.numero == 0) {
+            val totalDespesasGlobais = if (acertoSelecionado.numero == 0) {
                 // Ano inteiro: somatório de todos os 12 ciclos do ano para globais
                 (1..12).sumOf { numero ->
                     try { repository.somarDespesasGlobaisPorCiclo(anoSelecionado, numero) } catch (_: Exception) { 0.0 }
                 }
             } else {
-                try { repository.somarDespesasGlobaisPorCiclo(anoSelecionado, cicloSelecionado.numero) } catch (_: Exception) { 0.0 }
+                try { repository.somarDespesasGlobaisPorCiclo(anoSelecionado, acertoSelecionado.numero) } catch (_: Exception) { 0.0 }
             }
             // ✅ NOVO: Calcular comissões de motorista e Iltair
-            val (totalComissaoMotorista, totalComissaoIltair) = if (cicloSelecionado.numero == 0) {
+            val (totalComissaoMotorista, totalComissaoIltair) = if (acertoSelecionado.numero == 0) {
                 // Ano inteiro: somar comissões de todos os ciclos do ano
                 repository.calcularComissoesPorAno(anoSelecionado)
             } else {
-                // Ciclo específico: somar comissões de todos os ciclos com mesmo número no ano
-                repository.calcularComissoesPorAnoECiclo(anoSelecionado, cicloSelecionado.numero)
+                // Acerto específico: somar comissões de todos os ciclos com mesmo número no ano
+                repository.calcularComissoesPorAnoECiclo(anoSelecionado, acertoSelecionado.numero)
             }
             
             val totalDespesas = totalDespesasRotas + totalDespesasGlobais + totalComissaoMotorista + totalComissaoIltair
@@ -146,14 +150,24 @@ class ClosureReportViewModel @Inject constructor(
             val lucroPetrina = lucroLiquido * 0.4
             
             _detalhes.value = detalhes
-            _resumo.value = Resumo(totalFaturamento, totalDespesas, lucroLiquido, lucroRossiny, lucroPetrina)
+            _resumo.value = Resumo(
+                faturamentoTotal = totalFaturamento,
+                despesasTotal = totalDespesas,
+                lucroLiquido = lucroLiquido,
+                lucroRossiny = lucroRossiny,
+                lucroPetrina = lucroPetrina,
+                despesasRotas = totalDespesasRotas,
+                despesasGlobais = totalDespesasGlobais,
+                comissaoMotorista = totalComissaoMotorista,
+                comissaoIltair = totalComissaoIltair
+            )
 
             // ✅ NOVO: calcular total de mesas locadas reais (distintas) no período
-            val cicloIds = if (cicloSelecionado.numero == 0) {
+            val cicloIds = if (acertoSelecionado.numero == 0) {
                 repository.obterTodosCiclos().first().filter { it.ano == anoSelecionado }.map { it.id }
             } else {
                 repository.obterTodosCiclos().first()
-                    .filter { it.ano == anoSelecionado && it.numeroCiclo == cicloSelecionado.numero }
+                    .filter { it.ano == anoSelecionado && it.numeroCiclo == acertoSelecionado.numero }
                     .map { it.id }
             }
             _totalMesasLocadas.value = repository.contarMesasPorCiclos(cicloIds)

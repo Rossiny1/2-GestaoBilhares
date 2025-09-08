@@ -15,7 +15,21 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:title="Fechamento"
-            app:navigationIcon="@drawable/ic_arrow_back" />
+            app:navigationIcon="@drawable/ic_arrow_back">
+            
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGenerateReport"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="Gerar Relatório PDF"
+                app:icon="@drawable/ic_report"
+                app:iconSize="24dp"
+                app:iconTint="@color/primary_blue" />
+                
+        </com.google.android.material.appbar.MaterialToolbar>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardResumo"
@@ -48,14 +62,14 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Selecionar Ciclo"
+                    android:text="Selecionar Acerto"
                     android:textStyle="bold" />
 
                 <AutoCompleteTextView
                     android:id="@+id/spinnerCiclo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Ciclo"
+                    android:hint="Acerto"
                     android:inputType="none"
                     android:focusable="false"
                     android:clickable="true"
