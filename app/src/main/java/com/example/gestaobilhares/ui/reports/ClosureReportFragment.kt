@@ -97,7 +97,11 @@ class ClosureReportFragment : Fragment() {
         val detalhes = viewModel.detalhes.value
         val totalMesas = viewModel.totalMesasLocadas.value ?: 0
         val anoSelecionado = viewModel.anos.value?.firstOrNull() ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
-        val acertoSelecionado = viewModel.acertos.value?.firstOrNull()
+        
+        // ✅ CORRIGIDO: Pegar o acerto realmente selecionado no spinner
+        val acertoSelecionado = viewModel.acertos.value?.find { acerto ->
+            acerto.descricao == binding.spinnerCiclo.text.toString()
+        } ?: viewModel.acertos.value?.firstOrNull()
 
         if (resumo == null || detalhes == null) {
             Toast.makeText(requireContext(), "Nenhum dado disponível para gerar relatório", Toast.LENGTH_SHORT).show()

@@ -47,8 +47,8 @@ class ClosureReportPdfGenerator(private val context: Context) {
             // Configurar margens para A4
             document.setMargins(50f, 50f, 50f, 50f)
             
-            // Adicionar cabeçalho
-            addHeader(document, "Relatório do ${numeroAcerto}º Acerto")
+                    // Adicionar cabeçalho
+                    addHeader(document, "Relatório do ${numeroAcerto}º Acerto - $ano")
             
             // Adicionar resumo executivo
             addExecutiveSummary(document, resumo, totalMesas)
