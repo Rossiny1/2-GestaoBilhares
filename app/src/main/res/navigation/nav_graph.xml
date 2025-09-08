@@ -45,6 +45,10 @@
             app:destination="@id/loginFragment"
             app:popUpTo="@id/routesFragment"
             app:popUpToInclusive="true" />
+        <!-- ✅ NOVO: Navegação para gerenciar mesas -->
+        <action
+            android:id="@+id/action_routesFragment_to_gerenciarMesasFragment"
+            app:destination="@id/gerenciarMesasFragment" />
     </fragment>
 
     <fragment
@@ -277,6 +281,45 @@
         android:id="@+id/cadastroMesaFragment"
         android:name="com.example.gestaobilhares.ui.mesas.CadastroMesaFragment"
         android:label="Cadastro de Mesa" />
+
+    <!-- Tela de Gerenciar Mesas -->
+    <fragment
+        android:id="@+id/gerenciarMesasFragment"
+        android:name="com.example.gestaobilhares.ui.mesas.GerenciarMesasFragment"
+        android:label="Gerenciar Mesas">
+        <action
+            android:id="@+id/action_gerenciarMesasFragment_to_mesasDepositoFragment"
+            app:destination="@id/mesasDepositoFragment" />
+        <action
+            android:id="@+id/action_gerenciarMesasFragment_to_rotaMesasFragment"
+            app:destination="@id/rotaMesasFragment" />
+    </fragment>
+
+    <!-- Tela de Mesas da Rota -->
+    <fragment
+        android:id="@+id/rotaMesasFragment"
+        android:name="com.example.gestaobilhares.ui.mesas.RotaMesasFragment"
+        android:label="Mesas da Rota">
+        <argument
+            android:name="rotaId"
+            app:argType="long" />
+        <argument
+            android:name="rotaNome"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_rotaMesasFragment_to_editMesaFragment"
+            app:destination="@id/editMesaFragment" />
+    </fragment>
+
+    <!-- Tela de Edição de Mesa -->
+    <fragment
+        android:id="@+id/editMesaFragment"
+        android:name="com.example.gestaobilhares.ui.mesas.EditMesaFragment"
+        android:label="Editar Mesa">
+        <argument
+            android:name="mesaId"
+            app:argType="long" />
+    </fragment>
 
     <!-- ✅ FASE 9C: Tela de histórico de ciclos -->
     <fragment

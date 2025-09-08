@@ -167,7 +167,9 @@ class RoutesFragment : Fragment() {
                         return@setNavigationItemSelectedListener false
                     }
                     
-                    Toast.makeText(requireContext(), "Gerenciar Mesas será implementado em breve", Toast.LENGTH_SHORT).show()
+                    // Navegar para a tela de gerenciar mesas
+                    val action = RoutesFragmentDirections.actionRoutesFragmentToGerenciarMesasFragment()
+                    findNavController().navigate(action)
                     binding.drawerLayout.closeDrawers()
                     true
                 }
