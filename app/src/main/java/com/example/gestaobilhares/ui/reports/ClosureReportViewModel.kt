@@ -32,6 +32,12 @@ class ClosureReportViewModel @Inject constructor(
         val comissaoIltair: Double
     ) : java.io.Serializable
 
+    // Estrutura para dados dos gráficos
+    data class ChartData(
+        val faturamentoPorRota: Map<String, Double>,
+        val despesasPorTipo: Map<String, Double>
+    ) : java.io.Serializable
+
     private val moeda = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
     private val _anos = MutableLiveData<List<Int>>()
@@ -172,6 +178,89 @@ class ClosureReportViewModel @Inject constructor(
             }
             _totalMesasLocadas.value = repository.contarMesasPorCiclos(cicloIds)
         }
+    }
+
+    /**
+     * Gera dados para os gráficos do relatório
+     */
+    suspend fun generateChartData(): ChartData {
+        android.util.Log.d("ChartData", "Gerando dados para acerto: ${acertoSelecionado.numero}, ano: $anoSelecionado")
+        
+        val acertos = if (acertoSelecionado.numero == 0) {
+            // Para relatório anual, buscar todos os acertos do ano
+            val todosAcertos = repository.obterTodosAcertos().first()
+            android.util.Log.d("ChartData", "Total de acertos encontrados: ${todosAcertos.size}")
+            todosAcertos.filter { ac ->
+                val cal = java.util.Calendar.getInstance()
+                cal.time = ac.dataAcerto
+                val anoAcerto = cal.get(java.util.Calendar.YEAR)
+                android.util.Log.d("ChartData", "Acerto ano: $anoAcerto, filtro: $anoSelecionado, valor: ${ac.valorRecebido}")
+                anoAcerto == anoSelecionado
+            }
+        } else {
+            // Para relatório por acerto específico
+            val ciclosDoAnoNumero = repository.obterTodosCiclos().first()
+                .filter { it.ano == anoSelecionado && it.numeroCiclo == acertoSelecionado.numero }
+            android.util.Log.d("ChartData", "Ciclos encontrados: ${ciclosDoAnoNumero.size}")
+            ciclosDoAnoNumero.flatMap { ciclo ->
+                val acertosCiclo = repository.buscarAcertosPorCicloId(ciclo.id).first()
+                android.util.Log.d("ChartData", "Acertos do ciclo ${ciclo.id}: ${acertosCiclo.size}")
+                acertosCiclo
+            }
+        }
+        
+        android.util.Log.d("ChartData", "Acertos filtrados: ${acertos.size}")
+
+        // 1. Faturamento por rota
+        val rotas = repository.obterTodasRotas().first()
+        val rotaNomePorId = rotas.associateBy({ it.id }, { it.nome })
+        
+        val faturamentoPorRota = acertos.groupBy { it.rotaId ?: -1L }.mapValues { (_, lista) ->
+            lista.sumOf { it.valorRecebido }
+        }.mapKeys { (rotaId, _) ->
+            rotaNomePorId[rotaId] ?: if (rotaId == -1L) "Sem Rota" else "Rota ${rotaId}"
+        }
+        
+        android.util.Log.d("ChartData", "Faturamento por rota: $faturamentoPorRota")
+
+        // 2. Despesas por tipo
+        val despesas = if (acertoSelecionado.numero == 0) {
+            val despesasAno = repository.getDespesasPorAno(anoSelecionado, 0L)
+            android.util.Log.d("ChartData", "Despesas por ano: ${despesasAno.size}")
+            despesasAno
+        } else {
+            val ciclosDoAnoNumero = repository.obterTodosCiclos().first()
+                .filter { it.ano == anoSelecionado && it.numeroCiclo == acertoSelecionado.numero }
+            val despesasCiclo = ciclosDoAnoNumero.flatMap { ciclo ->
+                repository.getDespesasPorCiclo(ciclo.id, 0L)
+            }
+            android.util.Log.d("ChartData", "Despesas por ciclo: ${despesasCiclo.size}")
+            despesasCiclo
+        }
+
+        android.util.Log.d("ChartData", "Total de despesas: ${despesas.size}")
+        val despesasPorTipo = despesas.groupBy { it.categoria.ifEmpty { "Não categorizado" } }
+            .mapValues { (_, lista) -> lista.sumOf { it.valor } }
+        
+        android.util.Log.d("ChartData", "Despesas por tipo: $despesasPorTipo")
+
+        // 3. Adicionar comissões como tipo "Comissões"
+        val (totalComissaoMotorista, totalComissaoIltair) = if (acertoSelecionado.numero == 0) {
+            repository.calcularComissoesPorAno(anoSelecionado)
+        } else {
+            repository.calcularComissoesPorAnoECiclo(anoSelecionado, acertoSelecionado.numero)
+        }
+
+        val totalComissoes = totalComissaoMotorista + totalComissaoIltair
+        val despesasPorTipoComComissoes = despesasPorTipo.toMutableMap()
+        if (totalComissoes > 0) {
+            despesasPorTipoComComissoes["Comissões"] = totalComissoes
+        }
+
+        return ChartData(
+            faturamentoPorRota = faturamentoPorRota,
+            despesasPorTipo = despesasPorTipoComComissoes
+        )
     }
 }
 
