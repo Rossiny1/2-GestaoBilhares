@@ -383,22 +383,6 @@
             android:defaultValue="false" />
     </fragment>
 
-    <!-- Tela de Relatórios -->
-    <fragment
-        android:id="@+id/reportsFragment"
-        android:name="com.example.gestaobilhares.ui.reports.ReportsFragment"
-        android:label="Relatórios">
-        <!-- Navegação para relatórios específicos -->
-        <action
-            android:id="@+id/action_reportsFragment_to_despesasCategoriaFragment"
-            app:destination="@id/despesasCategoriaFragment" />
-        <action
-            android:id="@+id/action_reportsFragment_to_colaboradorPerformanceFragment"
-            app:destination="@id/colaboradorPerformanceFragment" />
-        <action
-            android:id="@+id/action_reportsFragment_to_relatorioClientesFragment"
-            app:destination="@id/relatorioClientesFragment" />
-    </fragment>
 
     <!-- ✅ NOVO: Tela de Dashboard -->
     <fragment
@@ -416,23 +400,8 @@
 
 
 
-    <!-- Relatório de Despesas por Categoria -->
-    <fragment
-        android:id="@+id/despesasCategoriaFragment"
-        android:name="com.example.gestaobilhares.ui.reports.DespesasCategoriaFragment"
-        android:label="Despesas por Categoria" />
 
-    <!-- Relatório de Performance dos Colaboradores -->
-    <fragment
-        android:id="@+id/colaboradorPerformanceFragment"
-        android:name="com.example.gestaobilhares.ui.reports.ColaboradorPerformanceFragment"
-        android:label="Performance dos Colaboradores" />
 
-    <!-- Relatório de Clientes -->
-    <fragment
-        android:id="@+id/relatorioClientesFragment"
-        android:name="com.example.gestaobilhares.ui.reports.RelatorioClientesFragment"
-        android:label="Relatório de Clientes" />
 
     <!-- Tela de Categorias de Despesa -->
     <fragment

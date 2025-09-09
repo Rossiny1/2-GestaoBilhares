@@ -46,10 +46,6 @@
             android:id="@+id/nav_closure_report"
             android:icon="@drawable/ic_assessment"
             android:title="Fechamento" />
-        <item
-            android:id="@+id/nav_management_report"
-            android:icon="@drawable/ic_report"
-            android:title="Relatório Gerencial" />
     </group>
 
     <!-- Grupo: Configurações -->

@@ -212,20 +212,6 @@ class RoutesFragment : Fragment() {
                         false
                     }
                 }
-                R.id.nav_management_report -> {
-                    try {
-                        android.util.Log.d("RoutesFragment", "Navegando para relatórios via drawer")
-                        findNavController().navigate(R.id.reportsFragment)
-                        android.util.Log.d("RoutesFragment", "Navegação para relatórios via drawer concluída")
-                        binding.drawerLayout.closeDrawers()
-                        true
-                    } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao navegar para relatórios via drawer: ${e.message}", e)
-                        Toast.makeText(requireContext(), "Erro ao abrir relatórios: ${e.message}", Toast.LENGTH_SHORT).show()
-                        binding.drawerLayout.closeDrawers()
-                        false
-                    }
-                }
                 R.id.nav_dashboard -> {
                     try {
                         findNavController().navigate(R.id.dashboardFragment)
