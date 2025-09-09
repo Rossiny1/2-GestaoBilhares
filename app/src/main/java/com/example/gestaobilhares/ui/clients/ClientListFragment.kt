@@ -297,8 +297,11 @@ class ClientListFragment : Fragment() {
     
     private fun atualizarInfoRota(rota: com.example.gestaobilhares.data.entities.Rota) {
         _binding?.let { binding ->
+            android.util.Log.d("ClientListFragment", "=== ATUALIZANDO INFO DA ROTA ===")
+            android.util.Log.d("ClientListFragment", "Rota: ${rota.nome} (ID: ${rota.id})")
+
             binding.tvTitle.text = rota.nome
-            
+
             // ✅ NOVO: Carregar dados reais em tempo real
             viewModel.carregarDadosRotaEmTempoReal(rota.id)
         }
@@ -308,9 +311,14 @@ class ClientListFragment : Fragment() {
     private fun observarDadosRotaReais() {
         lifecycleScope.launch {
             viewModel.dadosRotaReais.collect { dados ->
+                android.util.Log.d("ClientListFragment", "=== RECEBENDO DADOS ROTA NO FRAGMENT ===")
+                android.util.Log.d("ClientListFragment", "Dados recebidos: ${dados.totalClientes} clientes, ${dados.totalMesas} mesas")
+
                 try {
                     _binding?.let { binding ->
+                        val textoAnterior = binding.tvRouteInfo.text.toString()
                         binding.tvRouteInfo.text = "${dados.totalClientes} clientes ativos • ${dados.totalMesas} mesas"
+                        android.util.Log.d("ClientListFragment", "UI atualizada: '$textoAnterior' -> '${binding.tvRouteInfo.text}'")
                     }
                 } catch (e: Exception) {
                     android.util.Log.e("ClientListFragment", "Erro ao atualizar dados da rota: ${e.message}")

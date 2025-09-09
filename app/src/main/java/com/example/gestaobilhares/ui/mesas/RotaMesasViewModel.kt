@@ -44,7 +44,7 @@ class RotaMesasViewModel @Inject constructor(
                 android.util.Log.d("RotaMesasViewModel", "=== MESAS DA ROTA $rotaId ===")
                 android.util.Log.d("RotaMesasViewModel", "Encontradas ${mesasDaRota.size} mesas para a rota")
                 mesasDaRota.forEach { mesa ->
-                    android.util.Log.d("RotaMesasViewModel", "Mesa: ${mesa.numero} | ID: ${mesa.id} | ClienteId: ${mesa.clienteId}")
+                    android.util.Log.d("RotaMesasViewModel", "Mesa: ${mesa.numero} | ID: ${mesa.id} | ClienteId: ${mesa.clienteId} | Tipo: ${mesa.tipoMesa}")
                 }
 
                 _mesasRota.value = mesasDaRota

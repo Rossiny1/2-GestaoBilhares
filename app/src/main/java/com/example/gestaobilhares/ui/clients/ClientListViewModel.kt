@@ -822,22 +822,40 @@ class ClientListViewModel @Inject constructor(
      * ✅ NOVO: Carrega dados reais da rota em tempo real (clientes ativos e mesas)
      */
     fun carregarDadosRotaEmTempoReal(rotaId: Long) {
+        android.util.Log.d("ClientListViewModel", "=== INICIANDO CARREGAMENTO DE DADOS ROTA $rotaId ===")
+
         viewModelScope.launch {
             try {
-                // Observar clientes ativos da rota
-                clienteRepository.obterClientesPorRota(rotaId).collect { clientes ->
-                    val clientesAtivos = clientes.count { it.ativo }
-                    
-                    // Buscar total de mesas da rota
-                    val totalMesas = appRepository.buscarMesasPorRota(rotaId).first().size
-                    
-                    _dadosRotaReais.value = DadosRotaReais(
-                        totalClientes = clientesAtivos,
-                        totalMesas = totalMesas
-                    )
+                // Primeiro carregar clientes ativos
+                val clientes = clienteRepository.obterClientesPorRota(rotaId).first()
+                val clientesAtivos = clientes.count { it.ativo }
+
+                android.util.Log.d("ClientListViewModel", "=== DADOS CLIENTES CARREGADOS ===")
+                android.util.Log.d("ClientListViewModel", "Total clientes: ${clientes.size}, Ativos: $clientesAtivos")
+
+                // Depois carregar mesas da rota
+                val mesasDaRota = appRepository.buscarMesasPorRota(rotaId).first()
+                val totalMesas = mesasDaRota.size
+
+                android.util.Log.d("ClientListViewModel", "=== DADOS MESAS CARREGADOS ===")
+                android.util.Log.d("ClientListViewModel", "Mesas encontradas: $totalMesas")
+                mesasDaRota.forEach { mesa ->
+                    android.util.Log.d("ClientListViewModel", "Mesa: ${mesa.numero} (ID: ${mesa.id}, ClienteId: ${mesa.clienteId})")
                 }
+
+                // Atualizar dados apenas uma vez com ambos os valores
+                val dadosAtualizados = DadosRotaReais(
+                    totalClientes = clientesAtivos,
+                    totalMesas = totalMesas
+                )
+
+                android.util.Log.d("ClientListViewModel", "=== ATUALIZANDO DADOS FINAIS ===")
+                android.util.Log.d("ClientListViewModel", "Dados finais: ${dadosAtualizados.totalClientes} clientes, ${dadosAtualizados.totalMesas} mesas")
+
+                _dadosRotaReais.value = dadosAtualizados
+
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao carregar dados da rota: ${e.message}")
+                android.util.Log.e("ClientListViewModel", "Erro ao carregar dados da rota: ${e.message}", e)
                 // Valores padrão em caso de erro
                 _dadosRotaReais.value = DadosRotaReais(0, 0)
             }
