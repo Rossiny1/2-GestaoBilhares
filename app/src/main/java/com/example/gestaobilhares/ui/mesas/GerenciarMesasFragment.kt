@@ -80,8 +80,16 @@ class GerenciarMesasFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.rotasComMesas.collect { rotas ->
+                android.util.Log.d("GerenciarMesasFragment", "=== RECEBENDO ROTAS COM MESAS ===")
+                android.util.Log.d("GerenciarMesasFragment", "Total rotas recebidas: ${rotas.size}")
+
+                rotas.forEach { rotaComMesas ->
+                    android.util.Log.d("GerenciarMesasFragment", "Rota: ${rotaComMesas.rota.nome}")
+                    android.util.Log.d("GerenciarMesasFragment", "Sinuca: ${rotaComMesas.sinuca}, Jukebox: ${rotaComMesas.jukebox}, Pembolim: ${rotaComMesas.pembolim}")
+                }
+
                 adapter.updateData(rotas)
-                
+
                 // Mostrar/ocultar estado vazio
                 if (rotas.isEmpty()) {
                     binding.emptyStateLayout.visibility = View.VISIBLE

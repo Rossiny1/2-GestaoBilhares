@@ -78,7 +78,9 @@ class AppRepository(
         mesaDao.atualizarRelogioFinal(mesaId, relogioFinal)
     suspend fun obterMesasPorClienteDireto(clienteId: Long) = 
         mesaDao.obterMesasPorClienteDireto(clienteId)
-    fun buscarMesasPorRota(rotaId: Long) = mesaDao.buscarMesasPorRota(rotaId)
+    fun buscarMesasPorRota(rotaId: Long) = mesaDao.buscarMesasPorRota(rotaId).also {
+        android.util.Log.d("AppRepository", "Buscando mesas para rota $rotaId")
+    }
     suspend fun contarMesasAtivasPorClientes(clienteIds: List<Long>) =
         mesaDao.contarMesasAtivasPorClientes(clienteIds)
     fun obterTodasMesas() = mesaDao.obterTodasMesas()

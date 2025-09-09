@@ -73,14 +73,22 @@ class GerenciarMesasViewModel @Inject constructor(
                 )
                 _estatisticasGerais.value = statsGerais
 
-                // Calcular estatísticas por rota - por enquanto todas mesas são consideradas do depósito
-                // TODO: Implementar lógica para associar mesas às rotas quando necessário
+                // Calcular estatísticas por rota baseado nos clientes e suas mesas
                 val rotasComMesas = rotas.map { rota: Rota ->
+                    // Buscar mesas desta rota através dos clientes
+                    val mesasDaRota = repository.buscarMesasPorRota(rota.id).first()
+
+                    android.util.Log.d("GerenciarMesasViewModel", "=== ROTA ${rota.nome} (ID: ${rota.id}) ===")
+                    android.util.Log.d("GerenciarMesasViewModel", "Mesas encontradas: ${mesasDaRota.size}")
+                    mesasDaRota.forEach { mesa ->
+                        android.util.Log.d("GerenciarMesasViewModel", "Mesa: ${mesa.numero} (Tipo: ${mesa.tipoMesa}, ClienteId: ${mesa.clienteId})")
+                    }
+
                     RotaComMesas(
                         rota = rota,
-                        sinuca = 0, // Temporariamente 0 até implementar lógica de associação
-                        jukebox = 0,
-                        pembolim = 0
+                        sinuca = mesasDaRota.count { mesa -> mesa.tipoMesa == TipoMesa.SINUCA },
+                        jukebox = mesasDaRota.count { mesa -> mesa.tipoMesa == TipoMesa.JUKEBOX },
+                        pembolim = mesasDaRota.count { mesa -> mesa.tipoMesa == TipoMesa.PEMBOLIM }
                     )
                 }
                 _rotasComMesas.value = rotasComMesas
