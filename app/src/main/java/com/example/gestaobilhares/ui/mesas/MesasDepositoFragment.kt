@@ -57,7 +57,14 @@ class MesasDepositoFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = MesasDepositoAdapter { mesa ->
-            showTipoAcertoDialog(mesa)
+            // ✅ NOVA LÓGICA: Decidir comportamento baseado na origem
+            if (args.isFromGerenciarMesas) {
+                // Veio do Gerenciar Mesas - abrir edição da mesa
+                navigateToEditMesa(mesa)
+            } else {
+                // Veio de Detalhes do Cliente - mostrar dialog de tipo de acerto
+                showTipoAcertoDialog(mesa)
+            }
         }
         binding.rvMesasDeposito.adapter = adapter
         // ✅ NOVO: Usar GridLayoutManager com 2 colunas
@@ -170,6 +177,24 @@ class MesasDepositoFragment : Fragment() {
             }
             .setNegativeButton("Cancelar", null)
             .show()
+    }
+
+    /**
+     * ✅ NOVA FUNÇÃO: Navegar para tela de edição da mesa
+     * Usado quando acessado pelo Gerenciar Mesas
+     */
+    private fun navigateToEditMesa(mesa: Mesa) {
+        android.util.Log.d("MesasDepositoFragment", "Navegando para edição da mesa: ${mesa.numero} (ID: ${mesa.id})")
+
+        try {
+            val action = MesasDepositoFragmentDirections.actionMesasDepositoFragmentToEditMesaFragment(
+                mesaId = mesa.id
+            )
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            android.util.Log.e("MesasDepositoFragment", "Erro ao navegar para edição da mesa: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao abrir edição da mesa", Toast.LENGTH_SHORT).show()
+        }
     }
 
     /**

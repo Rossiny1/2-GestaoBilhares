@@ -59,8 +59,11 @@ class GerenciarMesasFragment : Fragment() {
         }
 
         binding.cardDeposito.setOnClickListener {
-            // Navegar para a tela de mesas do depósito
-            val action = GerenciarMesasFragmentDirections.actionGerenciarMesasFragmentToMesasDepositoFragment()
+            // Navegar para a tela de mesas do depósito indicando que veio do Gerenciar Mesas
+            val action = GerenciarMesasFragmentDirections.actionGerenciarMesasFragmentToMesasDepositoFragment(
+                clienteId = 0L, // Não há cliente específico
+                isFromGerenciarMesas = true
+            )
             findNavController().navigate(action)
         }
     }
