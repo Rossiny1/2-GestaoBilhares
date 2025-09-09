@@ -1,8 +1,10 @@
 package com.example.gestaobilhares.utils
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
 import com.example.gestaobilhares.ui.reports.ClosureReportViewModel
+import com.itextpdf.io.image.ImageDataFactory
 import com.itextpdf.kernel.colors.DeviceRgb
 import com.itextpdf.kernel.pdf.PdfDocument
 import com.itextpdf.kernel.pdf.PdfWriter
@@ -10,6 +12,7 @@ import com.itextpdf.layout.Document
 import com.itextpdf.layout.element.*
 import com.itextpdf.layout.property.TextAlignment
 import com.itextpdf.layout.property.UnitValue
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.text.NumberFormat
@@ -34,7 +37,8 @@ class ClosureReportPdfGenerator(private val context: Context) {
         numeroAcerto: Int,
         resumo: ClosureReportViewModel.Resumo,
         detalhes: List<ClosureReportViewModel.LinhaDetalhe>,
-        totalMesas: Int
+        totalMesas: Int,
+        chartData: ClosureReportViewModel.ChartData? = null
     ): File {
         val fileName = "relatorio_fechamento_${ano}_acerto_${numeroAcerto}_${System.currentTimeMillis()}.pdf"
         val file = File(context.getExternalFilesDir(null), fileName)
@@ -52,6 +56,9 @@ class ClosureReportPdfGenerator(private val context: Context) {
             
             // Adicionar resumo executivo
             addExecutiveSummary(document, resumo, totalMesas)
+            
+            // Adicionar gráficos se disponíveis
+            chartData?.let { addChartsSection(document, it) }
             
             // Adicionar detalhamento por rota
             addRouteDetails(document, detalhes)
@@ -80,7 +87,8 @@ class ClosureReportPdfGenerator(private val context: Context) {
         ano: Int,
         resumo: ClosureReportViewModel.Resumo,
         detalhes: List<ClosureReportViewModel.LinhaDetalhe>,
-        totalMesas: Int
+        totalMesas: Int,
+        chartData: ClosureReportViewModel.ChartData? = null
     ): File {
         val fileName = "relatorio_fechamento_anual_${ano}_${System.currentTimeMillis()}.pdf"
         val file = File(context.getExternalFilesDir(null), fileName)
@@ -98,6 +106,9 @@ class ClosureReportPdfGenerator(private val context: Context) {
             
             // Adicionar resumo executivo
             addExecutiveSummary(document, resumo, totalMesas)
+            
+            // Adicionar gráficos se disponíveis
+            chartData?.let { addChartsSection(document, it) }
             
             // Adicionar detalhamento por rota
             addRouteDetails(document, detalhes)
@@ -362,5 +373,85 @@ class ClosureReportPdfGenerator(private val context: Context) {
             .add(Paragraph(text).setBold().setFontSize(10f))
             .setBackgroundColor(DeviceRgb(220, 220, 220))
             .setPadding(8f)
+    }
+
+    /**
+     * Adiciona seção de gráficos ao documento
+     */
+    private fun addChartsSection(document: Document, chartData: ClosureReportViewModel.ChartData) {
+        try {
+            val chartGenerator = ChartGenerator(context)
+            
+            // Título da seção
+            document.add(
+                Paragraph("Análise Gráfica")
+                    .setBold()
+                    .setFontSize(16f)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginTop(20f)
+                    .setMarginBottom(15f)
+            )
+            
+            // Gerar gráfico de faturamento por rota
+            val revenueChart = chartGenerator.generateRevenuePieChart(
+                chartData.faturamentoPorRota,
+                "Faturamento por Rota"
+            )
+            
+            // Gerar gráfico de despesas por tipo
+            val expensesChart = chartGenerator.generateExpensesPieChart(
+                chartData.despesasPorTipo,
+                "Despesas por Tipo"
+            )
+            
+            // Adicionar gráficos ao documento
+            val table = Table(UnitValue.createPercentArray(floatArrayOf(50f, 50f)))
+                .setWidth(UnitValue.createPercentValue(100f))
+                .setMarginTop(10f)
+                .setMarginBottom(20f)
+            
+            // Célula do gráfico de faturamento
+            val revenueCell = Cell()
+            if (revenueChart != null) {
+                val revenueImage = Image(ImageDataFactory.create(bitmapToByteArray(revenueChart)))
+                revenueImage.scaleToFit(180f, 180f)
+                revenueCell.add(revenueImage)
+            } else {
+                revenueCell.add(Paragraph("Sem dados de faturamento").setTextAlignment(TextAlignment.CENTER))
+            }
+            table.addCell(revenueCell)
+            
+            // Célula do gráfico de despesas
+            val expensesCell = Cell()
+            if (expensesChart != null) {
+                val expensesImage = Image(ImageDataFactory.create(bitmapToByteArray(expensesChart)))
+                expensesImage.scaleToFit(180f, 180f)
+                expensesCell.add(expensesImage)
+            } else {
+                expensesCell.add(Paragraph("Sem dados de despesas").setTextAlignment(TextAlignment.CENTER))
+            }
+            table.addCell(expensesCell)
+            
+            document.add(table)
+            
+        } catch (e: Exception) {
+            Log.e("ClosureReportPdfGenerator", "Erro ao adicionar gráficos: ${e.message}", e)
+            // Adicionar mensagem de erro em vez de falhar completamente
+            document.add(
+                Paragraph("Erro ao gerar gráficos: ${e.message}")
+                    .setFontSize(10f)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginTop(10f)
+            )
+        }
+    }
+
+    /**
+     * Converte Bitmap para ByteArray
+     */
+    private fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        return stream.toByteArray()
     }
 }

@@ -31,6 +31,7 @@ class ClosureReportDialog : DialogFragment() {
     private var detalhes: List<ClosureReportViewModel.LinhaDetalhe>? = null
     private var totalMesas: Int = 0
     private var isAnnualReport: Boolean = false
+    private var chartData: ClosureReportViewModel.ChartData? = null
 
     companion object {
         fun newInstance(
@@ -39,7 +40,8 @@ class ClosureReportDialog : DialogFragment() {
             resumo: ClosureReportViewModel.Resumo,
             detalhes: List<ClosureReportViewModel.LinhaDetalhe>,
             totalMesas: Int,
-            isAnnualReport: Boolean = false
+            isAnnualReport: Boolean = false,
+            chartData: ClosureReportViewModel.ChartData? = null
         ): ClosureReportDialog {
             val dialog = ClosureReportDialog()
             val args = Bundle()
@@ -49,6 +51,7 @@ class ClosureReportDialog : DialogFragment() {
             args.putSerializable("detalhes", ArrayList(detalhes))
             args.putInt("totalMesas", totalMesas)
             args.putBoolean("isAnnualReport", isAnnualReport)
+            chartData?.let { args.putSerializable("chartData", it) }
             dialog.arguments = args
             return dialog
         }
@@ -63,6 +66,7 @@ class ClosureReportDialog : DialogFragment() {
             detalhes = it.getSerializable("detalhes") as? ArrayList<ClosureReportViewModel.LinhaDetalhe>
             totalMesas = it.getInt("totalMesas")
             isAnnualReport = it.getBoolean("isAnnualReport")
+            chartData = it.getSerializable("chartData") as? ClosureReportViewModel.ChartData
         }
     }
 
@@ -130,7 +134,8 @@ class ClosureReportDialog : DialogFragment() {
                         anoSelecionado,
                         resumo!!,
                         detalhes!!,
-                        totalMesas
+                        totalMesas,
+                        chartData
                     )
                 } else {
                     pdfGenerator.generateAcertoClosureReport(
@@ -138,7 +143,8 @@ class ClosureReportDialog : DialogFragment() {
                         numeroAcerto,
                         resumo!!,
                         detalhes!!,
-                        totalMesas
+                        totalMesas,
+                        chartData
                     )
                 }
 

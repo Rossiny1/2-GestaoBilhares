@@ -8,9 +8,11 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
 import com.example.gestaobilhares.databinding.FragmentClosureReportBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -113,31 +115,43 @@ class ClosureReportFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Tipo de Relatório")
             .setItems(options) { _, which ->
-                when (which) {
-                    0 -> {
-                        // Relatório por acerto
-                        val numeroAcerto = acertoSelecionado?.numero ?: 1
-                        val dialog = ClosureReportDialog.newInstance(
-                            anoSelecionado,
-                            numeroAcerto,
-                            resumo,
-                            detalhes,
-                            totalMesas,
-                            false
-                        )
-                        dialog.show(parentFragmentManager, "ClosureReportDialog")
-                    }
-                    1 -> {
-                        // Relatório anual
-                        val dialog = ClosureReportDialog.newInstance(
-                            anoSelecionado,
-                            0,
-                            resumo,
-                            detalhes,
-                            totalMesas,
-                            true
-                        )
-                        dialog.show(parentFragmentManager, "ClosureReportDialog")
+                // Gerar dados dos gráficos em background
+                lifecycleScope.launch {
+                    try {
+                        val chartData = viewModel.generateChartData()
+                        
+                        when (which) {
+                            0 -> {
+                                // Relatório por acerto
+                                val numeroAcerto = acertoSelecionado?.numero ?: 1
+                                val dialog = ClosureReportDialog.newInstance(
+                                    anoSelecionado,
+                                    numeroAcerto,
+                                    resumo,
+                                    detalhes,
+                                    totalMesas,
+                                    false,
+                                    chartData
+                                )
+                                dialog.show(parentFragmentManager, "ClosureReportDialog")
+                            }
+                            1 -> {
+                                // Relatório anual
+                                val dialog = ClosureReportDialog.newInstance(
+                                    anoSelecionado,
+                                    0,
+                                    resumo,
+                                    detalhes,
+                                    totalMesas,
+                                    true,
+                                    chartData
+                                )
+                                dialog.show(parentFragmentManager, "ClosureReportDialog")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("ClosureReportFragment", "Erro ao gerar dados dos gráficos: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao gerar gráficos: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
