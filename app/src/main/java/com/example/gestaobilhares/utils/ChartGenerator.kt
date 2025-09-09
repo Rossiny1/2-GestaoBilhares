@@ -143,6 +143,11 @@ class ChartGenerator(private val context: Context) {
      * Cria uma instância configurada do PieChart
      */
     private fun createPieChart(): PieChart {
+        // Preparar o Looper para criar componentes de UI em thread de background
+        if (android.os.Looper.myLooper() == null) {
+            android.os.Looper.prepare()
+        }
+        
         val pieChart = PieChart(context)
         
         // Configurar tamanho
