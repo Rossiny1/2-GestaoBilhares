@@ -45,11 +45,15 @@ class ChartGenerator(private val context: Context) {
                 return null
             }
 
-            // Configurar dataset
+            // Configurar dataset - CORRIGIDAS CORES PARA MELHOR VISIBILIDADE
             val dataSet = PieDataSet(entries, "")
-            dataSet.colors = ColorTemplate.COLORFUL_COLORS.toList()
+            
+            // Usar cores padrão do Material Design - mais confiáveis
+            dataSet.colors = ColorTemplate.MATERIAL_COLORS.toList()
+            
             dataSet.valueTextSize = 12f
             dataSet.valueTextColor = Color.BLACK
+            dataSet.sliceSpace = 2f
 
             // Configurar dados
             val pieData = PieData(dataSet)
@@ -103,11 +107,15 @@ class ChartGenerator(private val context: Context) {
                 return null
             }
 
-            // Configurar dataset
+            // Configurar dataset - CORRIGIDAS CORES PARA MELHOR VISIBILIDADE
             val dataSet = PieDataSet(entries, "")
+            
+            // Usar cores padrão do Material Design - mais confiáveis
             dataSet.colors = ColorTemplate.MATERIAL_COLORS.toList()
+            
             dataSet.valueTextSize = 12f
             dataSet.valueTextColor = Color.BLACK
+            dataSet.sliceSpace = 2f
 
             // Configurar dados
             val pieData = PieData(dataSet)
@@ -158,18 +166,28 @@ class ChartGenerator(private val context: Context) {
         )
         pieChart.layout(0, 0, 400, 400)
 
-        // Configurações gerais
+        // CONFIGURAÇÕES BÁSICAS PARA PDF - SIMPLIFICADAS
         pieChart.setUsePercentValues(true)
         pieChart.setDrawEntryLabels(false)
-        pieChart.setDrawHoleEnabled(true)
+        pieChart.setDrawHoleEnabled(true) // Manter buraco central
         pieChart.setHoleColor(Color.WHITE)
         pieChart.setTransparentCircleColor(Color.WHITE)
         pieChart.setTransparentCircleAlpha(110)
-        pieChart.setHoleRadius(58f)
-        pieChart.setTransparentCircleRadius(61f)
-        pieChart.setDrawCenterText(true)
-        pieChart.setCenterTextSize(12f)
-        pieChart.setCenterTextColor(Color.BLACK)
+        pieChart.setHoleRadius(50f)
+        pieChart.setTransparentCircleRadius(55f)
+        pieChart.setBackgroundColor(Color.WHITE)
+        
+        // Configurar legenda
+        val legend = pieChart.legend
+        legend.isEnabled = true
+        legend.verticalAlignment = com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.BOTTOM
+        legend.horizontalAlignment = com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER
+        legend.orientation = com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL
+        legend.setDrawInside(false)
+        legend.xEntrySpace = 10f
+        legend.yEntrySpace = 5f
+        legend.textSize = 10f
+        legend.textColor = Color.BLACK
 
         return pieChart
     }
@@ -178,10 +196,60 @@ class ChartGenerator(private val context: Context) {
      * Converte um PieChart em Bitmap
      */
     private fun convertChartToBitmap(pieChart: PieChart): Bitmap {
-        val bitmap = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        canvas.drawColor(Color.WHITE)
-        pieChart.draw(canvas)
+        android.util.Log.d("ChartGenerator", "Iniciando conversão do gráfico para Bitmap")
+        
+        // Preparar o Looper se necessário
+        if (android.os.Looper.myLooper() == null) {
+            android.os.Looper.prepare()
+        }
+        
+        // SOLUÇÃO CRÍTICA: Desativar aceleração de hardware para evitar conflitos
+        pieChart.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null)
+        
+        // Configurar tamanho do gráfico
+        pieChart.layoutParams = android.view.ViewGroup.LayoutParams(400, 400)
+        
+        // Forçar layout
+        pieChart.measure(
+            android.view.View.MeasureSpec.makeMeasureSpec(400, android.view.View.MeasureSpec.EXACTLY),
+            android.view.View.MeasureSpec.makeMeasureSpec(400, android.view.View.MeasureSpec.EXACTLY)
+        )
+        pieChart.layout(0, 0, 400, 400)
+        
+        android.util.Log.d("ChartGenerator", "Gráfico configurado - largura: ${pieChart.width}, altura: ${pieChart.height}")
+        android.util.Log.d("ChartGenerator", "Dados do gráfico: ${pieChart.data?.dataSet?.entryCount} entradas")
+        
+        // SOLUÇÃO ALTERNATIVA: Usar getDrawingCache() conforme fontes externas
+        pieChart.setDrawingCacheEnabled(true)
+        pieChart.buildDrawingCache()
+        
+        val bitmap: Bitmap = try {
+            // Tentar usar o drawing cache primeiro
+            val drawingCache = pieChart.drawingCache
+            if (drawingCache != null) {
+                android.util.Log.d("ChartGenerator", "Bitmap criado usando drawing cache")
+                Bitmap.createBitmap(drawingCache)
+            } else {
+                // Fallback: criar bitmap manualmente
+                android.util.Log.d("ChartGenerator", "Bitmap criado usando canvas manual")
+                val fallbackBitmap = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(fallbackBitmap)
+                canvas.drawColor(Color.WHITE)
+                pieChart.draw(canvas)
+                fallbackBitmap
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ChartGenerator", "Erro ao criar bitmap: ${e.message}", e)
+            // Fallback final
+            val fallbackBitmap = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(fallbackBitmap)
+            canvas.drawColor(Color.WHITE)
+            pieChart.draw(canvas)
+            fallbackBitmap
+        } finally {
+            pieChart.setDrawingCacheEnabled(false)
+        }
+        
         return bitmap
     }
 }
