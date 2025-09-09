@@ -267,6 +267,10 @@
             android:name="clienteId"
             app:argType="long"
             android:defaultValue="0L" />
+        <argument
+            android:name="isFromGerenciarMesas"
+            app:argType="boolean"
+            android:defaultValue="false" />
         <action
             android:id="@+id/action_mesasDepositoFragment_to_cadastroMesaFragment"
             app:destination="@id/cadastroMesaFragment" />
@@ -274,6 +278,10 @@
         <action
             android:id="@+id/action_mesasDepositoFragment_to_clientDetailFragment"
             app:destination="@id/clientDetailFragment" />
+        <!-- ✅ NOVA AÇÃO: Navegação para edição de mesa -->
+        <action
+            android:id="@+id/action_mesasDepositoFragment_to_editMesaFragment"
+            app:destination="@id/editMesaFragment" />
     </fragment>
 
     <!-- Tela de Cadastro de Mesa -->
