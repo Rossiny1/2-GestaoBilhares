@@ -3,6 +3,7 @@ package com.example.gestaobilhares.ui.contracts
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 
 class SignatureView @JvmOverloads constructor(
@@ -13,7 +14,7 @@ class SignatureView @JvmOverloads constructor(
     
     private val paint = Paint().apply {
         color = Color.BLACK
-        strokeWidth = 5f
+        strokeWidth = 8f
         style = Paint.Style.STROKE
         strokeJoin = Paint.Join.ROUND
         strokeCap = Paint.Cap.ROUND
@@ -22,6 +23,9 @@ class SignatureView @JvmOverloads constructor(
     
     private val path = Path()
     private val paths = mutableListOf<Path>()
+    
+    private var lastTouchX = 0f
+    private var lastTouchY = 0f
     
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -38,9 +42,39 @@ class SignatureView @JvmOverloads constructor(
         canvas.drawPath(path, paint)
     }
     
-    fun addPath(newPath: Path) {
-        paths.add(Path(newPath))
-        invalidate()
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        val x = event.x
+        val y = event.y
+        
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                path.moveTo(x, y)
+                lastTouchX = x
+                lastTouchY = y
+                invalidate()
+                return true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val dx = Math.abs(x - lastTouchX)
+                val dy = Math.abs(y - lastTouchY)
+                
+                if (dx >= 4 || dy >= 4) {
+                    path.quadTo(lastTouchX, lastTouchY, (x + lastTouchX) / 2, (y + lastTouchY) / 2)
+                    lastTouchX = x
+                    lastTouchY = y
+                    invalidate()
+                }
+                return true
+            }
+            MotionEvent.ACTION_UP -> {
+                path.lineTo(lastTouchX, lastTouchY)
+                paths.add(Path(path))
+                path.reset()
+                invalidate()
+                return true
+            }
+        }
+        return false
     }
     
     fun clear() {
@@ -50,7 +84,7 @@ class SignatureView @JvmOverloads constructor(
     }
     
     fun getSignatureBitmap(): Bitmap? {
-        if (paths.isEmpty() && path.isEmpty) {
+        if (paths.isEmpty()) {
             return null
         }
         
@@ -65,13 +99,10 @@ class SignatureView @JvmOverloads constructor(
             canvas.drawPath(pathToDraw, paint)
         }
         
-        // Desenhar linha atual
-        canvas.drawPath(path, paint)
-        
         return bitmap
     }
     
     fun hasSignature(): Boolean {
-        return !paths.isEmpty() || !path.isEmpty
+        return paths.isNotEmpty()
     }
 }
