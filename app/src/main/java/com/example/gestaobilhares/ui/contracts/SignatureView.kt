@@ -48,6 +48,8 @@ class SignatureView @JvmOverloads constructor(
         
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                // Solicitar que o parent não intercepte os eventos de toque
+                parent?.requestDisallowInterceptTouchEvent(true)
                 path.moveTo(x, y)
                 lastTouchX = x
                 lastTouchY = y
@@ -66,7 +68,9 @@ class SignatureView @JvmOverloads constructor(
                 }
                 return true
             }
-            MotionEvent.ACTION_UP -> {
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                // Liberar o controle do parent
+                parent?.requestDisallowInterceptTouchEvent(false)
                 path.lineTo(lastTouchX, lastTouchY)
                 paths.add(Path(path))
                 path.reset()
