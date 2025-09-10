@@ -1,7 +1,5 @@
 package com.example.gestaobilhares.ui.contracts
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -13,8 +11,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -35,15 +31,6 @@ class SignatureCaptureFragment : Fragment() {
     
     private var signatureBitmap: Bitmap? = null
     
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            enviarContratoViaWhatsApp()
-        } else {
-            Toast.makeText(requireContext(), "Permissão necessária para enviar via WhatsApp", Toast.LENGTH_SHORT).show()
-        }
-    }
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -154,15 +141,9 @@ class SignatureCaptureFragment : Fragment() {
     }
     
     private fun verificarPermissaoEEnviar() {
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.SEND_SMS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            enviarContratoViaWhatsApp()
-        } else {
-            requestPermissionLauncher.launch(Manifest.permission.SEND_SMS)
-        }
+        // Para WhatsApp, não precisamos de permissões especiais
+        // O WhatsApp pode ser aberto via Intent sem permissões
+        enviarContratoViaWhatsApp()
     }
     
     private fun enviarContratoViaWhatsApp() {
@@ -174,19 +155,54 @@ class SignatureCaptureFragment : Fragment() {
                 val pdfGenerator = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext())
                 val pdfFile = pdfGenerator.generateContractPdf(contrato, emptyList())
                 
+                // Verificar se o arquivo foi criado corretamente
+                if (!pdfFile.exists() || pdfFile.length() == 0L) {
+                    Toast.makeText(requireContext(), "Erro: Arquivo PDF não foi gerado corretamente", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                
                 // Preparar dados para envio
-                val whatsappNumber = contrato.locatarioTelefone.replace(Regex("[^0-9]"), "")
                 val message = "Contrato de locação ${contrato.numeroContrato} assinado com sucesso!"
                 
-                // TODO: Implementar envio via WhatsApp
-                // Por enquanto, mostrar mensagem de sucesso
-                Toast.makeText(requireContext(), "Contrato pronto para envio via WhatsApp!", Toast.LENGTH_LONG).show()
+                // Criar URI usando FileProvider para compartilhamento seguro
+                val pdfUri = androidx.core.content.FileProvider.getUriForFile(
+                    requireContext(),
+                    "${requireContext().packageName}.fileprovider",
+                    pdfFile
+                )
                 
-                // Navegar de volta
-                findNavController().popBackStack()
+                // Criar Intent para WhatsApp
+                val whatsappIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    setPackage("com.whatsapp")
+                    putExtra(android.content.Intent.EXTRA_STREAM, pdfUri)
+                    putExtra(android.content.Intent.EXTRA_TEXT, message)
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                
+                // Verificar se WhatsApp está instalado
+                if (whatsappIntent.resolveActivity(requireContext().packageManager) != null) {
+                    startActivity(whatsappIntent)
+                    Toast.makeText(requireContext(), "Abrindo WhatsApp...", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Se WhatsApp não estiver instalado, usar Intent genérico
+                    val genericIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = "application/pdf"
+                        putExtra(android.content.Intent.EXTRA_STREAM, pdfUri)
+                        putExtra(android.content.Intent.EXTRA_TEXT, message)
+                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(android.content.Intent.createChooser(genericIntent, "Enviar contrato via"))
+                }
+                
+                // Navegar de volta após um delay
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    findNavController().popBackStack()
+                }, 2000)
                 
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Erro ao preparar envio: ${e.message}", Toast.LENGTH_LONG).show()
+                android.util.Log.e("SignatureCaptureFragment", "Erro ao enviar contrato", e)
+                Toast.makeText(requireContext(), "Erro ao enviar contrato: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
