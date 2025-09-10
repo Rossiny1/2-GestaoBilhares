@@ -148,8 +148,12 @@ class ClientRegisterFragment : Fragment() {
                                 .setTitle("✅ Cliente Cadastrado!")
                                 .setMessage("Cliente cadastrado com sucesso!\n\nPróximo passo: Vincular mesas ao cliente.")
                                 .setPositiveButton("Adicionar Mesa") { _, _ ->
-                                    val action = ClientRegisterFragmentDirections.actionClientRegisterFragmentToMesasDepositoFragment(clienteId)
-                                    findNavController().navigate(action)
+                                    val bundle = Bundle().apply {
+                                        putLong("clienteId", clienteId)
+                                        putBoolean("isFromClientRegister", true)
+                                        putBoolean("isFromGerenciarMesas", false)
+                                    }
+                                    findNavController().navigate(com.example.gestaobilhares.R.id.mesasDepositoFragment, bundle)
                                     viewModel.resetNovoClienteId()
                                 }
                                 .setNegativeButton("Voltar") { _, _ ->

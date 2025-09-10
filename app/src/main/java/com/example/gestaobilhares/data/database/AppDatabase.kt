@@ -27,9 +27,11 @@ import com.example.gestaobilhares.data.entities.*
         AcertoMesa::class,
         CicloAcertoEntity::class, // ✅ FASE 8A: NOVA ENTIDADE PARA HISTÓRICO DE CICLOS
         CategoriaDespesa::class, // ✅ NOVO: CATEGORIAS DE DESPESAS
-        TipoDespesa::class // ✅ NOVO: TIPOS DE DESPESAS
+        TipoDespesa::class, // ✅ NOVO: TIPOS DE DESPESAS
+        ContratoLocacao::class, // ✅ NOVO: CONTRATOS DE LOCAÇÃO
+        ContratoMesa::class // ✅ NOVO: VINCULAÇÃO CONTRATO-MESAS
     ],
-    version = 26, // ✅ MIGRATION: adicionar origemLancamento/cicloAno/cicloNumero em despesas
+    version = 27, // ✅ MIGRATION: adicionar tabelas de contratos
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -88,6 +90,12 @@ abstract class AppDatabase : RoomDatabase() {
      * ✅ NOVO: TIPOS DE DESPESAS
      */
     abstract fun tipoDespesaDao(): com.example.gestaobilhares.data.dao.TipoDespesaDao
+    
+    /**
+     * DAO para operações com contratos de locação.
+     * ✅ NOVO: CONTRATOS DE LOCAÇÃO
+     */
+    abstract fun contratoLocacaoDao(): com.example.gestaobilhares.data.dao.ContratoLocacaoDao
 
     companion object {
         
@@ -558,6 +566,7 @@ abstract class AppDatabase : RoomDatabase() {
                         }
                     }
                 }
+                
                 
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
