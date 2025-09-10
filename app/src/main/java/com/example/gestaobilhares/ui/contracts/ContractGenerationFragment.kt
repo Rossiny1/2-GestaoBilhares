@@ -112,6 +112,20 @@ class ContractGenerationFragment : Fragment() {
             btnAssinar.setOnClickListener {
                 abrirTelaAssinatura()
             }
+            
+            // Listener para mostrar/ocultar campo de percentual
+            rgTipoPagamento.setOnCheckedChangeListener { _, checkedId ->
+                when (checkedId) {
+                    R.id.rbValorFixo -> {
+                        tilPercentualReceita.visibility = View.GONE
+                        etValorMensal.hint = "Valor Mensal (R$)"
+                    }
+                    R.id.rbPercentual -> {
+                        tilPercentualReceita.visibility = View.VISIBLE
+                        etValorMensal.hint = "Valor Base (R$)"
+                    }
+                }
+            }
         }
     }
     
@@ -124,7 +138,12 @@ class ContractGenerationFragment : Fragment() {
         } else null
         
         if (valorMensal <= 0) {
-            Toast.makeText(requireContext(), "Valor mensal deve ser maior que zero", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Valor deve ser maior que zero", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        if (tipoPagamento == "PERCENTUAL" && (percentualReceita == null || percentualReceita <= 0 || percentualReceita > 100)) {
+            Toast.makeText(requireContext(), "Percentual deve estar entre 1 e 100", Toast.LENGTH_SHORT).show()
             return
         }
         

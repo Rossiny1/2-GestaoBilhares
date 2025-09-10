@@ -34,14 +34,6 @@ class SignatureCaptureFragment : Fragment() {
     private val viewModel: SignatureCaptureViewModel by viewModels()
     
     private var signatureBitmap: Bitmap? = null
-    private var signaturePath = android.graphics.Path()
-    private var signaturePaint = Paint().apply {
-        color = Color.BLACK
-        strokeWidth = 5f
-        style = Paint.Style.STROKE
-        strokeJoin = Paint.Join.ROUND
-        strokeCap = Paint.Cap.ROUND
-    }
     
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -109,25 +101,8 @@ class SignatureCaptureFragment : Fragment() {
     }
     
     private fun setupSignatureView() {
-        binding.signatureView.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    signaturePath.moveTo(event.x, event.y)
-                    true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    signaturePath.lineTo(event.x, event.y)
-                    binding.signatureView.invalidate()
-                    true
-                }
-                MotionEvent.ACTION_UP -> {
-                    signaturePath.lineTo(event.x, event.y)
-                    binding.signatureView.invalidate()
-                    true
-                }
-                else -> false
-            }
-        }
+        // A SignatureView já tem seu próprio onTouchEvent implementado
+        // Não precisamos de um OnTouchListener adicional
         
         // Customizar a view de assinatura
         binding.signatureView.setBackgroundColor(Color.WHITE)
@@ -150,19 +125,18 @@ class SignatureCaptureFragment : Fragment() {
     }
     
     private fun limparAssinatura() {
-        signaturePath.reset()
-        binding.signatureView.invalidate()
+        binding.signatureView.clear()
         signatureBitmap = null
     }
     
     private fun salvarAssinatura() {
-        if (signaturePath.isEmpty) {
+        if (!binding.signatureView.hasSignature()) {
             Toast.makeText(requireContext(), "Por favor, assine o contrato", Toast.LENGTH_SHORT).show()
             return
         }
         
         // Capturar assinatura como bitmap
-        signatureBitmap = capturarAssinaturaComoBitmap()
+        signatureBitmap = binding.signatureView.getSignatureBitmap()
         
         // Converter para Base64
         val assinaturaBase64 = bitmapToBase64(signatureBitmap!!)
@@ -171,17 +145,6 @@ class SignatureCaptureFragment : Fragment() {
         viewModel.salvarAssinatura(assinaturaBase64)
     }
     
-    private fun capturarAssinaturaComoBitmap(): Bitmap {
-        val bitmap = Bitmap.createBitmap(
-            binding.signatureView.width,
-            binding.signatureView.height,
-            Bitmap.Config.ARGB_8888
-        )
-        val canvas = Canvas(bitmap)
-        canvas.drawColor(Color.WHITE)
-        canvas.drawPath(signaturePath, signaturePaint)
-        return bitmap
-    }
     
     private fun bitmapToBase64(bitmap: Bitmap): String {
         val outputStream = ByteArrayOutputStream()
