@@ -72,7 +72,7 @@ class ColaboradorRegisterFragment : Fragment() {
 
     private fun setupRepository() {
         val database = AppDatabase.getDatabase(requireContext())
-        appRepository = AppRepository(
+        appRepository =         AppRepository(
             database.clienteDao(),
             database.acertoDao(),
             database.mesaDao(),
@@ -80,7 +80,8 @@ class ColaboradorRegisterFragment : Fragment() {
             database.despesaDao(),
             database.colaboradorDao(),
             database.cicloAcertoDao(),
-            database.acertoMesaDao()
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao()
         )
     }
 

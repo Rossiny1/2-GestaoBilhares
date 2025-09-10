@@ -271,6 +271,10 @@
             android:name="isFromGerenciarMesas"
             app:argType="boolean"
             android:defaultValue="false" />
+        <argument
+            android:name="isFromClientRegister"
+            app:argType="boolean"
+            android:defaultValue="false" />
         <action
             android:id="@+id/action_mesasDepositoFragment_to_cadastroMesaFragment"
             app:destination="@id/cadastroMesaFragment" />
@@ -420,5 +424,45 @@
         android:id="@+id/mainFragment"
         android:name="com.example.gestaobilhares.ui.main.MainFragment"
         android:label="MainFragment" />
+
+    <!-- ✅ NOVO: Fragmentos de Contratos -->
+    <dialog
+        android:id="@+id/contractFinalizationDialog"
+        android:name="com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog"
+        android:label="ContractFinalizationDialog">
+        <argument
+            android:name="cliente_id"
+            app:argType="long" />
+        <argument
+            android:name="mesas_vinculadas"
+            app:argType="long[]" />
+        <action
+            android:id="@+id/action_contractFinalizationDialog_to_contractGenerationFragment"
+            app:destination="@id/contractGenerationFragment" />
+    </dialog>
+
+    <fragment
+        android:id="@+id/contractGenerationFragment"
+        android:name="com.example.gestaobilhares.ui.contracts.ContractGenerationFragment"
+        android:label="ContractGenerationFragment">
+        <argument
+            android:name="cliente_id"
+            app:argType="long" />
+        <argument
+            android:name="mesas_vinculadas"
+            app:argType="long[]" />
+        <action
+            android:id="@+id/action_contractGenerationFragment_to_signatureCaptureFragment"
+            app:destination="@id/signatureCaptureFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/signatureCaptureFragment"
+        android:name="com.example.gestaobilhares.ui.contracts.SignatureCaptureFragment"
+        android:label="SignatureCaptureFragment">
+        <argument
+            android:name="contrato_id"
+            app:argType="long" />
+    </fragment>
 
 </navigation> 

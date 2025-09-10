@@ -230,18 +230,17 @@ class MesasDepositoFragment : Fragment() {
         if (clienteId != null) {
             viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)
             
-            // ✅ CORREÇÃO MELHORADA: Sempre navegar para detalhes do cliente
-            // Verificar se veio do ClientRegisterFragment (cadastro de cliente)
-            val previousFragment = findNavController().previousBackStackEntry?.destination?.route
-            android.util.Log.d("MesasDepositoFragment", "Fragmento anterior: $previousFragment")
+            // ✅ NOVO: Mostrar diálogo de finalização de contrato
+            android.util.Log.d("MesasDepositoFragment", "isFromClientRegister: ${args.isFromClientRegister}")
             
-            if (previousFragment == "clientRegisterFragment") {
-                // Veio do cadastro de cliente - navegar para detalhes do cliente
-                android.util.Log.d("MesasDepositoFragment", "Vindo do cadastro - navegando para detalhes do cliente")
-                val action = MesasDepositoFragmentDirections.actionMesasDepositoFragmentToClientDetailFragment(clienteId)
-                findNavController().navigate(action)
-                // Remover o ClientRegisterFragment da pilha
-                findNavController().popBackStack("clientRegisterFragment", true)
+            if (args.isFromClientRegister) {
+                // Veio do cadastro de cliente - mostrar diálogo de contrato
+                android.util.Log.d("MesasDepositoFragment", "Vindo do cadastro - mostrando diálogo de contrato")
+                val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
+                    clienteId = clienteId,
+                    mesasVinculadas = listOf(mesa.id)
+                )
+                dialog.show(parentFragmentManager, "ContractFinalizationDialog")
             } else {
                 // Veio de outro lugar (provavelmente ClientDetailFragment) - voltar normalmente
                 android.util.Log.d("MesasDepositoFragment", "Vindo de outro lugar - voltando normalmente")

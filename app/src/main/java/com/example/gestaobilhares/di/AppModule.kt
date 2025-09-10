@@ -36,6 +36,7 @@ object AppModule {
     @Provides fun provideAcertoMesaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.AcertoMesaDao = db.acertoMesaDao()
     @Provides fun provideCategoriaDespesaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.CategoriaDespesaDao = db.categoriaDespesaDao()
     @Provides fun provideTipoDespesaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.TipoDespesaDao = db.tipoDespesaDao()
+    @Provides fun provideContratoLocacaoDao(db: AppDatabase): com.example.gestaobilhares.data.dao.ContratoLocacaoDao = db.contratoLocacaoDao()
 
     @Provides
     @Singleton
@@ -47,7 +48,8 @@ object AppModule {
         despesaDao: DespesaDao,
         colaboradorDao: ColaboradorDao,
         cicloAcertoDao: CicloAcertoDao,
-        acertoMesaDao: com.example.gestaobilhares.data.dao.AcertoMesaDao
+        acertoMesaDao: com.example.gestaobilhares.data.dao.AcertoMesaDao,
+        contratoLocacaoDao: com.example.gestaobilhares.data.dao.ContratoLocacaoDao
     ): AppRepository = AppRepository(
         clienteDao,
         acertoDao,
@@ -56,7 +58,8 @@ object AppModule {
         despesaDao,
         colaboradorDao,
         cicloAcertoDao,
-        acertoMesaDao
+        acertoMesaDao,
+        contratoLocacaoDao
     )
 
     // Repositories

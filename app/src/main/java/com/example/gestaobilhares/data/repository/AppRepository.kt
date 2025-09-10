@@ -20,7 +20,8 @@ class AppRepository(
     private val despesaDao: DespesaDao,
     private val colaboradorDao: ColaboradorDao,
     private val cicloAcertoDao: CicloAcertoDao,
-    private val acertoMesaDao: com.example.gestaobilhares.data.dao.AcertoMesaDao
+    private val acertoMesaDao: com.example.gestaobilhares.data.dao.AcertoMesaDao,
+    private val contratoLocacaoDao: ContratoLocacaoDao
 ) {
     
     // ==================== CLIENTE ====================
@@ -570,4 +571,21 @@ class AppRepository(
         // TODO: Implementar lógica de sincronização de colaboradores
         println("Sincronizando colaboradores (stub): ${colaboradores.size} colaboradores")
     }
+    
+    // ==================== CONTRATOS DE LOCAÇÃO ====================
+    
+    fun buscarContratosPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratosPorCliente(clienteId)
+    suspend fun buscarContratoPorNumero(numeroContrato: String) = contratoLocacaoDao.buscarContratoPorNumero(numeroContrato)
+    fun buscarContratosAtivos() = contratoLocacaoDao.buscarContratosAtivos()
+    fun buscarTodosContratos() = contratoLocacaoDao.buscarTodosContratos()
+    suspend fun contarContratosPorAno(ano: String) = contratoLocacaoDao.contarContratosPorAno(ano)
+    suspend fun inserirContrato(contrato: ContratoLocacao) = contratoLocacaoDao.inserirContrato(contrato)
+    suspend fun atualizarContrato(contrato: ContratoLocacao) = contratoLocacaoDao.atualizarContrato(contrato)
+    suspend fun excluirContrato(contrato: ContratoLocacao) = contratoLocacaoDao.excluirContrato(contrato)
+    suspend fun buscarContratoPorId(contratoId: Long) = contratoLocacaoDao.buscarContratoPorId(contratoId)
+    suspend fun buscarMesasPorContrato(contratoId: Long) = contratoLocacaoDao.buscarMesasPorContrato(contratoId)
+    suspend fun inserirContratoMesa(contratoMesa: ContratoMesa) = contratoLocacaoDao.inserirContratoMesa(contratoMesa)
+    suspend fun inserirContratoMesas(contratoMesas: List<ContratoMesa>) = contratoLocacaoDao.inserirContratoMesas(contratoMesas)
+    suspend fun excluirContratoMesa(contratoMesa: ContratoMesa) = contratoLocacaoDao.excluirContratoMesa(contratoMesa)
+    suspend fun excluirMesasPorContrato(contratoId: Long) = contratoLocacaoDao.excluirMesasPorContrato(contratoId)
 } 
