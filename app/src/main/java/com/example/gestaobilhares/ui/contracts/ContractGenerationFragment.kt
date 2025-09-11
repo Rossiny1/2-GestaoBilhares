@@ -108,6 +108,10 @@ class ContractGenerationFragment : Fragment() {
     
     private fun preencherCamposAutomaticamente(tipoFixo: Boolean, valorFixo: Double) {
         binding.apply {
+            // Preencher dia de vencimento com o dia atual
+            val diaAtual = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_MONTH)
+            etDiaVencimento.setText(diaAtual.toString())
+            
             // Configurar tipo de pagamento baseado no tipo de acerto
             if (tipoFixo) {
                 rbValorFixo.isChecked = true
@@ -120,6 +124,8 @@ class ContractGenerationFragment : Fragment() {
             } else {
                 rbPercentual.isChecked = true
                 tilPercentualReceita.visibility = View.VISIBLE
+                // Preencher percentual padrão de 40%
+                etPercentualReceita.setText("40")
                 // Para fichas jogadas, ocultar campos desnecessários
                 tilValorMensal.visibility = View.GONE
                 tilDiaVencimento.visibility = View.GONE
@@ -145,6 +151,11 @@ class ContractGenerationFragment : Fragment() {
                         tilValorMensal.visibility = View.VISIBLE
                         tilDiaVencimento.visibility = View.VISIBLE
                         etValorMensal.hint = "Valor Mensal (R$)"
+                        // Preencher dia de vencimento com o dia atual se estiver vazio
+                        if (etDiaVencimento.text.isNullOrEmpty()) {
+                            val diaAtual = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_MONTH)
+                            etDiaVencimento.setText(diaAtual.toString())
+                        }
                     }
                     R.id.rbPercentual -> {
                         tilPercentualReceita.visibility = View.VISIBLE

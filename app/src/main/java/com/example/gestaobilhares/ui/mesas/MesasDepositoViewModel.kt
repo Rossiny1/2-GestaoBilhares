@@ -76,4 +76,16 @@ class MesasDepositoViewModel(
             }
         }
     }
+    
+    /**
+     * ✅ NOVO: Obtém todas as mesas já vinculadas a um cliente específico
+     */
+    suspend fun obterTodasMesasVinculadasAoCliente(clienteId: Long): List<Mesa> {
+        return try {
+            mesaRepository.obterMesasPorClienteDireto(clienteId)
+        } catch (e: Exception) {
+            android.util.Log.e("MesasDepositoViewModel", "Erro ao buscar mesas vinculadas ao cliente $clienteId", e)
+            emptyList()
+        }
+    }
 } 

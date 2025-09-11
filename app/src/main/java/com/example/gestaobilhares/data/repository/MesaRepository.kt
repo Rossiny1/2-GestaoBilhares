@@ -52,18 +52,20 @@ class MesaRepository @Inject constructor(
     /**
      * ✅ NOVO: Busca uma mesa específica por ID
      */
-    suspend fun buscarPorId(mesaId: Long): Mesa? = mesaDao.obterMesaPorId(mesaId)
+    suspend fun obterMesaPorId(mesaId: Long): Mesa? = mesaDao.obterMesaPorId(mesaId)
+    
+    /**
+     * ✅ NOVO: Obtém todas as mesas vinculadas a um cliente (versão síncrona)
+     */
+    suspend fun obterMesasPorClienteDireto(clienteId: Long): List<Mesa> = mesaDao.obterMesasPorClienteDireto(clienteId)
 
     suspend fun atualizarRelogioFinal(mesaId: Long, relogioFinal: Int) = 
         mesaDao.atualizarRelogioFinal(mesaId, relogioFinal)
-
-    suspend fun obterMesaPorId(mesaId: Long): Mesa? = mesaDao.obterMesaPorId(mesaId)
-
+    
     /**
-     * ✅ FUNÇÃO FALLBACK: Obtém mesas do cliente diretamente (sem Flow)
+     * ✅ MÉTODO LEGADO: Mantido para compatibilidade com código existente
      */
-    suspend fun obterMesasPorClienteDireto(clienteId: Long): List<Mesa> =
-        mesaDao.obterMesasPorClienteDireto(clienteId)
+    suspend fun buscarPorId(mesaId: Long): Mesa? = mesaDao.obterMesaPorId(mesaId)
 
     /**
      * ✅ NOVA FUNÇÃO: Obtém todas as mesas (disponíveis e em uso)

@@ -103,8 +103,8 @@ class ContractPdfGenerator(private val context: Context) {
             .setFontSize(10f)
             .setMarginBottom(5f)
         
-        val equipamentos = mesas.joinToString(", ") { "Mesa ${it.numero} (${getTipoEquipamentoNome(it.tipoMesa)})" }
-        val objeto2 = Paragraph("1.2. Tipo de Equipamento: $equipamentos")
+        val tiposEquipamentos = mesas.map { getTipoEquipamentoNome(it.tipoMesa) }.distinct().joinToString(", ")
+        val objeto2 = Paragraph("1.2. Tipo de Equipamento: $tiposEquipamentos")
             .setFont(font)
             .setFontSize(10f)
             .setMarginBottom(5f)
@@ -191,7 +191,7 @@ class ContractPdfGenerator(private val context: Context) {
             
             "CLÁUSULA 9ª – DA VALIDADE JURÍDICA E ASSINATURA ELETRÔNICA",
             "9.1. As partes reconhecem que este contrato será celebrado por meio eletrônico, sendo as assinaturas apostas manualmente em tela de dispositivo móvel (assinatura eletrônica simples), conforme classificação da Lei nº 14.063/2020.",
-            "9.2. Nos termos da Medida Provisória nº 2.200-2/2001 e do Código Civil brasileiro, e em conformidade com a Lei nº 14.063/2020, as partes declaram que a assinatura eletrônica simples utilizada possui validade jurídica, desde que garanta a identificação do signatário e a integridade do documento.",
+            "9.2. Nos termos da Medida Provisória nº 2.200-2/2001 e do Código Civil brasileiro, e em conformidade com a Lei nº 14.063/2020, as partes declaram que a assinatura eletrônica simples utilizada possui validade jurídica.",
             "9.3. Para garantir a validade jurídica da assinatura eletrônica simples, o sistema implementa: (a) captura de metadados detalhados (timestamp, device ID, IP, pressão, velocidade); (b) geração de hash SHA-256 para integridade do documento e assinatura; (c) logs jurídicos completos para auditoria; (d) validação de características biométricas da assinatura.",
             "9.4. Uma via deste contrato, devidamente assinada, será enviada para o e-mail ou número de telefone celular informado pelo(a) LOCATÁRIO(A).",
             
@@ -220,18 +220,22 @@ class ContractPdfGenerator(private val context: Context) {
         document.add(data)
         
         // Assinatura do Locador
-        val locadorTitle = Paragraph("BILHAR GLOBO R & A LTDA (Locadora)")
+        val locadorTitle = Paragraph("BILHAR GLOBO R & A LTDA (Locadora) - CNPJ: ${contrato.locadorCnpj}")
             .setFont(fontBold)
             .setFontSize(10f)
-            .setMarginBottom(20f)
+            .setMarginBottom(10f)
         
         document.add(locadorTitle)
+        
+        // Linha para assinatura da locadora
+        val linhaLocadora = LineSeparator(null)
+            .setMarginBottom(20f)
+        document.add(linhaLocadora)
         
         // Adicionar assinatura do locador se existir
         contrato.assinaturaLocador?.let { assinaturaBase64 ->
             try {
                 val assinaturaBytes = Base64.decode(assinaturaBase64, Base64.DEFAULT)
-                val assinaturaBitmap = BitmapFactory.decodeByteArray(assinaturaBytes, 0, assinaturaBytes.size)
                 val assinaturaImage = ImageDataFactory.create(assinaturaBytes)
                 val image = Image(assinaturaImage)
                     .scaleToFit(200f, 100f)
@@ -239,48 +243,38 @@ class ContractPdfGenerator(private val context: Context) {
                 
                 document.add(image)
             } catch (e: Exception) {
-                // Se houver erro ao processar a assinatura, adicionar linha para assinatura
-                val linhaAssinatura = LineSeparator(null)
-                    .setMarginBottom(20f)
-                document.add(linhaAssinatura)
+                // Se houver erro ao processar a assinatura, manter apenas a linha
             }
-        } ?: run {
-            val linhaAssinatura = LineSeparator(null)
-                .setMarginBottom(20f)
-            document.add(linhaAssinatura)
         }
         
         // Assinatura do Locatário
-        val locatarioTitle = Paragraph("${contrato.locatarioNome} (Locatário(a))")
+        val locatarioTitle = Paragraph("${contrato.locatarioNome} (Locatário(a)) - CPF/CNPJ: ${contrato.locatarioCpf}")
             .setFont(fontBold)
             .setFontSize(10f)
             .setMarginTop(40f)
-            .setMarginBottom(20f)
+            .setMarginBottom(10f)
         
         document.add(locatarioTitle)
         
-        // Adicionar assinatura do locatário se existir
+        // Adicionar assinatura do locatário se existir (ACIMA da linha)
         contrato.assinaturaLocatario?.let { assinaturaBase64 ->
             try {
                 val assinaturaBytes = Base64.decode(assinaturaBase64, Base64.DEFAULT)
-                val assinaturaBitmap = BitmapFactory.decodeByteArray(assinaturaBytes, 0, assinaturaBytes.size)
                 val assinaturaImage = ImageDataFactory.create(assinaturaBytes)
                 val image = Image(assinaturaImage)
                     .scaleToFit(200f, 100f)
-                    .setMarginBottom(20f)
+                    .setMarginBottom(10f)
                 
                 document.add(image)
             } catch (e: Exception) {
-                // Se houver erro ao processar a assinatura, adicionar linha para assinatura
-                val linhaAssinatura = LineSeparator(null)
-                    .setMarginBottom(20f)
-                document.add(linhaAssinatura)
+                // Se houver erro ao processar a assinatura, manter apenas a linha
             }
-        } ?: run {
-            val linhaAssinatura = LineSeparator(null)
-                .setMarginBottom(20f)
-            document.add(linhaAssinatura)
         }
+        
+        // Linha para assinatura do locatário (DEPOIS da assinatura)
+        val linhaLocatario = LineSeparator(null)
+            .setMarginBottom(20f)
+        document.add(linhaLocatario)
     }
     
     private fun getTipoEquipamentoNome(tipoMesa: com.example.gestaobilhares.data.entities.TipoMesa): String {
