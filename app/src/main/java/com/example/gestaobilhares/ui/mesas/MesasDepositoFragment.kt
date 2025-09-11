@@ -238,7 +238,9 @@ class MesasDepositoFragment : Fragment() {
                 android.util.Log.d("MesasDepositoFragment", "Vindo do cadastro - mostrando diálogo de contrato")
                 val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
                     clienteId = clienteId,
-                    mesasVinculadas = listOf(mesa.id)
+                    mesasVinculadas = listOf(mesa.id),
+                    tipoFixo = tipoFixo,
+                    valorFixo = valorFixo ?: 0.0
                 )
                 dialog.show(parentFragmentManager, "ContractFinalizationDialog")
             } else {

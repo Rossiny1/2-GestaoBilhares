@@ -103,7 +103,7 @@ class ContractPdfGenerator(private val context: Context) {
             .setFontSize(10f)
             .setMarginBottom(5f)
         
-        val equipamentos = mesas.joinToString(", ") { "Mesa ${it.numero} (${it.tipoMesa.name})" }
+        val equipamentos = mesas.joinToString(", ") { "Mesa ${it.numero} (${getTipoEquipamentoNome(it.tipoMesa)})" }
         val objeto2 = Paragraph("1.2. Tipo de Equipamento: $equipamentos")
             .setFont(font)
             .setFontSize(10f)
@@ -190,9 +190,10 @@ class ContractPdfGenerator(private val context: Context) {
             "8.2. Caso o(a) LOCATÁRIO(A) impeça ou dificulte a retirada do(s) equipamento(s) pela LOCADORA, incidirá multa diária de R$ 200,00 (duzentos reais).",
             
             "CLÁUSULA 9ª – DA VALIDADE JURÍDICA E ASSINATURA ELETRÔNICA",
-            "9.1. As partes reconhecem que este contrato será celebrado por meio eletrônico, sendo as assinaturas apostas manualmente em tela de dispositivo móvel (assinatura eletrônica).",
-            "9.2. Nos termos da Medida Provisória nº 2.200-2/2001 e do Código Civil brasileiro, e em conformidade com a Lei nº 14.063/2020, as partes declaram que a assinatura eletrônica utilizada possui a mesma validade jurídica de uma assinatura de próprio punho.",
-            "9.3. Uma via deste contrato, devidamente assinada, será enviada para o e-mail ou número de telefone celular informado pelo(a) LOCATÁRIO(A).",
+            "9.1. As partes reconhecem que este contrato será celebrado por meio eletrônico, sendo as assinaturas apostas manualmente em tela de dispositivo móvel (assinatura eletrônica simples), conforme classificação da Lei nº 14.063/2020.",
+            "9.2. Nos termos da Medida Provisória nº 2.200-2/2001 e do Código Civil brasileiro, e em conformidade com a Lei nº 14.063/2020, as partes declaram que a assinatura eletrônica simples utilizada possui validade jurídica, desde que garanta a identificação do signatário e a integridade do documento.",
+            "9.3. Para garantir a validade jurídica da assinatura eletrônica simples, o sistema implementa: (a) captura de metadados detalhados (timestamp, device ID, IP, pressão, velocidade); (b) geração de hash SHA-256 para integridade do documento e assinatura; (c) logs jurídicos completos para auditoria; (d) validação de características biométricas da assinatura.",
+            "9.4. Uma via deste contrato, devidamente assinada, será enviada para o e-mail ou número de telefone celular informado pelo(a) LOCATÁRIO(A).",
             
             "CLÁUSULA 10ª – DO FORO",
             "10.1. Fica eleito o foro da Comarca de Montes Claros, MG, para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia expressa a qualquer outro, por mais privilegiado que seja."
@@ -279,6 +280,15 @@ class ContractPdfGenerator(private val context: Context) {
             val linhaAssinatura = LineSeparator(null)
                 .setMarginBottom(20f)
             document.add(linhaAssinatura)
+        }
+    }
+    
+    private fun getTipoEquipamentoNome(tipoMesa: com.example.gestaobilhares.data.entities.TipoMesa): String {
+        return when (tipoMesa) {
+            com.example.gestaobilhares.data.entities.TipoMesa.SINUCA -> "Sinuca"
+            com.example.gestaobilhares.data.entities.TipoMesa.JUKEBOX -> "Jukebox"
+            com.example.gestaobilhares.data.entities.TipoMesa.PEMBOLIM -> "Pembolim"
+            com.example.gestaobilhares.data.entities.TipoMesa.OUTROS -> "Outros"
         }
     }
 }

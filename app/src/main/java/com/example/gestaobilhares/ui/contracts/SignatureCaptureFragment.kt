@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -17,17 +18,34 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentSignatureCaptureBinding
+import com.example.gestaobilhares.utils.DocumentIntegrityManager
+import com.example.gestaobilhares.utils.LegalLogger
+import com.example.gestaobilhares.utils.SignatureMetadataCollector
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SignatureCaptureFragment : Fragment() {
+    
+    companion object {
+        private const val TAG = "SignatureCaptureFragment"
+    }
     
     private var _binding: FragmentSignatureCaptureBinding? = null
     private val binding get() = _binding!!
     
     private val viewModel: SignatureCaptureViewModel by viewModels()
+    
+    @Inject
+    lateinit var legalLogger: LegalLogger
+    
+    @Inject
+    lateinit var documentIntegrityManager: DocumentIntegrityManager
+    
+    @Inject
+    lateinit var metadataCollector: SignatureMetadataCollector
     
     private var signatureBitmap: Bitmap? = null
     
@@ -122,8 +140,47 @@ class SignatureCaptureFragment : Fragment() {
             return
         }
         
+        // Verificar se a assinatura é válida
+        val statistics = binding.signatureView.getSignatureStatistics()
+        
+        // Log para debug
+        Log.d(TAG, "Estatísticas da assinatura:")
+        Log.d(TAG, "Total de pontos: ${statistics.totalPoints}")
+        Log.d(TAG, "Duração: ${statistics.duration}ms")
+        Log.d(TAG, "Pressão média: ${statistics.averagePressure}")
+        Log.d(TAG, "Velocidade média: ${statistics.averageVelocity}")
+        Log.d(TAG, "Assinatura válida: ${statistics.isValidSignature()}")
+        
+        if (!statistics.isValidSignature()) {
+            Toast.makeText(requireContext(), "Assinatura muito simples. Por favor, assine novamente com mais detalhes.", Toast.LENGTH_LONG).show()
+            return
+        }
+        
         // Capturar assinatura como bitmap
         signatureBitmap = binding.signatureView.getSignatureBitmap()
+        
+        // Gerar hash da assinatura
+        val signatureHash = documentIntegrityManager.generateSignatureHash(signatureBitmap!!)
+        
+        // Coletar metadados jurídicos
+        val contrato = viewModel.contrato.value
+        if (contrato != null) {
+            val documentHash = documentIntegrityManager.generateDocumentHash(ByteArray(0)) // TODO: Obter hash real do documento
+            val metadata = metadataCollector.collectSignatureMetadata(documentHash, signatureHash)
+            
+            // Registrar log jurídico
+            viewLifecycleOwner.lifecycleScope.launch {
+                legalLogger.logSignatureEvent(
+                    contratoId = contrato.id,
+                    userId = contrato.clienteId.toString(),
+                    action = "ASSINATURA_SALVA",
+                    metadata = metadata
+                )
+                
+                Log.d(TAG, "Log jurídico registrado para contrato ${contrato.id}")
+                Log.d(TAG, statistics.generateSummary())
+            }
+        }
         
         // Converter para Base64
         val assinaturaBase64 = bitmapToBase64(signatureBitmap!!)
@@ -153,7 +210,8 @@ class SignatureCaptureFragment : Fragment() {
                 
                 // Gerar PDF do contrato
                 val pdfGenerator = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext())
-                val pdfFile = pdfGenerator.generateContractPdf(contrato, emptyList())
+                val mesas = viewModel.getMesasVinculadas()
+                val pdfFile = pdfGenerator.generateContractPdf(contrato, mesas)
                 
                 // Verificar se o arquivo foi criado corretamente
                 if (!pdfFile.exists() || pdfFile.length() == 0L) {

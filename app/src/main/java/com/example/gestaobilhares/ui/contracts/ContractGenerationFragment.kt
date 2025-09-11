@@ -51,10 +51,13 @@ class ContractGenerationFragment : Fragment() {
         
         val clienteId = arguments?.getLong("cliente_id") ?: 0L
         val mesasVinculadas = arguments?.getLongArray("mesas_vinculadas")?.toList() ?: emptyList()
+        val tipoFixo = arguments?.getBoolean("tipo_fixo") ?: false
+        val valorFixo = arguments?.getDouble("valor_fixo") ?: 0.0
         
-        viewModel.carregarDados(clienteId, mesasVinculadas)
+        viewModel.carregarDados(clienteId, mesasVinculadas, tipoFixo, valorFixo)
         setupObservers()
         setupClickListeners()
+        preencherCamposAutomaticamente(tipoFixo, valorFixo)
     }
     
     private fun setupObservers() {
@@ -103,6 +106,27 @@ class ContractGenerationFragment : Fragment() {
         }
     }
     
+    private fun preencherCamposAutomaticamente(tipoFixo: Boolean, valorFixo: Double) {
+        binding.apply {
+            // Configurar tipo de pagamento baseado no tipo de acerto
+            if (tipoFixo) {
+                rbValorFixo.isChecked = true
+                etValorMensal.setText(valorFixo.toString())
+                tilPercentualReceita.visibility = View.GONE
+                etValorMensal.hint = "Valor Mensal (R$)"
+                // Mostrar campos de valor fixo e dia de vencimento
+                tilValorMensal.visibility = View.VISIBLE
+                tilDiaVencimento.visibility = View.VISIBLE
+            } else {
+                rbPercentual.isChecked = true
+                tilPercentualReceita.visibility = View.VISIBLE
+                // Para fichas jogadas, ocultar campos desnecessários
+                tilValorMensal.visibility = View.GONE
+                tilDiaVencimento.visibility = View.GONE
+            }
+        }
+    }
+    
     private fun setupClickListeners() {
         binding.apply {
             btnGerarContrato.setOnClickListener {
@@ -113,15 +137,19 @@ class ContractGenerationFragment : Fragment() {
                 abrirTelaAssinatura()
             }
             
-            // Listener para mostrar/ocultar campo de percentual
+            // Listener para mostrar/ocultar campos baseado no tipo de pagamento
             rgTipoPagamento.setOnCheckedChangeListener { _, checkedId ->
                 when (checkedId) {
                     R.id.rbValorFixo -> {
                         tilPercentualReceita.visibility = View.GONE
+                        tilValorMensal.visibility = View.VISIBLE
+                        tilDiaVencimento.visibility = View.VISIBLE
                         etValorMensal.hint = "Valor Mensal (R$)"
                     }
                     R.id.rbPercentual -> {
                         tilPercentualReceita.visibility = View.VISIBLE
+                        tilValorMensal.visibility = View.GONE
+                        tilDiaVencimento.visibility = View.GONE
                         etValorMensal.hint = "Valor Base (R$)"
                     }
                 }
@@ -130,25 +158,35 @@ class ContractGenerationFragment : Fragment() {
     }
     
     private fun gerarContrato() {
-        val valorMensal = binding.etValorMensal.text.toString().toDoubleOrNull() ?: 0.0
-        val diaVencimento = binding.etDiaVencimento.text.toString().toIntOrNull() ?: 1
         val tipoPagamento = if (binding.rbValorFixo.isChecked) "FIXO" else "PERCENTUAL"
+        
+        // Valores padrão para fichas jogadas
+        var valorMensal = 0.0
+        var diaVencimento = 1
+        
+        // Validações específicas para valor fixo
+        if (tipoPagamento == "FIXO") {
+            valorMensal = binding.etValorMensal.text.toString().toDoubleOrNull() ?: 0.0
+            diaVencimento = binding.etDiaVencimento.text.toString().toIntOrNull() ?: 1
+            
+            if (valorMensal <= 0) {
+                Toast.makeText(requireContext(), "Valor deve ser maior que zero", Toast.LENGTH_SHORT).show()
+                return
+            }
+            
+            if (diaVencimento < 1 || diaVencimento > 31) {
+                Toast.makeText(requireContext(), "Dia de vencimento deve estar entre 1 e 31", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+        
+        // Validação para percentual (fichas jogadas)
         val percentualReceita = if (tipoPagamento == "PERCENTUAL") {
             binding.etPercentualReceita.text.toString().toDoubleOrNull()
         } else null
         
-        if (valorMensal <= 0) {
-            Toast.makeText(requireContext(), "Valor deve ser maior que zero", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
         if (tipoPagamento == "PERCENTUAL" && (percentualReceita == null || percentualReceita <= 0 || percentualReceita > 100)) {
             Toast.makeText(requireContext(), "Percentual deve estar entre 1 e 100", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        if (diaVencimento < 1 || diaVencimento > 31) {
-            Toast.makeText(requireContext(), "Dia de vencimento deve estar entre 1 e 31", Toast.LENGTH_SHORT).show()
             return
         }
         

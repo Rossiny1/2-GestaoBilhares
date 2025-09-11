@@ -24,12 +24,16 @@ class ContractFinalizationDialog : DialogFragment() {
     companion object {
         private const val ARG_CLIENTE_ID = "cliente_id"
         private const val ARG_MESAS_VINCULADAS = "mesas_vinculadas"
+        private const val ARG_TIPO_FIXO = "tipo_fixo"
+        private const val ARG_VALOR_FIXO = "valor_fixo"
         
-        fun newInstance(clienteId: Long, mesasVinculadas: List<Long>): ContractFinalizationDialog {
+        fun newInstance(clienteId: Long, mesasVinculadas: List<Long>, tipoFixo: Boolean, valorFixo: Double): ContractFinalizationDialog {
             return ContractFinalizationDialog().apply {
                 arguments = Bundle().apply {
                     putLong(ARG_CLIENTE_ID, clienteId)
                     putLongArray(ARG_MESAS_VINCULADAS, mesasVinculadas.toLongArray())
+                    putBoolean(ARG_TIPO_FIXO, tipoFixo)
+                    putDouble(ARG_VALOR_FIXO, valorFixo)
                 }
             }
         }
@@ -78,11 +82,15 @@ class ContractFinalizationDialog : DialogFragment() {
             btnGenerateContract.setOnClickListener {
                 val clienteId = arguments?.getLong(ARG_CLIENTE_ID) ?: return@setOnClickListener
                 val mesasVinculadas = arguments?.getLongArray(ARG_MESAS_VINCULADAS)?.toList() ?: emptyList()
+                val tipoFixo = arguments?.getBoolean(ARG_TIPO_FIXO) ?: false
+                val valorFixo = arguments?.getDouble(ARG_VALOR_FIXO) ?: 0.0
                 
                 // Navegar para a tela de geração de contrato
                 val bundle = Bundle().apply {
                     putLong("cliente_id", clienteId)
                     putLongArray("mesas_vinculadas", mesasVinculadas.toLongArray())
+                    putBoolean("tipo_fixo", tipoFixo)
+                    putDouble("valor_fixo", valorFixo)
                 }
                 findNavController().navigate(com.example.gestaobilhares.R.id.contractGenerationFragment, bundle)
                 dismiss()

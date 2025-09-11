@@ -31,7 +31,18 @@ class ContractGenerationViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
     
-    fun carregarDados(clienteId: Long, mesasIds: List<Long>) {
+    // Dados do tipo de acerto
+    private var tipoFixo: Boolean = false
+    private var valorFixo: Double = 0.0
+    
+    // Getters para as informações do tipo de acerto
+    fun isTipoFixo(): Boolean = tipoFixo
+    fun getValorFixo(): Double = valorFixo
+    
+    fun carregarDados(clienteId: Long, mesasIds: List<Long>, tipoFixo: Boolean, valorFixo: Double) {
+        this.tipoFixo = tipoFixo
+        this.valorFixo = valorFixo
+        
         viewModelScope.launch {
             _loading.value = true
             try {
