@@ -27,6 +27,21 @@ class SignatureCaptureViewModel @Inject constructor(
     private val _assinaturaSalva = MutableStateFlow(false)
     val assinaturaSalva: StateFlow<Boolean> = _assinaturaSalva.asStateFlow()
     
+    suspend fun getMesasVinculadas(): List<com.example.gestaobilhares.data.entities.Mesa> {
+        val contratoId = _contrato.value?.id ?: 0L
+        val contratoMesas = repository.buscarMesasPorContrato(contratoId)
+        val mesas = mutableListOf<com.example.gestaobilhares.data.entities.Mesa>()
+        
+        contratoMesas.forEach { contratoMesa ->
+            val mesa = repository.obterMesaPorId(contratoMesa.mesaId)
+            if (mesa != null) {
+                mesas.add(mesa)
+            }
+        }
+        
+        return mesas
+    }
+    
     fun carregarContrato(contratoId: Long) {
         viewModelScope.launch {
             _loading.value = true
