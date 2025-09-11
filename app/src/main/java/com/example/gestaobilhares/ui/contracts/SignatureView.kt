@@ -145,7 +145,7 @@ class SignatureView @JvmOverloads constructor(
         
         signaturePoints.add(point)
         
-        Log.d(TAG, "Ponto capturado: x=$x, y=$y, pressure=$pressure, velocity=$velocity")
+        Log.d(TAG, "Ponto capturado: x=$x, y=$y, pressure=$pressure, velocity=$velocity, total=${signaturePoints.size}")
     }
     
     fun clear() {
@@ -209,6 +209,8 @@ class SignatureView @JvmOverloads constructor(
         val averageVelocity = if (totalPoints > 0) {
             signaturePoints.map { it.velocity }.average()
         } else 0.0
+        
+        Log.d(TAG, "Estatísticas calculadas: pontos=$totalPoints, duração=${duration}ms, pressão=${averagePressure}, velocidade=${averageVelocity}")
         
         return SignatureStatistics(
             totalPoints = totalPoints,
