@@ -192,6 +192,10 @@
         <action
             android:id="@+id/action_clientDetailFragment_to_cycleManagementFragment"
             app:destination="@id/cycleManagementFragment" />
+        <!-- ✅ NOVA NAVEGAÇÃO: Para geração de contrato -->
+        <action
+            android:id="@+id/action_clientDetailFragment_to_contractGenerationFragment"
+            app:destination="@id/contractGenerationFragment" />
     </fragment>
 
     <!-- FASE 4A: Tela de registro de acerto -->

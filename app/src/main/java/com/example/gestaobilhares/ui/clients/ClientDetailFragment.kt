@@ -170,6 +170,33 @@ class ClientDetailFragment : Fragment() {
             recolherFabMenu()
         }
         
+        // ✅ NOVO: Botão Contrato
+        binding.fabContractContainer.setOnClickListener {
+            // Verificar se o cliente tem mesas vinculadas
+            lifecycleScope.launch {
+                try {
+                    val mesasAtivas = viewModel.mesasCliente.value
+                    if (mesasAtivas.isNotEmpty()) {
+                        // Navegar para tela de geração de contrato
+                        val mesasIds = mesasAtivas.map { it.id }.toLongArray()
+                        val action = ClientDetailFragmentDirections
+                            .actionClientDetailFragmentToContractGenerationFragment(
+                                clienteId = args.clienteId,
+                                mesasVinculadas = mesasIds
+                            )
+                        findNavController().navigate(action)
+                        Log.d("ClientDetailFragment", "Navegando para Geração de Contrato - Cliente ID: ${args.clienteId} com ${mesasIds.size} mesas")
+                    } else {
+                        Toast.makeText(requireContext(), "Cliente não possui mesas vinculadas. Vincule uma mesa primeiro.", Toast.LENGTH_LONG).show()
+                    }
+                } catch (e: Exception) {
+                    Log.e("ClientDetailFragment", "Erro ao verificar mesas para contrato: ${e.message}", e)
+                    Toast.makeText(requireContext(), "Erro ao verificar mesas: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+                recolherFabMenu()
+            }
+        }
+        
         binding.fabNewSettlementContainer.setOnClickListener {
             // ✅ NOVO: Verificar se a rota está em andamento antes de permitir novo acerto
             lifecycleScope.launch {
@@ -282,9 +309,17 @@ class ClientDetailFragment : Fragment() {
             .setDuration(200)
             .start()
         
-        binding.fabNewSettlementContainer.animate()
+        // ✅ NOVO: Animar botão Contrato
+        binding.fabContractContainer.animate()
             .alpha(1f)
             .translationY(-32f)
+            .setDuration(200)
+            .setStartDelay(25)
+            .start()
+        
+        binding.fabNewSettlementContainer.animate()
+            .alpha(1f)
+            .translationY(-48f)
             .setDuration(200)
             .setStartDelay(50)
             .start()
@@ -312,17 +347,23 @@ class ClientDetailFragment : Fragment() {
             .alpha(0f)
             .translationY(0f)
             .setDuration(200)
-            .withEndAction {
-                // Verificar novamente se o binding ainda é válido
-                _binding?.fabExpandedContainer?.visibility = View.GONE
-            }
+            .start()
+        
+        // ✅ NOVO: Animar botão Contrato
+        currentBinding.fabContractContainer.animate()
+            .alpha(0f)
+            .translationY(0f)
+            .setDuration(200)
             .start()
         
         currentBinding.fabNewSettlementContainer.animate()
             .alpha(0f)
             .translationY(0f)
             .setDuration(200)
-            .setStartDelay(50)
+            .withEndAction {
+                // Verificar novamente se o binding ainda é válido
+                _binding?.fabExpandedContainer?.visibility = View.GONE
+            }
             .start()
     }
 
