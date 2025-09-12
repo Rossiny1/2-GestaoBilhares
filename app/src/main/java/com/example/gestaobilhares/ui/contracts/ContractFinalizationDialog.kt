@@ -85,6 +85,11 @@ class ContractFinalizationDialog : DialogFragment() {
                 val tipoFixo = arguments?.getBoolean(ARG_TIPO_FIXO) ?: false
                 val valorFixo = arguments?.getDouble(ARG_VALOR_FIXO) ?: 0.0
                 
+                android.util.Log.d("ContractFinalizationDialog", "=== GERANDO CONTRATO ===")
+                android.util.Log.d("ContractFinalizationDialog", "ClienteId: $clienteId")
+                android.util.Log.d("ContractFinalizationDialog", "MesasVinculadas: $mesasVinculadas")
+                android.util.Log.d("ContractFinalizationDialog", "TipoFixo: $tipoFixo, ValorFixo: $valorFixo")
+                
                 // Navegar para a tela de geração de contrato
                 val bundle = Bundle().apply {
                     putLong("cliente_id", clienteId)

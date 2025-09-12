@@ -58,7 +58,7 @@ class ContractPdfGenerator(private val context: Context) {
             .setFontSize(16f)
             .setMarginBottom(20f)
         
-        val numero = Paragraph("Nº contrato: $numeroContrato")
+        val numero = Paragraph("Contrato nº: $numeroContrato")
             .setFont(fontBold)
             .setFontSize(12f)
             .setMarginBottom(30f)
@@ -103,13 +103,20 @@ class ContractPdfGenerator(private val context: Context) {
             .setFontSize(10f)
             .setMarginBottom(5f)
         
-        val tiposEquipamentos = mesas.map { getTipoEquipamentoNome(it.tipoMesa) }.distinct().joinToString(", ")
-        val objeto2 = Paragraph("1.2. Tipo de Equipamento: $tiposEquipamentos")
+        // Contar quantidade de cada tipo de equipamento
+        val equipamentosPorTipo = mesas.groupBy { it.tipoMesa }
+        val descricaoEquipamentos = equipamentosPorTipo.map { (tipo, lista) ->
+            val nomeTipo = getTipoEquipamentoNome(tipo)
+            val quantidade = lista.size
+            "$quantidade $nomeTipo${if (quantidade > 1) "s" else ""}"
+        }.joinToString(", ")
+        
+        val objeto2 = Paragraph("1.2. Tipo de equipamento e quantidade: $descricaoEquipamentos")
             .setFont(font)
             .setFontSize(10f)
             .setMarginBottom(5f)
         
-        val numerosSerie = mesas.joinToString(", ") { it.numero.toString() }
+        val numerosSerie = mesas.joinToString("; ") { it.numero.toString() }
         val objeto3 = Paragraph("1.3. Número de Série/Identificação: $numerosSerie")
             .setFont(font)
             .setFontSize(10f)
@@ -192,7 +199,7 @@ class ContractPdfGenerator(private val context: Context) {
             "CLÁUSULA 9ª – DA VALIDADE JURÍDICA E ASSINATURA ELETRÔNICA",
             "9.1. As partes reconhecem que este contrato será celebrado por meio eletrônico, sendo as assinaturas apostas manualmente em tela de dispositivo móvel (assinatura eletrônica simples), conforme classificação da Lei nº 14.063/2020.",
             "9.2. Nos termos da Medida Provisória nº 2.200-2/2001 e do Código Civil brasileiro, e em conformidade com a Lei nº 14.063/2020, as partes declaram que a assinatura eletrônica simples utilizada possui validade jurídica.",
-            "9.3. Para garantir a validade jurídica da assinatura eletrônica simples, o sistema implementa: (a) captura de metadados detalhados (timestamp, device ID, IP, pressão, velocidade); (b) geração de hash SHA-256 para integridade do documento e assinatura; (c) logs jurídicos completos para auditoria; (d) validação de características biométricas da assinatura.",
+            "9.3. Para garantir a validade jurídica da assinatura eletrônica simples, o sistema implementa: (a) captura de metadados detalhados (timestamp, device ID, IP, pressão, velocidade); (b) geração de hash SHA-256 para integridade do documento e assinatura; (c) logs jurídicos completos para auditoria; (d) validação de características biométricas da assinatura; (e) confirmação de presença física do LOCATÁRIO durante a assinatura.",
             "9.4. Uma via deste contrato, devidamente assinada, será enviada para o e-mail ou número de telefone celular informado pelo(a) LOCATÁRIO(A).",
             
             "CLÁUSULA 10ª – DO FORO",

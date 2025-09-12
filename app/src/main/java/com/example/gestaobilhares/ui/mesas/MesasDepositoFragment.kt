@@ -242,10 +242,16 @@ class MesasDepositoFragment : Fragment() {
                     try {
                         val todasMesasVinculadas = viewModel.obterTodasMesasVinculadasAoCliente(clienteId)
                         android.util.Log.d("MesasDepositoFragment", "Total de mesas vinculadas ao cliente: ${todasMesasVinculadas.size}")
+                        todasMesasVinculadas.forEach { mesa ->
+                            android.util.Log.d("MesasDepositoFragment", "Mesa vinculada: ID=${mesa.id}, Número=${mesa.numero}, Tipo=${mesa.tipoMesa}")
+                        }
+                        
+                        val mesasIds = todasMesasVinculadas.map { it.id }
+                        android.util.Log.d("MesasDepositoFragment", "IDs das mesas para o diálogo: $mesasIds")
                         
                         val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
                             clienteId = clienteId,
-                            mesasVinculadas = todasMesasVinculadas.map { it.id },
+                            mesasVinculadas = mesasIds,
                             tipoFixo = tipoFixo,
                             valorFixo = valorFixo ?: 0.0
                         )

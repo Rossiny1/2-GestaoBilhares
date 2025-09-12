@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.example.gestaobilhares.utils.ImageCompressionUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.text.NumberFormat
@@ -74,6 +75,11 @@ class SettlementFragment : Fragment() {
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
     private lateinit var mesasAcertoAdapter: MesasAcertoAdapter
     private var paymentValues: MutableMap<String, Double> = mutableMapOf()
+    
+    // ✅ CORREÇÃO: Inicialização segura do ImageCompressionUtils
+    private val imageCompressionUtils: ImageCompressionUtils by lazy {
+        ImageCompressionUtils(requireContext())
+    }
     
     // ✅ NOVO: Variáveis para captura de foto
     private var currentPhotoUri: Uri? = null
@@ -134,6 +140,17 @@ class SettlementFragment : Fragment() {
         return try {
             Log.d("SettlementFragment", "Obtendo caminho real para URI: $uri")
             
+            // ✅ CORREÇÃO: Tentar comprimir a imagem com fallback seguro
+            try {
+                val compressedPath = imageCompressionUtils.compressImageFromUri(uri)
+                if (compressedPath != null) {
+                    Log.d("SettlementFragment", "Imagem comprimida com sucesso: $compressedPath")
+                    return compressedPath
+                }
+            } catch (e: Exception) {
+                Log.w("SettlementFragment", "Compressão falhou, usando método original: ${e.message}")
+            }
+            
             // Tentativa 1: Converter URI para caminho real via ContentResolver
             val cursor = requireContext().contentResolver.query(
                 uri, 
@@ -150,6 +167,16 @@ class SettlementFragment : Fragment() {
                         val path = it.getString(columnIndex)
                         Log.d("SettlementFragment", "Caminho obtido via cursor: $path")
                         if (java.io.File(path).exists()) {
+                            // ✅ CORREÇÃO: Tentar comprimir com fallback
+                            try {
+                                val compressedPathFromFile = imageCompressionUtils.compressImageFromPath(path)
+                                if (compressedPathFromFile != null) {
+                                    Log.d("SettlementFragment", "Imagem comprimida do arquivo: $compressedPathFromFile")
+                                    return compressedPathFromFile
+                                }
+                            } catch (e: Exception) {
+                                Log.w("SettlementFragment", "Compressão do arquivo falhou: ${e.message}")
+                            }
                             return path
                         }
                     }
@@ -165,6 +192,18 @@ class SettlementFragment : Fragment() {
                     inputStream.copyTo(outputStream)
                 }
                 Log.d("SettlementFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
+                
+                // ✅ CORREÇÃO: Tentar comprimir com fallback
+                try {
+                    val compressedPath = imageCompressionUtils.compressImageFromPath(tempFile.absolutePath)
+                    if (compressedPath != null) {
+                        Log.d("SettlementFragment", "Arquivo temporário comprimido: $compressedPath")
+                        return compressedPath
+                    }
+                } catch (e: Exception) {
+                    Log.w("SettlementFragment", "Compressão do arquivo temporário falhou: ${e.message}")
+                }
+                
                 return tempFile.absolutePath
             }
             

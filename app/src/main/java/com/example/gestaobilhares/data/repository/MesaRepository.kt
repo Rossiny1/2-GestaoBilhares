@@ -32,12 +32,19 @@ class MesaRepository @Inject constructor(
 
     suspend fun deletar(mesa: Mesa) = mesaDao.deletar(mesa)
 
-    suspend fun vincularMesa(mesaId: Long, clienteId: Long) = mesaDao.vincularMesa(mesaId, clienteId)
+    suspend fun vincularMesa(mesaId: Long, clienteId: Long) {
+        android.util.Log.d("MesaRepository", "VincularMesa: MesaId=$mesaId, ClienteId=$clienteId")
+        mesaDao.vincularMesa(mesaId, clienteId)
+        android.util.Log.d("MesaRepository", "Mesa vinculada com sucesso")
+    }
 
     suspend fun desvincularMesa(mesaId: Long) = mesaDao.desvincularMesa(mesaId)
 
-    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double) = 
+    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double) {
+        android.util.Log.d("MesaRepository", "VincularMesaComValorFixo: MesaId=$mesaId, ClienteId=$clienteId, ValorFixo=$valorFixo")
         mesaDao.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
+        android.util.Log.d("MesaRepository", "Mesa vinculada com valor fixo com sucesso")
+    }
 
     suspend fun retirarMesa(mesaId: Long) = mesaDao.retirarMesa(mesaId)
 
@@ -52,12 +59,29 @@ class MesaRepository @Inject constructor(
     /**
      * ✅ NOVO: Busca uma mesa específica por ID
      */
-    suspend fun obterMesaPorId(mesaId: Long): Mesa? = mesaDao.obterMesaPorId(mesaId)
+    suspend fun obterMesaPorId(mesaId: Long): Mesa? {
+        android.util.Log.d("MesaRepository", "ObterMesaPorId: MesaId=$mesaId")
+        val mesa = mesaDao.obterMesaPorId(mesaId)
+        if (mesa != null) {
+            android.util.Log.d("MesaRepository", "Mesa encontrada: ID=${mesa.id}, Número=${mesa.numero}, Tipo=${mesa.tipoMesa}, ClienteId=${mesa.clienteId}")
+        } else {
+            android.util.Log.w("MesaRepository", "Mesa não encontrada para ID: $mesaId")
+        }
+        return mesa
+    }
     
     /**
      * ✅ NOVO: Obtém todas as mesas vinculadas a um cliente (versão síncrona)
      */
-    suspend fun obterMesasPorClienteDireto(clienteId: Long): List<Mesa> = mesaDao.obterMesasPorClienteDireto(clienteId)
+    suspend fun obterMesasPorClienteDireto(clienteId: Long): List<Mesa> {
+        android.util.Log.d("MesaRepository", "ObterMesasPorClienteDireto: ClienteId=$clienteId")
+        val mesas = mesaDao.obterMesasPorClienteDireto(clienteId)
+        android.util.Log.d("MesaRepository", "Mesas encontradas: ${mesas.size}")
+        mesas.forEach { mesa ->
+            android.util.Log.d("MesaRepository", "Mesa: ID=${mesa.id}, Número=${mesa.numero}, Tipo=${mesa.tipoMesa}, ClienteId=${mesa.clienteId}")
+        }
+        return mesas
+    }
 
     suspend fun atualizarRelogioFinal(mesaId: Long, relogioFinal: Int) = 
         mesaDao.atualizarRelogioFinal(mesaId, relogioFinal)
