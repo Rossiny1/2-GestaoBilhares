@@ -43,24 +43,36 @@ class ContractGenerationViewModel @Inject constructor(
         this.tipoFixo = tipoFixo
         this.valorFixo = valorFixo
         
+        android.util.Log.d("ContractGenerationViewModel", "=== CARREGANDO DADOS ===")
+        android.util.Log.d("ContractGenerationViewModel", "ClienteId: $clienteId")
+        android.util.Log.d("ContractGenerationViewModel", "MesasIds recebidas: $mesasIds")
+        android.util.Log.d("ContractGenerationViewModel", "TipoFixo: $tipoFixo, ValorFixo: $valorFixo")
+        
         viewModelScope.launch {
             _loading.value = true
             try {
                 // Carregar dados do cliente
                 val clienteData = repository.obterClientePorId(clienteId)
                 _cliente.value = clienteData
+                android.util.Log.d("ContractGenerationViewModel", "Cliente carregado: ${clienteData?.nome}")
                 
                 // Carregar mesas vinculadas
                 val mesas = mutableListOf<Mesa>()
                 mesasIds.forEach { mesaId ->
+                    android.util.Log.d("ContractGenerationViewModel", "Buscando mesa com ID: $mesaId")
                     val mesa = repository.obterMesaPorId(mesaId)
                     if (mesa != null) {
+                        android.util.Log.d("ContractGenerationViewModel", "Mesa encontrada: ${mesa.numero} (${mesa.tipoMesa})")
                         mesas.add(mesa)
+                    } else {
+                        android.util.Log.w("ContractGenerationViewModel", "Mesa não encontrada para ID: $mesaId")
                     }
                 }
+                android.util.Log.d("ContractGenerationViewModel", "Total de mesas carregadas: ${mesas.size}")
                 _mesasVinculadas.value = mesas
                 
             } catch (e: Exception) {
+                android.util.Log.e("ContractGenerationViewModel", "Erro ao carregar dados", e)
                 _error.value = "Erro ao carregar dados: ${e.message}"
             } finally {
                 _loading.value = false
@@ -158,6 +170,6 @@ class ContractGenerationViewModel @Inject constructor(
     private suspend fun gerarNumeroContrato(): String {
         val ano = SimpleDateFormat("yyyy", Locale.getDefault()).format(Date())
         val numeroSequencial = repository.contarContratosPorAno(ano) + 1
-        return "CONTRATO-$ano-${String.format("%04d", numeroSequencial)}"
+        return "$ano-${String.format("%04d", numeroSequencial)}"
     }
 }

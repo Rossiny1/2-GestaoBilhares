@@ -22,12 +22,14 @@ import com.example.gestaobilhares.data.entities.CategoriaDespesa
 import com.example.gestaobilhares.data.entities.TipoDespesa
 import com.example.gestaobilhares.data.repository.*
 import com.example.gestaobilhares.databinding.FragmentExpenseRegisterBinding
+import com.example.gestaobilhares.utils.ImageCompressionUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
+import javax.inject.Inject
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -42,6 +44,11 @@ class ExpenseRegisterFragment : Fragment() {
 
     private lateinit var viewModel: ExpenseRegisterViewModel
     private val args: ExpenseRegisterFragmentArgs by navArgs()
+    
+    // ✅ CORREÇÃO: Inicialização segura do ImageCompressionUtils
+    private val imageCompressionUtils: ImageCompressionUtils by lazy {
+        ImageCompressionUtils(requireContext())
+    }
 
     // Formatador de moeda brasileiro
     private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
@@ -687,6 +694,19 @@ class ExpenseRegisterFragment : Fragment() {
     private fun obterCaminhoRealFoto(uri: Uri): String? {
         return try {
             Log.d("ExpenseRegisterFragment", "Obtendo caminho real para URI: $uri")
+            
+            // ✅ CORREÇÃO: Tentar comprimir a imagem com fallback seguro
+            try {
+                val compressedPath = imageCompressionUtils.compressImageFromUri(uri)
+                if (compressedPath != null) {
+                    Log.d("ExpenseRegisterFragment", "Imagem comprimida com sucesso: $compressedPath")
+                    return compressedPath
+                }
+            } catch (e: Exception) {
+                Log.w("ExpenseRegisterFragment", "Compressão falhou, usando método original: ${e.message}")
+            }
+            
+            // Fallback: método original se a compressão falhar
             val cursor = requireContext().contentResolver.query(
                 uri, arrayOf(MediaStore.Images.Media.DATA), null, null, null
             )
@@ -697,6 +717,16 @@ class ExpenseRegisterFragment : Fragment() {
                         val path = it.getString(columnIndex)
                         Log.d("ExpenseRegisterFragment", "Caminho obtido via cursor: $path")
                         if (File(path).exists()) {
+                            // ✅ CORREÇÃO: Tentar comprimir com fallback
+                            try {
+                                val compressedPathFromFile = imageCompressionUtils.compressImageFromPath(path)
+                                if (compressedPathFromFile != null) {
+                                    Log.d("ExpenseRegisterFragment", "Imagem comprimida do arquivo: $compressedPathFromFile")
+                                    return compressedPathFromFile
+                                }
+                            } catch (e: Exception) {
+                                Log.w("ExpenseRegisterFragment", "Compressão do arquivo falhou: ${e.message}")
+                            }
                             return path
                         }
                     }
@@ -709,6 +739,18 @@ class ExpenseRegisterFragment : Fragment() {
                     inputStream.copyTo(outputStream)
                 }
                 Log.d("ExpenseRegisterFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
+                
+                // ✅ CORREÇÃO: Tentar comprimir com fallback
+                try {
+                    val compressedPath = imageCompressionUtils.compressImageFromPath(tempFile.absolutePath)
+                    if (compressedPath != null) {
+                        Log.d("ExpenseRegisterFragment", "Arquivo temporário comprimido: $compressedPath")
+                        return compressedPath
+                    }
+                } catch (e: Exception) {
+                    Log.w("ExpenseRegisterFragment", "Compressão do arquivo temporário falhou: ${e.message}")
+                }
+                
                 return tempFile.absolutePath
             }
             uri.toString()

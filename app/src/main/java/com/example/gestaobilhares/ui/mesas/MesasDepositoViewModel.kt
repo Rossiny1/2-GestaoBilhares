@@ -61,15 +61,22 @@ class MesasDepositoViewModel(
     }
 
     fun vincularMesaAoCliente(mesaId: Long, clienteId: Long, tipoFixo: Boolean, valorFixo: Double?) {
+        android.util.Log.d("MesasDepositoViewModel", "=== VINCULANDO MESA ===")
+        android.util.Log.d("MesasDepositoViewModel", "MesaId: $mesaId, ClienteId: $clienteId")
+        android.util.Log.d("MesasDepositoViewModel", "TipoFixo: $tipoFixo, ValorFixo: $valorFixo")
+        
         viewModelScope.launch {
             try {
                 if (tipoFixo && valorFixo != null) {
                     // Vincular mesa com valor fixo
+                    android.util.Log.d("MesasDepositoViewModel", "Vinculando mesa com valor fixo: $valorFixo")
                     mesaRepository.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
                 } else {
                     // Vincular mesa normal (fichas jogadas)
+                    android.util.Log.d("MesasDepositoViewModel", "Vinculando mesa com fichas jogadas")
                     mesaRepository.vincularMesa(mesaId, clienteId)
                 }
+                android.util.Log.d("MesasDepositoViewModel", "Mesa vinculada com sucesso")
                 loadMesasDisponiveis()
             } catch (e: Exception) {
                 android.util.Log.e("MesasDepositoViewModel", "Erro ao vincular mesa: ${e.message}", e)
@@ -82,7 +89,13 @@ class MesasDepositoViewModel(
      */
     suspend fun obterTodasMesasVinculadasAoCliente(clienteId: Long): List<Mesa> {
         return try {
-            mesaRepository.obterMesasPorClienteDireto(clienteId)
+            android.util.Log.d("MesasDepositoViewModel", "Buscando mesas vinculadas ao cliente: $clienteId")
+            val mesas = mesaRepository.obterMesasPorClienteDireto(clienteId)
+            android.util.Log.d("MesasDepositoViewModel", "Mesas encontradas: ${mesas.size}")
+            mesas.forEach { mesa ->
+                android.util.Log.d("MesasDepositoViewModel", "Mesa: ID=${mesa.id}, Número=${mesa.numero}, Tipo=${mesa.tipoMesa}, ClienteId=${mesa.clienteId}")
+            }
+            mesas
         } catch (e: Exception) {
             android.util.Log.e("MesasDepositoViewModel", "Erro ao buscar mesas vinculadas ao cliente $clienteId", e)
             emptyList()
