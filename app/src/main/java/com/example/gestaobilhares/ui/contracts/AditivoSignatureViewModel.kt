@@ -109,10 +109,18 @@ class AditivoSignatureViewModel @Inject constructor(
                 
                 repository.inserirAditivoMesas(aditivoMesas)
                 
-                // Atualizar mesas para vincular ao cliente
-                mesas.forEach { mesa ->
-                    val mesaAtualizada = mesa.copy(clienteId = contrato.clienteId)
-                    repository.atualizarMesa(mesaAtualizada)
+                // Atualizar mesas conforme o tipo do aditivo
+                if (aditivoTipo.equals("RETIRADA", ignoreCase = true)) {
+                    // Retirada: remover vínculo do cliente e manter mesa disponível
+                    mesas.forEach { mesa ->
+                        repository.retirarMesa(mesa.id)
+                    }
+                } else {
+                    // Inclusão: vincular mesas ao cliente do contrato
+                    mesas.forEach { mesa ->
+                        val mesaAtualizada = mesa.copy(clienteId = contrato.clienteId)
+                        repository.atualizarMesa(mesaAtualizada)
+                    }
                 }
                 
                 val aditivoCriado = aditivo.copy(id = aditivoId)
