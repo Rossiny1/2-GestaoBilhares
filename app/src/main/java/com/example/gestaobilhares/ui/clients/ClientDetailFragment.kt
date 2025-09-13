@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.flow.first
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -66,6 +67,111 @@ class ClientDetailFragment : Fragment() {
         return binding.root
     }
 
+    private fun abrirFluxoAditivoRetirada(clienteId: Long, mesasRemovidas: LongArray) {
+        lifecycleScope.launch {
+            try {
+                val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+                val repo = com.example.gestaobilhares.data.repository.AppRepository(
+                    db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
+                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao()
+                )
+                val contratos = repo.buscarContratosPorCliente(clienteId).first()
+                val contrato = contratos.find { it.status == "ATIVO" } ?: contratos.maxByOrNull { it.dataCriacao.time }
+                val bundle = android.os.Bundle().apply {
+                    putLong("contratoId", contrato?.id ?: 0L)
+                    putLongArray("mesasVinculadas", mesasRemovidas)
+                    putString("aditivoTipo", "RETIRADA")
+                }
+                findNavController().navigate(com.example.gestaobilhares.R.id.aditivoSignatureFragment, bundle)
+            } catch (e: Exception) {
+                android.util.Log.e("ClientDetailFragment", "Erro ao abrir aditivo de retirada: ${e.message}")
+            }
+        }
+    }
+
+    private fun abrirFluxoDistrato(clienteId: Long) {
+        try {
+            // Abre diálogo simples para confirmar distrato e gerar PDF
+            com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Encerrar contrato (Distrato)")
+                .setMessage("Todas as mesas foram retiradas. Deseja encerrar o contrato e gerar o Distrato?")
+                .setPositiveButton("Gerar Distrato") { _, _ ->
+                    gerarEDisponibilizarDistrato(clienteId)
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        } catch (e: Exception) {
+            android.util.Log.e("ClientDetailFragment", "Erro ao abrir fluxo de distrato: ${e.message}")
+        }
+    }
+
+    private fun obterContratoAtivoOuMaisRecente(clienteId: Long): Long = 0L
+
+    private fun gerarEDisponibilizarDistrato(clienteId: Long) {
+        lifecycleScope.launch {
+            try {
+                // Carregar contrato e mesas remanescentes (já vazias)
+                val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+                val repo = com.example.gestaobilhares.data.repository.AppRepository(
+                    db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
+                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao()
+                )
+                val contratos = repo.buscarContratosPorCliente(clienteId).first()
+                val contrato = contratos.maxByOrNull { it.dataCriacao.time }
+                if (contrato == null) {
+                    android.widget.Toast.makeText(requireContext(), "Contrato não encontrado", android.widget.Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val mesas = repo.obterMesasPorCliente(contrato.clienteId).first()
+
+                // Calcular fechamento (reuso simplificado): usar último acerto do cliente
+                val ultimo = repo.buscarUltimoAcertoPorCliente(contrato.clienteId)
+                val totalRecebido = ultimo?.valorRecebido ?: 0.0
+                val despesasViagem = 0.0
+                val subtotal = totalRecebido - despesasViagem
+                val comissaoMotorista = subtotal * 0.03
+                val comissaoIltair = totalRecebido * 0.02
+                val totalGeral = subtotal - comissaoMotorista - comissaoIltair
+                val saldoApurado = ultimo?.debitoAtual ?: 0.0
+
+                val fechamento = com.example.gestaobilhares.utils.ContractPdfGenerator.FechamentoResumo(
+                    totalRecebido, despesasViagem, subtotal, comissaoMotorista, comissaoIltair, totalGeral, saldoApurado
+                )
+
+                // Gerar PDF de distrato
+                val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext())
+                    .generateDistratoPdf(
+                        contrato = contrato,
+                        mesas = mesas,
+                        fechamento = fechamento,
+                        confissaoDivida = if (saldoApurado > 0.0) Pair(saldoApurado, java.util.Date()) else null
+                    )
+
+                // Atualizar status do contrato
+                val novoStatus = if (saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
+                repo.atualizarContrato(contrato.copy(status = novoStatus, dataEncerramento = java.util.Date()))
+
+                // Abrir compartilhamento
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    requireContext(),
+                    "${requireContext().packageName}.fileprovider",
+                    pdf
+                )
+                val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                    putExtra(android.content.Intent.EXTRA_SUBJECT, "Distrato ${contrato.numeroContrato}")
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(android.content.Intent.createChooser(shareIntent, "Compartilhar distrato"))
+
+            } catch (e: Exception) {
+                android.util.Log.e("ClientDetailFragment", "Erro ao gerar distrato: ${e.message}", e)
+                android.widget.Toast.makeText(requireContext(), "Erro ao gerar distrato: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
+    }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
@@ -579,6 +685,21 @@ class ClientDetailFragment : Fragment() {
                     .setPositiveButton("Confirmar") { _, _ ->
                         // Usar o relógio final do último acerto automaticamente
                         viewModel.retirarMesaDoCliente(mesa.id, args.clienteId, relogioFinal, 0.0)
+                        // Após retirar, decidir entre aditivo de retirada (parcial) ou distrato (todas)
+                        lifecycleScope.launch {
+                            try {
+                                // Aguardar recarregar listas
+                                kotlinx.coroutines.delay(200)
+                                val mesasRestantes = viewModel.mesasCliente.value.filter { it.ativa }
+                                if (mesasRestantes.isEmpty()) {
+                                    // Todas retiradas → distrato
+                                    abrirFluxoDistrato(args.clienteId)
+                                } else {
+                                    // Parcial → aditivo de retirada
+                                    abrirFluxoAditivoRetirada(args.clienteId, longArrayOf(mesa.id))
+                                }
+                            } catch (_: Exception) {}
+                        }
                     }
                     .setNegativeButton("Cancelar", null)
                     .show()

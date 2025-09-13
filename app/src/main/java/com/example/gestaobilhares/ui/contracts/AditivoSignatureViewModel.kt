@@ -21,6 +21,13 @@ class AditivoSignatureViewModel @Inject constructor(
     // Assinatura pendente para evitar segundo clique caso o aditivo ainda não exista
     private var pendingSignatureBase64: String? = null
 
+    // Tipo do aditivo: INCLUSAO (default) ou RETIRADA
+    private var aditivoTipo: String = "INCLUSAO"
+
+    fun setAditivoTipo(tipo: String) {
+        aditivoTipo = tipo
+    }
+
     private val _aditivo = MutableLiveData<AditivoContrato?>()
     val aditivo: LiveData<AditivoContrato?> = _aditivo
     
@@ -81,7 +88,8 @@ class AditivoSignatureViewModel @Inject constructor(
                     numeroAditivo = numeroAditivo,
                     contratoId = contrato.id,
                     dataAditivo = Date(),
-                    observacoes = observacoes
+                    observacoes = observacoes,
+                    tipo = aditivoTipo
                 )
                 
                 // Salvar aditivo

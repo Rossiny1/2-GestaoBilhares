@@ -51,6 +51,94 @@ class ContractPdfGenerator(private val context: Context) {
         
         return file
     }
+
+    data class FechamentoResumo(
+        val totalRecebido: Double,
+        val despesasViagem: Double,
+        val subtotal: Double,
+        val comissaoMotorista: Double,
+        val comissaoIltair: Double,
+        val totalGeral: Double,
+        val saldoApurado: Double
+    )
+
+    fun generateDistratoPdf(
+        contrato: ContratoLocacao,
+        mesas: List<Mesa>,
+        fechamento: FechamentoResumo,
+        confissaoDivida: Pair<Double, Date?>? = null
+    ): File {
+        val dir = File(context.getExternalFilesDir(null), "distratos_${contrato.numeroContrato}")
+        if (!dir.exists()) dir.mkdirs()
+        val file = File(dir, "distrato_${System.currentTimeMillis()}.pdf")
+
+        val writer = PdfWriter(FileOutputStream(file))
+        val pdfDocument = PdfDocument(writer)
+        val document = Document(pdfDocument)
+
+        try {
+            val font = PdfFontFactory.createFont()
+            val fontBold = PdfFontFactory.createFont("Helvetica-Bold")
+
+            val title = Paragraph("TERMO DE DISTRATO DO CONTRATO DE LOCAÇÃO")
+                .setFont(fontBold).setFontSize(16f).setMarginBottom(20f)
+            val numero = Paragraph("Contrato nº: ${contrato.numeroContrato}")
+                .setFont(fontBold).setFontSize(12f).setMarginBottom(20f)
+            document.add(title); document.add(numero)
+
+            addPartiesSection(document, contrato, font, fontBold)
+
+            // Equipamentos devolvidos (todas as mesas do contrato)
+            addClause(document, "CLÁUSULA 1ª – DA DEVOLUÇÃO DO OBJETO", fontBold, font)
+            val devolucao1 = Paragraph("1.1. O LOCATÁRIO devolve à LOCADORA todos os equipamentos locados, em regular estado de conservação, conforme vistoria no ato da retirada.")
+                .setFont(font).setFontSize(10f).setMarginBottom(5f)
+            document.add(devolucao1)
+            if (mesas.isNotEmpty()) {
+                val lista = com.itextpdf.layout.element.List()
+                mesas.forEach { m ->
+                    val itemText = "${getTipoEquipamentoNome(m.tipoMesa)} nº ${m.numero}"
+                    lista.add(ListItem(itemText))
+                }
+                document.add(lista)
+            }
+
+            // Resumo de fechamento
+            addClause(document, "CLÁUSULA 2ª – DO ACERTO DE FECHAMENTO", fontBold, font)
+            val resumo = Paragraph(
+                "Total Recebido: R$ ${formatMoney(fechamento.totalRecebido)}\n" +
+                "Despesas de viagem: R$ ${formatMoney(fechamento.despesasViagem)}\n" +
+                "Subtotal: R$ ${formatMoney(fechamento.subtotal)}\n" +
+                "Comissão motorista (3%): R$ ${formatMoney(fechamento.comissaoMotorista)}\n" +
+                "Comissão Iltair (2%): R$ ${formatMoney(fechamento.comissaoIltair)}\n" +
+                "Total Geral: R$ ${formatMoney(fechamento.totalGeral)}\n" +
+                "Saldo Apurado: R$ ${formatMoney(fechamento.saldoApurado)}"
+            ).setFont(font).setFontSize(10f).setMarginBottom(10f)
+            document.add(resumo)
+
+            // Quitação ou Confissão de Dívida
+            if (confissaoDivida == null || confissaoDivida.first <= 0.0) {
+                val quitacao = Paragraph("2.1. As partes dão-se plena, geral e irrevogável quitação, nada mais tendo a reclamar uma da outra a qualquer título, relativamente ao contrato ora distratado.")
+                    .setFont(font).setFontSize(10f).setMarginBottom(15f)
+                document.add(quitacao)
+            } else {
+                addClause(document, "CLÁUSULA 3ª – CONFISSÃO DE DÍVIDA", fontBold, font)
+                val (valor, venc) = confissaoDivida
+                val vencTxt = venc?.let { SimpleDateFormat("dd/MM/yyyy", Locale("pt","BR")).format(it) } ?: "imediato"
+                val conf = Paragraph(
+                    "3.1. O LOCATÁRIO confessa dever à LOCADORA a quantia de R$ ${formatMoney(valor)}, obrigando-se ao pagamento até ${vencTxt}. O não pagamento no prazo sujeitará o devedor às penalidades contratuais e legais."
+                ).setFont(font).setFontSize(10f).setMarginBottom(15f)
+                document.add(conf)
+            }
+
+            addSignatures(document, contrato, font, fontBold)
+        } finally {
+            document.close()
+        }
+
+        return file
+    }
+
+    private fun formatMoney(v: Double): String = String.format(Locale("pt","BR"), "%.2f", v)
     
     private fun addTitle(document: Document, numeroContrato: String, fontBold: com.itextpdf.kernel.font.PdfFont) {
         val title = Paragraph("CONTRATO DE LOCAÇÃO DE EQUIPAMENTO DE DIVERSÃO")

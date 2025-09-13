@@ -66,6 +66,8 @@ class AditivoSignatureFragment : Fragment() {
         // Carregar dados do aditivo
         contratoId = arguments?.getLong("contratoId") ?: 0L
         val mesasIds = arguments?.getLongArray("mesasVinculadas") ?: longArrayOf()
+        val tipo = arguments?.getString("aditivoTipo")
+        tipo?.let { viewModel.setAditivoTipo(it) }
         
         if (contratoId != 0L && mesasIds.isNotEmpty()) {
             viewModel.carregarDados(contratoId, mesasIds)
