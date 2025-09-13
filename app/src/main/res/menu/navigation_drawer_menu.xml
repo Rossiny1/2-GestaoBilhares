@@ -34,6 +34,11 @@
             android:id="@+id/nav_manage_routes"
             android:icon="@drawable/ic_route"
             android:title="Gerenciar Rotas" />
+        
+        <item
+            android:id="@+id/nav_manage_contracts"
+            android:icon="@drawable/ic_contract"
+            android:title="Gerenciar Contratos" />
     </group>
 
     <!-- Grupo: Relatórios -->

@@ -215,6 +215,13 @@ class UserSessionManager private constructor(context: Context) {
     }
     
     /**
+     * Verifica se o usuário tem permissão para gerenciar contratos
+     */
+    fun canManageContracts(): Boolean {
+        return isAdmin() && isApproved()
+    }
+    
+    /**
      * Verifica se o usuário pode acessar uma rota específica
      * Para usuários USER, só podem acessar rotas onde são responsáveis
      * Para usuários ADMIN, podem acessar todas as rotas

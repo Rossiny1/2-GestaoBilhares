@@ -49,6 +49,10 @@
         <action
             android:id="@+id/action_routesFragment_to_gerenciarMesasFragment"
             app:destination="@id/gerenciarMesasFragment" />
+        <!-- ✅ NOVO: Navegação para gerenciar contratos -->
+        <action
+            android:id="@+id/action_routesFragment_to_contractManagementFragment"
+            app:destination="@id/contractManagementFragment" />
     </fragment>
 
     <fragment
@@ -468,5 +472,10 @@
             android:name="contrato_id"
             app:argType="long" />
     </fragment>
+
+    <fragment
+        android:id="@+id/contractManagementFragment"
+        android:name="com.example.gestaobilhares.ui.contracts.ContractManagementFragment"
+        android:label="Gerenciar Contratos" />
 
 </navigation> 

@@ -26,6 +26,15 @@ interface ContratoLocacaoDao {
     @Query("SELECT COUNT(*) FROM contratos_locacao WHERE strftime('%Y', dataCriacao/1000, 'unixepoch') = :ano")
     suspend fun contarContratosPorAno(ano: String): Int
     
+    @Query("SELECT COUNT(*) FROM contratos_locacao")
+    suspend fun contarContratosGerados(): Int
+    
+    @Query("SELECT COUNT(*) FROM contratos_locacao WHERE assinaturaLocatario IS NOT NULL")
+    suspend fun contarContratosAssinados(): Int
+    
+    @Query("SELECT * FROM contratos_locacao WHERE assinaturaLocatario IS NOT NULL ORDER BY dataCriacao DESC")
+    suspend fun obterContratosAssinados(): List<ContratoLocacao>
+    
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserirContrato(contrato: ContratoLocacao): Long
     

@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background_clientes">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Header Moderno -->
+            <com.google.android.material.appbar.AppBarLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/background_billiard_hall"
+                app:elevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageButton
+                        android:id="@+id/btnBack"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Voltar"
+                        android:src="@drawable/ic_arrow_back"
+                        app:tint="@color/text_on_primary" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/fabSearch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/ic_search"
+                        app:backgroundTint="@color/blue_600"
+                        app:fabSize="mini"
+                        app:tint="@color/white" />
+
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/fabFilter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_filter"
+                        app:backgroundTint="@color/orange_500"
+                        app:fabSize="mini"
+                        app:tint="@color/white" />
+
+                </LinearLayout>
+
+            </com.google.android.material.appbar.AppBarLayout>
+
+            <!-- Hero Section -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="280dp">
+
+                <!-- Informações do Gerenciamento -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="bottom"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:background="@android:color/transparent">
+
+                    <!-- Título -->
+                    <TextView
+                        android:id="@+id/tvTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Gerenciar Contratos"
+                        android:textColor="@color/white"
+                        android:textSize="28sp"
+                        android:textStyle="bold"
+                        android:shadowColor="@color/black"
+                        android:shadowDx="2"
+                        android:shadowDy="2"
+                        android:shadowRadius="4" />
+
+                    <!-- Subtítulo -->
+                    <TextView
+                        android:id="@+id/tvSubtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Gerencie todos os contratos de locação"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:alpha="0.9"
+                        android:shadowColor="@color/black"
+                        android:shadowDx="1"
+                        android:shadowDy="1"
+                        android:shadowRadius="2" />
+
+                </LinearLayout>
+
+            </FrameLayout>
+
+            <!-- Cards de Estatísticas -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:paddingTop="0dp">
+
+                <!-- Card Total Clientes -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/white">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_people"
+                            app:tint="@color/blue_600" />
+
+                        <TextView
+                            android:id="@+id/tvTotalClientes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="0"
+                            android:textColor="@color/blue_600"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Total Clientes"
+                            android:textColor="@color/gray_700"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Card Contratos Gerados -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="4dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/white">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_contract"
+                            app:tint="@color/green_600" />
+
+                        <TextView
+                            android:id="@+id/tvContratosGerados"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="0"
+                            android:textColor="@color/green_600"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Contratos Gerados"
+                            android:textColor="@color/gray_700"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Card Contratos Assinados -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="@color/white">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_check"
+                            app:tint="@color/purple_600" />
+
+                        <TextView
+                            android:id="@+id/tvContratosAssinados"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="0"
+                            android:textColor="@color/purple_600"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Contratos Assinados"
+                            android:textColor="@color/gray_700"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+            <!-- Filtros Rápidos -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:paddingTop="8dp">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipTodos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="Todos"
+                    android:textColor="@color/blue_700"
+                    app:chipBackgroundColor="@color/blue_100"
+                    app:chipStrokeColor="@color/blue_600"
+                    app:chipStrokeWidth="2dp"
+                    app:checkedIconEnabled="false" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipComContrato"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="Com Contrato"
+                    android:textColor="@color/green_700"
+                    app:chipBackgroundColor="@color/green_100"
+                    app:chipStrokeColor="@color/green_600"
+                    app:chipStrokeWidth="2dp"
+                    app:checkedIconEnabled="false" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipSemContrato"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="Sem Contrato"
+                    android:textColor="@color/orange_700"
+                    app:chipBackgroundColor="@color/orange_100"
+                    app:chipStrokeColor="@color/orange_600"
+                    app:chipStrokeWidth="2dp"
+                    app:checkedIconEnabled="false" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipAssinados"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Assinados"
+                    android:textColor="@color/teal_700"
+                    app:chipBackgroundColor="@color/purple_100"
+                    app:chipStrokeColor="@color/teal_700"
+                    app:chipStrokeWidth="2dp"
+                    app:checkedIconEnabled="false" />
+
+            </LinearLayout>
+
+            <!-- Lista de Contratos -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvContracts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_marginTop="8dp"
+                android:clipToPadding="false"
+                android:paddingBottom="100dp"
+                tools:listitem="@layout/item_contract_management" />
+
+            <!-- Estado Vazio -->
+            <LinearLayout
+                android:id="@+id/layoutEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_contract"
+                    app:tint="@color/text_secondary"
+                    android:alpha="0.5" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Nenhum contrato encontrado"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Ajuste os filtros ou gere novos contratos"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:alpha="0.7" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- FAB Principal -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabMain"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="Menu de ações"
+        android:src="@drawable/ic_add"
+        app:backgroundTint="@color/yellow_600"
+        app:tint="@color/white"
+        app:fabSize="normal" />
+
+    <!-- Container para FABs expandidos -->
+    <LinearLayout
+        android:id="@+id/fab_expanded_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="80dp"
+        android:orientation="vertical"
+        android:gravity="end"
+        android:visibility="gone">
+
+        <!-- FAB Gerar Contrato com Label -->
+        <LinearLayout
+            android:id="@+id/fab_generate_contract_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="?attr/colorSurface"
+            android:elevation="8dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:alpha="0">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gerar Contrato"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_generate_contract"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Gerar Contrato"
+                android:src="@drawable/ic_contract"
+                app:fabSize="mini"
+                app:backgroundTint="@color/blue_600"
+                app:tint="@color/white"
+                android:clickable="false" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
