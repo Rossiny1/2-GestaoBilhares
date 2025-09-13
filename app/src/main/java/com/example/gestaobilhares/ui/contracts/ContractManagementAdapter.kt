@@ -80,7 +80,11 @@ class ContractManagementAdapter(
             // Configurar informações do contrato
             contrato?.let { contract ->
                 val baseNumero = contract.numeroContrato ?: "N/A"
-                val withBadge = if (aditivos.isNotEmpty()) "$baseNumero  •  ${aditivos.size} aditivo(s)" else baseNumero
+                val badges = mutableListOf<String>()
+                if (aditivos.isNotEmpty()) badges.add("${aditivos.size} aditivo(s)")
+                if (item.aditivosRetiradaCount > 0) badges.add("${item.aditivosRetiradaCount} retirada(s)")
+                if (item.hasDistrato) badges.add("distrato")
+                val withBadge = if (badges.isNotEmpty()) "$baseNumero  •  ${badges.joinToString("  •  ")}" else baseNumero
                 binding.tvNumeroContrato.text = withBadge
                 
                 // Formatar data de criação

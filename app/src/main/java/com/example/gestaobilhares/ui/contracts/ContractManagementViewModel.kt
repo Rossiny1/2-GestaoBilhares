@@ -97,6 +97,9 @@ class ContractManagementViewModel @Inject constructor(
             val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
             val mesas = repository.obterMesasPorCliente(contrato.clienteId).first()
             val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
+            val aditivosRetirada = aditivos.filter { it.tipo.equals("RETIRADA", ignoreCase = true) }
+            val hasDistrato = !contrato.status.equals("ATIVO", ignoreCase = true)
+            val statusLabel = mapStatusLabel(contrato)
             
             ContractItem(
                 contrato = contrato,
@@ -104,7 +107,9 @@ class ContractManagementViewModel @Inject constructor(
                 rota = rota,
                 mesas = mesas,
                 aditivos = aditivos,
-                status = if (contrato.assinaturaLocatario != null) "Assinado" else "Gerado"
+                aditivosRetiradaCount = aditivosRetirada.size,
+                hasDistrato = hasDistrato,
+                status = statusLabel
             )
         }
     }
@@ -119,6 +124,9 @@ class ContractManagementViewModel @Inject constructor(
             val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
             val mesas = repository.obterMesasPorCliente(contrato.clienteId).first()
             val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
+            val aditivosRetirada = aditivos.filter { it.tipo.equals("RETIRADA", ignoreCase = true) }
+            val hasDistrato = !contrato.status.equals("ATIVO", ignoreCase = true)
+            val statusLabel = mapStatusLabel(contrato)
             
             ContractItem(
                 contrato = contrato,
@@ -126,7 +134,9 @@ class ContractManagementViewModel @Inject constructor(
                 rota = rota,
                 mesas = mesas,
                 aditivos = aditivos,
-                status = if (contrato.assinaturaLocatario != null) "Assinado" else "Gerado"
+                aditivosRetiradaCount = aditivosRetirada.size,
+                hasDistrato = hasDistrato,
+                status = statusLabel
             )
         }
     }
@@ -163,6 +173,9 @@ class ContractManagementViewModel @Inject constructor(
             val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
             val mesas = repository.obterMesasPorCliente(contrato.clienteId).first()
             val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
+            val aditivosRetirada = aditivos.filter { it.tipo.equals("RETIRADA", ignoreCase = true) }
+            val hasDistrato = !contrato.status.equals("ATIVO", ignoreCase = true)
+            val statusLabel = mapStatusLabel(contrato)
             
             ContractItem(
                 contrato = contrato,
@@ -170,7 +183,9 @@ class ContractManagementViewModel @Inject constructor(
                 rota = rota,
                 mesas = mesas,
                 aditivos = aditivos,
-                status = "Assinado"
+                aditivosRetiradaCount = aditivosRetirada.size,
+                hasDistrato = hasDistrato,
+                status = statusLabel
             )
         }
     }
@@ -206,6 +221,9 @@ class ContractManagementViewModel @Inject constructor(
                     val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
                     val mesas = cliente?.let { repository.obterMesasPorCliente(it.id).first() } ?: emptyList()
                     val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
+                    val aditivosRetirada = aditivos.filter { it.tipo.equals("RETIRADA", ignoreCase = true) }
+                    val hasDistrato = !contrato.status.equals("ATIVO", ignoreCase = true)
+                    val statusLabel = mapStatusLabel(contrato)
                     
                     ContractItem(
                         contrato = contrato,
@@ -213,7 +231,9 @@ class ContractManagementViewModel @Inject constructor(
                         rota = rota,
                         mesas = mesas,
                         aditivos = aditivos,
-                        status = if (contrato.assinaturaLocatario != null) "Assinado" else "Gerado"
+                        aditivosRetiradaCount = aditivosRetirada.size,
+                        hasDistrato = hasDistrato,
+                        status = statusLabel
                     )
                 }
                 
@@ -245,6 +265,9 @@ class ContractManagementViewModel @Inject constructor(
                     val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
                     val mesas = cliente?.let { repository.obterMesasPorCliente(it.id).first() } ?: emptyList()
                     val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
+                    val aditivosRetirada = aditivos.filter { it.tipo.equals("RETIRADA", ignoreCase = true) }
+                    val hasDistrato = !contrato.status.equals("ATIVO", ignoreCase = true)
+                    val statusLabel = mapStatusLabel(contrato)
                     
                     ContractItem(
                         contrato = contrato,
@@ -252,7 +275,9 @@ class ContractManagementViewModel @Inject constructor(
                         rota = rota,
                         mesas = mesas,
                         aditivos = aditivos,
-                        status = if (contrato.assinaturaLocatario != null) "Assinado" else "Gerado"
+                        aditivosRetiradaCount = aditivosRetirada.size,
+                        hasDistrato = hasDistrato,
+                        status = statusLabel
                     )
                 }
                 
@@ -261,6 +286,16 @@ class ContractManagementViewModel @Inject constructor(
                 _contracts.value = emptyList()
             }
             _isLoading.value = false
+        }
+    }
+
+    private fun mapStatusLabel(contrato: ContratoLocacao): String {
+        return when (contrato.status.uppercase()) {
+            "ATIVO" -> if (contrato.assinaturaLocatario != null) "Ativo (Assinado)" else "Ativo (Gerado)"
+            "ENCERRADO_QUITADO" -> "Encerrado (Quitado)"
+            "RESCINDIDO_COM_DIVIDA" -> "Rescindido (Com dívida)"
+            "RESCINDIDO" -> "Rescindido"
+            else -> contrato.status
         }
     }
     
@@ -296,6 +331,8 @@ class ContractManagementViewModel @Inject constructor(
         val rota: Rota?,
         val mesas: List<Mesa>,
         val aditivos: List<AditivoContrato>,
+        val aditivosRetiradaCount: Int = 0,
+        val hasDistrato: Boolean = false,
         val status: String
     )
 
