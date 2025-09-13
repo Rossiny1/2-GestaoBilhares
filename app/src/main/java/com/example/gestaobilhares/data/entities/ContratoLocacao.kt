@@ -48,7 +48,8 @@ data class ContratoLocacao(
     // Status e datas
     val dataContrato: Date,
     val dataInicio: Date,
-    val status: String = "ATIVO", // ATIVO, RESCINDIDO, SUSPENSO
+    val status: String = "ATIVO", // ATIVO, RESCINDIDO, ENCERRADO_QUITADO, RESCINDIDO_COM_DIVIDA
+    val dataEncerramento: Date? = null,
     val assinaturaLocador: String? = null, // Base64 da assinatura
     val assinaturaLocatario: String? = null, // Base64 da assinatura
     
@@ -111,6 +112,7 @@ data class AditivoContrato(
     // Dados do aditivo
     val dataAditivo: Date,
     val observacoes: String? = null,
+    val tipo: String = "INCLUSAO", // INCLUSAO ou RETIRADA
     
     // Assinaturas
     val assinaturaLocador: String? = null, // Base64 da assinatura
