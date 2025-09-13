@@ -42,7 +42,9 @@ class AditivoPdfGenerator(private val context: Context) {
             val fontBold = PdfFontFactory.createFont("Helvetica-Bold")
             
             // Título
-            addTitle(document, aditivo.numeroAditivo, contrato.numeroContrato, fontBold)
+            val tituloNumero = if (aditivo.tipo.equals("RETIRADA", ignoreCase = true))
+                aditivo.numeroAditivo + " (RETIRADA)" else aditivo.numeroAditivo
+            addTitle(document, tituloNumero, contrato.numeroContrato, fontBold)
             
             // Identificação das Partes
             addPartiesSection(document, contrato, font, fontBold)
@@ -109,132 +111,79 @@ class AditivoPdfGenerator(private val context: Context) {
     }
     
     private fun addAditivoClauses(document: Document, aditivo: AditivoContrato, contrato: ContratoLocacao, mesas: List<Mesa>, font: com.itextpdf.kernel.font.PdfFont, fontBold: com.itextpdf.kernel.font.PdfFont) {
-        // Cláusula 1ª - DO OBJETO DO ADITIVO
+        val isRetirada = aditivo.tipo.equals("RETIRADA", ignoreCase = true)
         addClause(document, "CLÁUSULA 1ª – DO OBJETO DO ADITIVO", fontBold, font)
-        
-        val objeto1 = Paragraph("1.1. O presente aditivo tem por objeto a inclusão de novos equipamentos ao contrato de locação original.")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(5f)
-        
-        // Contar quantidade de cada tipo de equipamento
+
         val equipamentosPorTipo = mesas.groupBy { it.tipoMesa }
         val descricaoEquipamentos = equipamentosPorTipo.map { (tipo, lista) ->
             val nomeTipo = getTipoEquipamentoNome(tipo)
             val quantidade = lista.size
             "$quantidade $nomeTipo${if (quantidade > 1) "s" else ""}"
         }.joinToString(", ")
-        
-        val objeto2 = Paragraph("1.2. Novos equipamentos a serem incluídos: $descricaoEquipamentos")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(5f)
-        
         val numerosSerie = mesas.joinToString("; ") { it.numero.toString() }
-        val objeto3 = Paragraph("1.3. Número de Série/Identificação dos novos equipamentos: $numerosSerie")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(5f)
-        
-        val objeto4 = Paragraph("1.4. Os novos equipamentos serão entregues em perfeito estado de funcionamento e conservação, conforme verificado pelo(a) LOCATÁRIO(A) no ato da instalação.")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(15f)
-        
-        document.add(objeto1)
-        document.add(objeto2)
-        document.add(objeto3)
-        document.add(objeto4)
-        
-        // Cláusula 2ª - DAS CONDIÇÕES FINANCEIRAS
-        addClause(document, "CLÁUSULA 2ª – DAS CONDIÇÕES FINANCEIRAS", fontBold, font)
-        
-        val condicoes1 = Paragraph("2.1. Os novos equipamentos incluídos seguirão as mesmas condições financeiras estabelecidas no contrato original.")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(5f)
-        
-        val condicoes2 = if (contrato.tipoPagamento == "PERCENTUAL") {
-            Paragraph("2.2. O aluguel dos novos equipamentos corresponderá a ${contrato.percentualReceita}% (${contrato.percentualReceita} por cento) da receita bruta apurada nos novos equipamentos, considerada antes da incidência de quaisquer tributos ou deduções.")
-        } else {
-            Paragraph("2.2. O aluguel dos novos equipamentos será calculado proporcionalmente ao valor mensal estabelecido no contrato original (R$ ${String.format("%.2f", contrato.valorMensal)}), considerando a quantidade e tipo dos equipamentos adicionados.")
-        }
-        condicoes2.setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(5f)
-        
-        val condicoes3 = Paragraph("2.3. A apuração da receita e o pagamento do aluguel dos novos equipamentos seguirão o mesmo cronograma estabelecido no contrato original.")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(15f)
-        
-        document.add(condicoes1)
-        document.add(condicoes2)
-        document.add(condicoes3)
 
-        // 2.4 (espelhando a cláusula 2.4 do contrato principal para equipamentos por ficha)
-        val condicoes4 = Paragraph(
-            "2.4. O preço das Fichas dos novos equipamentos será definido pelo representante da LOCADORA no ato da locação/instalação. O valor estabelecido será informado ao(à) LOCATÁRIO(A) através do Recibo de Acerto ou por meio de uma placa informativa de preços entregue no momento da instalação, nos mesmos termos da cláusula 2.4 do Contrato de Locação original."
-        )
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(15f)
-        document.add(condicoes4)
-        
-        // Cláusula 3ª - DAS OBRIGAÇÕES
+        if (!isRetirada) {
+            val objeto1 = Paragraph("1.1. O presente aditivo tem por objeto a inclusão de novos equipamentos ao contrato de locação original.")
+                .setFont(font).setFontSize(10f).setMarginBottom(5f)
+            val objeto2 = Paragraph("1.2. Novos equipamentos a serem incluídos: $descricaoEquipamentos")
+                .setFont(font).setFontSize(10f).setMarginBottom(5f)
+            val objeto3 = Paragraph("1.3. Número de Série/Identificação dos novos equipamentos: $numerosSerie")
+                .setFont(font).setFontSize(10f).setMarginBottom(5f)
+            val objeto4 = Paragraph("1.4. Os novos equipamentos serão entregues em perfeito estado de funcionamento e conservação, conforme verificado pelo(a) LOCATÁRIO(A) no ato da instalação.")
+                .setFont(font).setFontSize(10f).setMarginBottom(15f)
+            document.add(objeto1); document.add(objeto2); document.add(objeto3); document.add(objeto4)
+        } else {
+            val objeto1 = Paragraph("1.1. O presente aditivo tem por objeto a RETIRADA de equipamentos do contrato de locação original, com ciência do(a) LOCATÁRIO(A).")
+                .setFont(font).setFontSize(10f).setMarginBottom(5f)
+            val objeto2 = Paragraph("1.2. Equipamentos a serem retirados: $descricaoEquipamentos")
+                .setFont(font).setFontSize(10f).setMarginBottom(5f)
+            val objeto3 = Paragraph("1.3. Número de Série/Identificação dos equipamentos retirados: $numerosSerie")
+                .setFont(font).setFontSize(10f).setMarginBottom(5f)
+            val objeto4 = Paragraph("1.4. As demais cláusulas do contrato original permanecem válidas para os equipamentos remanescentes.")
+                .setFont(font).setFontSize(10f).setMarginBottom(15f)
+            document.add(objeto1); document.add(objeto2); document.add(objeto3); document.add(objeto4)
+        }
+
+        addClause(document, "CLÁUSULA 2ª – DAS CONDIÇÕES FINANCEIRAS", fontBold, font)
+        if (!isRetirada) {
+            val condicoes1 = Paragraph("2.1. Os novos equipamentos incluídos seguirão as mesmas condições financeiras estabelecidas no contrato original.")
+                .setFont(font).setFontSize(10f).setMarginBottom(5f)
+            val condicoes2 = if (contrato.tipoPagamento == "PERCENTUAL") {
+                Paragraph("2.2. O aluguel dos novos equipamentos corresponderá a ${contrato.percentualReceita}% (${contrato.percentualReceita} por cento) da receita bruta apurada nos novos equipamentos, considerada antes da incidência de quaisquer tributos ou deduções.")
+            } else {
+                Paragraph("2.2. O aluguel dos novos equipamentos será calculado proporcionalmente ao valor mensal estabelecido no contrato original (R$ ${String.format("%.2f", contrato.valorMensal)}), considerando a quantidade e tipo dos equipamentos adicionados.")
+            }.setFont(font).setFontSize(10f).setMarginBottom(5f)
+            val condicoes3 = Paragraph("2.3. A apuração da receita e o pagamento do aluguel dos novos equipamentos seguirão o mesmo cronograma estabelecido no contrato original.")
+                .setFont(font).setFontSize(10f).setMarginBottom(15f)
+            document.add(condicoes1); document.add(condicoes2); document.add(condicoes3)
+
+            val condicoes4 = Paragraph("2.4. O preço das Fichas será definido pelo representante da LOCADORA no ato da locação/instalação, informado no Recibo de Acerto ou placa informativa, conforme cláusula 2.4 do Contrato de Locação original.")
+                .setFont(font).setFontSize(10f).setMarginBottom(15f)
+            document.add(condicoes4)
+        } else {
+            val c1 = Paragraph("2.1. A retirada implica ajuste proporcional da base de cálculo do aluguel, mantendo-se o mesmo modelo financeiro (percentual ou valor fixo) do contrato original.")
+                .setFont(font).setFontSize(10f).setMarginBottom(5f)
+            val c2 = Paragraph("2.2. A apuração e o pagamento considerarão apenas os equipamentos remanescentes a partir desta data.")
+                .setFont(font).setFontSize(10f).setMarginBottom(15f)
+            document.add(c1); document.add(c2)
+        }
+
         addClause(document, "CLÁUSULA 3ª – DAS OBRIGAÇÕES", fontBold, font)
-        
-        val obrigacoes1 = Paragraph("3.1. O(A) LOCATÁRIO(A) se obriga a cumprir todas as obrigações estabelecidas no contrato original em relação aos novos equipamentos.")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(5f)
-        
-        val obrigacoes2 = Paragraph("3.2. A LOCADORA se obriga a realizar a manutenção técnica dos novos equipamentos sempre que necessário, nos mesmos termos do contrato original.")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(5f)
-        
-        val obrigacoes3 = Paragraph("3.3. Todas as demais cláusulas do contrato original permanecem inalteradas e aplicáveis aos novos equipamentos.")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(15f)
-        
-        document.add(obrigacoes1)
-        document.add(obrigacoes2)
-        document.add(obrigacoes3)
-        
-        // Cláusula 4ª - DA VIGÊNCIA
+        val obrig = Paragraph("3.1. Permanecem inalteradas e aplicáveis as obrigações do contrato original, no que couber.")
+            .setFont(font).setFontSize(10f).setMarginBottom(15f)
+        document.add(obrig)
+
         addClause(document, "CLÁUSULA 4ª – DA VIGÊNCIA", fontBold, font)
-        
-        val vigencia1 = Paragraph("4.1. O presente aditivo entra em vigor na data de sua assinatura pelas partes.")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(5f)
-        
-        val vigencia2 = Paragraph("4.2. O presente aditivo integra o contrato original, não o substituindo, mas complementando-o.")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(5f)
-        
-        val vigencia3 = Paragraph("4.3. Em caso de rescisão do contrato original, o presente aditivo será automaticamente rescindido, aplicando-se as mesmas condições de rescisão.")
-            .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(15f)
-        
-        document.add(vigencia1)
-        document.add(vigencia2)
-        document.add(vigencia3)
-        
-        // Observações se houver
+        val v1 = Paragraph("4.1. O presente aditivo entra em vigor na data de sua assinatura pelas partes.")
+            .setFont(font).setFontSize(10f).setMarginBottom(5f)
+        val v2 = Paragraph("4.2. Este aditivo integra o contrato original, complementando-o no que aqui se estabelece.")
+            .setFont(font).setFontSize(10f).setMarginBottom(15f)
+        document.add(v1); document.add(v2)
+
         aditivo.observacoes?.let { observacoes ->
             if (observacoes.isNotBlank()) {
                 addClause(document, "CLÁUSULA 5ª – DAS OBSERVAÇÕES", fontBold, font)
-                
-                val obs = Paragraph("5.1. $observacoes")
-                    .setFont(font)
-                    .setFontSize(10f)
-                    .setMarginBottom(15f)
-                
+                val obs = Paragraph("5.1. $observacoes").setFont(font).setFontSize(10f).setMarginBottom(15f)
                 document.add(obs)
             }
         }
