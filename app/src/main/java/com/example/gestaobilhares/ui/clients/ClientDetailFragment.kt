@@ -96,12 +96,33 @@ class ClientDetailFragment : Fragment() {
                 .setTitle("Encerrar contrato (Distrato)")
                 .setMessage("Todas as mesas foram retiradas. Deseja encerrar o contrato e gerar o Distrato?")
                 .setPositiveButton("Gerar Distrato") { _, _ ->
-                    gerarEDisponibilizarDistrato(clienteId)
+                    abrirAssinaturaDistrato(clienteId)
                 }
                 .setNegativeButton("Cancelar", null)
                 .show()
         } catch (e: Exception) {
             android.util.Log.e("ClientDetailFragment", "Erro ao abrir fluxo de distrato: ${e.message}")
+        }
+    }
+
+    private fun abrirAssinaturaDistrato(clienteId: Long) {
+        lifecycleScope.launch {
+            try {
+                val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+                val repo = com.example.gestaobilhares.data.repository.AppRepository(
+                    db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
+                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao()
+                )
+                val contratos = repo.buscarContratosPorCliente(clienteId).first()
+                val contrato = contratos.maxByOrNull { it.dataCriacao.time } ?: return@launch
+                val bundle = android.os.Bundle().apply {
+                    putLong("contrato_id", contrato.id)
+                    putString("assinatura_contexto", "DISTRATO")
+                }
+                findNavController().navigate(com.example.gestaobilhares.R.id.signatureCaptureFragment, bundle)
+            } catch (e: Exception) {
+                android.util.Log.e("ClientDetailFragment", "Erro ao abrir assinatura do distrato: ${e.message}")
+            }
         }
     }
 

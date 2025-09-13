@@ -48,7 +48,7 @@ class SignatureCaptureFragment : Fragment() {
     lateinit var metadataCollector: SignatureMetadataCollector
     
     private var signatureBitmap: Bitmap? = null
-    
+    private var assinaturaContexto: String? = null // null|"CONTRATO"|"DISTRATO"
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,6 +63,7 @@ class SignatureCaptureFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         val contratoId = arguments?.getLong("contrato_id") ?: 0L
+        assinaturaContexto = arguments?.getString("assinatura_contexto")
         
         viewModel.carregarContrato(contratoId)
         setupObservers()
@@ -74,7 +75,8 @@ class SignatureCaptureFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.contrato.collect { contrato ->
                 contrato?.let {
-                    binding.tvContratoInfo.text = "Contrato: ${it.numeroContrato}\nLocatário: ${it.locatarioNome}"
+                    val titulo = if (assinaturaContexto == "DISTRATO") "Assinatura do Distrato" else "Assinatura do Contrato"
+                    binding.tvContratoInfo.text = "$titulo\nContrato: ${it.numeroContrato}\nLocatário: ${it.locatarioNome}"
                 }
             }
         }
@@ -106,26 +108,14 @@ class SignatureCaptureFragment : Fragment() {
     }
     
     private fun setupSignatureView() {
-        // A SignatureView já tem seu próprio onTouchEvent implementado
-        // Não precisamos de um OnTouchListener adicional
-        
-        // Customizar a view de assinatura
         binding.signatureView.setBackgroundColor(Color.WHITE)
     }
     
     private fun setupClickListeners() {
         binding.apply {
-            btnLimparAssinatura.setOnClickListener {
-                limparAssinatura()
-            }
-            
-            btnSalvarAssinatura.setOnClickListener {
-                salvarAssinatura()
-            }
-            
-            btnEnviarWhatsApp.setOnClickListener {
-                verificarPermissaoEEnviar()
-            }
+            btnLimparAssinatura.setOnClickListener { limparAssinatura() }
+            btnSalvarAssinatura.setOnClickListener { salvarAssinatura() }
+            btnEnviarWhatsApp.setOnClickListener { verificarPermissaoEEnviar() }
         }
     }
     
@@ -136,59 +126,40 @@ class SignatureCaptureFragment : Fragment() {
     
     private fun salvarAssinatura() {
         if (!binding.signatureView.hasSignature()) {
-            Toast.makeText(requireContext(), "Por favor, assine o contrato", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Por favor, assine", Toast.LENGTH_SHORT).show()
             return
         }
         
-        // Verificar se a assinatura é válida
         val statistics = binding.signatureView.getSignatureStatistics()
-        
-        // Log para debug
-        Log.d(TAG, "Estatísticas da assinatura:")
-        Log.d(TAG, "Total de pontos: ${statistics.totalPoints}")
-        Log.d(TAG, "Duração: ${statistics.duration}ms")
-        Log.d(TAG, "Pressão média: ${statistics.averagePressure}")
-        Log.d(TAG, "Velocidade média: ${statistics.averageVelocity}")
         Log.d(TAG, "Assinatura válida: ${statistics.isValidSignature()}")
-        
         if (!statistics.isValidSignature()) {
-            Toast.makeText(requireContext(), "Assinatura muito simples. Por favor, assine novamente com mais detalhes.", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "Assinatura muito simples. Por favor, assine novamente.", Toast.LENGTH_LONG).show()
             return
         }
         
-        // Capturar assinatura como bitmap
         signatureBitmap = binding.signatureView.getSignatureBitmap()
-        
-        // Gerar hash da assinatura
         val signatureHash = documentIntegrityManager.generateSignatureHash(signatureBitmap!!)
-        
-        // Coletar metadados jurídicos
         val contrato = viewModel.contrato.value
         if (contrato != null) {
-            val documentHash = documentIntegrityManager.generateDocumentHash(ByteArray(0)) // TODO: Obter hash real do documento
+            val documentHash = documentIntegrityManager.generateDocumentHash(ByteArray(0))
             val metadata = metadataCollector.collectSignatureMetadata(documentHash, signatureHash)
-            
-            // Registrar log jurídico
             viewLifecycleOwner.lifecycleScope.launch {
                 legalLogger.logSignatureEvent(
                     contratoId = contrato.id,
                     userId = contrato.clienteId.toString(),
-                    action = "ASSINATURA_SALVA",
+                    action = if (assinaturaContexto == "DISTRATO") "ASSINATURA_DISTRATO" else "ASSINATURA_CONTRATO",
                     metadata = metadata
                 )
-                
-                Log.d(TAG, "Log jurídico registrado para contrato ${contrato.id}")
-                Log.d(TAG, statistics.generateSummary())
             }
         }
         
-        // Converter para Base64
         val assinaturaBase64 = bitmapToBase64(signatureBitmap!!)
-        
-        // Salvar no ViewModel
-        viewModel.salvarAssinatura(assinaturaBase64)
+        if (assinaturaContexto == "DISTRATO") {
+            viewModel.salvarAssinaturaDistrato(assinaturaBase64)
+        } else {
+            viewModel.salvarAssinatura(assinaturaBase64)
+        }
     }
-    
     
     private fun bitmapToBase64(bitmap: Bitmap): String {
         val outputStream = ByteArrayOutputStream()
@@ -198,38 +169,26 @@ class SignatureCaptureFragment : Fragment() {
     }
     
     private fun verificarPermissaoEEnviar() {
-        // Para WhatsApp, não precisamos de permissões especiais
-        // O WhatsApp pode ser aberto via Intent sem permissões
-        enviarContratoViaWhatsApp()
+        if (assinaturaContexto == "DISTRATO") enviarDistratoViaWhatsApp() else enviarContratoViaWhatsApp()
     }
     
     private fun enviarContratoViaWhatsApp() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val contrato = viewModel.contrato.value ?: return@launch
-                
-                // Gerar PDF do contrato
                 val pdfGenerator = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext())
                 val mesas = viewModel.getMesasVinculadas()
                 val pdfFile = pdfGenerator.generateContractPdf(contrato, mesas)
-                
-                // Verificar se o arquivo foi criado corretamente
                 if (!pdfFile.exists() || pdfFile.length() == 0L) {
                     Toast.makeText(requireContext(), "Erro: Arquivo PDF não foi gerado corretamente", Toast.LENGTH_LONG).show()
                     return@launch
                 }
-                
-                // Preparar dados para envio
                 val message = "Contrato de locação ${contrato.numeroContrato} assinado com sucesso!"
-                
-                // Criar URI usando FileProvider para compartilhamento seguro
                 val pdfUri = androidx.core.content.FileProvider.getUriForFile(
                     requireContext(),
                     "${requireContext().packageName}.fileprovider",
                     pdfFile
                 )
-                
-                // Criar Intent para WhatsApp
                 val whatsappIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                     type = "application/pdf"
                     setPackage("com.whatsapp")
@@ -237,13 +196,9 @@ class SignatureCaptureFragment : Fragment() {
                     putExtra(android.content.Intent.EXTRA_TEXT, message)
                     addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                
-                // Verificar se WhatsApp está instalado
                 if (whatsappIntent.resolveActivity(requireContext().packageManager) != null) {
                     startActivity(whatsappIntent)
-                    Toast.makeText(requireContext(), "Abrindo WhatsApp...", Toast.LENGTH_SHORT).show()
                 } else {
-                    // Se WhatsApp não estiver instalado, usar Intent genérico
                     val genericIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                         type = "application/pdf"
                         putExtra(android.content.Intent.EXTRA_STREAM, pdfUri)
@@ -252,15 +207,48 @@ class SignatureCaptureFragment : Fragment() {
                     }
                     startActivity(android.content.Intent.createChooser(genericIntent, "Enviar contrato via"))
                 }
-                
-                // Navegar de volta após um delay
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    findNavController().popBackStack()
-                }, 2000)
-                
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ findNavController().popBackStack() }, 2000)
             } catch (e: Exception) {
                 android.util.Log.e("SignatureCaptureFragment", "Erro ao enviar contrato", e)
                 Toast.makeText(requireContext(), "Erro ao enviar contrato: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    
+    private fun enviarDistratoViaWhatsApp() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val contrato = viewModel.contrato.value ?: return@launch
+                val mesas = viewModel.getMesasParaDistrato()
+                val fechamento = viewModel.getFechamentoResumoDistrato()
+                val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext())
+                    .generateDistratoPdf(
+                        contrato = contrato,
+                        mesas = mesas,
+                        fechamento = fechamento,
+                        confissaoDivida = if (fechamento.saldoApurado > 0.0) Pair(fechamento.saldoApurado, java.util.Date()) else null
+                    )
+                if (!pdf.exists() || pdf.length() == 0L) {
+                    Toast.makeText(requireContext(), "Erro ao gerar o PDF do distrato.", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                val pdfUri = androidx.core.content.FileProvider.getUriForFile(
+                    requireContext(),
+                    "${requireContext().packageName}.fileprovider",
+                    pdf
+                )
+                val message = "Distrato do contrato ${contrato.numeroContrato} assinado."
+                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(android.content.Intent.EXTRA_STREAM, pdfUri)
+                    putExtra(android.content.Intent.EXTRA_TEXT, message)
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(android.content.Intent.createChooser(intent, "Enviar distrato via"))
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ findNavController().popBackStack() }, 2000)
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Erro ao enviar distrato", e)
+                Toast.makeText(requireContext(), "Erro ao enviar distrato: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
