@@ -78,4 +78,51 @@ class SignatureCaptureViewModel @Inject constructor(
             }
         }
     }
+
+    fun salvarAssinaturaDistrato(assinaturaBase64: String) {
+        viewModelScope.launch {
+            _loading.value = true
+            try {
+                val contrato = _contrato.value ?: throw Exception("Contrato não encontrado")
+                val contratoAtualizado = contrato.copy(
+                    distratoAssinaturaLocatario = assinaturaBase64,
+                    distratoDataAssinatura = Date(),
+                    dataAtualizacao = Date()
+                )
+                repository.atualizarContrato(contratoAtualizado)
+                _contrato.value = contratoAtualizado
+                _assinaturaSalva.value = true
+            } catch (e: Exception) {
+                _error.value = "Erro ao salvar assinatura do distrato: ${e.message}"
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    suspend fun getMesasParaDistrato(): List<com.example.gestaobilhares.data.entities.Mesa> {
+        val contratoId = _contrato.value?.id ?: 0L
+        val contratoMesas = repository.buscarMesasPorContrato(contratoId)
+        val mesas = mutableListOf<com.example.gestaobilhares.data.entities.Mesa>()
+        contratoMesas.forEach { cm ->
+            val mesa = repository.obterMesaPorId(cm.mesaId)
+            if (mesa != null) mesas.add(mesa)
+        }
+        return mesas
+    }
+
+    suspend fun getFechamentoResumoDistrato(): com.example.gestaobilhares.utils.ContractPdfGenerator.FechamentoResumo {
+        val contrato = _contrato.value ?: throw Exception("Contrato não encontrado")
+        val ultimo = repository.buscarUltimoAcertoPorCliente(contrato.clienteId)
+        val totalRecebido = ultimo?.valorRecebido ?: 0.0
+        val despesasViagem = 0.0
+        val subtotal = totalRecebido - despesasViagem
+        val comissaoMotorista = subtotal * 0.03
+        val comissaoIltair = totalRecebido * 0.02
+        val totalGeral = subtotal - comissaoMotorista - comissaoIltair
+        val saldo = ultimo?.debitoAtual ?: 0.0
+        return com.example.gestaobilhares.utils.ContractPdfGenerator.FechamentoResumo(
+            totalRecebido, despesasViagem, subtotal, comissaoMotorista, comissaoIltair, totalGeral, saldo
+        )
+    }
 }
