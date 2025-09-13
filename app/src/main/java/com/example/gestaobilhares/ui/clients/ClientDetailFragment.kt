@@ -10,6 +10,8 @@ import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.GridLayoutManager
@@ -588,38 +590,38 @@ class ClientDetailFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        lifecycleScope.launch {
-            viewModel.clientDetails.collect { client ->
-                client?.let { updateClientUI(it) }
-            }
-        }
-        
-        lifecycleScope.launch {
-            viewModel.settlementHistory.collect { settlements ->
-                Log.d("ClientDetailFragment", "=== HISTÓRICO ATUALIZADO ===")
-                Log.d("ClientDetailFragment", "Quantidade de acertos: ${settlements.size}")
-                settlements.forEachIndexed { index, acerto ->
-                    Log.d("ClientDetailFragment", "Acerto $index: ID=${acerto.id}, Data=${acerto.data}, Valor=${acerto.valorTotal}, Status=${acerto.status}")
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // Cliente
+                launch {
+                    viewModel.clientDetails.collect { client ->
+                        client?.let { updateClientUI(it) }
+                    }
                 }
-                settlementHistoryAdapter.submitList(settlements)
-            }
-        }
-        
-        // ✅ NOVO: Observer para atualizar o total de mesas ativas
-        lifecycleScope.launch {
-            viewModel.mesasCliente.collect { mesas ->
-                Log.d("ClientDetailFragment", "=== MESAS ATUALIZADAS ===")
-                Log.d("ClientDetailFragment", "Total de mesas: ${mesas.size}")
-                
-                // Filtrar apenas mesas ativas
-                val mesasAtivas = mesas.filter { it.ativa }
-                Log.d("ClientDetailFragment", "Mesas ativas: ${mesasAtivas.size}")
-                
-                // Atualizar o contador de mesas ativas
-                binding.tvTotalMesasAtivas.text = mesasAtivas.size.toString()
-                
-                // Atualizar o adapter das mesas
-                mesasAdapter.submitList(mesas)
+                // Histórico de acertos
+                launch {
+                    viewModel.settlementHistory.collect { settlements ->
+                        Log.d("ClientDetailFragment", "=== HISTÓRICO ATUALIZADO ===")
+                        Log.d("ClientDetailFragment", "Quantidade de acertos: ${settlements.size}")
+                        settlements.forEachIndexed { index, acerto ->
+                            Log.d("ClientDetailFragment", "Acerto $index: ID=${acerto.id}, Data=${acerto.data}, Valor=${acerto.valorTotal}, Status=${acerto.status}")
+                        }
+                        settlementHistoryAdapter.submitList(settlements)
+                    }
+                }
+                // Mesas do cliente
+                launch {
+                    viewModel.mesasCliente.collect { mesas ->
+                        Log.d("ClientDetailFragment", "=== MESAS ATUALIZADAS ===")
+                        Log.d("ClientDetailFragment", "Total de mesas: ${mesas.size}")
+                        val mesasAtivas = mesas.filter { it.ativa }
+                        Log.d("ClientDetailFragment", "Mesas ativas: ${mesasAtivas.size}")
+                        _binding?.let { b ->
+                            b.tvTotalMesasAtivas.text = mesasAtivas.size.toString()
+                        }
+                        mesasAdapter.submitList(mesas)
+                    }
+                }
             }
         }
     }

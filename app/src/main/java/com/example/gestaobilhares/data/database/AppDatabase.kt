@@ -29,9 +29,11 @@ import com.example.gestaobilhares.data.entities.*
         CategoriaDespesa::class, // ✅ NOVO: CATEGORIAS DE DESPESAS
         TipoDespesa::class, // ✅ NOVO: TIPOS DE DESPESAS
         ContratoLocacao::class, // ✅ NOVO: CONTRATOS DE LOCAÇÃO
-        ContratoMesa::class // ✅ NOVO: VINCULAÇÃO CONTRATO-MESAS
+        ContratoMesa::class, // ✅ NOVO: VINCULAÇÃO CONTRATO-MESAS
+        AditivoContrato::class, // ✅ NOVO: ADITIVOS DE CONTRATO
+        AditivoMesa::class // ✅ NOVO: VINCULAÇÃO ADITIVO-MESAS
     ],
-    version = 27, // ✅ MIGRATION: adicionar tabelas de contratos
+    version = 28, // ✅ MIGRATION: adicionar tabelas de aditivos
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -96,6 +98,12 @@ abstract class AppDatabase : RoomDatabase() {
      * ✅ NOVO: CONTRATOS DE LOCAÇÃO
      */
     abstract fun contratoLocacaoDao(): com.example.gestaobilhares.data.dao.ContratoLocacaoDao
+    
+    /**
+     * DAO para operações com aditivos de contrato.
+     * ✅ NOVO: ADITIVOS DE CONTRATO
+     */
+    abstract fun aditivoContratoDao(): com.example.gestaobilhares.data.dao.AditivoContratoDao
 
     companion object {
         
@@ -567,13 +575,119 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
                 
+                val MIGRATION_26_27 = object : androidx.room.migration.Migration(26, 27) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            // Criar tabelas de contratos
+                            database.execSQL("""
+                                CREATE TABLE IF NOT EXISTS contratos_locacao (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    numeroContrato TEXT NOT NULL,
+                                    clienteId INTEGER NOT NULL,
+                                    locadorNome TEXT NOT NULL DEFAULT 'BILHAR GLOBO R & A LTDA',
+                                    locadorCnpj TEXT NOT NULL DEFAULT '34.994.884/0001-69',
+                                    locadorEndereco TEXT NOT NULL DEFAULT 'Rua João Pinheiro, nº 765, Bairro Centro, Montes Claros, MG',
+                                    locadorCep TEXT NOT NULL DEFAULT '39.400-093',
+                                    locatarioNome TEXT NOT NULL,
+                                    locatarioCpf TEXT NOT NULL,
+                                    locatarioEndereco TEXT NOT NULL,
+                                    locatarioTelefone TEXT NOT NULL,
+                                    locatarioEmail TEXT NOT NULL,
+                                    valorMensal REAL NOT NULL,
+                                    diaVencimento INTEGER NOT NULL,
+                                    tipoPagamento TEXT NOT NULL,
+                                    percentualReceita REAL,
+                                    dataContrato INTEGER NOT NULL,
+                                    dataInicio INTEGER NOT NULL,
+                                    status TEXT NOT NULL DEFAULT 'ATIVO',
+                                    assinaturaLocador TEXT,
+                                    assinaturaLocatario TEXT,
+                                    dataCriacao INTEGER NOT NULL,
+                                    dataAtualizacao INTEGER NOT NULL,
+                                    FOREIGN KEY (clienteId) REFERENCES clientes (id) ON DELETE CASCADE
+                                )
+                            """)
+                            
+                            database.execSQL("""
+                                CREATE TABLE IF NOT EXISTS contrato_mesas (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    contratoId INTEGER NOT NULL,
+                                    mesaId INTEGER NOT NULL,
+                                    tipoEquipamento TEXT NOT NULL,
+                                    numeroSerie TEXT NOT NULL,
+                                    valorFicha REAL,
+                                    valorFixo REAL,
+                                    FOREIGN KEY (contratoId) REFERENCES contratos_locacao (id) ON DELETE CASCADE,
+                                    FOREIGN KEY (mesaId) REFERENCES mesas (id) ON DELETE CASCADE
+                                )
+                            """)
+                            
+                            // Criar índices
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_contratos_locacao_clienteId ON contratos_locacao (clienteId)")
+                            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_contratos_locacao_numeroContrato ON contratos_locacao (numeroContrato)")
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_contrato_mesas_contratoId ON contrato_mesas (contratoId)")
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_contrato_mesas_mesaId ON contrato_mesas (mesaId)")
+                            
+                            android.util.Log.d("Migration", "Migration 26_27 executada com sucesso")
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 26_27: ${e.message}")
+                        }
+                    }
+                }
+                
+                val MIGRATION_27_28 = object : androidx.room.migration.Migration(27, 28) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            // Criar tabelas de aditivos
+                            database.execSQL("""
+                                CREATE TABLE IF NOT EXISTS aditivos_contrato (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    numeroAditivo TEXT NOT NULL,
+                                    contratoId INTEGER NOT NULL,
+                                    dataAditivo INTEGER NOT NULL,
+                                    observacoes TEXT,
+                                    assinaturaLocador TEXT,
+                                    assinaturaLocatario TEXT,
+                                    dataCriacao INTEGER NOT NULL,
+                                    dataAtualizacao INTEGER NOT NULL,
+                                    FOREIGN KEY (contratoId) REFERENCES contratos_locacao (id) ON DELETE CASCADE
+                                )
+                            """)
+                            
+                            database.execSQL("""
+                                CREATE TABLE IF NOT EXISTS aditivo_mesas (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    aditivoId INTEGER NOT NULL,
+                                    mesaId INTEGER NOT NULL,
+                                    tipoEquipamento TEXT NOT NULL,
+                                    numeroSerie TEXT NOT NULL,
+                                    valorFicha REAL,
+                                    valorFixo REAL,
+                                    FOREIGN KEY (aditivoId) REFERENCES aditivos_contrato (id) ON DELETE CASCADE,
+                                    FOREIGN KEY (mesaId) REFERENCES mesas (id) ON DELETE CASCADE
+                                )
+                            """)
+                            
+                            // Criar índices
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_aditivos_contrato_contratoId ON aditivos_contrato (contratoId)")
+                            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_aditivos_contrato_numeroAditivo ON aditivos_contrato (numeroAditivo)")
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_aditivo_mesas_aditivoId ON aditivo_mesas (aditivoId)")
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_aditivo_mesas_mesaId ON aditivo_mesas (mesaId)")
+                            
+                            android.util.Log.d("Migration", "Migration 27_28 executada com sucesso")
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 27_28: ${e.message}")
+                        }
+                    }
+                }
+                
                 
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26)
+                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28)
                     .fallbackToDestructiveMigration() // ✅ NOVO: Permite recriar banco em caso de erro de migration
                     .build()
                 INSTANCE = instance

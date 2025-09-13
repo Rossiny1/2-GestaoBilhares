@@ -269,24 +269,14 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:padding="16dp"
-                android:paddingTop="8dp">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipTodos"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:text="Todos"
-                    android:textColor="@color/blue_700"
-                    app:chipBackgroundColor="@color/blue_100"
-                    app:chipStrokeColor="@color/blue_600"
-                    app:chipStrokeWidth="2dp"
-                    app:checkedIconEnabled="false" />
+                android:paddingTop="8dp"
+                android:gravity="center">
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipComContrato"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:layout_marginEnd="8dp"
                     android:text="Com Contrato"
                     android:textColor="@color/green_700"
@@ -297,24 +287,13 @@
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipSemContrato"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
                     android:text="Sem Contrato"
                     android:textColor="@color/orange_700"
                     app:chipBackgroundColor="@color/orange_100"
                     app:chipStrokeColor="@color/orange_600"
-                    app:chipStrokeWidth="2dp"
-                    app:checkedIconEnabled="false" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipAssinados"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Assinados"
-                    android:textColor="@color/teal_700"
-                    app:chipBackgroundColor="@color/purple_100"
-                    app:chipStrokeColor="@color/teal_700"
                     app:chipStrokeWidth="2dp"
                     app:checkedIconEnabled="false" />
 
@@ -371,71 +350,5 @@
 
     </ScrollView>
 
-    <!-- FAB Principal -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabMain"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contentDescription="Menu de ações"
-        android:src="@drawable/ic_add"
-        app:backgroundTint="@color/yellow_600"
-        app:tint="@color/white"
-        app:fabSize="normal" />
-
-    <!-- Container para FABs expandidos -->
-    <LinearLayout
-        android:id="@+id/fab_expanded_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="80dp"
-        android:orientation="vertical"
-        android:gravity="end"
-        android:visibility="gone">
-
-        <!-- FAB Gerar Contrato com Label -->
-        <LinearLayout
-            android:id="@+id/fab_generate_contract_container"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/rounded_background"
-            android:backgroundTint="?attr/colorSurface"
-            android:elevation="8dp"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            android:alpha="0">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Gerar Contrato"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp" />
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fab_generate_contract"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="Gerar Contrato"
-                android:src="@drawable/ic_contract"
-                app:fabSize="mini"
-                app:backgroundTint="@color/blue_600"
-                app:tint="@color/white"
-                android:clickable="false" />
-
-        </LinearLayout>
-
-    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
