@@ -152,6 +152,28 @@ class ContractPdfGenerator(private val context: Context) {
         document.add(valor1)
         document.add(valor2)
         
+        // Cláusula específica sobre preços das fichas
+        addClause(document, "CLÁUSULA 2.3 – DO PREÇO DAS FICHAS E REAJUSTES", fontBold, font)
+        
+        val precoFichas = Paragraph("2.3. O preço das fichas dos equipamentos de sinuca será estabelecido EXCLUSIVAMENTE pela LOCADORA, sendo vedado ao LOCATÁRIO(A) qualquer alteração sem prévia anuência expressa da LOCADORA.")
+            .setFont(font)
+            .setFontSize(10f)
+            .setMarginBottom(5f)
+        
+        val reajustes = Paragraph("2.4. O preço das Fichas será definido pelo representante da LOCADORA no ato da locação. O valor estabelecido será informado ao LOCATÁRIO(A) através do Recibo de Acerto ou por meio de uma placa informativa de preços entregue no momento da locação.")
+            .setFont(font)
+            .setFontSize(10f)
+            .setMarginBottom(5f)
+        
+        val multa = Paragraph("2.5. O descumprimento desta cláusula, especialmente a alteração não autorizada dos preços das fichas, constitui violação contratual passível de multa e rescisão do presente contrato, sem prejuízo das demais medidas legais cabíveis.")
+            .setFont(font)
+            .setFontSize(10f)
+            .setMarginBottom(15f)
+        
+        document.add(precoFichas)
+        document.add(reajustes)
+        document.add(multa)
+        
         // Adicionar outras cláusulas padrão
         addStandardClauses(document, font, fontBold)
     }

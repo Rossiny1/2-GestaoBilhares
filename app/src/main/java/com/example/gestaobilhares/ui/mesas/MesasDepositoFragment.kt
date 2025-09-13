@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentMesasDepositoBinding
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.utils.UserSessionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -41,7 +42,20 @@ class MesasDepositoFragment : Fragment() {
         // Inicializar gerenciador de sessão
         userSessionManager = UserSessionManager.getInstance(requireContext())
         
-        viewModel = MesasDepositoViewModel(MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao()))
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao()
+        )
+        viewModel = MesasDepositoViewModel(MesaRepository(database.mesaDao()), appRepository)
         setupRecyclerView()
         setupListeners()
         setupAccessControl()
@@ -230,25 +244,35 @@ class MesasDepositoFragment : Fragment() {
         if (clienteId != null) {
             viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)
             
-            // ✅ NOVO: Mostrar diálogo de finalização de contrato
-            android.util.Log.d("MesasDepositoFragment", "isFromClientRegister: ${args.isFromClientRegister}")
-            
-            if (args.isFromClientRegister) {
-                // Veio do cadastro de cliente - mostrar diálogo de contrato
-                android.util.Log.d("MesasDepositoFragment", "Vindo do cadastro - mostrando diálogo de contrato")
-                
-                // ✅ CORREÇÃO: Buscar TODAS as mesas já vinculadas ao cliente
-                viewLifecycleOwner.lifecycleScope.launch {
-                    try {
-                        val todasMesasVinculadas = viewModel.obterTodasMesasVinculadasAoCliente(clienteId)
-                        android.util.Log.d("MesasDepositoFragment", "Total de mesas vinculadas ao cliente: ${todasMesasVinculadas.size}")
-                        todasMesasVinculadas.forEach { mesa ->
-                            android.util.Log.d("MesasDepositoFragment", "Mesa vinculada: ID=${mesa.id}, Número=${mesa.numero}, Tipo=${mesa.tipoMesa}")
+            // ✅ SEMPRE decidir entre aditivo x contrato após vinculação
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    android.util.Log.d("MesasDepositoFragment", "Decidindo diálogo pós-vinculação para cliente $clienteId / mesa ${mesa.id}")
+                    val contratoAtivo = viewModel.verificarContratoAtivo(clienteId)
+
+                    if (contratoAtivo != null) {
+                        android.util.Log.d("MesasDepositoFragment", "Contrato ativo encontrado: ${contratoAtivo.numeroContrato} -> mostrar AditivoDialog")
+
+                        val dialog = com.example.gestaobilhares.ui.contracts.AditivoDialog.newInstance(contratoAtivo)
+                        dialog.setOnGerarAditivoClickListener { contrato ->
+                            val mesasIds = longArrayOf(mesa.id)
+                            val action = MesasDepositoFragmentDirections
+                                .actionMesasDepositoFragmentToAditivoSignatureFragment(
+                                    contratoId = contrato.id,
+                                    mesasVinculadas = mesasIds
+                                )
+                            findNavController().navigate(action)
                         }
-                        
+                        dialog.setOnCancelarClickListener {
+                            findNavController().popBackStack()
+                        }
+                        dialog.show(parentFragmentManager, "AditivoDialog")
+                    } else {
+                        android.util.Log.d("MesasDepositoFragment", "Sem contrato -> mostrar ContractFinalizationDialog")
+
+                        val todasMesasVinculadas = viewModel.obterTodasMesasVinculadasAoCliente(clienteId)
                         val mesasIds = todasMesasVinculadas.map { it.id }
-                        android.util.Log.d("MesasDepositoFragment", "IDs das mesas para o diálogo: $mesasIds")
-                        
+
                         val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
                             clienteId = clienteId,
                             mesasVinculadas = mesasIds,
@@ -256,22 +280,17 @@ class MesasDepositoFragment : Fragment() {
                             valorFixo = valorFixo ?: 0.0
                         )
                         dialog.show(parentFragmentManager, "ContractFinalizationDialog")
-                    } catch (e: Exception) {
-                        android.util.Log.e("MesasDepositoFragment", "Erro ao buscar mesas vinculadas", e)
-                        // Fallback: usar apenas a mesa atual
-                        val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
-                            clienteId = clienteId,
-                            mesasVinculadas = listOf(mesa.id),
-                            tipoFixo = tipoFixo,
-                            valorFixo = valorFixo ?: 0.0
-                        )
-                        dialog.show(parentFragmentManager, "ContractFinalizationDialog")
                     }
+                } catch (e: Exception) {
+                    android.util.Log.e("MesasDepositoFragment", "Erro ao decidir diálogo pós-vinculação", e)
+                    val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
+                        clienteId = clienteId,
+                        mesasVinculadas = listOf(mesa.id),
+                        tipoFixo = tipoFixo,
+                        valorFixo = valorFixo ?: 0.0
+                    )
+                    dialog.show(parentFragmentManager, "ContractFinalizationDialog")
                 }
-            } else {
-                // Veio de outro lugar (provavelmente ClientDetailFragment) - voltar normalmente
-                android.util.Log.d("MesasDepositoFragment", "Vindo de outro lugar - voltando normalmente")
-                findNavController().popBackStack()
             }
         }
     }

@@ -294,6 +294,10 @@
         <action
             android:id="@+id/action_mesasDepositoFragment_to_editMesaFragment"
             app:destination="@id/editMesaFragment" />
+        <!-- ✅ NOVA AÇÃO: Navegação para assinatura de aditivo -->
+        <action
+            android:id="@+id/action_mesasDepositoFragment_to_aditivoSignatureFragment"
+            app:destination="@id/aditivoSignatureFragment" />
     </fragment>
 
     <!-- Tela de Cadastro de Mesa -->
@@ -471,6 +475,18 @@
         <argument
             android:name="contrato_id"
             app:argType="long" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/aditivoSignatureFragment"
+        android:name="com.example.gestaobilhares.ui.contracts.AditivoSignatureFragment"
+        android:label="Assinatura do Aditivo">
+        <argument
+            android:name="contratoId"
+            app:argType="long" />
+        <argument
+            android:name="mesasVinculadas"
+            app:argType="long[]" />
     </fragment>
 
     <fragment

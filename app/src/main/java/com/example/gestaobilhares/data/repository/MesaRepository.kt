@@ -95,4 +95,13 @@ class MesaRepository @Inject constructor(
      * ✅ NOVA FUNÇÃO: Obtém todas as mesas (disponíveis e em uso)
      */
     fun obterTodasMesas(): Flow<List<Mesa>> = mesaDao.obterTodasMesas()
+    
+    /**
+     * ✅ NOVA FUNÇÃO: Busca contratos por cliente
+     */
+    fun buscarContratosPorCliente(clienteId: Long): Flow<List<com.example.gestaobilhares.data.entities.ContratoLocacao>> {
+        // Este método será implementado no AppRepository
+        // Por enquanto, retorna um Flow vazio
+        return kotlinx.coroutines.flow.flowOf(emptyList())
+    }
 } 

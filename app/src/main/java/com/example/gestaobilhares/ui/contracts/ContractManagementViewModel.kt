@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.first
 import com.example.gestaobilhares.data.entities.ContratoLocacao
+import com.example.gestaobilhares.data.entities.AditivoContrato
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
@@ -31,7 +32,7 @@ class ContractManagementViewModel @Inject constructor(
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
-    private var currentFilter = ContractFilter.ALL
+    private var currentFilter = ContractFilter.WITH_CONTRACT
 
     /**
      * Carrega dados dos contratos e estatísticas
@@ -76,10 +77,8 @@ class ContractManagementViewModel @Inject constructor(
     private suspend fun loadContracts() {
         try {
             val contractItems = when (currentFilter) {
-                ContractFilter.ALL -> loadAllContracts()
                 ContractFilter.WITH_CONTRACT -> loadContractsWithContract()
                 ContractFilter.WITHOUT_CONTRACT -> loadClientsWithoutContract()
-                ContractFilter.SIGNED -> loadSignedContracts()
             }
             _contracts.value = contractItems
         } catch (e: Exception) {
@@ -97,12 +96,14 @@ class ContractManagementViewModel @Inject constructor(
             val cliente = repository.obterClientePorId(contrato.clienteId)
             val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
             val mesas = repository.obterMesasPorCliente(contrato.clienteId).first()
+            val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
             
             ContractItem(
                 contrato = contrato,
                 cliente = cliente,
                 rota = rota,
                 mesas = mesas,
+                aditivos = aditivos,
                 status = if (contrato.assinaturaLocatario != null) "Assinado" else "Gerado"
             )
         }
@@ -117,12 +118,14 @@ class ContractManagementViewModel @Inject constructor(
             val cliente = repository.obterClientePorId(contrato.clienteId)
             val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
             val mesas = repository.obterMesasPorCliente(contrato.clienteId).first()
+            val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
             
             ContractItem(
                 contrato = contrato,
                 cliente = cliente,
                 rota = rota,
                 mesas = mesas,
+                aditivos = aditivos,
                 status = if (contrato.assinaturaLocatario != null) "Assinado" else "Gerado"
             )
         }
@@ -144,6 +147,7 @@ class ContractManagementViewModel @Inject constructor(
                 cliente = cliente,
                 rota = rota,
                 mesas = mesas,
+                aditivos = emptyList(),
                 status = "Sem Contrato"
             )
         }
@@ -158,12 +162,14 @@ class ContractManagementViewModel @Inject constructor(
             val cliente = repository.obterClientePorId(contrato.clienteId)
             val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
             val mesas = repository.obterMesasPorCliente(contrato.clienteId).first()
+            val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
             
             ContractItem(
                 contrato = contrato,
                 cliente = cliente,
                 rota = rota,
                 mesas = mesas,
+                aditivos = aditivos,
                 status = "Assinado"
             )
         }
@@ -199,12 +205,14 @@ class ContractManagementViewModel @Inject constructor(
                     val cliente = allClients.find { it.id == contrato.clienteId }
                     val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
                     val mesas = cliente?.let { repository.obterMesasPorCliente(it.id).first() } ?: emptyList()
+                    val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
                     
                     ContractItem(
                         contrato = contrato,
                         cliente = cliente,
                         rota = rota,
                         mesas = mesas,
+                        aditivos = aditivos,
                         status = if (contrato.assinaturaLocatario != null) "Assinado" else "Gerado"
                     )
                 }
@@ -236,12 +244,14 @@ class ContractManagementViewModel @Inject constructor(
                     val cliente = allClients.find { it.id == contrato.clienteId }
                     val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
                     val mesas = cliente?.let { repository.obterMesasPorCliente(it.id).first() } ?: emptyList()
+                    val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
                     
                     ContractItem(
                         contrato = contrato,
                         cliente = cliente,
                         rota = rota,
                         mesas = mesas,
+                        aditivos = aditivos,
                         status = if (contrato.assinaturaLocatario != null) "Assinado" else "Gerado"
                     )
                 }
@@ -285,6 +295,7 @@ class ContractManagementViewModel @Inject constructor(
         val cliente: Cliente?,
         val rota: Rota?,
         val mesas: List<Mesa>,
+        val aditivos: List<AditivoContrato>,
         val status: String
     )
 
@@ -292,9 +303,7 @@ class ContractManagementViewModel @Inject constructor(
      * Enum para filtros de contrato
      */
     enum class ContractFilter {
-        ALL,
         WITH_CONTRACT,
-        WITHOUT_CONTRACT,
-        SIGNED
+        WITHOUT_CONTRACT
     }
 }

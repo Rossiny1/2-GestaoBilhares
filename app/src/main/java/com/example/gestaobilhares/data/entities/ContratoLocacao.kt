@@ -5,6 +5,7 @@ import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
 import java.util.Date
+import java.io.Serializable
 
 @Entity(
     tableName = "contratos_locacao",
@@ -54,7 +55,7 @@ data class ContratoLocacao(
     // Controle
     val dataCriacao: Date = Date(),
     val dataAtualizacao: Date = Date()
-)
+) : Serializable
 
 @Entity(
     tableName = "contrato_mesas",
@@ -82,6 +83,70 @@ data class ContratoMesa(
     val mesaId: Long,
     
     // Dados específicos da mesa no contrato
+    val tipoEquipamento: String, // Sinuca, Jukebox, Pembolim
+    val numeroSerie: String, // Número da mesa
+    val valorFicha: Double? = null, // Se for por fichas
+    val valorFixo: Double? = null // Se for valor fixo
+)
+
+@Entity(
+    tableName = "aditivos_contrato",
+    foreignKeys = [
+        ForeignKey(
+            entity = ContratoLocacao::class,
+            parentColumns = ["id"],
+            childColumns = ["contratoId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["contratoId"]), Index(value = ["numeroAditivo"], unique = true)]
+)
+data class AditivoContrato(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    
+    val numeroAditivo: String, // Número único do aditivo (ex: ADT-001/2024)
+    val contratoId: Long, // ID do contrato original
+    
+    // Dados do aditivo
+    val dataAditivo: Date,
+    val observacoes: String? = null,
+    
+    // Assinaturas
+    val assinaturaLocador: String? = null, // Base64 da assinatura
+    val assinaturaLocatario: String? = null, // Base64 da assinatura
+    
+    // Controle
+    val dataCriacao: Date = Date(),
+    val dataAtualizacao: Date = Date()
+)
+
+@Entity(
+    tableName = "aditivo_mesas",
+    foreignKeys = [
+        ForeignKey(
+            entity = AditivoContrato::class,
+            parentColumns = ["id"],
+            childColumns = ["aditivoId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Mesa::class,
+            parentColumns = ["id"],
+            childColumns = ["mesaId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["aditivoId"]), Index(value = ["mesaId"])]
+)
+data class AditivoMesa(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    
+    val aditivoId: Long,
+    val mesaId: Long,
+    
+    // Dados específicos da mesa no aditivo
     val tipoEquipamento: String, // Sinuca, Jukebox, Pembolim
     val numeroSerie: String, // Número da mesa
     val valorFicha: Double? = null, // Se for por fichas

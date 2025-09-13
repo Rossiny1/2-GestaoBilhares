@@ -15,9 +15,9 @@ import java.util.*
  * Adapter para lista de contratos no gerenciamento
  */
 class ContractManagementAdapter(
-    private val onContractClick: (ContratoLocacao?) -> Unit,
-    private val onViewClick: (ContratoLocacao?) -> Unit,
-    private val onShareClick: (ContratoLocacao?) -> Unit
+    private val onContractClick: (ContractManagementViewModel.ContractItem) -> Unit,
+    private val onViewClick: (ContractManagementViewModel.ContractItem) -> Unit,
+    private val onShareClick: (ContractManagementViewModel.ContractItem) -> Unit
 ) : ListAdapter<ContractManagementViewModel.ContractItem, ContractManagementAdapter.ContractViewHolder>(
     ContractDiffCallback()
 ) {
@@ -44,6 +44,7 @@ class ContractManagementAdapter(
             val cliente = item.cliente
             val rota = item.rota
             val mesas = item.mesas
+            val aditivos = item.aditivos
             val status = item.status
 
             // Configurar informações do cliente
@@ -54,6 +55,10 @@ class ContractManagementAdapter(
 
             // Configurar status do contrato
             binding.chipStatus.text = status
+            // Exibir quantidade de aditivos (se houver)
+            if (aditivos.isNotEmpty()) {
+                binding.tvNumeroContrato.append("  •  ${aditivos.size} aditivo(s)")
+            }
             when (status) {
                 "Assinado" -> {
                     binding.chipStatus.setChipBackgroundColorResource(R.color.green_100)
@@ -74,7 +79,9 @@ class ContractManagementAdapter(
 
             // Configurar informações do contrato
             contrato?.let { contract ->
-                binding.tvNumeroContrato.text = contract.numeroContrato
+                val baseNumero = contract.numeroContrato ?: "N/A"
+                val withBadge = if (aditivos.isNotEmpty()) "$baseNumero  •  ${aditivos.size} aditivo(s)" else baseNumero
+                binding.tvNumeroContrato.text = withBadge
                 
                 // Formatar data de criação
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -100,17 +107,11 @@ class ContractManagementAdapter(
             }
 
             // Configurar cliques
-            binding.root.setOnClickListener {
-                onContractClick(contrato)
-            }
+            binding.root.setOnClickListener { onContractClick(item) }
 
-            binding.btnView.setOnClickListener {
-                onViewClick(contrato)
-            }
+            binding.btnView.setOnClickListener { onViewClick(item) }
 
-            binding.btnShare.setOnClickListener {
-                onShareClick(contrato)
-            }
+            binding.btnShare.setOnClickListener { onShareClick(item) }
 
             // Mostrar/ocultar botões baseado no status
             if (status == "Sem Contrato") {

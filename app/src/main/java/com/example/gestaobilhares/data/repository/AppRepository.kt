@@ -21,7 +21,8 @@ class AppRepository(
     private val colaboradorDao: ColaboradorDao,
     private val cicloAcertoDao: CicloAcertoDao,
     private val acertoMesaDao: com.example.gestaobilhares.data.dao.AcertoMesaDao,
-    private val contratoLocacaoDao: ContratoLocacaoDao
+    private val contratoLocacaoDao: ContratoLocacaoDao,
+    private val aditivoContratoDao: AditivoContratoDao
 ) {
     
     // ==================== CLIENTE ====================
@@ -591,4 +592,21 @@ class AppRepository(
     suspend fun inserirContratoMesas(contratoMesas: List<ContratoMesa>) = contratoLocacaoDao.inserirContratoMesas(contratoMesas)
     suspend fun excluirContratoMesa(contratoMesa: ContratoMesa) = contratoLocacaoDao.excluirContratoMesa(contratoMesa)
     suspend fun excluirMesasPorContrato(contratoId: Long) = contratoLocacaoDao.excluirMesasPorContrato(contratoId)
+    
+    // ==================== ADITIVO CONTRATO ====================
+    
+    fun buscarAditivosPorContrato(contratoId: Long) = aditivoContratoDao.buscarAditivosPorContrato(contratoId)
+    suspend fun buscarAditivoPorNumero(numeroAditivo: String) = aditivoContratoDao.buscarAditivoPorNumero(numeroAditivo)
+    suspend fun buscarAditivoPorId(aditivoId: Long) = aditivoContratoDao.buscarAditivoPorId(aditivoId)
+    fun buscarTodosAditivos() = aditivoContratoDao.buscarTodosAditivos()
+    suspend fun contarAditivosPorAno(ano: String) = aditivoContratoDao.contarAditivosPorAno(ano)
+    suspend fun contarAditivosGerados() = aditivoContratoDao.contarAditivosGerados()
+    suspend fun contarAditivosAssinados() = aditivoContratoDao.contarAditivosAssinados()
+    suspend fun inserirAditivo(aditivo: AditivoContrato) = aditivoContratoDao.inserirAditivo(aditivo)
+    suspend fun atualizarAditivo(aditivo: AditivoContrato) = aditivoContratoDao.atualizarAditivo(aditivo)
+    suspend fun excluirAditivo(aditivo: AditivoContrato) = aditivoContratoDao.excluirAditivo(aditivo)
+    suspend fun buscarMesasPorAditivo(aditivoId: Long) = aditivoContratoDao.buscarMesasPorAditivo(aditivoId)
+    suspend fun inserirAditivoMesas(aditivoMesas: List<AditivoMesa>) = aditivoContratoDao.inserirAditivoMesas(aditivoMesas)
+    suspend fun excluirAditivoMesa(aditivoMesa: AditivoMesa) = aditivoContratoDao.excluirAditivoMesa(aditivoMesa)
+    suspend fun excluirTodasMesasDoAditivo(aditivoId: Long) = aditivoContratoDao.excluirTodasMesasDoAditivo(aditivoId)
 } 

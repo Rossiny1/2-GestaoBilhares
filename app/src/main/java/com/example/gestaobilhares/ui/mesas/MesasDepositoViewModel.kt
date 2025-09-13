@@ -6,9 +6,11 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.TipoMesa
 import com.example.gestaobilhares.data.entities.TamanhoMesa
 import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class EstatisticasDeposito(
@@ -23,7 +25,8 @@ data class EstatisticasDeposito(
 )
 
 class MesasDepositoViewModel(
-    private val mesaRepository: MesaRepository
+    private val mesaRepository: MesaRepository,
+    private val appRepository: AppRepository
 ) : ViewModel() {
     private val _mesasDisponiveis = MutableStateFlow<List<Mesa>>(emptyList())
     val mesasDisponiveis: StateFlow<List<Mesa>> = _mesasDisponiveis.asStateFlow()
@@ -99,6 +102,26 @@ class MesasDepositoViewModel(
         } catch (e: Exception) {
             android.util.Log.e("MesasDepositoViewModel", "Erro ao buscar mesas vinculadas ao cliente $clienteId", e)
             emptyList()
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Verifica se o cliente possui contrato ativo
+     */
+    suspend fun verificarContratoAtivo(clienteId: Long): com.example.gestaobilhares.data.entities.ContratoLocacao? {
+        return try {
+            android.util.Log.d("MesasDepositoViewModel", "Verificando contrato existente para cliente: $clienteId")
+            val contratos = appRepository.buscarContratosPorCliente(clienteId).first()
+            android.util.Log.d("MesasDepositoViewModel", "Total de contratos encontrados: ${contratos.size}")
+            // Preferir ATIVO; se não houver, pegar o mais recente (qualquer status)
+            val ativo = contratos.firstOrNull { it.status.equals("ATIVO", ignoreCase = true) }
+            val maisRecente = contratos.maxByOrNull { it.dataCriacao.time }
+            val escolhido = ativo ?: maisRecente
+            android.util.Log.d("MesasDepositoViewModel", "Contrato escolhido para aditivo: ${escolhido?.numeroContrato} / status=${escolhido?.status}")
+            escolhido
+        } catch (e: Exception) {
+            android.util.Log.e("MesasDepositoViewModel", "Erro ao verificar contrato para cliente $clienteId", e)
+            null
         }
     }
 } 

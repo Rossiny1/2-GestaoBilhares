@@ -68,17 +68,17 @@ class ContractManagementFragment : Fragment() {
 
     private fun setupRecyclerView() {
         contractAdapter = ContractManagementAdapter(
-            onContractClick = { contrato ->
-                // Navegar para detalhes do contrato
-                navigateToContractDetails(contrato)
+            onContractClick = { item ->
+                // Abrir opções: visualizar/compartilhar contrato ou aditivos
+                showContractOrAddendumOptions(item)
             },
-            onViewClick = { contrato ->
-                // Visualizar contrato
-                viewContract(contrato)
+            onViewClick = { item ->
+                // Visualizar contrato ou último aditivo se existir
+                if (item.aditivos.isNotEmpty()) viewAddendum(item) else viewContract(item.contrato)
             },
-            onShareClick = { contrato ->
-                // Compartilhar contrato
-                shareContract(contrato)
+            onShareClick = { item ->
+                // Compartilhar contrato ou último aditivo se existir
+                if (item.aditivos.isNotEmpty()) shareAddendum(item) else shareContract(item.contrato)
             }
         )
 
@@ -104,77 +104,11 @@ class ContractManagementFragment : Fragment() {
             showFilterDialog()
         }
 
-        // FAB expandível
-        setupFabMenu()
     }
 
-    private fun setupFabMenu() {
-        var isExpanded = false
-
-        // FAB Principal
-        binding.fabMain.setOnClickListener {
-            if (isExpanded) {
-                collapseFabMenu()
-                isExpanded = false
-            } else {
-                expandFabMenu()
-                isExpanded = true
-            }
-        }
-
-        // FAB Gerar Contrato
-        binding.fabGenerateContractContainer.setOnClickListener {
-            // Navegar para seleção de cliente para gerar contrato
-            findNavController().navigate(R.id.clientListFragment)
-            collapseFabMenu()
-            isExpanded = false
-        }
-    }
-
-    private fun expandFabMenu() {
-        binding.fabExpandedContainer.visibility = View.VISIBLE
-
-        // Animar FAB principal
-        binding.fabMain.animate()
-            .rotation(45f)
-            .setDuration(200)
-            .start()
-
-        // Animar FABs expandidos
-        binding.fabGenerateContractContainer.animate()
-            .alpha(1f)
-            .translationY(-16f)
-            .setDuration(200)
-            .start()
-    }
-
-    private fun collapseFabMenu() {
-        // Animar FAB principal
-        binding.fabMain.animate()
-            .rotation(0f)
-            .setDuration(200)
-            .start()
-
-        // Animar FABs expandidos
-        binding.fabGenerateContractContainer.animate()
-            .alpha(0f)
-            .translationY(0f)
-            .setDuration(200)
-            .withEndAction {
-                if (_binding != null) {
-                    binding.fabExpandedContainer.visibility = View.GONE
-                }
-            }
-            .start()
-    }
 
     private fun setupFilters() {
         // Configurar chips de filtro
-        binding.chipTodos.setOnClickListener {
-            viewModel.setFilter(ContractManagementViewModel.ContractFilter.ALL)
-            updateFilterChips(ContractManagementViewModel.ContractFilter.ALL)
-        }
-
         binding.chipComContrato.setOnClickListener {
             viewModel.setFilter(ContractManagementViewModel.ContractFilter.WITH_CONTRACT)
             updateFilterChips(ContractManagementViewModel.ContractFilter.WITH_CONTRACT)
@@ -184,18 +118,11 @@ class ContractManagementFragment : Fragment() {
             viewModel.setFilter(ContractManagementViewModel.ContractFilter.WITHOUT_CONTRACT)
             updateFilterChips(ContractManagementViewModel.ContractFilter.WITHOUT_CONTRACT)
         }
-
-        binding.chipAssinados.setOnClickListener {
-            viewModel.setFilter(ContractManagementViewModel.ContractFilter.SIGNED)
-            updateFilterChips(ContractManagementViewModel.ContractFilter.SIGNED)
-        }
     }
 
     private fun updateFilterChips(filter: ContractManagementViewModel.ContractFilter) {
-        binding.chipTodos.isChecked = filter == ContractManagementViewModel.ContractFilter.ALL
         binding.chipComContrato.isChecked = filter == ContractManagementViewModel.ContractFilter.WITH_CONTRACT
         binding.chipSemContrato.isChecked = filter == ContractManagementViewModel.ContractFilter.WITHOUT_CONTRACT
-        binding.chipAssinados.isChecked = filter == ContractManagementViewModel.ContractFilter.SIGNED
     }
 
     private fun observeViewModel() {
@@ -227,9 +154,25 @@ class ContractManagementFragment : Fragment() {
     }
 
     private fun navigateToContractDetails(contrato: ContratoLocacao?) {
-        // Navegar para detalhes do contrato
-        // TODO: Implementar navegação para detalhes
         Toast.makeText(requireContext(), "Detalhes do contrato ${contrato?.numeroContrato}", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showContractOrAddendumOptions(item: ContractManagementViewModel.ContractItem) {
+        val hasAddenda = item.aditivos.isNotEmpty()
+        val options = if (hasAddenda) arrayOf("Visualizar Contrato", "Compartilhar Contrato", "Visualizar Aditivo mais recente", "Compartilhar Aditivo mais recente")
+                      else arrayOf("Visualizar Contrato", "Compartilhar Contrato")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Ações")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> viewContract(item.contrato)
+                    1 -> shareContract(item.contrato)
+                    2 -> if (hasAddenda) viewAddendum(item)
+                    3 -> if (hasAddenda) shareAddendum(item)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun viewContract(contrato: ContratoLocacao?) {
@@ -249,26 +192,123 @@ class ContractManagementFragment : Fragment() {
                 val pdfFile = contractPdfGenerator.generateContractPdf(contrato, mesas)
                 
                 if (pdfFile.exists()) {
-                    // Abrir PDF com visualizador padrão
+                    // Tentar abrir PDF com visualizador padrão
+                    val uri = FileProvider.getUriForFile(
+                        requireContext(),
+                        "${requireContext().packageName}.fileprovider",
+                        pdfFile
+                    )
+                    
+                    // Intent para visualizar PDF
                     val intent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(FileProvider.getUriForFile(
-                            requireContext(),
-                            "${requireContext().packageName}.fileprovider",
-                            pdfFile
-                        ), "application/pdf")
+                        setDataAndType(uri, "application/pdf")
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     
-                    if (intent.resolveActivity(requireContext().packageManager) != null) {
+                    // Verificar se há apps que podem abrir PDF
+                    val packageManager = requireContext().packageManager
+                    val resolveInfo = packageManager.queryIntentActivities(intent, 0)
+                    
+                    if (resolveInfo.isNotEmpty()) {
                         startActivity(intent)
                     } else {
-                        Toast.makeText(requireContext(), "Nenhum visualizador de PDF encontrado", Toast.LENGTH_SHORT).show()
+                        // Se não houver visualizador de PDF, tentar abrir com qualquer app
+                        val genericIntent = Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(uri, "*/*")
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        
+                        if (genericIntent.resolveActivity(packageManager) != null) {
+                            startActivity(genericIntent)
+                        } else {
+                            // Como último recurso, compartilhar o arquivo
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "application/pdf"
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                putExtra(Intent.EXTRA_SUBJECT, "Contrato ${contrato.numeroContrato}")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            
+                            if (shareIntent.resolveActivity(packageManager) != null) {
+                                startActivity(Intent.createChooser(shareIntent, "Abrir contrato com"))
+                            } else {
+                                Toast.makeText(requireContext(), "Nenhum app encontrado para abrir PDF. O arquivo foi salvo em: ${pdfFile.absolutePath}", Toast.LENGTH_LONG).show()
+                            }
+                        }
                     }
                 } else {
                     Toast.makeText(requireContext(), "Erro ao gerar PDF do contrato", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Erro ao visualizar contrato: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun viewAddendum(item: ContractManagementViewModel.ContractItem) {
+        lifecycleScope.launch {
+            try {
+                val contrato = item.contrato
+                if (contrato == null) {
+                    Toast.makeText(requireContext(), "Contrato não encontrado", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                if (item.aditivos.isEmpty()) {
+                    Toast.makeText(requireContext(), "Nenhum aditivo para este contrato", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                val aditivo = item.aditivos.maxByOrNull { it.dataCriacao.time } ?: item.aditivos.last()
+                val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
+                val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas)
+                if (!pdf.exists()) {
+                    Toast.makeText(requireContext(), "Erro ao gerar PDF do aditivo", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", pdf)
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/pdf")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                val pm = requireContext().packageManager
+                if (intent.resolveActivity(pm) != null) startActivity(intent) else Toast.makeText(requireContext(), "Nenhum app para abrir PDF", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Erro ao visualizar aditivo: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun shareAddendum(item: ContractManagementViewModel.ContractItem) {
+        lifecycleScope.launch {
+            try {
+                val contrato = item.contrato
+                if (contrato == null) {
+                    Toast.makeText(requireContext(), "Contrato não encontrado", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                if (item.aditivos.isEmpty()) {
+                    Toast.makeText(requireContext(), "Nenhum aditivo para este contrato", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                val aditivo = item.aditivos.maxByOrNull { it.dataCriacao.time } ?: item.aditivos.last()
+                val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
+                val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas)
+                if (!pdf.exists()) {
+                    Toast.makeText(requireContext(), "Erro ao gerar PDF do aditivo", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", pdf)
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    putExtra(Intent.EXTRA_SUBJECT, "Aditivo ${aditivo.numeroAditivo}")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(shareIntent, "Compartilhar aditivo"))
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Erro ao compartilhar aditivo: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -340,17 +380,15 @@ class ContractManagementFragment : Fragment() {
 
     private fun showFilterDialog() {
         // Implementar diálogo de filtros avançados
-        val filterOptions = arrayOf("Todos", "Com Contrato", "Sem Contrato", "Assinados", "Por Rota")
+        val filterOptions = arrayOf("Com Contrato", "Sem Contrato", "Por Rota")
         
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Filtros Avançados")
             .setItems(filterOptions) { _, which ->
                 when (which) {
-                    0 -> viewModel.setFilter(ContractManagementViewModel.ContractFilter.ALL)
-                    1 -> viewModel.setFilter(ContractManagementViewModel.ContractFilter.WITH_CONTRACT)
-                    2 -> viewModel.setFilter(ContractManagementViewModel.ContractFilter.WITHOUT_CONTRACT)
-                    3 -> viewModel.setFilter(ContractManagementViewModel.ContractFilter.SIGNED)
-                    4 -> showRouteFilterDialog()
+                    0 -> viewModel.setFilter(ContractManagementViewModel.ContractFilter.WITH_CONTRACT)
+                    1 -> viewModel.setFilter(ContractManagementViewModel.ContractFilter.WITHOUT_CONTRACT)
+                    2 -> showRouteFilterDialog()
                 }
             }
             .setNegativeButton("Cancelar", null)
