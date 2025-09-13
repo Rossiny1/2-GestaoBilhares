@@ -212,6 +212,26 @@ class RoutesFragment : Fragment() {
                         false
                     }
                 }
+                R.id.nav_manage_contracts -> {
+                    // Verificar permissão para gerenciar contratos
+                    if (!userSessionManager.canManageContracts()) {
+                        Toast.makeText(requireContext(), "Acesso negado: Apenas administradores podem gerenciar contratos", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        return@setNavigationItemSelectedListener false
+                    }
+                    
+                    // Navegar para a tela de gerenciamento de contratos
+                    try {
+                        findNavController().navigate(R.id.contractManagementFragment)
+                        binding.drawerLayout.closeDrawers()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao navegar para gerenciamento de contratos: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir gerenciamento de contratos: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
+                }
                 R.id.nav_dashboard -> {
                     try {
                         findNavController().navigate(R.id.dashboardFragment)
