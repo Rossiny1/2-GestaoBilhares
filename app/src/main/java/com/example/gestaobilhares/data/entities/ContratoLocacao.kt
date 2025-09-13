@@ -52,6 +52,10 @@ data class ContratoLocacao(
     val dataEncerramento: Date? = null,
     val assinaturaLocador: String? = null, // Base64 da assinatura
     val assinaturaLocatario: String? = null, // Base64 da assinatura
+    // Assinaturas do distrato (capturadas no ato do encerramento)
+    val distratoAssinaturaLocador: String? = null,
+    val distratoAssinaturaLocatario: String? = null,
+    val distratoDataAssinatura: Date? = null,
     
     // Controle
     val dataCriacao: Date = Date(),

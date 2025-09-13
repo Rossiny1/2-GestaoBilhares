@@ -69,7 +69,7 @@ class ContractManagementFragment : Fragment() {
     private fun setupRecyclerView() {
         contractAdapter = ContractManagementAdapter(
             onContractClick = { item ->
-                // Abrir opções: visualizar/compartilhar contrato ou aditivos
+                // Abrir opções: contrato, aditivo de inclusão/retirada, distrato
                 showContractOrAddendumOptions(item)
             },
             onViewClick = { item ->
@@ -159,16 +159,28 @@ class ContractManagementFragment : Fragment() {
 
     private fun showContractOrAddendumOptions(item: ContractManagementViewModel.ContractItem) {
         val hasAddenda = item.aditivos.isNotEmpty()
-        val options = if (hasAddenda) arrayOf("Visualizar Contrato", "Compartilhar Contrato", "Visualizar Aditivo mais recente", "Compartilhar Aditivo mais recente")
-                      else arrayOf("Visualizar Contrato", "Compartilhar Contrato")
+        val hasRetirada = item.aditivosRetiradaCount > 0
+        val hasDistrato = item.hasDistrato
+        val options = buildList {
+            add("Visualizar Contrato")
+            add("Compartilhar Contrato")
+            if (hasAddenda) { add("Visualizar Aditivo mais recente"); add("Compartilhar Aditivo mais recente") }
+            if (hasRetirada) { add("Visualizar Aditivo de Retirada mais recente"); add("Compartilhar Aditivo de Retirada mais recente") }
+            if (hasDistrato) { add("Visualizar Distrato"); add("Compartilhar Distrato") }
+        }.toTypedArray()
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Ações")
             .setItems(options) { _, which ->
+                var idx = 0
                 when (which) {
-                    0 -> viewContract(item.contrato)
-                    1 -> shareContract(item.contrato)
-                    2 -> if (hasAddenda) viewAddendum(item)
-                    3 -> if (hasAddenda) shareAddendum(item)
+                    idx++ -> viewContract(item.contrato)
+                    idx++ -> shareContract(item.contrato)
+                    idx++ -> if (hasAddenda) viewAddendum(item) else return@setItems
+                    idx++ -> if (hasAddenda) shareAddendum(item) else return@setItems
+                    idx++ -> if (hasRetirada) viewAddendumRetirada(item) else return@setItems
+                    idx++ -> if (hasRetirada) shareAddendumRetirada(item) else return@setItems
+                    idx -> if (hasDistrato) viewDistrato(item) else return@setItems
+                    else -> shareDistrato(item)
                 }
             }
             .setNegativeButton("Cancelar", null)
@@ -310,6 +322,86 @@ class ContractManagementFragment : Fragment() {
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Erro ao compartilhar aditivo: ${e.message}", Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    private fun viewAddendumRetirada(item: ContractManagementViewModel.ContractItem) {
+        // Reutiliza o mesmo gerador do aditivo; filtra pelo tipo RETIRADA
+        lifecycleScope.launch {
+            val contrato = item.contrato ?: return@launch
+            val aditivo = item.aditivos.filter { it.tipo.equals("RETIRADA", true) }.maxByOrNull { it.dataCriacao.time } ?: return@launch
+            val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
+            val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas)
+            if (!pdf.exists()) {
+                Toast.makeText(requireContext(), "Erro ao gerar PDF do aditivo de retirada", Toast.LENGTH_SHORT).show(); return@launch
+            }
+            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", pdf)
+            val intent = Intent(Intent.ACTION_VIEW).apply { setDataAndType(uri, "application/pdf"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+            if (intent.resolveActivity(requireContext().packageManager) != null) startActivity(intent) else Toast.makeText(requireContext(), "Nenhum app para abrir PDF", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun shareAddendumRetirada(item: ContractManagementViewModel.ContractItem) {
+        lifecycleScope.launch {
+            val contrato = item.contrato ?: return@launch
+            val aditivo = item.aditivos.filter { it.tipo.equals("RETIRADA", true) }.maxByOrNull { it.dataCriacao.time } ?: return@launch
+            val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
+            val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas)
+            if (!pdf.exists()) { Toast.makeText(requireContext(), "Erro ao gerar PDF", Toast.LENGTH_SHORT).show(); return@launch }
+            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", pdf)
+            val shareIntent = Intent(Intent.ACTION_SEND).apply { type = "application/pdf"; putExtra(Intent.EXTRA_STREAM, uri); putExtra(Intent.EXTRA_SUBJECT, "Aditivo ${aditivo.numeroAditivo}"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            startActivity(Intent.createChooser(shareIntent, "Compartilhar aditivo de retirada"))
+        }
+    }
+
+    private fun viewDistrato(item: ContractManagementViewModel.ContractItem) {
+        lifecycleScope.launch {
+            val contrato = item.contrato ?: return@launch
+            val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
+            // Fechamento mínimo derivado do último acerto
+            val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+            val repo = com.example.gestaobilhares.data.repository.AppRepository(
+                db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
+                db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao()
+            )
+            val ultimo = repo.buscarUltimoAcertoPorCliente(contrato.clienteId)
+            val totalRecebido = ultimo?.valorRecebido ?: 0.0
+            val despesasViagem = 0.0
+            val subtotal = totalRecebido - despesasViagem
+            val comissaoMotorista = subtotal * 0.03
+            val comissaoIltair = totalRecebido * 0.02
+            val totalGeral = subtotal - comissaoMotorista - comissaoIltair
+            val saldo = ultimo?.debitoAtual ?: 0.0
+            val fechamento = com.example.gestaobilhares.utils.ContractPdfGenerator.FechamentoResumo(totalRecebido, despesasViagem, subtotal, comissaoMotorista, comissaoIltair, totalGeral, saldo)
+            val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext()).generateDistratoPdf(contrato, mesas, fechamento, if (saldo > 0.0) Pair(saldo, java.util.Date()) else null)
+            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", pdf)
+            val intent = Intent(Intent.ACTION_VIEW).apply { setDataAndType(uri, "application/pdf"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+            if (intent.resolveActivity(requireContext().packageManager) != null) startActivity(intent) else Toast.makeText(requireContext(), "Nenhum app para abrir PDF", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun shareDistrato(item: ContractManagementViewModel.ContractItem) {
+        lifecycleScope.launch {
+            val contrato = item.contrato ?: return@launch
+            val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
+            val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+            val repo = com.example.gestaobilhares.data.repository.AppRepository(
+                db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
+                db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao()
+            )
+            val ultimo = repo.buscarUltimoAcertoPorCliente(contrato.clienteId)
+            val totalRecebido = ultimo?.valorRecebido ?: 0.0
+            val despesasViagem = 0.0
+            val subtotal = totalRecebido - despesasViagem
+            val comissaoMotorista = subtotal * 0.03
+            val comissaoIltair = totalRecebido * 0.02
+            val totalGeral = subtotal - comissaoMotorista - comissaoIltair
+            val saldo = ultimo?.debitoAtual ?: 0.0
+            val fechamento = com.example.gestaobilhares.utils.ContractPdfGenerator.FechamentoResumo(totalRecebido, despesasViagem, subtotal, comissaoMotorista, comissaoIltair, totalGeral, saldo)
+            val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext()).generateDistratoPdf(contrato, mesas, fechamento, if (saldo > 0.0) Pair(saldo, java.util.Date()) else null)
+            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", pdf)
+            val shareIntent = Intent(Intent.ACTION_SEND).apply { type = "application/pdf"; putExtra(Intent.EXTRA_STREAM, uri); putExtra(Intent.EXTRA_SUBJECT, "Distrato ${contrato.numeroContrato}"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            startActivity(Intent.createChooser(shareIntent, "Compartilhar distrato"))
         }
     }
 

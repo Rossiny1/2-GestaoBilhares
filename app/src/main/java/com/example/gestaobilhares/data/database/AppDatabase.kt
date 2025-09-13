@@ -33,7 +33,7 @@ import com.example.gestaobilhares.data.entities.*
         AditivoContrato::class, // ✅ NOVO: ADITIVOS DE CONTRATO
         AditivoMesa::class // ✅ NOVO: VINCULAÇÃO ADITIVO-MESAS
     ],
-    version = 29, // ✅ MIGRATION: status/dataEncerramento no contrato e tipo no aditivo
+    version = 30, // ✅ MIGRATION: campos de assinatura do distrato
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -706,6 +706,28 @@ abstract class AppDatabase : RoomDatabase() {
                         }
                     }
                 }
+
+                val MIGRATION_29_30 = object : androidx.room.migration.Migration(29, 30) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            val cursor = database.query("PRAGMA table_info(contratos_locacao)")
+                            val cols = mutableListOf<String>()
+                            while (cursor.moveToNext()) cols.add(cursor.getString(1))
+                            cursor.close()
+                            if (!cols.contains("distratoAssinaturaLocador")) {
+                                database.execSQL("ALTER TABLE contratos_locacao ADD COLUMN distratoAssinaturaLocador TEXT")
+                            }
+                            if (!cols.contains("distratoAssinaturaLocatario")) {
+                                database.execSQL("ALTER TABLE contratos_locacao ADD COLUMN distratoAssinaturaLocatario TEXT")
+                            }
+                            if (!cols.contains("distratoDataAssinatura")) {
+                                database.execSQL("ALTER TABLE contratos_locacao ADD COLUMN distratoDataAssinatura INTEGER")
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 29_30: ${e.message}")
+                        }
+                    }
+                }
                 
                 
                 val instance = Room.databaseBuilder(
@@ -713,7 +735,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29)
+                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
                     .fallbackToDestructiveMigration() // ✅ NOVO: Permite recriar banco em caso de erro de migration
                     .build()
                 INSTANCE = instance

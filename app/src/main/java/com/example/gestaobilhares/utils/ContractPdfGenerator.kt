@@ -130,7 +130,36 @@ class ContractPdfGenerator(private val context: Context) {
                 document.add(conf)
             }
 
-            addSignatures(document, contrato, font, fontBold)
+            // Assinaturas específicas do distrato
+            val dataAtual = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")).format(Date())
+            val data = Paragraph("Montes Claros, $dataAtual.")
+                .setFont(font).setFontSize(10f)
+                .setMarginTop(30f).setMarginBottom(40f)
+            document.add(data)
+
+            val locadora = Paragraph("BILHAR GLOBO R & A LTDA (Locadora) - CNPJ: ${contrato.locadorCnpj}")
+                .setFont(fontBold).setFontSize(10f).setMarginBottom(10f)
+            document.add(locadora)
+            contrato.distratoAssinaturaLocador?.let { b64 ->
+                try {
+                    val bytes = Base64.decode(b64, Base64.DEFAULT)
+                    val img = Image(ImageDataFactory.create(bytes)).scaleToFit(200f, 100f).setMarginBottom(20f)
+                    document.add(img)
+                } catch (_: Exception) {}
+            }
+            document.add(LineSeparator(null).setMarginBottom(20f))
+
+            val locatario = Paragraph("${contrato.locatarioNome} (Locatário(a)) - CPF/CNPJ: ${contrato.locatarioCpf}")
+                .setFont(fontBold).setFontSize(10f).setMarginBottom(10f)
+            document.add(locatario)
+            contrato.distratoAssinaturaLocatario?.let { b64 ->
+                try {
+                    val bytes = Base64.decode(b64, Base64.DEFAULT)
+                    val img = Image(ImageDataFactory.create(bytes)).scaleToFit(200f, 100f).setMarginBottom(10f)
+                    document.add(img)
+                } catch (_: Exception) {}
+            }
+            document.add(LineSeparator(null).setMarginBottom(20f))
         } finally {
             document.close()
         }
