@@ -58,23 +58,24 @@ class ChartGenerator(private val context: Context) {
             // Configurar dados
             val pieData = PieData(dataSet)
             pieData.setValueFormatter(PercentFormatter(pieChart))
+            pieData.setValueTextSize(12f)
+            pieData.setValueTextColor(Color.BLACK)
             pieChart.data = pieData
 
-            // Configurar descrição
-            pieChart.description.text = title
-            pieChart.description.textSize = 14f
-            pieChart.description.textColor = Color.BLACK
+            // Garantir atualização sem animação (offscreen)
+            pieChart.highlightValues(null)
+            pieChart.notifyDataSetChanged()
+            pieChart.invalidate()
+
+            // Remover descrição para evitar título duplicado no gráfico
+            pieChart.description.isEnabled = false
 
             // Configurar legenda
             val legend = pieChart.legend
-            legend.verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
-            legend.horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
-            legend.orientation = Legend.LegendOrientation.HORIZONTAL
-            legend.setDrawInside(false)
-            legend.textSize = 10f
-
-            // Configurar animação
-            pieChart.animateY(1000)
+            // Desativar a legenda dentro do gráfico para maximizar o tamanho do donut.
+            legend.isEnabled = false
+            // Espaços menores agora que a legenda não está no chart
+            pieChart.setExtraOffsets(8f, 8f, 8f, 8f)
 
             // Converter para bitmap
             convertChartToBitmap(pieChart)
@@ -120,23 +121,22 @@ class ChartGenerator(private val context: Context) {
             // Configurar dados
             val pieData = PieData(dataSet)
             pieData.setValueFormatter(PercentFormatter(pieChart))
+            pieData.setValueTextSize(12f)
+            pieData.setValueTextColor(Color.BLACK)
             pieChart.data = pieData
 
-            // Configurar descrição
-            pieChart.description.text = title
-            pieChart.description.textSize = 14f
-            pieChart.description.textColor = Color.BLACK
+            // Garantir atualização sem animação (offscreen)
+            pieChart.highlightValues(null)
+            pieChart.notifyDataSetChanged()
+            pieChart.invalidate()
+
+            // Remover descrição para evitar título duplicado no gráfico
+            pieChart.description.isEnabled = false
 
             // Configurar legenda
             val legend = pieChart.legend
-            legend.verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
-            legend.horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
-            legend.orientation = Legend.LegendOrientation.HORIZONTAL
-            legend.setDrawInside(false)
-            legend.textSize = 10f
-
-            // Configurar animação
-            pieChart.animateY(1000)
+            legend.isEnabled = false
+            pieChart.setExtraOffsets(8f, 8f, 8f, 8f)
 
             // Converter para bitmap
             convertChartToBitmap(pieChart)
@@ -158,13 +158,14 @@ class ChartGenerator(private val context: Context) {
         
         val pieChart = PieChart(context)
         
-        // Configurar tamanho
-        pieChart.layoutParams = android.view.ViewGroup.LayoutParams(400, 400)
+        // Configurar tamanho (maior para melhor definição)
+        val size = 500
+        pieChart.layoutParams = android.view.ViewGroup.LayoutParams(size, size)
         pieChart.measure(
-            android.view.View.MeasureSpec.makeMeasureSpec(400, android.view.View.MeasureSpec.EXACTLY),
-            android.view.View.MeasureSpec.makeMeasureSpec(400, android.view.View.MeasureSpec.EXACTLY)
+            android.view.View.MeasureSpec.makeMeasureSpec(size, android.view.View.MeasureSpec.EXACTLY),
+            android.view.View.MeasureSpec.makeMeasureSpec(size, android.view.View.MeasureSpec.EXACTLY)
         )
-        pieChart.layout(0, 0, 400, 400)
+        pieChart.layout(0, 0, size, size)
 
         // CONFIGURAÇÕES BÁSICAS PARA PDF - SIMPLIFICADAS
         pieChart.setUsePercentValues(true)
@@ -173,8 +174,8 @@ class ChartGenerator(private val context: Context) {
         pieChart.setHoleColor(Color.WHITE)
         pieChart.setTransparentCircleColor(Color.WHITE)
         pieChart.setTransparentCircleAlpha(110)
-        pieChart.setHoleRadius(50f)
-        pieChart.setTransparentCircleRadius(55f)
+        pieChart.setHoleRadius(40f)
+        pieChart.setTransparentCircleRadius(45f)
         pieChart.setBackgroundColor(Color.WHITE)
         
         // Configurar legenda
@@ -203,51 +204,44 @@ class ChartGenerator(private val context: Context) {
             android.os.Looper.prepare()
         }
         
-        // SOLUÇÃO CRÍTICA: Desativar aceleração de hardware para evitar conflitos
+        // Desativar aceleração de hardware para evitar conflitos
         pieChart.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null)
         
         // Configurar tamanho do gráfico
-        pieChart.layoutParams = android.view.ViewGroup.LayoutParams(400, 400)
+        val size2 = 500
+        pieChart.layoutParams = android.view.ViewGroup.LayoutParams(size2, size2)
         
         // Forçar layout
         pieChart.measure(
-            android.view.View.MeasureSpec.makeMeasureSpec(400, android.view.View.MeasureSpec.EXACTLY),
-            android.view.View.MeasureSpec.makeMeasureSpec(400, android.view.View.MeasureSpec.EXACTLY)
+            android.view.View.MeasureSpec.makeMeasureSpec(size2, android.view.View.MeasureSpec.EXACTLY),
+            android.view.View.MeasureSpec.makeMeasureSpec(size2, android.view.View.MeasureSpec.EXACTLY)
         )
-        pieChart.layout(0, 0, 400, 400)
+        pieChart.layout(0, 0, size2, size2)
         
         android.util.Log.d("ChartGenerator", "Gráfico configurado - largura: ${pieChart.width}, altura: ${pieChart.height}")
         android.util.Log.d("ChartGenerator", "Dados do gráfico: ${pieChart.data?.dataSet?.entryCount} entradas")
         
-        // SOLUÇÃO ALTERNATIVA: Usar getDrawingCache() conforme fontes externas
-        pieChart.setDrawingCacheEnabled(true)
-        pieChart.buildDrawingCache()
-        
+        // Tentar obter o bitmap nativo do chart (recomendado pelo MPAndroidChart)
         val bitmap: Bitmap = try {
-            // Tentar usar o drawing cache primeiro
-            val drawingCache = pieChart.drawingCache
-            if (drawingCache != null) {
-                android.util.Log.d("ChartGenerator", "Bitmap criado usando drawing cache")
-                Bitmap.createBitmap(drawingCache)
+            val native = pieChart.chartBitmap
+            if (native != null) {
+                android.util.Log.d("ChartGenerator", "Bitmap criado via chartBitmap")
+                native
             } else {
-                // Fallback: criar bitmap manualmente
-                android.util.Log.d("ChartGenerator", "Bitmap criado usando canvas manual")
-                val fallbackBitmap = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(fallbackBitmap)
+                android.util.Log.d("ChartGenerator", "chartBitmap null, desenhando manualmente")
+                val fb = Bitmap.createBitmap(size2, size2, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(fb)
                 canvas.drawColor(Color.WHITE)
                 pieChart.draw(canvas)
-                fallbackBitmap
+                fb
             }
         } catch (e: Exception) {
             android.util.Log.e("ChartGenerator", "Erro ao criar bitmap: ${e.message}", e)
-            // Fallback final
-            val fallbackBitmap = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(fallbackBitmap)
+            val fb = Bitmap.createBitmap(size2, size2, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(fb)
             canvas.drawColor(Color.WHITE)
             pieChart.draw(canvas)
-            fallbackBitmap
-        } finally {
-            pieChart.setDrawingCacheEnabled(false)
+            fb
         }
         
         return bitmap

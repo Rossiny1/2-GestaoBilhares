@@ -3,6 +3,8 @@ package com.example.gestaobilhares.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import android.graphics.Color
+import com.github.mikephil.charting.utils.ColorTemplate
 import com.example.gestaobilhares.ui.reports.ClosureReportViewModel
 import com.itextpdf.io.image.ImageDataFactory
 import com.itextpdf.kernel.colors.DeviceRgb
@@ -386,35 +388,47 @@ class ClosureReportPdfGenerator(private val context: Context) {
             document.add(
                 Paragraph("Análise Gráfica")
                     .setBold()
-                    .setFontSize(16f)
+                    .setFontSize(18f)
                     .setTextAlignment(TextAlignment.CENTER)
                     .setMarginTop(20f)
                     .setMarginBottom(15f)
             )
             
-            // Gerar gráfico de faturamento por rota
-            val revenueChart = chartGenerator.generateRevenuePieChart(
-                chartData.faturamentoPorRota,
-                "Faturamento por Rota"
-            )
-            
-            // Gerar gráfico de despesas por tipo
-            val expensesChart = chartGenerator.generateExpensesPieChart(
-                chartData.despesasPorTipo,
-                "Despesas por Tipo"
-            )
+            // Ordenar dados por valor para manter correspondência de cores entre gráfico e legenda
+            val revenuePairs = chartData.faturamentoPorRota.entries.sortedByDescending { it.value }
+            val orderedRevenueMap = java.util.LinkedHashMap<String, Double>().apply {
+                revenuePairs.forEach { put(it.key, it.value) }
+            }
+            val expensesPairs = chartData.despesasPorTipo.entries.sortedByDescending { it.value }
+            val orderedExpensesMap = java.util.LinkedHashMap<String, Double>().apply {
+                expensesPairs.forEach { put(it.key, it.value) }
+            }
+
+            // Gerar gráficos com mapas ordenados
+            val revenueChart = chartGenerator.generateRevenuePieChart(orderedRevenueMap, "Faturamento por Rota")
+            val expensesChart = chartGenerator.generateExpensesPieChart(orderedExpensesMap, "Despesas por Tipo")
             
             // Adicionar gráficos ao documento
+            // Tabela de 2 colunas: cada célula terá imagem grande e uma legenda textual abaixo
             val table = Table(UnitValue.createPercentArray(floatArrayOf(50f, 50f)))
                 .setWidth(UnitValue.createPercentValue(100f))
                 .setMarginTop(10f)
-                .setMarginBottom(20f)
+                .setMarginBottom(10f)
             
             // Célula do gráfico de faturamento
             val revenueCell = Cell()
             if (revenueChart != null) {
                 val revenueImage = Image(ImageDataFactory.create(bitmapToByteArray(revenueChart)))
-                revenueImage.scaleToFit(180f, 180f)
+                revenueImage.scaleToFit(360f, 360f)
+                revenueImage.setAutoScale(true)
+                // Título acima do gráfico
+                revenueCell.add(
+                    Paragraph("Faturamento por Rota")
+                        .setBold()
+                        .setFontSize(11f)
+                        .setTextAlignment(TextAlignment.CENTER)
+                        .setMarginBottom(6f)
+                )
                 revenueCell.add(revenueImage)
             } else {
                 revenueCell.add(Paragraph("Sem dados de faturamento").setTextAlignment(TextAlignment.CENTER))
@@ -425,7 +439,15 @@ class ClosureReportPdfGenerator(private val context: Context) {
             val expensesCell = Cell()
             if (expensesChart != null) {
                 val expensesImage = Image(ImageDataFactory.create(bitmapToByteArray(expensesChart)))
-                expensesImage.scaleToFit(180f, 180f)
+                expensesImage.scaleToFit(360f, 360f)
+                expensesImage.setAutoScale(true)
+                expensesCell.add(
+                    Paragraph("Despesas por Tipo")
+                        .setBold()
+                        .setFontSize(11f)
+                        .setTextAlignment(TextAlignment.CENTER)
+                        .setMarginBottom(6f)
+                )
                 expensesCell.add(expensesImage)
             } else {
                 expensesCell.add(Paragraph("Sem dados de despesas").setTextAlignment(TextAlignment.CENTER))
@@ -433,6 +455,25 @@ class ClosureReportPdfGenerator(private val context: Context) {
             table.addCell(expensesCell)
             
             document.add(table)
+
+            // Legendas completas abaixo (fora das imagens) com marcadores coloridos
+            val legendsTable = Table(2)
+                .setWidth(UnitValue.createPercentValue(100f))
+                .setMarginTop(6f)
+                .setMarginBottom(16f)
+
+            legendsTable.addCell(
+                Cell().add(
+                    createLegendRow(revenuePairs.map { it.key })
+                )
+            )
+            legendsTable.addCell(
+                Cell().add(
+                    createLegendRow(expensesPairs.map { it.key })
+                )
+            )
+
+            document.add(legendsTable)
             
         } catch (e: Exception) {
             Log.e("ClosureReportPdfGenerator", "Erro ao adicionar gráficos: ${e.message}", e)
@@ -453,5 +494,25 @@ class ClosureReportPdfGenerator(private val context: Context) {
         val stream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
         return stream.toByteArray()
+    }
+
+    /**
+     * Cria um parágrafo de legenda com marcadores coloridos
+     */
+    private fun createLegendRow(labelsInOrder: List<String>): Paragraph {
+        val p = Paragraph().setFontSize(10f)
+        val colors = ColorTemplate.MATERIAL_COLORS
+        labelsInOrder.forEachIndexed { index, label ->
+            val color = colors[index % colors.size]
+            val square = com.itextpdf.layout.element.Text("■ ")
+                .setFontSize(10f)
+                .setFontColor(DeviceRgb(Color.red(color), Color.green(color), Color.blue(color)))
+            val text = com.itextpdf.layout.element.Text(label)
+                .setFontSize(10f)
+            p.add(square)
+            p.add(text)
+            if (index < labelsInOrder.size - 1) p.add(com.itextpdf.layout.element.Text("    "))
+        }
+        return p
     }
 }
