@@ -504,15 +504,23 @@ class ClosureReportPdfGenerator(private val context: Context) {
         val colors = ColorTemplate.MATERIAL_COLORS
         labelsInOrder.forEachIndexed { index, label ->
             val color = colors[index % colors.size]
-            val square = com.itextpdf.layout.element.Text("■ ")
-                .setFontSize(10f)
-                .setFontColor(DeviceRgb(Color.red(color), Color.green(color), Color.blue(color)))
-            val text = com.itextpdf.layout.element.Text(label)
-                .setFontSize(10f)
-            p.add(square)
-            p.add(text)
+            val swatch = createColorSwatch(color)
+            p.add(swatch)
+            p.add(com.itextpdf.layout.element.Text(" "))
+            p.add(com.itextpdf.layout.element.Text(label).setFontSize(10f))
             if (index < labelsInOrder.size - 1) p.add(com.itextpdf.layout.element.Text("    "))
         }
         return p
+    }
+
+    private fun createColorSwatch(colorInt: Int): Image {
+        val bmp = Bitmap.createBitmap(12, 12, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bmp)
+        canvas.drawColor(colorInt)
+        val img = Image(ImageDataFactory.create(bitmapToByteArray(bmp)))
+        img.scaleAbsolute(8f, 8f)
+        img.setMarginRight(2f)
+        img.setAutoScale(false)
+        return img
     }
 }
