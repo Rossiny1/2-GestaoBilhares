@@ -737,9 +737,171 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                     .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
                     .fallbackToDestructiveMigration() // ✅ NOVO: Permite recriar banco em caso de erro de migration
+                    .addCallback(object : RoomDatabase.Callback() {
+                        override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                            super.onOpen(db)
+                            // Popular dados de demonstração apenas uma vez (debug/dev)
+                            try {
+                                val appCtx = context.applicationContext
+                                val prefs = appCtx.getSharedPreferences("gestao_bilhares_seed", android.content.Context.MODE_PRIVATE)
+                                val alreadySeeded = prefs.getBoolean("db_seeded_v1", false)
+                                if (!alreadySeeded) {
+                                    // Rodar em thread separada para não bloquear a inicialização
+                                    Thread {
+                                        try {
+                                            seedDatabaseIfNeeded(appCtx)
+                                            prefs.edit().putBoolean("db_seeded_v1", true).apply()
+                                        } catch (e: Exception) {
+                                            android.util.Log.e("AppDatabase", "Erro ao popular seed: ${e.message}", e)
+                                        }
+                                    }.start()
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.e("AppDatabase", "Falha ao verificar seed: ${e.message}", e)
+                            }
+                        }
+                    })
                     .build()
                 INSTANCE = instance
                 instance
+            }
+        }
+
+        private fun seedDatabaseIfNeeded(context: Context) {
+            // Inserções de exemplo: 4 rotas, clientes, mesas, ciclos, acertos, acerto_mesas, categorias/tipos de despesa e algumas despesas
+            val db = getDatabase(context)
+            // Usar uma única transação para consistência
+            db.runInTransaction {
+                // 1) Rotas
+                val rotaDao = db.rotaDao()
+                val rotaCentroId = kotlinx.coroutines.runBlocking { rotaDao.insertRota(com.example.gestaobilhares.data.entities.Rota(nome = "Centro")) }
+                val rotaNorteId = kotlinx.coroutines.runBlocking { rotaDao.insertRota(com.example.gestaobilhares.data.entities.Rota(nome = "Norte")) }
+                val rotaSulId = kotlinx.coroutines.runBlocking { rotaDao.insertRota(com.example.gestaobilhares.data.entities.Rota(nome = "Sul")) }
+                val rotaLesteId = kotlinx.coroutines.runBlocking { rotaDao.insertRota(com.example.gestaobilhares.data.entities.Rota(nome = "Leste")) }
+
+                // 2) Clientes (alguns com débitos e valores de ficha)
+                val clienteDao = db.clienteDao()
+                val c1Id = kotlinx.coroutines.runBlocking { clienteDao.inserir(com.example.gestaobilhares.data.entities.Cliente(nome = "Bar do João", rotaId = rotaCentroId, valorFicha = 1.5, comissaoFicha = 0.0)) }
+                val c2Id = kotlinx.coroutines.runBlocking { clienteDao.inserir(com.example.gestaobilhares.data.entities.Cliente(nome = "Boteco da Ana", rotaId = rotaCentroId, valorFicha = 2.0, comissaoFicha = 0.0)) }
+                val c3Id = kotlinx.coroutines.runBlocking { clienteDao.inserir(com.example.gestaobilhares.data.entities.Cliente(nome = "Bar do Zé", rotaId = rotaNorteId, valorFicha = 1.75, comissaoFicha = 0.0)) }
+                val c4Id = kotlinx.coroutines.runBlocking { clienteDao.inserir(com.example.gestaobilhares.data.entities.Cliente(nome = "Quiosque da Praia", rotaId = rotaSulId, valorFicha = 2.0, comissaoFicha = 0.0)) }
+                val c5Id = kotlinx.coroutines.runBlocking { clienteDao.inserir(com.example.gestaobilhares.data.entities.Cliente(nome = "Bar da Esquina", rotaId = rotaLesteId, valorFicha = 1.5, comissaoFicha = 0.0)) }
+
+                // 3) Mesas por cliente
+                val mesaDao = db.mesaDao()
+                val m1Id = kotlinx.coroutines.runBlocking { mesaDao.inserir(com.example.gestaobilhares.data.entities.Mesa(numero = "101", clienteId = c1Id, relogioInicial = 100, relogioFinal = 200)) }
+                val m2Id = kotlinx.coroutines.runBlocking { mesaDao.inserir(com.example.gestaobilhares.data.entities.Mesa(numero = "102", clienteId = c1Id, relogioInicial = 50, relogioFinal = 120)) }
+                val m3Id = kotlinx.coroutines.runBlocking { mesaDao.inserir(com.example.gestaobilhares.data.entities.Mesa(numero = "201", clienteId = c2Id, relogioInicial = 300, relogioFinal = 430)) }
+                val m4Id = kotlinx.coroutines.runBlocking { mesaDao.inserir(com.example.gestaobilhares.data.entities.Mesa(numero = "301", clienteId = c3Id, relogioInicial = 0, relogioFinal = 90)) }
+                val m5Id = kotlinx.coroutines.runBlocking { mesaDao.inserir(com.example.gestaobilhares.data.entities.Mesa(numero = "401", clienteId = c4Id, relogioInicial = 10, relogioFinal = 10)) }
+                val m6Id = kotlinx.coroutines.runBlocking { mesaDao.inserir(com.example.gestaobilhares.data.entities.Mesa(numero = "501", clienteId = c5Id, relogioInicial = 5, relogioFinal = 65)) }
+
+                // 4) Ciclos de acerto (2 ciclos para ano atual em algumas rotas)
+                val anoAtual = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                val cicloDao = db.cicloAcertoDao()
+                val cInicio1 = java.util.Calendar.getInstance().apply { set(anoAtual, 0, 1) }.time
+                val cFim1 = java.util.Calendar.getInstance().apply { set(anoAtual, 0, 15) }.time
+                val cInicio2 = java.util.Calendar.getInstance().apply { set(anoAtual, 0, 16) }.time
+                val cFim2 = java.util.Calendar.getInstance().apply { set(anoAtual, 0, 31) }.time
+                val cicloCentro1 = kotlinx.coroutines.runBlocking { cicloDao.inserir(com.example.gestaobilhares.data.entities.CicloAcertoEntity(rotaId = rotaCentroId, numeroCiclo = 1, ano = anoAtual, dataInicio = cInicio1, dataFim = cFim1)) }
+                val cicloCentro2 = kotlinx.coroutines.runBlocking { cicloDao.inserir(com.example.gestaobilhares.data.entities.CicloAcertoEntity(rotaId = rotaCentroId, numeroCiclo = 2, ano = anoAtual, dataInicio = cInicio2, dataFim = cFim2)) }
+                val cicloNorte1 = kotlinx.coroutines.runBlocking { cicloDao.inserir(com.example.gestaobilhares.data.entities.CicloAcertoEntity(rotaId = rotaNorteId, numeroCiclo = 1, ano = anoAtual, dataInicio = cInicio1, dataFim = cFim1)) }
+
+                // 5) Acertos para alguns clientes
+                val acertoDao = db.acertoDao()
+                val acerto1Id = kotlinx.coroutines.runBlocking {
+                    acertoDao.inserir(
+                        com.example.gestaobilhares.data.entities.Acerto(
+                            clienteId = c1Id,
+                            periodoInicio = cInicio1,
+                            periodoFim = cFim1,
+                            totalMesas = 0.0,
+                            debitoAnterior = 0.0,
+                            valorTotal = 0.0,
+                            desconto = 0.0,
+                            valorComDesconto = 0.0,
+                            valorRecebido = 500.0,
+                            debitoAtual = 0.0,
+                            status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
+                            observacoes = "Acerto inicial Centro",
+                            rotaId = rotaCentroId,
+                            cicloId = cicloCentro1
+                        )
+                    )
+                }
+                val acerto2Id = kotlinx.coroutines.runBlocking {
+                    acertoDao.inserir(
+                        com.example.gestaobilhares.data.entities.Acerto(
+                            clienteId = c2Id,
+                            periodoInicio = cInicio1,
+                            periodoFim = cFim1,
+                            totalMesas = 0.0,
+                            debitoAnterior = 50.0,
+                            valorTotal = 0.0,
+                            desconto = 0.0,
+                            valorComDesconto = 0.0,
+                            valorRecebido = 350.0,
+                            debitoAtual = 0.0,
+                            status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
+                            observacoes = "Acerto ciclo 1",
+                            rotaId = rotaCentroId,
+                            cicloId = cicloCentro1
+                        )
+                    )
+                }
+                val acerto3Id = kotlinx.coroutines.runBlocking {
+                    acertoDao.inserir(
+                        com.example.gestaobilhares.data.entities.Acerto(
+                            clienteId = c3Id,
+                            periodoInicio = cInicio2,
+                            periodoFim = cFim2,
+                            totalMesas = 0.0,
+                            debitoAnterior = 0.0,
+                            valorTotal = 0.0,
+                            desconto = 0.0,
+                            valorComDesconto = 0.0,
+                            valorRecebido = 420.0,
+                            debitoAtual = 0.0,
+                            status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
+                            observacoes = "Acerto Norte",
+                            rotaId = rotaNorteId,
+                            cicloId = cicloNorte1
+                        )
+                    )
+                }
+
+                // 6) AcertoMesas (fichas/relogios)
+                val acertoMesaDao = db.acertoMesaDao()
+                kotlinx.coroutines.runBlocking {
+                    acertoMesaDao.inserir(com.example.gestaobilhares.data.entities.AcertoMesa(acertoId = acerto1Id, mesaId = m1Id, relogioInicial = 100, relogioFinal = 180, fichasJogadas = 80, valorFixo = 0.0, valorFicha = 1.5, comissaoFicha = 0.0, subtotal = 120.0))
+                    acertoMesaDao.inserir(com.example.gestaobilhares.data.entities.AcertoMesa(acertoId = acerto1Id, mesaId = m2Id, relogioInicial = 50, relogioFinal = 100, fichasJogadas = 50, valorFixo = 0.0, valorFicha = 1.5, comissaoFicha = 0.0, subtotal = 75.0))
+                    acertoMesaDao.inserir(com.example.gestaobilhares.data.entities.AcertoMesa(acertoId = acerto2Id, mesaId = m3Id, relogioInicial = 300, relogioFinal = 420, fichasJogadas = 120, valorFixo = 0.0, valorFicha = 2.0, comissaoFicha = 0.0, subtotal = 240.0))
+                    acertoMesaDao.inserir(com.example.gestaobilhares.data.entities.AcertoMesa(acertoId = acerto3Id, mesaId = m4Id, relogioInicial = 0, relogioFinal = 80, fichasJogadas = 80, valorFixo = 0.0, valorFicha = 1.75, comissaoFicha = 0.0, subtotal = 140.0))
+                }
+
+                // 7) Categorias e Tipos de Despesa
+                val catDao = db.categoriaDespesaDao()
+                val catCombId = kotlinx.coroutines.runBlocking { catDao.inserir(com.example.gestaobilhares.data.entities.CategoriaDespesa(nome = "Combustível")) }
+                val catAlimId = kotlinx.coroutines.runBlocking { catDao.inserir(com.example.gestaobilhares.data.entities.CategoriaDespesa(nome = "Alimentação")) }
+                val catManuId = kotlinx.coroutines.runBlocking { catDao.inserir(com.example.gestaobilhares.data.entities.CategoriaDespesa(nome = "Manutenção")) }
+
+                val tipoDao = db.tipoDespesaDao()
+                kotlinx.coroutines.runBlocking {
+                    tipoDao.inserir(com.example.gestaobilhares.data.entities.TipoDespesa(categoriaId = catCombId, nome = "Gasolina"))
+                    tipoDao.inserir(com.example.gestaobilhares.data.entities.TipoDespesa(categoriaId = catAlimId, nome = "Almoço"))
+                    tipoDao.inserir(com.example.gestaobilhares.data.entities.TipoDespesa(categoriaId = catManuId, nome = "Troca de pano"))
+                }
+
+                // 8) Despesas em ciclos diferentes
+                val despesaDao = db.despesaDao()
+                val agora = java.time.LocalDateTime.now()
+                kotlinx.coroutines.runBlocking {
+                    despesaDao.inserir(com.example.gestaobilhares.data.entities.Despesa(rotaId = rotaCentroId, descricao = "Gasolina rota Centro", valor = 150.0, categoria = "Combustível", tipoDespesa = "Gasolina", dataHora = agora.minusDays(20), observacoes = "", criadoPor = "seed", cicloId = cicloCentro1, origemLancamento = "ROTA", cicloAno = anoAtual, cicloNumero = 1))
+                    despesaDao.inserir(com.example.gestaobilhares.data.entities.Despesa(rotaId = rotaCentroId, descricao = "Almoço equipe", valor = 80.0, categoria = "Alimentação", tipoDespesa = "Almoço", dataHora = agora.minusDays(19), observacoes = "", criadoPor = "seed", cicloId = cicloCentro1, origemLancamento = "ROTA", cicloAno = anoAtual, cicloNumero = 1))
+                    despesaDao.inserir(com.example.gestaobilhares.data.entities.Despesa(rotaId = rotaNorteId, descricao = "Troca de pano mesa 301", valor = 120.0, categoria = "Manutenção", tipoDespesa = "Troca de pano", dataHora = agora.minusDays(5), observacoes = "", criadoPor = "seed", cicloId = cicloNorte1, origemLancamento = "ROTA", cicloAno = anoAtual, cicloNumero = 2))
+                    // Despesa global (sem rota efetiva no cálculo por rota, mas marcada pelo ano/ciclo)
+                    despesaDao.inserir(com.example.gestaobilhares.data.entities.Despesa(rotaId = rotaCentroId, descricao = "Despesa global escritório", valor = 200.0, categoria = "Outros", tipoDespesa = "Administrativo", dataHora = agora.minusDays(2), observacoes = "Global", criadoPor = "seed", cicloId = null, origemLancamento = "GLOBAL", cicloAno = anoAtual, cicloNumero = 2))
+                }
             }
         }
     }
