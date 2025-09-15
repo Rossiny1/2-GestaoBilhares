@@ -1109,7 +1109,9 @@ class SettlementFragment : Fragment() {
                         debitoAtual = acerto.debitoAtual,
                         debitoAnterior = debitoAnterior,
                         desconto = desconto,
-                        valorTotalMesas = valorTotalMesas // ✅ CORREÇÃO: Passar valor total das mesas do banco
+                        valorTotalMesas = valorTotalMesas,
+                        valorFicha = cliente?.valorFicha ?: 0.0,
+                        comissaoFicha = cliente?.comissaoFicha ?: 0.0
                     )
                     dialog.acertoCompartilhadoListener = object : SettlementSummaryDialog.OnAcertoCompartilhadoListener {
                         override fun onAcertoCompartilhado() {
