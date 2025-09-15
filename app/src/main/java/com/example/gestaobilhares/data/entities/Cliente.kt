@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import java.io.Serializable
 import java.util.Date
 
 /**
@@ -102,7 +103,7 @@ data class Cliente(
     
     @ColumnInfo(name = "data_ultima_atualizacao")
     val dataUltimaAtualizacao: Date = Date()
-)
+) : Serializable
 
 /**
  * Data class para representar um resumo de cliente na lista

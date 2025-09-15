@@ -22,6 +22,9 @@ import com.example.gestaobilhares.utils.UserSessionManager
 import com.google.android.material.navigation.NavigationView
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.example.gestaobilhares.data.entities.Cliente
+import com.example.gestaobilhares.data.entities.Rota
+import com.example.gestaobilhares.data.entities.Mesa
 import java.text.NumberFormat
 import java.util.Locale
 import dagger.hilt.android.AndroidEntryPoint
@@ -364,6 +367,11 @@ class RoutesFragment : Fragment() {
         binding.filterButton.setOnClickListener {
             Toast.makeText(requireContext(), "Filtros serão implementados em breve", Toast.LENGTH_SHORT).show()
         }
+
+        // Botão de transferência
+        binding.transferButton.setOnClickListener {
+            showTransferClientDialog()
+        }
     }
 
 
@@ -425,6 +433,30 @@ class RoutesFragment : Fragment() {
     /**
      * Limpa o binding quando o fragment é destruído.
      */
+    /**
+     * Mostra o diálogo de seleção de cliente para transferência.
+     */
+    private fun showTransferClientDialog() {
+        val dialog = ClientSelectionDialog.newInstance()
+        dialog.setOnClientSelectedListener { cliente, rota, mesas ->
+            // Mostrar o diálogo de transferência com os dados selecionados
+            showTransferDialog(cliente, rota, mesas)
+        }
+        dialog.show(parentFragmentManager, "ClientSelectionDialog")
+    }
+
+    /**
+     * Mostra o diálogo de transferência com os dados do cliente selecionado.
+     */
+    private fun showTransferDialog(cliente: Cliente, rota: Rota, mesas: List<Mesa>) {
+        val dialog = TransferClientDialog.newInstance(cliente, rota, mesas)
+        dialog.setOnTransferSuccessListener {
+            // Recarregar dados após transferência
+            // Os dados serão atualizados automaticamente via LiveData
+        }
+        dialog.show(parentFragmentManager, "TransferClientDialog")
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
