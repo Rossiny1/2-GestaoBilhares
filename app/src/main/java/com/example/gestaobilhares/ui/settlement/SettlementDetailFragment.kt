@@ -533,21 +533,18 @@ class SettlementDetailFragment : Fragment() {
         texto.append("🎱 *ACERTO DE BILHAR*\n")
         texto.append("================================\n\n")
         texto.append("👤 *Cliente:* $clienteNome\n")
-        texto.append("📅 *Data:* ${settlement.date}\n")
-        texto.append("🆔 *Acerto:* #${settlement.id.toString().padStart(4, '0')}\n\n")
+        texto.append("📅 *Data:* ${settlement.date}\n\n")
 
         texto.append("🎯 *MESAS ACERTADAS:*\n")
         var totalFichasJogadas = 0
         settlement.acertoMesas.forEach { mesa ->
             val numeroMesa = mesa.mesaId.toString()
             if (mesa.valorFixo > 0) {
-                // Para valor fixo
-                texto.append("• *Mesa $numeroMesa*: ${formatter.format(mesa.valorFixo)}/mês\n")
+                texto.append("• *Mesa $numeroMesa*\n${formatter.format(mesa.valorFixo)}/mês\n")
             } else {
-                // Para fichas jogadas
                 val fichasJogadas = mesa.relogioFinal - mesa.relogioInicial
                 totalFichasJogadas += fichasJogadas
-                texto.append("• *Mesa $numeroMesa*: ${mesa.relogioInicial} → ${mesa.relogioFinal} ($fichasJogadas fichas)\n")
+                texto.append("• *Mesa $numeroMesa*\n${mesa.relogioInicial} → ${mesa.relogioFinal} ($fichasJogadas fichas)\n")
             }
         }
         if (totalFichasJogadas > 0) {

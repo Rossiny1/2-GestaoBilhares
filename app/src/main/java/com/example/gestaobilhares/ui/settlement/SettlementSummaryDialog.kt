@@ -47,7 +47,9 @@ class SettlementSummaryDialog : DialogFragment() {
             debitoAtual: Double = 0.0,
             debitoAnterior: Double = 0.0,
             desconto: Double = 0.0,
-            valorTotalMesas: Double = 0.0
+            valorTotalMesas: Double = 0.0,
+            valorFicha: Double = 0.0,
+            comissaoFicha: Double = 0.0
         ): SettlementSummaryDialog {
             val args = Bundle().apply {
                 putString("clienteNome", clienteNome)
@@ -60,6 +62,8 @@ class SettlementSummaryDialog : DialogFragment() {
                 putDouble("debitoAnterior", debitoAnterior)
                 putDouble("desconto", desconto)
                 putDouble("valorTotalMesas", valorTotalMesas)
+                putDouble("valorFicha", valorFicha)
+                putDouble("comissaoFicha", comissaoFicha)
             }
             val fragment = SettlementSummaryDialog()
             fragment.arguments = args
@@ -89,6 +93,9 @@ class SettlementSummaryDialog : DialogFragment() {
         val debitoAnterior = arguments?.getDouble("debitoAnterior") ?: 0.0
         val desconto = arguments?.getDouble("desconto") ?: 0.0
         val valorTotalMesas = arguments?.getDouble("valorTotalMesas") ?: 0.0
+        val valorFicha = arguments?.getDouble("valorFicha") ?: 0.0
+        val comissaoFicha = arguments?.getDouble("comissaoFicha") ?: 0.0
+        val valorFichaExibir = if (valorFicha > 0) valorFicha else if (comissaoFicha > 0) comissaoFicha else 0.0
 
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
         
@@ -183,6 +190,8 @@ class SettlementSummaryDialog : DialogFragment() {
                                 val txtPagamentos = reciboView.findViewById<TextView>(R.id.txtPagamentos)
                                 val txtObservacoes = reciboView.findViewById<TextView>(R.id.txtObservacoes)
                                 val imgLogo = reciboView.findViewById<ImageView>(R.id.imgLogoRecibo)
+                                val txtValorFichaImpressao = reciboView.findViewById<TextView>(R.id.txtValorFicha)
+                                val rowValorFicha = reciboView.findViewById<android.widget.LinearLayout>(R.id.rowValorFicha)
 
                                 // Preencher campos do recibo
                                 // Cliente
@@ -194,22 +203,30 @@ class SettlementSummaryDialog : DialogFragment() {
                                 val mesasFormatadas = StringBuilder()
                                 mesas.forEachIndexed { index, mesa ->
                                     val fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0)
-                                    mesasFormatadas.append("Mesa${mesa.numero}\n${mesa.fichasInicial}→${mesa.fichasFinal} (${fichasJogadas} fichas)")
+                                    mesasFormatadas.append("Mesa ${mesa.numero}\n${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)")
                                     if (index < mesas.size - 1) mesasFormatadas.append("\n")
                                 }
                                 txtMesas.text = mesasFormatadas.toString()
                                 // Fichas jogadas
                                 val totalFichasJogadas = mesas.sumOf { (it.fichasFinal ?: 0) - (it.fichasInicial ?: 0) }
                                 txtFichasJogadas.text = totalFichasJogadas.toString()
-                                // Resumo Financeiro
+                                // Resumo Financeiro (sem duplicação e com rótulos únicos)
                                 val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
                                 txtDebitoAnterior.text = formatter.format(debitoAnterior)
                                 txtSubtotalMesas.text = formatter.format(valorTotalMesas)
                                 val valorTotal = valorTotalMesas + debitoAnterior
                                 txtTotal.text = formatter.format(valorTotal)
                                 txtDesconto.text = formatter.format(desconto)
-                                txtValorRecebido.text = formatter.format(metodosPagamento.values.sum())
+                                val valorRecebidoSum = metodosPagamento.values.sum()
+                                txtValorRecebido.text = formatter.format(valorRecebidoSum)
                                 txtDebitoAtual.text = formatter.format(debitoAtual)
+                                // Valor da ficha
+                                if (valorFichaExibir > 0) {
+                                    txtValorFichaImpressao.text = formatter.format(valorFichaExibir)
+                                    rowValorFicha.visibility = android.view.View.VISIBLE
+                                } else {
+                                    rowValorFicha.visibility = android.view.View.GONE
+                                }
                                 // Forma de pagamento (formatação limpa)
                                 val pagamentosFormatados = if (metodosPagamento.isNotEmpty()) {
                                     metodosPagamento.entries.joinToString("\n") { "${it.key}: ${formatter.format(it.value)}" }
@@ -271,7 +288,7 @@ class SettlementSummaryDialog : DialogFragment() {
         
         // Botão WhatsApp
         view.findViewById<MaterialButton>(R.id.btnWhatsapp).setOnClickListener {
-            val textoCompleto = gerarTextoResumo(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual, debitoAnterior, desconto, valorTotalMesas)
+            val textoCompleto = gerarTextoResumo(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual, debitoAnterior, desconto, valorTotalMesas, valorFichaExibir, comissaoFicha)
             enviarViaWhatsAppDireto(clienteTelefone, textoCompleto)
             dismiss()
             acertoCompartilhadoListener?.onAcertoCompartilhado()
@@ -296,7 +313,9 @@ class SettlementSummaryDialog : DialogFragment() {
         debitoAtual: Double,
         debitoAnterior: Double,
         desconto: Double,
-        valorTotalMesas: Double
+        valorTotalMesas: Double,
+        valorFicha: Double,
+        comissaoFicha: Double
     ): String {
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
         val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
@@ -305,6 +324,10 @@ class SettlementSummaryDialog : DialogFragment() {
         texto.append("================================\n\n")
         texto.append("👤 *Cliente:* $clienteNome\n")
         texto.append("📅 *Data:* $dataAtual\n\n")
+        // Mostrar também no cabeçalho para destaque
+        if (valorFicha > 0) {
+            texto.append("*Valor da ficha:* ${formatter.format(valorFicha)}\n")
+        }
 
         texto.append("🎯 *MESAS ACERTADAS:*\n")
         var totalFichasJogadas = 0
@@ -323,6 +346,9 @@ class SettlementSummaryDialog : DialogFragment() {
         }
         
         texto.append("• Total das mesas: ${formatter.format(valorTotalMesas)}\n")
+        if (valorFicha > 0) {
+            texto.append("• Valor da ficha: ${formatter.format(valorFicha)}\n")
+        }
         
         val valorTotal = valorTotalMesas + debitoAnterior
         texto.append("• Valor total: ${formatter.format(valorTotal)}\n")
@@ -565,7 +591,9 @@ class SettlementSummaryDialog : DialogFragment() {
         debitoAtual: Double,
         debitoAnterior: Double,
         desconto: Double,
-        valorTotalMesas: Double
+        valorTotalMesas: Double,
+        valorFicha: Double = 0.0,
+        comissaoFicha: Double = 0.0
     ): String {
         val sb = StringBuilder()
         val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
@@ -574,6 +602,9 @@ class SettlementSummaryDialog : DialogFragment() {
         sb.appendLine("********* RECIBO DE ACERTO *********")
         sb.appendLine("=====================================")
         sb.appendLine("Cliente: $clienteNome")
+        if (valorFicha > 0) {
+            sb.appendLine("Valor da Ficha: ${formatter.format(valorFicha)}")
+        }
         sb.appendLine("Data: $dataAtual")
         sb.appendLine("")
         sb.appendLine("MESAS ACERTADAS:")

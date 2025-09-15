@@ -49,25 +49,55 @@
         android:layout_marginTop="2dp"
         android:layout_marginBottom="4dp" />
 
-    <!-- Cliente -->
-    <TextView
+    <!-- Cliente (em uma linha) -->
+    <LinearLayout
+        android:id="@+id/rowValorFicha"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Cliente:"
-        android:textStyle="bold"
-        android:textColor="#000000"
-        android:textSize="7sp"
-        android:gravity="center" />
-    <TextView
-        android:id="@+id/txtClienteValor"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Nome do Cliente"
-        android:textStyle="bold|italic"
-        android:textColor="#000000"
-        android:textSize="7sp"
+        android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginBottom="2dp" />
+        android:layout_marginBottom="2dp"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cliente: "
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:textSize="7sp" />
+        <TextView
+            android:id="@+id/txtClienteValor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textStyle="bold|italic"
+            android:textColor="#000000"
+            android:textSize="7sp" />
+    </LinearLayout>
+
+    <!-- Valor da Ficha -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="2dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Valor da ficha: "
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:textSize="7sp" />
+        <TextView
+            android:id="@+id/txtValorFicha"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textStyle="bold|italic"
+            android:textColor="#000000"
+            android:textSize="7sp" />
+    </LinearLayout>
 
     <!-- Data -->
     <LinearLayout
@@ -108,7 +138,7 @@
         android:id="@+id/txtMesas"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Mesa 1122-13: 123 → 523 (400 fichas)"
+        android:text="Mesa 1122-13\n123 → 523 (400 fichas)"
         android:textStyle="bold|italic"
         android:textColor="#000000"
         android:textSize="7sp"
@@ -117,7 +147,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center"
+        android:gravity="start"
         android:layout_marginBottom="4dp">
         <TextView
             android:layout_width="wrap_content"
@@ -159,7 +189,7 @@
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Valor total: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
         <TextView android:id="@+id/txtTotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="R$ 0,00" android:textStyle="bold|italic" android:textColor="#000000" android:textSize="7sp" />
     </LinearLayout>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="start">
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Desconto: " android:textStyle="bold" android:textColor="#000000" android:textSize="7sp" />
         <TextView android:id="@+id/txtDesconto" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="R$ 0,00" android:textStyle="bold|italic" android:textColor="#000000" android:textSize="7sp" />
     </LinearLayout>
