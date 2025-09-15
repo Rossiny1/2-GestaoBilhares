@@ -10,6 +10,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -34,6 +35,21 @@ class MesasDepositoViewModel(
     private val _estatisticas = MutableStateFlow(EstatisticasDeposito())
     val estatisticas: StateFlow<EstatisticasDeposito> = _estatisticas.asStateFlow()
 
+    // ✅ ESTADO DE BUSCA POR NÚMERO
+    private val _queryNumero = MutableStateFlow("")
+    val queryNumero: StateFlow<String> = _queryNumero.asStateFlow()
+
+    // ✅ LISTA FILTRADA REATIVA
+    val mesasFiltradas: StateFlow<List<Mesa>> = combine(_mesasDisponiveis, _queryNumero) { mesas, query ->
+        val q = query.trim()
+        if (q.isEmpty()) mesas else mesas.filter { it.numero.contains(q, ignoreCase = true) }
+    }.let { flow ->
+        // Converter para StateFlow mantendo último valor
+        val state = MutableStateFlow<List<Mesa>>(emptyList())
+        viewModelScope.launch { flow.collect { state.value = it } }
+        state.asStateFlow()
+    }
+
     fun loadMesasDisponiveis() {
         viewModelScope.launch {
             android.util.Log.d("MesasDepositoViewModel", "=== CARREGANDO MESAS DISPONÍVEIS ===")
@@ -47,6 +63,11 @@ class MesasDepositoViewModel(
                 calcularEstatisticas(mesas)
             }
         }
+    }
+
+    // ✅ ATUALIZA A QUERY DE BUSCA
+    fun atualizarBuscaNumero(query: String) {
+        _queryNumero.value = query
     }
 
     private fun calcularEstatisticas(mesas: List<Mesa>) {

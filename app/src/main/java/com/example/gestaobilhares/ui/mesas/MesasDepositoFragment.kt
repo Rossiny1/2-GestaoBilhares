@@ -104,6 +104,17 @@ class MesasDepositoFragment : Fragment() {
         binding.cardSinuca.setOnClickListener {
             showDetalhesSinucaDialog()
         }
+
+        // ✅ BUSCA POR NÚMERO: Botão e ação do teclado
+        binding.btnBuscarMesa.setOnClickListener {
+            val query = binding.etSearchNumero.text?.toString().orEmpty()
+            viewModel.atualizarBuscaNumero(query)
+        }
+        binding.etSearchNumero.setOnEditorActionListener { v, actionId, event ->
+            val text = binding.etSearchNumero.text?.toString().orEmpty()
+            viewModel.atualizarBuscaNumero(text)
+            true
+        }
     }
     
     /**
@@ -122,7 +133,7 @@ class MesasDepositoFragment : Fragment() {
 
     private fun observeViewModel() {
         lifecycleScope.launch {
-            viewModel.mesasDisponiveis.collect { mesas ->
+            viewModel.mesasFiltradas.collect { mesas ->
                 android.util.Log.d("MesasDepositoFragment", "=== MESAS RECEBIDAS NO FRAGMENT ===")
                 android.util.Log.d("MesasDepositoFragment", "📱 Mesas recebidas do ViewModel: ${mesas.size}")
                 mesas.forEach { mesa ->
