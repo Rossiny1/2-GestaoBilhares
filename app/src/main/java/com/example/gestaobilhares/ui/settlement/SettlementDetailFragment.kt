@@ -22,6 +22,7 @@ import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.databinding.FragmentSettlementDetailBinding
 import com.example.gestaobilhares.utils.AppLogger
+import com.example.gestaobilhares.utils.ReciboPrinterHelper
 import com.example.gestaobilhares.R
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -389,92 +390,34 @@ class SettlementDetailFragment : Fragment() {
      * ✅ NOVA FUNÇÃO: Preenche o layout do recibo com os dados do acerto
      */
     private fun preencherLayoutRecibo(reciboView: android.view.ViewGroup, settlement: SettlementDetailViewModel.SettlementDetail) {
-        val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
-        
-        // Buscar as views do layout
-        val txtTitulo = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtTituloRecibo)
-        val txtClienteValor = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtClienteValor)
-        val txtData = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtData)
-        val txtMesas = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtMesas)
-        val txtFichasJogadas = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtFichasJogadas)
-        val txtDebitoAnterior = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtDebitoAnterior)
-        val txtSubtotalMesas = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtSubtotalMesas)
-        val txtTotal = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtTotal)
-        val txtDesconto = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtDesconto)
-        val txtPagamentos = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtPagamentos)
-        val txtObservacoes = reciboView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.txtObservacoes)
-        
-        // Preencher dados
-        txtTitulo.text = "RECIBO DE ACERTO #${settlement.id.toString().padStart(4, '0')}"
-        txtClienteValor.text = "Cliente: ${settlement.representante ?: "Cliente"}"
-        txtData.text = "Data: ${settlement.date}"
-        
-        // Mesas
-        val mesasText = StringBuilder()
-        var totalFichasJogadas = 0
-        settlement.acertoMesas.forEach { mesa ->
-            val numeroMesa = mesa.mesaId.toString()
-            if (mesa.valorFixo > 0) {
-                mesasText.append("Mesa $numeroMesa: ${formatter.format(mesa.valorFixo)}/mês\n")
-            } else {
-                val fichasJogadas = mesa.relogioFinal - mesa.relogioInicial
-                totalFichasJogadas += fichasJogadas
-                mesasText.append("Mesa $numeroMesa: ${mesa.relogioInicial} → ${mesa.relogioFinal} ($fichasJogadas fichas)\n")
-            }
-        }
-        txtMesas.text = mesasText.toString()
-        
-        if (totalFichasJogadas > 0) {
-            txtFichasJogadas.text = "Total fichas jogadas: $totalFichasJogadas"
-            txtFichasJogadas.visibility = android.view.View.VISIBLE
-        } else {
-            txtFichasJogadas.visibility = android.view.View.GONE
+        // Converter SettlementDetail para formato compatível com ReciboPrinterHelper
+        val mesas = settlement.acertoMesas.map { mesa ->
+            com.example.gestaobilhares.data.entities.AcertoMesa(
+                acertoId = settlement.id,
+                mesaId = mesa.mesaId,
+                relogioInicial = mesa.relogioInicial,
+                relogioFinal = mesa.relogioFinal,
+                fichasJogadas = mesa.relogioFinal - mesa.relogioInicial,
+                valorFixo = mesa.valorFixo,
+                subtotal = mesa.valorFixo
+            )
         }
         
-        // Valores financeiros
-        if (settlement.debitoAnterior > 0) {
-            txtDebitoAnterior.text = "Débito anterior: ${formatter.format(settlement.debitoAnterior)}"
-            txtDebitoAnterior.visibility = android.view.View.VISIBLE
-        } else {
-            txtDebitoAnterior.visibility = android.view.View.GONE
-        }
-        
-        txtSubtotalMesas.text = "Subtotal mesas: ${formatter.format(settlement.valorTotal)}"
-        txtTotal.text = "Total: ${formatter.format(settlement.valorTotal)}"
-        
-        if (settlement.desconto > 0) {
-            txtDesconto.text = "Desconto: ${formatter.format(settlement.desconto)}"
-            txtDesconto.visibility = android.view.View.VISIBLE
-        } else {
-            txtDesconto.visibility = android.view.View.GONE
-        }
-        
-        // Métodos de pagamento
-        if (settlement.metodosPagamento.isNotEmpty()) {
-            val pagamentosText = StringBuilder("Pagamento:\n")
-            settlement.metodosPagamento.forEach { (metodo, valor) ->
-                pagamentosText.append("$metodo: ${formatter.format(valor)}\n")
-            }
-            txtPagamentos.text = pagamentosText.toString()
-            txtPagamentos.visibility = android.view.View.VISIBLE
-        } else {
-            txtPagamentos.visibility = android.view.View.GONE
-        }
-        
-        // Observações
-        if (settlement.observacoes.isNotBlank()) {
-            txtObservacoes.text = "Obs: ${settlement.observacoes}"
-            txtObservacoes.visibility = android.view.View.VISIBLE
-        } else {
-            txtObservacoes.visibility = android.view.View.GONE
-        }
-        
-        // Ajustar estilos para títulos e valores principais
-        txtTitulo.setTypeface(null, android.graphics.Typeface.BOLD)
-        txtClienteValor.setTypeface(null, android.graphics.Typeface.BOLD)
-        txtMesas.setTypeface(null, android.graphics.Typeface.BOLD)
-        txtPagamentos.setTypeface(null, android.graphics.Typeface.BOLD)
-        txtObservacoes.setTypeface(null, android.graphics.Typeface.BOLD)
+        // Usar a função centralizada
+        ReciboPrinterHelper.preencherReciboImpressao(
+            context = requireContext(),
+            reciboView = reciboView,
+            clienteNome = settlement.clienteNome,
+            mesas = mesas,
+            debitoAnterior = settlement.debitoAnterior,
+            valorTotalMesas = settlement.valorTotal,
+            desconto = settlement.desconto,
+            metodosPagamento = settlement.metodosPagamento,
+            debitoAtual = settlement.debitoAtual,
+            observacao = settlement.observacoes,
+            valorFicha = settlement.valorFicha,
+            acertoId = settlement.id
+        )
     }
     
     /**
@@ -534,6 +477,9 @@ class SettlementDetailFragment : Fragment() {
         texto.append("================================\n\n")
         texto.append("👤 *Cliente:* $clienteNome\n")
         texto.append("📅 *Data:* ${settlement.date}\n\n")
+        if (settlement.valorFicha > 0) {
+            texto.append("*Valor da ficha:* ${formatter.format(settlement.valorFicha)}\n\n")
+        }
 
         texto.append("🎯 *MESAS ACERTADAS:*\n")
         var totalFichasJogadas = 0
