@@ -75,6 +75,8 @@ class SettlementFragment : Fragment() {
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
     private lateinit var mesasAcertoAdapter: MesasAcertoAdapter
     private var paymentValues: MutableMap<String, Double> = mutableMapOf()
+    // ✅ NOVO: Flag para controlar modo sem mesas (apenas pagamento de débito)
+    private var isDebtOnlyMode: Boolean = false
     
     // ✅ CORREÇÃO: Inicialização segura do ImageCompressionUtils
     private val imageCompressionUtils: ImageCompressionUtils by lazy {
@@ -433,6 +435,7 @@ class SettlementFragment : Fragment() {
      */
     private fun configurarModoPagamentoDebito() {
         try {
+            isDebtOnlyMode = true
             // Esconder lista de mesas
             binding.rvMesasAcerto.visibility = View.GONE
             // Zerar totais de mesas
@@ -616,7 +619,7 @@ class SettlementFragment : Fragment() {
             Log.d("SettlementFragment", "Soma paymentValues: R$ ${paymentValues.values.sum()}")
 
             // O subtotal agora vem diretamente do adapter, que soma os subtotais de todas as mesas
-            val subtotalMesas = mesasAcertoAdapter.getSubtotal()
+            val subtotalMesas = if (::mesasAcertoAdapter.isInitialized) mesasAcertoAdapter.getSubtotal() else 0.0
             
             // Usar o débito anterior carregado do ViewModel
             val debitoAnterior = viewModel.debitoAnterior.value
@@ -885,10 +888,12 @@ class SettlementFragment : Fragment() {
         }
         
         // ✅ CORREÇÃO: Validar dados ANTES de desabilitar o botão
-        if (!mesasAcertoAdapter.isDataValid()) {
-            val errorMessage = mesasAcertoAdapter.getValidationErrorMessage()
-            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show()
-            return
+        if (!isDebtOnlyMode) {
+            if (!::mesasAcertoAdapter.isInitialized || !mesasAcertoAdapter.isDataValid()) {
+                val errorMessage = if (::mesasAcertoAdapter.isInitialized) mesasAcertoAdapter.getValidationErrorMessage() else "Dados de mesas não disponíveis"
+                Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show()
+                return
+            }
         }
         
         // Desabilitar botão apenas após validação bem-sucedida
@@ -916,32 +921,36 @@ class SettlementFragment : Fragment() {
         val observacaoFinal = if (observacao.isBlank()) "Acerto realizado via app" else observacao
         Log.d("SettlementFragment", "Observação final que será salva: '$observacaoFinal'")
 
-        // ✅ CORREÇÃO CRÍTICA: Usar dados do adapter como fonte única e confiável
-        val mesasDoAcerto = mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
-            // Buscar a mesa original no adapter para obter dados completos
-            val mesaOriginal = mesasAcertoAdapter.currentList.find { it.id == mesaState.mesaId }
-            
-            Log.d("SettlementFragment", "=== MONTANDO MESA PARA SALVAR ===")
-            Log.d("SettlementFragment", "Mesa ${idx + 1}: ID=${mesaState.mesaId}")
-            Log.d("SettlementFragment", "Relógio inicial: ${mesaState.relogioInicial}")
-            Log.d("SettlementFragment", "Relógio final: ${mesaState.relogioFinal}")
-            Log.d("SettlementFragment", "Valor fixo (mesa original): ${mesaOriginal?.valorFixo ?: 0.0}")
-            Log.d("SettlementFragment", "Com defeito: ${mesaState.comDefeito}")
-            Log.d("SettlementFragment", "Relógio reiniciou: ${mesaState.relogioReiniciou}")
-            
-            SettlementViewModel.MesaAcerto(
-                id = mesaState.mesaId,
-                numero = mesaOriginal?.numero ?: (idx + 1).toString(),
-                fichasInicial = mesaState.relogioInicial,
-                fichasFinal = mesaState.relogioFinal,
-                valorFixo = mesaOriginal?.valorFixo ?: 0.0,
-                tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA,
-                comDefeito = mesaState.comDefeito,
-                relogioReiniciou = mesaState.relogioReiniciou,
-                // ✅ NOVO: Incluir dados de foto
-                fotoRelogioFinal = mesaState.fotoRelogioFinal,
-                dataFoto = mesaState.dataFoto
-            )
+        // ✅ CORREÇÃO CRÍTICA: Usar dados do adapter como fonte única e confiável quando houver mesas
+        val mesasDoAcerto = if (!isDebtOnlyMode && ::mesasAcertoAdapter.isInitialized) {
+            mesasAcertoAdapter.getMesasAcerto().mapIndexed { idx, mesaState ->
+                // Buscar a mesa original no adapter para obter dados completos
+                val mesaOriginal = mesasAcertoAdapter.currentList.find { it.id == mesaState.mesaId }
+                
+                Log.d("SettlementFragment", "=== MONTANDO MESA PARA SALVAR ===")
+                Log.d("SettlementFragment", "Mesa ${idx + 1}: ID=${mesaState.mesaId}")
+                Log.d("SettlementFragment", "Relógio inicial: ${mesaState.relogioInicial}")
+                Log.d("SettlementFragment", "Relógio final: ${mesaState.relogioFinal}")
+                Log.d("SettlementFragment", "Valor fixo (mesa original): ${mesaOriginal?.valorFixo ?: 0.0}")
+                Log.d("SettlementFragment", "Com defeito: ${mesaState.comDefeito}")
+                Log.d("SettlementFragment", "Relógio reiniciou: ${mesaState.relogioReiniciou}")
+                
+                SettlementViewModel.MesaAcerto(
+                    id = mesaState.mesaId,
+                    numero = mesaOriginal?.numero ?: (idx + 1).toString(),
+                    fichasInicial = mesaState.relogioInicial,
+                    fichasFinal = mesaState.relogioFinal,
+                    valorFixo = mesaOriginal?.valorFixo ?: 0.0,
+                    tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA,
+                    comDefeito = mesaState.comDefeito,
+                    relogioReiniciou = mesaState.relogioReiniciou,
+                    // ✅ NOVO: Incluir dados de foto
+                    fotoRelogioFinal = mesaState.fotoRelogioFinal,
+                    dataFoto = mesaState.dataFoto
+                )
+            }
+        } else {
+            emptyList()
         }
         
         Log.d("SettlementFragment", "=== LISTA DE MESAS PARA SALVAR ===")
