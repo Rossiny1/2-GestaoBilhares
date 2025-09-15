@@ -24,6 +24,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.graphics.BitmapFactory
 import android.graphics.Typeface
+import com.example.gestaobilhares.utils.ReciboPrinterHelper
 
 class SettlementSummaryDialog : DialogFragment() {
     interface OnAcertoCompartilhadoListener {
@@ -108,7 +109,7 @@ class SettlementSummaryDialog : DialogFragment() {
         mesas.forEachIndexed { index, mesa ->
             val fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0)
             totalFichasJogadas += fichasJogadas
-            mesasDetalhes.append("${mesa.numero}: ${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)")
+            mesasDetalhes.append("Mesa ${mesa.numero}\n${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)")
             if (index < mesas.size - 1) mesasDetalhes.append("\n")
         }
         view.findViewById<TextView>(R.id.tvResumoMesas).text = mesasDetalhes.toString()
@@ -193,62 +194,33 @@ class SettlementSummaryDialog : DialogFragment() {
                                 val txtValorFichaImpressao = reciboView.findViewById<TextView>(R.id.txtValorFicha)
                                 val rowValorFicha = reciboView.findViewById<android.widget.LinearLayout>(R.id.rowValorFicha)
 
-                                // Preencher campos do recibo
-                                // Cliente
-                                txtClienteValor.text = clienteNome
-                                // Data (apenas data, sem horário)
-                                val dataFormatada = java.text.SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
-                                txtData.text = dataFormatada
-                                // Mesas (formatação limpa sem quebras extras)
-                                val mesasFormatadas = StringBuilder()
-                                mesas.forEachIndexed { index, mesa ->
-                                    val fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0)
-                                    mesasFormatadas.append("Mesa ${mesa.numero}\n${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)")
-                                    if (index < mesas.size - 1) mesasFormatadas.append("\n")
+                                // Converter Mesa para AcertoMesa para compatibilidade
+                                val mesasAcerto = mesas.map { mesa ->
+                                    com.example.gestaobilhares.data.entities.AcertoMesa(
+                                        acertoId = 0L, // Placeholder para impressão
+                                        mesaId = mesa.id,
+                                        relogioInicial = mesa.fichasInicial ?: 0,
+                                        relogioFinal = mesa.fichasFinal ?: 0,
+                                        fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0),
+                                        valorFixo = 0.0,
+                                        subtotal = 0.0
+                                    )
                                 }
-                                txtMesas.text = mesasFormatadas.toString()
-                                // Fichas jogadas
-                                val totalFichasJogadas = mesas.sumOf { (it.fichasFinal ?: 0) - (it.fichasInicial ?: 0) }
-                                txtFichasJogadas.text = totalFichasJogadas.toString()
-                                // Resumo Financeiro (sem duplicação e com rótulos únicos)
-                                val formatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR"))
-                                txtDebitoAnterior.text = formatter.format(debitoAnterior)
-                                txtSubtotalMesas.text = formatter.format(valorTotalMesas)
-                                val valorTotal = valorTotalMesas + debitoAnterior
-                                txtTotal.text = formatter.format(valorTotal)
-                                txtDesconto.text = formatter.format(desconto)
-                                val valorRecebidoSum = metodosPagamento.values.sum()
-                                txtValorRecebido.text = formatter.format(valorRecebidoSum)
-                                txtDebitoAtual.text = formatter.format(debitoAtual)
-                                // Valor da ficha
-                                if (valorFichaExibir > 0) {
-                                    txtValorFichaImpressao.text = formatter.format(valorFichaExibir)
-                                    rowValorFicha.visibility = android.view.View.VISIBLE
-                                } else {
-                                    rowValorFicha.visibility = android.view.View.GONE
-                                }
-                                // Forma de pagamento (formatação limpa)
-                                val pagamentosFormatados = if (metodosPagamento.isNotEmpty()) {
-                                    metodosPagamento.entries.joinToString("\n") { "${it.key}: ${formatter.format(it.value)}" }
-                                } else {
-                                    "Não informado"
-                                }
-                                txtPagamentos.text = pagamentosFormatados
-                                // Observações
-                                if (observacao.isNullOrBlank()) {
-                                    txtObservacoes.text = "-"
-                                } else {
-                                    txtObservacoes.text = observacao
-                                }
-                                // Logo
-                                imgLogo.setImageResource(R.drawable.logo_globo1)
-
-                                // Ajustar estilos para títulos e valores principais
-                                txtTitulo.setTypeface(null, Typeface.BOLD)
-                                txtClienteValor.setTypeface(null, Typeface.BOLD)
-                                txtMesas.setTypeface(null, Typeface.BOLD)
-                                txtPagamentos.setTypeface(null, Typeface.BOLD)
-                                txtObservacoes.setTypeface(null, Typeface.BOLD)
+                                
+                                // Preencher dados do recibo usando função centralizada
+                                ReciboPrinterHelper.preencherReciboImpressao(
+                                    context = requireContext(),
+                                    reciboView = reciboView,
+                                    clienteNome = clienteNome,
+                                    mesas = mesasAcerto,
+                                    debitoAnterior = debitoAnterior,
+                                    valorTotalMesas = valorTotalMesas,
+                                    desconto = desconto,
+                                    metodosPagamento = metodosPagamento,
+                                    debitoAtual = debitoAtual,
+                                    observacao = observacao,
+                                    valorFicha = valorFichaExibir
+                                )
                                 // Fontes menores já estão no layout XML
                                 // Imprimir
                                 printerHelper.printReciboLayoutBitmap(reciboView)
