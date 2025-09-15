@@ -359,7 +359,10 @@ class ClientDetailFragment : Fragment() {
                     val mesasAtivas = viewModel.mesasCliente.value
                     Log.d("NovoAcerto", "Mesas ativas encontradas: ${mesasAtivas.size}")
                     
-                    if (mesasAtivas.isEmpty()) {
+                    // Exceção: permitir acerto sem mesa se houver débito
+                    val debitoAtual = cliente.debitoAtual
+                    val permitirSemMesa = mesasAtivas.isEmpty() && debitoAtual > 0.0
+                    if (mesasAtivas.isEmpty() && !permitirSemMesa) {
                         Toast.makeText(requireContext(), "Este cliente não possui mesas ativas para acerto.", Toast.LENGTH_LONG).show()
                         recolherFabMenu()
                         return@launch
@@ -369,7 +372,7 @@ class ClientDetailFragment : Fragment() {
                     val valorFicha = cliente.valorFicha ?: 0.0
                     val comissaoFicha = cliente.comissaoFicha ?: 0.0
                     
-                    val mesasDTO = mesasAtivas.map { mesa ->
+                    val mesasDTO = if (permitirSemMesa) emptyArray<MesaDTO>() else mesasAtivas.map { mesa ->
                         Log.d("NovoAcerto", "Convertendo mesa ${mesa.numero} - ID: ${mesa.id}")
                         MesaDTO(
                             id = mesa.id,

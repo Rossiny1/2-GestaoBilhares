@@ -346,9 +346,17 @@ class SettlementFragment : Fragment() {
                             setupRecyclerViewComDados(mesasDTO)
                             
                         } else {
-                            Log.w("SettlementFragment", "⚠️ Timeout ou nenhuma mesa encontrada, tentando carregar dados básicos...")
-                            // Fallback: tentar carregar mesas diretamente sem aguardar Flow
-                            carregarMesasFallback(cliente)
+                            Log.w("SettlementFragment", "⚠️ Nenhuma mesa encontrada para o cliente.")
+                            // Exceção: permitir acerto apenas para pagamento de débito se houver débito
+                            val debitoAnterior = viewModel.debitoAnterior.value
+                            if (debitoAnterior > 0.0) {
+                                Log.i("SettlementFragment", "Modo pagamento de débito sem mesas. Débito anterior: R$ $debitoAnterior")
+                                configurarModoPagamentoDebito()
+                            } else {
+                                Log.w("SettlementFragment", "Cliente sem mesas e sem débito. Encerrando tela de acerto.")
+                                Toast.makeText(requireContext(), "Cliente sem mesas e sem débito.", Toast.LENGTH_LONG).show()
+                                findNavController().popBackStack()
+                            }
                         }
                         
                     } catch (e: Exception) {
@@ -401,12 +409,39 @@ class SettlementFragment : Fragment() {
                 
                 setupRecyclerViewComDados(mesasDTO)
             } else {
-                Log.e("SettlementFragment", "❌ Fallback: Nenhuma mesa encontrada")
-                Toast.makeText(requireContext(), "Cliente não possui mesas para acerto", Toast.LENGTH_LONG).show()
+                Log.w("SettlementFragment", "Fallback: Nenhuma mesa encontrada")
+                val debitoAnterior = viewModel.debitoAnterior.value
+                if (debitoAnterior > 0.0) {
+                    Log.i("SettlementFragment", "Fallback -> Modo pagamento de débito sem mesas. Débito: R$ $debitoAnterior")
+                    configurarModoPagamentoDebito()
+                } else {
+                    Toast.makeText(requireContext(), "Cliente sem mesas e sem débito.", Toast.LENGTH_LONG).show()
+                    findNavController().popBackStack()
+                }
             }
         } catch (e: Exception) {
             Log.e("SettlementFragment", "❌ Erro no fallback: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao carregar dados: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /**
+     * ✅ NOVO: Configura a tela para o modo "Pagamento de Débito" sem mesas
+     * - Esconde RecyclerView de mesas
+     * - Zera subtotal de mesas
+     * - Mantém métodos de pagamento e desconto para quitar parcial ou totalmente o débito
+     */
+    private fun configurarModoPagamentoDebito() {
+        try {
+            // Esconder lista de mesas
+            binding.rvMesasAcerto.visibility = View.GONE
+            // Zerar totais de mesas
+            binding.tvTableTotal.text = formatter.format(0.0)
+            // Forçar recálculo considerando apenas débito anterior, desconto e pagamentos
+            updateCalculations()
+            showSnackbar("Modo pagamento de débito habilitado (sem mesas)")
+        } catch (e: Exception) {
+            Log.e("SettlementFragment", "Erro ao configurar modo pagamento de débito: ${e.message}")
         }
     }
     
