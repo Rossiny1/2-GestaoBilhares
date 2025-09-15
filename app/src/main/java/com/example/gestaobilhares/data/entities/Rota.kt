@@ -3,6 +3,7 @@ package com.example.gestaobilhares.data.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 
 /**
  * Entidade que representa uma Rota no banco de dados.
@@ -51,7 +52,7 @@ data class Rota(
     
     @ColumnInfo(name = "data_fim_ciclo")
     val dataFimCiclo: Long? = null
-)
+) : Serializable
 
 /**
  * Data class para representar informações resumidas de uma rota

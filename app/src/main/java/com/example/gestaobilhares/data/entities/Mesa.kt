@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 import java.util.Date
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import java.io.Serializable
 
 /**
  * Entidade que representa uma Mesa de sinuca no banco de dados.
@@ -72,7 +73,7 @@ data class Mesa(
     
     @ColumnInfo(name = "data_ultima_leitura")
     val dataUltimaLeitura: Date = Date()
-) : Parcelable
+) : Parcelable, Serializable
 
 /**
  * Enum para tipos de mesa
