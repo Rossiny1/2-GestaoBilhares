@@ -127,18 +127,17 @@ class ContractManagementViewModel @Inject constructor(
             val cliente = repository.obterClientePorId(clienteId)
             val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
             
-            // ✅ NOVO: Pegar o contrato mais recente para determinar o status
-            // Ordenar por data de criação (mais recente primeiro) e depois por data de atualização
+            // ✅ CORRIGIDO: Pegar o contrato mais recente por data (não por status)
+            // Se há contrato ATIVO mais recente que contratos com distrato, priorizar o ATIVO
             val contratoMaisRecente = contratosCliente.maxByOrNull { contrato ->
-                // Priorizar data de encerramento se existir, senão data de atualização, senão data de criação
-                contrato.dataEncerramento?.time ?: contrato.dataAtualizacao?.time ?: contrato.dataCriacao.time
+                // Usar sempre a data mais recente (criação, atualização ou encerramento)
+                contrato.dataCriacao.time
             } ?: contratosCliente.first()
             
             // ✅ NOVO: Coletar todas as mesas de todos os contratos do cliente
             val todasMesas = mutableListOf<Mesa>()
             val todosAditivos = mutableListOf<AditivoContrato>()
             var totalAditivosRetirada = 0
-            var temDistrato = false
             
             contratosCliente.forEach { contrato ->
                 val mesas = repository.obterMesasPorCliente(contrato.clienteId).first()
@@ -147,13 +146,11 @@ class ContractManagementViewModel @Inject constructor(
                 val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
                 todosAditivos.addAll(aditivos)
                 totalAditivosRetirada += aditivos.count { it.tipo.equals("RETIRADA", ignoreCase = true) }
-                
-                if (!contrato.status.equals("ATIVO", ignoreCase = true)) {
-                    temDistrato = true
-                }
             }
             
+            // ✅ CORRIGIDO: Status baseado no contrato mais recente (que pode ter distrato)
             val statusLabel = mapStatusLabel(contratoMaisRecente)
+            val hasDistrato = !contratoMaisRecente.status.equals("ATIVO", ignoreCase = true)
             
             ContractItem(
                 contrato = contratoMaisRecente, // ✅ NOVO: Usar contrato mais recente
@@ -162,7 +159,7 @@ class ContractManagementViewModel @Inject constructor(
                 mesas = todasMesas.distinctBy { it.id }, // ✅ NOVO: Remover duplicatas
                 aditivos = todosAditivos.sortedByDescending { it.dataCriacao }, // ✅ NOVO: Ordenar por data
                 aditivosRetiradaCount = totalAditivosRetirada,
-                hasDistrato = temDistrato,
+                hasDistrato = hasDistrato,
                 status = statusLabel
             )
         }
