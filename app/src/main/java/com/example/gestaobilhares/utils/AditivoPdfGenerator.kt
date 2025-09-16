@@ -21,7 +21,7 @@ import java.util.*
 
 class AditivoPdfGenerator(private val context: Context) {
     
-    fun generateAditivoPdf(aditivo: AditivoContrato, contrato: ContratoLocacao, mesas: List<Mesa>): File {
+    fun generateAditivoPdf(aditivo: AditivoContrato, contrato: ContratoLocacao, mesas: List<Mesa>, assinaturaRepresentante: String? = null): File {
         // Criar diretório dedicado para cada aditivo (evita ENOENT ao salvar)
         val aditivoDirName = "aditivo_${aditivo.numeroAditivo}"
         val aditivoDir = File(context.getExternalFilesDir(null), aditivoDirName)
@@ -53,7 +53,7 @@ class AditivoPdfGenerator(private val context: Context) {
             addAditivoClauses(document, aditivo, contrato, mesas, font, fontBold)
             
             // Assinaturas
-            addSignatures(document, aditivo, contrato, font, fontBold)
+            addSignatures(document, aditivo, contrato, font, fontBold, assinaturaRepresentante)
             
         } finally {
             document.close()
@@ -198,7 +198,7 @@ class AditivoPdfGenerator(private val context: Context) {
         document.add(clause)
     }
     
-    private fun addSignatures(document: Document, aditivo: AditivoContrato, contrato: ContratoLocacao, font: com.itextpdf.kernel.font.PdfFont, fontBold: com.itextpdf.kernel.font.PdfFont) {
+    private fun addSignatures(document: Document, aditivo: AditivoContrato, contrato: ContratoLocacao, font: com.itextpdf.kernel.font.PdfFont, fontBold: com.itextpdf.kernel.font.PdfFont, assinaturaRepresentante: String? = null) {
         val dataAtual = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")).format(Date())
         val data = Paragraph("Montes Claros, $dataAtual.")
             .setFont(font)
@@ -221,8 +221,9 @@ class AditivoPdfGenerator(private val context: Context) {
             .setMarginBottom(20f)
         document.add(linhaLocadora)
         
-        // Adicionar assinatura do locador se existir
-        aditivo.assinaturaLocador?.let { assinaturaBase64 ->
+        // Adicionar assinatura do locador (priorizar assinatura pré-fabricada do representante)
+        val assinaturaLocador = assinaturaRepresentante ?: aditivo.assinaturaLocador
+        assinaturaLocador?.let { assinaturaBase64 ->
             try {
                 val assinaturaBytes = Base64.decode(assinaturaBase64, Base64.DEFAULT)
                 val assinaturaImage = ImageDataFactory.create(assinaturaBytes)

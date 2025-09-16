@@ -73,7 +73,8 @@ class ClientDetailFragment : Fragment() {
                 val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
                 val repo = com.example.gestaobilhares.data.repository.AppRepository(
                     db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao()
+                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
+                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
                 )
                 val contratos = repo.buscarContratosPorCliente(clienteId).first()
                 val contrato = contratos.find { it.status == "ATIVO" } ?: contratos.maxByOrNull { it.dataCriacao.time }
@@ -111,7 +112,8 @@ class ClientDetailFragment : Fragment() {
                 val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
                 val repo = com.example.gestaobilhares.data.repository.AppRepository(
                     db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao()
+                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
+                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
                 )
                 val contratos = repo.buscarContratosPorCliente(clienteId).first()
                 val contrato = contratos.maxByOrNull { it.dataCriacao.time } ?: return@launch
@@ -135,7 +137,8 @@ class ClientDetailFragment : Fragment() {
                 val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
                 val repo = com.example.gestaobilhares.data.repository.AppRepository(
                     db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao()
+                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
+                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
                 )
                 val contratos = repo.buscarContratosPorCliente(clienteId).first()
                 val contrato = contratos.maxByOrNull { it.dataCriacao.time }

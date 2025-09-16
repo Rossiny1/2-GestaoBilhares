@@ -22,7 +22,10 @@ class AppRepository(
     private val cicloAcertoDao: CicloAcertoDao,
     private val acertoMesaDao: com.example.gestaobilhares.data.dao.AcertoMesaDao,
     private val contratoLocacaoDao: ContratoLocacaoDao,
-    private val aditivoContratoDao: AditivoContratoDao
+    private val aditivoContratoDao: AditivoContratoDao,
+    private val assinaturaRepresentanteLegalDao: AssinaturaRepresentanteLegalDao,
+    private val logAuditoriaAssinaturaDao: LogAuditoriaAssinaturaDao,
+    private val procuraçãoRepresentanteDao: ProcuraçãoRepresentanteDao
 ) {
     
     // ==================== CLIENTE ====================
@@ -609,4 +612,53 @@ class AppRepository(
     suspend fun inserirAditivoMesas(aditivoMesas: List<AditivoMesa>) = aditivoContratoDao.inserirAditivoMesas(aditivoMesas)
     suspend fun excluirAditivoMesa(aditivoMesa: AditivoMesa) = aditivoContratoDao.excluirAditivoMesa(aditivoMesa)
     suspend fun excluirTodasMesasDoAditivo(aditivoId: Long) = aditivoContratoDao.excluirTodasMesasDoAditivo(aditivoId)
+    
+    // ==================== ASSINATURA REPRESENTANTE LEGAL ====================
+    
+    suspend fun obterAssinaturaRepresentanteLegalAtiva() = assinaturaRepresentanteLegalDao.obterAssinaturaAtiva()
+    fun obterAssinaturaRepresentanteLegalAtivaFlow() = assinaturaRepresentanteLegalDao.obterAssinaturaAtivaFlow()
+    suspend fun obterTodasAssinaturasRepresentanteLegal() = assinaturaRepresentanteLegalDao.obterTodasAssinaturas()
+    fun obterTodasAssinaturasRepresentanteLegalFlow() = assinaturaRepresentanteLegalDao.obterTodasAssinaturasFlow()
+    suspend fun obterAssinaturaRepresentanteLegalPorId(id: Long) = assinaturaRepresentanteLegalDao.obterAssinaturaPorId(id)
+    suspend fun inserirAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal) = assinaturaRepresentanteLegalDao.inserirAssinatura(assinatura)
+    suspend fun atualizarAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal) = assinaturaRepresentanteLegalDao.atualizarAssinatura(assinatura)
+    suspend fun desativarAssinaturaRepresentanteLegal(id: Long) = assinaturaRepresentanteLegalDao.desativarAssinatura(id)
+    suspend fun incrementarUsoAssinatura(id: Long, dataUso: java.util.Date) = assinaturaRepresentanteLegalDao.incrementarUso(id, dataUso)
+    suspend fun contarAssinaturasRepresentanteLegalAtivas() = assinaturaRepresentanteLegalDao.contarAssinaturasAtivas()
+    suspend fun obterAssinaturasRepresentanteLegalValidadas() = assinaturaRepresentanteLegalDao.obterAssinaturasValidadas()
+    
+    // ==================== LOGS DE AUDITORIA ====================
+    
+    suspend fun obterTodosLogsAuditoria() = logAuditoriaAssinaturaDao.obterTodosLogs()
+    fun obterTodosLogsAuditoriaFlow() = logAuditoriaAssinaturaDao.obterTodosLogsFlow()
+    suspend fun obterLogsAuditoriaPorAssinatura(idAssinatura: Long) = logAuditoriaAssinaturaDao.obterLogsPorAssinatura(idAssinatura)
+    suspend fun obterLogsAuditoriaPorContrato(idContrato: Long) = logAuditoriaAssinaturaDao.obterLogsPorContrato(idContrato)
+    suspend fun obterLogsAuditoriaPorTipoOperacao(tipoOperacao: String) = logAuditoriaAssinaturaDao.obterLogsPorTipoOperacao(tipoOperacao)
+    suspend fun obterLogsAuditoriaPorPeriodo(dataInicio: java.util.Date, dataFim: java.util.Date) = logAuditoriaAssinaturaDao.obterLogsPorPeriodo(dataInicio, dataFim)
+    suspend fun obterLogsAuditoriaPorUsuario(usuario: String) = logAuditoriaAssinaturaDao.obterLogsPorUsuario(usuario)
+    suspend fun obterLogsAuditoriaComErro() = logAuditoriaAssinaturaDao.obterLogsComErro()
+    suspend fun inserirLogAuditoriaAssinatura(log: LogAuditoriaAssinatura) = logAuditoriaAssinaturaDao.inserirLog(log)
+    suspend fun contarLogsAuditoriaDesde(dataInicio: java.util.Date) = logAuditoriaAssinaturaDao.contarLogsDesde(dataInicio)
+    suspend fun contarUsosAssinaturaAuditoria(idAssinatura: Long) = logAuditoriaAssinaturaDao.contarUsosAssinatura(idAssinatura)
+    suspend fun obterLogsAuditoriaNaoValidados() = logAuditoriaAssinaturaDao.obterLogsNaoValidados()
+    suspend fun validarLogAuditoria(id: Long, dataValidacao: java.util.Date, validadoPor: String) = logAuditoriaAssinaturaDao.validarLog(id, dataValidacao, validadoPor)
+    
+    // ==================== PROCURAÇÕES ====================
+    
+    suspend fun obterProcuraçõesAtivas() = procuraçãoRepresentanteDao.obterProcuraçõesAtivas()
+    fun obterProcuraçõesAtivasFlow() = procuraçãoRepresentanteDao.obterProcuraçõesAtivasFlow()
+    suspend fun obterProcuraçãoPorUsuario(usuario: String) = procuraçãoRepresentanteDao.obterProcuraçãoPorUsuario(usuario)
+    fun obterProcuraçãoPorUsuarioFlow(usuario: String) = procuraçãoRepresentanteDao.obterProcuraçãoPorUsuarioFlow(usuario)
+    suspend fun obterProcuraçãoPorCpf(cpf: String) = procuraçãoRepresentanteDao.obterProcuraçãoPorCpf(cpf)
+    suspend fun obterTodasProcurações() = procuraçãoRepresentanteDao.obterTodasProcurações()
+    fun obterTodasProcuraçõesFlow() = procuraçãoRepresentanteDao.obterTodasProcuraçõesFlow()
+    suspend fun obterProcuraçãoPorId(id: Long) = procuraçãoRepresentanteDao.obterProcuraçãoPorId(id)
+    suspend fun obterProcuraçãoPorNumero(numero: String) = procuraçãoRepresentanteDao.obterProcuraçãoPorNumero(numero)
+    suspend fun inserirProcuração(procuração: ProcuraçãoRepresentante) = procuraçãoRepresentanteDao.inserirProcuração(procuração)
+    suspend fun atualizarProcuração(procuração: ProcuraçãoRepresentante) = procuraçãoRepresentanteDao.atualizarProcuração(procuração)
+    suspend fun revogarProcuração(id: Long, dataRevogacao: java.util.Date, motivo: String) = procuraçãoRepresentanteDao.revogarProcuração(id, dataRevogacao, motivo)
+    suspend fun contarProcuraçõesAtivas() = procuraçãoRepresentanteDao.contarProcuraçõesAtivas()
+    suspend fun obterProcuraçõesValidadas() = procuraçãoRepresentanteDao.obterProcuraçõesValidadas()
+    suspend fun obterProcuraçõesVencidas(dataAtual: java.util.Date) = procuraçãoRepresentanteDao.obterProcuraçõesVencidas(dataAtual)
+    suspend fun validarProcuração(id: Long, dataValidacao: java.util.Date, validadoPor: String) = procuraçãoRepresentanteDao.validarProcuração(id, dataValidacao, validadoPor)
 } 

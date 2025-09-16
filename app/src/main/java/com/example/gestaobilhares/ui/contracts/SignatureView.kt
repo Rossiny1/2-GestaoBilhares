@@ -3,11 +3,13 @@ package com.example.gestaobilhares.ui.contracts
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.example.gestaobilhares.utils.SignaturePoint
 import com.example.gestaobilhares.utils.SignatureStatistics
+import java.io.ByteArrayOutputStream
 
 class SignatureView @JvmOverloads constructor(
     context: Context,
@@ -158,7 +160,7 @@ class SignatureView @JvmOverloads constructor(
     }
     
     fun getSignatureBitmap(): Bitmap? {
-        if (paths.isEmpty()) {
+        if (paths.isEmpty() || width <= 0 || height <= 0) {
             return null
         }
         
@@ -219,5 +221,23 @@ class SignatureView @JvmOverloads constructor(
             averageVelocity = averageVelocity.toFloat(),
             startTime = startTime
         )
+    }
+    
+    /**
+     * Obtém a assinatura em formato Base64 para armazenamento
+     */
+    fun getSignatureBase64(): String {
+        val bitmap = getSignatureBitmap() ?: return ""
+        
+        return try {
+            val outputStream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+            val byteArray = outputStream.toByteArray()
+            
+            Base64.encodeToString(byteArray, Base64.DEFAULT)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao converter assinatura para Base64", e)
+            ""
+        }
     }
 }

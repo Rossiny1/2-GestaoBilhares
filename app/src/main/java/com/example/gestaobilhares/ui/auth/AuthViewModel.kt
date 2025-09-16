@@ -84,7 +84,10 @@ class AuthViewModel @Inject constructor() : ViewModel() {
             database.cicloAcertoDao(),
             database.acertoMesaDao(),
             database.contratoLocacaoDao(),
-            database.aditivoContratoDao()
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao(),
+            database.procuraçãoRepresentanteDao()
         )
         
         networkUtils = NetworkUtils(context)

@@ -31,9 +31,12 @@ import com.example.gestaobilhares.data.entities.*
         ContratoLocacao::class, // ✅ NOVO: CONTRATOS DE LOCAÇÃO
         ContratoMesa::class, // ✅ NOVO: VINCULAÇÃO CONTRATO-MESAS
         AditivoContrato::class, // ✅ NOVO: ADITIVOS DE CONTRATO
-        AditivoMesa::class // ✅ NOVO: VINCULAÇÃO ADITIVO-MESAS
+        AditivoMesa::class, // ✅ NOVO: VINCULAÇÃO ADITIVO-MESAS
+        AssinaturaRepresentanteLegal::class, // ✅ NOVO: ASSINATURA DIGITAL DO REPRESENTANTE
+        LogAuditoriaAssinatura::class, // ✅ NOVO: LOGS DE AUDITORIA
+        ProcuraçãoRepresentante::class // ✅ NOVO: PROCURAÇÕES E DELEGAÇÃO DE PODERES
     ],
-    version = 30, // ✅ MIGRATION: campos de assinatura do distrato
+    version = 31, // ✅ MIGRATION: sistema de assinatura digital e auditoria
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -104,6 +107,24 @@ abstract class AppDatabase : RoomDatabase() {
      * ✅ NOVO: ADITIVOS DE CONTRATO
      */
     abstract fun aditivoContratoDao(): com.example.gestaobilhares.data.dao.AditivoContratoDao
+    
+    /**
+     * DAO para operações com assinaturas do representante legal.
+     * ✅ NOVO: ASSINATURA DIGITAL DO REPRESENTANTE
+     */
+    abstract fun assinaturaRepresentanteLegalDao(): com.example.gestaobilhares.data.dao.AssinaturaRepresentanteLegalDao
+    
+    /**
+     * DAO para operações com logs de auditoria de assinaturas.
+     * ✅ NOVO: LOGS DE AUDITORIA
+     */
+    abstract fun logAuditoriaAssinaturaDao(): com.example.gestaobilhares.data.dao.LogAuditoriaAssinaturaDao
+    
+    /**
+     * DAO para operações com procurações de representantes.
+     * ✅ NOVO: PROCURAÇÕES E DELEGAÇÃO DE PODERES
+     */
+    abstract fun procuraçãoRepresentanteDao(): com.example.gestaobilhares.data.dao.ProcuraçãoRepresentanteDao
 
     companion object {
         

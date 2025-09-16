@@ -53,7 +53,10 @@ class CycleHistoryFragment : Fragment() {
                 AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
                 AppDatabase.getDatabase(requireContext()).acertoMesaDao(),
                 AppDatabase.getDatabase(requireContext()).contratoLocacaoDao(),
-                AppDatabase.getDatabase(requireContext()).aditivoContratoDao()
+                AppDatabase.getDatabase(requireContext()).aditivoContratoDao(),
+                AppDatabase.getDatabase(requireContext()).assinaturaRepresentanteLegalDao(),
+                AppDatabase.getDatabase(requireContext()).logAuditoriaAssinaturaDao(),
+                AppDatabase.getDatabase(requireContext()).procuraçãoRepresentanteDao()
             )
         )
     }

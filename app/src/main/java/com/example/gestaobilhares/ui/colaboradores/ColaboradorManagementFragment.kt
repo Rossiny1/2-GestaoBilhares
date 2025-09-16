@@ -54,7 +54,10 @@ class ColaboradorManagementFragment : Fragment() {
             cicloAcertoDao = database.cicloAcertoDao(),
             acertoMesaDao = database.acertoMesaDao(),
             contratoLocacaoDao = database.contratoLocacaoDao(),
-            aditivoContratoDao = database.aditivoContratoDao()
+            aditivoContratoDao = database.aditivoContratoDao(),
+            assinaturaRepresentanteLegalDao = database.assinaturaRepresentanteLegalDao(),
+            logAuditoriaAssinaturaDao = database.logAuditoriaAssinaturaDao(),
+            procuraçãoRepresentanteDao = database.procuraçãoRepresentanteDao()
         )
         viewModel = ColaboradorManagementViewModel(appRepository)
         

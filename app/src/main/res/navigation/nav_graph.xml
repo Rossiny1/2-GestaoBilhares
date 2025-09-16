@@ -492,6 +492,15 @@
     <fragment
         android:id="@+id/contractManagementFragment"
         android:name="com.example.gestaobilhares.ui.contracts.ContractManagementFragment"
-        android:label="Gerenciar Contratos" />
+        android:label="Gerenciar Contratos">
+        <action
+            android:id="@+id/action_contractManagementFragment_to_representanteLegalSignatureFragment"
+            app:destination="@id/representanteLegalSignatureFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/representanteLegalSignatureFragment"
+        android:name="com.example.gestaobilhares.ui.contracts.RepresentanteLegalSignatureFragment"
+        android:label="Assinatura do Representante Legal" />
 
 </navigation> 
