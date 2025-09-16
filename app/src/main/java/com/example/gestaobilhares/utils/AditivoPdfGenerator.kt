@@ -52,8 +52,8 @@ class AditivoPdfGenerator(private val context: Context) {
             // Cláusulas do Aditivo
             addAditivoClauses(document, aditivo, contrato, mesas, font, fontBold)
             
-            // Assinaturas
-            addSignatures(document, aditivo, contrato, font, fontBold, assinaturaRepresentante)
+            // ✅ OTIMIZADO: Assinaturas lado a lado para aditivo
+            addDistratoSignatures(document, contrato, font, fontBold, assinaturaRepresentante)
             
         } finally {
             document.close()
@@ -196,6 +196,116 @@ class AditivoPdfGenerator(private val context: Context) {
             .setMarginBottom(10f)
         
         document.add(clause)
+    }
+    
+    private fun addDistratoSignatures(document: Document, contrato: ContratoLocacao, font: com.itextpdf.kernel.font.PdfFont, fontBold: com.itextpdf.kernel.font.PdfFont, assinaturaRepresentante: String? = null) {
+        val dataAtual = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")).format(Date())
+        val data = Paragraph("Montes Claros, $dataAtual.")
+            .setFont(font)
+            .setFontSize(9f) // ✅ OTIMIZADO: menor para caber em 1 página
+            .setMarginTop(10f) // ✅ OTIMIZADO: reduzido
+            .setMarginBottom(15f) // ✅ OTIMIZADO: reduzido
+        
+        document.add(data)
+        
+        // ✅ NOVO: Layout lado a lado com Table
+        val table = Table(2).useAllAvailableWidth()
+        
+        // Coluna 1: Locadora
+        val cellLocadora = Cell()
+        cellLocadora.setPadding(5f)
+        
+        // Assinatura do locador (representante legal)
+        val assinaturaLocador = assinaturaRepresentante ?: contrato.assinaturaLocador
+        assinaturaLocador?.let { assinaturaBase64 ->
+            try {
+                val assinaturaBytes = Base64.decode(assinaturaBase64, Base64.DEFAULT)
+                val assinaturaImage = ImageDataFactory.create(assinaturaBytes)
+                val image = Image(assinaturaImage)
+                    .scaleToFit(150f, 80f) // ✅ OTIMIZADO: menor para lado a lado
+                    .setMarginBottom(5f)
+                
+                cellLocadora.add(image)
+            } catch (e: Exception) {
+                // Se houver erro, adicionar linha para assinatura
+                val linha = Paragraph("_________________________")
+                    .setFont(font)
+                    .setFontSize(9f)
+                    .setMarginBottom(5f)
+                cellLocadora.add(linha)
+            }
+        } ?: run {
+            // Linha para assinatura se não houver
+            val linha = Paragraph("_________________________")
+                .setFont(font)
+                .setFontSize(9f)
+                .setMarginBottom(5f)
+            cellLocadora.add(linha)
+        }
+        
+        // Nome da empresa
+        val locadoraNome = Paragraph("BILHAR GLOBO R & A LTDA")
+            .setFont(fontBold)
+            .setFontSize(9f)
+            .setMarginBottom(2f)
+        cellLocadora.add(locadoraNome)
+        
+        // CNPJ embaixo do nome
+        val locadoraCnpj = Paragraph("CNPJ: ${contrato.locadorCnpj}")
+            .setFont(font)
+            .setFontSize(8f)
+            .setMarginBottom(5f)
+        cellLocadora.add(locadoraCnpj)
+        
+        // Coluna 2: Locatário
+        val cellLocatario = Cell()
+        cellLocatario.setPadding(5f)
+        
+        // Assinatura do locatário
+        contrato.assinaturaLocatario?.let { assinaturaBase64 ->
+            try {
+                val assinaturaBytes = Base64.decode(assinaturaBase64, Base64.DEFAULT)
+                val assinaturaImage = ImageDataFactory.create(assinaturaBytes)
+                val image = Image(assinaturaImage)
+                    .scaleToFit(150f, 80f) // ✅ OTIMIZADO: menor para lado a lado
+                    .setMarginBottom(5f)
+                
+                cellLocatario.add(image)
+            } catch (e: Exception) {
+                // Se houver erro, adicionar linha para assinatura
+                val linha = Paragraph("_________________________")
+                    .setFont(font)
+                    .setFontSize(9f)
+                    .setMarginBottom(5f)
+                cellLocatario.add(linha)
+            }
+        } ?: run {
+            // Linha para assinatura se não houver
+            val linha = Paragraph("_________________________")
+                .setFont(font)
+                .setFontSize(9f)
+                .setMarginBottom(5f)
+            cellLocatario.add(linha)
+        }
+        
+        // Nome do locatário
+        val locatarioNome = Paragraph(contrato.locatarioNome)
+            .setFont(fontBold)
+            .setFontSize(9f)
+            .setMarginBottom(2f)
+        cellLocatario.add(locatarioNome)
+        
+        // CPF embaixo do nome
+        val locatarioCpf = Paragraph("CPF/CNPJ: ${contrato.locatarioCpf}")
+            .setFont(font)
+            .setFontSize(8f)
+            .setMarginBottom(5f)
+        cellLocatario.add(locatarioCpf)
+        
+        table.addCell(cellLocadora)
+        table.addCell(cellLocatario)
+        
+        document.add(table)
     }
     
     private fun addSignatures(document: Document, aditivo: AditivoContrato, contrato: ContratoLocacao, font: com.itextpdf.kernel.font.PdfFont, fontBold: com.itextpdf.kernel.font.PdfFont, assinaturaRepresentante: String? = null) {

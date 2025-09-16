@@ -131,15 +131,22 @@ class MesasDepositoViewModel(
      */
     suspend fun verificarContratoAtivo(clienteId: Long): com.example.gestaobilhares.data.entities.ContratoLocacao? {
         return try {
-            android.util.Log.d("MesasDepositoViewModel", "Verificando contrato existente para cliente: $clienteId")
+            android.util.Log.d("MesasDepositoViewModel", "Verificando contrato ATIVO para cliente: $clienteId")
             val contratos = appRepository.buscarContratosPorCliente(clienteId).first()
             android.util.Log.d("MesasDepositoViewModel", "Total de contratos encontrados: ${contratos.size}")
-            // Preferir ATIVO; se não houver, pegar o mais recente (qualquer status)
-            val ativo = contratos.firstOrNull { it.status.equals("ATIVO", ignoreCase = true) }
-            val maisRecente = contratos.maxByOrNull { it.dataCriacao.time }
-            val escolhido = ativo ?: maisRecente
-            android.util.Log.d("MesasDepositoViewModel", "Contrato escolhido para aditivo: ${escolhido?.numeroContrato} / status=${escolhido?.status}")
-            escolhido
+            
+            // ✅ CORRIGIDO: Retornar APENAS contratos com status ATIVO
+            // Se o contrato foi encerrado com distrato (ENCERRADO_QUITADO ou RESCINDIDO_COM_DIVIDA),
+            // deve ser gerado um NOVO CONTRATO, não um aditivo
+            val contratoAtivo = contratos.firstOrNull { it.status.equals("ATIVO", ignoreCase = true) }
+            
+            if (contratoAtivo != null) {
+                android.util.Log.d("MesasDepositoViewModel", "Contrato ATIVO encontrado: ${contratoAtivo.numeroContrato}")
+            } else {
+                android.util.Log.d("MesasDepositoViewModel", "Nenhum contrato ATIVO encontrado. Cliente precisa de NOVO CONTRATO")
+            }
+            
+            contratoAtivo
         } catch (e: Exception) {
             android.util.Log.e("MesasDepositoViewModel", "Erro ao verificar contrato para cliente $clienteId", e)
             null

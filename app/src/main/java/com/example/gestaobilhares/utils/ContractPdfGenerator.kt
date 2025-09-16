@@ -42,8 +42,8 @@ class ContractPdfGenerator(private val context: Context) {
             // Cláusulas
             addClauses(document, contrato, mesas, font, fontBold)
             
-            // Assinaturas
-            addSignatures(document, contrato, font, fontBold, assinaturaRepresentante)
+            // ✅ OTIMIZADO: Assinaturas lado a lado para contrato
+            addDistratoSignatures(document, contrato, font, fontBold, assinaturaRepresentante)
             
         } finally {
             document.close()
@@ -87,53 +87,76 @@ class ContractPdfGenerator(private val context: Context) {
                 .setFont(fontBold).setFontSize(12f).setMarginBottom(20f)
             document.add(title); document.add(numero)
 
-            addPartiesSection(document, contrato, font, fontBold)
+            // ✅ OTIMIZADO: Seção de partes com espaçamento reduzido para distrato
+            val sectionTitle = Paragraph("IDENTIFICAÇÃO DAS PARTES")
+                .setFont(fontBold).setFontSize(12f).setMarginBottom(5f) // ✅ OTIMIZADO: reduzido
+            document.add(sectionTitle)
+            
+            val locadora = Paragraph("LOCADORA: ${contrato.locadorNome}, pessoa jurídica de direito privado, inscrita no CNPJ/MF sob o nº ${contrato.locadorCnpj}, com sede na ${contrato.locadorEndereco}, CEP ${contrato.locadorCep}, neste ato representada por seu representante legal.")
+                .setFont(font).setFontSize(9f).setMarginBottom(5f) // ✅ OTIMIZADO: menor fonte e espaçamento
+            document.add(locadora)
+            
+            val locatario = Paragraph("LOCATÁRIO(A): NOME/RAZÃO SOCIAL: ${contrato.locatarioNome} CPF/CNPJ: ${contrato.locatarioCpf} ENDEREÇO COMERCIAL: ${contrato.locatarioEndereco} TELEFONE CELULAR (WhatsApp): ${contrato.locatarioTelefone} E-MAIL: ${contrato.locatarioEmail}")
+                .setFont(font).setFontSize(9f).setMarginBottom(5f) // ✅ OTIMIZADO: menor fonte e espaçamento
+            document.add(locatario)
+            
+            val intro = Paragraph("As partes acima qualificadas celebram o presente Termo de Distrato, que se regerá pelas seguintes cláusulas:")
+                .setFont(font).setFontSize(9f).setMarginBottom(8f) // ✅ OTIMIZADO: menor fonte e espaçamento
+            document.add(intro)
 
-            // Equipamentos devolvidos (todas as mesas do contrato)
-            addClause(document, "CLÁUSULA 1ª – DA DEVOLUÇÃO DO OBJETO", fontBold, font)
+            // ✅ OTIMIZADO: Equipamentos devolvidos com espaçamento reduzido
+            val devolucaoTitle = Paragraph("CLÁUSULA 1ª – DA DEVOLUÇÃO DO OBJETO")
+                .setFont(fontBold).setFontSize(11f).setMarginBottom(5f) // ✅ OTIMIZADO: reduzido
+            document.add(devolucaoTitle)
+            
             val devolucao1 = Paragraph("1.1. O LOCATÁRIO devolve à LOCADORA todos os equipamentos locados, em regular estado de conservação, conforme vistoria no ato da retirada.")
-                .setFont(font).setFontSize(10f).setMarginBottom(5f)
+                .setFont(font).setFontSize(9f).setMarginBottom(3f) // ✅ OTIMIZADO: menor fonte e espaçamento
             document.add(devolucao1)
+            
             if (mesas.isNotEmpty()) {
                 val lista = com.itextpdf.layout.element.List()
                 mesas.forEach { m ->
                     val itemText = "${getTipoEquipamentoNome(m.tipoMesa)} nº ${m.numero}"
-                    lista.add(ListItem(itemText))
+                    val item = ListItem(itemText)
+                    item.setFont(font).setFontSize(9f) // ✅ CORRIGIDO: aplicar fonte no item
+                    lista.add(item)
                 }
                 document.add(lista)
             }
 
-            // Resumo de fechamento
-            addClause(document, "CLÁUSULA 2ª – DO ACERTO DE FECHAMENTO", fontBold, font)
-            val resumo = Paragraph(
-                "Total Recebido: R$ ${formatMoney(fechamento.totalRecebido)}\n" +
-                "Despesas de viagem: R$ ${formatMoney(fechamento.despesasViagem)}\n" +
-                "Subtotal: R$ ${formatMoney(fechamento.subtotal)}\n" +
-                "Comissão motorista (3%): R$ ${formatMoney(fechamento.comissaoMotorista)}\n" +
-                "Comissão Iltair (2%): R$ ${formatMoney(fechamento.comissaoIltair)}\n" +
-                "Total Geral: R$ ${formatMoney(fechamento.totalGeral)}\n" +
-                "Saldo Apurado: R$ ${formatMoney(fechamento.saldoApurado)}"
-            ).setFont(font).setFontSize(10f).setMarginBottom(10f)
-            document.add(resumo)
+            // ✅ OTIMIZADO: Apenas saldo devedor quando houver
+            if (fechamento.saldoApurado > 0.0) {
+                val saldoTitle = Paragraph("CLÁUSULA 2ª – DO SALDO DEVEDOR")
+                    .setFont(fontBold).setFontSize(11f).setMarginBottom(5f) // ✅ OTIMIZADO: reduzido
+                document.add(saldoTitle)
+                
+                val saldo = Paragraph(
+                    "2.1. Fica reconhecido pelo LOCATÁRIO o saldo devedor de R$ ${formatMoney(fechamento.saldoApurado)} (${formatMoney(fechamento.saldoApurado)} reais), referente ao contrato ora distratado."
+                ).setFont(font).setFontSize(9f).setMarginBottom(8f) // ✅ OTIMIZADO: menor fonte e espaçamento
+                document.add(saldo)
+            }
 
-            // Quitação ou Confissão de Dívida
+            // ✅ OTIMIZADO: Quitação ou Confissão de Dívida
             if (confissaoDivida == null || confissaoDivida.first <= 0.0) {
-                val quitacao = Paragraph("2.1. As partes dão-se plena, geral e irrevogável quitação, nada mais tendo a reclamar uma da outra a qualquer título, relativamente ao contrato ora distratado.")
-                    .setFont(font).setFontSize(10f).setMarginBottom(15f)
+                val numClausula = if (fechamento.saldoApurado > 0.0) "3.1" else "2.1"
+                val quitacao = Paragraph("$numClausula. As partes dão-se plena, geral e irrevogável quitação, nada mais tendo a reclamar uma da outra a qualquer título, relativamente ao contrato ora distratado.")
+                    .setFont(font).setFontSize(9f).setMarginBottom(10f) // ✅ OTIMIZADO: menor fonte e espaçamento
                 document.add(quitacao)
             } else {
-                addClause(document, "CLÁUSULA 3ª – CONFISSÃO DE DÍVIDA", fontBold, font)
+                val confissaoTitle = Paragraph("CLÁUSULA 3ª – CONFISSÃO DE DÍVIDA")
+                    .setFont(fontBold).setFontSize(11f).setMarginBottom(5f) // ✅ OTIMIZADO: reduzido
+                document.add(confissaoTitle)
+                
                 val (valor, venc) = confissaoDivida
                 val vencTxt = venc?.let { SimpleDateFormat("dd/MM/yyyy", Locale("pt","BR")).format(it) } ?: "imediato"
                 val conf = Paragraph(
                     "3.1. O LOCATÁRIO confessa dever à LOCADORA a quantia de R$ ${formatMoney(valor)}, obrigando-se ao pagamento até ${vencTxt}. O não pagamento no prazo sujeitará o devedor às penalidades contratuais e legais."
-                ).setFont(font).setFontSize(10f).setMarginBottom(15f)
+                ).setFont(font).setFontSize(9f).setMarginBottom(10f) // ✅ OTIMIZADO: menor fonte e espaçamento
                 document.add(conf)
             }
 
-            // ✅ CORRIGIDO: Removida duplicação - usar apenas o método addSignatures
-            // ✅ NOVO: Usar método addSignatures para incluir assinatura do representante legal
-            addSignatures(document, contrato, font, fontBold, assinaturaRepresentante)
+            // ✅ OTIMIZADO: Assinaturas lado a lado para distrato em 1 página
+            addDistratoSignatures(document, contrato, font, fontBold, assinaturaRepresentante)
         } finally {
             document.close()
         }
@@ -327,6 +350,116 @@ class ContractPdfGenerator(private val context: Context) {
             
             document.add(paragraph)
         }
+    }
+    
+    private fun addDistratoSignatures(document: Document, contrato: ContratoLocacao, font: com.itextpdf.kernel.font.PdfFont, fontBold: com.itextpdf.kernel.font.PdfFont, assinaturaRepresentante: String? = null) {
+        val dataAtual = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")).format(Date())
+        val data = Paragraph("Montes Claros, $dataAtual.")
+            .setFont(font)
+            .setFontSize(9f) // ✅ OTIMIZADO: menor para caber em 1 página
+            .setMarginTop(10f) // ✅ OTIMIZADO: reduzido
+            .setMarginBottom(15f) // ✅ OTIMIZADO: reduzido
+        
+        document.add(data)
+        
+        // ✅ NOVO: Layout lado a lado com Table
+        val table = Table(2).useAllAvailableWidth()
+        
+        // Coluna 1: Locadora
+        val cellLocadora = Cell()
+        cellLocadora.setPadding(5f)
+        
+        // Assinatura do locador (representante legal)
+        val assinaturaLocador = assinaturaRepresentante ?: contrato.assinaturaLocador
+        assinaturaLocador?.let { assinaturaBase64 ->
+            try {
+                val assinaturaBytes = Base64.decode(assinaturaBase64, Base64.DEFAULT)
+                val assinaturaImage = ImageDataFactory.create(assinaturaBytes)
+                val image = Image(assinaturaImage)
+                    .scaleToFit(150f, 80f) // ✅ OTIMIZADO: menor para lado a lado
+                    .setMarginBottom(5f)
+                
+                cellLocadora.add(image)
+            } catch (e: Exception) {
+                // Se houver erro, adicionar linha para assinatura
+                val linha = Paragraph("_________________________")
+                    .setFont(font)
+                    .setFontSize(9f)
+                    .setMarginBottom(5f)
+                cellLocadora.add(linha)
+            }
+        } ?: run {
+            // Linha para assinatura se não houver
+            val linha = Paragraph("_________________________")
+                .setFont(font)
+                .setFontSize(9f)
+                .setMarginBottom(5f)
+            cellLocadora.add(linha)
+        }
+        
+        // Nome da empresa
+        val locadoraNome = Paragraph("BILHAR GLOBO R & A LTDA")
+            .setFont(fontBold)
+            .setFontSize(9f)
+            .setMarginBottom(2f)
+        cellLocadora.add(locadoraNome)
+        
+        // CNPJ embaixo do nome
+        val locadoraCnpj = Paragraph("CNPJ: ${contrato.locadorCnpj}")
+            .setFont(font)
+            .setFontSize(8f)
+            .setMarginBottom(5f)
+        cellLocadora.add(locadoraCnpj)
+        
+        // Coluna 2: Locatário
+        val cellLocatario = Cell()
+        cellLocatario.setPadding(5f)
+        
+        // Assinatura do locatário
+        contrato.assinaturaLocatario?.let { assinaturaBase64 ->
+            try {
+                val assinaturaBytes = Base64.decode(assinaturaBase64, Base64.DEFAULT)
+                val assinaturaImage = ImageDataFactory.create(assinaturaBytes)
+                val image = Image(assinaturaImage)
+                    .scaleToFit(150f, 80f) // ✅ OTIMIZADO: menor para lado a lado
+                    .setMarginBottom(5f)
+                
+                cellLocatario.add(image)
+            } catch (e: Exception) {
+                // Se houver erro, adicionar linha para assinatura
+                val linha = Paragraph("_________________________")
+                    .setFont(font)
+                    .setFontSize(9f)
+                    .setMarginBottom(5f)
+                cellLocatario.add(linha)
+            }
+        } ?: run {
+            // Linha para assinatura se não houver
+            val linha = Paragraph("_________________________")
+                .setFont(font)
+                .setFontSize(9f)
+                .setMarginBottom(5f)
+            cellLocatario.add(linha)
+        }
+        
+        // Nome do locatário
+        val locatarioNome = Paragraph(contrato.locatarioNome)
+            .setFont(fontBold)
+            .setFontSize(9f)
+            .setMarginBottom(2f)
+        cellLocatario.add(locatarioNome)
+        
+        // CPF embaixo do nome
+        val locatarioCpf = Paragraph("CPF/CNPJ: ${contrato.locatarioCpf}")
+            .setFont(font)
+            .setFontSize(8f)
+            .setMarginBottom(5f)
+        cellLocatario.add(locatarioCpf)
+        
+        table.addCell(cellLocadora)
+        table.addCell(cellLocatario)
+        
+        document.add(table)
     }
     
     private fun addSignatures(document: Document, contrato: ContratoLocacao, font: com.itextpdf.kernel.font.PdfFont, fontBold: com.itextpdf.kernel.font.PdfFont, assinaturaRepresentante: String? = null) {
