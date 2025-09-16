@@ -119,23 +119,47 @@ class ContractManagementViewModel @Inject constructor(
      */
     private suspend fun loadContractsWithContract(): List<ContractItem> {
         val contratos = repository.buscarTodosContratos().first()
-        return contratos.map { contrato ->
-            val cliente = repository.obterClientePorId(contrato.clienteId)
+        
+        // ✅ NOVO: Agrupar contratos por cliente
+        val contratosPorCliente = contratos.groupBy { it.clienteId }
+        
+        return contratosPorCliente.map { (clienteId, contratosCliente) ->
+            val cliente = repository.obterClientePorId(clienteId)
             val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
-            val mesas = repository.obterMesasPorCliente(contrato.clienteId).first()
-            val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
-            val aditivosRetirada = aditivos.filter { it.tipo.equals("RETIRADA", ignoreCase = true) }
-            val hasDistrato = !contrato.status.equals("ATIVO", ignoreCase = true)
-            val statusLabel = mapStatusLabel(contrato)
+            
+            // ✅ NOVO: Pegar o contrato mais recente para determinar o status
+            val contratoMaisRecente = contratosCliente.maxByOrNull { it.dataCriacao.time }
+                ?: contratosCliente.first()
+            
+            // ✅ NOVO: Coletar todas as mesas de todos os contratos do cliente
+            val todasMesas = mutableListOf<Mesa>()
+            val todosAditivos = mutableListOf<AditivoContrato>()
+            var totalAditivosRetirada = 0
+            var temDistrato = false
+            
+            contratosCliente.forEach { contrato ->
+                val mesas = repository.obterMesasPorCliente(contrato.clienteId).first()
+                todasMesas.addAll(mesas)
+                
+                val aditivos = repository.buscarAditivosPorContrato(contrato.id).first()
+                todosAditivos.addAll(aditivos)
+                totalAditivosRetirada += aditivos.count { it.tipo.equals("RETIRADA", ignoreCase = true) }
+                
+                if (!contrato.status.equals("ATIVO", ignoreCase = true)) {
+                    temDistrato = true
+                }
+            }
+            
+            val statusLabel = mapStatusLabel(contratoMaisRecente)
             
             ContractItem(
-                contrato = contrato,
+                contrato = contratoMaisRecente, // ✅ NOVO: Usar contrato mais recente
                 cliente = cliente,
                 rota = rota,
-                mesas = mesas,
-                aditivos = aditivos,
-                aditivosRetiradaCount = aditivosRetirada.size,
-                hasDistrato = hasDistrato,
+                mesas = todasMesas.distinctBy { it.id }, // ✅ NOVO: Remover duplicatas
+                aditivos = todosAditivos.sortedByDescending { it.dataCriacao }, // ✅ NOVO: Ordenar por data
+                aditivosRetiradaCount = totalAditivosRetirada,
+                hasDistrato = temDistrato,
                 status = statusLabel
             )
         }
