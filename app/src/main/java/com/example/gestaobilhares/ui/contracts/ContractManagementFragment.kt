@@ -153,19 +153,28 @@ class ContractManagementFragment : Fragment() {
             ))
         }
         
-        // Criar array de strings para o diálogo
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-        val documentosArray = documentos.map { documento ->
-            "${documento.titulo}\n${documento.tipo} • ${dateFormat.format(documento.data)}"
-        }.toTypedArray()
+        // ✅ NOVO: Criar diálogo customizado com RecyclerView
+        showCustomDocumentsDialog(item.cliente?.nome ?: "Cliente", documentos)
+    }
+
+    /**
+     * ✅ NOVO: Mostra diálogo customizado com RecyclerView para documentos
+     */
+    private fun showCustomDocumentsDialog(clienteNome: String, documentos: List<DocumentoItem>) {
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_documentos_lista, null)
         
-        // Mostrar diálogo
+        val recyclerView = dialogView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvDocumentos)
+        val adapter = DocumentosListaAdapter(documentos) { documento ->
+            showDocumentActionsDialog(documento)
+        }
+        
+        recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
+        
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Documentos - ${item.cliente?.nome}")
-            .setItems(documentosArray) { _, which ->
-                val documentoSelecionado = documentos[which]
-                showDocumentActionsDialog(documentoSelecionado)
-            }
+            .setTitle("Documentos - $clienteNome")
+            .setView(dialogView)
             .setNegativeButton("Fechar", null)
             .show()
     }
@@ -254,6 +263,77 @@ class ContractManagementFragment : Fragment() {
         val contrato: ContratoLocacao,
         val aditivo: AditivoContrato?
     )
+
+    /**
+     * ✅ NOVO: Adapter para lista de documentos no diálogo
+     */
+    private inner class DocumentosListaAdapter(
+        private val documentos: List<DocumentoItem>,
+        private val onItemClick: (DocumentoItem) -> Unit
+    ) : androidx.recyclerview.widget.RecyclerView.Adapter<DocumentosListaAdapter.DocumentoViewHolder>() {
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DocumentoViewHolder {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_documento_dialog, parent, false)
+            return DocumentoViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: DocumentoViewHolder, position: Int) {
+            holder.bind(documentos[position])
+        }
+
+        override fun getItemCount() = documentos.size
+
+        inner class DocumentoViewHolder(itemView: android.view.View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+            private val tvTitulo = itemView.findViewById<android.widget.TextView>(R.id.tvDocumentoTitulo)
+            private val tvTipo = itemView.findViewById<android.widget.TextView>(R.id.tvDocumentoTipo)
+            private val tvStatus = itemView.findViewById<android.widget.TextView>(R.id.tvDocumentoStatus)
+            private val tvData = itemView.findViewById<android.widget.TextView>(R.id.tvDocumentoData)
+
+            fun bind(documento: DocumentoItem) {
+                // Configurar título
+                tvTitulo.text = documento.titulo
+
+                // Configurar tipo com cores diferentes
+                tvTipo.text = documento.tipo
+                when (documento.tipo) {
+                    "CONTRATO" -> {
+                        tvTipo.setBackgroundColor(itemView.context.getColor(R.color.blue_600))
+                        tvTipo.setTextColor(itemView.context.getColor(R.color.white))
+                    }
+                    "ADITIVO (INCLUSÃO)" -> {
+                        tvTipo.setBackgroundColor(itemView.context.getColor(R.color.green_600))
+                        tvTipo.setTextColor(itemView.context.getColor(R.color.white))
+                    }
+                    "ADITIVO (RETIRADA)" -> {
+                        tvTipo.setBackgroundColor(itemView.context.getColor(R.color.orange_600))
+                        tvTipo.setTextColor(itemView.context.getColor(R.color.white))
+                    }
+                    "DISTRATO" -> {
+                        tvTipo.setBackgroundColor(itemView.context.getColor(R.color.red_600))
+                        tvTipo.setTextColor(itemView.context.getColor(R.color.white))
+                    }
+                }
+
+                // Configurar status
+                val status = when (documento.contrato.status.uppercase()) {
+                    "ATIVO" -> if (documento.contrato.assinaturaLocatario != null) "(Assinado)" else "(Gerado)"
+                    "ENCERRADO_QUITADO" -> "(Inativo)"
+                    "RESCINDIDO_COM_DIVIDA" -> "(Inativo com dívida)"
+                    "RESCINDIDO" -> "(Inativo)"
+                    else -> "(${documento.contrato.status})"
+                }
+                tvStatus.text = status
+
+                // Configurar data
+                val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                tvData.text = dateFormat.format(documento.data)
+
+                // Configurar clique
+                itemView.setOnClickListener { onItemClick(documento) }
+            }
+        }
+    }
 
 
     private fun setupFilters() {
