@@ -131,23 +131,7 @@ class ContractPdfGenerator(private val context: Context) {
                 document.add(conf)
             }
 
-            // Assinaturas específicas do distrato
-            val dataAtual = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")).format(Date())
-            val data = Paragraph("Montes Claros, $dataAtual.")
-                .setFont(font).setFontSize(10f)
-                .setMarginTop(30f).setMarginBottom(40f)
-            document.add(data)
-
-            val locadora = Paragraph("BILHAR GLOBO R & A LTDA (Locadora) - CNPJ: ${contrato.locadorCnpj}")
-                .setFont(fontBold).setFontSize(10f).setMarginBottom(10f)
-            document.add(locadora)
-            contrato.distratoAssinaturaLocador?.let { b64 ->
-                try {
-                    val bytes = Base64.decode(b64, Base64.DEFAULT)
-                    val img = Image(ImageDataFactory.create(bytes)).scaleToFit(200f, 100f).setMarginBottom(20f)
-                    document.add(img)
-                } catch (_: Exception) {}
-            }
+            // ✅ CORRIGIDO: Removida duplicação - usar apenas o método addSignatures
             // ✅ NOVO: Usar método addSignatures para incluir assinatura do representante legal
             addSignatures(document, contrato, font, fontBold, assinaturaRepresentante)
         } finally {
