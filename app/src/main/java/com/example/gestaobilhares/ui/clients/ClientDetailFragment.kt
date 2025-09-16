@@ -77,9 +77,18 @@ class ClientDetailFragment : Fragment() {
                     db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
                 )
                 val contratos = repo.buscarContratosPorCliente(clienteId).first()
-                val contrato = contratos.find { it.status == "ATIVO" } ?: contratos.maxByOrNull { it.dataCriacao.time }
+                // ✅ CORRIGIDO: Buscar APENAS contrato ATIVO para aditivo
+                // Se não houver contrato ativo, não pode gerar aditivo
+                val contrato = contratos.find { it.status == "ATIVO" }
+                
+                if (contrato == null) {
+                    // ✅ NOVO: Se não há contrato ativo, mostrar mensagem explicativa
+                    Toast.makeText(requireContext(), "Não é possível gerar aditivo: contrato foi encerrado. Cliente precisa de novo contrato.", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                
                 val bundle = android.os.Bundle().apply {
-                    putLong("contratoId", contrato?.id ?: 0L)
+                    putLong("contratoId", contrato.id)
                     putLongArray("mesasVinculadas", mesasRemovidas)
                     putString("aditivoTipo", "RETIRADA")
                 }
