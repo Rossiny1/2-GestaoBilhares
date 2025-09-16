@@ -337,6 +337,20 @@ class ContractManagementViewModel @Inject constructor(
     )
 
     /**
+     * ✅ NOVO: Obter assinatura do representante legal ativa
+     * Retorna a assinatura Base64 do representante legal para uso automático em contratos
+     */
+    suspend fun obterAssinaturaRepresentanteLegalAtiva(): String? {
+        return try {
+            val assinatura = repository.obterAssinaturaRepresentanteLegalAtiva()
+            assinatura?.assinaturaBase64
+        } catch (e: Exception) {
+            android.util.Log.e("ContractManagementViewModel", "Erro ao obter assinatura do representante: ${e.message}")
+            null
+        }
+    }
+    
+    /**
      * Enum para filtros de contrato
      */
     enum class ContractFilter {

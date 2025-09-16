@@ -178,7 +178,11 @@ class SignatureCaptureFragment : Fragment() {
                 val contrato = viewModel.contrato.value ?: return@launch
                 val pdfGenerator = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext())
                 val mesas = viewModel.getMesasVinculadas()
-                val pdfFile = pdfGenerator.generateContractPdf(contrato, mesas)
+                
+                // ✅ NOVO: Obter assinatura do representante legal automaticamente
+                val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+                
+                val pdfFile = pdfGenerator.generateContractPdf(contrato, mesas, assinaturaRepresentante)
                 if (!pdfFile.exists() || pdfFile.length() == 0L) {
                     Toast.makeText(requireContext(), "Erro: Arquivo PDF não foi gerado corretamente", Toast.LENGTH_LONG).show()
                     return@launch

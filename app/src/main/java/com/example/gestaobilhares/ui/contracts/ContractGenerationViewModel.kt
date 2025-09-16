@@ -172,4 +172,18 @@ class ContractGenerationViewModel @Inject constructor(
         val numeroSequencial = repository.contarContratosPorAno(ano) + 1
         return "$ano-${String.format("%04d", numeroSequencial)}"
     }
+    
+    /**
+     * ✅ NOVO: Obter assinatura do representante legal ativa
+     * Retorna a assinatura Base64 do representante legal para uso automático em contratos
+     */
+    suspend fun obterAssinaturaRepresentanteLegalAtiva(): String? {
+        return try {
+            val assinatura = repository.obterAssinaturaRepresentanteLegalAtiva()
+            assinatura?.assinaturaBase64
+        } catch (e: Exception) {
+            android.util.Log.e("ContractGenerationViewModel", "Erro ao obter assinatura do representante: ${e.message}")
+            null
+        }
+    }
 }

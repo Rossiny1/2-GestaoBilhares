@@ -221,7 +221,11 @@ class ContractGenerationFragment : Fragment() {
             try {
                 // Gerar PDF do contrato
                 val pdfGenerator = ContractPdfGenerator(requireContext())
-                val pdfFile = pdfGenerator.generateContractPdf(contrato, viewModel.mesasVinculadas.value)
+                
+                // ✅ NOVO: Obter assinatura do representante legal automaticamente
+                val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+                
+                val pdfFile = pdfGenerator.generateContractPdf(contrato, viewModel.mesasVinculadas.value, assinaturaRepresentante)
                 
                 // Enviar via WhatsApp
                 val whatsappNumber = cliente.telefone?.replace(Regex("[^0-9]"), "") ?: ""
