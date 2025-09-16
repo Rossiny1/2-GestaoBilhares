@@ -118,7 +118,7 @@ class ContractManagementFragment : Fragment() {
         val contrato = item.contrato ?: return
         val aditivos = item.aditivos
         
-        // Criar lista de documentos ordenados por data (mais recente primeiro)
+        // ✅ CORRIGIDO: Criar lista de documentos e ordenar por data (mais recente primeiro)
         val documentos = mutableListOf<DocumentoItem>()
         
         // Adicionar contrato principal
@@ -130,8 +130,8 @@ class ContractManagementFragment : Fragment() {
             aditivo = null
         ))
         
-        // Adicionar aditivos ordenados por data
-        aditivos.sortedByDescending { it.dataCriacao }.forEach { aditivo ->
+        // Adicionar aditivos
+        aditivos.forEach { aditivo ->
             val tipoAditivo = if (aditivo.tipo.equals("RETIRADA", ignoreCase = true)) "ADITIVO (RETIRADA)" else "ADITIVO (INCLUSÃO)"
             documentos.add(DocumentoItem(
                 tipo = tipoAditivo,
@@ -153,8 +153,11 @@ class ContractManagementFragment : Fragment() {
             ))
         }
         
+        // ✅ CORRIGIDO: Ordenar TODOS os documentos por data (mais recente primeiro)
+        val documentosOrdenados = documentos.sortedByDescending { it.data.time }
+        
         // ✅ NOVO: Criar diálogo customizado com RecyclerView
-        showCustomDocumentsDialog(item.cliente?.nome ?: "Cliente", documentos)
+        showCustomDocumentsDialog(item.cliente?.nome ?: "Cliente", documentosOrdenados)
     }
 
     /**
