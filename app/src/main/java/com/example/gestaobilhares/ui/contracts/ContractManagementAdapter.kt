@@ -58,21 +58,33 @@ class ContractManagementAdapter(
             if (aditivos.isNotEmpty()) {
                 binding.tvNumeroContrato.append("  •  ${aditivos.size} aditivo(s)")
             }
-            when (status) {
-                "Assinado" -> {
-                    binding.chipStatus.setChipBackgroundColorResource(R.color.green_100)
-                    binding.chipStatus.setChipStrokeColorResource(R.color.green_600)
-                    binding.chipStatus.setTextColor(binding.root.context.getColor(R.color.green_600))
+            when {
+                status.startsWith("Ativo") -> {
+                    if (status.contains("Assinado")) {
+                        binding.chipStatus.setChipBackgroundColorResource(R.color.green_100)
+                        binding.chipStatus.setChipStrokeColorResource(R.color.green_600)
+                        binding.chipStatus.setTextColor(binding.root.context.getColor(R.color.green_600))
+                    } else {
+                        binding.chipStatus.setChipBackgroundColorResource(R.color.blue_100)
+                        binding.chipStatus.setChipStrokeColorResource(R.color.blue_600)
+                        binding.chipStatus.setTextColor(binding.root.context.getColor(R.color.blue_600))
+                    }
                 }
-                "Gerado" -> {
-                    binding.chipStatus.setChipBackgroundColorResource(R.color.blue_100)
-                    binding.chipStatus.setChipStrokeColorResource(R.color.blue_600)
-                    binding.chipStatus.setTextColor(binding.root.context.getColor(R.color.blue_600))
+                status.startsWith("Inativo") -> {
+                    binding.chipStatus.setChipBackgroundColorResource(R.color.red_100)
+                    binding.chipStatus.setChipStrokeColorResource(R.color.red_600)
+                    binding.chipStatus.setTextColor(binding.root.context.getColor(R.color.red_600))
                 }
-                "Sem Contrato" -> {
+                status == "Sem Contrato" -> {
                     binding.chipStatus.setChipBackgroundColorResource(R.color.orange_100)
                     binding.chipStatus.setChipStrokeColorResource(R.color.orange_600)
                     binding.chipStatus.setTextColor(binding.root.context.getColor(R.color.orange_600))
+                }
+                else -> {
+                    // Status padrão
+                    binding.chipStatus.setChipBackgroundColorResource(R.color.gray_100)
+                    binding.chipStatus.setChipStrokeColorResource(R.color.gray_600)
+                    binding.chipStatus.setTextColor(binding.root.context.getColor(R.color.gray_600))
                 }
             }
 

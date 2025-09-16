@@ -128,8 +128,11 @@ class ContractManagementViewModel @Inject constructor(
             val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
             
             // ✅ NOVO: Pegar o contrato mais recente para determinar o status
-            val contratoMaisRecente = contratosCliente.maxByOrNull { it.dataCriacao.time }
-                ?: contratosCliente.first()
+            // Ordenar por data de criação (mais recente primeiro) e depois por data de atualização
+            val contratoMaisRecente = contratosCliente.maxByOrNull { contrato ->
+                // Priorizar data de encerramento se existir, senão data de atualização, senão data de criação
+                contrato.dataEncerramento?.time ?: contrato.dataAtualizacao?.time ?: contrato.dataCriacao.time
+            } ?: contratosCliente.first()
             
             // ✅ NOVO: Coletar todas as mesas de todos os contratos do cliente
             val todasMesas = mutableListOf<Mesa>()
@@ -316,9 +319,9 @@ class ContractManagementViewModel @Inject constructor(
     private fun mapStatusLabel(contrato: ContratoLocacao): String {
         return when (contrato.status.uppercase()) {
             "ATIVO" -> if (contrato.assinaturaLocatario != null) "Ativo (Assinado)" else "Ativo (Gerado)"
-            "ENCERRADO_QUITADO" -> "Encerrado (Quitado)"
-            "RESCINDIDO_COM_DIVIDA" -> "Rescindido (Com dívida)"
-            "RESCINDIDO" -> "Rescindido"
+            "ENCERRADO_QUITADO" -> "Inativo (Distrato)"
+            "RESCINDIDO_COM_DIVIDA" -> "Inativo (Distrato com dívida)"
+            "RESCINDIDO" -> "Inativo (Rescindido)"
             else -> contrato.status
         }
     }
