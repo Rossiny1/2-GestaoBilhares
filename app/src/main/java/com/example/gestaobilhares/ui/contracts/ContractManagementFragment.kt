@@ -399,7 +399,11 @@ class ContractManagementFragment : Fragment() {
             val totalGeral = subtotal - comissaoMotorista - comissaoIltair
             val saldo = ultimo?.debitoAtual ?: 0.0
             val fechamento = com.example.gestaobilhares.utils.ContractPdfGenerator.FechamentoResumo(totalRecebido, despesasViagem, subtotal, comissaoMotorista, comissaoIltair, totalGeral, saldo)
-            val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext()).generateDistratoPdf(contrato, mesas, fechamento, if (saldo > 0.0) Pair(saldo, java.util.Date()) else null)
+            
+            // ✅ NOVO: Obter assinatura do representante legal automaticamente
+            val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+            
+            val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext()).generateDistratoPdf(contrato, mesas, fechamento, if (saldo > 0.0) Pair(saldo, java.util.Date()) else null, assinaturaRepresentante)
             val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", pdf)
             val intent = Intent(Intent.ACTION_VIEW).apply { setDataAndType(uri, "application/pdf"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
             if (intent.resolveActivity(requireContext().packageManager) != null) startActivity(intent) else Toast.makeText(requireContext(), "Nenhum app para abrir PDF", Toast.LENGTH_SHORT).show()
@@ -425,7 +429,11 @@ class ContractManagementFragment : Fragment() {
             val totalGeral = subtotal - comissaoMotorista - comissaoIltair
             val saldo = ultimo?.debitoAtual ?: 0.0
             val fechamento = com.example.gestaobilhares.utils.ContractPdfGenerator.FechamentoResumo(totalRecebido, despesasViagem, subtotal, comissaoMotorista, comissaoIltair, totalGeral, saldo)
-            val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext()).generateDistratoPdf(contrato, mesas, fechamento, if (saldo > 0.0) Pair(saldo, java.util.Date()) else null)
+            
+            // ✅ NOVO: Obter assinatura do representante legal automaticamente
+            val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+            
+            val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext()).generateDistratoPdf(contrato, mesas, fechamento, if (saldo > 0.0) Pair(saldo, java.util.Date()) else null, assinaturaRepresentante)
             val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", pdf)
             val shareIntent = Intent(Intent.ACTION_SEND).apply { type = "application/pdf"; putExtra(Intent.EXTRA_STREAM, uri); putExtra(Intent.EXTRA_SUBJECT, "Distrato ${contrato.numeroContrato}"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
             startActivity(Intent.createChooser(shareIntent, "Compartilhar distrato"))

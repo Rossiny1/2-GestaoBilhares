@@ -66,7 +66,8 @@ class ContractPdfGenerator(private val context: Context) {
         contrato: ContratoLocacao,
         mesas: List<Mesa>,
         fechamento: FechamentoResumo,
-        confissaoDivida: Pair<Double, Date?>? = null
+        confissaoDivida: Pair<Double, Date?>? = null,
+        assinaturaRepresentante: String? = null
     ): File {
         val dir = File(context.getExternalFilesDir(null), "distratos_${contrato.numeroContrato}")
         if (!dir.exists()) dir.mkdirs()
@@ -147,19 +148,8 @@ class ContractPdfGenerator(private val context: Context) {
                     document.add(img)
                 } catch (_: Exception) {}
             }
-            document.add(LineSeparator(null).setMarginBottom(20f))
-
-            val locatario = Paragraph("${contrato.locatarioNome} (Locatário(a)) - CPF/CNPJ: ${contrato.locatarioCpf}")
-                .setFont(fontBold).setFontSize(10f).setMarginBottom(10f)
-            document.add(locatario)
-            contrato.distratoAssinaturaLocatario?.let { b64 ->
-                try {
-                    val bytes = Base64.decode(b64, Base64.DEFAULT)
-                    val img = Image(ImageDataFactory.create(bytes)).scaleToFit(200f, 100f).setMarginBottom(10f)
-                    document.add(img)
-                } catch (_: Exception) {}
-            }
-            document.add(LineSeparator(null).setMarginBottom(20f))
+            // ✅ NOVO: Usar método addSignatures para incluir assinatura do representante legal
+            addSignatures(document, contrato, font, fontBold, assinaturaRepresentante)
         } finally {
             document.close()
         }
@@ -172,13 +162,13 @@ class ContractPdfGenerator(private val context: Context) {
     private fun addTitle(document: Document, numeroContrato: String, fontBold: com.itextpdf.kernel.font.PdfFont) {
         val title = Paragraph("CONTRATO DE LOCAÇÃO DE EQUIPAMENTO DE DIVERSÃO")
             .setFont(fontBold)
-            .setFontSize(16f)
-            .setMarginBottom(20f)
+            .setFontSize(16f) // ✅ REVERTIDO: voltou para 16f
+            .setMarginBottom(10f) // ✅ OTIMIZADO: 20f → 10f
         
         val numero = Paragraph("Contrato nº: $numeroContrato")
             .setFont(fontBold)
-            .setFontSize(12f)
-            .setMarginBottom(30f)
+            .setFontSize(12f) // ✅ REVERTIDO: voltou para 12f
+            .setMarginBottom(15f) // ✅ OTIMIZADO: 30f → 15f
         
         document.add(title)
         document.add(numero)
@@ -187,23 +177,23 @@ class ContractPdfGenerator(private val context: Context) {
     private fun addPartiesSection(document: Document, contrato: ContratoLocacao, font: com.itextpdf.kernel.font.PdfFont, fontBold: com.itextpdf.kernel.font.PdfFont) {
         val sectionTitle = Paragraph("IDENTIFICAÇÃO DAS PARTES")
             .setFont(fontBold)
-            .setFontSize(14f)
-            .setMarginBottom(15f)
+            .setFontSize(14f) // ✅ REVERTIDO: voltou para 14f
+            .setMarginBottom(8f) // ✅ OTIMIZADO: 15f → 8f
         
         val locadora = Paragraph("LOCADORA: ${contrato.locadorNome}, pessoa jurídica de direito privado, inscrita no CNPJ/MF sob o nº ${contrato.locadorCnpj}, com sede na ${contrato.locadorEndereco}, CEP ${contrato.locadorCep}, neste ato representada por seu representante legal.")
             .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(15f)
+            .setFontSize(10f) // ✅ REVERTIDO: voltou para 10f
+            .setMarginBottom(8f) // ✅ OTIMIZADO: 15f → 8f
         
         val locatario = Paragraph("LOCATÁRIO(A): NOME/RAZÃO SOCIAL: ${contrato.locatarioNome} CPF/CNPJ: ${contrato.locatarioCpf} ENDEREÇO COMERCIAL: ${contrato.locatarioEndereco} TELEFONE CELULAR (WhatsApp): ${contrato.locatarioTelefone} E-MAIL: ${contrato.locatarioEmail}")
             .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(15f)
+            .setFontSize(10f) // ✅ REVERTIDO: voltou para 10f
+            .setMarginBottom(8f) // ✅ OTIMIZADO: 15f → 8f
         
         val intro = Paragraph("As partes acima qualificadas celebram o presente Contrato de Locação, que se regerá pelas seguintes cláusulas e condições:")
             .setFont(font)
-            .setFontSize(10f)
-            .setMarginBottom(20f)
+            .setFontSize(10f) // ✅ REVERTIDO: voltou para 10f
+            .setMarginBottom(10f) // ✅ OTIMIZADO: 20f → 10f
         
         document.add(sectionTitle)
         document.add(locadora)
@@ -359,26 +349,14 @@ class ContractPdfGenerator(private val context: Context) {
         val dataAtual = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")).format(Date())
         val data = Paragraph("Montes Claros, $dataAtual.")
             .setFont(font)
-            .setFontSize(10f)
-            .setMarginTop(30f)
-            .setMarginBottom(40f)
+            .setFontSize(10f) // ✅ REVERTIDO: voltou para 10f
+            .setMarginTop(15f) // ✅ OTIMIZADO: 30f → 15f
+            .setMarginBottom(20f) // ✅ OTIMIZADO: 40f → 20f
         
         document.add(data)
         
-        // Assinatura do Locador
-        val locadorTitle = Paragraph("BILHAR GLOBO R & A LTDA (Locadora) - CNPJ: ${contrato.locadorCnpj}")
-            .setFont(fontBold)
-            .setFontSize(10f)
-            .setMarginBottom(10f)
-        
-        document.add(locadorTitle)
-        
-        // Linha para assinatura da locadora
-        val linhaLocadora = LineSeparator(null)
-            .setMarginBottom(20f)
-        document.add(linhaLocadora)
-        
-        // Adicionar assinatura do locador (priorizar assinatura pré-fabricada do representante)
+        // ✅ CORRIGIDO: Assinatura do Locador (ACIMA do nome)
+        // Adicionar assinatura do locador primeiro (priorizar assinatura pré-fabricada do representante)
         val assinaturaLocador = assinaturaRepresentante ?: contrato.assinaturaLocador
         assinaturaLocador?.let { assinaturaBase64 ->
             try {
@@ -386,7 +364,7 @@ class ContractPdfGenerator(private val context: Context) {
                 val assinaturaImage = ImageDataFactory.create(assinaturaBytes)
                 val image = Image(assinaturaImage)
                     .scaleToFit(200f, 100f)
-                    .setMarginBottom(20f)
+                    .setMarginBottom(5f) // ✅ OTIMIZADO: 10f → 5f
                 
                 document.add(image)
             } catch (e: Exception) {
@@ -394,23 +372,23 @@ class ContractPdfGenerator(private val context: Context) {
             }
         }
         
-        // Assinatura do Locatário
-        val locatarioTitle = Paragraph("${contrato.locatarioNome} (Locatário(a)) - CPF/CNPJ: ${contrato.locatarioCpf}")
+        val locadorTitle = Paragraph("BILHAR GLOBO R & A LTDA (Locadora) - CNPJ: ${contrato.locadorCnpj}")
             .setFont(fontBold)
-            .setFontSize(10f)
-            .setMarginTop(40f)
-            .setMarginBottom(10f)
+            .setFontSize(10f) // ✅ REVERTIDO: voltou para 10f
+            .setMarginBottom(10f) // ✅ OTIMIZADO: 20f → 10f
         
-        document.add(locatarioTitle)
+        document.add(locadorTitle)
         
-        // Adicionar assinatura do locatário se existir (ACIMA da linha)
+        // ✅ CORRIGIDO: Assinatura do Locatário (ACIMA do nome)
+        // Adicionar assinatura do locatário primeiro
         contrato.assinaturaLocatario?.let { assinaturaBase64 ->
             try {
                 val assinaturaBytes = Base64.decode(assinaturaBase64, Base64.DEFAULT)
                 val assinaturaImage = ImageDataFactory.create(assinaturaBytes)
                 val image = Image(assinaturaImage)
                     .scaleToFit(200f, 100f)
-                    .setMarginBottom(10f)
+                    .setMarginTop(20f) // ✅ OTIMIZADO: 40f → 20f
+                    .setMarginBottom(5f) // ✅ OTIMIZADO: 10f → 5f
                 
                 document.add(image)
             } catch (e: Exception) {
@@ -418,10 +396,12 @@ class ContractPdfGenerator(private val context: Context) {
             }
         }
         
-        // Linha para assinatura do locatário (DEPOIS da assinatura)
-        val linhaLocatario = LineSeparator(null)
-            .setMarginBottom(20f)
-        document.add(linhaLocatario)
+        val locatarioTitle = Paragraph("${contrato.locatarioNome} (Locatário(a)) - CPF/CNPJ: ${contrato.locatarioCpf}")
+            .setFont(fontBold)
+            .setFontSize(10f) // ✅ REVERTIDO: voltou para 10f
+            .setMarginBottom(10f) // ✅ OTIMIZADO: 20f → 10f
+        
+        document.add(locatarioTitle)
     }
     
     private fun getTipoEquipamentoNome(tipoMesa: com.example.gestaobilhares.data.entities.TipoMesa): String {

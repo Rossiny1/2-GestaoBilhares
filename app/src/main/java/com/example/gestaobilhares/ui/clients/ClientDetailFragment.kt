@@ -163,13 +163,17 @@ class ClientDetailFragment : Fragment() {
                     totalRecebido, despesasViagem, subtotal, comissaoMotorista, comissaoIltair, totalGeral, saldoApurado
                 )
 
+                // ✅ NOVO: Obter assinatura do representante legal automaticamente
+                val assinaturaRepresentante = repo.obterAssinaturaRepresentanteLegalAtiva()?.assinaturaBase64
+                
                 // Gerar PDF de distrato
                 val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext())
                     .generateDistratoPdf(
                         contrato = contrato,
                         mesas = mesas,
                         fechamento = fechamento,
-                        confissaoDivida = if (saldoApurado > 0.0) Pair(saldoApurado, java.util.Date()) else null
+                        confissaoDivida = if (saldoApurado > 0.0) Pair(saldoApurado, java.util.Date()) else null,
+                        assinaturaRepresentante = assinaturaRepresentante
                     )
 
                 // Atualizar status do contrato
