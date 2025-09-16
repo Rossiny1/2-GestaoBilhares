@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentContractManagementBinding
 import com.example.gestaobilhares.data.entities.ContratoLocacao
+import com.example.gestaobilhares.data.entities.AditivoContrato
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
@@ -28,6 +29,8 @@ import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.*
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Fragment para gerenciamento de contratos
@@ -73,12 +76,8 @@ class ContractManagementFragment : Fragment() {
                 showContractOrAddendumOptions(item)
             },
             onViewClick = { item ->
-                // Visualizar contrato ou último aditivo se existir
-                if (item.aditivos.isNotEmpty()) viewAddendum(item) else viewContract(item.contrato)
-            },
-            onShareClick = { item ->
-                // Compartilhar contrato ou último aditivo se existir
-                if (item.aditivos.isNotEmpty()) shareAddendum(item) else shareContract(item.contrato)
+                // ✅ NOVO: Mostrar diálogo com lista de documentos
+                showDocumentsDialog(item)
             }
         )
 
@@ -110,6 +109,151 @@ class ContractManagementFragment : Fragment() {
         }
 
     }
+
+    /**
+     * ✅ NOVO: Mostra diálogo com lista de documentos (contratos, aditivos, distratos)
+     * Ordenados do mais recente para o mais antigo
+     */
+    private fun showDocumentsDialog(item: ContractManagementViewModel.ContractItem) {
+        val contrato = item.contrato ?: return
+        val aditivos = item.aditivos
+        
+        // Criar lista de documentos ordenados por data (mais recente primeiro)
+        val documentos = mutableListOf<DocumentoItem>()
+        
+        // Adicionar contrato principal
+        documentos.add(DocumentoItem(
+            tipo = "CONTRATO",
+            titulo = "Contrato ${contrato.numeroContrato}",
+            data = contrato.dataCriacao,
+            contrato = contrato,
+            aditivo = null
+        ))
+        
+        // Adicionar aditivos ordenados por data
+        aditivos.sortedByDescending { it.dataCriacao }.forEach { aditivo ->
+            val tipoAditivo = if (aditivo.tipo.equals("RETIRADA", ignoreCase = true)) "ADITIVO (RETIRADA)" else "ADITIVO (INCLUSÃO)"
+            documentos.add(DocumentoItem(
+                tipo = tipoAditivo,
+                titulo = "Aditivo ${aditivo.numeroAditivo}",
+                data = aditivo.dataCriacao,
+                contrato = contrato,
+                aditivo = aditivo
+            ))
+        }
+        
+        // Verificar se há distrato (contrato encerrado)
+        if (contrato.status == "ENCERRADO_QUITADO" || contrato.status == "RESCINDIDO_COM_DIVIDA") {
+            documentos.add(DocumentoItem(
+                tipo = "DISTRATO",
+                titulo = "Distrato ${contrato.numeroContrato}",
+                data = contrato.dataEncerramento ?: contrato.dataAtualizacao,
+                contrato = contrato,
+                aditivo = null
+            ))
+        }
+        
+        // Criar array de strings para o diálogo
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        val documentosArray = documentos.map { documento ->
+            "${documento.titulo}\n${documento.tipo} • ${dateFormat.format(documento.data)}"
+        }.toTypedArray()
+        
+        // Mostrar diálogo
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Documentos - ${item.cliente?.nome}")
+            .setItems(documentosArray) { _, which ->
+                val documentoSelecionado = documentos[which]
+                showDocumentActionsDialog(documentoSelecionado)
+            }
+            .setNegativeButton("Fechar", null)
+            .show()
+    }
+
+    /**
+     * ✅ NOVO: Mostra diálogo com ações do documento (visualizar/compartilhar)
+     */
+    private fun showDocumentActionsDialog(documento: DocumentoItem) {
+        val actions = arrayOf("Visualizar", "Compartilhar")
+        
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(documento.titulo)
+            .setItems(actions) { _, which ->
+                when (which) {
+                    0 -> { // Visualizar
+                        when (documento.tipo) {
+                            "CONTRATO" -> viewContract(documento.contrato)
+                            "ADITIVO (INCLUSÃO)", "ADITIVO (RETIRADA)" -> {
+                                documento.aditivo?.let { aditivo ->
+                                    viewAddendum(ContractManagementViewModel.ContractItem(
+                                        contrato = documento.contrato,
+                                        cliente = null,
+                                        rota = null,
+                                        mesas = emptyList(),
+                                        aditivos = listOf(aditivo),
+                                        status = "",
+                                        aditivosRetiradaCount = 0,
+                                        hasDistrato = false
+                                    ))
+                                }
+                            }
+                            "DISTRATO" -> viewDistrato(ContractManagementViewModel.ContractItem(
+                                contrato = documento.contrato,
+                                cliente = null,
+                                rota = null,
+                                mesas = emptyList(),
+                                aditivos = emptyList(),
+                                status = "",
+                                aditivosRetiradaCount = 0,
+                                hasDistrato = true
+                            ))
+                        }
+                    }
+                    1 -> { // Compartilhar
+                        when (documento.tipo) {
+                            "CONTRATO" -> shareContract(documento.contrato)
+                            "ADITIVO (INCLUSÃO)", "ADITIVO (RETIRADA)" -> {
+                                documento.aditivo?.let { aditivo ->
+                                    shareAddendum(ContractManagementViewModel.ContractItem(
+                                        contrato = documento.contrato,
+                                        cliente = null,
+                                        rota = null,
+                                        mesas = emptyList(),
+                                        aditivos = listOf(aditivo),
+                                        status = "",
+                                        aditivosRetiradaCount = 0,
+                                        hasDistrato = false
+                                    ))
+                                }
+                            }
+                            "DISTRATO" -> shareDistrato(ContractManagementViewModel.ContractItem(
+                                contrato = documento.contrato,
+                                cliente = null,
+                                rota = null,
+                                mesas = emptyList(),
+                                aditivos = emptyList(),
+                                status = "",
+                                aditivosRetiradaCount = 0,
+                                hasDistrato = true
+                            ))
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    /**
+     * ✅ NOVO: Classe para representar um documento
+     */
+    data class DocumentoItem(
+        val tipo: String,
+        val titulo: String,
+        val data: Date,
+        val contrato: ContratoLocacao,
+        val aditivo: AditivoContrato?
+    )
 
 
     private fun setupFilters() {

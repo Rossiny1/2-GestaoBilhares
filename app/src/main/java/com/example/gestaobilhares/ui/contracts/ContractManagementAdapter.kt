@@ -16,8 +16,7 @@ import java.util.*
  */
 class ContractManagementAdapter(
     private val onContractClick: (ContractManagementViewModel.ContractItem) -> Unit,
-    private val onViewClick: (ContractManagementViewModel.ContractItem) -> Unit,
-    private val onShareClick: (ContractManagementViewModel.ContractItem) -> Unit
+    private val onViewClick: (ContractManagementViewModel.ContractItem) -> Unit
 ) : ListAdapter<ContractManagementViewModel.ContractItem, ContractManagementAdapter.ContractViewHolder>(
     ContractDiffCallback()
 ) {
@@ -113,17 +112,17 @@ class ContractManagementAdapter(
             // Configurar cliques
             binding.root.setOnClickListener { onContractClick(item) }
 
+            // ✅ NOVO: Botão visualizar no local do compartilhar
             binding.btnView.setOnClickListener { onViewClick(item) }
 
-            binding.btnShare.setOnClickListener { onShareClick(item) }
+            // ✅ REMOVIDO: Botão compartilhar
+            binding.btnShare.visibility = android.view.View.GONE
 
-            // Mostrar/ocultar botões baseado no status
+            // Mostrar/ocultar botão visualizar baseado no status
             if (status == "Sem Contrato") {
                 binding.btnView.visibility = android.view.View.GONE
-                binding.btnShare.visibility = android.view.View.GONE
             } else {
                 binding.btnView.visibility = android.view.View.VISIBLE
-                binding.btnShare.visibility = android.view.View.VISIBLE
             }
         }
 
