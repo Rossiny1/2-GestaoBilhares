@@ -225,12 +225,16 @@ class SignatureCaptureFragment : Fragment() {
                 val contrato = viewModel.contrato.value ?: return@launch
                 val mesas = viewModel.getMesasParaDistrato()
                 val fechamento = viewModel.getFechamentoResumoDistrato()
+                // ✅ NOVO: Obter assinatura do representante legal automaticamente
+                val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+                
                 val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext())
                     .generateDistratoPdf(
                         contrato = contrato,
                         mesas = mesas,
                         fechamento = fechamento,
-                        confissaoDivida = if (fechamento.saldoApurado > 0.0) Pair(fechamento.saldoApurado, java.util.Date()) else null
+                        confissaoDivida = if (fechamento.saldoApurado > 0.0) Pair(fechamento.saldoApurado, java.util.Date()) else null,
+                        assinaturaRepresentante = assinaturaRepresentante
                     )
                 if (!pdf.exists() || pdf.length() == 0L) {
                     Toast.makeText(requireContext(), "Erro ao gerar o PDF do distrato.", Toast.LENGTH_LONG).show()
