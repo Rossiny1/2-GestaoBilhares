@@ -38,6 +38,10 @@ object AppModule {
     @Provides fun provideTipoDespesaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.TipoDespesaDao = db.tipoDespesaDao()
     @Provides fun provideContratoLocacaoDao(db: AppDatabase): com.example.gestaobilhares.data.dao.ContratoLocacaoDao = db.contratoLocacaoDao()
     @Provides fun provideAditivoContratoDao(db: AppDatabase): com.example.gestaobilhares.data.dao.AditivoContratoDao = db.aditivoContratoDao()
+    
+    @Provides fun provideAssinaturaRepresentanteLegalDao(db: AppDatabase): AssinaturaRepresentanteLegalDao = db.assinaturaRepresentanteLegalDao()
+    @Provides fun provideLogAuditoriaAssinaturaDao(db: AppDatabase): LogAuditoriaAssinaturaDao = db.logAuditoriaAssinaturaDao()
+    @Provides fun provideProcuraçãoRepresentanteDao(db: AppDatabase): ProcuraçãoRepresentanteDao = db.procuraçãoRepresentanteDao()
 
     @Provides
     @Singleton
@@ -51,7 +55,10 @@ object AppModule {
         cicloAcertoDao: CicloAcertoDao,
         acertoMesaDao: com.example.gestaobilhares.data.dao.AcertoMesaDao,
         contratoLocacaoDao: com.example.gestaobilhares.data.dao.ContratoLocacaoDao,
-        aditivoContratoDao: com.example.gestaobilhares.data.dao.AditivoContratoDao
+        aditivoContratoDao: com.example.gestaobilhares.data.dao.AditivoContratoDao,
+        assinaturaRepresentanteLegalDao: AssinaturaRepresentanteLegalDao,
+        logAuditoriaAssinaturaDao: LogAuditoriaAssinaturaDao,
+        procuraçãoRepresentanteDao: ProcuraçãoRepresentanteDao
     ): AppRepository = AppRepository(
         clienteDao,
         acertoDao,
@@ -62,7 +69,10 @@ object AppModule {
         cicloAcertoDao,
         acertoMesaDao,
         contratoLocacaoDao,
-        aditivoContratoDao
+        aditivoContratoDao,
+        assinaturaRepresentanteLegalDao,
+        logAuditoriaAssinaturaDao,
+        procuraçãoRepresentanteDao
     )
 
     // Repositories

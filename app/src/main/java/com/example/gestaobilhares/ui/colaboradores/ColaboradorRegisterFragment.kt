@@ -82,7 +82,10 @@ class ColaboradorRegisterFragment : Fragment() {
             database.cicloAcertoDao(),
             database.acertoMesaDao(),
             database.contratoLocacaoDao(),
-            database.aditivoContratoDao()
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao(),
+            database.procuraçãoRepresentanteDao()
         )
     }
 

@@ -104,6 +104,11 @@ class ContractManagementFragment : Fragment() {
             showFilterDialog()
         }
 
+        // Botão assinatura do representante legal
+        binding.btnAssinaturaRepresentante.setOnClickListener {
+            findNavController().navigate(R.id.action_contractManagementFragment_to_representanteLegalSignatureFragment)
+        }
+
     }
 
 
@@ -362,7 +367,8 @@ class ContractManagementFragment : Fragment() {
             val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
             val repo = com.example.gestaobilhares.data.repository.AppRepository(
                 db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao()
+                db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
+                db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
             )
             val ultimo = repo.buscarUltimoAcertoPorCliente(contrato.clienteId)
             val totalRecebido = ultimo?.valorRecebido ?: 0.0
@@ -387,7 +393,8 @@ class ContractManagementFragment : Fragment() {
             val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
             val repo = com.example.gestaobilhares.data.repository.AppRepository(
                 db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao()
+                db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
+                db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
             )
             val ultimo = repo.buscarUltimoAcertoPorCliente(contrato.clienteId)
             val totalRecebido = ultimo?.valorRecebido ?: 0.0

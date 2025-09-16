@@ -20,7 +20,7 @@ import java.util.*
 
 class ContractPdfGenerator(private val context: Context) {
     
-    fun generateContractPdf(contrato: ContratoLocacao, mesas: List<Mesa>): File {
+    fun generateContractPdf(contrato: ContratoLocacao, mesas: List<Mesa>, assinaturaRepresentante: String? = null): File {
         val fileName = "contrato_${contrato.numeroContrato}_${System.currentTimeMillis()}.pdf"
         val file = File(context.getExternalFilesDir(null), fileName)
         
@@ -43,7 +43,7 @@ class ContractPdfGenerator(private val context: Context) {
             addClauses(document, contrato, mesas, font, fontBold)
             
             // Assinaturas
-            addSignatures(document, contrato, font, fontBold)
+            addSignatures(document, contrato, font, fontBold, assinaturaRepresentante)
             
         } finally {
             document.close()
@@ -355,7 +355,7 @@ class ContractPdfGenerator(private val context: Context) {
         }
     }
     
-    private fun addSignatures(document: Document, contrato: ContratoLocacao, font: com.itextpdf.kernel.font.PdfFont, fontBold: com.itextpdf.kernel.font.PdfFont) {
+    private fun addSignatures(document: Document, contrato: ContratoLocacao, font: com.itextpdf.kernel.font.PdfFont, fontBold: com.itextpdf.kernel.font.PdfFont, assinaturaRepresentante: String? = null) {
         val dataAtual = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")).format(Date())
         val data = Paragraph("Montes Claros, $dataAtual.")
             .setFont(font)
@@ -378,8 +378,9 @@ class ContractPdfGenerator(private val context: Context) {
             .setMarginBottom(20f)
         document.add(linhaLocadora)
         
-        // Adicionar assinatura do locador se existir
-        contrato.assinaturaLocador?.let { assinaturaBase64 ->
+        // Adicionar assinatura do locador (priorizar assinatura pré-fabricada do representante)
+        val assinaturaLocador = assinaturaRepresentante ?: contrato.assinaturaLocador
+        assinaturaLocador?.let { assinaturaBase64 ->
             try {
                 val assinaturaBytes = Base64.decode(assinaturaBase64, Base64.DEFAULT)
                 val assinaturaImage = ImageDataFactory.create(assinaturaBytes)
