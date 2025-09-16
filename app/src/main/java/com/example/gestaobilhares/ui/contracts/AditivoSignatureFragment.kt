@@ -193,7 +193,11 @@ class AditivoSignatureFragment : Fragment() {
                     return@launch
                 }
                 val pdfGenerator = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext())
-                val pdfFile = pdfGenerator.generateAditivoPdf(aditivo, contrato, mesas)
+                
+                // ✅ NOVO: Obter assinatura do representante legal automaticamente
+                val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+                
+                val pdfFile = pdfGenerator.generateAditivoPdf(aditivo, contrato, mesas, assinaturaRepresentante)
                 if (!pdfFile.exists() || pdfFile.length() == 0L) {
                     Toast.makeText(requireContext(), "Erro ao gerar o PDF do aditivo.", Toast.LENGTH_LONG).show()
                     return@launch

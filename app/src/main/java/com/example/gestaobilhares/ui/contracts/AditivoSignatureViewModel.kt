@@ -174,4 +174,18 @@ class AditivoSignatureViewModel @Inject constructor(
         val numero = count + 1
         return "ADT-${String.format("%03d", numero)}/$ano"
     }
+    
+    /**
+     * ✅ NOVO: Obter assinatura do representante legal ativa
+     * Retorna a assinatura Base64 do representante legal para uso automático em aditivos
+     */
+    suspend fun obterAssinaturaRepresentanteLegalAtiva(): String? {
+        return try {
+            val assinatura = repository.obterAssinaturaRepresentanteLegalAtiva()
+            assinatura?.assinaturaBase64
+        } catch (e: Exception) {
+            android.util.Log.e("AditivoSignatureViewModel", "Erro ao obter assinatura do representante: ${e.message}")
+            null
+        }
+    }
 }

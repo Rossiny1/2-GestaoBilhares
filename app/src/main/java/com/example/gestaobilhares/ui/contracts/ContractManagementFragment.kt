@@ -206,7 +206,11 @@ class ContractManagementFragment : Fragment() {
                 val mesas = contrato?.let { 
                     viewModel.getMesasPorCliente(it.clienteId)
                 } ?: emptyList()
-                val pdfFile = contractPdfGenerator.generateContractPdf(contrato, mesas)
+                
+                // ✅ NOVO: Obter assinatura do representante legal automaticamente
+                val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+                
+                val pdfFile = contractPdfGenerator.generateContractPdf(contrato, mesas, assinaturaRepresentante)
                 
                 if (pdfFile.exists()) {
                     // Tentar abrir PDF com visualizador padrão
@@ -278,7 +282,11 @@ class ContractManagementFragment : Fragment() {
                 }
                 val aditivo = item.aditivos.maxByOrNull { it.dataCriacao.time } ?: item.aditivos.last()
                 val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
-                val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas)
+                
+                // ✅ NOVO: Obter assinatura do representante legal automaticamente
+                val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+                
+                val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas, assinaturaRepresentante)
                 if (!pdf.exists()) {
                     Toast.makeText(requireContext(), "Erro ao gerar PDF do aditivo", Toast.LENGTH_SHORT).show()
                     return@launch
@@ -311,7 +319,11 @@ class ContractManagementFragment : Fragment() {
                 }
                 val aditivo = item.aditivos.maxByOrNull { it.dataCriacao.time } ?: item.aditivos.last()
                 val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
-                val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas)
+                
+                // ✅ NOVO: Obter assinatura do representante legal automaticamente
+                val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+                
+                val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas, assinaturaRepresentante)
                 if (!pdf.exists()) {
                     Toast.makeText(requireContext(), "Erro ao gerar PDF do aditivo", Toast.LENGTH_SHORT).show()
                     return@launch
@@ -336,7 +348,11 @@ class ContractManagementFragment : Fragment() {
             val contrato = item.contrato ?: return@launch
             val aditivo = item.aditivos.filter { it.tipo.equals("RETIRADA", true) }.maxByOrNull { it.dataCriacao.time } ?: return@launch
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
-            val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas)
+            
+            // ✅ NOVO: Obter assinatura do representante legal automaticamente
+            val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+            
+            val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas, assinaturaRepresentante)
             if (!pdf.exists()) {
                 Toast.makeText(requireContext(), "Erro ao gerar PDF do aditivo de retirada", Toast.LENGTH_SHORT).show(); return@launch
             }
@@ -351,7 +367,11 @@ class ContractManagementFragment : Fragment() {
             val contrato = item.contrato ?: return@launch
             val aditivo = item.aditivos.filter { it.tipo.equals("RETIRADA", true) }.maxByOrNull { it.dataCriacao.time } ?: return@launch
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
-            val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas)
+            
+            // ✅ NOVO: Obter assinatura do representante legal automaticamente
+            val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+            
+            val pdf = com.example.gestaobilhares.utils.AditivoPdfGenerator(requireContext()).generateAditivoPdf(aditivo, contrato, mesas, assinaturaRepresentante)
             if (!pdf.exists()) { Toast.makeText(requireContext(), "Erro ao gerar PDF", Toast.LENGTH_SHORT).show(); return@launch }
             val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", pdf)
             val shareIntent = Intent(Intent.ACTION_SEND).apply { type = "application/pdf"; putExtra(Intent.EXTRA_STREAM, uri); putExtra(Intent.EXTRA_SUBJECT, "Aditivo ${aditivo.numeroAditivo}"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
@@ -426,7 +446,11 @@ class ContractManagementFragment : Fragment() {
                 val mesas = contrato?.let { 
                     viewModel.getMesasPorCliente(it.clienteId)
                 } ?: emptyList()
-                val pdfFile = contractPdfGenerator.generateContractPdf(contrato, mesas)
+                
+                // ✅ NOVO: Obter assinatura do representante legal automaticamente
+                val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
+                
+                val pdfFile = contractPdfGenerator.generateContractPdf(contrato, mesas, assinaturaRepresentante)
                 
                 if (pdfFile.exists()) {
                     // Compartilhar PDF via WhatsApp ou outros apps
