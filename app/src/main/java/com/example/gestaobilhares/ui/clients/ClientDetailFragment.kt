@@ -330,6 +330,28 @@ class ClientDetailFragment : Fragment() {
                 try {
                     val mesasAtivas = viewModel.mesasCliente.value
                     if (mesasAtivas.isNotEmpty()) {
+                        // ✅ BLOQUEIO: Não permitir gerar novo contrato se já houver contrato ATIVO
+                        val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+                        val repo = com.example.gestaobilhares.data.repository.AppRepository(
+                            db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
+                            db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
+                            db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
+                        )
+                        val contratos = repo.buscarContratosPorCliente(args.clienteId).first()
+                        val contratoMaisRecente = contratos.maxByOrNull { c ->
+                            (c.dataEncerramento?.time ?: c.dataAtualizacao?.time ?: c.dataCriacao.time)
+                        }
+                        val isAtivo = contratoMaisRecente?.status?.equals("ATIVO", ignoreCase = true) == true
+                        android.util.Log.d(
+                            "ClientDetailFragment",
+                            "Verificação pré-contrato -> cliente=${args.clienteId}, contratos=${contratos.size}, maisRecente=${contratoMaisRecente?.id}, status=${contratoMaisRecente?.status}, permitirGerar=${!isAtivo}"
+                        )
+                        if (isAtivo) {
+                            android.widget.Toast.makeText(requireContext(), "Cliente já possui contrato ATIVO. Para incluir mesa, gere um aditivo.", android.widget.Toast.LENGTH_LONG).show()
+                            recolherFabMenu()
+                            return@launch
+                        }
+
                         // Navegar para tela de geração de contrato
                         val mesasIds = mesasAtivas.map { it.id }.toLongArray()
                         val action = ClientDetailFragmentDirections
