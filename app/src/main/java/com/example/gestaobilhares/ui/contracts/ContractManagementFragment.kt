@@ -157,7 +157,7 @@ class ContractManagementFragment : Fragment() {
                 }
                 // Adiciona distrato se houver (status) ou se existir PDF (fallback)
                 val isDistratoStatus = contrato.status == "ENCERRADO_QUITADO" || contrato.status == "RESCINDIDO_COM_DIVIDA"
-                var distratoData: java.util.Date? = contrato.dataEncerramento ?: contrato.dataAtualizacao
+                var distratoData: java.util.Date? = contrato.dataEncerramento
 
                 // Fallback por arquivo físico
                 try {
@@ -179,7 +179,7 @@ class ContractManagementFragment : Fragment() {
                 }
 
                 if (isDistratoStatus || distratoData != null) {
-                    val dataDoc = distratoData ?: (contrato.dataEncerramento ?: contrato.dataAtualizacao ?: contrato.dataCriacao)
+                    val dataDoc = distratoData ?: contrato.dataCriacao
                     android.util.Log.d("DocsDialog", "Adicionando DISTrato num=${contrato.numeroContrato} data=${dataDoc}")
                     documentos.add(DocumentoItem(
                         tipo = "DISTRATO",
