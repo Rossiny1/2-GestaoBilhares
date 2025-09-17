@@ -31,6 +31,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.flow.first
 
 /**
  * Fragment para gerenciamento de contratos
@@ -115,56 +116,53 @@ class ContractManagementFragment : Fragment() {
      * Ordenados do mais recente para o mais antigo
      */
     private fun showDocumentsDialog(item: ContractManagementViewModel.ContractItem) {
-        val contrato = item.contrato ?: return
-        val aditivos = item.aditivos
-        
-        // ✅ CORRIGIDO: Criar lista de documentos e ordenar por data (mais recente primeiro)
-        val documentos = mutableListOf<DocumentoItem>()
-        
-        // Adicionar contrato principal
-        documentos.add(DocumentoItem(
-            tipo = "CONTRATO",
-            titulo = "Contrato ${contrato.numeroContrato}",
-            data = contrato.dataCriacao,
-            contrato = contrato,
-            aditivo = null
-        ))
-        
-        // Adicionar aditivos
-        aditivos.forEach { aditivo ->
-            val tipoAditivo = if (aditivo.tipo.equals("RETIRADA", ignoreCase = true)) "ADITIVO (RETIRADA)" else "ADITIVO (INCLUSÃO)"
-            documentos.add(DocumentoItem(
-                tipo = tipoAditivo,
-                titulo = "Aditivo ${aditivo.numeroAditivo}",
-                data = aditivo.dataCriacao,
-                contrato = contrato,
-                aditivo = aditivo
-            ))
+        val cliente = item.cliente ?: return
+        val repo = AppRepository(
+            database.clienteDao(), database.acertoDao(), database.mesaDao(), database.rotaDao(), database.despesaDao(),
+            database.colaboradorDao(), database.cicloAcertoDao(), database.acertoMesaDao(), database.contratoLocacaoDao(), database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(), database.logAuditoriaAssinaturaDao(), database.procuraçãoRepresentanteDao()
+        )
+        lifecycleScope.launch {
+            val contratosFlow = repo.buscarContratosPorCliente(cliente.id)
+            val contratos = contratosFlow.first() // Flow<List<ContratoLocacao>> -> List<ContratoLocacao>
+            val documentos = mutableListOf<DocumentoItem>()
+            contratos.forEach { contrato ->
+                // Adiciona contrato principal
+                documentos.add(DocumentoItem(
+                    tipo = "CONTRATO",
+                    titulo = "Contrato ${contrato.numeroContrato}",
+                    data = contrato.dataCriacao,
+                    contrato = contrato,
+                    aditivo = null
+                ))
+                // Adiciona aditivos
+                val aditivosFlow = repo.buscarAditivosPorContrato(contrato.id)
+                val aditivos = aditivosFlow.first() // Flow<List<AditivoContrato>> -> List<AditivoContrato>
+                aditivos.forEach { aditivo ->
+                    val tipoAditivo = if (aditivo.tipo.equals("RETIRADA", ignoreCase = true)) "ADITIVO (RETIRADA)" else "ADITIVO (INCLUSÃO)"
+                    documentos.add(DocumentoItem(
+                        tipo = tipoAditivo,
+                        titulo = "Aditivo ${aditivo.numeroAditivo}",
+                        data = aditivo.dataCriacao,
+                        contrato = contrato,
+                        aditivo = aditivo
+                    ))
+                }
+                // Adiciona distrato se houver
+                if (contrato.status == "ENCERRADO_QUITADO" || contrato.status == "RESCINDIDO_COM_DIVIDA") {
+                    documentos.add(DocumentoItem(
+                        tipo = "DISTRATO",
+                        titulo = "Distrato ${contrato.numeroContrato}",
+                        data = contrato.dataEncerramento ?: contrato.dataAtualizacao ?: contrato.dataCriacao,
+                        contrato = contrato,
+                        aditivo = null
+                    ))
+                }
+            }
+            // Ordena todos os documentos por data (mais recente primeiro)
+            val documentosOrdenados = documentos.sortedByDescending { it.data.time }
+            showCustomDocumentsDialog(cliente.nome, documentosOrdenados)
         }
-        
-        // ✅ DEBUG: Verificar se há distrato (contrato encerrado)
-        android.util.Log.d("ContractManagement", "Contrato ${contrato.numeroContrato} - Status: ${contrato.status}")
-        android.util.Log.d("ContractManagement", "Data encerramento: ${contrato.dataEncerramento}")
-        android.util.Log.d("ContractManagement", "Data atualização: ${contrato.dataAtualizacao}")
-        
-        if (contrato.status == "ENCERRADO_QUITADO" || contrato.status == "RESCINDIDO_COM_DIVIDA") {
-            android.util.Log.d("ContractManagement", "Adicionando distrato para contrato ${contrato.numeroContrato}")
-            documentos.add(DocumentoItem(
-                tipo = "DISTRATO",
-                titulo = "Distrato ${contrato.numeroContrato}",
-                data = contrato.dataEncerramento ?: contrato.dataAtualizacao ?: contrato.dataCriacao,
-                contrato = contrato,
-                aditivo = null
-            ))
-        } else {
-            android.util.Log.d("ContractManagement", "Contrato ${contrato.numeroContrato} não tem distrato - Status: ${contrato.status}")
-        }
-        
-        // ✅ CORRIGIDO: Ordenar TODOS os documentos por data (mais recente primeiro)
-        val documentosOrdenados = documentos.sortedByDescending { it.data.time }
-        
-        // ✅ NOVO: Criar diálogo customizado com RecyclerView
-        showCustomDocumentsDialog(item.cliente?.nome ?: "Cliente", documentosOrdenados)
     }
 
     /**
