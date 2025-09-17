@@ -19,6 +19,7 @@ import com.example.gestaobilhares.utils.UserSessionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.Toast
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 
 // Hilt removido - usando instanciação direta
 class MesasDepositoFragment : Fragment() {
@@ -256,56 +257,150 @@ class MesasDepositoFragment : Fragment() {
     private fun vincularMesa(mesa: Mesa, tipoFixo: Boolean, valorFixo: Double?) {
         val clienteId = args.clienteId.takeIf { it != 0L }
         if (clienteId != null) {
-            viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)
-            
-            // ✅ SEMPRE decidir entre aditivo x contrato após vinculação
+            // ✅ CORREÇÃO CRÍTICA: Verificar status ANTES de vincular a mesa
             viewLifecycleOwner.lifecycleScope.launch {
-                try {
-                    android.util.Log.d("MesasDepositoFragment", "Decidindo diálogo pós-vinculação para cliente $clienteId / mesa ${mesa.id}")
-                    val contratoAtivo = viewModel.verificarContratoAtivo(clienteId)
-
-                    if (contratoAtivo != null) {
-                        android.util.Log.d("MesasDepositoFragment", "Contrato ativo encontrado: ${contratoAtivo.numeroContrato} -> mostrar AditivoDialog")
-
-                        val dialog = com.example.gestaobilhares.ui.contracts.AditivoDialog.newInstance(contratoAtivo)
-                        dialog.setOnGerarAditivoClickListener { contrato ->
-                            val mesasIds = longArrayOf(mesa.id)
-                            val action = MesasDepositoFragmentDirections
-                                .actionMesasDepositoFragmentToAditivoSignatureFragment(
-                                    contratoId = contrato.id,
-                                    mesasVinculadas = mesasIds
+                    try {
+                        android.util.Log.d("MesasDepositoFragment", "Decidindo diálogo pós-vinculação para cliente $clienteId / mesa ${mesa.id}")
+                        
+                        val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+                        val repo = com.example.gestaobilhares.data.repository.AppRepository(
+                            db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
+                            db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
+                            db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
+                        )
+                        
+                        // ✅ FORÇAR REFRESH DO BANCO ANTES DA DECISÃO
+                        kotlinx.coroutines.delay(100) // Pequeno delay para garantir sincronização
+                        val todos = repo.buscarContratosPorCliente(clienteId).first()
+                        android.util.Log.d("MesasDepositoFragment", "Total contratos cliente $clienteId: ${todos.size}")
+                        
+                        // ✅ REGRA DEFINITIVA: Verificação completa do status do cliente
+                        android.util.Log.d("MesasDepositoFragment", "=== ANÁLISE COMPLETA DOS CONTRATOS ===")
+                        todos.forEachIndexed { idx, c ->
+                            android.util.Log.d("MesasDepositoFragment", 
+                                "Contrato #$idx -> id=${c.id} status='${c.status}' " +
+                                "criacao=${c.dataCriacao} encerramento=${c.dataEncerramento}")
+                        }
+                        
+                        // Verificar se existe algum contrato com status diferente de ATIVO (indica distrato)
+                        val temContratoEncerrado = todos.any { c -> 
+                            val statusNormalized = c.status.uppercase().trim()
+                            statusNormalized in listOf("ENCERRADO_QUITADO", "RESCINDIDO_COM_DIVIDA", "RESCINDIDO")
+                        }
+                        
+                        // Verificar se existe algum contrato com dataEncerramento (indica distrato físico)
+                        val temDistratoFisico = todos.any { c -> c.dataEncerramento != null }
+                        
+                        // Buscar último documento por data (priorizar dataEncerramento se existe)
+                        val latest = todos.maxByOrNull { c -> 
+                            c.dataEncerramento?.time ?: c.dataCriacao.time 
+                        }
+                        
+                        android.util.Log.d("MesasDepositoFragment", 
+                            "=== ANÁLISE DE STATUS ===\n" +
+                            "temContratoEncerrado=$temContratoEncerrado\n" +
+                            "temDistratoFisico=$temDistratoFisico\n" +
+                            "latest.id=${latest?.id} latest.status='${latest?.status}'\n" +
+                            "latest.dataEncerramento=${latest?.dataEncerramento}")
+                        
+                        if (latest != null) {
+                            val isLatestActive = latest.status.equals("ATIVO", ignoreCase = true)
+                            val hasEncerramento = latest.dataEncerramento != null
+                            
+                            // ✅ VERIFICAÇÃO ADICIONAL: Mesas ativas do cliente
+                            val mesasAtivasCliente = repo.obterMesasPorClienteDireto(clienteId).filter { it.ativa }
+                            val temMesasAtivas = mesasAtivasCliente.isNotEmpty()
+                            
+                            android.util.Log.d("MesasDepositoFragment", 
+                                "Mesas ativas cliente $clienteId: ${mesasAtivasCliente.size} -> $temMesasAtivas")
+                            
+                            // ✅ DECISÃO FINAL: Múltiplas condições para garantir novo contrato após distrato
+                            // Só abre aditivo se:
+                            // 1. Último documento é ATIVO
+                            // 2. Não tem dataEncerramento
+                            // 3. Não tem contratos encerrados
+                            // 4. Não tem distrato físico
+                            // 5. Cliente não está "limpo" (sem mesas ativas antigas)
+                            val deveAbrirAditivo = isLatestActive && !hasEncerramento && !temContratoEncerrado && !temDistratoFisico && temMesasAtivas
+                            
+                            android.util.Log.d("MesasDepositoFragment", 
+                                "=== DECISÃO FINAL ===\n" +
+                                "isLatestActive=$isLatestActive\n" +
+                                "hasEncerramento=$hasEncerramento\n" +
+                                "temContratoEncerrado=$temContratoEncerrado\n" +
+                                "temDistratoFisico=$temDistratoFisico\n" +
+                                "temMesasAtivas=$temMesasAtivas\n" +
+                                "RESULTADO: deveAbrirAditivo=$deveAbrirAditivo")
+                            
+                            if (deveAbrirAditivo) {
+                                android.util.Log.d("MesasDepositoFragment", "ABRINDO ADITIVO: Documento mais recente é ATIVO sem encerramento")
+                                
+                                // ✅ VINCULAR MESA APENAS QUANDO FOR ADITIVO
+                                viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)
+                                
+                                val dialog = com.example.gestaobilhares.ui.contracts.AditivoDialog.newInstance(latest)
+                                dialog.setOnGerarAditivoClickListener { contrato ->
+                                    val mesasIds = longArrayOf(mesa.id)
+                                    val action = MesasDepositoFragmentDirections
+                                        .actionMesasDepositoFragmentToAditivoSignatureFragment(
+                                            contratoId = contrato.id,
+                                            mesasVinculadas = mesasIds
+                                        )
+                                    findNavController().navigate(action)
+                                }
+                                dialog.setOnCancelarClickListener {
+                                    findNavController().popBackStack()
+                                }
+                                dialog.show(parentFragmentManager, "AditivoDialog")
+                            } else {
+                                android.util.Log.d("MesasDepositoFragment", 
+                                    "ABRINDO NOVO CONTRATO: Documento mais recente não é ATIVO vigente " +
+                                    "(status=${latest.status}, hasEncerramento=$hasEncerramento)")
+                                
+                                // ✅ VINCULAR MESA ANTES DO NOVO CONTRATO
+                                viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)
+                                
+                                val todasMesasVinculadas = viewModel.obterTodasMesasVinculadasAoCliente(clienteId)
+                                val mesasIds = todasMesasVinculadas.map { it.id }
+                                
+                                val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
+                                    clienteId = clienteId,
+                                    mesasVinculadas = mesasIds,
+                                    tipoFixo = tipoFixo,
+                                    valorFixo = valorFixo ?: 0.0
                                 )
-                            findNavController().navigate(action)
+                                dialog.show(parentFragmentManager, "ContractFinalizationDialog")
+                            }
+                        } else {
+                            android.util.Log.d("MesasDepositoFragment", "ABRINDO NOVO CONTRATO: Nenhum contrato encontrado para cliente")
+                            
+                            // ✅ VINCULAR MESA ANTES DO NOVO CONTRATO
+                            viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)
+                            
+                            val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
+                                clienteId = clienteId,
+                                mesasVinculadas = listOf(mesa.id),
+                                tipoFixo = tipoFixo,
+                                valorFixo = valorFixo ?: 0.0
+                            )
+                            dialog.show(parentFragmentManager, "ContractFinalizationDialog")
                         }
-                        dialog.setOnCancelarClickListener {
-                            findNavController().popBackStack()
-                        }
-                        dialog.show(parentFragmentManager, "AditivoDialog")
-                    } else {
-                        android.util.Log.d("MesasDepositoFragment", "Sem contrato -> mostrar ContractFinalizationDialog")
-
-                        val todasMesasVinculadas = viewModel.obterTodasMesasVinculadasAoCliente(clienteId)
-                        val mesasIds = todasMesasVinculadas.map { it.id }
-
+                        
+                    } catch (e: Exception) {
+                        android.util.Log.e("MesasDepositoFragment", "Erro ao decidir diálogo pós-vinculação", e)
+                        
+                        // ✅ VINCULAR MESA EM CASO DE ERRO (FALLBACK)
+                        viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)
+                        
                         val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
                             clienteId = clienteId,
-                            mesasVinculadas = mesasIds,
+                            mesasVinculadas = listOf(mesa.id),
                             tipoFixo = tipoFixo,
                             valorFixo = valorFixo ?: 0.0
                         )
                         dialog.show(parentFragmentManager, "ContractFinalizationDialog")
                     }
-                } catch (e: Exception) {
-                    android.util.Log.e("MesasDepositoFragment", "Erro ao decidir diálogo pós-vinculação", e)
-                    val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
-                        clienteId = clienteId,
-                        mesasVinculadas = listOf(mesa.id),
-                        tipoFixo = tipoFixo,
-                        valorFixo = valorFixo ?: 0.0
-                    )
-                    dialog.show(parentFragmentManager, "ContractFinalizationDialog")
                 }
-            }
         }
     }
 

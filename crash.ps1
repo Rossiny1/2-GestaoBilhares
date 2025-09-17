@@ -68,8 +68,8 @@ Write-Host "Iniciando monitoramento de crashes..." -ForegroundColor Green
 Write-Host "Agora você pode testar o app no dispositivo" -ForegroundColor Green
 Write-Host "" 
 
-# Padrão de filtro expandido para incluir nossos logs de diagnóstico
-$pattern = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|DocsDialog|ContractManagement|Distrato|DISTRATO|DistratoFlow|RepoUpdate|RepoContracts|FileProvider|Permission Denial"
+# Padrão de filtro expandido para incluir nossos logs de diagnóstico e análise de fluxo
+$pattern = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|DocsDialog|ContractManagement|Distrato|DISTRATO|DistratoFlow|RepoUpdate|RepoContracts|FileProvider|Permission Denial|MesasDepositoFragment|ANÁLISE COMPLETA|ANÁLISE DE STATUS|DECISÃO FINAL|ABRINDO ADITIVO|ABRINDO NOVO CONTRATO|temContratoEncerrado|temDistratoFisico|temMesasAtivas|deveAbrirAditivo"
 
 # Monitorar logcat filtrando apenas erros e crashes
 try {
