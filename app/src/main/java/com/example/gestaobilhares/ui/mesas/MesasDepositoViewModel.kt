@@ -133,37 +133,42 @@ class MesasDepositoViewModel(
         return try {
             android.util.Log.d("MesasDepositoViewModel", "Verificando contrato ATIVO para cliente: $clienteId")
             
+            fun docEpoch(c: com.example.gestaobilhares.data.entities.ContratoLocacao): Long {
+                // Data do “documento” que define recência
+                return (c.dataEncerramento?.time ?: c.dataCriacao.time)
+            }
+            
             suspend fun pickLatestContrato(): com.example.gestaobilhares.data.entities.ContratoLocacao? {
                 val contratos = appRepository.buscarContratosPorCliente(clienteId).first()
-                val latest = contratos.maxByOrNull { c ->
-                    (c.dataEncerramento?.time ?: c.dataAtualizacao?.time ?: c.dataCriacao.time)
-                }
+                if (contratos.isEmpty()) return null
+                val latest = contratos.maxByOrNull { c -> docEpoch(c) }
                 if (latest != null) {
-                    val ts = latest.dataEncerramento ?: latest.dataAtualizacao ?: latest.dataCriacao
+                    val ts = latest.dataEncerramento ?: latest.dataCriacao
                     android.util.Log.d(
                         "MesasDepositoViewModel",
-                        "Mais recente -> id=${latest.id}, num=${latest.numeroContrato}, status=${latest.status}, data=${ts}"
+                        "Mais recente(doc) -> id=${latest.id}, num=${latest.numeroContrato}, status=${latest.status}, data=${ts}"
                     )
-                } else {
-                    android.util.Log.d("MesasDepositoViewModel", "Nenhum contrato encontrado para cliente $clienteId")
                 }
-                // Regra: só considerar ATIVO se o documento mais recente estiver ATIVO
-                return if (latest != null && latest.status.equals("ATIVO", ignoreCase = true)) latest else null
+                return latest
             }
 
-            // Tentativa 1
-            var ativo = pickLatestContrato()
-            if (ativo == null) {
-                // Retry rápido para casos logo após distrato/atualização
-                android.util.Log.d("MesasDepositoViewModel", "Retry rápido (150ms) pós-distrato para cliente $clienteId")
+            var latest = pickLatestContrato()
+            if (latest == null) {
+                android.util.Log.d("MesasDepositoViewModel", "Sem contratos para cliente $clienteId")
+                return null
+            }
+            
+            // Retry rápido pós-distrato caso a leitura ainda não tenha propagado
+            if (!latest.status.equals("ATIVO", true)) {
                 kotlinx.coroutines.delay(150)
-                ativo = pickLatestContrato()
+                latest = pickLatestContrato() ?: latest
             }
 
+            val ativo = if (latest.status.equals("ATIVO", ignoreCase = true)) latest else null
             if (ativo != null) {
-                android.util.Log.d("MesasDepositoViewModel", "Contrato ATIVO confirmado (mais recente): ${ativo.numeroContrato}")
+                android.util.Log.d("MesasDepositoViewModel", "Contrato ATIVO confirmado (mais recente por doc): ${ativo.numeroContrato}")
             } else {
-                android.util.Log.d("MesasDepositoViewModel", "Sem contrato ATIVO vigente (mais recente não é ATIVO) -> gerar NOVO CONTRATO")
+                android.util.Log.d("MesasDepositoViewModel", "Sem contrato ATIVO vigente (mais recente por doc não é ATIVO) -> gerar NOVO CONTRATO")
             }
             ativo
         } catch (e: Exception) {
