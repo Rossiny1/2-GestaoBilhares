@@ -127,14 +127,13 @@ class ContractManagementViewModel @Inject constructor(
             val cliente = repository.obterClientePorId(clienteId)
             val rota = cliente?.let { repository.obterRotaPorId(it.rotaId) }
             
-            // ✅ CORRIGIDO: Pegar o contrato mais recente por data (não por status)
-            // Se há contrato ATIVO mais recente que contratos com distrato, priorizar o ATIVO
-            val contratoMaisRecente = contratosCliente.maxByOrNull { contrato ->
-                // Usar sempre a data mais recente (criação, atualização ou encerramento)
-                contrato.dataCriacao.time
+            // Buscar o documento mais recente (contrato ou distrato)
+            val documentoMaisRecente = contratosCliente.maxByOrNull { contrato ->
+                // Se for distrato, usar dataEncerramento; senão, dataCriacao
+                (contrato.dataEncerramento ?: contrato.dataCriacao).time
             } ?: contratosCliente.first()
             
-            // ✅ NOVO: Coletar todas as mesas de todos os contratos do cliente
+            // Coletar todas as mesas de todos os contratos do cliente
             val todasMesas = mutableListOf<Mesa>()
             val todosAditivos = mutableListOf<AditivoContrato>()
             var totalAditivosRetirada = 0
@@ -148,12 +147,12 @@ class ContractManagementViewModel @Inject constructor(
                 totalAditivosRetirada += aditivos.count { it.tipo.equals("RETIRADA", ignoreCase = true) }
             }
             
-            // ✅ CORRIGIDO: Status baseado no contrato mais recente (que pode ter distrato)
-            val statusLabel = mapStatusLabel(contratoMaisRecente)
-            val hasDistrato = !contratoMaisRecente.status.equals("ATIVO", ignoreCase = true)
+            // Status baseado no documento mais recente
+            val statusLabel = mapStatusLabel(documentoMaisRecente)
+            val hasDistrato = !documentoMaisRecente.status.equals("ATIVO", ignoreCase = true)
             
             ContractItem(
-                contrato = contratoMaisRecente, // ✅ NOVO: Usar contrato mais recente
+                contrato = documentoMaisRecente, // ✅ NOVO: Usar contrato mais recente
                 cliente = cliente,
                 rota = rota,
                 mesas = todasMesas.distinctBy { it.id }, // ✅ NOVO: Remover duplicatas
