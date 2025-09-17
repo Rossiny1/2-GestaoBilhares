@@ -187,7 +187,15 @@ class ClientDetailFragment : Fragment() {
 
                 // Atualizar status do contrato
                 val novoStatus = if (saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
-                repo.atualizarContrato(contrato.copy(status = novoStatus, dataEncerramento = java.util.Date()))
+                repo.encerrarContrato(contrato.id, contrato.clienteId, novoStatus)
+                // Verificação imediata (diagnóstico)
+                try {
+                    val apos = repo.buscarContratosPorCliente(contrato.clienteId).first()
+                    val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
+                    android.util.Log.d("DistratoFlow", "Após atualizar (ClientDetail): ${'$'}resumo")
+                } catch (e: Exception) {
+                    android.util.Log.e("DistratoFlow", "Falha verificação pós-atualização (ClientDetail)", e)
+                }
 
                 // Abrir compartilhamento
                 val uri = androidx.core.content.FileProvider.getUriForFile(

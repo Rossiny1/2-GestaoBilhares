@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import android.util.Log
 
 /**
  * ✅ REPOSITORY CONSOLIDADO - AppRepository
@@ -587,7 +588,33 @@ class AppRepository(
     suspend fun contarContratosAssinados() = contratoLocacaoDao.contarContratosAssinados()
     suspend fun obterContratosAssinados() = contratoLocacaoDao.obterContratosAssinados()
     suspend fun inserirContrato(contrato: ContratoLocacao) = contratoLocacaoDao.inserirContrato(contrato)
-    suspend fun atualizarContrato(contrato: ContratoLocacao) = contratoLocacaoDao.atualizarContrato(contrato)
+    suspend fun atualizarContrato(contrato: ContratoLocacao) {
+        try {
+            Log.d("RepoUpdate", "Atualizando contrato id=${contrato.id} cliente=${contrato.clienteId} status=${contrato.status} encerramento=${contrato.dataEncerramento}")
+            contratoLocacaoDao.atualizarContrato(contrato)
+            // Leitura de verificação (apenas diagnóstico)
+            try {
+                val apos = contratoLocacaoDao.buscarContratosPorCliente(contrato.clienteId).first()
+                val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
+                Log.d("RepoContracts", "Após atualizar: cliente=${contrato.clienteId} contratos=${apos.size} -> ${'$'}resumo")
+            } catch (e: Exception) {
+                Log.e("RepoContracts", "Falha ao ler contratos após atualizar", e)
+            }
+        } catch (e: Exception) {
+            Log.e("RepoUpdate", "Erro ao atualizar contrato id=${contrato.id}", e)
+            throw e
+        }
+    }
+
+    // ✅ NOVO: Encerrar contrato (UPDATE direto)
+    suspend fun encerrarContrato(contratoId: Long, clienteId: Long, status: String) {
+        val agora = java.util.Date()
+        Log.d("RepoUpdate", "Encerrar direto contrato id=${contratoId} status=${status} em ${agora}")
+        contratoLocacaoDao.encerrarContrato(contratoId, status, agora, agora)
+        val apos = contratoLocacaoDao.buscarContratosPorCliente(clienteId).first()
+        val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
+        Log.d("RepoContracts", "Após encerrar direto: cliente=${clienteId} contratos=${apos.size} -> ${'$'}resumo")
+    }
     suspend fun excluirContrato(contrato: ContratoLocacao) = contratoLocacaoDao.excluirContrato(contrato)
     suspend fun buscarContratoPorId(contratoId: Long) = contratoLocacaoDao.buscarContratoPorId(contratoId)
     suspend fun buscarMesasPorContrato(contratoId: Long) = contratoLocacaoDao.buscarMesasPorContrato(contratoId)

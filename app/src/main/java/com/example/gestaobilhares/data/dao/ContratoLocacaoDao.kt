@@ -41,6 +41,10 @@ interface ContratoLocacaoDao {
     @Update
     suspend fun atualizarContrato(contrato: ContratoLocacao)
     
+    // ✅ NOVO: Encerrar contrato via UPDATE direto (diagnóstico robusto)
+    @Query("UPDATE contratos_locacao SET status = :status, dataEncerramento = :dataEncerramento, dataAtualizacao = :dataAtualizacao WHERE id = :contratoId")
+    suspend fun encerrarContrato(contratoId: Long, status: String, dataEncerramento: java.util.Date?, dataAtualizacao: java.util.Date?)
+    
     @Delete
     suspend fun excluirContrato(contrato: ContratoLocacao)
     

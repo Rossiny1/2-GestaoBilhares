@@ -124,9 +124,15 @@ class ContractManagementFragment : Fragment() {
         )
         lifecycleScope.launch {
             val contratosFlow = repo.buscarContratosPorCliente(cliente.id)
-            val contratos = contratosFlow.first() // Flow<List<ContratoLocacao>> -> List<ContratoLocacao>
+            val contratos = contratosFlow.first()
+            android.util.Log.d("DocsDialog", "Cliente=${cliente.id} '${cliente.nome}' - contratos=${contratos.size}")
             val documentos = mutableListOf<DocumentoItem>()
             contratos.forEach { contrato ->
+                android.util.Log.d(
+                    "DocsDialog",
+                    "Contrato id=${contrato.id} num=${contrato.numeroContrato} status=${contrato.status} " +
+                        "criacao=${contrato.dataCriacao} atualizacao=${contrato.dataAtualizacao} encerramento=${contrato.dataEncerramento}"
+                )
                 // Adiciona contrato principal
                 documentos.add(DocumentoItem(
                     tipo = "CONTRATO",
@@ -137,7 +143,8 @@ class ContractManagementFragment : Fragment() {
                 ))
                 // Adiciona aditivos
                 val aditivosFlow = repo.buscarAditivosPorContrato(contrato.id)
-                val aditivos = aditivosFlow.first() // Flow<List<AditivoContrato>> -> List<AditivoContrato>
+                val aditivos = aditivosFlow.first()
+                android.util.Log.d("DocsDialog", "Aditivos contratoId=${contrato.id} qtd=${aditivos.size}")
                 aditivos.forEach { aditivo ->
                     val tipoAditivo = if (aditivo.tipo.equals("RETIRADA", ignoreCase = true)) "ADITIVO (RETIRADA)" else "ADITIVO (INCLUSÃO)"
                     documentos.add(DocumentoItem(
@@ -148,19 +155,49 @@ class ContractManagementFragment : Fragment() {
                         aditivo = aditivo
                     ))
                 }
-                // Adiciona distrato se houver
-                if (contrato.status == "ENCERRADO_QUITADO" || contrato.status == "RESCINDIDO_COM_DIVIDA") {
+                // Adiciona distrato se houver (status) ou se existir PDF (fallback)
+                val isDistratoStatus = contrato.status == "ENCERRADO_QUITADO" || contrato.status == "RESCINDIDO_COM_DIVIDA"
+                var distratoData: java.util.Date? = contrato.dataEncerramento ?: contrato.dataAtualizacao
+
+                // Fallback por arquivo físico
+                try {
+                    val dir = java.io.File(requireContext().getExternalFilesDir(null), "distratos_${contrato.numeroContrato}")
+                    if (dir.exists()) {
+                        val pdfs = dir.listFiles { f -> f.isFile && f.name.endsWith(".pdf", ignoreCase = true) }?.toList().orEmpty()
+                        if (pdfs.isNotEmpty()) {
+                            val maisRecente = pdfs.maxByOrNull { it.lastModified() }!!
+                            val dataArquivo = java.util.Date(maisRecente.lastModified())
+                            distratoData = distratoData ?: dataArquivo
+                            android.util.Log.d("DocsDialog", "Fallback PDF distrato detectado para contrato ${contrato.numeroContrato}, arquivos=${pdfs.size}, maisRecente=${maisRecente.name} @ ${dataArquivo}")
+                            if (!isDistratoStatus) {
+                                android.util.Log.d("DocsDialog", "Adicionando DISTrato via fallback de arquivo (status ainda ${contrato.status})")
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("DocsDialog", "Erro ao checar PDFs de distrato", e)
+                }
+
+                if (isDistratoStatus || distratoData != null) {
+                    val dataDoc = distratoData ?: (contrato.dataEncerramento ?: contrato.dataAtualizacao ?: contrato.dataCriacao)
+                    android.util.Log.d("DocsDialog", "Adicionando DISTrato num=${contrato.numeroContrato} data=${dataDoc}")
                     documentos.add(DocumentoItem(
                         tipo = "DISTRATO",
                         titulo = "Distrato ${contrato.numeroContrato}",
-                        data = contrato.dataEncerramento ?: contrato.dataAtualizacao ?: contrato.dataCriacao,
+                        data = dataDoc,
                         contrato = contrato,
                         aditivo = null
                     ))
+                } else {
+                    android.util.Log.d("DocsDialog", "Contrato id=${contrato.id} temDistrato=false")
                 }
             }
             // Ordena todos os documentos por data (mais recente primeiro)
             val documentosOrdenados = documentos.sortedByDescending { it.data.time }
+            android.util.Log.d("DocsDialog", "Total documentos montados=${documentosOrdenados.size}")
+            documentosOrdenados.forEachIndexed { idx, doc ->
+                android.util.Log.d("DocsDialog", "#${idx} tipo=${doc.tipo} titulo=${doc.titulo} data=${doc.data} contratoId=${doc.contrato.id}")
+            }
             showCustomDocumentsDialog(cliente.nome, documentosOrdenados)
         }
     }
@@ -615,7 +652,6 @@ class ContractManagementFragment : Fragment() {
         lifecycleScope.launch {
             val contrato = item.contrato ?: return@launch
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
-            // Fechamento mínimo derivado do último acerto
             val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
             val repo = com.example.gestaobilhares.data.repository.AppRepository(
                 db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
@@ -631,13 +667,24 @@ class ContractManagementFragment : Fragment() {
             val totalGeral = subtotal - comissaoMotorista - comissaoIltair
             val saldo = ultimo?.debitoAtual ?: 0.0
             val fechamento = com.example.gestaobilhares.utils.ContractPdfGenerator.FechamentoResumo(totalRecebido, despesasViagem, subtotal, comissaoMotorista, comissaoIltair, totalGeral, saldo)
-            
-            // ✅ NOVO: Obter assinatura do representante legal automaticamente
             val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
-            
             val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext()).generateDistratoPdf(contrato, mesas, fechamento, if (saldo > 0.0) Pair(saldo, java.util.Date()) else null, assinaturaRepresentante)
+
+            // ✅ Persistir status de encerramento
+            val novoStatus = if (saldo > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
+            val agora = java.util.Date()
+            val contratoEncerrado = contrato.copy(status = novoStatus, dataEncerramento = agora, dataAtualizacao = agora)
+            repo.atualizarContrato(contratoEncerrado)
+
+            // Recarregar lista e abrir PDF
+            viewModel.loadContractData()
             val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", pdf)
-            val intent = Intent(Intent.ACTION_VIEW).apply { setDataAndType(uri, "application/pdf"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/pdf")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                clipData = android.content.ClipData.newUri(requireContext().contentResolver, "Distrato", uri)
+            }
             if (intent.resolveActivity(requireContext().packageManager) != null) startActivity(intent) else Toast.makeText(requireContext(), "Nenhum app para abrir PDF", Toast.LENGTH_SHORT).show()
         }
     }
@@ -661,14 +708,29 @@ class ContractManagementFragment : Fragment() {
             val totalGeral = subtotal - comissaoMotorista - comissaoIltair
             val saldo = ultimo?.debitoAtual ?: 0.0
             val fechamento = com.example.gestaobilhares.utils.ContractPdfGenerator.FechamentoResumo(totalRecebido, despesasViagem, subtotal, comissaoMotorista, comissaoIltair, totalGeral, saldo)
-            
-            // ✅ NOVO: Obter assinatura do representante legal automaticamente
             val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
-            
             val pdf = com.example.gestaobilhares.utils.ContractPdfGenerator(requireContext()).generateDistratoPdf(contrato, mesas, fechamento, if (saldo > 0.0) Pair(saldo, java.util.Date()) else null, assinaturaRepresentante)
+
+            // ✅ Persistir status de encerramento
+            val novoStatus = if (saldo > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
+            val agora = java.util.Date()
+            val contratoEncerrado = contrato.copy(status = novoStatus, dataEncerramento = agora, dataAtualizacao = agora)
+            repo.atualizarContrato(contratoEncerrado)
+
+            // Recarregar lista e compartilhar
+            viewModel.loadContractData()
             val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", pdf)
-            val shareIntent = Intent(Intent.ACTION_SEND).apply { type = "application/pdf"; putExtra(Intent.EXTRA_STREAM, uri); putExtra(Intent.EXTRA_SUBJECT, "Distrato ${contrato.numeroContrato}"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-            startActivity(Intent.createChooser(shareIntent, "Compartilhar distrato"))
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "Distrato ${contrato.numeroContrato}")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                clipData = android.content.ClipData.newUri(requireContext().contentResolver, "Distrato", uri)
+            }
+            val chooser = Intent.createChooser(shareIntent, "Compartilhar distrato").apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(chooser)
         }
     }
 
