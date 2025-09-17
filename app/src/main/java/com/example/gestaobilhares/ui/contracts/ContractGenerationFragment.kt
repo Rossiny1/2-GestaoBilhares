@@ -27,6 +27,9 @@ class ContractGenerationFragment : Fragment() {
     
     private val viewModel: ContractGenerationViewModel by viewModels()
     
+    // ✅ PROTEÇÃO: Flag para evitar múltiplos cliques
+    private var isGenerating = false
+    
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -86,6 +89,10 @@ class ContractGenerationFragment : Fragment() {
                 contrato?.let {
                     binding.tvNumeroContrato.text = it.numeroContrato
                     binding.btnAssinar.isEnabled = true
+                    // ✅ Reabilitar botão quando contrato for gerado com sucesso
+                    if (isGenerating) {
+                        resetButton()
+                    }
                 }
             }
         }
@@ -101,6 +108,10 @@ class ContractGenerationFragment : Fragment() {
             viewModel.error.collect { error ->
                 error?.let {
                     Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+                    // ✅ Reabilitar botão quando houver erro
+                    if (isGenerating) {
+                        resetButton()
+                    }
                 }
             }
         }
@@ -136,6 +147,10 @@ class ContractGenerationFragment : Fragment() {
     private fun setupClickListeners() {
         binding.apply {
             btnGerarContrato.setOnClickListener {
+                if (isGenerating) {
+                    android.util.Log.d("ContractGeneration", "Tentativa de clique duplo bloqueada")
+                    return@setOnClickListener
+                }
                 gerarContrato()
             }
             
@@ -169,6 +184,16 @@ class ContractGenerationFragment : Fragment() {
     }
     
     private fun gerarContrato() {
+        if (isGenerating) {
+            android.util.Log.d("ContractGeneration", "Geração já em andamento, ignorando clique")
+            return
+        }
+        
+        isGenerating = true
+        binding.btnGerarContrato.isEnabled = false
+        binding.btnGerarContrato.text = "Gerando..."
+        android.util.Log.d("ContractGeneration", "Iniciando geração de contrato")
+        
         val tipoPagamento = if (binding.rbValorFixo.isChecked) "FIXO" else "PERCENTUAL"
         
         // Valores padrão para fichas jogadas
@@ -182,11 +207,13 @@ class ContractGenerationFragment : Fragment() {
             
             if (valorMensal <= 0) {
                 Toast.makeText(requireContext(), "Valor deve ser maior que zero", Toast.LENGTH_SHORT).show()
+                resetButton()
                 return
             }
             
             if (diaVencimento < 1 || diaVencimento > 31) {
                 Toast.makeText(requireContext(), "Dia de vencimento deve estar entre 1 e 31", Toast.LENGTH_SHORT).show()
+                resetButton()
                 return
             }
         }
@@ -198,10 +225,19 @@ class ContractGenerationFragment : Fragment() {
         
         if (tipoPagamento == "PERCENTUAL" && (percentualReceita == null || percentualReceita <= 0 || percentualReceita > 100)) {
             Toast.makeText(requireContext(), "Percentual deve estar entre 1 e 100", Toast.LENGTH_SHORT).show()
+            resetButton()
             return
         }
         
+        // Gerar contrato - a reabilitação do botão será feita pelo observer do contrato
         viewModel.gerarContrato(valorMensal, diaVencimento, tipoPagamento, percentualReceita)
+    }
+    
+    private fun resetButton() {
+        isGenerating = false
+        binding.btnGerarContrato.isEnabled = true
+        binding.btnGerarContrato.text = "Gerar Contrato"
+        android.util.Log.d("ContractGeneration", "Botão reabilitado")
     }
     
     private fun abrirTelaAssinatura() {

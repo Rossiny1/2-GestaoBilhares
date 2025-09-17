@@ -35,6 +35,9 @@ class ContractGenerationViewModel @Inject constructor(
     private var tipoFixo: Boolean = false
     private var valorFixo: Double = 0.0
     
+    // ✅ Guarda idempotente: evita múltiplas gerações
+    @Volatile private var generating: Boolean = false
+    
     // Getters para as informações do tipo de acerto
     fun isTipoFixo(): Boolean = tipoFixo
     fun getValorFixo(): Double = valorFixo
@@ -86,6 +89,13 @@ class ContractGenerationViewModel @Inject constructor(
         tipoPagamento: String,
         percentualReceita: Double? = null
     ) {
+        // ✅ Early return se já estiver gerando/gerado nesta sessão do ViewModel
+        if (generating) {
+            android.util.Log.d("ContractGenerationVM", "Geração ignorada: já em andamento ou concluída")
+            return
+        }
+        generating = true
+        
         viewModelScope.launch {
             _loading.value = true
             try {
@@ -143,6 +153,7 @@ class ContractGenerationViewModel @Inject constructor(
                 
             } catch (e: Exception) {
                 _error.value = "Erro ao gerar contrato: ${e.message}"
+                generating = false // ✅ Permitir nova tentativa apenas em erro
             } finally {
                 _loading.value = false
             }
