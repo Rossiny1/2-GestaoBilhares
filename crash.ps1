@@ -66,21 +66,24 @@ Write-Host "Limpando logcat anterior..." -ForegroundColor Yellow
 
 Write-Host "Iniciando monitoramento de crashes..." -ForegroundColor Green
 Write-Host "Agora você pode testar o app no dispositivo" -ForegroundColor Green
-Write-Host ""
+Write-Host "" 
+
+# Padrão de filtro expandido para incluir nossos logs de diagnóstico
+$pattern = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|DocsDialog|ContractManagement|Distrato|DISTRATO|DistratoFlow|RepoUpdate|RepoContracts|FileProvider|Permission Denial"
 
 # Monitorar logcat filtrando apenas erros e crashes
 try {
     Write-Host "Monitorando em tempo real..." -ForegroundColor Green
-    Write-Host "Filtros: gestaobilhares, FATAL, AndroidRuntime, crash, Exception, Caused by" -ForegroundColor Gray
+    Write-Host "Filtros: $pattern" -ForegroundColor Gray
     Write-Host "========================================" -ForegroundColor Cyan
     Write-Host ""
     
-    & $adbPath logcat | Select-String "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by"
+    & $adbPath logcat -v time | Select-String -Pattern $pattern
 } catch {
     Write-Host "Erro ao executar logcat: $($_.Exception.Message)" -ForegroundColor Red
     Read-Host "Pressione Enter para sair"
 }
 
-Write-Host ""
+Write-Host "" 
 Write-Host "Monitoramento finalizado" -ForegroundColor Gray
 Read-Host "Pressione Enter para sair" 

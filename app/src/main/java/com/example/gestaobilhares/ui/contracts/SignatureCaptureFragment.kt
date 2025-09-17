@@ -23,6 +23,7 @@ import com.example.gestaobilhares.utils.LegalLogger
 import com.example.gestaobilhares.utils.SignatureMetadataCollector
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
@@ -240,6 +241,31 @@ class SignatureCaptureFragment : Fragment() {
                     Toast.makeText(requireContext(), "Erro ao gerar o PDF do distrato.", Toast.LENGTH_LONG).show()
                     return@launch
                 }
+
+                // ✅ NOVO: Persistir status de encerramento do contrato
+                try {
+                    val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+                    val repo = com.example.gestaobilhares.data.repository.AppRepository(
+                        db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
+                        db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
+                        db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
+                    )
+                    val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
+                    val agora = java.util.Date()
+                    android.util.Log.d("DistratoFlow", "Encerrar direto contrato ${contrato.id} para $novoStatus em $agora")
+                    repo.encerrarContrato(contrato.id, contrato.clienteId, novoStatus)
+                    // Verificação imediata (diagnóstico)
+                    try {
+                        val apos = repo.buscarContratosPorCliente(contrato.clienteId).first()
+                        val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
+                        android.util.Log.d("DistratoFlow", "Após atualizar (SignatureCapture): ${'$'}resumo")
+                    } catch (e: Exception) {
+                        android.util.Log.e("DistratoFlow", "Falha verificação pós-atualização (SignatureCapture)", e)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("DistratoFlow", "Falha ao atualizar contrato como encerrado", e)
+                }
+
                 val pdfUri = androidx.core.content.FileProvider.getUriForFile(
                     requireContext(),
                     "${requireContext().packageName}.fileprovider",
@@ -251,6 +277,7 @@ class SignatureCaptureFragment : Fragment() {
                     putExtra(android.content.Intent.EXTRA_STREAM, pdfUri)
                     putExtra(android.content.Intent.EXTRA_TEXT, message)
                     addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    clipData = android.content.ClipData.newUri(requireContext().contentResolver, "Distrato", pdfUri)
                 }
                 startActivity(android.content.Intent.createChooser(intent, "Enviar distrato via"))
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ findNavController().popBackStack() }, 2000)

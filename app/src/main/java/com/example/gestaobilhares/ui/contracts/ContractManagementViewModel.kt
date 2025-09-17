@@ -148,18 +148,25 @@ class ContractManagementViewModel @Inject constructor(
             }
             
             // Status baseado no documento mais recente
-            val statusLabel = mapStatusLabel(documentoMaisRecente)
+            val baseStatusLabel = mapStatusLabel(documentoMaisRecente)
             val hasDistrato = !documentoMaisRecente.status.equals("ATIVO", ignoreCase = true)
-            
+
+            // ✅ Regra de negócio adicional: se o cliente não possui mesas, considerar Inativo
+            val finalStatusLabel = if (todasMesas.isEmpty()) {
+                if (hasDistrato) baseStatusLabel else "Inativo (Sem mesas)"
+            } else {
+                baseStatusLabel
+            }
+
             ContractItem(
-                contrato = documentoMaisRecente, // ✅ NOVO: Usar contrato mais recente
+                contrato = documentoMaisRecente,
                 cliente = cliente,
                 rota = rota,
-                mesas = todasMesas.distinctBy { it.id }, // ✅ NOVO: Remover duplicatas
-                aditivos = todosAditivos.sortedByDescending { it.dataCriacao }, // ✅ NOVO: Ordenar por data
+                mesas = todasMesas.distinctBy { it.id },
+                aditivos = todosAditivos.sortedByDescending { it.dataCriacao },
                 aditivosRetiradaCount = totalAditivosRetirada,
                 hasDistrato = hasDistrato,
-                status = statusLabel
+                status = finalStatusLabel
             )
         }
     }
