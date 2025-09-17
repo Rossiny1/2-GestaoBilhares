@@ -142,15 +142,22 @@ class ContractManagementFragment : Fragment() {
             ))
         }
         
-        // Verificar se há distrato (contrato encerrado)
+        // ✅ DEBUG: Verificar se há distrato (contrato encerrado)
+        android.util.Log.d("ContractManagement", "Contrato ${contrato.numeroContrato} - Status: ${contrato.status}")
+        android.util.Log.d("ContractManagement", "Data encerramento: ${contrato.dataEncerramento}")
+        android.util.Log.d("ContractManagement", "Data atualização: ${contrato.dataAtualizacao}")
+        
         if (contrato.status == "ENCERRADO_QUITADO" || contrato.status == "RESCINDIDO_COM_DIVIDA") {
+            android.util.Log.d("ContractManagement", "Adicionando distrato para contrato ${contrato.numeroContrato}")
             documentos.add(DocumentoItem(
                 tipo = "DISTRATO",
                 titulo = "Distrato ${contrato.numeroContrato}",
-                data = contrato.dataEncerramento ?: contrato.dataAtualizacao,
+                data = contrato.dataEncerramento ?: contrato.dataAtualizacao ?: contrato.dataCriacao,
                 contrato = contrato,
                 aditivo = null
             ))
+        } else {
+            android.util.Log.d("ContractManagement", "Contrato ${contrato.numeroContrato} não tem distrato - Status: ${contrato.status}")
         }
         
         // ✅ CORRIGIDO: Ordenar TODOS os documentos por data (mais recente primeiro)
