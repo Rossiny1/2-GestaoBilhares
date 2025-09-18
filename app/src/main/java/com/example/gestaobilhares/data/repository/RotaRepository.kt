@@ -66,6 +66,9 @@ class RotaRepository @Inject constructor(
                 val cicloAtual = calcularCicloAtualReal(rota.id)
                 val dataCiclo = obterDataCicloAtual(rota.id)
                 
+                // ✅ NOVO: Obter datas de início e fim do ciclo
+                val (dataInicio, dataFim) = obterDatasCicloRota(rota.id)
+                
                 RotaResumo(
                     rota = rota,
                     clientesAtivos = clientesAtivos,
@@ -75,7 +78,8 @@ class RotaRepository @Inject constructor(
                     percentualAcertados = percentualAcertados,
                     status = status,
                     cicloAtual = cicloAtual,
-                    dataCiclo = dataCiclo
+                    dataInicioCiclo = dataInicio,  // ✅ NOVO: Data de início
+                    dataFimCiclo = dataFim        // ✅ NOVO: Data de fim
                 )
             }
         }
@@ -102,6 +106,9 @@ class RotaRepository @Inject constructor(
                 val cicloAtual = calcularCicloAtualReal(rota.id)
                 val dataCiclo = obterDataCicloAtual(rota.id)
                 
+                // ✅ NOVO: Obter datas de início e fim do ciclo
+                val (dataInicio, dataFim) = obterDatasCicloRota(rota.id)
+                
                 RotaResumo(
                     rota = rota,
                     clientesAtivos = clientesAtivos,
@@ -111,7 +118,8 @@ class RotaRepository @Inject constructor(
                     percentualAcertados = percentualAcertados,
                     status = status,
                     cicloAtual = cicloAtual,
-                    dataCiclo = dataCiclo
+                    dataInicioCiclo = dataInicio,  // ✅ NOVO: Data de início
+                    dataFimCiclo = dataFim        // ✅ NOVO: Data de fim
                 )
             }
         }
@@ -276,6 +284,37 @@ class RotaRepository @Inject constructor(
         } catch (e: Exception) {
             android.util.Log.e("RotaRepository", "Erro ao obter data do ciclo: ${e.message}")
             null
+        }
+    }
+
+    // ✅ NOVO: Método para obter datas de início e fim do ciclo
+    private fun obterDatasCicloRota(rotaId: Long): Pair<Long?, Long?> {
+        return try {
+            // Primeiro, verificar se há ciclo em andamento
+            val cicloAtivo = runBlocking {
+                cicloAcertoDao?.buscarCicloEmAndamento(rotaId)
+            }
+            
+            if (cicloAtivo != null) {
+                // Se há ciclo em andamento, usar as datas dele
+                Pair(cicloAtivo.dataInicio?.time, cicloAtivo.dataFim?.time)
+            } else {
+                // Se não há ciclo em andamento, buscar o último ciclo finalizado
+                val ultimoCiclo = runBlocking {
+                    cicloAcertoDao?.buscarUltimoCicloPorRota(rotaId)
+                }
+                
+                if (ultimoCiclo != null) {
+                    // Se há ciclos finalizados, usar as datas do último
+                    Pair(ultimoCiclo.dataInicio?.time, ultimoCiclo.dataFim?.time)
+                } else {
+                    // Se não há nenhum ciclo, retornar null
+                    Pair(null, null)
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("RotaRepository", "Erro ao obter datas do ciclo: ${e.message}")
+            Pair(null, null)
         }
     }
 

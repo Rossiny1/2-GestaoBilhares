@@ -56,8 +56,13 @@ class RoutesAdapter(
                 rotaStatus.text = when (rotaResumo.status) {
                     StatusRota.EM_ANDAMENTO -> "Em andamento"
                     StatusRota.FINALIZADA -> "Finalizada"
+                    StatusRota.PAUSADA -> "Pausada"
+                    StatusRota.CONCLUIDA -> "Concluída"
                     else -> "Finalizada" // Fallback para qualquer outro status
                 }
+                
+                // ✅ NOVO: Log para debug do status
+                android.util.Log.d("RoutesAdapter", "Rota ${rotaResumo.rota.nome}: Status = ${rotaResumo.status} -> Texto = '${rotaStatus.text}'")
 
                 // Informações do ciclo atual
                 rotaCiclo.text = rotaResumo.getCicloFormatado()

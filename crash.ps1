@@ -66,10 +66,18 @@ Write-Host "Limpando logcat anterior..." -ForegroundColor Yellow
 
 Write-Host "Iniciando monitoramento de crashes..." -ForegroundColor Green
 Write-Host "Agora você pode testar o app no dispositivo" -ForegroundColor Green
+Write-Host ""
+Write-Host "NOVOS LOGS MONITORADOS:" -ForegroundColor Cyan
+Write-Host "- Rotas: Status de ciclos (EM_ANDAMENTO/FINALIZADA)" -ForegroundColor Gray
+Write-Host "- Datas: Início e fim dos ciclos de acerto" -ForegroundColor Gray
+Write-Host "- Distrato: Atualização de status ao assinar" -ForegroundColor Gray
+Write-Host "- Contratos: Fluxo de geração e vinculação" -ForegroundColor Gray
+Write-Host "- Transferência: Cliente transferido entre rotas" -ForegroundColor Gray
 Write-Host "" 
 
 # Padrão de filtro expandido para incluir nossos logs de diagnóstico e análise de fluxo
-$pattern = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|DocsDialog|ContractManagement|Distrato|DISTRATO|DistratoFlow|RepoUpdate|RepoContracts|FileProvider|Permission Denial|MesasDepositoFragment|ANÁLISE COMPLETA|ANÁLISE DE STATUS|DECISÃO FINAL|ABRINDO ADITIVO|ABRINDO NOVO CONTRATO|temContratoEncerrado|temDistratoFisico|temMesasAtivas|deveAbrirAditivo"
+# ✅ NOVO: Adicionados logs de rotas e status
+$pattern = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|DocsDialog|ContractManagement|Distrato|DISTRATO|DistratoFlow|RepoUpdate|RepoContracts|FileProvider|Permission Denial|MesasDepositoFragment|ANÁLISE COMPLETA|ANÁLISE DE STATUS|DECISÃO FINAL|ABRINDO ADITIVO|ABRINDO NOVO CONTRATO|temContratoEncerrado|temDistratoFisico|temMesasAtivas|deveAbrirAditivo|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|ATUALIZAR STATUS|Ciclo em andamento|Nenhum ciclo em andamento|EM_ANDAMENTO|FINALIZADA|PAUSADA|CONCLUIDA|TransferClientViewModel|Transferência concluída|Forçando atualização|Dados atualizados|Cliente transferido|Mesas transferidas"
 
 # Monitorar logcat filtrando apenas erros e crashes
 try {

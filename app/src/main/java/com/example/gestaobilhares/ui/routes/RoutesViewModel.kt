@@ -184,8 +184,18 @@ class RoutesViewModel @Inject constructor(
      * Recarrega os dados das rotas.
      */
     fun refresh() {
-        // Os dados são atualizados automaticamente via Flow/LiveData
-        // Aqui poderíamos adicionar lógica para sincronização com servidor
+        // ✅ CORREÇÃO: Forçar atualização dos dados após transferência
+        android.util.Log.d("RoutesViewModel", "🔄 Forçando refresh dos dados das rotas")
+        viewModelScope.launch {
+            try {
+                // Forçar recálculo das estatísticas
+                val rotasAtuais = appRepository.getRotasResumoComAtualizacaoTempoReal().first()
+                android.util.Log.d("RoutesViewModel", "📊 Dados atualizados: ${rotasAtuais.size} rotas")
+                aplicarFiltroAcesso(rotasAtuais)
+            } catch (e: Exception) {
+                android.util.Log.e("RoutesViewModel", "Erro ao fazer refresh: ${e.message}", e)
+            }
+        }
     }
 
     /**
