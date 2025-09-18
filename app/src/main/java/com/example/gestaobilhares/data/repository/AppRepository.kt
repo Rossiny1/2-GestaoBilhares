@@ -109,6 +109,9 @@ class AppRepository(
                 val percentualAcertados = calcularPercentualClientesAcertados(rota.id, cicloAtualId, clientesAtivos)
                 val valorAcertado = calcularValorAcertadoPorRotaECiclo(rota.id, cicloAtualId)
                 val statusAtual = determinarStatusRotaEmTempoReal(rota.id)
+                
+                // ✅ NOVO: Obter datas de início e fim do ciclo
+                val (dataInicio, dataFim) = obterDatasCicloRota(rota.id)
 
                 RotaResumo(
                     rota = rota,
@@ -119,7 +122,8 @@ class AppRepository(
                     percentualAcertados = percentualAcertados,
                     status = statusAtual,
                     cicloAtual = cicloAtualNumero,
-                    dataCiclo = dataCicloInicio
+                    dataInicioCiclo = dataInicio,  // ✅ NOVO: Data de início
+                    dataFimCiclo = dataFim        // ✅ NOVO: Data de fim
                 )
             }
         }
@@ -221,14 +225,43 @@ class AppRepository(
         }
     }
 
+    // ✅ NOVO: Método para obter datas de início e fim do ciclo
+    private fun obterDatasCicloRota(rotaId: Long): Pair<Long?, Long?> {
+        return try {
+            kotlinx.coroutines.runBlocking {
+                val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
+                if (emAndamento != null) {
+                    Pair(emAndamento.dataInicio.time, emAndamento.dataFim?.time)
+                } else {
+                    val ultimo = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
+                    if (ultimo != null) {
+                        Pair(ultimo.dataInicio.time, ultimo.dataFim?.time)
+                    } else {
+                        Pair(null, null)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "Erro ao obter datas do ciclo da rota $rotaId: ${e.message}")
+            Pair(null, null)
+        }
+    }
+
     private fun determinarStatusRotaEmTempoReal(rotaId: Long): StatusRota {
         return try {
             kotlinx.coroutines.runBlocking {
                 val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
-                if (emAndamento != null) StatusRota.EM_ANDAMENTO else StatusRota.FINALIZADA
+                val status = if (emAndamento != null) {
+                    android.util.Log.d("AppRepository", "✅ Rota $rotaId: Ciclo em andamento encontrado (ID: ${emAndamento.id}) -> EM_ANDAMENTO")
+                    StatusRota.EM_ANDAMENTO
+                } else {
+                    android.util.Log.d("AppRepository", "✅ Rota $rotaId: Nenhum ciclo em andamento -> FINALIZADA")
+                    StatusRota.FINALIZADA
+                }
+                status
             }
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao determinar status da rota $rotaId: ${e.message}")
+            android.util.Log.e("AppRepository", "❌ Erro ao determinar status da rota $rotaId: ${e.message}")
             StatusRota.PAUSADA
         }
     }

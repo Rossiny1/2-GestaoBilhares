@@ -451,8 +451,9 @@ class RoutesFragment : Fragment() {
     private fun showTransferDialog(cliente: Cliente, rota: Rota, mesas: List<Mesa>) {
         val dialog = TransferClientDialog.newInstance(cliente, rota, mesas)
         dialog.setOnTransferSuccessListener {
-            // Recarregar dados após transferência
-            // Os dados serão atualizados automaticamente via LiveData
+            // ✅ CORREÇÃO: Forçar atualização dos dados após transferência
+            android.util.Log.d("RoutesFragment", "✅ Transferência concluída - Forçando atualização dos dados")
+            viewModel.refresh()
         }
         dialog.show(parentFragmentManager, "TransferClientDialog")
     }

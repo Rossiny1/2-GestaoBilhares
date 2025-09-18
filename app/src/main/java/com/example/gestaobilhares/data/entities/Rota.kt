@@ -67,20 +67,30 @@ data class RotaResumo(
     val percentualAcertados: Int = 0, // Percentual de clientes que acertaram (0-100)
     val status: StatusRota = StatusRota.EM_ANDAMENTO,
     val cicloAtual: Int = 1,
-    val dataCiclo: Long? = null
+    val dataInicioCiclo: Long? = null, // ✅ NOVO: Data de início do ciclo
+    val dataFimCiclo: Long? = null     // ✅ NOVO: Data de fim do ciclo
 ) {
     /**
-     * Formata a informação do ciclo atual com data
+     * Formata a informação do ciclo atual com datas de início e fim
      * ✅ CORREÇÃO: Exibe "Acerto" em vez de "Ciclo" para maior clareza
+     * ✅ NOVO: Mostra data de início e fim quando disponível
      */
     fun getCicloFormatado(): String {
-        val dataFormatada = if (dataCiclo != null) {
-            val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
-            sdf.format(java.util.Date(dataCiclo))
+        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
+        
+        val dataInicioFormatada = if (dataInicioCiclo != null) {
+            sdf.format(java.util.Date(dataInicioCiclo))
         } else {
             "Data não definida"
         }
-        return "${cicloAtual}º Acerto - $dataFormatada"
+        
+        val dataFimFormatada = if (dataFimCiclo != null) {
+            sdf.format(java.util.Date(dataFimCiclo))
+        } else {
+            "Em andamento"
+        }
+        
+        return "${cicloAtual}º Acerto - $dataInicioFormatada a $dataFimFormatada"
     }
 }
 

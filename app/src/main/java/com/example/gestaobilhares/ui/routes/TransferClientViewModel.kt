@@ -69,6 +69,10 @@ class TransferClientViewModel @Inject constructor(
                 val clienteAtualizado = cliente.copy(rotaId = rotaDestino.id)
                 clienteRepository.atualizar(clienteAtualizado)
 
+                // ✅ NOVO: Log para debug da transferência
+                android.util.Log.d("TransferClientViewModel", "✅ Cliente '${cliente.nome}' transferido de '${rotaOrigem.nome}' para '${rotaDestino.nome}'")
+                android.util.Log.d("TransferClientViewModel", "📊 Mesas transferidas: ${mesas.size} mesas")
+
                 // As mesas não precisam ser atualizadas pois já estão vinculadas ao cliente
                 // que foi transferido para a nova rota
 
