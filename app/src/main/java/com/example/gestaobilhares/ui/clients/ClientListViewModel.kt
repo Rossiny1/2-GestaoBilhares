@@ -83,7 +83,7 @@ class ClientListViewModel @Inject constructor(
     val pendencias: StateFlow<Int> = _pendencias.asStateFlow()
 
     private val _clientesTodos = MutableStateFlow<List<Cliente>>(emptyList())
-    private val _filtroAtual = MutableStateFlow(FiltroCliente.ACERTADOS)
+    private val _filtroAtual = MutableStateFlow(FiltroCliente.NAO_ACERTADOS)
     val filtroAtual: StateFlow<FiltroCliente> = _filtroAtual.asStateFlow()
     
     // ✅ FASE 9B: Lista de clientes filtrados
@@ -283,6 +283,7 @@ class ClientListViewModel @Inject constructor(
                 // Atualizar estado
                 _cicloAcerto.value = proximoCiclo
                 _cicloAcertoEntity.value = novoCiclo.copy(id = cicloId)
+                _cicloAtivo.value = novoCiclo.copy(id = cicloId) // ✅ CORREÇÃO: Atualizar ciclo ativo
                 _statusCiclo.value = StatusCicloAcerto.EM_ANDAMENTO
                 _statusRota.value = StatusRota.EM_ANDAMENTO
                 
@@ -295,6 +296,7 @@ class ClientListViewModel @Inject constructor(
                 _pendencias.value = pendenciasCicloAnterior
                 
                 android.util.Log.d("ClientListViewModel", "✅ Ciclo $proximoCiclo iniciado com sucesso - campos reinicializados, pendências mantidas: $pendenciasCicloAnterior")
+                android.util.Log.d("ClientListViewModel", "🔄 Atualizando _cicloAtivo com novo ciclo: ID=$cicloId, Número=$proximoCiclo, Status=EM_ANDAMENTO")
                 
                 // ✅ NOTIFICAR MUDANÇA DE STATUS para atualização em tempo real
                 notificarMudancaStatusRota(rota.id)
@@ -360,32 +362,40 @@ class ClientListViewModel @Inject constructor(
 
     /**
      * ✅ FASE 8C: Carrega o ciclo de acerto real do banco de dados
+     * ✅ CORREÇÃO: Usar a mesma lógica do AppRepository para sincronização
      */
     private suspend fun carregarCicloAcertoReal(rota: Rota) {
         try {
-            // Buscar ciclo em andamento primeiro
-            var cicloAtual = cicloAcertoRepository.buscarCicloAtivo(rota.id)
+            // ✅ CORREÇÃO: Usar a mesma lógica do AppRepository.obterCicloAtualRota()
+            val emAndamento = cicloAcertoRepository.buscarCicloAtivo(rota.id)
             
-            // Se não há ciclo em andamento, buscar o último ciclo
-            if (cicloAtual == null) {
-                cicloAtual = cicloAcertoRepository.buscarEstatisticasRota(rota.id)
-            }
-            
-            if (cicloAtual != null) {
-                _cicloAcerto.value = cicloAtual.numeroCiclo
-                _cicloAcertoEntity.value = cicloAtual
-                _statusCiclo.value = cicloAtual.status
-                _progressoCiclo.value = cicloAtual.percentualConclusao
+            if (emAndamento != null) {
+                // Ciclo em andamento - mostrar o número atual
+                _cicloAcerto.value = emAndamento.numeroCiclo
+                _cicloAcertoEntity.value = emAndamento
+                _cicloAtivo.value = emAndamento
+                _statusCiclo.value = emAndamento.status
+                _progressoCiclo.value = emAndamento.percentualConclusao
                 
-                android.util.Log.d("ClientListViewModel", "✅ Ciclo carregado: ${cicloAtual.titulo}")
+                android.util.Log.d("ClientListViewModel", "✅ Ciclo em andamento carregado: ${emAndamento.numeroCiclo}º Acerto (ID: ${emAndamento.id})")
             } else {
-                // Primeiro ciclo da rota
-                _cicloAcerto.value = 1
-                _cicloAcertoEntity.value = null
-                _statusCiclo.value = StatusCicloAcerto.FINALIZADO
-                _progressoCiclo.value = 0
-                
-                android.util.Log.d("ClientListViewModel", "🆕 Primeiro ciclo da rota")
+                // ✅ CORREÇÃO: Nenhum ciclo em andamento - espelhar o AppRepository exibindo o ÚLTIMO ciclo finalizado
+                val ultimoCiclo = cicloAcertoRepository.buscarUltimoCicloPorRota(rota.id)
+                if (ultimoCiclo != null) {
+                    _cicloAcerto.value = ultimoCiclo.numeroCiclo
+                    _cicloAcertoEntity.value = ultimoCiclo
+                    _cicloAtivo.value = ultimoCiclo
+                    _statusCiclo.value = ultimoCiclo.status
+                    _progressoCiclo.value = ultimoCiclo.percentualConclusao
+                    android.util.Log.d("ClientListViewModel", "🔄 Nenhum ciclo em andamento, exibindo último finalizado: ${ultimoCiclo.numeroCiclo}º Acerto")
+                } else {
+                    _cicloAcerto.value = 1
+                    _cicloAcertoEntity.value = null
+                    _cicloAtivo.value = null
+                    _statusCiclo.value = StatusCicloAcerto.FINALIZADO
+                    _progressoCiclo.value = 0
+                    android.util.Log.d("ClientListViewModel", "🆕 Primeira vez nesta rota, exibindo 1º Acerto")
+                }
             }
             
         } catch (e: Exception) {
@@ -393,6 +403,7 @@ class ClientListViewModel @Inject constructor(
             // Valores padrão em caso de erro
             _cicloAcerto.value = 1
             _cicloAcertoEntity.value = null
+            _cicloAtivo.value = null
             _statusCiclo.value = StatusCicloAcerto.FINALIZADO
             _progressoCiclo.value = 0
         }
@@ -456,11 +467,39 @@ class ClientListViewModel @Inject constructor(
     }
 
     /**
+     * ✅ NOVO: Busca o último ciclo finalizado da rota
+     */
+    suspend fun buscarUltimoCicloFinalizado(): com.example.gestaobilhares.data.entities.CicloAcertoEntity? {
+        return try {
+            val rotaId = _rotaIdFlow.value ?: return null
+            cicloAcertoRepository.buscarUltimoCicloPorRota(rotaId)
+        } catch (e: Exception) {
+            android.util.Log.e("ClientListViewModel", "Erro ao buscar último ciclo finalizado: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * ✅ NOVO: Força a atualização do ciclo atual (para sincronização com AppRepository)
+     */
+    fun atualizarCicloAtual() {
+        viewModelScope.launch {
+            try {
+                val rota = _rotaInfo.value ?: return@launch
+                android.util.Log.d("ClientListViewModel", "🔄 Forçando atualização do ciclo atual para rota ${rota.nome}")
+                carregarCicloAcertoReal(rota)
+            } catch (e: Exception) {
+                android.util.Log.e("ClientListViewModel", "Erro ao atualizar ciclo atual: ${e.message}")
+            }
+        }
+    }
+
+    /**
      * ✅ FASE 9B: Aplica filtro à lista de clientes com filtros combinados
      */
     private suspend fun aplicarFiltrosCombinados() {
         val query = _buscaAtual.value.trim()
-        val filtro = _filtroAtual.value ?: FiltroCliente.ACERTADOS
+        val filtro = _filtroAtual.value ?: FiltroCliente.NAO_ACERTADOS
         val todos = _clientesTodos.value
         val isAdvancedSearch = _isAdvancedSearch.value ?: false
         val searchType = _searchType.value
@@ -691,7 +730,7 @@ class ClientListViewModel @Inject constructor(
      * ✅ FASE 9A: Obtém o filtro atual para uso na UI
      */
     fun getFiltroAtual(): FiltroCliente {
-        return _filtroAtual.value ?: FiltroCliente.ACERTADOS
+        return _filtroAtual.value ?: FiltroCliente.NAO_ACERTADOS
     }
 
     /**

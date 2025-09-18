@@ -73,11 +73,14 @@ Write-Host "- Datas: Início e fim dos ciclos de acerto" -ForegroundColor Gray
 Write-Host "- Distrato: Atualização de status ao assinar" -ForegroundColor Gray
 Write-Host "- Contratos: Fluxo de geração e vinculação" -ForegroundColor Gray
 Write-Host "- Transferência: Cliente transferido entre rotas" -ForegroundColor Gray
+Write-Host "- Ciclos: Sincronização do card de ciclo na tela de detalhes" -ForegroundColor Gray
+Write-Host "- Atualização: Cards de rotas em tempo real (onResume)" -ForegroundColor Gray
+Write-Host "- Sincronização: Ciclo entre tela Rotas e Detalhes da Rota" -ForegroundColor Gray
 Write-Host "" 
 
 # Padrão de filtro expandido para incluir nossos logs de diagnóstico e análise de fluxo
 # ✅ NOVO: Adicionados logs de rotas e status
-$pattern = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|DocsDialog|ContractManagement|Distrato|DISTRATO|DistratoFlow|RepoUpdate|RepoContracts|FileProvider|Permission Denial|MesasDepositoFragment|ANÁLISE COMPLETA|ANÁLISE DE STATUS|DECISÃO FINAL|ABRINDO ADITIVO|ABRINDO NOVO CONTRATO|temContratoEncerrado|temDistratoFisico|temMesasAtivas|deveAbrirAditivo|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|ATUALIZAR STATUS|Ciclo em andamento|Nenhum ciclo em andamento|EM_ANDAMENTO|FINALIZADA|PAUSADA|CONCLUIDA|TransferClientViewModel|Transferência concluída|Forçando atualização|Dados atualizados|Cliente transferido|Mesas transferidas"
+$pattern = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|DocsDialog|ContractManagement|Distrato|DISTRATO|DistratoFlow|RepoUpdate|RepoContracts|FileProvider|Permission Denial|MesasDepositoFragment|ANÁLISE COMPLETA|ANÁLISE DE STATUS|DECISÃO FINAL|ABRINDO ADITIVO|ABRINDO NOVO CONTRATO|temContratoEncerrado|temDistratoFisico|temMesasAtivas|deveAbrirAditivo|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|ATUALIZAR STATUS|Ciclo em andamento|Nenhum ciclo em andamento|EM_ANDAMENTO|FINALIZADA|PAUSADA|CONCLUIDA|TransferClientViewModel|Transferência concluída|Forçando atualização|Dados atualizados|Cliente transferido|Mesas transferidas|ClientListFragment|ClientListViewModel|Atualizando card do ciclo|Ciclo iniciado com sucesso|Atualizando _cicloAtivo|Nenhum ciclo ativo encontrado|RoutesFragment|onResume|Atualizando resumo de rotas|Rota.*Ciclo.*Status|Ciclo em andamento carregado|Nenhum ciclo em andamento.*próximo ciclo|Exibindo próximo ciclo|Forçando atualização do ciclo atual"
 
 # Monitorar logcat filtrando apenas erros e crashes
 try {

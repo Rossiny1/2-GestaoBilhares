@@ -98,8 +98,13 @@ class AppRepository(
     
     // ✅ NOVO: Método para obter resumo de rotas com atualização em tempo real
     fun getRotasResumoComAtualizacaoTempoReal(): Flow<List<RotaResumo>> {
-        // ✅ CORREÇÃO: Implementar cálculos reais usando os DAOs disponíveis
-        return rotaDao.getAllRotasAtivas().map { rotas ->
+        // ✅ CORREÇÃO: Combinar Flow de rotas com Flow de ciclos para atualização em tempo real
+        return kotlinx.coroutines.flow.combine(
+            rotaDao.getAllRotasAtivas(),
+            cicloAcertoDao.listarTodos()
+        ) { rotas, ciclos ->
+            android.util.Log.d("AppRepository", "🔄 Atualizando resumo de rotas: ${rotas.size} rotas, ${ciclos.size} ciclos")
+            
             rotas.map { rota ->
                 // Calcular dados reais para cada rota
                 val clientesAtivos = calcularClientesAtivosPorRota(rota.id)
@@ -113,7 +118,7 @@ class AppRepository(
                 // ✅ NOVO: Obter datas de início e fim do ciclo
                 val (dataInicio, dataFim) = obterDatasCicloRota(rota.id)
 
-                RotaResumo(
+                val resumo = RotaResumo(
                     rota = rota,
                     clientesAtivos = clientesAtivos,
                     pendencias = pendencias,
@@ -125,6 +130,9 @@ class AppRepository(
                     dataInicioCiclo = dataInicio,  // ✅ NOVO: Data de início
                     dataFimCiclo = dataFim        // ✅ NOVO: Data de fim
                 )
+                
+                android.util.Log.d("AppRepository", "📊 Rota ${rota.nome}: Ciclo ${cicloAtualNumero}, Status ${statusAtual}")
+                resumo
             }
         }
     }
@@ -213,10 +221,18 @@ class AppRepository(
             kotlinx.coroutines.runBlocking {
                 val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
                 if (emAndamento != null) {
+                    // ✅ CORREÇÃO: Ciclo em andamento - mostrar o número atual
                     Triple(emAndamento.numeroCiclo, emAndamento.id, emAndamento.dataInicio.time)
                 } else {
-                    val ultimo = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
-                    if (ultimo != null) Triple(ultimo.numeroCiclo, ultimo.id, ultimo.dataInicio.time) else Triple(1, null, null)
+                    // ✅ CORREÇÃO: Nenhum ciclo em andamento - mostrar o ÚLTIMO ciclo finalizado
+                    val ultimoCiclo = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
+                    if (ultimoCiclo != null) {
+                        android.util.Log.d("AppRepository", "🔄 Rota $rotaId: Nenhum ciclo em andamento, último ciclo finalizado: ${ultimoCiclo.numeroCiclo}")
+                        Triple(ultimoCiclo.numeroCiclo, ultimoCiclo.id, ultimoCiclo.dataFim?.time)
+                    } else {
+                        android.util.Log.d("AppRepository", "🆕 Rota $rotaId: Sem histórico, exibindo 1º ciclo")
+                        Triple(1, null, null)
+                    }
                 }
             }
         } catch (e: Exception) {
