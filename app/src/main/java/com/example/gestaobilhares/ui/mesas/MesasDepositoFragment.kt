@@ -358,18 +358,42 @@ class MesasDepositoFragment : Fragment() {
                                     "(status=${latest.status}, hasEncerramento=$hasEncerramento)")
                                 
                                 // ✅ VINCULAR MESA ANTES DO NOVO CONTRATO
-                                viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)
+                                android.util.Log.d("MesasDepositoFragment", "Vinculando mesa ${mesa.id} ao cliente $clienteId antes do novo contrato")
                                 
-                                val todasMesasVinculadas = viewModel.obterTodasMesasVinculadasAoCliente(clienteId)
-                                val mesasIds = todasMesasVinculadas.map { it.id }
-                                
-                                val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
-                                    clienteId = clienteId,
-                                    mesasVinculadas = mesasIds,
-                                    tipoFixo = tipoFixo,
-                                    valorFixo = valorFixo ?: 0.0
-                                )
-                                dialog.show(parentFragmentManager, "ContractFinalizationDialog")
+                                // Executar vinculação de forma síncrona
+                                try {
+                                    if (tipoFixo && valorFixo != null) {
+                                        viewModel.mesaRepository.vincularMesaComValorFixo(mesa.id, clienteId, valorFixo)
+                                    } else {
+                                        viewModel.mesaRepository.vincularMesa(mesa.id, clienteId)
+                                    }
+                                    android.util.Log.d("MesasDepositoFragment", "Mesa vinculada com sucesso")
+                                    
+                                    // Aguardar um pouco para sincronização
+                                    kotlinx.coroutines.delay(200)
+                                    
+                                    val todasMesasVinculadas = viewModel.obterTodasMesasVinculadasAoCliente(clienteId)
+                                    val mesasIds = todasMesasVinculadas.map { it.id }
+                                    android.util.Log.d("MesasDepositoFragment", "Mesas vinculadas encontradas: ${mesasIds.size} -> $mesasIds")
+                                    val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
+                                        clienteId = clienteId,
+                                        mesasVinculadas = mesasIds,
+                                        tipoFixo = tipoFixo,
+                                        valorFixo = valorFixo ?: 0.0
+                                    )
+                                    dialog.show(parentFragmentManager, "ContractFinalizationDialog")
+                                } catch (e: Exception) {
+                                    android.util.Log.e("MesasDepositoFragment", "Erro ao vincular mesa para novo contrato", e)
+                                    // Usar apenas a mesa atual se houver erro
+                                    val mesasIds = listOf(mesa.id)
+                                    val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
+                                        clienteId = clienteId,
+                                        mesasVinculadas = mesasIds,
+                                        tipoFixo = tipoFixo,
+                                        valorFixo = valorFixo ?: 0.0
+                                    )
+                                    dialog.show(parentFragmentManager, "ContractFinalizationDialog")
+                                }
                             }
                         } else {
                             android.util.Log.d("MesasDepositoFragment", "ABRINDO NOVO CONTRATO: Nenhum contrato encontrado para cliente")

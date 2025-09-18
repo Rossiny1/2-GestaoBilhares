@@ -26,7 +26,7 @@ data class EstatisticasDeposito(
 )
 
 class MesasDepositoViewModel(
-    private val mesaRepository: MesaRepository,
+    val mesaRepository: MesaRepository, // ✅ Tornar público para acesso direto
     private val appRepository: AppRepository
 ) : ViewModel() {
     private val _mesasDisponiveis = MutableStateFlow<List<Mesa>>(emptyList())
