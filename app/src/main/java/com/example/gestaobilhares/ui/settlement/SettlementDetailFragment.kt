@@ -390,34 +390,43 @@ class SettlementDetailFragment : Fragment() {
      * ✅ NOVA FUNÇÃO: Preenche o layout do recibo com os dados do acerto
      */
     private fun preencherLayoutRecibo(reciboView: android.view.ViewGroup, settlement: SettlementDetailViewModel.SettlementDetail) {
-        // Converter SettlementDetail para formato compatível com ReciboPrinterHelper
-        val mesas = settlement.acertoMesas.map { mesa ->
-            com.example.gestaobilhares.data.entities.AcertoMesa(
-                acertoId = settlement.id,
-                mesaId = mesa.mesaId,
-                relogioInicial = mesa.relogioInicial,
-                relogioFinal = mesa.relogioFinal,
-                fichasJogadas = mesa.relogioFinal - mesa.relogioInicial,
-                valorFixo = mesa.valorFixo,
-                subtotal = mesa.valorFixo
-            )
+        // Buscar mesas completas para obter informações de tipo
+        lifecycleScope.launch {
+            try {
+                val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
+                val mesasCompletas = mutableListOf<Mesa>()
+                
+                for (acertoMesa in settlement.acertoMesas) {
+                    val mesaCompleta = mesaRepository.buscarPorId(acertoMesa.mesaId)
+                    if (mesaCompleta != null) {
+                        // Criar uma mesa com os dados do acerto (fichas inicial/final)
+                        val mesaComAcerto = mesaCompleta.copy(
+                            fichasInicial = acertoMesa.relogioInicial,
+                            fichasFinal = acertoMesa.relogioFinal
+                        )
+                        mesasCompletas.add(mesaComAcerto)
+                    }
+                }
+                
+                // Usar a função centralizada com informações completas das mesas
+                ReciboPrinterHelper.preencherReciboImpressaoCompleto(
+                    context = requireContext(),
+                    reciboView = reciboView,
+                    clienteNome = settlement.clienteNome,
+                    mesasCompletas = mesasCompletas,
+                    debitoAnterior = settlement.debitoAnterior,
+                    valorTotalMesas = settlement.valorTotal,
+                    desconto = settlement.desconto,
+                    metodosPagamento = settlement.metodosPagamento,
+                    debitoAtual = settlement.debitoAtual,
+                    observacao = settlement.observacoes,
+                    valorFicha = settlement.valorFicha,
+                    acertoId = settlement.id
+                )
+            } catch (e: Exception) {
+                Log.e("SettlementDetailFragment", "Erro ao preencher layout do recibo: ${e.message}")
+            }
         }
-        
-        // Usar a função centralizada
-        ReciboPrinterHelper.preencherReciboImpressao(
-            context = requireContext(),
-            reciboView = reciboView,
-            clienteNome = settlement.clienteNome,
-            mesas = mesas,
-            debitoAnterior = settlement.debitoAnterior,
-            valorTotalMesas = settlement.valorTotal,
-            desconto = settlement.desconto,
-            metodosPagamento = settlement.metodosPagamento,
-            debitoAtual = settlement.debitoAtual,
-            observacao = settlement.observacoes,
-            valorFicha = settlement.valorFicha,
-            acertoId = settlement.id
-        )
     }
     
     /**
