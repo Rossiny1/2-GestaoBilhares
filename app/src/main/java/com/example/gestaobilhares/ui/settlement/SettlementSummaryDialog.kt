@@ -194,25 +194,12 @@ class SettlementSummaryDialog : DialogFragment() {
                                 val txtValorFichaImpressao = reciboView.findViewById<TextView>(R.id.txtValorFicha)
                                 val rowValorFicha = reciboView.findViewById<android.widget.LinearLayout>(R.id.rowValorFicha)
 
-                                // Converter Mesa para AcertoMesa para compatibilidade
-                                val mesasAcerto = mesas.map { mesa ->
-                                    com.example.gestaobilhares.data.entities.AcertoMesa(
-                                        acertoId = 0L, // Placeholder para impressão
-                                        mesaId = mesa.id,
-                                        relogioInicial = mesa.fichasInicial ?: 0,
-                                        relogioFinal = mesa.fichasFinal ?: 0,
-                                        fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0),
-                                        valorFixo = 0.0,
-                                        subtotal = 0.0
-                                    )
-                                }
-                                
-                                // Preencher dados do recibo usando função centralizada
-                                ReciboPrinterHelper.preencherReciboImpressao(
+                                // Preencher dados do recibo usando função centralizada com informações completas das mesas
+                                ReciboPrinterHelper.preencherReciboImpressaoCompleto(
                                     context = requireContext(),
                                     reciboView = reciboView,
                                     clienteNome = clienteNome,
-                                    mesas = mesasAcerto,
+                                    mesasCompletas = mesas,
                                     debitoAnterior = debitoAnterior,
                                     valorTotalMesas = valorTotalMesas,
                                     desconto = desconto,
