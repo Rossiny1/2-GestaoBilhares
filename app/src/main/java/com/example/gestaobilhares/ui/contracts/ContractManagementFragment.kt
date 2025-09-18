@@ -183,11 +183,18 @@ class ContractManagementFragment : Fragment() {
                     android.util.Log.e("DocsDialog", "Erro ao checar PDFs de distrato", e)
                 }
 
-                if (isDistratoStatus || distratoData != null) {
+                // ✅ CORRIGIDO: Sempre mostrar distrato se este contrato específico foi encerrado
+                val hasDataEncerramento = contrato.dataEncerramento != null
+                
+                android.util.Log.d("DocsDialog", 
+                    "Verificando distrato para contrato ${contrato.numeroContrato}: " +
+                    "status='${contrato.status}' isDistratoStatus=$isDistratoStatus hasDataEncerramento=$hasDataEncerramento")
+
+                if (isDistratoStatus || hasDataEncerramento || distratoData != null) {
                     val dataDoc = contrato.dataEncerramento
                         ?: distratoData
                         ?: (contrato.dataAtualizacao ?: contrato.dataCriacao)
-                    android.util.Log.d("DocsDialog", "Adicionando DISTrato num=${contrato.numeroContrato} data=${dataDoc}")
+                    android.util.Log.d("DocsDialog", "✅ Adicionando DISTRATO para contrato ${contrato.numeroContrato} data=${dataDoc}")
                     documentos.add(DocumentoItem(
                         tipo = "DISTRATO",
                         titulo = "Distrato ${contrato.numeroContrato}",
@@ -196,26 +203,7 @@ class ContractManagementFragment : Fragment() {
                         aditivo = null
                     ))
                 } else {
-                    // ✅ NOVO: Se não há status/arquivo de distrato, mas o cliente está sem mesas, sugerir distrato
-                    try {
-                        val mesasAtivasDoCliente = viewModel.getMesasPorCliente(contrato.clienteId).filter { it.ativa }
-                        android.util.Log.d("DocsDialog", "Contrato id=${contrato.id} sem distrato; mesas ativas=${mesasAtivasDoCliente.size}")
-                        if (mesasAtivasDoCliente.isEmpty()) {
-                            val hoje = java.util.Date()
-                            android.util.Log.d("DocsDialog", "Cliente sem mesas -> adicionando entrada de Distrato acionável para contrato ${contrato.numeroContrato}")
-                            documentos.add(DocumentoItem(
-                                tipo = "DISTRATO",
-                                titulo = "Distrato ${contrato.numeroContrato}",
-                                data = hoje,
-                                contrato = contrato,
-                                aditivo = null
-                            ))
-                        } else {
-                            android.util.Log.d("DocsDialog", "Contrato id=${contrato.id} temDistrato=false e cliente ainda possui mesas ativas")
-                        }
-                    } catch (e: Exception) {
-                        android.util.Log.e("DocsDialog", "Falha ao verificar mesas para sugerir distrato", e)
-                    }
+                    android.util.Log.d("DocsDialog", "❌ SEM distrato para contrato ${contrato.numeroContrato} (status=${contrato.status}, dataEncerramento=${contrato.dataEncerramento})")
                 }
             }
             // Ordena todos os documentos por data (mais recente primeiro)

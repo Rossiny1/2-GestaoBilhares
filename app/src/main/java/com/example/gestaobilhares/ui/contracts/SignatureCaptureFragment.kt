@@ -157,6 +157,36 @@ class SignatureCaptureFragment : Fragment() {
         val assinaturaBase64 = bitmapToBase64(signatureBitmap!!)
         if (assinaturaContexto == "DISTRATO") {
             viewModel.salvarAssinaturaDistrato(assinaturaBase64)
+            
+            // ✅ CORREÇÃO CRÍTICA: Atualizar status do contrato SEMPRE que distrato for assinado
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    val contrato = viewModel.contrato.value ?: return@launch
+                    val fechamento = viewModel.getFechamentoResumoDistrato()
+                    
+                    val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+                    val repo = com.example.gestaobilhares.data.repository.AppRepository(
+                        db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
+                        db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
+                        db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
+                    )
+                    val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
+                    val agora = java.util.Date()
+                    android.util.Log.d("DistratoFlow", "✅ ATUALIZAR STATUS ao salvar assinatura: contrato ${contrato.id} para $novoStatus em $agora")
+                    repo.encerrarContrato(contrato.id, contrato.clienteId, novoStatus)
+                    
+                    // Verificação imediata
+                    try {
+                        val apos = repo.buscarContratosPorCliente(contrato.clienteId).first()
+                        val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
+                        android.util.Log.d("DistratoFlow", "✅ Após salvar assinatura distrato: ${'$'}resumo")
+                    } catch (e: Exception) {
+                        android.util.Log.e("DistratoFlow", "Falha verificação pós-assinatura distrato", e)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("DistratoFlow", "Falha ao atualizar status na assinatura do distrato", e)
+                }
+            }
         } else {
             viewModel.salvarAssinatura(assinaturaBase64)
         }
