@@ -79,6 +79,13 @@ class RoutesFragment : Fragment() {
         collapseExpenseSubmenu()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // ✅ CORREÇÃO: Atualizar dados das rotas quando retorna de outras telas
+        android.util.Log.d("RoutesFragment", "🔄 onResume - Forçando atualização dos dados das rotas")
+        viewModel.refresh()
+    }
+
     /**
      * Configura o RecyclerView com o adapter.
      */

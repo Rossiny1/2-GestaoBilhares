@@ -116,6 +116,13 @@ class ClientListFragment : Fragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // ✅ CORREÇÃO: Forçar atualização do ciclo quando retorna de outras telas
+        android.util.Log.d("ClientListFragment", "🔄 onResume - Forçando atualização do ciclo atual")
+        viewModel.atualizarCicloAtual()
+    }
+
     private fun configurarRecyclerView() {
         clientAdapter = ClientAdapter { cliente ->
             // ✅ NOVO: Sempre permitir navegação para detalhes do cliente, independente do status da rota
@@ -238,8 +245,25 @@ class ClientListFragment : Fragment() {
             viewModel.cicloAtivo.collect { cicloEntity ->
                 try {
                     cicloEntity?.let { ciclo ->
-                        _binding?.tvCycleTitle?.text = "${ciclo.numeroCiclo}º Acerto"
+                        val tituloCiclo = "${ciclo.numeroCiclo}º Acerto"
+                        _binding?.tvCycleTitle?.text = tituloCiclo
+                        
+                        // ✅ NOVO: Log para debug do ciclo
+                        android.util.Log.d("ClientListFragment", "🔄 Atualizando card do ciclo: $tituloCiclo (ID: ${ciclo.id}, Status: ${ciclo.status})")
+                        
                         // ✅ NOVO: Tornar o título clicável
+                        _binding?.tvCycleTitle?.setOnClickListener {
+                            mostrarDialogoProgressoCiclo()
+                        }
+                    } ?: run {
+                        // ✅ CORREÇÃO: Quando não há ciclo ativo, exibir o ÚLTIMO ciclo finalizado (espelhando AppRepository)
+                        lifecycleScope.launch {
+                            val ultimoCiclo = viewModel.buscarUltimoCicloFinalizado()
+                            val tituloCiclo = if (ultimoCiclo != null) "${ultimoCiclo.numeroCiclo}º Acerto" else "1º Acerto"
+                            _binding?.tvCycleTitle?.text = tituloCiclo
+                            android.util.Log.d("ClientListFragment", "🔄 Exibindo ciclo finalizado (fallback): $tituloCiclo")
+                        }
+                        
                         // ✅ NOVO: Tornar o título clicável
                         _binding?.tvCycleTitle?.setOnClickListener {
                             mostrarDialogoProgressoCiclo()
@@ -420,7 +444,7 @@ class ClientListFragment : Fragment() {
                 FiltroCliente.ACERTADOS -> binding.btnFilterAcertados
                 FiltroCliente.NAO_ACERTADOS -> binding.btnFilterNaoAcertados
                 FiltroCliente.PENDENCIAS -> binding.btnFilterPendencias
-                else -> binding.btnFilterAcertados // Padrão
+                else -> binding.btnFilterNaoAcertados // Padrão
             }
             atualizarEstadoFiltros(botaoAtivo)
         }

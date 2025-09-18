@@ -67,6 +67,13 @@ class CicloAcertoRepository @Inject constructor(
     }
 
     /**
+     * ✅ NOVO: Busca o último ciclo de uma rota (finalizado ou em andamento)
+     */
+    suspend fun buscarUltimoCicloPorRota(rotaId: Long): CicloAcertoEntity? {
+        return cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
+    }
+
+    /**
      * Insere ou atualiza um ciclo
      */
     suspend fun inserirOuAtualizarCiclo(ciclo: CicloAcertoEntity): Long {
