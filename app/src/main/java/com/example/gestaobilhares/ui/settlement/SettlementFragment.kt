@@ -1102,6 +1102,7 @@ class SettlementFragment : Fragment() {
                     val dialog = SettlementSummaryDialog.newInstance(
                         clienteNome = viewModel.clientName.value,
                         clienteTelefone = cliente?.telefone,
+                        clienteCpf = cliente?.cpfCnpj,
                         mesas = mesasComNumerosReais,
                         total = acerto.valorTotal,
                         metodosPagamento = metodosPagamento,

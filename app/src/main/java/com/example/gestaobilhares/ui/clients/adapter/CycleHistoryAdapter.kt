@@ -54,6 +54,7 @@ class CycleHistoryAdapter(
                 // Valores financeiros
                 tvRevenue.text = currencyFormatter.format(ciclo.valorTotalAcertado)
                 tvExpenses.text = currencyFormatter.format(ciclo.valorTotalDespesas)
+                tvDiscounts.text = currencyFormatter.format(ciclo.totalDescontos)
                 tvProfit.text = currencyFormatter.format(ciclo.lucroLiquido)
                 
                 // Débito total

@@ -56,6 +56,7 @@ data class CycleHistoryItem(
     val dataFim: Date,
     val valorTotalAcertado: Double,
     val valorTotalDespesas: Double,
+    val totalDescontos: Double,
     val lucroLiquido: Double,
     val debitoTotal: Double,
     val clientesAcertados: Int,
@@ -110,6 +111,9 @@ class CycleHistoryViewModel(
                     val despesasCiclo = appRepository.buscarDespesasPorCicloId(ciclo.id).first()
                     val valorTotalDespesas = despesasCiclo.sumOf { despesa -> despesa.valor }
 
+                    // ✅ NOVO: Calcular total de descontos do ciclo
+                    val totalDescontos = appRepository.calcularTotalDescontosPorCiclo(ciclo.id)
+
                     // ✅ CORREÇÃO: Calcular clientes acertados e total em tempo real para ciclos em andamento
                     val (clientesAcertados, totalClientes) = if (ciclo.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
                         // Para ciclos finalizados, usar dados salvos
@@ -129,6 +133,7 @@ class CycleHistoryViewModel(
                         dataFim = ciclo.dataFim ?: Date(), // Usar data atual se for nula
                         valorTotalAcertado = ciclo.valorTotalAcertado,
                         valorTotalDespesas = valorTotalDespesas, // ✅ Usar valor real calculado
+                        totalDescontos = totalDescontos, // ✅ NOVO: Total de descontos do ciclo
                         lucroLiquido = ciclo.valorTotalAcertado - valorTotalDespesas, // ✅ Recalcular lucro
                         debitoTotal = debitoTotal,
                         clientesAcertados = clientesAcertados, // ✅ Usar dados calculados em tempo real

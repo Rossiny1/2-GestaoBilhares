@@ -34,9 +34,10 @@ import com.example.gestaobilhares.data.entities.*
         AditivoMesa::class, // ✅ NOVO: VINCULAÇÃO ADITIVO-MESAS
         AssinaturaRepresentanteLegal::class, // ✅ NOVO: ASSINATURA DIGITAL DO REPRESENTANTE
         LogAuditoriaAssinatura::class, // ✅ NOVO: LOGS DE AUDITORIA
-        ProcuraçãoRepresentante::class // ✅ NOVO: PROCURAÇÕES E DELEGAÇÃO DE PODERES
+        ProcuraçãoRepresentante::class, // ✅ NOVO: PROCURAÇÕES E DELEGAÇÃO DE PODERES
+        MesaVendida::class // ✅ NOVO: MESAS VENDIDAS
     ],
-    version = 31, // ✅ MIGRATION: sistema de assinatura digital e auditoria
+    version = 32, // ✅ MIGRATION: sistema de venda de mesas
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -125,6 +126,12 @@ abstract class AppDatabase : RoomDatabase() {
      * ✅ NOVO: PROCURAÇÕES E DELEGAÇÃO DE PODERES
      */
     abstract fun procuraçãoRepresentanteDao(): com.example.gestaobilhares.data.dao.ProcuraçãoRepresentanteDao
+    
+    /**
+     * DAO para operações com mesas vendidas.
+     * ✅ NOVO: MESAS VENDIDAS
+     */
+    abstract fun mesaVendidaDao(): com.example.gestaobilhares.data.dao.MesaVendidaDao
 
     companion object {
         

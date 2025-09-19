@@ -23,6 +23,7 @@ object ReciboPrinterHelper {
      * @param context Contexto da aplicação
      * @param reciboView View do layout de recibo já inflado
      * @param clienteNome Nome do cliente
+     * @param clienteCpf CPF do cliente (opcional)
      * @param mesasCompletas Lista de mesas completas com informações de tipo
      * @param debitoAnterior Débito anterior do cliente
      * @param valorTotalMesas Valor total das mesas
@@ -37,6 +38,7 @@ object ReciboPrinterHelper {
         context: Context,
         reciboView: View,
         clienteNome: String,
+        clienteCpf: String? = null,
         mesasCompletas: List<Mesa>,
         debitoAnterior: Double,
         valorTotalMesas: Double,
@@ -50,6 +52,8 @@ object ReciboPrinterHelper {
         // Referências dos elementos
         val txtTitulo = reciboView.findViewById<android.widget.TextView>(R.id.txtTituloRecibo)
         val txtClienteValor = reciboView.findViewById<android.widget.TextView>(R.id.txtClienteValor)
+        val rowCpfCliente = reciboView.findViewById<android.widget.LinearLayout>(R.id.rowCpfCliente)
+        val txtCpfCliente = reciboView.findViewById<android.widget.TextView>(R.id.txtCpfCliente)
         val txtData = reciboView.findViewById<android.widget.TextView>(R.id.txtData)
         val rowValorFicha = reciboView.findViewById<android.widget.LinearLayout>(R.id.rowValorFicha)
         val txtValorFicha = reciboView.findViewById<android.widget.TextView>(R.id.txtValorFicha)
@@ -76,8 +80,18 @@ object ReciboPrinterHelper {
         }
         txtTitulo.text = titulo
 
-        // Cliente e data
+        // Cliente e CPF
         txtClienteValor.text = clienteNome
+        
+        // CPF do cliente
+        if (!clienteCpf.isNullOrBlank()) {
+            txtCpfCliente.text = clienteCpf
+            rowCpfCliente.visibility = View.VISIBLE
+        } else {
+            rowCpfCliente.visibility = View.GONE
+        }
+        
+        // Data
         txtData.text = "Data: $dataFormatada"
 
         // Valor da ficha

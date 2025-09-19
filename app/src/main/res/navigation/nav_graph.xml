@@ -317,6 +317,9 @@
         <action
             android:id="@+id/action_gerenciarMesasFragment_to_rotaMesasFragment"
             app:destination="@id/rotaMesasFragment" />
+        <action
+            android:id="@+id/action_gerenciarMesasFragment_to_historicoMesasVendidasFragment"
+            app:destination="@id/historicoMesasVendidasFragment" />
     </fragment>
 
     <!-- Tela de Mesas da Rota -->
@@ -344,6 +347,12 @@
             android:name="mesaId"
             app:argType="long" />
     </fragment>
+
+    <!-- Tela de Histórico de Mesas Vendidas -->
+    <fragment
+        android:id="@+id/historicoMesasVendidasFragment"
+        android:name="com.example.gestaobilhares.ui.mesas.HistoricoMesasVendidasFragment"
+        android:label="Histórico de Mesas Vendidas" />
 
     <!-- ✅ FASE 9C: Tela de histórico de ciclos -->
     <fragment

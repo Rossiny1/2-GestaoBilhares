@@ -355,6 +355,19 @@ class AppRepository(
         } catch (e: Exception) { 0 }
     }
     
+    // ✅ NOVO: calcular total de descontos por ciclo
+    suspend fun calcularTotalDescontosPorCiclo(cicloId: Long): Double {
+        return try {
+            val acertos = buscarAcertosPorCicloId(cicloId).first()
+            val totalDescontos = acertos.sumOf { it.desconto }
+            android.util.Log.d("AppRepository", "✅ Total de descontos calculado para ciclo $cicloId: R$ $totalDescontos")
+            totalDescontos
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "Erro ao calcular total de descontos para ciclo $cicloId: ${e.message}")
+            0.0
+        }
+    }
+
     // ✅ NOVO: calcular comissões de motorista e Iltair por ciclo
     suspend fun calcularComissoesPorCiclo(cicloId: Long): Pair<Double, Double> {
         val acertos = buscarAcertosPorCicloId(cicloId).first()
