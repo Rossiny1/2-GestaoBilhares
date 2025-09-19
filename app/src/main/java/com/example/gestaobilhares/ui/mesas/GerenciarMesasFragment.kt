@@ -92,38 +92,40 @@ class GerenciarMesasFragment : Fragment() {
 
     private fun showFabMenu() {
         isFabMenuExpanded = true
-        binding.fabVendaMesa.visibility = View.VISIBLE
-        binding.fabVendaMesa.animate()
-            .scaleX(1f)
-            .scaleY(1f)
-            .alpha(1f)
-            .setDuration(200)
-            .start()
+        _binding?.fabVendaMesa?.visibility = View.VISIBLE
+        _binding?.fabVendaMesa?.animate()
+            ?.scaleX(1f)
+            ?.scaleY(1f)
+            ?.alpha(1f)
+            ?.setDuration(200)
+            ?.start()
     }
 
     private fun hideFabMenu() {
         isFabMenuExpanded = false
-        binding.fabVendaMesa.animate()
-            .scaleX(0f)
-            .scaleY(0f)
-            .alpha(0f)
-            .setDuration(200)
-            .withEndAction {
-                binding.fabVendaMesa.visibility = View.GONE
+        _binding?.fabVendaMesa?.animate()
+            ?.scaleX(0f)
+            ?.scaleY(0f)
+            ?.alpha(0f)
+            ?.setDuration(200)
+            ?.withEndAction {
+                _binding?.fabVendaMesa?.visibility = View.GONE
             }
-            .start()
+            ?.start()
     }
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.estatisticasGerais.collect { stats ->
-                binding.tvTotalSinuca.text = stats.totalSinuca.toString()
-                binding.tvTotalJukebox.text = stats.totalJukebox.toString()
-                binding.tvTotalPembolim.text = stats.totalPembolim.toString()
-                
-                binding.tvDepositoSinuca.text = "S: ${stats.depositoSinuca}"
-                binding.tvDepositoJukebox.text = "J: ${stats.depositoJukebox}"
-                binding.tvDepositoPembolim.text = "P: ${stats.depositoPembolim}"
+                _binding?.let { binding ->
+                    binding.tvTotalSinuca.text = stats.totalSinuca.toString()
+                    binding.tvTotalJukebox.text = stats.totalJukebox.toString()
+                    binding.tvTotalPembolim.text = stats.totalPembolim.toString()
+                    
+                    binding.tvDepositoSinuca.text = "S: ${stats.depositoSinuca}"
+                    binding.tvDepositoJukebox.text = "J: ${stats.depositoJukebox}"
+                    binding.tvDepositoPembolim.text = "P: ${stats.depositoPembolim}"
+                }
             }
         }
 
@@ -140,12 +142,14 @@ class GerenciarMesasFragment : Fragment() {
                 adapter.updateData(rotas)
 
                 // Mostrar/ocultar estado vazio
-                if (rotas.isEmpty()) {
-                    binding.emptyStateLayout.visibility = View.VISIBLE
-                    binding.rvRotas.visibility = View.GONE
-                } else {
-                    binding.emptyStateLayout.visibility = View.GONE
-                    binding.rvRotas.visibility = View.VISIBLE
+                _binding?.let { binding ->
+                    if (rotas.isEmpty()) {
+                        binding.emptyStateLayout.visibility = View.VISIBLE
+                        binding.rvRotas.visibility = View.GONE
+                    } else {
+                        binding.emptyStateLayout.visibility = View.GONE
+                        binding.rvRotas.visibility = View.VISIBLE
+                    }
                 }
             }
         }
