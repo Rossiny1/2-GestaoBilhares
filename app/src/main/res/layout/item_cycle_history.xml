@@ -142,6 +142,33 @@
 
             </LinearLayout>
 
+            <!-- Descontos -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Descontos"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvDiscounts"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="R$ 50,00"
+                    android:textColor="@color/orange_600"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="R$ 50,00" />
+
+            </LinearLayout>
+
             <!-- Lucro -->
             <LinearLayout
                 android:layout_width="0dp"

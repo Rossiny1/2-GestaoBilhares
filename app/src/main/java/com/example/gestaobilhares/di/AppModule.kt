@@ -9,6 +9,8 @@ import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
+import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repository.MesaVendidaRepository
 import com.example.gestaobilhares.utils.UserSessionManager
 import dagger.Module
 import dagger.Provides
@@ -42,6 +44,9 @@ object AppModule {
     @Provides fun provideAssinaturaRepresentanteLegalDao(db: AppDatabase): AssinaturaRepresentanteLegalDao = db.assinaturaRepresentanteLegalDao()
     @Provides fun provideLogAuditoriaAssinaturaDao(db: AppDatabase): LogAuditoriaAssinaturaDao = db.logAuditoriaAssinaturaDao()
     @Provides fun provideProcuraçãoRepresentanteDao(db: AppDatabase): ProcuraçãoRepresentanteDao = db.procuraçãoRepresentanteDao()
+    
+    // ✅ NOVO: SISTEMA DE VENDA DE MESAS
+    @Provides fun provideMesaVendidaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.MesaVendidaDao = db.mesaVendidaDao()
 
     @Provides
     @Singleton
@@ -115,6 +120,19 @@ object AppModule {
     @Singleton
     fun provideUserSessionManager(@ApplicationContext context: Context): UserSessionManager =
         UserSessionManager.getInstance(context)
+
+    // ✅ NOVO: SISTEMA DE VENDA DE MESAS - Repositories
+    @Provides
+    @Singleton
+    fun provideMesaRepository(
+        mesaDao: MesaDao
+    ): MesaRepository = MesaRepository(mesaDao)
+
+    @Provides
+    @Singleton
+    fun provideMesaVendidaRepository(
+        mesaVendidaDao: com.example.gestaobilhares.data.dao.MesaVendidaDao
+    ): MesaVendidaRepository = MesaVendidaRepository(mesaVendidaDao)
 }
 
 

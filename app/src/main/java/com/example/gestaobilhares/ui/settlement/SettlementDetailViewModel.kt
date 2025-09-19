@@ -119,6 +119,7 @@ class SettlementDetailViewModel(
                     val cliente = clienteRepository.obterPorId(acerto.clienteId)
                     val clienteNome = cliente?.nome ?: "Cliente #${acerto.clienteId}"
                     val clienteTelefone = cliente?.telefone
+                    val clienteCpf = cliente?.cpfCnpj
                     val clienteValorFicha = cliente?.valorFicha ?: 0.0
                     
                     AppLogger.log("SettlementDetail", "=== DADOS DO CLIENTE ===")
@@ -148,6 +149,7 @@ class SettlementDetailViewModel(
                         // ✅ NOVOS DADOS: Dados do cliente
                         clienteNome = clienteNome,
                         clienteTelefone = clienteTelefone,
+                        clienteCpf = clienteCpf,
                         valorFicha = clienteValorFicha
                     )
                     
@@ -189,6 +191,7 @@ class SettlementDetailViewModel(
         // ✅ NOVOS CAMPOS: Dados do cliente
         val clienteNome: String,
         val clienteTelefone: String?,
+        val clienteCpf: String?,
         val valorFicha: Double
     )
 

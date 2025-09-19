@@ -66,6 +66,52 @@ class GerenciarMesasFragment : Fragment() {
             )
             findNavController().navigate(action)
         }
+
+        // ✅ NOVO: FAB expandível para venda de mesas
+        binding.fabMain.setOnClickListener {
+            toggleFabMenu()
+        }
+
+        binding.fabVendaMesa.setOnClickListener {
+            // Navegar para histórico de mesas vendidas
+            val action = GerenciarMesasFragmentDirections.actionGerenciarMesasFragmentToHistoricoMesasVendidasFragment()
+            findNavController().navigate(action)
+            hideFabMenu()
+        }
+    }
+
+    private var isFabMenuExpanded = false
+
+    private fun toggleFabMenu() {
+        if (isFabMenuExpanded) {
+            hideFabMenu()
+        } else {
+            showFabMenu()
+        }
+    }
+
+    private fun showFabMenu() {
+        isFabMenuExpanded = true
+        binding.fabVendaMesa.visibility = View.VISIBLE
+        binding.fabVendaMesa.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .alpha(1f)
+            .setDuration(200)
+            .start()
+    }
+
+    private fun hideFabMenu() {
+        isFabMenuExpanded = false
+        binding.fabVendaMesa.animate()
+            .scaleX(0f)
+            .scaleY(0f)
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                binding.fabVendaMesa.visibility = View.GONE
+            }
+            .start()
     }
 
     private fun observeViewModel() {

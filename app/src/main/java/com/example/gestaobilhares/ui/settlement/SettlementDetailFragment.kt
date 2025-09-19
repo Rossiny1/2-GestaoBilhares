@@ -413,6 +413,7 @@ class SettlementDetailFragment : Fragment() {
                     context = requireContext(),
                     reciboView = reciboView,
                     clienteNome = settlement.clienteNome,
+                    clienteCpf = settlement.clienteCpf,
                     mesasCompletas = mesasCompletas,
                     debitoAnterior = settlement.debitoAnterior,
                     valorTotalMesas = settlement.valorTotal,

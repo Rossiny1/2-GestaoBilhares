@@ -41,6 +41,7 @@ class SettlementSummaryDialog : DialogFragment() {
         fun newInstance(
             clienteNome: String,
             clienteTelefone: String?,
+            clienteCpf: String?,
             mesas: List<Mesa>,
             total: Double,
             metodosPagamento: Map<String, Double>,
@@ -55,6 +56,7 @@ class SettlementSummaryDialog : DialogFragment() {
             val args = Bundle().apply {
                 putString("clienteNome", clienteNome)
                 putString("clienteTelefone", clienteTelefone)
+                putString("clienteCpf", clienteCpf)
                 putParcelableArrayList("mesas", ArrayList(mesas))
                 putDouble("total", total)
                 putSerializable("metodosPagamento", HashMap(metodosPagamento))
@@ -76,6 +78,7 @@ class SettlementSummaryDialog : DialogFragment() {
         val view = LayoutInflater.from(context).inflate(R.layout.dialog_settlement_summary, null)
         val clienteNome = arguments?.getString("clienteNome") ?: ""
         val clienteTelefone = arguments?.getString("clienteTelefone")
+        val clienteCpf = arguments?.getString("clienteCpf")
         val mesas = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             arguments?.getParcelableArrayList("mesas", Mesa::class.java) ?: emptyList<Mesa>()
         } else {
@@ -199,6 +202,7 @@ class SettlementSummaryDialog : DialogFragment() {
                                     context = requireContext(),
                                     reciboView = reciboView,
                                     clienteNome = clienteNome,
+                                    clienteCpf = clienteCpf,
                                     mesasCompletas = mesas,
                                     debitoAnterior = debitoAnterior,
                                     valorTotalMesas = valorTotalMesas,
