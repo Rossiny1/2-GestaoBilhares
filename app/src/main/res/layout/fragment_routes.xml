@@ -55,21 +55,12 @@
                         android:textStyle="bold" />
 
                     <ImageView
-                        android:id="@+id/searchButton"
+                        android:id="@+id/reformaButton"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_search"
-                        android:contentDescription="Pesquisar"
-                        app:tint="@color/primary_blue" />
-
-                    <ImageView
-                        android:id="@+id/filterButton"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_filter"
-                        android:contentDescription="Filtrar"
+                        android:src="@drawable/ic_build"
+                        android:contentDescription="Reforma de Mesas"
                         app:tint="@color/primary_blue" />
 
                     <ImageView

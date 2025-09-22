@@ -365,14 +365,15 @@ class RoutesFragment : Fragment() {
 
 
 
-        // Botão de pesquisa
-        binding.searchButton.setOnClickListener {
-            Toast.makeText(requireContext(), "Busca será implementada em breve", Toast.LENGTH_SHORT).show()
-        }
-
-        // Botão de filtro
-        binding.filterButton.setOnClickListener {
-            Toast.makeText(requireContext(), "Filtros serão implementados em breve", Toast.LENGTH_SHORT).show()
+        // Botão de reforma de mesas
+        binding.reformaButton.setOnClickListener {
+            // Navegar para a tela de mesas reformadas
+            try {
+                findNavController().navigate(R.id.mesasReformadasFragment)
+            } catch (e: Exception) {
+                Log.e("RoutesFragment", "Erro ao navegar para mesas reformadas: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao abrir reforma de mesas: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
 
         // Botão de transferência

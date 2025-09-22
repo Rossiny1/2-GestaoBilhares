@@ -49,6 +49,10 @@
         <action
             android:id="@+id/action_routesFragment_to_gerenciarMesasFragment"
             app:destination="@id/gerenciarMesasFragment" />
+        <!-- ✅ NOVO: Navegação para reforma de mesas -->
+        <action
+            android:id="@+id/action_routesFragment_to_mesasReformadasFragment"
+            app:destination="@id/mesasReformadasFragment" />
         <!-- ✅ NOVO: Navegação para gerenciar contratos -->
         <action
             android:id="@+id/action_routesFragment_to_contractManagementFragment"
@@ -515,5 +519,20 @@
         android:id="@+id/representanteLegalSignatureFragment"
         android:name="com.example.gestaobilhares.ui.contracts.RepresentanteLegalSignatureFragment"
         android:label="Assinatura do Representante Legal" />
+
+    <!-- ✅ NOVO: Sistema de Reforma de Mesas -->
+    <fragment
+        android:id="@+id/mesasReformadasFragment"
+        android:name="com.example.gestaobilhares.ui.mesas.MesasReformadasFragment"
+        android:label="Reforma de Mesas">
+        <action
+            android:id="@+id/action_mesasReformadasFragment_to_novaReformaFragment"
+            app:destination="@id/novaReformaFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/novaReformaFragment"
+        android:name="com.example.gestaobilhares.ui.mesas.NovaReformaFragment"
+        android:label="Nova Reforma" />
 
 </navigation> 

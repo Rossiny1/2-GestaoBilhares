@@ -35,9 +35,11 @@ import com.example.gestaobilhares.data.entities.*
         AssinaturaRepresentanteLegal::class, // ✅ NOVO: ASSINATURA DIGITAL DO REPRESENTANTE
         LogAuditoriaAssinatura::class, // ✅ NOVO: LOGS DE AUDITORIA
         ProcuraçãoRepresentante::class, // ✅ NOVO: PROCURAÇÕES E DELEGAÇÃO DE PODERES
-        MesaVendida::class // ✅ NOVO: MESAS VENDIDAS
+        MesaVendida::class, // ✅ NOVO: MESAS VENDIDAS
+        MesaReformada::class, // ✅ NOVO: MESAS REFORMADAS
+        PanoEstoque::class // ✅ NOVO: PANOS EM ESTOQUE
     ],
-    version = 32, // ✅ MIGRATION: sistema de venda de mesas
+    version = 33, // ✅ MIGRATION: sistema de reforma de mesas
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -132,6 +134,18 @@ abstract class AppDatabase : RoomDatabase() {
      * ✅ NOVO: MESAS VENDIDAS
      */
     abstract fun mesaVendidaDao(): com.example.gestaobilhares.data.dao.MesaVendidaDao
+    
+    /**
+     * DAO para operações com mesas reformadas.
+     * ✅ NOVO: MESAS REFORMADAS
+     */
+    abstract fun mesaReformadaDao(): com.example.gestaobilhares.data.dao.MesaReformadaDao
+    
+    /**
+     * DAO para operações com panos em estoque.
+     * ✅ NOVO: PANOS EM ESTOQUE
+     */
+    abstract fun panoEstoqueDao(): com.example.gestaobilhares.data.dao.PanoEstoqueDao
 
     companion object {
         
