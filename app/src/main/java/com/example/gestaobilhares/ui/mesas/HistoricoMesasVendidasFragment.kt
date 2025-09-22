@@ -88,11 +88,7 @@ class HistoricoMesasVendidasFragment : Fragment() {
                         }
                     }
                 }
-                launch {
-                    viewModel.isLoading.collect { isLoading ->
-                        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-                    }
-                }
+                // Loading spinner removido do layout e da observação
                 launch {
                     viewModel.errorMessage.collect { error ->
                         error?.let {
