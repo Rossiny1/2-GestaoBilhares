@@ -11,6 +11,7 @@ import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repository.MesaVendidaRepository
+import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 import com.example.gestaobilhares.utils.UserSessionManager
 import dagger.Module
 import dagger.Provides
@@ -47,6 +48,10 @@ object AppModule {
     
     // ✅ NOVO: SISTEMA DE VENDA DE MESAS
     @Provides fun provideMesaVendidaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.MesaVendidaDao = db.mesaVendidaDao()
+    
+    // ✅ NOVO: SISTEMA DE REFORMA DE MESAS
+    @Provides fun provideMesaReformadaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.MesaReformadaDao = db.mesaReformadaDao()
+    @Provides fun providePanoEstoqueDao(db: AppDatabase): com.example.gestaobilhares.data.dao.PanoEstoqueDao = db.panoEstoqueDao()
 
     @Provides
     @Singleton
@@ -133,6 +138,13 @@ object AppModule {
     fun provideMesaVendidaRepository(
         mesaVendidaDao: com.example.gestaobilhares.data.dao.MesaVendidaDao
     ): MesaVendidaRepository = MesaVendidaRepository(mesaVendidaDao)
+
+    // ✅ NOVO: SISTEMA DE REFORMA DE MESAS - Repositories
+    @Provides
+    @Singleton
+    fun provideMesaReformadaRepository(
+        mesaReformadaDao: com.example.gestaobilhares.data.dao.MesaReformadaDao
+    ): MesaReformadaRepository = MesaReformadaRepository(mesaReformadaDao)
 }
 
 
