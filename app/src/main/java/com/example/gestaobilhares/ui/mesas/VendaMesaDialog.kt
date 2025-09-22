@@ -19,6 +19,8 @@ import com.example.gestaobilhares.data.repository.MesaVendidaRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.room.withTransaction
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.take
 import java.util.*
 
 /**
@@ -40,6 +42,7 @@ class VendaMesaDialog : DialogFragment() {
     private var mesaSelecionada: Mesa? = null
     private var dataVenda: Date = Date()
     private var initialized: Boolean = false
+    private var isUpdatingNumeroMesa: Boolean = false
 
     companion object {
         private const val TAG = "VendaMesaDialog"
@@ -92,38 +95,7 @@ class VendaMesaDialog : DialogFragment() {
         return dialog
     }
 
-    override fun onStart() {
-        super.onStart()
-        if (!initialized) {
-            android.util.Log.d(TAG, "onStart() - inicializando (lazy)")
-            try {
-                database = AppDatabase.getDatabase(requireContext())
-                appRepository = AppRepository(
-                    database.clienteDao(),
-                    database.acertoDao(),
-                    database.mesaDao(),
-                    database.rotaDao(),
-                    database.despesaDao(),
-                    database.colaboradorDao(),
-                    database.cicloAcertoDao(),
-                    database.acertoMesaDao(),
-                    database.contratoLocacaoDao(),
-                    database.aditivoContratoDao(),
-                    database.assinaturaRepresentanteLegalDao(),
-                    database.logAuditoriaAssinaturaDao(),
-                    database.procuraçãoRepresentanteDao()
-                )
-                mesaVendidaRepository = MesaVendidaRepository(database.mesaVendidaDao())
-                setupUI()
-                setupClickListeners()
-                carregarMesasDisponiveis()
-                initialized = true
-                android.util.Log.d(TAG, "onStart() - inicializacao concluida")
-            } catch (e: Exception) {
-                android.util.Log.e(TAG, "onStart() - falha ao inicializar: ${e.message}", e)
-            }
-        }
-    }
+    // onStart não é necessário; inicialização é realizada em onCreateDialog
 
     private fun setupUI() {
         android.util.Log.d(TAG, "setupUI() - configurando data e campos")
@@ -160,6 +132,10 @@ class VendaMesaDialog : DialogFragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 val texto = s.toString().trim()
+                if (isUpdatingNumeroMesa) {
+                    android.util.Log.d(TAG, "afterTextChanged() - ignorado (atualização programática)")
+                    return
+                }
                 android.util.Log.d(TAG, "afterTextChanged() - filtro='${texto}'")
                 if (texto.isNotEmpty()) {
                     filtrarMesas(texto)
@@ -180,16 +156,18 @@ class VendaMesaDialog : DialogFragment() {
         android.util.Log.d(TAG, "carregarMesasDisponiveis() - iniciando")
         lifecycleScope.launch {
             try {
-                // ✅ CORRIGIDO: Usar collect com flag para pegar apenas o primeiro valor
-                var primeiraExecucao = true
-                appRepository.obterMesasDisponiveis().collect { mesas ->
-                    if (primeiraExecucao) {
+                // Pegar apenas o primeiro snapshot sem cancelar explicitamente (evita CancellationException)
+                appRepository
+                    .obterMesasDisponiveis()
+                    .take(1)
+                    .collect { mesas ->
+                        if (!isAdded || _binding == null) return@collect
                         mesasDisponiveis = mesas
                         android.util.Log.d(TAG, "Mesas carregadas=${mesasDisponiveis.size}")
-                        primeiraExecucao = false
-
                         if (mesasDisponiveis.isEmpty()) {
-                            Toast.makeText(requireContext(), "Nenhuma mesa disponível no depósito", Toast.LENGTH_SHORT).show()
+                            context?.let {
+                                Toast.makeText(it, "Nenhuma mesa disponível no depósito", Toast.LENGTH_SHORT).show()
+                            }
                             binding.etNumeroMesa.hint = "Nenhuma mesa disponível"
                             binding.etNumeroMesa.isEnabled = false
                         } else {
@@ -197,11 +175,14 @@ class VendaMesaDialog : DialogFragment() {
                             binding.etNumeroMesa.isEnabled = true
                         }
                     }
-                }
 
             } catch (e: Exception) {
+                if (e is CancellationException) {
+                    android.util.Log.d(TAG, "carregarMesasDisponiveis() cancelado")
+                    return@launch
+                }
                 android.util.Log.e(TAG, "Erro ao carregar mesas: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao carregar mesas: ${e.message}", Toast.LENGTH_SHORT).show()
+                context?.let { Toast.makeText(it, "Erro ao carregar mesas: ${e.message}", Toast.LENGTH_SHORT).show() }
             }
         }
     }
@@ -215,8 +196,15 @@ class VendaMesaDialog : DialogFragment() {
         if (mesasFiltradas.size == 1) {
             val mesa = mesasFiltradas.first()
             mesaSelecionada = mesa
-            binding.etNumeroMesa.setText(mesa.numero)
-            binding.etNumeroMesa.setSelection(mesa.numero.length)
+            if (binding.etNumeroMesa.text?.toString() != mesa.numero) {
+                isUpdatingNumeroMesa = true
+                try {
+                    binding.etNumeroMesa.setText(mesa.numero)
+                    binding.etNumeroMesa.setSelection(mesa.numero.length)
+                } finally {
+                    isUpdatingNumeroMesa = false
+                }
+            }
             android.util.Log.d(TAG, "Mesa selecionada automaticamente='${mesa.numero}'")
             Toast.makeText(requireContext(), "Mesa ${mesa.numero} selecionada!", Toast.LENGTH_SHORT).show()
         } else if (mesasFiltradas.isEmpty()) {
@@ -263,7 +251,12 @@ class VendaMesaDialog : DialogFragment() {
                 try {
                     val mesaSelecionada = mesasDisponiveis[which]
                     this.mesaSelecionada = mesaSelecionada
-                    binding.etNumeroMesa.setText(mesaSelecionada.numero)
+                    isUpdatingNumeroMesa = true
+                    try {
+                        binding.etNumeroMesa.setText(mesaSelecionada.numero)
+                    } finally {
+                        isUpdatingNumeroMesa = false
+                    }
                     android.util.Log.d(TAG, "Mesa selecionada no seletor='${mesaSelecionada.numero}'")
                     Toast.makeText(requireContext(), "Mesa ${mesaSelecionada.numero} selecionada!", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
@@ -328,7 +321,7 @@ class VendaMesaDialog : DialogFragment() {
 
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Erro ao vender mesa: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao vender mesa: ${e.message}", Toast.LENGTH_SHORT).show()
+                context?.let { Toast.makeText(it, "Erro ao vender mesa: ${e.message}", Toast.LENGTH_SHORT).show() }
             }
         }
     }
@@ -343,7 +336,7 @@ class VendaMesaDialog : DialogFragment() {
         if (mesaSelecionada == null) {
             android.util.Log.w(TAG, "validarCampos() - mesa não selecionada")
             binding.etNumeroMesa.error = "Selecione uma mesa"
-            Toast.makeText(requireContext(), "Selecione uma mesa", Toast.LENGTH_SHORT).show()
+            context?.let { Toast.makeText(it, "Selecione uma mesa", Toast.LENGTH_SHORT).show() }
             return false
         }
 
@@ -351,7 +344,7 @@ class VendaMesaDialog : DialogFragment() {
         if (nomeComprador.isEmpty()) {
             android.util.Log.w(TAG, "validarCampos() - nome vazio")
             binding.etNomeComprador.error = "Nome obrigatório"
-            Toast.makeText(requireContext(), "Nome do comprador é obrigatório", Toast.LENGTH_SHORT).show()
+            context?.let { Toast.makeText(it, "Nome do comprador é obrigatório", Toast.LENGTH_SHORT).show() }
             return false
         }
 
@@ -359,7 +352,7 @@ class VendaMesaDialog : DialogFragment() {
         if (valorTexto.isEmpty()) {
             android.util.Log.w(TAG, "validarCampos() - valor vazio")
             binding.etValorVenda.error = "Valor obrigatório"
-            Toast.makeText(requireContext(), "Valor da venda é obrigatório", Toast.LENGTH_SHORT).show()
+            context?.let { Toast.makeText(it, "Valor da venda é obrigatório", Toast.LENGTH_SHORT).show() }
             return false
         }
 
@@ -367,7 +360,7 @@ class VendaMesaDialog : DialogFragment() {
         if (valorVenda == null || valorVenda <= 0) {
             android.util.Log.w(TAG, "validarCampos() - valor inválido='$valorTexto'")
             binding.etValorVenda.error = "Valor deve ser maior que zero"
-            Toast.makeText(requireContext(), "Valor inválido", Toast.LENGTH_SHORT).show()
+            context?.let { Toast.makeText(it, "Valor inválido", Toast.LENGTH_SHORT).show() }
             return false
         }
 
