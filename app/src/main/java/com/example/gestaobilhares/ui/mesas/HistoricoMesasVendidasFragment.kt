@@ -39,18 +39,21 @@ class HistoricoMesasVendidasFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        android.util.Log.d("HistoricoMesasVendidasFragment", "🚀 Inicializando fragment de histórico de mesas vendidas...")
+        
         setupRecyclerView()
         setupClickListeners()
         observeViewModel()
         
         // Carregar dados
+        android.util.Log.d("HistoricoMesasVendidasFragment", "📋 Carregando mesas vendidas...")
         viewModel.carregarMesasVendidas()
     }
 
     private fun setupRecyclerView() {
         adapter = MesasVendidasAdapter { mesaVendida ->
-            // TODO: Implementar ação ao clicar em uma mesa vendida (ex: detalhes)
             android.util.Log.d("HistoricoMesasVendidasFragment", "Mesa vendida clicada: ${mesaVendida.numeroMesa}")
+            abrirDetalhesMesaVendida(mesaVendida)
         }
         
         binding.rvMesasVendidas.adapter = adapter
@@ -71,15 +74,18 @@ class HistoricoMesasVendidasFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.mesasVendidas.collect { mesas ->
+                android.util.Log.d("HistoricoMesasVendidasFragment", "📊 Mesas vendidas recebidas: ${mesas.size}")
                 adapter.updateData(mesas)
                 
                 // Mostrar/ocultar estado vazio
                 if (mesas.isEmpty()) {
                     binding.emptyStateLayout.visibility = View.VISIBLE
                     binding.rvMesasVendidas.visibility = View.GONE
+                    android.util.Log.d("HistoricoMesasVendidasFragment", "📭 Exibindo estado vazio")
                 } else {
                     binding.emptyStateLayout.visibility = View.GONE
                     binding.rvMesasVendidas.visibility = View.VISIBLE
+                    android.util.Log.d("HistoricoMesasVendidasFragment", "📋 Exibindo lista com ${mesas.size} mesas")
                 }
             }
         }
@@ -115,8 +121,15 @@ class HistoricoMesasVendidasFragment : Fragment() {
             // Recarregar dados após venda
             viewModel.recarregarDados()
             android.util.Log.d("HistoricoMesasVendidasFragment", "Mesa vendida: ${mesaVendida.numeroMesa}")
+            // Mostrar snackbar de sucesso
+            com.google.android.material.snackbar.Snackbar.make(binding.root, "Mesa vendida com sucesso!", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
         }
         dialog.show(parentFragmentManager, "VendaMesaDialog")
+    }
+
+    private fun abrirDetalhesMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida) {
+        val dialog = DetalhesMesaVendidaDialog.newInstance(mesaVendida)
+        dialog.show(parentFragmentManager, "DetalhesMesaVendidaDialog")
     }
 
     override fun onDestroyView() {
