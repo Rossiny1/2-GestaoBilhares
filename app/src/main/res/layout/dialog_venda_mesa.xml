@@ -35,11 +35,11 @@
                 android:id="@+id/etNumeroMesa"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Selecionar Mesa"
-                android:inputType="none"
+                android:hint="Digite o número da mesa"
+                android:inputType="text"
                 android:clickable="true"
-                android:focusable="false"
-                android:drawableEnd="@drawable/ic_arrow_drop_down"
+                android:focusable="true"
+                android:drawableEnd="@drawable/ic_search"
                 android:drawablePadding="8dp" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -133,7 +133,8 @@
                 android:hint="Data da Venda"
                 android:inputType="none"
                 android:clickable="true"
-                android:focusable="false"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:drawableEnd="@drawable/ic_calendar"
                 android:drawablePadding="8dp" />
 

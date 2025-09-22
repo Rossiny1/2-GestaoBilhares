@@ -33,7 +33,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:paddingStart="12dp"
-                android:text="💰 Histórico de Mesas Vendidas"
+                android:text="Mesas Vendidas"
                 android:textColor="@color/text_on_primary"
                 android:textSize="18sp"
                 android:textStyle="bold"

@@ -76,11 +76,14 @@ Write-Host "- Transferência: Cliente transferido entre rotas" -ForegroundColor 
 Write-Host "- Ciclos: Sincronização do card de ciclo na tela de detalhes" -ForegroundColor Gray
 Write-Host "- Atualização: Cards de rotas em tempo real (onResume)" -ForegroundColor Gray
 Write-Host "- Sincronização: Ciclo entre tela Rotas e Detalhes da Rota" -ForegroundColor Gray
+Write-Host "- Mesas Vendidas: Carregamento e busca de mesas no depósito" -ForegroundColor Gray
+Write-Host "- Venda Mesa: Validação de mesa e seletor de data" -ForegroundColor Gray
+Write-Host "- DatabasePopulator: População de dados de teste" -ForegroundColor Gray
 Write-Host "" 
 
 # Padrão de filtro expandido para incluir nossos logs de diagnóstico e análise de fluxo
-# ✅ NOVO: Adicionados logs de rotas e status
-$pattern = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|DocsDialog|ContractManagement|Distrato|DISTRATO|DistratoFlow|RepoUpdate|RepoContracts|FileProvider|Permission Denial|MesasDepositoFragment|ANÁLISE COMPLETA|ANÁLISE DE STATUS|DECISÃO FINAL|ABRINDO ADITIVO|ABRINDO NOVO CONTRATO|temContratoEncerrado|temDistratoFisico|temMesasAtivas|deveAbrirAditivo|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|ATUALIZAR STATUS|Ciclo em andamento|Nenhum ciclo em andamento|EM_ANDAMENTO|FINALIZADA|PAUSADA|CONCLUIDA|TransferClientViewModel|Transferência concluída|Forçando atualização|Dados atualizados|Cliente transferido|Mesas transferidas|ClientListFragment|ClientListViewModel|Atualizando card do ciclo|Ciclo iniciado com sucesso|Atualizando _cicloAtivo|Nenhum ciclo ativo encontrado|RoutesFragment|onResume|Atualizando resumo de rotas|Rota.*Ciclo.*Status|Ciclo em andamento carregado|Nenhum ciclo em andamento.*próximo ciclo|Exibindo próximo ciclo|Forçando atualização do ciclo atual"
+# ✅ NOVO: Adicionados logs de rotas, status e mesas vendidas
+$pattern = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|DocsDialog|ContractManagement|Distrato|DISTRATO|DistratoFlow|RepoUpdate|RepoContracts|FileProvider|Permission Denial|MesasDepositoFragment|ANÁLISE COMPLETA|ANÁLISE DE STATUS|DECISÃO FINAL|ABRINDO ADITIVO|ABRINDO NOVO CONTRATO|temContratoEncerrado|temDistratoFisico|temMesasAtivas|deveAbrirAditivo|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|ATUALIZAR STATUS|Ciclo em andamento|Nenhum ciclo em andamento|EM_ANDAMENTO|FINALIZADA|PAUSADA|CONCLUIDA|TransferClientViewModel|Transferência concluída|Forçando atualização|Dados atualizados|Cliente transferido|Mesas transferidas|ClientListFragment|ClientListViewModel|Atualizando card do ciclo|Ciclo iniciado com sucesso|Atualizando _cicloAtivo|Nenhum ciclo ativo encontrado|RoutesFragment|onResume|Atualizando resumo de rotas|Rota.*Ciclo.*Status|Ciclo em andamento carregado|Nenhum ciclo em andamento.*próximo ciclo|Exibindo próximo ciclo|Forçando atualização do ciclo atual|HistoricoMesasVendidasFragment|HistoricoMesasVendidasViewModel|VendaMesaDialog|DatabasePopulator|Mesas disponíveis|Validando mesa por número|Abrindo seletor de data|Data selecionada|Mesa encontrada|Mesa não encontrada|Mesas vendidas carregadas|Iniciando carregamento|Configurando UI do dialog|DatePickerDialog exibido"
 
 # Monitorar logcat filtrando apenas erros e crashes
 try {
