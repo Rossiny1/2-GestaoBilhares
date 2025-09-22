@@ -17,7 +17,12 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "MONITORAMENTO DE CRASH - GESTAO BILHARES" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "INSTRUÇÕES:" -ForegroundColor Yellow
+param(
+    [switch]$OnlyVenda,     # Mostra apenas logs do fluxo de venda (tag: VendaMesaDialog)
+    [switch]$ToFile         # Salva a saída em arquivo (além de mostrar na tela)
+)
+
+Write-Host "INSTRUCOES:" -ForegroundColor Yellow
 Write-Host "1. Este script deve ser executado em JANELA SEPARADA" -ForegroundColor Yellow
 Write-Host "2. Para abrir nova janela: Ctrl+Shift+N ou Win+R -> powershell" -ForegroundColor Yellow
 Write-Host "3. Navegue até: cd 'C:\Users\Rossiny\Desktop\2-GestaoBilhares'" -ForegroundColor Yellow
@@ -68,22 +73,28 @@ Write-Host "Iniciando monitoramento de crashes..." -ForegroundColor Green
 Write-Host "Agora você pode testar o app no dispositivo" -ForegroundColor Green
 Write-Host ""
 Write-Host "NOVOS LOGS MONITORADOS:" -ForegroundColor Cyan
-Write-Host "- Rotas: Status de ciclos (EM_ANDAMENTO/FINALIZADA)" -ForegroundColor Gray
-Write-Host "- Datas: Início e fim dos ciclos de acerto" -ForegroundColor Gray
-Write-Host "- Distrato: Atualização de status ao assinar" -ForegroundColor Gray
-Write-Host "- Contratos: Fluxo de geração e vinculação" -ForegroundColor Gray
-Write-Host "- Transferência: Cliente transferido entre rotas" -ForegroundColor Gray
-Write-Host "- Ciclos: Sincronização do card de ciclo na tela de detalhes" -ForegroundColor Gray
-Write-Host "- Atualização: Cards de rotas em tempo real (onResume)" -ForegroundColor Gray
-Write-Host "- Sincronização: Ciclo entre tela Rotas e Detalhes da Rota" -ForegroundColor Gray
-Write-Host "- Mesas Vendidas: Carregamento e busca de mesas no depósito" -ForegroundColor Gray
-Write-Host "- Venda Mesa: Validação de mesa e seletor de data" -ForegroundColor Gray
-Write-Host "- DatabasePopulator: População de dados de teste" -ForegroundColor Gray
-Write-Host "" 
+Write-Host "- VendaMesaDialog: clique vender, validacao, transacao, pos-transacao" -ForegroundColor Gray
+Write-Host "- HistoricoMesasVendidasFragment: coleta e atualizacao da lista" -ForegroundColor Gray
+Write-Host "- MesasDepositoFragment: fluxo de deposito" -ForegroundColor Gray
+Write-Host "- Rotas/Repositorios: eventos gerais" -ForegroundColor Gray
+Write-Host ""
 
-# Padrão de filtro expandido para incluir nossos logs de diagnóstico e análise de fluxo
-# ✅ NOVO: Adicionados logs de rotas, status e mesas vendidas
-$pattern = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|DocsDialog|ContractManagement|Distrato|DISTRATO|DistratoFlow|RepoUpdate|RepoContracts|FileProvider|Permission Denial|MesasDepositoFragment|ANÁLISE COMPLETA|ANÁLISE DE STATUS|DECISÃO FINAL|ABRINDO ADITIVO|ABRINDO NOVO CONTRATO|temContratoEncerrado|temDistratoFisico|temMesasAtivas|deveAbrirAditivo|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|ATUALIZAR STATUS|Ciclo em andamento|Nenhum ciclo em andamento|EM_ANDAMENTO|FINALIZADA|PAUSADA|CONCLUIDA|TransferClientViewModel|Transferência concluída|Forçando atualização|Dados atualizados|Cliente transferido|Mesas transferidas|ClientListFragment|ClientListViewModel|Atualizando card do ciclo|Ciclo iniciado com sucesso|Atualizando _cicloAtivo|Nenhum ciclo ativo encontrado|RoutesFragment|onResume|Atualizando resumo de rotas|Rota.*Ciclo.*Status|Ciclo em andamento carregado|Nenhum ciclo em andamento.*próximo ciclo|Exibindo próximo ciclo|Forçando atualização do ciclo atual|HistoricoMesasVendidasFragment|HistoricoMesasVendidasViewModel|VendaMesaDialog|DatabasePopulator|Mesas disponíveis|Validando mesa por número|Abrindo seletor de data|Data selecionada|Mesa encontrada|Mesa não encontrada|Mesas vendidas carregadas|Iniciando carregamento|Configurando UI do dialog|DatePickerDialog exibido"
+# Padrao de filtro expandido para incluir nossos logs de diagnostico e analise de fluxo
+$patternAll = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|FileProvider|Permission Denial|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|RoutesFragment|HistoricoMesasVendidasFragment|HistoricoMesasVendidasViewModel|MesasDepositoFragment|VendaMesaDialog"
+
+# Padrao focado apenas no fluxo de venda (tag e mensagens chave)
+$patternVenda = "VendaMesaDialog|Clique em Vender|validarCampos|realizarVenda|Transacao concluida|Pos-transacao|Venda concluida|mostrarSeletorMesa|filtrarMesas|mostrarSeletorData|onCreateDialog|onViewCreated|setupClickListeners|setupUI"
+
+$pattern = if ($OnlyVenda) { $patternVenda } else { $patternAll }
+
+# Opcional: salvar em arquivo
+$logDir = Join-Path $PSScriptRoot "logs"
+if ($ToFile) {
+    if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
+    $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    $logFile = Join-Path $logDir (if ($OnlyVenda) { "logcat-venda-$timestamp.txt" } else { "logcat-all-$timestamp.txt" })
+    Write-Host "Salvando saida tambem em arquivo: $logFile" -ForegroundColor Yellow
+}
 
 # Monitorar logcat filtrando apenas erros e crashes
 try {
@@ -92,7 +103,11 @@ try {
     Write-Host "========================================" -ForegroundColor Cyan
     Write-Host ""
     
-    & $adbPath logcat -v time | Select-String -Pattern $pattern
+    if ($ToFile) {
+        & $adbPath logcat -v time | Tee-Object -Variable raw | Select-String -Pattern $pattern | Tee-Object -FilePath $logFile
+    } else {
+        & $adbPath logcat -v time | Select-String -Pattern $pattern
+    }
 } catch {
     Write-Host "Erro ao executar logcat: $($_.Exception.Message)" -ForegroundColor Red
     Read-Host "Pressione Enter para sair"

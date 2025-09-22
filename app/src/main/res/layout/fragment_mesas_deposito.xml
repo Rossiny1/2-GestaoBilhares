@@ -7,6 +7,10 @@
     android:background="@color/background_dark"
     android:fillViewport="true">
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -340,5 +344,9 @@
         </LinearLayout>
 
     </LinearLayout>
+
+        <!-- ❌ REMOVIDO: FAB de venda de mesa do local incorreto -->
+
+    </FrameLayout>
 
 </ScrollView> 

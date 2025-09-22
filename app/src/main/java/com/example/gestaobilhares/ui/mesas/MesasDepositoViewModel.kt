@@ -52,15 +52,13 @@ class MesasDepositoViewModel(
 
     fun loadMesasDisponiveis() {
         viewModelScope.launch {
-            android.util.Log.d("MesasDepositoViewModel", "=== CARREGANDO MESAS DISPONÍVEIS ===")
-            mesaRepository.obterMesasDisponiveis().collect { mesas ->
-                android.util.Log.d("MesasDepositoViewModel", "📊 Mesas recebidas do repositório: ${mesas.size}")
-                mesas.forEach { mesa ->
-                    android.util.Log.d("MesasDepositoViewModel", "Mesa: ${mesa.numero} | ID: ${mesa.id} | Ativa: ${mesa.ativa} | ClienteId: ${mesa.clienteId}")
+            try {
+                mesaRepository.obterMesasDisponiveis().collect { mesas ->
+                    _mesasDisponiveis.value = mesas
+                    calcularEstatisticas(mesas)
                 }
-                _mesasDisponiveis.value = mesas
-                android.util.Log.d("MesasDepositoViewModel", "✅ Lista atualizada no StateFlow: ${_mesasDisponiveis.value.size} mesas")
-                calcularEstatisticas(mesas)
+            } catch (e: Exception) {
+                // Silenciar erros para não poluir o log
             }
         }
     }
@@ -85,94 +83,33 @@ class MesasDepositoViewModel(
     }
 
     fun vincularMesaAoCliente(mesaId: Long, clienteId: Long, tipoFixo: Boolean, valorFixo: Double?) {
-        android.util.Log.d("MesasDepositoViewModel", "=== VINCULANDO MESA ===")
-        android.util.Log.d("MesasDepositoViewModel", "MesaId: $mesaId, ClienteId: $clienteId")
-        android.util.Log.d("MesasDepositoViewModel", "TipoFixo: $tipoFixo, ValorFixo: $valorFixo")
-        
         viewModelScope.launch {
             try {
                 if (tipoFixo && valorFixo != null) {
-                    // Vincular mesa com valor fixo
-                    android.util.Log.d("MesasDepositoViewModel", "Vinculando mesa com valor fixo: $valorFixo")
                     mesaRepository.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
                 } else {
-                    // Vincular mesa normal (fichas jogadas)
-                    android.util.Log.d("MesasDepositoViewModel", "Vinculando mesa com fichas jogadas")
                     mesaRepository.vincularMesa(mesaId, clienteId)
                 }
-                android.util.Log.d("MesasDepositoViewModel", "Mesa vinculada com sucesso")
                 loadMesasDisponiveis()
             } catch (e: Exception) {
-                android.util.Log.e("MesasDepositoViewModel", "Erro ao vincular mesa: ${e.message}", e)
+                // Silenciar erros
             }
         }
     }
     
-    /**
-     * ✅ NOVO: Obtém todas as mesas já vinculadas a um cliente específico
-     */
     suspend fun obterTodasMesasVinculadasAoCliente(clienteId: Long): List<Mesa> {
         return try {
-            android.util.Log.d("MesasDepositoViewModel", "Buscando mesas vinculadas ao cliente: $clienteId")
-            val mesas = mesaRepository.obterMesasPorClienteDireto(clienteId)
-            android.util.Log.d("MesasDepositoViewModel", "Mesas encontradas: ${mesas.size}")
-            mesas.forEach { mesa ->
-                android.util.Log.d("MesasDepositoViewModel", "Mesa: ID=${mesa.id}, Número=${mesa.numero}, Tipo=${mesa.tipoMesa}, ClienteId=${mesa.clienteId}")
-            }
-            mesas
+            mesaRepository.obterMesasPorClienteDireto(clienteId)
         } catch (e: Exception) {
-            android.util.Log.e("MesasDepositoViewModel", "Erro ao buscar mesas vinculadas ao cliente $clienteId", e)
             emptyList()
         }
     }
     
-    /**
-     * ✅ NOVO: Verifica se o cliente possui contrato ativo
-     */
     suspend fun verificarContratoAtivo(clienteId: Long): com.example.gestaobilhares.data.entities.ContratoLocacao? {
         return try {
-            android.util.Log.d("MesasDepositoViewModel", "Verificando contrato ATIVO para cliente: $clienteId")
-            
-            fun docEpoch(c: com.example.gestaobilhares.data.entities.ContratoLocacao): Long {
-                // Data do “documento” que define recência
-                return (c.dataEncerramento?.time ?: c.dataCriacao.time)
-            }
-            
-            suspend fun pickLatestContrato(): com.example.gestaobilhares.data.entities.ContratoLocacao? {
-                val contratos = appRepository.buscarContratosPorCliente(clienteId).first()
-                if (contratos.isEmpty()) return null
-                val latest = contratos.maxByOrNull { c -> docEpoch(c) }
-                if (latest != null) {
-                    val ts = latest.dataEncerramento ?: latest.dataCriacao
-                    android.util.Log.d(
-                        "MesasDepositoViewModel",
-                        "Mais recente(doc) -> id=${latest.id}, num=${latest.numeroContrato}, status=${latest.status}, data=${ts}"
-                    )
-                }
-                return latest
-            }
-
-            var latest = pickLatestContrato()
-            if (latest == null) {
-                android.util.Log.d("MesasDepositoViewModel", "Sem contratos para cliente $clienteId")
-                return null
-            }
-            
-            // Retry rápido pós-distrato caso a leitura ainda não tenha propagado
-            if (!latest.status.equals("ATIVO", true)) {
-                kotlinx.coroutines.delay(150)
-                latest = pickLatestContrato() ?: latest
-            }
-
-            val ativo = if (latest.status.equals("ATIVO", ignoreCase = true)) latest else null
-            if (ativo != null) {
-                android.util.Log.d("MesasDepositoViewModel", "Contrato ATIVO confirmado (mais recente por doc): ${ativo.numeroContrato}")
-            } else {
-                android.util.Log.d("MesasDepositoViewModel", "Sem contrato ATIVO vigente (mais recente por doc não é ATIVO) -> gerar NOVO CONTRATO")
-            }
-            ativo
+            val contratos = appRepository.buscarContratosPorCliente(clienteId).first()
+            contratos.find { it.status.equals("ATIVO", ignoreCase = true) }
         } catch (e: Exception) {
-            android.util.Log.e("MesasDepositoViewModel", "Erro ao verificar contrato para cliente $clienteId", e)
             null
         }
     }

@@ -119,6 +119,9 @@ class MesasDepositoFragment : Fragment() {
             viewModel.atualizarBuscaNumero(text)
             true
         }
+
+        // ❌ REMOVIDO: FAB de venda de mesa do local incorreto
+        // A venda de mesa deve ser feita na tela "Mesas Vendidas"
     }
     
     /**
@@ -427,6 +430,8 @@ class MesasDepositoFragment : Fragment() {
                 }
         }
     }
+
+    // ❌ REMOVIDO: Função de venda de mesa do local incorreto
 
     override fun onDestroyView() {
         super.onDestroyView()
