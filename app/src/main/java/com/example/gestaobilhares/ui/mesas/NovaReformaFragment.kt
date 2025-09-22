@@ -4,12 +4,14 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -21,7 +23,9 @@ import com.example.gestaobilhares.data.entities.TamanhoMesa
 import com.example.gestaobilhares.databinding.FragmentNovaReformaBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.Date
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Fragment para cadastrar uma nova reforma de mesa.
@@ -36,13 +40,42 @@ class NovaReformaFragment : Fragment() {
     
     private var mesaSelecionada: Mesa? = null
     private var fotoUri: Uri? = null
+    private var fotoPath: String? = null
 
     private val takePictureLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { success ->
-        if (success && fotoUri != null) {
-            binding.ivFotoMesa.setImageURI(fotoUri)
-            binding.ivFotoMesa.visibility = View.VISIBLE
+        if (success) {
+            try {
+                fotoUri?.let { uri ->
+                    Log.d("NovaReformaFragment", "Foto capturada com sucesso: $uri")
+                    
+                    binding.root.post {
+                        try {
+                            val caminhoReal = obterCaminhoRealFoto(uri)
+                            if (caminhoReal != null) {
+                                Log.d("NovaReformaFragment", "Caminho real da foto: $caminhoReal")
+                                fotoPath = caminhoReal
+                                binding.ivFotoMesa.setImageURI(uri)
+                                binding.ivFotoMesa.visibility = View.VISIBLE
+                                binding.btnRemoverFoto.visibility = View.VISIBLE
+                                Toast.makeText(requireContext(), "Foto da mesa reformada capturada com sucesso!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Log.e("NovaReformaFragment", "Não foi possível obter o caminho real da foto")
+                                Toast.makeText(requireContext(), "Erro: não foi possível salvar a foto", Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) {
+                            Log.e("NovaReformaFragment", "Erro ao processar foto: ${e.message}", e)
+                            Toast.makeText(requireContext(), "Erro ao processar foto: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("NovaReformaFragment", "Erro crítico após captura de foto: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao processar foto capturada", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            Toast.makeText(requireContext(), "Erro ao capturar foto", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -92,6 +125,10 @@ class NovaReformaFragment : Fragment() {
 
         binding.btnTirarFoto.setOnClickListener {
             verificarPermissaoCamera()
+        }
+
+        binding.btnRemoverFoto.setOnClickListener {
+            removerFoto()
         }
 
         binding.btnSalvarReforma.setOnClickListener {
@@ -157,8 +194,84 @@ class NovaReformaFragment : Fragment() {
     }
 
     private fun tirarFoto() {
-        // TODO: Implementar captura de foto
-        Toast.makeText(requireContext(), "Captura de foto será implementada em breve", Toast.LENGTH_SHORT).show()
+        try {
+            val photoFile = criarArquivoFoto()
+            fotoUri = FileProvider.getUriForFile(
+                requireContext(),
+                "${requireContext().packageName}.fileprovider",
+                photoFile
+            )
+            
+            takePictureLauncher.launch(fotoUri)
+            
+        } catch (e: Exception) {
+            Log.e("NovaReformaFragment", "Erro ao abrir câmera: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao abrir câmera: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun removerFoto() {
+        fotoUri = null
+        fotoPath = null
+        binding.ivFotoMesa.visibility = View.GONE
+        binding.btnRemoverFoto.visibility = View.GONE
+        Toast.makeText(requireContext(), "Foto removida", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun criarArquivoFoto(): File {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val mesaNumero = mesaSelecionada?.numero ?: "UNKNOWN"
+        val imageFileName = "REFORMA_MESA_${mesaNumero}_${timeStamp}"
+        val storageDir = requireContext().getExternalFilesDir(null)
+        return File.createTempFile(imageFileName, ".jpg", storageDir)
+    }
+
+    private fun obterCaminhoRealFoto(uri: Uri): String? {
+        return try {
+            Log.d("NovaReformaFragment", "Obtendo caminho real para URI: $uri")
+            
+            // Tentativa 1: Converter URI para caminho real via ContentResolver
+            val cursor = requireContext().contentResolver.query(
+                uri, 
+                arrayOf(android.provider.MediaStore.Images.Media.DATA), 
+                null, 
+                null, 
+                null
+            )
+            
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val columnIndex = it.getColumnIndex(android.provider.MediaStore.Images.Media.DATA)
+                    if (columnIndex >= 0) {
+                        val path = it.getString(columnIndex)
+                        if (path != null && File(path).exists()) {
+                            Log.d("NovaReformaFragment", "Caminho real encontrado via cursor: $path")
+                            return path
+                        }
+                    }
+                }
+            }
+            
+            // Tentativa 2: Se o cursor não funcionou, criar arquivo temporário
+            Log.d("NovaReformaFragment", "Cursor não funcionou, criando arquivo temporário...")
+            val inputStream = requireContext().contentResolver.openInputStream(uri)
+            if (inputStream != null) {
+                val tempFile = File.createTempFile("reforma_foto_", ".jpg", requireContext().cacheDir)
+                tempFile.outputStream().use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+                Log.d("NovaReformaFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
+                return tempFile.absolutePath
+            }
+            
+            // Tentativa 3: Fallback para URI como string
+            Log.d("NovaReformaFragment", "Usando URI como fallback: $uri")
+            uri.toString()
+            
+        } catch (e: Exception) {
+            Log.e("NovaReformaFragment", "Erro ao obter caminho real da foto: ${e.message}", e)
+            null
+        }
     }
 
     private fun salvarReforma() {
@@ -199,7 +312,7 @@ class NovaReformaFragment : Fragment() {
             numeroPanos = numeroPanos,
             outros = outros,
             observacoes = observacoes,
-            fotoReforma = fotoUri?.toString(),
+            fotoReforma = fotoPath, // Usar o caminho real da foto
             dataReforma = Date()
         )
 
