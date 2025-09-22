@@ -37,6 +37,9 @@ data class MesaVendida(
     
     @ColumnInfo(name = "cpf_cnpj_comprador")
     val cpfCnpjComprador: String?, // CPF/CNPJ do comprador (opcional)
+
+    @ColumnInfo(name = "endereco_comprador")
+    val enderecoComprador: String?, // Endereço do comprador (opcional)
     
     @ColumnInfo(name = "valor_venda")
     val valorVenda: Double, // Valor da venda

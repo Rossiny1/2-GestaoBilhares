@@ -61,7 +61,7 @@ class VendaMesaDialog : DialogFragment() {
             .setView(binding.root)
             .create()
         dialog.setCanceledOnTouchOutside(false)
-        dialog.setTitle("Vender Mesa")
+        // Remover título do dialog (layout já tem título próprio)
         // ✅ IMPORTANTE: Em DialogFragment, quando se usa setView em onCreateDialog,
         // onViewCreated normalmente NÃO é chamado. Portanto, inicializamos aqui.
         try {
@@ -290,6 +290,7 @@ class VendaMesaDialog : DialogFragment() {
                     nomeComprador = binding.etNomeComprador.text.toString().trim(),
                     telefoneComprador = binding.etTelefoneComprador.text.toString().trim().takeIf { it.isNotEmpty() },
                     cpfCnpjComprador = binding.etCpfCnpjComprador.text.toString().trim().takeIf { it.isNotEmpty() },
+                    enderecoComprador = binding.etEnderecoComprador.text.toString().trim().takeIf { it.isNotEmpty() },
                     valorVenda = binding.etValorVenda.text.toString().replace(",", ".").toDoubleOrNull() ?: 0.0,
                     dataVenda = dataVenda,
                     observacoes = binding.etObservacoes.text.toString().trim().takeIf { it.isNotEmpty() }
