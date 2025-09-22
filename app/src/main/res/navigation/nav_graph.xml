@@ -298,6 +298,10 @@
         <action
             android:id="@+id/action_mesasDepositoFragment_to_aditivoSignatureFragment"
             app:destination="@id/aditivoSignatureFragment" />
+        <!-- ✅ NOVA AÇÃO: Navegação para histórico de mesas vendidas -->
+        <action
+            android:id="@+id/action_mesasDepositoFragment_to_historicoMesasVendidasFragment"
+            app:destination="@id/historicoMesasVendidasFragment" />
     </fragment>
 
     <!-- Tela de Cadastro de Mesa -->

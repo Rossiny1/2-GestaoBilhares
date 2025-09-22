@@ -18,13 +18,7 @@ class MesaRepository @Inject constructor(
     fun obterMesasPorCliente(clienteId: Long): Flow<List<Mesa>> =
         mesaDao.obterMesasPorCliente(clienteId)
 
-    fun obterMesasDisponiveis(): Flow<List<Mesa>> {
-        android.util.Log.d("MesaRepository", "=== OBTENDO MESAS DISPONÍVEIS ===")
-        return mesaDao.obterMesasDisponiveis().also { flow ->
-            // Log adicional para debug
-            android.util.Log.d("MesaRepository", "Query de mesas disponíveis executada")
-        }
-    }
+    fun obterMesasDisponiveis(): Flow<List<Mesa>> = mesaDao.obterMesasDisponiveis()
 
     suspend fun inserir(mesa: Mesa): Long = mesaDao.inserir(mesa)
 
@@ -32,19 +26,12 @@ class MesaRepository @Inject constructor(
 
     suspend fun deletar(mesa: Mesa) = mesaDao.deletar(mesa)
 
-    suspend fun vincularMesa(mesaId: Long, clienteId: Long) {
-        android.util.Log.d("MesaRepository", "VincularMesa: MesaId=$mesaId, ClienteId=$clienteId")
-        mesaDao.vincularMesa(mesaId, clienteId)
-        android.util.Log.d("MesaRepository", "Mesa vinculada com sucesso")
-    }
+    suspend fun vincularMesa(mesaId: Long, clienteId: Long) = mesaDao.vincularMesa(mesaId, clienteId)
 
     suspend fun desvincularMesa(mesaId: Long) = mesaDao.desvincularMesa(mesaId)
 
-    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double) {
-        android.util.Log.d("MesaRepository", "VincularMesaComValorFixo: MesaId=$mesaId, ClienteId=$clienteId, ValorFixo=$valorFixo")
+    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double) =
         mesaDao.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
-        android.util.Log.d("MesaRepository", "Mesa vinculada com valor fixo com sucesso")
-    }
 
     suspend fun retirarMesa(mesaId: Long) = mesaDao.retirarMesa(mesaId)
 

@@ -4,9 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentHistoricoMesasVendidasBinding
@@ -73,44 +75,43 @@ class HistoricoMesasVendidasFragment : Fragment() {
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.mesasVendidas.collect { mesas ->
-                android.util.Log.d("HistoricoMesasVendidasFragment", "📊 Mesas vendidas recebidas: ${mesas.size}")
-                adapter.updateData(mesas)
-                
-                // Mostrar/ocultar estado vazio
-                if (mesas.isEmpty()) {
-                    binding.emptyStateLayout.visibility = View.VISIBLE
-                    binding.rvMesasVendidas.visibility = View.GONE
-                    android.util.Log.d("HistoricoMesasVendidasFragment", "📭 Exibindo estado vazio")
-                } else {
-                    binding.emptyStateLayout.visibility = View.GONE
-                    binding.rvMesasVendidas.visibility = View.VISIBLE
-                    android.util.Log.d("HistoricoMesasVendidasFragment", "📋 Exibindo lista com ${mesas.size} mesas")
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.mesasVendidas.collect { mesas ->
+                        adapter.updateData(mesas)
+                        if (mesas.isEmpty()) {
+                            binding.emptyStateLayout.visibility = View.VISIBLE
+                            binding.rvMesasVendidas.visibility = View.GONE
+                        } else {
+                            binding.emptyStateLayout.visibility = View.GONE
+                            binding.rvMesasVendidas.visibility = View.VISIBLE
+                        }
+                    }
                 }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.isLoading.collect { isLoading ->
-                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.errorMessage.collect { error ->
-                error?.let {
-                    // TODO: Mostrar snackbar com erro
-                    android.util.Log.e("HistoricoMesasVendidasFragment", "Erro: $it")
-                    viewModel.limparErro()
+                launch {
+                    viewModel.isLoading.collect { isLoading ->
+                        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+                    }
                 }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.showVendaDialog.collect { show ->
-                if (show) {
-                    abrirDialogVendaMesa()
-                    viewModel.dialogVendaAberto()
+                launch {
+                    viewModel.errorMessage.collect { error ->
+                        error?.let {
+                            try {
+                                com.google.android.material.snackbar.Snackbar.make(binding.root, it, com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
+                            } catch (_: Exception) {
+                                android.widget.Toast.makeText(requireContext(), it, android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                            viewModel.limparErro()
+                        }
+                    }
+                }
+                launch {
+                    viewModel.showVendaDialog.collect { show ->
+                        if (show) {
+                            abrirDialogVendaMesa()
+                            viewModel.dialogVendaAberto()
+                        }
+                    }
                 }
             }
         }
@@ -120,16 +121,33 @@ class HistoricoMesasVendidasFragment : Fragment() {
         val dialog = VendaMesaDialog.newInstance { mesaVendida ->
             // Recarregar dados após venda
             viewModel.recarregarDados()
-            android.util.Log.d("HistoricoMesasVendidasFragment", "Mesa vendida: ${mesaVendida.numeroMesa}")
+
             // Mostrar snackbar de sucesso
-            com.google.android.material.snackbar.Snackbar.make(binding.root, "Mesa vendida com sucesso!", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
+            try {
+                com.google.android.material.snackbar.Snackbar.make(binding.root, "Mesa vendida com sucesso!", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                // Fallback para Toast se Snackbar falhar
+                Toast.makeText(requireContext(), "Mesa vendida com sucesso!", Toast.LENGTH_SHORT).show()
+            }
         }
-        dialog.show(parentFragmentManager, "VendaMesaDialog")
+
+        try {
+            dialog.show(parentFragmentManager, "VendaMesaDialog")
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Erro ao abrir dialog de venda", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun abrirDetalhesMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida) {
         val dialog = DetalhesMesaVendidaDialog.newInstance(mesaVendida)
         dialog.show(parentFragmentManager, "DetalhesMesaVendidaDialog")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        android.util.Log.d("HistoricoMesasVendidasFragment", "🔄 Voltando para a tela - recarregando dados...")
+        // ✅ CORREÇÃO: Recarregar mesas vendidas sempre que voltar para a tela
+        viewModel.carregarMesasVendidas()
     }
 
     override fun onDestroyView() {
