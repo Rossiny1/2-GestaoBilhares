@@ -242,6 +242,18 @@ class RoutesFragment : Fragment() {
                         false
                     }
                 }
+                R.id.nav_inventory -> {
+                    try {
+                        findNavController().navigate(R.id.inventorySelectionDialog)
+                        binding.drawerLayout.closeDrawers()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao abrir Inventário: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir Inventário: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
+                }
                 R.id.nav_dashboard -> {
                     try {
                         findNavController().navigate(R.id.dashboardFragment)

@@ -38,9 +38,10 @@ import com.example.gestaobilhares.data.entities.*
         MesaVendida::class, // ✅ NOVO: MESAS VENDIDAS
         MesaReformada::class, // ✅ NOVO: MESAS REFORMADAS
         PanoEstoque::class, // ✅ NOVO: PANOS EM ESTOQUE
-        HistoricoManutencaoMesa::class // ✅ NOVO: HISTÓRICO DE MANUTENÇÃO DAS MESAS
+        HistoricoManutencaoMesa::class, // ✅ NOVO: HISTÓRICO DE MANUTENÇÃO DAS MESAS
+        Veiculo::class // ✅ NOVO: VEÍCULOS
     ],
-    version = 34, // ✅ MIGRATION: sistema de histórico de manutenção das mesas
+    version = 36, // ✅ MIGRATION: inclusão de campos de viagem em despesas
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -153,6 +154,9 @@ abstract class AppDatabase : RoomDatabase() {
      * ✅ NOVO: HISTÓRICO DE MANUTENÇÃO DAS MESAS
      */
     abstract fun historicoManutencaoMesaDao(): com.example.gestaobilhares.data.dao.HistoricoManutencaoMesaDao
+
+    // ✅ NOVO: DAO de veículos
+    abstract fun veiculoDao(): com.example.gestaobilhares.data.dao.VeiculoDao
 
     companion object {
         

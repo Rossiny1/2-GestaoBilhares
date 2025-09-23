@@ -39,6 +39,12 @@
             android:id="@+id/nav_manage_contracts"
             android:icon="@drawable/ic_contract"
             android:title="Gerenciar Contratos" />
+
+        <!-- ✅ NOVO: Inventário -->
+        <item
+            android:id="@+id/nav_inventory"
+            android:icon="@drawable/ic_category"
+            android:title="Inventário" />
     </group>
 
     <!-- Grupo: Relatórios -->
