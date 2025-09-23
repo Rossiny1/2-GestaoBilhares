@@ -20,6 +20,8 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.data.entities.TipoMesa
 import com.example.gestaobilhares.data.entities.TamanhoMesa
+import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
+import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.example.gestaobilhares.databinding.FragmentNovaReformaBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,6 +39,7 @@ class NovaReformaFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: NovaReformaViewModel by viewModels()
+    private val historicoViewModel: HistoricoManutencaoMesaViewModel by viewModels()
     
     private var mesaSelecionada: Mesa? = null
     private var fotoUri: Uri? = null
@@ -317,6 +320,70 @@ class NovaReformaFragment : Fragment() {
         )
 
         viewModel.salvarReforma(mesaReformada)
+        
+        // ✅ NOVO: Registrar no histórico de manutenção
+        registrarManutencoesNoHistorico(mesaReformada)
+    }
+
+    /**
+     * Registra as manutenções realizadas no histórico de manutenção da mesa.
+     */
+    private fun registrarManutencoesNoHistorico(mesaReformada: MesaReformada) {
+        val mesa = mesaSelecionada ?: return
+        
+        // Registrar pintura
+        if (mesaReformada.pintura) {
+            historicoViewModel.registrarManutencao(
+                mesaId = mesa.id,
+                numeroMesa = mesa.numero,
+                tipoManutencao = TipoManutencao.PINTURA,
+                descricao = "Pintura da mesa realizada durante reforma",
+                responsavel = "Sistema de Reforma",
+                observacoes = mesaReformada.observacoes
+            )
+        }
+        
+        // Registrar troca de pano
+        if (mesaReformada.panos) {
+            val descricaoPano = if (!mesaReformada.numeroPanos.isNullOrBlank()) {
+                "Troca de pano - Números: ${mesaReformada.numeroPanos}"
+            } else {
+                "Troca de pano realizada durante reforma"
+            }
+            
+            historicoViewModel.registrarManutencao(
+                mesaId = mesa.id,
+                numeroMesa = mesa.numero,
+                tipoManutencao = TipoManutencao.TROCA_PANO,
+                descricao = descricaoPano,
+                responsavel = "Sistema de Reforma",
+                observacoes = mesaReformada.observacoes
+            )
+        }
+        
+        // Registrar troca de tabela
+        if (mesaReformada.tabela) {
+            historicoViewModel.registrarManutencao(
+                mesaId = mesa.id,
+                numeroMesa = mesa.numero,
+                tipoManutencao = TipoManutencao.TROCA_TABELA,
+                descricao = "Troca de tabela realizada durante reforma",
+                responsavel = "Sistema de Reforma",
+                observacoes = mesaReformada.observacoes
+            )
+        }
+        
+        // Registrar outras manutenções
+        if (mesaReformada.outros) {
+            historicoViewModel.registrarManutencao(
+                mesaId = mesa.id,
+                numeroMesa = mesa.numero,
+                tipoManutencao = TipoManutencao.OUTROS,
+                descricao = "Outras manutenções realizadas durante reforma",
+                responsavel = "Sistema de Reforma",
+                observacoes = mesaReformada.observacoes
+            )
+        }
     }
 
     override fun onDestroyView() {

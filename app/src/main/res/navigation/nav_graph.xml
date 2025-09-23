@@ -354,6 +354,19 @@
         <argument
             android:name="mesaId"
             app:argType="long" />
+        <action
+            android:id="@+id/action_editMesaFragment_to_historicoManutencaoMesaFragment"
+            app:destination="@id/historicoManutencaoMesaFragment" />
+    </fragment>
+
+    <!-- ✅ NOVO: Tela de Histórico de Manutenção da Mesa -->
+    <fragment
+        android:id="@+id/historicoManutencaoMesaFragment"
+        android:name="com.example.gestaobilhares.ui.mesas.HistoricoManutencaoMesaFragment"
+        android:label="Histórico de Manutenção">
+        <argument
+            android:name="mesaId"
+            app:argType="long" />
     </fragment>
 
     <!-- Tela de Histórico de Mesas Vendidas -->

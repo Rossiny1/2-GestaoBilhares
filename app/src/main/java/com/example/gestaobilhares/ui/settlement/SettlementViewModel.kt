@@ -16,6 +16,9 @@ import com.example.gestaobilhares.data.entities.Acerto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import com.example.gestaobilhares.data.repository.AcertoMesaRepository
+import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
+import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
+import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,7 +34,8 @@ class SettlementViewModel @Inject constructor(
     private val clienteRepository: ClienteRepository,
     private val acertoRepository: AcertoRepository,
     private val acertoMesaRepository: AcertoMesaRepository,
-    private val cicloAcertoRepository: CicloAcertoRepository
+    private val cicloAcertoRepository: CicloAcertoRepository,
+    private val historicoManutencaoMesaRepository: HistoricoManutencaoMesaRepository
 ) : ViewModel() {
 
     /**
@@ -521,6 +525,25 @@ class SettlementViewModel @Inject constructor(
                 acertoMesaRepository.inserirLista(acertoMesas)
                 Log.d("SettlementViewModel", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
                 
+                // ✅ NOVO: Registrar troca de pano no histórico de manutenção
+                if (dadosAcerto.panoTrocado && !dadosAcerto.numeroPano.isNullOrBlank()) {
+                    registrarTrocaPanoNoHistorico(dadosAcerto.mesas.map { mesa ->
+                        com.example.gestaobilhares.ui.settlement.MesaDTO(
+                            id = mesa.id,
+                            numero = mesa.numero,
+                            tipoMesa = mesa.tipoMesa,
+                            tamanho = com.example.gestaobilhares.data.entities.TamanhoMesa.MEDIA,
+                            estadoConservacao = com.example.gestaobilhares.data.entities.EstadoConservacao.BOM,
+                            fichasInicial = mesa.fichasInicial,
+                            fichasFinal = mesa.fichasFinal,
+                            valorFixo = mesa.valorFixo,
+                            valorFicha = 0.0,
+                            comissaoFicha = 0.0,
+                            ativa = true
+                        )
+                    }, dadosAcerto.numeroPano)
+                }
+                
                 // ✅ CRÍTICO: Atualizar o débito atual na tabela de clientes
                 clienteRepository.atualizarDebitoAtual(clienteId, debitoAtual)
                 Log.d("SettlementViewModel", "Débito atual atualizado na tabela clientes: R$ $debitoAtual")
@@ -541,6 +564,32 @@ class SettlementViewModel @Inject constructor(
 
     fun resetarResultadoSalvamento() {
         _resultadoSalvamento.value = null
+    }
+
+    /**
+     * Registra a troca de pano no histórico de manutenção das mesas.
+     */
+    private suspend fun registrarTrocaPanoNoHistorico(mesas: List<com.example.gestaobilhares.ui.settlement.MesaDTO>, numeroPano: String) {
+        try {
+            Log.d("SettlementViewModel", "Registrando troca de pano no histórico: $numeroPano")
+            
+            mesas.forEach { mesa ->
+                val historico = HistoricoManutencaoMesa(
+                    mesaId = mesa.id,
+                    numeroMesa = mesa.numero,
+                    tipoManutencao = TipoManutencao.TROCA_PANO,
+                    descricao = "Troca de pano durante acerto - Número: $numeroPano",
+                    responsavel = "Sistema de Acerto",
+                    observacoes = "Troca de pano registrada automaticamente durante o acerto",
+                    dataManutencao = java.util.Date()
+                )
+                
+                historicoManutencaoMesaRepository.inserir(historico)
+                Log.d("SettlementViewModel", "Histórico de troca de pano registrado para mesa ${mesa.numero}")
+            }
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao registrar troca de pano no histórico: ${e.message}", e)
+        }
     }
     
     fun limparResultadoSalvamento() {

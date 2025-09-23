@@ -37,9 +37,10 @@ import com.example.gestaobilhares.data.entities.*
         ProcuraçãoRepresentante::class, // ✅ NOVO: PROCURAÇÕES E DELEGAÇÃO DE PODERES
         MesaVendida::class, // ✅ NOVO: MESAS VENDIDAS
         MesaReformada::class, // ✅ NOVO: MESAS REFORMADAS
-        PanoEstoque::class // ✅ NOVO: PANOS EM ESTOQUE
+        PanoEstoque::class, // ✅ NOVO: PANOS EM ESTOQUE
+        HistoricoManutencaoMesa::class // ✅ NOVO: HISTÓRICO DE MANUTENÇÃO DAS MESAS
     ],
-    version = 33, // ✅ MIGRATION: sistema de reforma de mesas
+    version = 34, // ✅ MIGRATION: sistema de histórico de manutenção das mesas
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -146,6 +147,12 @@ abstract class AppDatabase : RoomDatabase() {
      * ✅ NOVO: PANOS EM ESTOQUE
      */
     abstract fun panoEstoqueDao(): com.example.gestaobilhares.data.dao.PanoEstoqueDao
+    
+    /**
+     * DAO para operações com histórico de manutenção das mesas.
+     * ✅ NOVO: HISTÓRICO DE MANUTENÇÃO DAS MESAS
+     */
+    abstract fun historicoManutencaoMesaDao(): com.example.gestaobilhares.data.dao.HistoricoManutencaoMesaDao
 
     companion object {
         

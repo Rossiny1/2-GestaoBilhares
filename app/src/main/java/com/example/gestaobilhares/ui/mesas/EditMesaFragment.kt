@@ -15,9 +15,12 @@ import com.example.gestaobilhares.databinding.FragmentEditMesaBinding
 import com.example.gestaobilhares.data.entities.TipoMesa
 import com.example.gestaobilhares.data.entities.TamanhoMesa
 import com.example.gestaobilhares.data.entities.EstadoConservacao
+import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
+import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 
 @AndroidEntryPoint
 class EditMesaFragment : Fragment() {
@@ -26,6 +29,7 @@ class EditMesaFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: EditMesaViewModel by viewModels()
+    private val historicoViewModel: HistoricoManutencaoMesaViewModel by viewModels()
     private val args: EditMesaFragmentArgs by navArgs()
 
     override fun onCreateView(
@@ -46,6 +50,9 @@ class EditMesaFragment : Fragment() {
 
         // Carregar dados da mesa
         viewModel.loadMesa(args.mesaId)
+        
+        // Carregar histórico de manutenção
+        historicoViewModel.carregarHistoricoMesa(args.mesaId)
     }
 
     private fun setupSpinners() {
@@ -79,12 +86,12 @@ class EditMesaFragment : Fragment() {
             salvarMesa()
         }
 
-        binding.btnCancelar.setOnClickListener {
-            findNavController().navigateUp()
-        }
+        // Removed: btnCancelar was removed from layout
 
-        binding.btnExcluir.setOnClickListener {
-            mostrarDialogoExclusao()
+        binding.btnVerHistoricoCompleto.setOnClickListener {
+            // Navegar para o histórico completo
+            val action = EditMesaFragmentDirections.actionEditMesaFragmentToHistoricoManutencaoMesaFragment(args.mesaId)
+            findNavController().navigate(action)
         }
     }
 
@@ -106,8 +113,43 @@ class EditMesaFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.saving.collect { saving ->
                 binding.btnSalvar.isEnabled = !saving
-                binding.btnExcluir.isEnabled = !saving
-                binding.btnCancelar.isEnabled = !saving
+            }
+        }
+
+        // ✅ NOVO: Observar histórico de manutenção (LiveData)
+        historicoViewModel.ultimaPintura.observe(viewLifecycleOwner) { pintura ->
+            binding.tvDataPintura.text = if (pintura != null) {
+                val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                dateFormat.format(pintura.dataManutencao)
+            } else {
+                "Nunca pintada"
+            }
+        }
+
+        historicoViewModel.ultimaTrocaPano.observe(viewLifecycleOwner) { pano ->
+            binding.tvPanoAtual.text = if (pano != null) {
+                val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                val numeroPano = pano.descricao ?: "N/A"
+                "$numeroPano - ${dateFormat.format(pano.dataManutencao)}"
+            } else {
+                "Nunca trocado"
+            }
+        }
+
+        historicoViewModel.ultimaTrocaTabela.observe(viewLifecycleOwner) { tabela ->
+            binding.tvDataTrocaTabela.text = if (tabela != null) {
+                val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                dateFormat.format(tabela.dataManutencao)
+            } else {
+                "Nunca trocada"
+            }
+        }
+
+        historicoViewModel.outrasManutencoes.observe(viewLifecycleOwner) { outras ->
+            binding.tvOutrasManutencoes.text = if (!outras.isNullOrEmpty()) {
+                "${outras.size} manutenção(ões)"
+            } else {
+                "Nenhuma"
             }
         }
     }
@@ -202,18 +244,6 @@ class EditMesaFragment : Fragment() {
         findNavController().navigateUp()
     }
 
-    private fun mostrarDialogoExclusao() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Excluir Mesa")
-            .setMessage("Tem certeza que deseja excluir esta mesa? Esta ação não pode ser desfeita.")
-            .setPositiveButton("Excluir") { _, _ ->
-                viewModel.excluirMesa()
-                Toast.makeText(requireContext(), "Mesa excluída com sucesso!", Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()
