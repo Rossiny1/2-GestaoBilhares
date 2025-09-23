@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
+import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.databinding.FragmentMesasReformadasBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -47,7 +48,7 @@ class MesasReformadasFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = MesasReformadasAdapter { mesaReformada ->
-            // TODO: Implementar navegação para detalhes da reforma
+            mostrarDetalhesMesaReformada(mesaReformada)
         }
 
         binding.rvMesasReformadas.apply {
@@ -84,6 +85,15 @@ class MesasReformadasFragment : Fragment() {
                 // TODO: Mostrar erro
                 viewModel.clearError()
             }
+        }
+    }
+
+    private fun mostrarDetalhesMesaReformada(mesaReformada: MesaReformada) {
+        try {
+            val dialog = DetalhesMesaReformadaDialog.newInstance(mesaReformada)
+            dialog.show(parentFragmentManager, "DetalhesMesaReformadaDialog")
+        } catch (e: Exception) {
+            // Log do erro se necessário
         }
     }
 
