@@ -60,6 +60,7 @@ class ExpenseRegisterFragment : Fragment() {
     private var currentPhotoUri: Uri? = null
     private var fotoComprovantePath: String? = null
     private var dataFotoComprovante: Date? = null
+    private var selectedVehicleId: Long? = null
     
     // ✅ NOVO: Launchers para câmera e permissões
     private val cameraPermissionLauncher = registerForActivityResult(
@@ -267,6 +268,10 @@ class ExpenseRegisterFragment : Fragment() {
         binding.etTipoDespesa.setOnClickListener {
             showTypeSelectionDialog()
         }
+
+        // ✅ NOVO: Campo de veículo (Viagem)
+        binding.tilVeiculo.setEndIconOnClickListener { showVehicleSelectionDialog() }
+        binding.etVeiculo.setOnClickListener { showVehicleSelectionDialog() }
 
         // ✅ NOVO: Botões de foto do comprovante
         binding.btnCameraComprovante.setOnClickListener {
@@ -583,6 +588,84 @@ class ExpenseRegisterFragment : Fragment() {
         dialog.show()
     }
 
+    // ✅ NOVO: Diálogo de seleção de veículo
+    private fun showVehicleSelectionDialog() {
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_select_category, null)
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialogView.findViewById<android.widget.TextView>(R.id.tvTitle).text = "Selecione o Veículo"
+
+        val recyclerView = dialogView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvCategories)
+        recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
+
+        val adapter = object : androidx.recyclerview.widget.ListAdapter<com.example.gestaobilhares.data.entities.Veiculo, androidx.recyclerview.widget.RecyclerView.ViewHolder>(
+            object : androidx.recyclerview.widget.DiffUtil.ItemCallback<com.example.gestaobilhares.data.entities.Veiculo>() {
+                override fun areItemsTheSame(oldItem: com.example.gestaobilhares.data.entities.Veiculo, newItem: com.example.gestaobilhares.data.entities.Veiculo): Boolean = oldItem.id == newItem.id
+                override fun areContentsTheSame(oldItem: com.example.gestaobilhares.data.entities.Veiculo, newItem: com.example.gestaobilhares.data.entities.Veiculo): Boolean = oldItem == newItem
+            }
+        ) {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder {
+                val v = LayoutInflater.from(parent.context).inflate(R.layout.item_expense_category, parent, false)
+                return object : androidx.recyclerview.widget.RecyclerView.ViewHolder(v) {}
+            }
+
+            override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
+                val item = currentList[position]
+                val title = holder.itemView.findViewById<android.widget.TextView>(R.id.tvCategoryName)
+                val subtitle = holder.itemView.findViewById<android.widget.TextView>(R.id.tvTypeCount)
+                title.text = "${item.marca} ${item.modelo}"
+                subtitle.text = "Ano: ${item.anoModelo} • KM: ${item.kmAtual}"
+                holder.itemView.setOnClickListener {
+                    selectedVehicleId = item.id
+                    binding.etVeiculo.setText("${item.marca} ${item.modelo}")
+                    dialog.dismiss()
+                }
+            }
+        }
+
+        recyclerView.adapter = adapter
+
+        // Carregar veículos do banco
+        var vehiclesCache: List<com.example.gestaobilhares.data.entities.Veiculo> = emptyList()
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val db = AppDatabase.getDatabase(requireContext())
+                db.veiculoDao().listar().collect { lista ->
+                    vehiclesCache = lista
+                    adapter.submitList(lista)
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Erro ao carregar veículos: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Pesquisa
+        val searchEditText = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etSearch)
+        searchEditText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val query = s.toString().lowercase()
+                val filtered = vehiclesCache.filter { (it.marca + " " + it.modelo).lowercase().contains(query) }
+                adapter.submitList(filtered)
+            }
+        })
+
+        dialogView.findViewById<View>(R.id.btnClear).setOnClickListener {
+            selectedVehicleId = null
+            binding.etVeiculo.setText("")
+            dialog.dismiss()
+        }
+        dialogView.findViewById<View>(R.id.btnDone).setOnClickListener { dialog.dismiss() }
+
+        dialog.show()
+    }
+
     // Função removida - criação de categoria movida para menu principal
 
     // Função removida - criação de tipo movida para menu principal
@@ -649,6 +732,39 @@ class ExpenseRegisterFragment : Fragment() {
             return
         }
 
+        // Regras de validação para Viagem
+        val categoria = viewModel.selectedCategory.value?.nome ?: ""
+        val tipoNome = viewModel.selectedType.value?.nome ?: ""
+        val isViagem = categoria.equals("Viagem", ignoreCase = true)
+        val isCombustivel = tipoNome.equals("Combustível", ignoreCase = true) || tipoNome.equals("Gasolina", ignoreCase = true)
+        val isManutencao = tipoNome.equals("Manutenção", ignoreCase = true)
+
+        var kmValue: Long? = null
+        var litrosValue: Double? = null
+
+        if (isViagem) {
+            if (selectedVehicleId == null) {
+                binding.tilVeiculo.error = "Selecione um veículo"
+                return
+            } else {
+                binding.tilVeiculo.error = null
+            }
+            if (isCombustivel || isManutencao) {
+                kmValue = kmText?.toLongOrNull()
+                if (kmValue == null || kmValue <= 0) {
+                    binding.tilKm.error = "Informe o KM"
+                    return
+                } else binding.tilKm.error = null
+            }
+            if (isCombustivel) {
+                litrosValue = litrosText?.toDoubleOrNull()
+                if (litrosValue == null || litrosValue <= 0.0) {
+                    binding.tilLitros.error = "Informe os litros"
+                    return
+                } else binding.tilLitros.error = null
+            }
+        }
+
         // Limpar erros
         binding.tilDescricao.error = null
         binding.tilValorDespesa.error = null
@@ -664,7 +780,10 @@ class ExpenseRegisterFragment : Fragment() {
             despesaId = args.despesaId,
             modoEdicao = args.modoEdicao,
             fotoComprovante = fotoComprovantePath,
-            dataFotoComprovante = dataFotoComprovante
+            dataFotoComprovante = dataFotoComprovante,
+            veiculoId = if (isViagem) selectedVehicleId else null,
+            kmRodado = if (isViagem) kmValue else null,
+            litrosAbastecidos = if (isViagem) litrosValue else null
         )
     }
     
