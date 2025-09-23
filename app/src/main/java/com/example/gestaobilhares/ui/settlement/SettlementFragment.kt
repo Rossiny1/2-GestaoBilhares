@@ -243,7 +243,8 @@ class SettlementFragment : Fragment() {
                 DespesaRepository(database.despesaDao()),
                 AcertoRepository(database.acertoDao(), database.clienteDao()),
                 ClienteRepository(database.clienteDao()) // NOVO
-            )
+            ),
+            com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao())
         )
         
         Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
