@@ -337,6 +337,17 @@ class ExpenseRegisterFragment : Fragment() {
             viewModel.selectedType.collect { type ->
                 val binding = _binding ?: return@collect
                 binding.etTipoDespesa.setText(type?.nome ?: "")
+                // ✅ Mostrar campos de viagem conforme categoria/tipo
+                val categoria = viewModel.selectedCategory.value?.nome ?: ""
+                val tipoNome = type?.nome ?: ""
+                val isViagem = categoria.equals("Viagem", ignoreCase = true)
+                val isCombustivel = tipoNome.equals("Combustível", ignoreCase = true) || tipoNome.equals("Gasolina", ignoreCase = true)
+                val isManutencao = tipoNome.equals("Manutenção", ignoreCase = true)
+
+                binding.tvViagemHeader.visibility = if (isViagem) View.VISIBLE else View.GONE
+                binding.tilVeiculo.visibility = if (isViagem) View.VISIBLE else View.GONE
+                binding.tilKm.visibility = if (isViagem && (isCombustivel || isManutencao)) View.VISIBLE else View.GONE
+                binding.tilLitros.visibility = if (isViagem && isCombustivel) View.VISIBLE else View.GONE
             }
         }
 
@@ -601,6 +612,8 @@ class ExpenseRegisterFragment : Fragment() {
         val descricao = binding.etDescricao.text.toString().trim()
         val valorText = binding.etValorDespesa.text.toString().trim()
         val quantidadeText = binding.etQuantidade.text.toString().trim()
+        val kmText = binding.etKm.text?.toString()?.trim()
+        val litrosText = binding.etLitros.text?.toString()?.trim()
 
         if (descricao.isEmpty()) {
             binding.tilDescricao.error = "Descrição é obrigatória"

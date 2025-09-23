@@ -77,6 +77,11 @@ data class Despesa(
     // ✅ NOVO: CAMPOS PARA FOTO DO COMPROVANTE
     val fotoComprovante: String? = null,
     val dataFotoComprovante: Date? = null
+    ,
+    // ✅ NOVO: Campos para despesas de viagem
+    val veiculoId: Long? = null,
+    val kmRodado: Long? = null,
+    val litrosAbastecidos: Double? = null
 )
 
 /**

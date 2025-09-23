@@ -13,6 +13,7 @@ import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repository.MesaVendidaRepository
 import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
+import com.example.gestaobilhares.data.repository.VeiculoRepository
 import com.example.gestaobilhares.utils.UserSessionManager
 import dagger.Module
 import dagger.Provides
@@ -56,6 +57,8 @@ object AppModule {
     
     // ✅ NOVO: SISTEMA DE HISTÓRICO DE MANUTENÇÃO DAS MESAS
     @Provides fun provideHistoricoManutencaoMesaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.HistoricoManutencaoMesaDao = db.historicoManutencaoMesaDao()
+    // ✅ NOVO: DAO de Veículos
+    @Provides fun provideVeiculoDao(db: AppDatabase): com.example.gestaobilhares.data.dao.VeiculoDao = db.veiculoDao()
 
     @Provides
     @Singleton
@@ -156,6 +159,13 @@ object AppModule {
     fun provideHistoricoManutencaoMesaRepository(
         historicoManutencaoMesaDao: com.example.gestaobilhares.data.dao.HistoricoManutencaoMesaDao
     ): HistoricoManutencaoMesaRepository = HistoricoManutencaoMesaRepository(historicoManutencaoMesaDao)
+
+    // ✅ NOVO: Repositório de Veículos
+    @Provides
+    @Singleton
+    fun provideVeiculoRepository(
+        veiculoDao: com.example.gestaobilhares.data.dao.VeiculoDao
+    ): VeiculoRepository = VeiculoRepository(veiculoDao)
 }
 
 

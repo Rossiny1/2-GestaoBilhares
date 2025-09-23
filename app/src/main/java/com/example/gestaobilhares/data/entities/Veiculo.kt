@@ -1,0 +1,20 @@
+package com.example.gestaobilhares.data.entities
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import java.util.Date
+
+@Entity(tableName = "veiculos")
+data class Veiculo(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val marca: String,
+    val modelo: String,
+    val anoModelo: Int,
+    val kmAtual: Long = 0,
+    val placa: String? = null,
+    val dataCompra: Date? = null,
+    val observacoes: String? = null
+)
+
+

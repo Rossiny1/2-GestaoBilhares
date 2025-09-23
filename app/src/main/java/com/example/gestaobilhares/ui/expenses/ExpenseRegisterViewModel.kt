@@ -67,6 +67,7 @@ class ExpenseRegisterViewModel @Inject constructor(
 
     init {
         loadCategories()
+        ensureViagemCategory()
     }
 
     /**
@@ -161,6 +162,33 @@ class ExpenseRegisterViewModel @Inject constructor(
      */
     fun setSelectedType(tipo: TipoDespesa?) {
         _selectedType.value = tipo
+    }
+
+    /**
+     * ✅ Garante a existência da categoria fixa "Viagem" com tipos "Combustível" e "Manutenção".
+     */
+    private fun ensureViagemCategory() {
+        viewModelScope.launch {
+            try {
+                val existe = categoriaDespesaRepository.categoriaExiste("Viagem")
+                if (!existe) {
+                    val catId = categoriaDespesaRepository.criarCategoria(
+                        NovaCategoriaDespesa(nome = "Viagem", descricao = "Despesas de viagem", criadoPor = "Sistema")
+                    )
+                    // Tipos fixos
+                    if (!tipoDespesaRepository.tipoExiste("Combustível", catId)) {
+                        tipoDespesaRepository.criarTipo(NovoTipoDespesa(categoriaId = catId, nome = "Combustível", descricao = "Gasto com combustível"))
+                    }
+                    if (!tipoDespesaRepository.tipoExiste("Manutenção", catId)) {
+                        tipoDespesaRepository.criarTipo(NovoTipoDespesa(categoriaId = catId, nome = "Manutenção", descricao = "Manutenção de veículo"))
+                    }
+                    // Recarregar categorias/tipos
+                    loadCategories()
+                }
+            } catch (e: Exception) {
+                _message.value = "Erro ao configurar categoria Viagem: ${e.message}"
+            }
+        }
     }
 
     /**
@@ -260,7 +288,10 @@ class ExpenseRegisterViewModel @Inject constructor(
         despesaId: Long = 0L,
         modoEdicao: Boolean = false,
         fotoComprovante: String? = null,
-        dataFotoComprovante: Date? = null
+        dataFotoComprovante: Date? = null,
+        veiculoId: Long? = null,
+        kmRodado: Long? = null,
+        litrosAbastecidos: Double? = null
     ) {
         viewModelScope.launch {
             try {
@@ -323,7 +354,10 @@ class ExpenseRegisterViewModel @Inject constructor(
                             cicloNumero = if (rotaId == 0L) cicloNumero else despesaExistente.cicloNumero,
                             rotaId = rotaParaLancamento,
                             fotoComprovante = fotoComprovante,
-                            dataFotoComprovante = dataFotoComprovante
+                            dataFotoComprovante = dataFotoComprovante,
+                            veiculoId = veiculoId,
+                            kmRodado = kmRodado,
+                            litrosAbastecidos = litrosAbastecidos
                         )
                         
                         despesaRepository.atualizar(despesaAtualizada)
@@ -348,7 +382,10 @@ class ExpenseRegisterViewModel @Inject constructor(
                         cicloAno = if (rotaId == 0L) cicloAno else null,
                         cicloNumero = if (rotaId == 0L) cicloNumero else null,
                         fotoComprovante = fotoComprovante,
-                        dataFotoComprovante = dataFotoComprovante
+                        dataFotoComprovante = dataFotoComprovante,
+                        veiculoId = veiculoId,
+                        kmRodado = kmRodado,
+                        litrosAbastecidos = litrosAbastecidos
                     )
 
                     val novaDespesaId = despesaRepository.inserir(despesa)

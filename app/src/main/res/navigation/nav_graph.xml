@@ -467,6 +467,30 @@
         android:name="com.example.gestaobilhares.ui.main.MainFragment"
         android:label="MainFragment" />
 
+    <!-- ✅ NOVO: Diálogo de seleção de Inventário -->
+    <dialog
+        android:id="@+id/inventorySelectionDialog"
+        android:name="com.example.gestaobilhares.ui.inventory.InventorySelectionDialog"
+        android:label="Inventário" />
+
+    <!-- ✅ NOVO: Telas de Inventário -->
+    <fragment
+        android:id="@+id/vehiclesFragment"
+        android:name="com.example.gestaobilhares.ui.inventory.vehicles.VehiclesFragment"
+        android:label="Veículos" />
+    <fragment
+        android:id="@+id/equipmentsFragment"
+        android:name="com.example.gestaobilhares.ui.inventory.equipments.EquipmentsFragment"
+        android:label="Equipamentos" />
+    <fragment
+        android:id="@+id/stockFragment"
+        android:name="com.example.gestaobilhares.ui.inventory.stock.StockFragment"
+        android:label="Estoque" />
+    <fragment
+        android:id="@+id/othersInventoryFragment"
+        android:name="com.example.gestaobilhares.ui.inventory.others.OthersInventoryFragment"
+        android:label="Outros" />
+
     <!-- ✅ NOVO: Fragmentos de Contratos -->
     <dialog
         android:id="@+id/contractFinalizationDialog"
