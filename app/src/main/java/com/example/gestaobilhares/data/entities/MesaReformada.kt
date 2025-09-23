@@ -3,6 +3,7 @@ package com.example.gestaobilhares.data.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 import java.util.Date
 
 /**
@@ -52,4 +53,4 @@ data class MesaReformada(
     
     @ColumnInfo(name = "data_criacao")
     val dataCriacao: Date = Date() // Data de criação do registro
-)
+) : Serializable
