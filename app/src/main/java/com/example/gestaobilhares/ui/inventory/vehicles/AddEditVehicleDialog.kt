@@ -24,12 +24,14 @@ class AddEditVehicleDialog : DialogFragment() {
             .setTitle("Novo Veículo")
             .setView(binding.root)
             .setPositiveButton("Salvar") { d, _ ->
+                val nome = binding.etNome.text.toString().trim()
+                val placa = binding.etPlaca.text.toString().trim()
                 val marca = binding.etMarca.text.toString().trim()
                 val modelo = binding.etModelo.text.toString().trim()
                 val ano = binding.etAno.text.toString().toIntOrNull() ?: 0
                 val km = binding.etKm.text.toString().toLongOrNull() ?: 0L
-                if (marca.isNotEmpty() && modelo.isNotEmpty() && ano > 0) {
-                    viewModel.addVehicle(marca, modelo, ano, km)
+                if (nome.isNotEmpty() && placa.isNotEmpty() && marca.isNotEmpty() && modelo.isNotEmpty() && ano > 0) {
+                    viewModel.addVehicle(nome, placa, marca, modelo, ano, km)
                 }
                 d.dismiss()
             }

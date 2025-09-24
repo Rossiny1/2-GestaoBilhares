@@ -1,12 +1,12 @@
 # ========================================
-# SCRIPT DE MONITORAMENTO DE CRASH - GESTAO BILHARES
+# SCRIPT DE MONITORAMENTO DE ABASTECIMENTO - GESTAO BILHARES
 # ========================================
 #
 # INSTRUÇÕES IMPORTANTES:
 # 1. Execute este script em uma NOVA JANELA do PowerShell
 # 2. Para abrir nova janela: Ctrl+Shift+N ou Win+R -> powershell
 # 3. Navegue até a pasta do projeto: cd "C:\Users\Rossiny\Desktop\2-GestaoBilhares"
-# 4. Execute: .\crash.ps1
+# 4. Execute: .\scripts\monitor-abastecimento.ps1
 #
 # CAMINHO CORRETO DO ADB:
 # C:\Users\Rossiny\AppData\Local\Android\Sdk\platform-tools\adb.exe
@@ -14,12 +14,11 @@
 # ========================================
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "MONITORAMENTO DE CRASH - GESTAO BILHARES" -ForegroundColor Cyan
+Write-Host "MONITORAMENTO DE ABASTECIMENTO - GESTAO BILHARES" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
+
 param(
-    [switch]$OnlyVenda,     # Mostra apenas logs do fluxo de venda (tag: VendaMesaDialog)
-    [switch]$OnlyAbastecimento,  # Mostra apenas logs do fluxo de abastecimento
     [switch]$ToFile         # Salva a saída em arquivo (além de mostrar na tela)
 )
 
@@ -27,20 +26,19 @@ Write-Host "INSTRUCOES:" -ForegroundColor Yellow
 Write-Host "1. Este script deve ser executado em JANELA SEPARADA" -ForegroundColor Yellow
 Write-Host "2. Para abrir nova janela: Ctrl+Shift+N ou Win+R -> powershell" -ForegroundColor Yellow
 Write-Host "3. Navegue até: cd 'C:\Users\Rossiny\Desktop\2-GestaoBilhares'" -ForegroundColor Yellow
-Write-Host "4. Execute: .\crash.ps1" -ForegroundColor Yellow
+Write-Host "4. Execute: .\scripts\monitor-abastecimento.ps1" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "PARAMETROS DISPONIVEIS:" -ForegroundColor Cyan
-Write-Host "-OnlyVenda: Monitora apenas logs de venda de mesas" -ForegroundColor Gray
-Write-Host "-OnlyAbastecimento: Monitora apenas logs de abastecimento" -ForegroundColor Gray
 Write-Host "-ToFile: Salva logs em arquivo" -ForegroundColor Gray
 Write-Host ""
 Write-Host "EXEMPLOS:" -ForegroundColor Cyan
-Write-Host ".\crash.ps1 -OnlyAbastecimento" -ForegroundColor Gray
-Write-Host ".\crash.ps1 -OnlyAbastecimento -ToFile" -ForegroundColor Gray
+Write-Host ".\scripts\monitor-abastecimento.ps1" -ForegroundColor Gray
+Write-Host ".\scripts\monitor-abastecimento.ps1 -ToFile" -ForegroundColor Gray
 Write-Host ""
+
 Write-Host "CAMINHO ADB: C:\Users\Rossiny\AppData\Local\Android\Sdk\platform-tools\adb.exe" -ForegroundColor Green
 Write-Host ""
-Write-Host "MONITORANDO CRASHES DO APP..." -ForegroundColor Red
+Write-Host "MONITORANDO ABASTECIMENTO..." -ForegroundColor Red
 Write-Host "Pressione Ctrl+C para parar" -ForegroundColor Gray
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
@@ -79,50 +77,40 @@ Write-Host ""
 Write-Host "Limpando logcat anterior..." -ForegroundColor Yellow
 & $adbPath logcat -c
 
-Write-Host "Iniciando monitoramento de crashes..." -ForegroundColor Green
-Write-Host "Agora você pode testar o app no dispositivo" -ForegroundColor Green
+Write-Host "Iniciando monitoramento de abastecimento..." -ForegroundColor Green
+Write-Host "Agora você pode testar o salvamento de abastecimento no app" -ForegroundColor Green
 Write-Host ""
-Write-Host "NOVOS LOGS MONITORADOS:" -ForegroundColor Cyan
-Write-Host "- VendaMesaDialog: clique vender, validacao, transacao, pos-transacao" -ForegroundColor Gray
-Write-Host "- HistoricoMesasVendidasFragment: coleta e atualizacao da lista" -ForegroundColor Gray
-Write-Host "- MesasDepositoFragment: fluxo de deposito" -ForegroundColor Gray
-Write-Host "- Rotas/Repositorios: eventos gerais" -ForegroundColor Gray
-Write-Host "- ExpenseRegisterViewModel: salvamento de despesas e abastecimento" -ForegroundColor Gray
+Write-Host "LOGS MONITORADOS:" -ForegroundColor Cyan
+Write-Host "- ExpenseRegisterViewModel: salvamento de despesas" -ForegroundColor Gray
 Write-Host "- HistoricoCombustivelVeiculo: logs de debug do abastecimento" -ForegroundColor Gray
 Write-Host "- VehicleDetailViewModel: carregamento de dados reais" -ForegroundColor Gray
+Write-Host "- Conversão de data: logs de erro na conversão" -ForegroundColor Gray
+Write-Host "- Salvamento: logs de sucesso e erro" -ForegroundColor Gray
 Write-Host ""
 
-# Padrao de filtro expandido para incluir nossos logs de diagnostico e analise de fluxo
-$patternAll = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|FileProvider|Permission Denial|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|RoutesFragment|HistoricoMesasVendidasFragment|HistoricoMesasVendidasViewModel|MesasDepositoFragment|VendaMesaDialog|ExpenseRegisterViewModel|HistoricoCombustivelVeiculo|VehicleDetailViewModel|Salvando abastecimento|Abastecimento salvo|Erro ao salvar|Despesa salva|Histórico de veículo|Conversão de data"
-
-# Padrao focado apenas no fluxo de venda (tag e mensagens chave)
-$patternVenda = "VendaMesaDialog|Clique em Vender|validarCampos|realizarVenda|Transacao concluida|Pos-transacao|Venda concluida|mostrarSeletorMesa|filtrarMesas|mostrarSeletorData|onCreateDialog|onViewCreated|setupClickListeners|setupUI"
-
 # Padrao focado apenas no fluxo de abastecimento
-$patternAbastecimento = "ExpenseRegisterViewModel|HistoricoCombustivelVeiculo|VehicleDetailViewModel|Salvando abastecimento|Abastecimento salvo|Erro ao salvar|Despesa salva|Histórico de veículo|Conversão de data|Litros não informados|Abastecimento salvo com ID|Histórico de veículo salvo|Erro ao salvar histórico|isCombustivel|isManutencao|salvarNoHistoricoVeiculo|Carregando histórico|Abastecimentos encontrados|Forçando recarregamento|DEBUG|TOTAL de abastecimentos|Abastecimento ID|Data=|Ano=|Match=|Filtro=|Abastecimento FILTRADO|Carregando TODOS os dados sem filtro|filtradas de|Filtro=TODOS"
-
-$pattern = if ($OnlyVenda) { $patternVenda } elseif ($OnlyAbastecimento) { $patternAbastecimento } else { $patternAll }
+$patternAbastecimento = "ExpenseRegisterViewModel|HistoricoCombustivelVeiculo|VehicleDetailViewModel|Salvando abastecimento|Abastecimento salvo|Erro ao salvar|Despesa salva|Histórico de veículo|Conversão de data|Litros não informados|Abastecimento salvo com ID|Histórico de veículo salvo|Erro ao salvar histórico|isCombustivel|isManutencao|salvarNoHistoricoVeiculo|FATAL|AndroidRuntime|crash|Exception|Caused by"
 
 # Opcional: salvar em arquivo
 $logDir = Join-Path $PSScriptRoot "logs"
 if ($ToFile) {
     if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
     $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    $logFile = Join-Path $logDir (if ($OnlyVenda) { "logcat-venda-$timestamp.txt" } elseif ($OnlyAbastecimento) { "logcat-abastecimento-$timestamp.txt" } else { "logcat-all-$timestamp.txt" })
+    $logFile = Join-Path $logDir "logcat-abastecimento-$timestamp.txt"
     Write-Host "Salvando saida tambem em arquivo: $logFile" -ForegroundColor Yellow
 }
 
-# Monitorar logcat filtrando apenas erros e crashes
+# Monitorar logcat filtrando apenas logs de abastecimento
 try {
     Write-Host "Monitorando em tempo real..." -ForegroundColor Green
-    Write-Host "Filtros: $pattern" -ForegroundColor Gray
+    Write-Host "Filtros: $patternAbastecimento" -ForegroundColor Gray
     Write-Host "========================================" -ForegroundColor Cyan
     Write-Host ""
     
     if ($ToFile) {
-        & $adbPath logcat -v time | Tee-Object -Variable raw | Select-String -Pattern $pattern | Tee-Object -FilePath $logFile
+        & $adbPath logcat -v time | Tee-Object -Variable raw | Select-String -Pattern $patternAbastecimento | Tee-Object -FilePath $logFile
     } else {
-        & $adbPath logcat -v time | Select-String -Pattern $pattern
+        & $adbPath logcat -v time | Select-String -Pattern $patternAbastecimento
     }
 } catch {
     Write-Host "Erro ao executar logcat: $($_.Exception.Message)" -ForegroundColor Red
@@ -131,4 +119,4 @@ try {
 
 Write-Host "" 
 Write-Host "Monitoramento finalizado" -ForegroundColor Gray
-Read-Host "Pressione Enter para sair" 
+Read-Host "Pressione Enter para sair"

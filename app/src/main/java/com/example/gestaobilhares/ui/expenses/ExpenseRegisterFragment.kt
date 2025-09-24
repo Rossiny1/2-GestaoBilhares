@@ -131,7 +131,9 @@ class ExpenseRegisterFragment : Fragment() {
                 DespesaRepository(database.despesaDao()),
                 AcertoRepository(database.acertoDao(), database.clienteDao()),
                 ClienteRepository(database.clienteDao())
-            )
+            ),
+            HistoricoManutencaoVeiculoRepository(database.historicoManutencaoVeiculoDao()),
+            HistoricoCombustivelVeiculoRepository(database.historicoCombustivelVeiculoDao())
         )
         
         setupUI()
@@ -590,6 +592,8 @@ class ExpenseRegisterFragment : Fragment() {
 
     // ✅ NOVO: Diálogo de seleção de veículo
     private fun showVehicleSelectionDialog() {
+        if (!isAdded || _binding == null) return
+        
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_select_category, null)
 
@@ -622,7 +626,9 @@ class ExpenseRegisterFragment : Fragment() {
                 subtitle.text = "Ano: ${item.anoModelo} • KM: ${item.kmAtual}"
                 holder.itemView.setOnClickListener {
                     selectedVehicleId = item.id
-                    binding.etVeiculo.setText("${item.marca} ${item.modelo}")
+                    if (isAdded && _binding != null) {
+                        binding.etVeiculo.setText("${item.marca} ${item.modelo}")
+                    }
                     dialog.dismiss()
                 }
             }
@@ -634,13 +640,20 @@ class ExpenseRegisterFragment : Fragment() {
         var vehiclesCache: List<com.example.gestaobilhares.data.entities.Veiculo> = emptyList()
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val db = AppDatabase.getDatabase(requireContext())
+                // ✅ CORREÇÃO: Verificar se o fragment ainda está ativo antes de usar requireContext()
+                if (!isAdded) return@launch
+                
+                val context = requireContext() // Capturar o contexto uma vez
+                val db = AppDatabase.getDatabase(context)
                 db.veiculoDao().listar().collect { lista ->
+                    if (!isAdded) return@collect // Verificar novamente antes de usar binding
                     vehiclesCache = lista
                     adapter.submitList(lista)
                 }
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Erro ao carregar veículos: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (isAdded) {
+                    Toast.makeText(requireContext(), "Erro ao carregar veículos: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -658,7 +671,9 @@ class ExpenseRegisterFragment : Fragment() {
 
         dialogView.findViewById<View>(R.id.btnClear).setOnClickListener {
             selectedVehicleId = null
-            binding.etVeiculo.setText("")
+            if (isAdded && _binding != null) {
+                binding.etVeiculo.setText("")
+            }
             dialog.dismiss()
         }
         dialogView.findViewById<View>(R.id.btnDone).setOnClickListener { dialog.dismiss() }

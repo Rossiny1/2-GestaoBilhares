@@ -59,6 +59,10 @@ object AppModule {
     @Provides fun provideHistoricoManutencaoMesaDao(db: AppDatabase): com.example.gestaobilhares.data.dao.HistoricoManutencaoMesaDao = db.historicoManutencaoMesaDao()
     // ✅ NOVO: DAO de Veículos
     @Provides fun provideVeiculoDao(db: AppDatabase): com.example.gestaobilhares.data.dao.VeiculoDao = db.veiculoDao()
+    
+    // ✅ NOVO: DAOs de Histórico de Veículos
+    @Provides fun provideHistoricoManutencaoVeiculoDao(db: AppDatabase): com.example.gestaobilhares.data.dao.HistoricoManutencaoVeiculoDao = db.historicoManutencaoVeiculoDao()
+    @Provides fun provideHistoricoCombustivelVeiculoDao(db: AppDatabase): com.example.gestaobilhares.data.dao.HistoricoCombustivelVeiculoDao = db.historicoCombustivelVeiculoDao()
 
     @Provides
     @Singleton
@@ -166,6 +170,21 @@ object AppModule {
     fun provideVeiculoRepository(
         veiculoDao: com.example.gestaobilhares.data.dao.VeiculoDao
     ): VeiculoRepository = VeiculoRepository(veiculoDao)
+    
+    // ✅ NOVO: Repositórios de Histórico de Veículos
+    @Provides
+    @Singleton
+    fun provideHistoricoManutencaoVeiculoRepository(
+        historicoManutencaoVeiculoDao: com.example.gestaobilhares.data.dao.HistoricoManutencaoVeiculoDao
+    ): com.example.gestaobilhares.data.repository.HistoricoManutencaoVeiculoRepository = 
+        com.example.gestaobilhares.data.repository.HistoricoManutencaoVeiculoRepository(historicoManutencaoVeiculoDao)
+    
+    @Provides
+    @Singleton
+    fun provideHistoricoCombustivelVeiculoRepository(
+        historicoCombustivelVeiculoDao: com.example.gestaobilhares.data.dao.HistoricoCombustivelVeiculoDao
+    ): com.example.gestaobilhares.data.repository.HistoricoCombustivelVeiculoRepository = 
+        com.example.gestaobilhares.data.repository.HistoricoCombustivelVeiculoRepository(historicoCombustivelVeiculoDao)
 }
 
 

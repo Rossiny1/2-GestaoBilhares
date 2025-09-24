@@ -375,27 +375,4 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <!-- FAB para Adicionar Manutenção -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddMaintenance"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contentDescription="Adicionar Manutenção"
-        android:src="@drawable/ic_add"
-        app:tint="@android:color/white" />
-
-    <!-- FAB para Adicionar Abastecimento -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddFuel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contentDescription="Adicionar Abastecimento"
-        android:src="@drawable/ic_add"
-        android:visibility="gone"
-        app:tint="@android:color/white" />
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

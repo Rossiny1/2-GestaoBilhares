@@ -61,16 +61,20 @@ class VehicleDetailFragment : Fragment() {
 
     private fun setupYearSpinner() {
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-        val years = (currentYear - 5..currentYear).toList().reversed()
+        val years = mutableListOf<String>()
+        years.add("Todos")
+        years.addAll((currentYear - 5..currentYear).toList().reversed().map { it.toString() })
         
         val yearAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, years)
         yearAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerYear.adapter = yearAdapter
         
         // Selecionar ano atual por padrão
-        val currentYearIndex = years.indexOf(currentYear)
+        val currentYearIndex = years.indexOf(currentYear.toString())
         if (currentYearIndex >= 0) {
             binding.spinnerYear.setSelection(currentYearIndex)
+        } else {
+            binding.spinnerYear.setSelection(0) // Todos
         }
     }
 
@@ -109,19 +113,13 @@ class VehicleDetailFragment : Fragment() {
     private fun setupClickListeners() {
         binding.spinnerYear.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val selectedYear = parent?.getItemAtPosition(position) as? Int ?: Calendar.getInstance().get(Calendar.YEAR)
+                val value = parent?.getItemAtPosition(position)?.toString()
+                val selectedYear: Int? = if (value == null || value == "Todos") null else value.toIntOrNull()
                 viewModel.filterByYear(selectedYear)
             }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
 
-        binding.fabAddMaintenance.setOnClickListener {
-            AddEditMaintenanceDialog().show(childFragmentManager, "add_maintenance")
-        }
-
-        binding.fabAddFuel.setOnClickListener {
-            AddEditFuelDialog().show(childFragmentManager, "add_fuel")
-        }
     }
 
     private fun observeData() {
@@ -159,19 +157,24 @@ class VehicleDetailFragment : Fragment() {
     private fun loadVehicleData() {
         viewModel.loadVehicle(vehicleId)
     }
+    
+    override fun onResume() {
+        super.onResume()
+        // ✅ NOVO: Recarregar dados quando o fragment voltar ao foco
+        viewModel.refreshData()
+        
+        // ✅ DEBUG: Carregar todos os dados para debug
+        viewModel.loadAllDataForDebug()
+    }
 
     private fun showMaintenanceHistory() {
         binding.rvMaintenanceHistory.visibility = View.VISIBLE
         binding.rvFuelHistory.visibility = View.GONE
-        binding.fabAddMaintenance.visibility = View.VISIBLE
-        binding.fabAddFuel.visibility = View.GONE
     }
 
     private fun showFuelHistory() {
         binding.rvMaintenanceHistory.visibility = View.GONE
         binding.rvFuelHistory.visibility = View.VISIBLE
-        binding.fabAddMaintenance.visibility = View.GONE
-        binding.fabAddFuel.visibility = View.VISIBLE
     }
 
     private fun updateMaintenanceSummary() {
