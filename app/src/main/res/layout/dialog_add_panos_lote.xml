@@ -36,12 +36,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Tamanho do Pano"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="8dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
             <AutoCompleteTextView
                 android:id="@+id/etTamanhoPano"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="none" />
+                android:inputType="none"
+                android:focusable="false"
+                android:clickable="true" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Material do Pano -->
