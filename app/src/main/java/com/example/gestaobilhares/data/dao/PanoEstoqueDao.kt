@@ -45,4 +45,34 @@ interface PanoEstoqueDao {
 
     @Query("UPDATE panos_estoque SET disponivel = :disponivel WHERE id = :id")
     suspend fun atualizarDisponibilidade(id: Long, disponivel: Boolean)
+    
+    /**
+     * ✅ NOVO: Busca panos disponíveis por tamanho
+     */
+    @Query("SELECT * FROM panos_estoque WHERE tamanho = :tamanho AND disponivel = 1 ORDER BY numero ASC")
+    fun buscarDisponiveisPorTamanho(tamanho: String): Flow<List<PanoEstoque>>
+    
+    /**
+     * ✅ NOVO: Busca panos disponíveis por tamanho e cor
+     */
+    @Query("SELECT * FROM panos_estoque WHERE tamanho = :tamanho AND cor = :cor AND disponivel = 1 ORDER BY numero ASC")
+    fun buscarDisponiveisPorTamanhoECor(tamanho: String, cor: String): Flow<List<PanoEstoque>>
+    
+    /**
+     * ✅ NOVO: Insere panos em lote com numeração sequencial
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun inserirLote(panos: List<PanoEstoque>)
+    
+    /**
+     * ✅ NOVO: Busca o maior número de pano para uma cor e tamanho específicos
+     */
+    @Query("SELECT MAX(CAST(SUBSTR(numero, 2) AS INTEGER)) FROM panos_estoque WHERE cor = :cor AND tamanho = :tamanho")
+    suspend fun buscarMaiorNumeroPano(cor: String, tamanho: String): Int?
+    
+    /**
+     * ✅ NOVO: Busca panos por intervalo de numeração
+     */
+    @Query("SELECT * FROM panos_estoque WHERE numero BETWEEN :numeroInicial AND :numeroFinal AND disponivel = 1 ORDER BY numero ASC")
+    fun buscarPorIntervalo(numeroInicial: String, numeroFinal: String): Flow<List<PanoEstoque>>
 }

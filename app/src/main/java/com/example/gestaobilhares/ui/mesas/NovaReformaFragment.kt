@@ -18,11 +18,13 @@ import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.MesaReformada
+import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.data.entities.TipoMesa
 import com.example.gestaobilhares.data.entities.TamanhoMesa
 import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.example.gestaobilhares.databinding.FragmentNovaReformaBinding
+import com.example.gestaobilhares.ui.settlement.PanoSelectionDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
@@ -293,14 +295,12 @@ class NovaReformaFragment : Fragment() {
             return
         }
 
+        // ✅ NOVO: Integração com sistema de panos
         val numeroPanos = if (panos) {
-            binding.etNumeroPanos.text.toString().trim().takeIf { it.isNotEmpty() }
+            // Se panos foram trocados, mostrar seleção de panos do estoque
+            mostrarSelecaoPanosReforma()
+            return // A função continuará após a seleção
         } else null
-
-        if (panos && numeroPanos.isNullOrBlank()) {
-            Toast.makeText(requireContext(), "Informe os números dos panos utilizados", Toast.LENGTH_SHORT).show()
-            return
-        }
 
         val observacoes = binding.etObservacoes.text.toString().trim().takeIf { it.isNotEmpty() }
 
@@ -384,6 +384,62 @@ class NovaReformaFragment : Fragment() {
                 observacoes = mesaReformada.observacoes
             )
         }
+    }
+
+    /**
+     * ✅ NOVO: Mostra seleção de panos para reforma
+     */
+    private fun mostrarSelecaoPanosReforma() {
+        // TODO: Implementar seleção de panos específica para reforma
+        // Por enquanto, usar o dialog genérico
+        PanoSelectionDialog.newInstance { panoSelecionado ->
+            // Registrar uso do pano na reforma
+            registrarPanoReforma(panoSelecionado)
+        }.show(childFragmentManager, "select_pano_reforma")
+    }
+    
+    /**
+     * ✅ NOVO: Registra o uso do pano na reforma
+     */
+    private fun registrarPanoReforma(panoSelecionado: com.example.gestaobilhares.data.entities.PanoEstoque) {
+        // TODO: Implementar lógica de registro do pano na reforma
+        // 1. Marcar pano como usado no estoque
+        // 2. Vincular pano à mesa
+        // 3. Continuar com o salvamento da reforma
+        
+        val numeroPanos = panoSelecionado.numero
+        continuarSalvamentoReforma(numeroPanos)
+    }
+    
+    /**
+     * ✅ NOVO: Continua o salvamento da reforma após seleção do pano
+     */
+    private fun continuarSalvamentoReforma(numeroPanos: String) {
+        val pintura = binding.cbPintura.isChecked
+        val tabela = binding.cbTabela.isChecked
+        val panos = binding.cbPanos.isChecked
+        val outros = binding.cbOutros.isChecked
+        val observacoes = binding.etObservacoes.text.toString().trim().takeIf { it.isNotEmpty() }
+
+        val mesaReformada = MesaReformada(
+            mesaId = mesaSelecionada!!.id,
+            numeroMesa = mesaSelecionada!!.numero,
+            tipoMesa = mesaSelecionada!!.tipoMesa,
+            tamanhoMesa = mesaSelecionada!!.tamanho,
+            pintura = pintura,
+            tabela = tabela,
+            panos = panos,
+            numeroPanos = numeroPanos,
+            outros = outros,
+            observacoes = observacoes,
+            fotoReforma = fotoPath,
+            dataReforma = Date()
+        )
+
+        viewModel.salvarReforma(mesaReformada)
+        
+        // Registrar no histórico de manutenção
+        registrarManutencoesNoHistorico(mesaReformada)
     }
 
     override fun onDestroyView() {

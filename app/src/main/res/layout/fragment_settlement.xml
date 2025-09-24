@@ -357,21 +357,139 @@
                         android:paddingHorizontal="16dp"
                         android:layout_marginBottom="8dp" />
 
-                    <!-- Checkbox Pano trocado -->
-                    <CheckBox
-                        android:id="@+id/cbPanoTrocado"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Pano trocado"
-                        android:layout_marginBottom="4dp" />
-                    <EditText
-                        android:id="@+id/etNumeroPano"
+                    <!-- ✅ NOVO: Seção de Pano -->
+                    <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Número do pano"
-                        android:inputType="text"
-                        android:visibility="gone"
-                        android:layout_marginBottom="8dp" />
+                        android:layout_marginBottom="16dp"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="2dp"
+                        app:strokeColor="?attr/colorOutline"
+                        app:strokeWidth="1dp">
+                        
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Pano da Mesa"
+                                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                                android:textColor="?attr/colorOnSurface"
+                                android:layout_marginBottom="8dp" />
+                            
+                            <!-- Pano Atual -->
+                            <LinearLayout
+                                android:id="@+id/layoutPanoAtual"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:background="?attr/colorSurfaceVariant"
+                                android:padding="12dp"
+                                android:layout_marginBottom="8dp">
+                                
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+                                    
+                                    <TextView
+                                        android:id="@+id/tvPanoAtualNumero"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="P001"
+                                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                                        android:textColor="?attr/colorOnSurface" />
+                                    
+                                    <TextView
+                                        android:id="@+id/tvPanoAtualInfo"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Azul - Grande - Veludo"
+                                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                                        android:textColor="?attr/colorOnSurfaceVariant" />
+                                </LinearLayout>
+                                
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:gravity="end">
+                                    
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Última troca:"
+                                        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                                        android:textColor="?attr/colorOnSurfaceVariant" />
+                                    
+                                    <TextView
+                                        android:id="@+id/tvPanoAtualData"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="15/01/2024"
+                                        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                                        android:textColor="?attr/colorOnSurface" />
+                                </LinearLayout>
+                            </LinearLayout>
+                            
+                            <!-- Checkbox Pano trocado -->
+                            <CheckBox
+                                android:id="@+id/cbPanoTrocado"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Pano trocado"
+                                android:layout_marginBottom="8dp" />
+                            
+                            <!-- Novo Pano Selecionado -->
+                            <LinearLayout
+                                android:id="@+id/layoutNovoPano"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:background="?attr/colorPrimaryContainer"
+                                android:padding="12dp"
+                                android:visibility="gone">
+                                
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+                                    
+                                    <TextView
+                                        android:id="@+id/tvNovoPanoNumero"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="P002"
+                                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                                        android:textColor="?attr/colorOnPrimaryContainer" />
+                                    
+                                    <TextView
+                                        android:id="@+id/tvNovoPanoInfo"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Azul - Grande - Veludo"
+                                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                                        android:textColor="?attr/colorOnPrimaryContainer" />
+                                </LinearLayout>
+                                
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnTrocarPano"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Trocar"
+                                    style="@style/Widget.Material3.Button.OutlinedButton" />
+                            </LinearLayout>
+                            
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
 
                     <!-- Caixa de seleção Tipo de Acerto -->
                     <TextView

@@ -2,6 +2,8 @@ package com.example.gestaobilhares.ui.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.gestaobilhares.data.entities.PanoEstoque
+import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +12,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class StockViewModel @Inject constructor() : ViewModel() {
+class StockViewModel @Inject constructor(
+    private val panoEstoqueRepository: PanoEstoqueRepository
+) : ViewModel() {
     
     private val _stockItems = MutableStateFlow<List<StockItem>>(emptyList())
     val stockItems: StateFlow<List<StockItem>> = _stockItems.asStateFlow()
@@ -45,6 +49,22 @@ class StockViewModel @Inject constructor() : ViewModel() {
                 supplier = "Fornecedor B"
             )
         )
+    }
+    
+    /**
+     * ✅ NOVO: Adiciona panos em lote ao estoque
+     */
+    fun adicionarPanosLote(panos: List<PanoEstoque>) {
+        viewModelScope.launch {
+            try {
+                panoEstoqueRepository.inserirLote(panos)
+                // Recarregar dados do estoque
+                loadStockItems()
+            } catch (e: Exception) {
+                // TODO: Tratar erro
+                android.util.Log.e("StockViewModel", "Erro ao adicionar panos em lote: ${e.message}", e)
+            }
+        }
     }
 }
 
