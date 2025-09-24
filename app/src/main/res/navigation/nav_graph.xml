@@ -473,11 +473,32 @@
         android:name="com.example.gestaobilhares.ui.inventory.InventorySelectionDialog"
         android:label="Inventário" />
 
+    <!-- ✅ NOVO: Fragment de Metas -->
+    <fragment
+        android:id="@+id/metasFragment"
+        android:name="com.example.gestaobilhares.ui.metas.MetasFragment"
+        android:label="Metas"
+        tools:layout="@layout/fragment_metas" />
+
     <!-- ✅ NOVO: Telas de Inventário -->
     <fragment
         android:id="@+id/vehiclesFragment"
         android:name="com.example.gestaobilhares.ui.inventory.vehicles.VehiclesFragment"
-        android:label="Veículos" />
+        android:label="Veículos">
+        <action
+            android:id="@+id/action_vehiclesFragment_to_vehicleDetailFragment"
+            app:destination="@id/vehicleDetailFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/vehicleDetailFragment"
+        android:name="com.example.gestaobilhares.ui.inventory.vehicles.VehicleDetailFragment"
+        android:label="Detalhes do Veículo">
+        <argument
+            android:name="vehicleId"
+            app:argType="long"
+            android:defaultValue="0L" />
+    </fragment>
     <fragment
         android:id="@+id/equipmentsFragment"
         android:name="com.example.gestaobilhares.ui.inventory.equipments.EquipmentsFragment"

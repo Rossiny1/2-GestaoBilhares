@@ -57,10 +57,15 @@ class ColaboradorMetasFragment : Fragment() {
         setupCiclosERotas()
         setupClickListeners()
         
-        // Verificar se é edição
+        // Verificar se é edição ou se veio da tela de metas
         colaboradorId = arguments?.getLong("colaborador_id", -1L).takeIf { it != -1L }
+        val rotaId = arguments?.getLong("rota_id", -1L).takeIf { it != -1L }
+        
         if (colaboradorId != null) {
             carregarMetasColaborador(colaboradorId!!)
+        } else if (rotaId != null) {
+            // Auto-vincular ao colaborador responsável da rota
+            autoVincularColaboradorResponsavel(rotaId)
         }
     }
 
@@ -258,6 +263,43 @@ class ColaboradorMetasFragment : Fragment() {
                 
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Erro ao salvar meta: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /**
+     * Auto-vincula ao colaborador responsável principal da rota
+     */
+    private fun autoVincularColaboradorResponsavel(rotaId: Long) {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val colaboradorResponsavel = withContext(Dispatchers.IO) {
+                    appRepository.buscarColaboradorResponsavelPrincipal(rotaId)
+                }
+                
+                if (colaboradorResponsavel != null) {
+                    colaboradorId = colaboradorResponsavel.id
+                    binding.toolbar.title = "Nova Meta - ${colaboradorResponsavel.nome}"
+                    
+                    // Pre-selecionar o ciclo atual da rota
+                    val cicloAtual = withContext(Dispatchers.IO) {
+                        appRepository.buscarCicloAtualPorRota(rotaId)
+                    }
+                    
+                    if (cicloAtual != null) {
+                        cicloSelecionado = cicloAtual.id
+                        rotaSelecionada = rotaId
+                        // Atualizar dropdowns com os valores selecionados
+                        binding.autoCompleteCiclo.setText(cicloAtual.numeroCiclo.toString())
+                        binding.autoCompleteRota.setText(rotaId.toString())
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Nenhum colaborador responsável encontrado para esta rota", Toast.LENGTH_SHORT).show()
+                    findNavController().navigateUp()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Erro ao vincular colaborador: ${e.message}", Toast.LENGTH_SHORT).show()
+                findNavController().navigateUp()
             }
         }
     }

@@ -95,9 +95,6 @@ interface ColaboradorDao {
     @Query("UPDATE metas_colaborador SET valor_atual = :valorAtual WHERE id = :metaId")
     suspend fun atualizarValorAtual(metaId: Long, valorAtual: Double)
     
-    @Query("UPDATE metas_colaborador SET ativo = 0 WHERE colaborador_id = :colaboradorId")
-    suspend fun desativarMetasColaborador(colaboradorId: Long)
-    
     @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND ciclo_id = :cicloId AND ativo = 1")
     fun obterMetasPorCiclo(colaboradorId: Long, cicloId: Long): Flow<List<MetaColaborador>>
     
@@ -132,4 +129,57 @@ interface ColaboradorDao {
     
     @Query("UPDATE colaborador_rotas SET responsavel_principal = 1 WHERE colaborador_id = :colaboradorId AND rota_id = :rotaId")
     suspend fun definirResponsavelPrincipal(colaboradorId: Long, rotaId: Long)
+    
+    // ==================== QUERIES PARA METAS ====================
+    
+    /**
+     * Busca metas ativas de um colaborador para um ciclo específico
+     */
+    @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND ciclo_id = :cicloId AND ativo = 1")
+    suspend fun buscarMetasPorColaboradorECiclo(colaboradorId: Long, cicloId: Long): List<MetaColaborador>
+    
+    /**
+     * Busca metas ativas de uma rota para um ciclo específico
+     */
+    @Query("""
+        SELECT mc.* FROM metas_colaborador mc
+        INNER JOIN colaborador_rotas cr ON mc.colaborador_id = cr.colaborador_id
+        WHERE cr.rota_id = :rotaId AND mc.ciclo_id = :cicloId AND mc.ativo = 1
+    """)
+    suspend fun buscarMetasPorRotaECiclo(rotaId: Long, cicloId: Long): List<MetaColaborador>
+    
+    /**
+     * Busca colaborador responsável principal de uma rota
+     */
+    @Query("""
+        SELECT c.* FROM colaboradores c
+        INNER JOIN colaborador_rotas cr ON c.id = cr.colaborador_id
+        WHERE cr.rota_id = :rotaId AND cr.responsavel_principal = 1
+        LIMIT 1
+    """)
+    suspend fun buscarColaboradorResponsavelPrincipal(rotaId: Long): Colaborador?
+    
+    /**
+     * Busca todas as metas ativas de um colaborador
+     */
+    @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND ativo = 1 ORDER BY data_criacao DESC")
+    fun buscarMetasAtivasPorColaborador(colaboradorId: Long): Flow<List<MetaColaborador>>
+    
+    /**
+     * Busca metas por tipo e ciclo
+     */
+    @Query("SELECT * FROM metas_colaborador WHERE tipo_meta = :tipoMeta AND ciclo_id = :cicloId AND ativo = 1")
+    suspend fun buscarMetasPorTipoECiclo(tipoMeta: TipoMeta, cicloId: Long): List<MetaColaborador>
+    
+    /**
+     * Atualiza o valor atual de uma meta
+     */
+    @Query("UPDATE metas_colaborador SET valor_atual = :valorAtual WHERE id = :metaId")
+    suspend fun atualizarValorAtualMeta(metaId: Long, valorAtual: Double)
+    
+    /**
+     * Desativa todas as metas de um colaborador
+     */
+    @Query("UPDATE metas_colaborador SET ativo = 0 WHERE colaborador_id = :colaboradorId")
+    suspend fun desativarMetasColaborador(colaboradorId: Long)
 } 

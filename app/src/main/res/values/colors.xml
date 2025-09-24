@@ -180,4 +180,10 @@
     <color name="primary_light">@color/primary_blue_light</color>
     <color name="success_color">@color/success_green</color>
     <color name="success_light">@color/green_100</color>
+    
+    <!-- Cores para progresso e metas -->
+    <color name="progress_track">#4A5568</color>
+    <color name="progress_success">@color/green_500</color>
+    <color name="progress_warning">@color/orange_500</color>
+    <color name="progress_error">@color/red_500</color>
 </resources>

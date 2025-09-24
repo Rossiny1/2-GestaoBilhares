@@ -254,6 +254,18 @@ class RoutesFragment : Fragment() {
                         false
                     }
                 }
+                R.id.nav_metas -> {
+                    try {
+                        findNavController().navigate(R.id.metasFragment)
+                        binding.drawerLayout.closeDrawers()
+                        true
+                    } catch (e: Exception) {
+                        Log.e("RoutesFragment", "Erro ao abrir metas: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao abrir metas: ${e.message}", Toast.LENGTH_SHORT).show()
+                        binding.drawerLayout.closeDrawers()
+                        false
+                    }
+                }
                 R.id.nav_dashboard -> {
                     try {
                         findNavController().navigate(R.id.dashboardFragment)

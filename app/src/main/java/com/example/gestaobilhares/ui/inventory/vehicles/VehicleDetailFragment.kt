@@ -1,0 +1,207 @@
+package com.example.gestaobilhares.ui.inventory.vehicles
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.gestaobilhares.databinding.FragmentVehicleDetailBinding
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import java.util.Calendar
+
+@AndroidEntryPoint
+class VehicleDetailFragment : Fragment() {
+    private var _binding: FragmentVehicleDetailBinding? = null
+    private val binding get() = _binding!!
+
+    private val viewModel: VehicleDetailViewModel by viewModels()
+    private lateinit var maintenanceAdapter: MaintenanceHistoryAdapter
+    private lateinit var fuelAdapter: FuelHistoryAdapter
+
+    private var vehicleId: Long = 0L
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentVehicleDetailBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        
+        vehicleId = arguments?.getLong("vehicleId", 0L) ?: 0L
+        
+        setupUI()
+        setupRecyclerViews()
+        setupClickListeners()
+        observeData()
+        loadVehicleData()
+    }
+
+    private fun setupUI() {
+        // Configurar toolbar
+        binding.toolbar.setNavigationOnClickListener {
+            requireActivity().onBackPressed()
+        }
+        
+        // Configurar spinner de anos
+        setupYearSpinner()
+        
+        // Configurar tabs
+        setupTabs()
+    }
+
+    private fun setupYearSpinner() {
+        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+        val years = (currentYear - 5..currentYear).toList().reversed()
+        
+        val yearAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, years)
+        yearAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerYear.adapter = yearAdapter
+        
+        // Selecionar ano atual por padrão
+        val currentYearIndex = years.indexOf(currentYear)
+        if (currentYearIndex >= 0) {
+            binding.spinnerYear.setSelection(currentYearIndex)
+        }
+    }
+
+    private fun setupTabs() {
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Manutenção"))
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Abastecimento"))
+        
+        binding.tabLayout.addOnTabSelectedListener(object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab?) {
+                when (tab?.position) {
+                    0 -> showMaintenanceHistory()
+                    1 -> showFuelHistory()
+                }
+            }
+            override fun onTabUnselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
+            override fun onTabReselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
+        })
+    }
+
+    private fun setupRecyclerViews() {
+        // Adapter de manutenção
+        maintenanceAdapter = MaintenanceHistoryAdapter { maintenance ->
+            // TODO: Implementar navegação para detalhes da manutenção
+        }
+        binding.rvMaintenanceHistory.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvMaintenanceHistory.adapter = maintenanceAdapter
+
+        // Adapter de abastecimento
+        fuelAdapter = FuelHistoryAdapter { fuel ->
+            // TODO: Implementar navegação para detalhes do abastecimento
+        }
+        binding.rvFuelHistory.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvFuelHistory.adapter = fuelAdapter
+    }
+
+    private fun setupClickListeners() {
+        binding.spinnerYear.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedYear = parent?.getItemAtPosition(position) as? Int ?: Calendar.getInstance().get(Calendar.YEAR)
+                viewModel.filterByYear(selectedYear)
+            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+        }
+
+        binding.fabAddMaintenance.setOnClickListener {
+            AddEditMaintenanceDialog().show(childFragmentManager, "add_maintenance")
+        }
+
+        binding.fabAddFuel.setOnClickListener {
+            AddEditFuelDialog().show(childFragmentManager, "add_fuel")
+        }
+    }
+
+    private fun observeData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.vehicle.collect { vehicle ->
+                vehicle?.let {
+                    binding.tvVehicleName.text = it.name
+                    binding.tvVehiclePlate.text = it.plate
+                    binding.tvVehicleModel.text = it.model
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.maintenanceHistory.collect { maintenanceList ->
+                maintenanceAdapter.submitList(maintenanceList)
+                updateMaintenanceSummary()
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.fuelHistory.collect { fuelList ->
+                fuelAdapter.submitList(fuelList)
+                updateFuelSummary()
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.summaryData.collect { summary ->
+                updateSummaryCards(summary)
+            }
+        }
+    }
+
+    private fun loadVehicleData() {
+        viewModel.loadVehicle(vehicleId)
+    }
+
+    private fun showMaintenanceHistory() {
+        binding.rvMaintenanceHistory.visibility = View.VISIBLE
+        binding.rvFuelHistory.visibility = View.GONE
+        binding.fabAddMaintenance.visibility = View.VISIBLE
+        binding.fabAddFuel.visibility = View.GONE
+    }
+
+    private fun showFuelHistory() {
+        binding.rvMaintenanceHistory.visibility = View.GONE
+        binding.rvFuelHistory.visibility = View.VISIBLE
+        binding.fabAddMaintenance.visibility = View.GONE
+        binding.fabAddFuel.visibility = View.VISIBLE
+    }
+
+    private fun updateMaintenanceSummary() {
+        val maintenanceList = viewModel.maintenanceHistory.value
+        val totalMaintenance = maintenanceList.sumOf { it.value }
+        binding.tvTotalMaintenance.text = "R$ ${String.format("%.2f", totalMaintenance)}"
+    }
+
+    private fun updateFuelSummary() {
+        val fuelList = viewModel.fuelHistory.value
+        val totalFuel = fuelList.sumOf { it.value }
+        val totalKm = fuelList.sumOf { it.km }
+        val averageKmPerLiter = if (fuelList.isNotEmpty()) {
+            fuelList.sumOf { it.km } / fuelList.sumOf { it.liters }
+        } else 0.0
+        
+        binding.tvTotalFuel.text = "R$ ${String.format("%.2f", totalFuel)}"
+        binding.tvTotalKm.text = "${String.format("%.0f", totalKm)} km"
+        binding.tvAverageKmPerLiter.text = "${String.format("%.1f", averageKmPerLiter)} km/l"
+    }
+
+    private fun updateSummaryCards(summary: VehicleSummary) {
+        binding.tvTotalMaintenance.text = "R$ ${String.format("%.2f", summary.totalMaintenance)}"
+        binding.tvTotalFuel.text = "R$ ${String.format("%.2f", summary.totalFuel)}"
+        binding.tvTotalKm.text = "${String.format("%.0f", summary.totalKm)} km"
+        binding.tvAverageKmPerLiter.text = "${String.format("%.1f", summary.averageKmPerLiter)} km/l"
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}
