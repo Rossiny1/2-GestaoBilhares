@@ -57,6 +57,13 @@ class AddPanosLoteDialog : DialogFragment() {
         
         // Configurar listeners para cálculo automático
         setupCalculoAutomatico()
+        
+        // Configurar listener para o campo tamanho
+        binding.etTamanhoPano.setOnItemClickListener { _, _, position, _ ->
+            val tamanhoSelecionado = tamanhos[position]
+            binding.etTamanhoPano.setText(tamanhoSelecionado, false)
+            atualizarResumo()
+        }
     }
 
     private fun setupCalculoAutomatico() {
@@ -113,7 +120,8 @@ class AddPanosLoteDialog : DialogFragment() {
         val observacoes = binding.etObservacoes.text.toString().trim()
 
         if (cor.isEmpty() || tamanho.isEmpty() || material.isEmpty() || quantidade <= 0) {
-            // TODO: Mostrar erro
+            // Mostrar erro
+            android.widget.Toast.makeText(requireContext(), "Preencha todos os campos obrigatórios", android.widget.Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -133,6 +141,10 @@ class AddPanosLoteDialog : DialogFragment() {
         }
 
         viewModel.adicionarPanosLote(panos)
+        
+        // Mostrar sucesso e fechar diálogo
+        android.widget.Toast.makeText(requireContext(), "$quantidade panos criados com sucesso!", android.widget.Toast.LENGTH_SHORT).show()
+        dismiss()
     }
 
     override fun onDestroyView() {
