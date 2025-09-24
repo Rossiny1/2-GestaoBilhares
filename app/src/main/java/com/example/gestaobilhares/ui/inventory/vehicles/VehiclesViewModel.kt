@@ -19,10 +19,12 @@ class VehiclesViewModel @Inject constructor(
     val vehicles: StateFlow<List<Veiculo>> = repository.listar()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    fun addVehicle(marca: String, modelo: String, anoModelo: Int, kmAtual: Long) {
+    fun addVehicle(nome: String, placa: String, marca: String, modelo: String, anoModelo: Int, kmAtual: Long) {
         viewModelScope.launch {
             repository.inserir(
                 Veiculo(
+                    nome = nome.trim(),
+                    placa = placa.trim(),
                     marca = marca.trim(),
                     modelo = modelo.trim(),
                     anoModelo = anoModelo,

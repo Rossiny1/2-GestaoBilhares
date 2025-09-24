@@ -23,8 +23,8 @@ class VehiclesAdapter(
 
     inner class VehicleViewHolder(private val binding: ItemVehicleBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: Veiculo) {
-            binding.tvTitle.text = "${item.marca} ${item.modelo}"
-            binding.tvSubtitle.text = "Ano/Modelo: ${item.anoModelo}"
+            binding.tvTitle.text = item.nome.ifEmpty { "${item.marca} ${item.modelo}" }
+            binding.tvSubtitle.text = "Placa: ${item.placa} | Ano: ${item.anoModelo}"
             binding.tvKm.text = "KM: ${item.kmAtual}"
             binding.root.setOnClickListener { onClick(item) }
         }

@@ -21,7 +21,9 @@ class ExpenseRegisterViewModel @Inject constructor(
     private val despesaRepository: DespesaRepository,
     private val categoriaDespesaRepository: CategoriaDespesaRepository,
     private val tipoDespesaRepository: TipoDespesaRepository,
-    private val cicloAcertoRepository: CicloAcertoRepository
+    private val cicloAcertoRepository: CicloAcertoRepository,
+    private val historicoManutencaoRepository: HistoricoManutencaoVeiculoRepository,
+    private val historicoCombustivelRepository: HistoricoCombustivelVeiculoRepository
 ) : ViewModel() {
 
     // Estado de carregamento
@@ -389,6 +391,19 @@ class ExpenseRegisterViewModel @Inject constructor(
                     )
 
                     val novaDespesaId = despesaRepository.inserir(despesa)
+                    android.util.Log.d("ExpenseRegisterViewModel", "Despesa salva com ID: $novaDespesaId")
+                    
+                    // ✅ NOVO: Salvar no histórico de veículos se for combustível ou manutenção
+                    if (veiculoId != null) {
+                        try {
+                            salvarNoHistoricoVeiculo(despesa, veiculoId, kmRodado, litrosAbastecidos)
+                            android.util.Log.d("ExpenseRegisterViewModel", "Histórico de veículo salvo com sucesso")
+                        } catch (e: Exception) {
+                            android.util.Log.e("ExpenseRegisterViewModel", "Erro ao salvar histórico de veículo: ${e.message}", e)
+                            _message.value = "Despesa salva, mas erro ao salvar no histórico do veículo: ${e.message}"
+                        }
+                    }
+                    
                     _message.value = "Despesa salva com sucesso"
                     _success.value = true
                 }
@@ -420,5 +435,98 @@ class ExpenseRegisterViewModel @Inject constructor(
      */
     fun resetSuccess() {
         _success.value = false
+    }
+    
+    /**
+     * ✅ NOVO: Salva no histórico de veículos baseado no tipo de despesa
+     */
+    private suspend fun salvarNoHistoricoVeiculo(
+        despesa: Despesa,
+        veiculoId: Long,
+        kmRodado: Long?,
+        litrosAbastecidos: Double?
+    ) {
+        try {
+            val tipoDespesa = despesa.tipoDespesa.lowercase()
+            val categoriaDespesa = despesa.categoria.lowercase()
+            
+            // ✅ CORREÇÃO: Conversão segura de LocalDateTime para Date
+            val dataDespesa = try {
+                Date.from(despesa.dataHora.atZone(java.time.ZoneId.systemDefault()).toInstant())
+            } catch (e: Exception) {
+                // Fallback para data atual se houver erro na conversão
+                android.util.Log.w("ExpenseRegisterViewModel", "Erro na conversão de data: ${e.message}")
+                Date()
+            }
+            
+            when {
+                isCombustivel(tipoDespesa, categoriaDespesa) -> {
+                    // Salvar no histórico de combustível
+                    if (litrosAbastecidos != null && litrosAbastecidos > 0) {
+                        android.util.Log.d("ExpenseRegisterViewModel", "Salvando abastecimento: veiculoId=$veiculoId, litros=$litrosAbastecidos, valor=${despesa.valor}")
+                        
+                        val historicoCombustivel = HistoricoCombustivelVeiculo(
+                            veiculoId = veiculoId,
+                            dataAbastecimento = dataDespesa,
+                            litros = litrosAbastecidos,
+                            valor = despesa.valor,
+                            kmVeiculo = kmRodado ?: 0L,
+                            kmRodado = kmRodado?.toDouble() ?: 0.0,
+                            posto = "Posto", // TODO: Permitir seleção de posto
+                            observacoes = despesa.observacoes
+                        )
+                        
+                        val idInserido = historicoCombustivelRepository.inserir(historicoCombustivel)
+                        android.util.Log.d("ExpenseRegisterViewModel", "Abastecimento salvo com ID: $idInserido")
+                    } else {
+                        android.util.Log.w("ExpenseRegisterViewModel", "Litros não informados ou inválidos: $litrosAbastecidos")
+                    }
+                }
+                isManutencao(tipoDespesa, categoriaDespesa) -> {
+                    // Salvar no histórico de manutenção
+                    val historicoManutencao = HistoricoManutencaoVeiculo(
+                        veiculoId = veiculoId,
+                        tipoManutencao = despesa.tipoDespesa,
+                        descricao = despesa.descricao,
+                        dataManutencao = dataDespesa,
+                        valor = despesa.valor,
+                        kmVeiculo = kmRodado ?: 0L,
+                        responsavel = "Sistema", // TODO: Pegar usuário atual
+                        observacoes = despesa.observacoes
+                    )
+                    historicoManutencaoRepository.inserir(historicoManutencao)
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ExpenseRegisterViewModel", "Erro ao salvar no histórico de veículos: ${e.message}", e)
+            // Não falhar o salvamento da despesa por causa do histórico
+            // Mas vamos tentar salvar pelo menos a despesa principal
+            throw e // Re-throw para que o erro seja capturado no saveExpense
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Verifica se é despesa de combustível
+     */
+    private fun isCombustivel(tipoDespesa: String, categoriaDespesa: String): Boolean {
+        val combustivelKeywords = listOf(
+            "combustível", "combustivel", "gasolina", "diesel", "etanol", "gnv", "gás"
+        )
+        return combustivelKeywords.any { keyword ->
+            tipoDespesa.contains(keyword) || categoriaDespesa.contains(keyword)
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Verifica se é despesa de manutenção
+     */
+    private fun isManutencao(tipoDespesa: String, categoriaDespesa: String): Boolean {
+        val manutencaoKeywords = listOf(
+            "manutenção", "manutencao", "revisão", "revisao", "troca", "pneu", "óleo", "oleo",
+            "filtro", "bateria", "freio", "suspensão", "suspensao", "motor", "transmissão"
+        )
+        return manutencaoKeywords.any { keyword ->
+            tipoDespesa.contains(keyword) || categoriaDespesa.contains(keyword)
+        }
     }
 } 

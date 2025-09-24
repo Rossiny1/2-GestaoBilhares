@@ -8,11 +8,12 @@ import java.util.Date
 data class Veiculo(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val nome: String = "",
+    val placa: String = "",
     val marca: String,
     val modelo: String,
     val anoModelo: Int,
     val kmAtual: Long = 0,
-    val placa: String? = null,
     val dataCompra: Date? = null,
     val observacoes: String? = null
 )
