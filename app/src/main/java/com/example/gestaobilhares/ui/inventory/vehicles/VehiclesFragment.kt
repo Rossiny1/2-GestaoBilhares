@@ -7,7 +7,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentVehiclesBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -31,7 +33,13 @@ class VehiclesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        adapter = VehiclesAdapter { /* abrir detalhes futuramente */ }
+        adapter = VehiclesAdapter { vehicle ->
+            // Navegar para tela de detalhes do veículo
+            val bundle = Bundle().apply {
+                putLong("vehicleId", vehicle.id)
+            }
+            findNavController().navigate(R.id.vehicleDetailFragment, bundle)
+        }
         binding.rvVehicles.layoutManager = LinearLayoutManager(requireContext())
         binding.rvVehicles.adapter = adapter
 

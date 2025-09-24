@@ -50,6 +50,10 @@
     <!-- Grupo: Relatórios -->
     <group android:id="@+id/group_reports" android:checkableBehavior="single">
         <item
+            android:id="@+id/nav_metas"
+            android:icon="@drawable/ic_target"
+            android:title="Metas" />
+        <item
             android:id="@+id/nav_dashboard"
             android:icon="@drawable/ic_dashboard"
             android:title="Dashboard" />

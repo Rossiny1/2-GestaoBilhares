@@ -466,6 +466,13 @@ class AppRepository(
     suspend fun atualizarValorAtualMeta(metaId: Long, valorAtual: Double) = colaboradorDao?.atualizarValorAtual(metaId, valorAtual)
     suspend fun desativarMetasColaborador(colaboradorId: Long) = colaboradorDao?.desativarMetasColaborador(colaboradorId)
     
+    // Métodos para metas
+    suspend fun buscarMetasPorColaboradorECiclo(colaboradorId: Long, cicloId: Long) = colaboradorDao?.buscarMetasPorColaboradorECiclo(colaboradorId, cicloId) ?: emptyList()
+    suspend fun buscarMetasPorRotaECiclo(rotaId: Long, cicloId: Long) = colaboradorDao?.buscarMetasPorRotaECiclo(rotaId, cicloId) ?: emptyList()
+    suspend fun buscarColaboradorResponsavelPrincipal(rotaId: Long) = colaboradorDao?.buscarColaboradorResponsavelPrincipal(rotaId)
+    fun buscarMetasAtivasPorColaborador(colaboradorId: Long) = colaboradorDao?.buscarMetasAtivasPorColaborador(colaboradorId) ?: flowOf(emptyList())
+    suspend fun buscarMetasPorTipoECiclo(tipoMeta: TipoMeta, cicloId: Long) = colaboradorDao?.buscarMetasPorTipoECiclo(tipoMeta, cicloId) ?: emptyList()
+    
     // ==================== COLABORADOR ROTA ====================
     
     fun obterRotasPorColaborador(colaboradorId: Long) = colaboradorDao?.obterRotasPorColaborador(colaboradorId) ?: flowOf(emptyList())
@@ -498,6 +505,10 @@ class AppRepository(
     // ==================== CICLO ACERTO ====================
     
     fun obterTodosCiclos() = cicloAcertoDao.listarTodos()
+    
+    suspend fun buscarCicloAtualPorRota(rotaId: Long) = cicloAcertoDao.buscarCicloAtualPorRota(rotaId)
+    suspend fun buscarUltimoCicloFinalizadoPorRota(rotaId: Long) = cicloAcertoDao.buscarUltimoCicloFinalizadoPorRota(rotaId)
+    suspend fun buscarCiclosPorRotaEAno(rotaId: Long, ano: Int) = cicloAcertoDao.buscarCiclosPorRotaEAno(rotaId, ano)
     
     // ==================== MÉTODOS PARA RELATÓRIOS ====================
     
@@ -750,4 +761,55 @@ class AppRepository(
     suspend fun obterProcuraçõesValidadas() = procuraçãoRepresentanteDao.obterProcuraçõesValidadas()
     suspend fun obterProcuraçõesVencidas(dataAtual: java.util.Date) = procuraçãoRepresentanteDao.obterProcuraçõesVencidas(dataAtual)
     suspend fun validarProcuração(id: Long, dataValidacao: java.util.Date, validadoPor: String) = procuraçãoRepresentanteDao.validarProcuração(id, dataValidacao, validadoPor)
+    
+    // ==================== MÉTODOS PARA CÁLCULO DE METAS ====================
+    
+    /**
+     * Busca acertos por rota e ciclo
+     */
+    suspend fun buscarAcertosPorRotaECiclo(rotaId: Long, cicloId: Long): List<Acerto> {
+        return try {
+            acertoDao.buscarPorRotaECicloId(rotaId, cicloId).first()
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "Erro ao buscar acertos por rota e ciclo: ${e.message}", e)
+            emptyList()
+        }
+    }
+    
+    /**
+     * Conta clientes ativos por rota
+     */
+    suspend fun contarClientesAtivosPorRota(rotaId: Long): Int {
+        return try {
+            clienteDao.obterClientesPorRota(rotaId).first().count { it.ativo }
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "Erro ao contar clientes ativos por rota: ${e.message}", e)
+            0
+        }
+    }
+    
+    /**
+     * Conta clientes acertados por rota e ciclo
+     */
+    suspend fun contarClientesAcertadosPorRotaECiclo(rotaId: Long, cicloId: Long): Int {
+        return try {
+            acertoDao.buscarPorRotaECicloId(rotaId, cicloId).first().size
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "Erro ao contar clientes acertados: ${e.message}", e)
+            0
+        }
+    }
+    
+    /**
+     * Conta mesas locadas por rota
+     */
+    suspend fun contarMesasLocadasPorRota(rotaId: Long): Int {
+        return try {
+            // Consideramos "locadas" como mesas ativas vinculadas a clientes da rota
+            mesaDao.buscarMesasPorRota(rotaId).first().size
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "Erro ao contar mesas locadas: ${e.message}", e)
+            0
+        }
+    }
 } 

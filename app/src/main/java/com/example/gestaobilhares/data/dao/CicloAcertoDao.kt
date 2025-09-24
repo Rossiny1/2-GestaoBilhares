@@ -128,6 +128,43 @@ interface CicloAcertoDao {
      */
     @Query("SELECT status, COUNT(*) as total FROM ciclos_acerto GROUP BY status")
     suspend fun contarPorStatus(): List<StatusCount>
+    
+    // ==================== QUERIES PARA METAS ====================
+    
+    /**
+     * Busca o ciclo atual de uma rota (em andamento ou último finalizado)
+     */
+    @Query("""
+        SELECT * FROM ciclos_acerto 
+        WHERE rota_id = :rotaId 
+        ORDER BY 
+            CASE WHEN status = 'EM_ANDAMENTO' THEN 0 ELSE 1 END,
+            ano DESC, 
+            numero_ciclo DESC 
+        LIMIT 1
+    """)
+    suspend fun buscarCicloAtualPorRota(rotaId: Long): CicloAcertoEntity?
+    
+    /**
+     * Busca o último ciclo finalizado de uma rota
+     */
+    @Query("""
+        SELECT * FROM ciclos_acerto 
+        WHERE rota_id = :rotaId AND status = 'FINALIZADO'
+        ORDER BY ano DESC, numero_ciclo DESC 
+        LIMIT 1
+    """)
+    suspend fun buscarUltimoCicloFinalizadoPorRota(rotaId: Long): CicloAcertoEntity?
+    
+    /**
+     * Busca ciclos por rota e ano
+     */
+    @Query("""
+        SELECT * FROM ciclos_acerto 
+        WHERE rota_id = :rotaId AND ano = :ano
+        ORDER BY numero_ciclo DESC
+    """)
+    suspend fun buscarCiclosPorRotaEAno(rotaId: Long, ano: Int): List<CicloAcertoEntity>
 }
 
 /**
