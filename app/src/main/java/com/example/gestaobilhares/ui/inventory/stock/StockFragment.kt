@@ -9,6 +9,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentStockBinding
+import com.example.gestaobilhares.ui.inventory.stock.AddPanosLoteDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -54,8 +56,22 @@ class StockFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.fabAddStockItem.setOnClickListener {
-            AddEditStockItemDialog().show(childFragmentManager, "add_stock_item")
+            showAddItemDialog()
         }
+    }
+    
+    private fun showAddItemDialog() {
+        val options = arrayOf("Adicionar Item Genérico", "Adicionar Panos em Lote")
+        
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Adicionar ao Estoque")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> AddEditStockItemDialog().show(childFragmentManager, "add_stock_item")
+                    1 -> AddPanosLoteDialog().show(childFragmentManager, "add_panos_lote")
+                }
+            }
+            .show()
     }
 
     override fun onDestroyView() {

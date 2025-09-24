@@ -40,6 +40,8 @@ import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.entities.Acerto
+import com.example.gestaobilhares.data.entities.PanoEstoque
+import com.example.gestaobilhares.ui.settlement.PanoSelectionDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.Toast
 import com.example.gestaobilhares.data.entities.Mesa
@@ -459,9 +461,8 @@ class SettlementFragment : Fragment() {
         setupPaymentMethod()
         setupCalculationListeners()
         preencherNomeRepresentante()
-        binding.cbPanoTrocado.setOnCheckedChangeListener { _, isChecked ->
-            binding.etNumeroPano.visibility = if (isChecked) View.VISIBLE else View.GONE
-        }
+        // ✅ NOVO: Configurar lógica do pano
+        setupPanoLogic()
         // ✅ Bloquear edição manual do campo Valor Recebido
         binding.etAmountReceived.isFocusable = false
         binding.etAmountReceived.isClickable = false
@@ -905,7 +906,7 @@ class SettlementFragment : Fragment() {
         val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
         val observacao = binding.etObservacao.text.toString().trim()
         val panoTrocado = binding.cbPanoTrocado.isChecked
-        val numeroPano = if (panoTrocado) binding.etNumeroPano.text.toString() else null
+        val numeroPano = if (panoTrocado) binding.tvNovoPanoNumero.text.toString() else null
         val tipoAcerto = binding.spTipoAcerto.selectedItem.toString()
         val representante = binding.tvRepresentante.text.toString()
 
@@ -1210,6 +1211,71 @@ class SettlementFragment : Fragment() {
             }
             .setNegativeButton("Cancelar", null)
             .show()
+    }
+
+    /**
+     * ✅ NOVO: Configura a lógica do pano
+     */
+    private fun setupPanoLogic() {
+        // Carregar pano atual da mesa (se houver)
+        carregarPanoAtual()
+        
+        // Configurar checkbox de pano trocado
+        binding.cbPanoTrocado.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                mostrarSelecaoPano()
+            } else {
+                binding.layoutNovoPano.visibility = View.GONE
+            }
+        }
+        
+        // Configurar botão de trocar pano
+        binding.btnTrocarPano.setOnClickListener {
+            trocarPano()
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Carrega o pano atual da mesa
+     */
+    private fun carregarPanoAtual() {
+        // TODO: Implementar carregamento do pano atual do banco de dados
+        // Por enquanto, dados mock
+        binding.tvPanoAtualNumero.text = "P001"
+        binding.tvPanoAtualInfo.text = "Azul - Grande - Veludo"
+        binding.tvPanoAtualData.text = "15/01/2024"
+    }
+    
+    /**
+     * ✅ NOVO: Mostra a seleção de pano
+     */
+    private fun mostrarSelecaoPano() {
+        // TODO: Obter tamanho da mesa para filtrar panos
+        val tamanhoMesa = "Grande" // Mock - deve vir da mesa selecionada
+        
+        PanoSelectionDialog.newInstance { panoSelecionado ->
+            binding.tvNovoPanoNumero.text = panoSelecionado.numero
+            binding.tvNovoPanoInfo.text = "${panoSelecionado.cor} - ${panoSelecionado.tamanho} - ${panoSelecionado.material}"
+            binding.layoutNovoPano.visibility = View.VISIBLE
+        }.show(childFragmentManager, "select_pano")
+    }
+    
+    /**
+     * ✅ NOVO: Executa a troca do pano
+     */
+    private fun trocarPano() {
+        // TODO: Implementar lógica de troca do pano
+        // 1. Desativar pano atual no estoque
+        // 2. Ativar novo pano na mesa
+        // 3. Registrar histórico da troca
+        // 4. Atualizar UI
+        
+        Toast.makeText(requireContext(), "Pano trocado com sucesso!", Toast.LENGTH_SHORT).show()
+        binding.layoutNovoPano.visibility = View.GONE
+        binding.cbPanoTrocado.isChecked = false
+        
+        // Atualizar pano atual
+        carregarPanoAtual()
     }
 
     override fun onDestroyView() {

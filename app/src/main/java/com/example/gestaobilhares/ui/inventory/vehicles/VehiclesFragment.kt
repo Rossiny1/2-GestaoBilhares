@@ -33,6 +33,10 @@ class VehiclesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Configurar toolbar com título "Veículo" e navegação back
+        binding.toolbar.setNavigationOnClickListener {
+            requireActivity().onBackPressed()
+        }
         adapter = VehiclesAdapter { vehicle ->
             // Navegar para tela de detalhes do veículo
             val bundle = Bundle().apply {

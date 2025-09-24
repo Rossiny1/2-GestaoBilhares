@@ -8,6 +8,7 @@ import android.content.Context
 import com.example.gestaobilhares.data.dao.RotaDao
 import com.example.gestaobilhares.data.dao.ClienteDao
 import com.example.gestaobilhares.data.dao.DespesaDao
+import com.example.gestaobilhares.data.dao.PanoMesaDao
 import com.example.gestaobilhares.data.entities.*
 
 /**
@@ -41,9 +42,10 @@ import com.example.gestaobilhares.data.entities.*
         HistoricoManutencaoMesa::class, // ✅ NOVO: HISTÓRICO DE MANUTENÇÃO DAS MESAS
         Veiculo::class, // ✅ NOVO: VEÍCULOS
         HistoricoManutencaoVeiculo::class, // ✅ NOVO: HISTÓRICO DE MANUTENÇÃO DE VEÍCULOS
-        HistoricoCombustivelVeiculo::class // ✅ NOVO: HISTÓRICO DE COMBUSTÍVEL DE VEÍCULOS
+        HistoricoCombustivelVeiculo::class, // ✅ NOVO: HISTÓRICO DE COMBUSTÍVEL DE VEÍCULOS
+        PanoMesa::class // ✅ NOVO: VINCULAÇÃO PANO-MESA
     ],
-    version = 37, // ✅ MIGRATION: inclusão de histórico de veículos
+    version = 38, // ✅ MIGRATION: inclusão de sistema de panos
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -165,6 +167,9 @@ abstract class AppDatabase : RoomDatabase() {
     
     // ✅ NOVO: DAO de histórico de combustível de veículos
     abstract fun historicoCombustivelVeiculoDao(): com.example.gestaobilhares.data.dao.HistoricoCombustivelVeiculoDao
+    
+    // ✅ NOVO: DAO de vinculação pano-mesa
+    abstract fun panoMesaDao(): PanoMesaDao
 
     companion object {
         

@@ -72,7 +72,14 @@ data class Mesa(
     val dataInstalacao: Date = Date(),
     
     @ColumnInfo(name = "data_ultima_leitura")
-    val dataUltimaLeitura: Date = Date()
+    val dataUltimaLeitura: Date = Date(),
+    
+    // ✅ NOVO: Campos para pano atual da mesa
+    @ColumnInfo(name = "pano_atual_id")
+    val panoAtualId: Long? = null,
+    
+    @ColumnInfo(name = "data_ultima_troca_pano")
+    val dataUltimaTrocaPano: Date? = null
 ) : Parcelable, Serializable
 
 /**
