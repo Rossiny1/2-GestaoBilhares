@@ -1,5 +1,6 @@
 package com.example.gestaobilhares.ui.mesas
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -78,8 +79,11 @@ class NovaReformaViewModel @Inject constructor(
     fun marcarPanoComoUsado(panoId: Long, motivo: String = "Usado em reforma") {
         viewModelScope.launch {
             try {
+                Log.d("NovaReformaViewModel", "Marcando pano $panoId como usado: $motivo")
                 panoEstoqueRepository.marcarPanoComoUsado(panoId, motivo)
+                Log.d("NovaReformaViewModel", "Pano $panoId marcado como usado com sucesso")
             } catch (e: Exception) {
+                Log.e("NovaReformaViewModel", "Erro ao marcar pano como usado: ${e.message}", e)
                 _errorMessage.value = "Erro ao marcar pano como usado: ${e.message}"
             }
         }

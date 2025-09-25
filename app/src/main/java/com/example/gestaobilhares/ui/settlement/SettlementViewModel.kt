@@ -656,8 +656,9 @@ class SettlementViewModel @Inject constructor(
      */
     suspend fun marcarPanoComoUsado(numeroPano: String, motivo: String = "Usado no acerto") {
         try {
+            Log.d("SettlementViewModel", "Marcando pano $numeroPano como usado: $motivo")
             panoEstoqueRepository.marcarPanoComoUsadoPorNumero(numeroPano, motivo)
-            Log.d("SettlementViewModel", "Pano $numeroPano marcado como usado: $motivo")
+            Log.d("SettlementViewModel", "Pano $numeroPano marcado como usado com sucesso")
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao marcar pano como usado: ${e.message}", e)
         }
@@ -692,6 +693,8 @@ class SettlementViewModel @Inject constructor(
      */
     suspend fun trocarPanoNaMesa(mesaId: Long, numeroPano: String, motivo: String = "Usado no acerto") {
         try {
+            Log.d("SettlementViewModel", "Iniciando troca de pano $numeroPano na mesa $mesaId")
+            
             // 1. Buscar o pano no estoque
             val pano = panoEstoqueRepository.buscarPorNumero(numeroPano)
             if (pano == null) {
@@ -699,13 +702,16 @@ class SettlementViewModel @Inject constructor(
                 return
             }
             
+            Log.d("SettlementViewModel", "Pano encontrado: ${pano.numero} (ID: ${pano.id})")
+            
             // 2. Marcar pano como usado no estoque
             panoEstoqueRepository.marcarPanoComoUsado(pano.id, motivo)
+            Log.d("SettlementViewModel", "Pano ${pano.id} marcado como usado no estoque")
             
             // 3. Atualizar mesa com novo pano
             atualizarPanoDaMesa(mesaId, pano.id)
             
-            Log.d("SettlementViewModel", "Pano $numeroPano trocado na mesa $mesaId: $motivo")
+            Log.d("SettlementViewModel", "Pano $numeroPano trocado na mesa $mesaId com sucesso: $motivo")
             
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao trocar pano na mesa: ${e.message}", e)
@@ -717,16 +723,22 @@ class SettlementViewModel @Inject constructor(
      */
     private suspend fun atualizarPanoDaMesa(mesaId: Long, panoId: Long) {
         try {
+            Log.d("SettlementViewModel", "Atualizando pano da mesa $mesaId com pano $panoId")
+            
             // Buscar a mesa atual
             val mesa = mesaRepository.buscarPorId(mesaId)
             if (mesa != null) {
+                Log.d("SettlementViewModel", "Mesa encontrada: ${mesa.numero}")
+                
                 // Atualizar mesa com novo pano e data
                 val mesaAtualizada = mesa.copy(
                     panoAtualId = panoId,
                     dataUltimaTrocaPano = Date()
                 )
                 mesaRepository.atualizar(mesaAtualizada)
-                Log.d("SettlementViewModel", "Mesa $mesaId atualizada com pano $panoId")
+                Log.d("SettlementViewModel", "Mesa $mesaId atualizada com pano $panoId com sucesso")
+            } else {
+                Log.e("SettlementViewModel", "Mesa $mesaId não encontrada")
             }
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao atualizar pano da mesa: ${e.message}", e)
