@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -51,24 +52,31 @@ class PanoSelectionDialog : DialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        Log.d("PanoSelectionDialog", "Criando diálogo de seleção de panos")
+        
         _binding = DialogSelectPanoBinding.inflate(LayoutInflater.from(requireContext()))
 
         setupUI()
         setupClickListeners()
         loadPanos()
 
-        return MaterialAlertDialogBuilder(requireContext())
+        val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle("Selecionar Pano")
             .setView(binding.root)
             .setPositiveButton("Confirmar") { _, _ ->
                 selectedPano?.let { pano ->
+                    Log.d("PanoSelectionDialog", "Pano confirmado: ${pano.numero}")
                     onPanoSelected?.invoke(pano)
                 }
             }
             .setNegativeButton("Cancelar") { _, _ ->
+                Log.d("PanoSelectionDialog", "Diálogo cancelado pelo usuário")
                 dismiss()
             }
             .create()
+            
+        Log.d("PanoSelectionDialog", "Diálogo criado com sucesso")
+        return dialog
     }
 
     private fun setupUI() {
@@ -171,7 +179,8 @@ class PanoSelectionDialog : DialogFragment() {
     }
 
     private fun updateConfirmButton() {
-        binding.btnConfirmar.isEnabled = selectedPano != null
+        // Botão confirmar é gerenciado pelo MaterialAlertDialogBuilder
+        // Não precisa de lógica adicional
     }
 
     override fun onDestroyView() {

@@ -1,5 +1,6 @@
 package com.example.gestaobilhares.data.repository
 
+import android.util.Log
 import com.example.gestaobilhares.data.dao.PanoEstoqueDao
 import com.example.gestaobilhares.data.entities.PanoEstoque
 import kotlinx.coroutines.flow.Flow
@@ -57,16 +58,32 @@ class PanoEstoqueRepository @Inject constructor(
      * ✅ NOVO: Marca um pano como usado (indisponível) no estoque
      */
     suspend fun marcarPanoComoUsado(panoId: Long, motivo: String = "Usado em reforma/acerto") {
-        panoEstoqueDao.atualizarDisponibilidade(panoId, false)
+        try {
+            Log.d("PanoEstoqueRepository", "Marcando pano $panoId como usado: $motivo")
+            panoEstoqueDao.atualizarDisponibilidade(panoId, false)
+            Log.d("PanoEstoqueRepository", "Pano $panoId marcado como usado com sucesso")
+        } catch (e: Exception) {
+            Log.e("PanoEstoqueRepository", "Erro ao marcar pano como usado: ${e.message}", e)
+            throw e
+        }
     }
     
     /**
      * ✅ NOVO: Marca um pano como usado pelo número
      */
     suspend fun marcarPanoComoUsadoPorNumero(numero: String, motivo: String = "Usado em reforma/acerto") {
-        val pano = panoEstoqueDao.buscarPorNumero(numero)
-        pano?.let {
-            panoEstoqueDao.atualizarDisponibilidade(it.id, false)
+        try {
+            Log.d("PanoEstoqueRepository", "Marcando pano $numero como usado: $motivo")
+            val pano = panoEstoqueDao.buscarPorNumero(numero)
+            if (pano != null) {
+                panoEstoqueDao.atualizarDisponibilidade(pano.id, false)
+                Log.d("PanoEstoqueRepository", "Pano $numero (ID: ${pano.id}) marcado como usado com sucesso")
+            } else {
+                Log.e("PanoEstoqueRepository", "Pano $numero não encontrado no estoque")
+            }
+        } catch (e: Exception) {
+            Log.e("PanoEstoqueRepository", "Erro ao marcar pano como usado: ${e.message}", e)
+            throw e
         }
     }
 }

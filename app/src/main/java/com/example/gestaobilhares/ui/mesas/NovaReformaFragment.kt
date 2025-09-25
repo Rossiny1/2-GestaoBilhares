@@ -124,8 +124,7 @@ class NovaReformaFragment : Fragment() {
         }
 
         binding.btnSelecionarPanos.setOnClickListener {
-            // TODO: Implementar seletor de panos do estoque
-            Toast.makeText(requireContext(), "Seletor de panos será implementado em breve", Toast.LENGTH_SHORT).show()
+            mostrarSelecaoPanosReforma()
         }
 
         binding.btnTirarFoto.setOnClickListener {
@@ -390,6 +389,13 @@ class NovaReformaFragment : Fragment() {
      * ✅ NOVO: Mostra seleção de panos para reforma
      */
     private fun mostrarSelecaoPanosReforma() {
+        Log.d("NovaReformaFragment", "Mostrando seleção de panos para reforma")
+        
+        if (mesaSelecionada == null) {
+            Toast.makeText(requireContext(), "Selecione uma mesa primeiro", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
         // Selecionar panos do estoque filtrando pelo tamanho da mesa selecionada
         val tamanhoMesaStr = mesaSelecionada?.tamanho?.let { tamanhoEnum ->
             when (tamanhoEnum) {
@@ -399,23 +405,42 @@ class NovaReformaFragment : Fragment() {
             }
         }
         
-        PanoSelectionDialog.newInstance(
-            onPanoSelected = { panoSelecionado ->
-                // Registrar uso do pano na reforma
-                registrarPanoReforma(panoSelecionado)
-            },
-            tamanhoMesa = tamanhoMesaStr
-        ).show(childFragmentManager, "select_pano_reforma")
+        Log.d("NovaReformaFragment", "Tamanho da mesa: $tamanhoMesaStr")
+        
+        try {
+            val dialog = PanoSelectionDialog.newInstance(
+                onPanoSelected = { panoSelecionado ->
+                    Log.d("NovaReformaFragment", "Pano selecionado: ${panoSelecionado.numero}")
+                    // Registrar uso do pano na reforma
+                    registrarPanoReforma(panoSelecionado)
+                },
+                tamanhoMesa = tamanhoMesaStr
+            )
+            
+            Log.d("NovaReformaFragment", "Mostrando diálogo de seleção de panos")
+            dialog.show(childFragmentManager, "select_pano_reforma")
+            
+        } catch (e: Exception) {
+            Log.e("NovaReformaFragment", "Erro ao mostrar diálogo de seleção de panos: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao abrir seleção de panos: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
     
     /**
      * ✅ NOVO: Registra o uso do pano na reforma
      */
     private fun registrarPanoReforma(panoSelecionado: com.example.gestaobilhares.data.entities.PanoEstoque) {
+        Log.d("NovaReformaFragment", "Registrando pano ${panoSelecionado.numero} para reforma")
+        
         // Marcar pano como usado no estoque
         viewModel.marcarPanoComoUsado(panoSelecionado.id, "Usado em reforma da mesa ${mesaSelecionada?.numero}")
         
         val numeroPanos = panoSelecionado.numero
+        Log.d("NovaReformaFragment", "Número do pano: $numeroPanos")
+        
+        // Atualizar o campo de número de panos na UI
+        binding.etNumeroPanos.setText(numeroPanos)
+        
         continuarSalvamentoReforma(numeroPanos)
     }
     
@@ -423,6 +448,8 @@ class NovaReformaFragment : Fragment() {
      * ✅ NOVO: Continua o salvamento da reforma após seleção do pano
      */
     private fun continuarSalvamentoReforma(numeroPanos: String) {
+        Log.d("NovaReformaFragment", "Continuando salvamento da reforma com pano: $numeroPanos")
+        
         val pintura = binding.cbPintura.isChecked
         val tabela = binding.cbTabela.isChecked
         val panos = binding.cbPanos.isChecked
@@ -444,10 +471,13 @@ class NovaReformaFragment : Fragment() {
             dataReforma = Date()
         )
 
+        Log.d("NovaReformaFragment", "Salvando reforma: ${mesaReformada.numeroMesa}")
         viewModel.salvarReforma(mesaReformada)
         
         // Registrar no histórico de manutenção
         registrarManutencoesNoHistorico(mesaReformada)
+        
+        Toast.makeText(requireContext(), "Reforma salva com sucesso! Pano $numeroPanos foi usado.", Toast.LENGTH_LONG).show()
     }
 
     override fun onDestroyView() {

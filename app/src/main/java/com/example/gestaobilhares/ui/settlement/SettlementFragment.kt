@@ -1276,35 +1276,52 @@ class SettlementFragment : Fragment() {
         
         PanoSelectionDialog.newInstance(
             onPanoSelected = { panoSelecionado ->
+                Log.d("SettlementFragment", "Pano selecionado no acerto: ${panoSelecionado.numero}")
+                
+                // ✅ CORREÇÃO: Marcar pano como usado IMEDIATAMENTE quando selecionado
+                lifecycleScope.launch {
+                    try {
+                        val mesaId = mesasAcertoAdapter.currentList.firstOrNull()?.id ?: 0L
+                        if (mesaId != 0L) {
+                            Log.d("SettlementFragment", "Marcando pano ${panoSelecionado.numero} como usado no acerto")
+                            viewModel.trocarPanoNaMesa(mesaId, panoSelecionado.numero, "Usado no acerto")
+                            Toast.makeText(requireContext(), "Pano ${panoSelecionado.numero} selecionado e removido do estoque!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Log.e("SettlementFragment", "Erro: Nenhuma mesa disponível para vincular o pano")
+                            Toast.makeText(requireContext(), "Erro: Nenhuma mesa disponível para vincular o pano.", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        Log.e("SettlementFragment", "Erro ao marcar pano como usado: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao selecionar pano: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                
+                // Atualizar UI
                 binding.tvNovoPanoNumero.text = panoSelecionado.numero
                 binding.tvNovoPanoInfo.text = "${panoSelecionado.cor} - ${panoSelecionado.tamanho} - ${panoSelecionado.material}"
                 binding.layoutNovoPano.visibility = View.VISIBLE
+                
+                // Atualizar pano atual da mesa
+                carregarPanoAtual()
             },
             tamanhoMesa = tamanhoMesa
         ).show(childFragmentManager, "select_pano")
     }
     
     /**
-     * ✅ NOVO: Executa a troca do pano
+     * ✅ SIMPLIFICADO: Apenas oculta o layout do pano (já foi marcado como usado na seleção)
      */
     private fun trocarPano() {
-        val numeroPanoNovo = binding.tvNovoPanoNumero.text.toString()
-        if (numeroPanoNovo.isBlank()) {
-            Toast.makeText(requireContext(), "Selecione um pano primeiro", Toast.LENGTH_SHORT).show()
-            return
-        }
+        Log.d("SettlementFragment", "Finalizando seleção de pano")
         
-        // Marcar pano como usado no estoque e vincular à mesa
-        lifecycleScope.launch {
-            viewModel.trocarPanoNaMesa(numeroPanoNovo, "Usado no acerto")
-        }
-        
-        Toast.makeText(requireContext(), "Pano $numeroPanoNovo trocado com sucesso!", Toast.LENGTH_SHORT).show()
+        // Ocultar layout do pano
         binding.layoutNovoPano.visibility = View.GONE
         binding.cbPanoTrocado.isChecked = false
         
-        // Atualizar pano atual
+        // Atualizar pano atual da mesa
         carregarPanoAtual()
+        
+        Toast.makeText(requireContext(), "Pano selecionado com sucesso!", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {
