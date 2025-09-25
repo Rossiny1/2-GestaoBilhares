@@ -390,22 +390,30 @@ class NovaReformaFragment : Fragment() {
      * ✅ NOVO: Mostra seleção de panos para reforma
      */
     private fun mostrarSelecaoPanosReforma() {
-        // TODO: Implementar seleção de panos específica para reforma
-        // Por enquanto, usar o dialog genérico
-        PanoSelectionDialog.newInstance { panoSelecionado ->
-            // Registrar uso do pano na reforma
-            registrarPanoReforma(panoSelecionado)
-        }.show(childFragmentManager, "select_pano_reforma")
+        // Selecionar panos do estoque filtrando pelo tamanho da mesa selecionada
+        val tamanhoMesaStr = mesaSelecionada?.tamanho?.let { tamanhoEnum ->
+            when (tamanhoEnum) {
+                com.example.gestaobilhares.data.entities.TamanhoMesa.PEQUENA -> "Pequeno"
+                com.example.gestaobilhares.data.entities.TamanhoMesa.MEDIA -> "Médio"
+                com.example.gestaobilhares.data.entities.TamanhoMesa.GRANDE -> "Grande"
+            }
+        }
+        
+        PanoSelectionDialog.newInstance(
+            onPanoSelected = { panoSelecionado ->
+                // Registrar uso do pano na reforma
+                registrarPanoReforma(panoSelecionado)
+            },
+            tamanhoMesa = tamanhoMesaStr
+        ).show(childFragmentManager, "select_pano_reforma")
     }
     
     /**
      * ✅ NOVO: Registra o uso do pano na reforma
      */
     private fun registrarPanoReforma(panoSelecionado: com.example.gestaobilhares.data.entities.PanoEstoque) {
-        // TODO: Implementar lógica de registro do pano na reforma
-        // 1. Marcar pano como usado no estoque
-        // 2. Vincular pano à mesa
-        // 3. Continuar com o salvamento da reforma
+        // Marcar pano como usado no estoque
+        viewModel.marcarPanoComoUsado(panoSelecionado.id, "Usado em reforma da mesa ${mesaSelecionada?.numero}")
         
         val numeroPanos = panoSelecionado.numero
         continuarSalvamentoReforma(numeroPanos)

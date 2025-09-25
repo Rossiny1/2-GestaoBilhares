@@ -9,13 +9,17 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.PanoEstoque
+import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
 import com.example.gestaobilhares.databinding.DialogSelectPanoBinding
 import com.example.gestaobilhares.databinding.ItemPanoSelectionBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Dialog para seleção de pano no acerto.
@@ -31,11 +35,17 @@ class PanoSelectionDialog : DialogFragment() {
     private lateinit var adapter: PanoSelectionAdapter
     private var selectedPano: PanoEstoque? = null
     private var onPanoSelected: ((PanoEstoque) -> Unit)? = null
+    
+    @Inject
+    lateinit var panoEstoqueRepository: PanoEstoqueRepository
 
     companion object {
-        fun newInstance(onPanoSelected: (PanoEstoque) -> Unit): PanoSelectionDialog {
+        fun newInstance(onPanoSelected: (PanoEstoque) -> Unit, tamanhoMesa: String? = null): PanoSelectionDialog {
             return PanoSelectionDialog().apply {
                 this.onPanoSelected = onPanoSelected
+                arguments = Bundle().apply {
+                    putString("tamanho_mesa", tamanhoMesa)
+                }
             }
         }
     }
@@ -92,8 +102,32 @@ class PanoSelectionDialog : DialogFragment() {
     }
 
     private fun loadPanos() {
-        // TODO: Carregar panos do ViewModel baseado no tamanho da mesa
-        // Por enquanto, dados mock
+        // Carregar panos disponíveis do banco de dados
+        // Usar lifecycleScope do DialogFragment, pois onCreateDialog é chamado antes da View existir
+        lifecycleScope.launch {
+            try {
+                val tamanhoMesa = arguments?.getString("tamanho_mesa")
+                
+                if (tamanhoMesa != null) {
+                    // Filtrar por tamanho da mesa
+                    panoEstoqueRepository.buscarDisponiveisPorTamanho(tamanhoMesa).collect { panos ->
+                        adapter.submitList(panos)
+                    }
+                } else {
+                    // Carregar todos os panos disponíveis
+                    panoEstoqueRepository.listarDisponiveis().collect { panos ->
+                        adapter.submitList(panos)
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PanoSelectionDialog", "Erro ao carregar panos: ${e.message}", e)
+                // Fallback para dados mock em caso de erro
+                loadPanosMock()
+            }
+        }
+    }
+    
+    private fun loadPanosMock() {
         val panosMock = listOf(
             PanoEstoque(
                 id = 1L,

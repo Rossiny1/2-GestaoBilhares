@@ -18,15 +18,31 @@ class StockViewModel @Inject constructor(
     
     private val _stockItems = MutableStateFlow<List<StockItem>>(emptyList())
     val stockItems: StateFlow<List<StockItem>> = _stockItems.asStateFlow()
+    
+    private val _panosEstoque = MutableStateFlow<List<PanoEstoque>>(emptyList())
+    val panosEstoque: StateFlow<List<PanoEstoque>> = _panosEstoque.asStateFlow()
 
     init {
         loadStockItems()
+        loadPanosEstoque()
     }
 
     private fun loadStockItems() {
         viewModelScope.launch {
             // TODO: Implementar carregamento de itens do estoque do banco de dados
             _stockItems.value = getSampleStockItems()
+        }
+    }
+    
+    private fun loadPanosEstoque() {
+        viewModelScope.launch {
+            try {
+                panoEstoqueRepository.listarTodos().collect { panos ->
+                    _panosEstoque.value = panos
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("StockViewModel", "Erro ao carregar panos: ${e.message}", e)
+            }
         }
     }
 
@@ -58,10 +74,9 @@ class StockViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 panoEstoqueRepository.inserirLote(panos)
-                // Recarregar dados do estoque
-                loadStockItems()
+                // Recarregar panos do estoque
+                loadPanosEstoque()
             } catch (e: Exception) {
-                // TODO: Tratar erro
                 android.util.Log.e("StockViewModel", "Erro ao adicionar panos em lote: ${e.message}", e)
             }
         }
