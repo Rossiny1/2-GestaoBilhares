@@ -8,15 +8,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.data.entities.Mesa
+import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.entities.Acerto
+import java.util.Date
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
+import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
 import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.google.gson.Gson
@@ -35,7 +38,8 @@ class SettlementViewModel @Inject constructor(
     private val acertoRepository: AcertoRepository,
     private val acertoMesaRepository: AcertoMesaRepository,
     private val cicloAcertoRepository: CicloAcertoRepository,
-    private val historicoManutencaoMesaRepository: HistoricoManutencaoMesaRepository
+    private val historicoManutencaoMesaRepository: HistoricoManutencaoMesaRepository,
+    private val panoEstoqueRepository: PanoEstoqueRepository
 ) : ViewModel() {
 
     /**
@@ -644,6 +648,116 @@ class SettlementViewModel @Inject constructor(
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao calcular média de fichas: ${e.message}", e)
             0.0
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Marca um pano como usado no estoque
+     */
+    suspend fun marcarPanoComoUsado(numeroPano: String, motivo: String = "Usado no acerto") {
+        try {
+            panoEstoqueRepository.marcarPanoComoUsadoPorNumero(numeroPano, motivo)
+            Log.d("SettlementViewModel", "Pano $numeroPano marcado como usado: $motivo")
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao marcar pano como usado: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Troca o pano na mesa e marca como usado no estoque
+     */
+    suspend fun trocarPanoNaMesa(numeroPano: String, motivo: String = "Usado no acerto") {
+        try {
+            // 1. Buscar o pano no estoque
+            val pano = panoEstoqueRepository.buscarPorNumero(numeroPano)
+            if (pano == null) {
+                Log.e("SettlementViewModel", "Pano $numeroPano não encontrado no estoque")
+                return
+            }
+            
+            // 2. Marcar pano como usado no estoque
+            panoEstoqueRepository.marcarPanoComoUsado(pano.id, motivo)
+            
+            // 3. TODO: Vincular pano à mesa (precisa do ID da mesa)
+            // Por enquanto, apenas log
+            Log.d("SettlementViewModel", "Pano $numeroPano trocado na mesa: $motivo")
+            
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao trocar pano na mesa: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Troca o pano em uma mesa específica
+     */
+    suspend fun trocarPanoNaMesa(mesaId: Long, numeroPano: String, motivo: String = "Usado no acerto") {
+        try {
+            // 1. Buscar o pano no estoque
+            val pano = panoEstoqueRepository.buscarPorNumero(numeroPano)
+            if (pano == null) {
+                Log.e("SettlementViewModel", "Pano $numeroPano não encontrado no estoque")
+                return
+            }
+            
+            // 2. Marcar pano como usado no estoque
+            panoEstoqueRepository.marcarPanoComoUsado(pano.id, motivo)
+            
+            // 3. Atualizar mesa com novo pano
+            atualizarPanoDaMesa(mesaId, pano.id)
+            
+            Log.d("SettlementViewModel", "Pano $numeroPano trocado na mesa $mesaId: $motivo")
+            
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao trocar pano na mesa: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Atualiza o pano atual de uma mesa
+     */
+    private suspend fun atualizarPanoDaMesa(mesaId: Long, panoId: Long) {
+        try {
+            // Buscar a mesa atual
+            val mesa = mesaRepository.buscarPorId(mesaId)
+            if (mesa != null) {
+                // Atualizar mesa com novo pano e data
+                val mesaAtualizada = mesa.copy(
+                    panoAtualId = panoId,
+                    dataUltimaTrocaPano = Date()
+                )
+                mesaRepository.atualizar(mesaAtualizada)
+                Log.d("SettlementViewModel", "Mesa $mesaId atualizada com pano $panoId")
+            }
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao atualizar pano da mesa: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Carrega o pano atual de uma mesa
+     */
+    suspend fun carregarPanoAtualDaMesa(mesaId: Long): PanoEstoque? {
+        return try {
+            // 1. Buscar a mesa
+            val mesa = mesaRepository.buscarPorId(mesaId)
+            if (mesa?.panoAtualId == null) {
+                Log.d("SettlementViewModel", "Mesa $mesaId não possui pano atual")
+                return null
+            }
+            
+            // 2. Buscar o pano atual
+            val pano = panoEstoqueRepository.buscarPorId(mesa.panoAtualId)
+            if (pano == null) {
+                Log.w("SettlementViewModel", "Pano ${mesa.panoAtualId} não encontrado no estoque")
+                return null
+            }
+            
+            Log.d("SettlementViewModel", "Pano atual da mesa $mesaId: ${pano.numero}")
+            pano
+            
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao carregar pano atual da mesa: ${e.message}", e)
+            null
         }
     }
 } 

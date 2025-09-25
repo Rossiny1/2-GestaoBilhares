@@ -52,4 +52,21 @@ class PanoEstoqueRepository @Inject constructor(
     
     fun buscarPorIntervalo(numeroInicial: String, numeroFinal: String): Flow<List<PanoEstoque>> = 
         panoEstoqueDao.buscarPorIntervalo(numeroInicial, numeroFinal)
+    
+    /**
+     * ✅ NOVO: Marca um pano como usado (indisponível) no estoque
+     */
+    suspend fun marcarPanoComoUsado(panoId: Long, motivo: String = "Usado em reforma/acerto") {
+        panoEstoqueDao.atualizarDisponibilidade(panoId, false)
+    }
+    
+    /**
+     * ✅ NOVO: Marca um pano como usado pelo número
+     */
+    suspend fun marcarPanoComoUsadoPorNumero(numero: String, motivo: String = "Usado em reforma/acerto") {
+        val pano = panoEstoqueDao.buscarPorNumero(numero)
+        pano?.let {
+            panoEstoqueDao.atualizarDisponibilidade(it.id, false)
+        }
+    }
 }

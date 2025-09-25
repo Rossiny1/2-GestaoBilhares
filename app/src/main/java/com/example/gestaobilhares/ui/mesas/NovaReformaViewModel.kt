@@ -8,6 +8,7 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.repository.MesaReformadaRepository
+import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -19,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class NovaReformaViewModel @Inject constructor(
     private val appRepository: AppRepository,
-    private val mesaReformadaRepository: MesaReformadaRepository
+    private val mesaReformadaRepository: MesaReformadaRepository,
+    private val panoEstoqueRepository: PanoEstoqueRepository
 ) : ViewModel() {
 
     private val _mesasDisponiveis = MutableLiveData<List<Mesa>>()
@@ -68,5 +70,18 @@ class NovaReformaViewModel @Inject constructor(
 
     fun clearSuccess() {
         _successMessage.value = null
+    }
+    
+    /**
+     * ✅ NOVO: Marca um pano como usado no estoque
+     */
+    fun marcarPanoComoUsado(panoId: Long, motivo: String = "Usado em reforma") {
+        viewModelScope.launch {
+            try {
+                panoEstoqueRepository.marcarPanoComoUsado(panoId, motivo)
+            } catch (e: Exception) {
+                _errorMessage.value = "Erro ao marcar pano como usado: ${e.message}"
+            }
+        }
     }
 }

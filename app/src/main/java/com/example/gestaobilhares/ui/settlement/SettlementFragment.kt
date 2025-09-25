@@ -246,7 +246,8 @@ class SettlementFragment : Fragment() {
                 AcertoRepository(database.acertoDao(), database.clienteDao()),
                 ClienteRepository(database.clienteDao()) // NOVO
             ),
-            com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao())
+            com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao()),
+            com.example.gestaobilhares.data.repository.PanoEstoqueRepository(database.panoEstoqueDao())
         )
         
         Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
@@ -1239,38 +1240,66 @@ class SettlementFragment : Fragment() {
      * ✅ NOVO: Carrega o pano atual da mesa
      */
     private fun carregarPanoAtual() {
-        // TODO: Implementar carregamento do pano atual do banco de dados
+        // TODO: Implementar carregamento real do pano atual da mesa
         // Por enquanto, dados mock
         binding.tvPanoAtualNumero.text = "P001"
         binding.tvPanoAtualInfo.text = "Azul - Grande - Veludo"
         binding.tvPanoAtualData.text = "15/01/2024"
+        
+        // TODO: Implementar carregamento real do pano atual da mesa
+        // lifecycleScope.launch {
+        //     val pano = viewModel.carregarPanoAtualDaMesa(mesaId)
+        //     if (pano != null) {
+        //         binding.tvPanoAtualNumero.text = pano.numero
+        //         binding.tvPanoAtualInfo.text = "${pano.cor} - ${pano.tamanho} - ${pano.material}"
+        //         binding.tvPanoAtualData.text = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(pano.dataUltimaTrocaPano)
+        //     } else {
+        //         binding.tvPanoAtualNumero.text = "Nenhum pano"
+        //         binding.tvPanoAtualInfo.text = "Mesa sem pano"
+        //         binding.tvPanoAtualData.text = "N/A"
+        //     }
+        // }
     }
     
     /**
      * ✅ NOVO: Mostra a seleção de pano
      */
     private fun mostrarSelecaoPano() {
-        // TODO: Obter tamanho da mesa para filtrar panos
-        val tamanhoMesa = "Grande" // Mock - deve vir da mesa selecionada
+        // Obter tamanho da mesa para filtrar panos
+        val tamanhoMesa = mesasAcertoAdapter.currentList.firstOrNull()?.tamanho?.let { tamanhoEnum ->
+            when (tamanhoEnum) {
+                com.example.gestaobilhares.data.entities.TamanhoMesa.PEQUENA -> "Pequeno"
+                com.example.gestaobilhares.data.entities.TamanhoMesa.MEDIA -> "Médio"
+                com.example.gestaobilhares.data.entities.TamanhoMesa.GRANDE -> "Grande"
+            }
+        }
         
-        PanoSelectionDialog.newInstance { panoSelecionado ->
-            binding.tvNovoPanoNumero.text = panoSelecionado.numero
-            binding.tvNovoPanoInfo.text = "${panoSelecionado.cor} - ${panoSelecionado.tamanho} - ${panoSelecionado.material}"
-            binding.layoutNovoPano.visibility = View.VISIBLE
-        }.show(childFragmentManager, "select_pano")
+        PanoSelectionDialog.newInstance(
+            onPanoSelected = { panoSelecionado ->
+                binding.tvNovoPanoNumero.text = panoSelecionado.numero
+                binding.tvNovoPanoInfo.text = "${panoSelecionado.cor} - ${panoSelecionado.tamanho} - ${panoSelecionado.material}"
+                binding.layoutNovoPano.visibility = View.VISIBLE
+            },
+            tamanhoMesa = tamanhoMesa
+        ).show(childFragmentManager, "select_pano")
     }
     
     /**
      * ✅ NOVO: Executa a troca do pano
      */
     private fun trocarPano() {
-        // TODO: Implementar lógica de troca do pano
-        // 1. Desativar pano atual no estoque
-        // 2. Ativar novo pano na mesa
-        // 3. Registrar histórico da troca
-        // 4. Atualizar UI
+        val numeroPanoNovo = binding.tvNovoPanoNumero.text.toString()
+        if (numeroPanoNovo.isBlank()) {
+            Toast.makeText(requireContext(), "Selecione um pano primeiro", Toast.LENGTH_SHORT).show()
+            return
+        }
         
-        Toast.makeText(requireContext(), "Pano trocado com sucesso!", Toast.LENGTH_SHORT).show()
+        // Marcar pano como usado no estoque e vincular à mesa
+        lifecycleScope.launch {
+            viewModel.trocarPanoNaMesa(numeroPanoNovo, "Usado no acerto")
+        }
+        
+        Toast.makeText(requireContext(), "Pano $numeroPanoNovo trocado com sucesso!", Toast.LENGTH_SHORT).show()
         binding.layoutNovoPano.visibility = View.GONE
         binding.cbPanoTrocado.isChecked = false
         

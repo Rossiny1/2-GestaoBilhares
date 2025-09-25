@@ -21,6 +21,7 @@ class StockFragment : Fragment() {
 
     private val viewModel: StockViewModel by viewModels()
     private lateinit var adapter: StockAdapter
+    private lateinit var panosAdapter: PanosEstoqueAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,6 +43,11 @@ class StockFragment : Fragment() {
         adapter = StockAdapter { stockItem ->
             // TODO: Implementar navegação para detalhes do item
         }
+        
+        panosAdapter = PanosEstoqueAdapter { pano ->
+            // TODO: Implementar navegação para detalhes do pano
+        }
+        
         binding.rvStock.layoutManager = LinearLayoutManager(requireContext())
         binding.rvStock.adapter = adapter
     }
@@ -50,6 +56,19 @@ class StockFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.stockItems.collect { items ->
                 adapter.submitList(items)
+            }
+        }
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.panosEstoque.collect { panos ->
+                if (panos.isNotEmpty()) {
+                    // Se há panos, mostrar os panos no RecyclerView
+                    binding.rvStock.adapter = panosAdapter
+                    panosAdapter.submitList(panos)
+                } else {
+                    // Se não há panos, mostrar itens genéricos
+                    binding.rvStock.adapter = adapter
+                }
             }
         }
     }
