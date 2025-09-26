@@ -306,7 +306,7 @@ class NovaReformaFragment : Fragment() {
         val numeroPanos = if (panos) {
             // Se panos foram trocados, exigir seleção prévia; não salvar automaticamente
             if (numeroPanoSelecionado.isNullOrBlank()) {
-                mostrarSelecaoPanosReforma()
+            mostrarSelecaoPanosReforma()
                 Toast.makeText(requireContext(), "Selecione o pano do estoque", Toast.LENGTH_SHORT).show()
                 return
             }
