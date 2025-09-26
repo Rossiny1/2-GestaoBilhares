@@ -46,6 +46,7 @@ class NovaReformaFragment : Fragment() {
     private var mesaSelecionada: Mesa? = null
     private var fotoUri: Uri? = null
     private var fotoPath: String? = null
+    private var numeroPanoSelecionado: String? = null
 
     private val takePictureLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
@@ -119,9 +120,16 @@ class NovaReformaFragment : Fragment() {
             mostrarSeletorMesa()
         }
 
+        // Removido campo de número de pano. Mantemos apenas o botão de seleção.
         binding.cbPanos.setOnCheckedChangeListener { _, isChecked ->
-            binding.layoutNumeroPanos.visibility = if (isChecked) View.VISIBLE else View.GONE
+            // Sem campo para mostrar/ocultar. Apenas habilitar o botão quando marcado.
+            binding.btnSelecionarPanos.isEnabled = isChecked
+            if (!isChecked) {
+                numeroPanoSelecionado = null
+            }
         }
+        // Estado inicial do botão de seleção de pano
+        binding.btnSelecionarPanos.isEnabled = binding.cbPanos.isChecked
 
         binding.btnSelecionarPanos.setOnClickListener {
             mostrarSelecaoPanosReforma()
@@ -296,9 +304,13 @@ class NovaReformaFragment : Fragment() {
 
         // ✅ NOVO: Integração com sistema de panos
         val numeroPanos = if (panos) {
-            // Se panos foram trocados, mostrar seleção de panos do estoque
-            mostrarSelecaoPanosReforma()
-            return // A função continuará após a seleção
+            // Se panos foram trocados, exigir seleção prévia; não salvar automaticamente
+            if (numeroPanoSelecionado.isNullOrBlank()) {
+                mostrarSelecaoPanosReforma()
+                Toast.makeText(requireContext(), "Selecione o pano do estoque", Toast.LENGTH_SHORT).show()
+                return
+            }
+            numeroPanoSelecionado
         } else null
 
         val observacoes = binding.etObservacoes.text.toString().trim().takeIf { it.isNotEmpty() }
@@ -435,49 +447,9 @@ class NovaReformaFragment : Fragment() {
         // Marcar pano como usado no estoque
         viewModel.marcarPanoComoUsado(panoSelecionado.id, "Usado em reforma da mesa ${mesaSelecionada?.numero}")
         
-        val numeroPanos = panoSelecionado.numero
-        Log.d("NovaReformaFragment", "Número do pano: $numeroPanos")
-        
-        // Atualizar o campo de número de panos na UI
-        binding.etNumeroPanos.setText(numeroPanos)
-        
-        continuarSalvamentoReforma(numeroPanos)
-    }
-    
-    /**
-     * ✅ NOVO: Continua o salvamento da reforma após seleção do pano
-     */
-    private fun continuarSalvamentoReforma(numeroPanos: String) {
-        Log.d("NovaReformaFragment", "Continuando salvamento da reforma com pano: $numeroPanos")
-        
-        val pintura = binding.cbPintura.isChecked
-        val tabela = binding.cbTabela.isChecked
-        val panos = binding.cbPanos.isChecked
-        val outros = binding.cbOutros.isChecked
-        val observacoes = binding.etObservacoes.text.toString().trim().takeIf { it.isNotEmpty() }
-
-        val mesaReformada = MesaReformada(
-            mesaId = mesaSelecionada!!.id,
-            numeroMesa = mesaSelecionada!!.numero,
-            tipoMesa = mesaSelecionada!!.tipoMesa,
-            tamanhoMesa = mesaSelecionada!!.tamanho,
-            pintura = pintura,
-            tabela = tabela,
-            panos = panos,
-            numeroPanos = numeroPanos,
-            outros = outros,
-            observacoes = observacoes,
-            fotoReforma = fotoPath,
-            dataReforma = Date()
-        )
-
-        Log.d("NovaReformaFragment", "Salvando reforma: ${mesaReformada.numeroMesa}")
-        viewModel.salvarReforma(mesaReformada)
-        
-        // Registrar no histórico de manutenção
-        registrarManutencoesNoHistorico(mesaReformada)
-        
-        Toast.makeText(requireContext(), "Reforma salva com sucesso! Pano $numeroPanos foi usado.", Toast.LENGTH_LONG).show()
+        numeroPanoSelecionado = panoSelecionado.numero
+        Log.d("NovaReformaFragment", "Pano selecionado armazenado: $numeroPanoSelecionado")
+        Toast.makeText(requireContext(), "Pano ${panoSelecionado.numero} selecionado", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {

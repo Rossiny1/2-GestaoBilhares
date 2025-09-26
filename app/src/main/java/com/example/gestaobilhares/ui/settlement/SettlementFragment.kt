@@ -1218,13 +1218,19 @@ class SettlementFragment : Fragment() {
      * ✅ NOVO: Configura a lógica do pano
      */
     private fun setupPanoLogic() {
-        // Carregar pano atual da mesa (se houver)
-        carregarPanoAtual()
+        // Carregar últimas trocas de todas as mesas
+        carregarUltimasTrocasTodasMesas()
         
         // Configurar checkbox de pano trocado
         binding.cbPanoTrocado.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                mostrarSelecaoPano()
+                // Se houver mais de uma mesa, primeiro selecionar a mesa
+                val mesas = mesasAcertoAdapter.currentList
+                if (mesas.size > 1) {
+                    mostrarSelecaoMesaParaTrocaPano()
+                } else {
+                    mostrarSelecaoPano(mesas.firstOrNull()?.id)
+                }
             } else {
                 binding.layoutNovoPano.visibility = View.GONE
             }
@@ -1240,33 +1246,108 @@ class SettlementFragment : Fragment() {
      * ✅ NOVO: Carrega o pano atual da mesa
      */
     private fun carregarPanoAtual() {
-        // TODO: Implementar carregamento real do pano atual da mesa
-        // Por enquanto, dados mock
-        binding.tvPanoAtualNumero.text = "P001"
-        binding.tvPanoAtualInfo.text = "Azul - Grande - Veludo"
-        binding.tvPanoAtualData.text = "15/01/2024"
-        
-        // TODO: Implementar carregamento real do pano atual da mesa
-        // lifecycleScope.launch {
-        //     val pano = viewModel.carregarPanoAtualDaMesa(mesaId)
-        //     if (pano != null) {
-        //         binding.tvPanoAtualNumero.text = pano.numero
-        //         binding.tvPanoAtualInfo.text = "${pano.cor} - ${pano.tamanho} - ${pano.material}"
-        //         binding.tvPanoAtualData.text = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(pano.dataUltimaTrocaPano)
-        //     } else {
-        //         binding.tvPanoAtualNumero.text = "Nenhum pano"
-        //         binding.tvPanoAtualInfo.text = "Mesa sem pano"
-        //         binding.tvPanoAtualData.text = "N/A"
-        //     }
-        // }
+        if (!::mesasAcertoAdapter.isInitialized) {
+            android.util.Log.w("SettlementFragment", "carregarPanoAtual: adapter ainda não inicializado")
+            binding.tvPanoAtualNumero.text = "Nenhum pano"
+            binding.tvPanoAtualInfo.text = "Aguarde carregamento das mesas"
+            binding.tvPanoAtualData.text = "N/A"
+            return
+        }
+        val mesaId = mesasAcertoAdapter.currentList.firstOrNull()?.id ?: 0L
+        if (mesaId == 0L) {
+            android.util.Log.w("SettlementFragment", "carregarPanoAtual: nenhuma mesa selecionada")
+            binding.tvPanoAtualNumero.text = "Nenhum pano"
+            binding.tvPanoAtualInfo.text = "Mesa sem pano"
+            binding.tvPanoAtualData.text = "N/A"
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                // Buscar pano atual
+                val pano = viewModel.carregarPanoAtualDaMesa(mesaId)
+                // Buscar mesa para obter a data da última troca
+                val mesa = viewModel.buscarMesaPorId(mesaId)
+
+                if (pano != null) {
+                    binding.tvPanoAtualNumero.text = pano.numero
+                    binding.tvPanoAtualInfo.text = "${pano.cor} - ${pano.tamanho} - ${pano.material}"
+                    val dataStr = mesa?.dataUltimaTrocaPano?.let {
+                        java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(it)
+                    } ?: "N/A"
+                    binding.tvPanoAtualData.text = dataStr
+                    android.util.Log.d("SettlementFragment", "Pano atual atualizado: ${pano.numero} | data=$dataStr")
+                } else {
+                    binding.tvPanoAtualNumero.text = "Nenhum pano"
+                    binding.tvPanoAtualInfo.text = "Mesa sem pano"
+                    binding.tvPanoAtualData.text = "N/A"
+                    android.util.Log.d("SettlementFragment", "Mesa $mesaId sem pano atual")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SettlementFragment", "Erro ao carregar pano atual: ${e.message}", e)
+                binding.tvPanoAtualNumero.text = "Erro"
+                binding.tvPanoAtualInfo.text = "Não foi possível carregar"
+                binding.tvPanoAtualData.text = "N/A"
+            }
+        }
+    }
+
+    private fun carregarUltimasTrocasTodasMesas() {
+        if (!::mesasAcertoAdapter.isInitialized) {
+            android.util.Log.w("SettlementFragment", "carregarUltimasTrocasTodasMesas: adapter ainda não inicializado")
+            binding.tvPanoAtualNumero.text = "Nenhum pano"
+            binding.tvPanoAtualInfo.text = "Aguarde carregamento das mesas"
+            binding.tvPanoAtualData.text = ""
+            return
+        }
+        val mesas = mesasAcertoAdapter.currentList
+        if (mesas.isEmpty()) {
+            binding.tvPanoAtualNumero.text = "Nenhum pano"
+            binding.tvPanoAtualInfo.text = "Cliente sem mesas"
+            binding.tvPanoAtualData.text = "N/A"
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val linhas = mutableListOf<String>()
+                for (mesa in mesas) {
+                    val pano = viewModel.carregarPanoAtualDaMesa(mesa.id)
+                    val mesaFull = viewModel.buscarMesaPorId(mesa.id)
+                    val numero = pano?.numero ?: "--"
+                    val info = if (pano != null) "${pano.cor} - ${pano.tamanho}" else "Sem pano"
+                    val dataStr = mesaFull?.dataUltimaTrocaPano?.let {
+                        java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(it)
+                    } ?: "N/A"
+                    linhas.add("$numero - Mesa ${mesa.numero} - Última troca $dataStr")
+                }
+
+                // Exibir a primeira linha em destaque e o restante no campo info
+                val destaque = linhas.firstOrNull() ?: "Sem dados"
+                val restantes = if (linhas.size > 1) linhas.drop(1).joinToString("\n") else ""
+                binding.tvPanoAtualNumero.text = destaque
+                binding.tvPanoAtualInfo.text = restantes
+                binding.tvPanoAtualData.text = ""
+            } catch (e: Exception) {
+                android.util.Log.e("SettlementFragment", "Erro ao carregar últimas trocas: ${e.message}", e)
+                binding.tvPanoAtualNumero.text = "Erro"
+                binding.tvPanoAtualInfo.text = "Não foi possível carregar"
+                binding.tvPanoAtualData.text = ""
+            }
+        }
     }
     
     /**
      * ✅ NOVO: Mostra a seleção de pano
      */
-    private fun mostrarSelecaoPano() {
+    private fun mostrarSelecaoPano(mesaIdParam: Long? = null) {
         // Obter tamanho da mesa para filtrar panos
-        val tamanhoMesa = mesasAcertoAdapter.currentList.firstOrNull()?.tamanho?.let { tamanhoEnum ->
+        val mesaTarget = if (mesaIdParam != null) {
+            mesasAcertoAdapter.currentList.firstOrNull { it.id == mesaIdParam }
+        } else {
+            mesasAcertoAdapter.currentList.firstOrNull()
+        }
+        val tamanhoMesa = mesaTarget?.tamanho?.let { tamanhoEnum ->
             when (tamanhoEnum) {
                 com.example.gestaobilhares.data.entities.TamanhoMesa.PEQUENA -> "Pequeno"
                 com.example.gestaobilhares.data.entities.TamanhoMesa.MEDIA -> "Médio"
@@ -1281,7 +1362,7 @@ class SettlementFragment : Fragment() {
                 // ✅ CORREÇÃO: Marcar pano como usado IMEDIATAMENTE quando selecionado
                 lifecycleScope.launch {
                     try {
-                        val mesaId = mesasAcertoAdapter.currentList.firstOrNull()?.id ?: 0L
+                        val mesaId = mesaTarget?.id ?: 0L
                         if (mesaId != 0L) {
                             Log.d("SettlementFragment", "Marcando pano ${panoSelecionado.numero} como usado no acerto")
                             viewModel.trocarPanoNaMesa(mesaId, panoSelecionado.numero, "Usado no acerto")
@@ -1303,9 +1384,24 @@ class SettlementFragment : Fragment() {
                 
                 // Atualizar pano atual da mesa
                 carregarPanoAtual()
+                carregarUltimasTrocasTodasMesas()
             },
             tamanhoMesa = tamanhoMesa
         ).show(childFragmentManager, "select_pano")
+    }
+
+    private fun mostrarSelecaoMesaParaTrocaPano() {
+        val mesas = mesasAcertoAdapter.currentList
+        val opcoes = mesas.map { mesa -> "Mesa ${mesa.numero}" }.toTypedArray()
+        val ids = mesas.map { it.id }
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Selecione a mesa para trocar o pano")
+            .setItems(opcoes) { _, which ->
+                val mesaId = ids[which]
+                mostrarSelecaoPano(mesaId)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
     
     /**
@@ -1320,6 +1416,7 @@ class SettlementFragment : Fragment() {
         
         // Atualizar pano atual da mesa
         carregarPanoAtual()
+        carregarUltimasTrocasTodasMesas()
         
         Toast.makeText(requireContext(), "Pano selecionado com sucesso!", Toast.LENGTH_SHORT).show()
     }
