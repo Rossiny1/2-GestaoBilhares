@@ -23,17 +23,12 @@ class PanoDetailsDialog : DialogFragment() {
     private var panoGroup: PanoGroup? = null
 
     companion object {
+        private const val ARG_PANO_GROUP = "pano_group"
+        
         fun newInstance(panoGroup: PanoGroup): PanoDetailsDialog {
             return PanoDetailsDialog().apply {
                 arguments = Bundle().apply {
-                    putString("cor", panoGroup.cor)
-                    putString("tamanho", panoGroup.tamanho)
-                    putString("material", panoGroup.material)
-                    putInt("quantidadeDisponivel", panoGroup.quantidadeDisponivel)
-                    putInt("quantidadeTotal", panoGroup.quantidadeTotal)
-                    putString("observacoes", panoGroup.observacoes)
-                    putString("numeroInicial", panoGroup.numeroInicial)
-                    putString("numeroFinal", panoGroup.numeroFinal)
+                    putParcelable(ARG_PANO_GROUP, panoGroup)
                 }
             }
         }
@@ -62,50 +57,28 @@ class PanoDetailsDialog : DialogFragment() {
             // TODO: Implementar ação ao clicar em um pano individual
         }
         
-        binding.rvPanoDetails.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvPanoDetails.layoutManager = LinearLayoutManager(requireContext()).apply {
+            // Forçar medição correta dos itens
+            isItemPrefetchEnabled = false
+        }
         binding.rvPanoDetails.adapter = adapter
+        binding.rvPanoDetails.setHasFixedSize(true)
+        binding.rvPanoDetails.isNestedScrollingEnabled = false
     }
 
     private fun loadPanoGroup() {
-        val cor = arguments?.getString("cor") ?: ""
-        val tamanho = arguments?.getString("tamanho") ?: ""
-        val material = arguments?.getString("material") ?: ""
-        val quantidadeDisponivel = arguments?.getInt("quantidadeDisponivel") ?: 0
-        val quantidadeTotal = arguments?.getInt("quantidadeTotal") ?: 0
-        val observacoes = arguments?.getString("observacoes")
-        val numeroInicial = arguments?.getString("numeroInicial") ?: ""
-        val numeroFinal = arguments?.getString("numeroFinal") ?: ""
-
-        // Atualizar header
-        binding.tvGroupInfo.text = "Panos $cor - $tamanho - $material"
-        binding.tvGroupCount.text = "$quantidadeDisponivel de $quantidadeTotal panos disponíveis"
-
-        // TODO: Carregar panos individuais do banco de dados
-        // Por enquanto, criar dados mock baseados no grupo
-        val panosMock = createMockPanos(cor, tamanho, material, quantidadeTotal, numeroInicial)
-        adapter.submitList(panosMock)
-    }
-
-    private fun createMockPanos(cor: String, tamanho: String, material: String, quantidade: Int, numeroInicial: String): List<PanoEstoque> {
-        val panos = mutableListOf<PanoEstoque>()
-        val numeroBase = numeroInicial.replace("P", "").toIntOrNull() ?: 1
+        panoGroup = arguments?.getParcelable(ARG_PANO_GROUP)
         
-        for (i in 0 until quantidade) {
-            val numero = numeroBase + i
-            val pano = PanoEstoque(
-                id = numero.toLong(),
-                numero = "P$numero",
-                cor = cor,
-                tamanho = tamanho,
-                material = material,
-                disponivel = i < quantidade * 0.8, // 80% disponíveis para simulação
-                observacoes = if (i == 2) "Pano com pequeno rasgo" else null
-            )
-            panos.add(pano)
+        panoGroup?.let { group ->
+            // Atualizar header
+            binding.tvGroupInfo.text = "Panos ${group.cor} - ${group.tamanho} - ${group.material}"
+            binding.tvGroupCount.text = "${group.quantidadeDisponivel} de ${group.quantidadeTotal} panos disponíveis"
+
+            // Usar os panos reais do grupo
+            adapter.submitList(group.panos.sortedBy { it.numero })
         }
-        
-        return panos
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

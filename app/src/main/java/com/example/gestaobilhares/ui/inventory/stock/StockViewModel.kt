@@ -36,8 +36,10 @@ class StockViewModel @Inject constructor(
     private fun loadStockItems() {
         viewModelScope.launch {
             try {
+                android.util.Log.d("StockViewModel", "Carregando itens do estoque...")
                 stockItemRepository.listarTodos().collect { stockItems ->
-                    _stockItems.value = stockItems.map { entity ->
+                    android.util.Log.d("StockViewModel", "Itens recebidos do banco: ${stockItems.size}")
+                    val mappedItems = stockItems.map { entity ->
                         StockItem(
                             id = entity.id,
                             name = entity.name,
@@ -47,6 +49,8 @@ class StockViewModel @Inject constructor(
                             supplier = entity.supplier
                         )
                     }
+                    android.util.Log.d("StockViewModel", "Itens mapeados: ${mappedItems.size}")
+                    _stockItems.value = mappedItems
                 }
             } catch (e: Exception) {
                 android.util.Log.e("StockViewModel", "Erro ao carregar itens do estoque: ${e.message}", e)
@@ -74,11 +78,18 @@ class StockViewModel @Inject constructor(
      * ✅ NOVO: Agrupa panos por cor, tamanho e material
      */
     private fun agruparPanos(panos: List<PanoEstoque>): List<PanoGroup> {
-        return panos.groupBy { pano ->
+        android.util.Log.d("StockViewModel", "Agrupando ${panos.size} panos")
+        
+        // Log dos panos antes do agrupamento
+        panos.forEach { pano ->
+            android.util.Log.d("StockViewModel", "Pano ${pano.numero}: disponivel=${pano.disponivel}, cor=${pano.cor}, tamanho=${pano.tamanho}")
+        }
+        
+        val grupos = panos.groupBy { pano ->
             "${pano.cor}|${pano.tamanho}|${pano.material}"
         }.map { (_, panosGrupo) ->
             val primeiroPano = panosGrupo.first()
-            PanoGroup(
+            val grupo = PanoGroup(
                 cor = primeiroPano.cor,
                 tamanho = primeiroPano.tamanho,
                 material = primeiroPano.material,
@@ -86,7 +97,18 @@ class StockViewModel @Inject constructor(
                 quantidadeDisponivel = panosGrupo.count { it.disponivel },
                 quantidadeTotal = panosGrupo.size
             )
+            
+            // Log do grupo criado
+            android.util.Log.d("StockViewModel", "Grupo ${grupo.cor}-${grupo.tamanho}: ${grupo.quantidadeDisponivel}/${grupo.quantidadeTotal} disponíveis")
+            grupo.panos.forEach { pano ->
+                android.util.Log.d("StockViewModel", "  Pano ${pano.numero}: disponivel=${pano.disponivel}")
+            }
+            
+            grupo
         }.sortedWith(compareBy<PanoGroup> { it.cor }.thenBy { it.tamanho }.thenBy { it.material })
+        
+        android.util.Log.d("StockViewModel", "Total de grupos criados: ${grupos.size}")
+        return grupos
     }
 
     private fun getSampleStockItems(): List<StockItem> {
@@ -131,6 +153,7 @@ class StockViewModel @Inject constructor(
     fun adicionarItemEstoque(stockItem: StockItem) {
         viewModelScope.launch {
             try {
+                android.util.Log.d("StockViewModel", "Adicionando item ao estoque: ${stockItem.name}")
                 val entity = StockItemEntity(
                     name = stockItem.name,
                     category = stockItem.category,
@@ -138,8 +161,18 @@ class StockViewModel @Inject constructor(
                     unitPrice = stockItem.unitPrice,
                     supplier = stockItem.supplier
                 )
-                stockItemRepository.inserir(entity)
-                // Recarregar itens do estoque
+                val id = stockItemRepository.inserir(entity)
+                android.util.Log.d("StockViewModel", "Item inserido com ID: $id")
+                
+                // Forçar atualização imediata da lista
+                android.util.Log.d("StockViewModel", "Forçando atualização da lista...")
+                val currentItems = _stockItems.value.toMutableList()
+                val newItem = stockItem.copy(id = id)
+                currentItems.add(newItem)
+                _stockItems.value = currentItems
+                android.util.Log.d("StockViewModel", "Lista atualizada com ${currentItems.size} itens")
+                
+                // Recarregar itens do estoque para sincronizar com o banco
                 loadStockItems()
             } catch (e: Exception) {
                 android.util.Log.e("StockViewModel", "Erro ao adicionar item ao estoque: ${e.message}", e)

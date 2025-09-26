@@ -45,8 +45,11 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvPanoDetails"
         android:layout_width="match_parent"
-        android:layout_height="400dp"
+        android:layout_height="wrap_content"
+        android:minHeight="200dp"
+        android:maxHeight="400dp"
         android:background="?attr/colorSurfaceVariant"
-        android:padding="8dp" />
+        android:padding="4dp"
+        android:nestedScrollingEnabled="true" />
 
 </LinearLayout>

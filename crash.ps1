@@ -21,6 +21,7 @@ param(
     [switch]$OnlyVenda,     # Mostra apenas logs do fluxo de venda (tag: VendaMesaDialog)
     [switch]$OnlyAbastecimento,  # Mostra apenas logs do fluxo de abastecimento
     [switch]$OnlyPanos,     # Mostra apenas logs do sistema de panos
+    [switch]$OnlyEstoque,   # Mostra apenas logs do sistema de estoque
     [switch]$ToFile         # Salva a saída em arquivo (além de mostrar na tela)
 )
 
@@ -34,6 +35,7 @@ Write-Host "PARAMETROS DISPONIVEIS:" -ForegroundColor Cyan
 Write-Host "-OnlyVenda: Monitora apenas logs de venda de mesas" -ForegroundColor Gray
 Write-Host "-OnlyAbastecimento: Monitora apenas logs de abastecimento" -ForegroundColor Gray
 Write-Host "-OnlyPanos: Monitora apenas logs do sistema de panos" -ForegroundColor Gray
+Write-Host "-OnlyEstoque: Monitora apenas logs do sistema de estoque" -ForegroundColor Gray
 Write-Host "-ToFile: Salva logs em arquivo" -ForegroundColor Gray
 Write-Host ""
 Write-Host "EXEMPLOS:" -ForegroundColor Cyan
@@ -41,6 +43,8 @@ Write-Host ".\crash.ps1 -OnlyAbastecimento" -ForegroundColor Gray
 Write-Host ".\crash.ps1 -OnlyAbastecimento -ToFile" -ForegroundColor Gray
 Write-Host ".\crash.ps1 -OnlyPanos" -ForegroundColor Gray
 Write-Host ".\crash.ps1 -OnlyPanos -ToFile" -ForegroundColor Gray
+Write-Host ".\crash.ps1 -OnlyEstoque" -ForegroundColor Gray
+Write-Host ".\crash.ps1 -OnlyEstoque -ToFile" -ForegroundColor Gray
 Write-Host ""
 Write-Host "CAMINHO ADB: C:\Users\Rossiny\AppData\Local\Android\Sdk\platform-tools\adb.exe" -ForegroundColor Green
 Write-Host ""
@@ -101,10 +105,15 @@ Write-Host "- PanoSelectionDialog: diálogo de seleção de panos" -ForegroundCo
 Write-Host "- PanoEstoqueRepository: operações de estoque de panos" -ForegroundColor Gray
 Write-Host "- SettlementViewModel: gerenciamento de panos no acerto" -ForegroundColor Gray
 Write-Host "- NovaReformaViewModel: gerenciamento de panos na reforma" -ForegroundColor Gray
+Write-Host "- SISTEMA DE ESTOQUE: logs de debug do gerenciamento de itens genéricos" -ForegroundColor Gray
+Write-Host "- StockFragment: exibição e atualização da lista de itens" -ForegroundColor Gray
+Write-Host "- StockViewModel: carregamento e salvamento de itens" -ForegroundColor Gray
+Write-Host "- AddEditStockItemDialog: diálogo de adição de itens" -ForegroundColor Gray
+Write-Host "- StockItemRepository: operações de banco de dados" -ForegroundColor Gray
 Write-Host ""
 
 # Padrao de filtro expandido para incluir nossos logs de diagnostico e analise de fluxo
-$patternAll = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|FileProvider|Permission Denial|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|RoutesFragment|HistoricoMesasVendidasFragment|HistoricoMesasVendidasViewModel|MesasDepositoFragment|VendaMesaDialog|ExpenseRegisterViewModel|HistoricoCombustivelVeiculo|VehicleDetailViewModel|Salvando abastecimento|Abastecimento salvo|Erro ao salvar|Despesa salva|Histórico de veículo|Conversão de data|SettlementFragment|NovaReformaFragment|PanoSelectionDialog|PanoEstoqueRepository|SettlementViewModel|NovaReformaViewModel|PanoEstoqueDao|MesaRepository|MesaDao|Marcando pano|Pano encontrado|Pano marcado como usado|Troca de pano|Seleção de panos|Diálogo de seleção|Mostrando seleção|Pano selecionado|Registrando pano|Continuando salvamento|Salvando reforma|Pano trocado|Pano removido do estoque|Tamanho da mesa|Panos encontrados|Panos disponíveis|Pano confirmado|Diálogo cancelado|Erro ao marcar pano|Erro ao trocar pano|Erro ao atualizar pano|Erro ao carregar panos|Erro ao mostrar diálogo"
+$patternAll = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|FileProvider|Permission Denial|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|RoutesFragment|HistoricoMesasVendidasFragment|HistoricoMesasVendidasViewModel|MesasDepositoFragment|VendaMesaDialog|ExpenseRegisterViewModel|HistoricoCombustivelVeiculo|VehicleDetailViewModel|Salvando abastecimento|Abastecimento salvo|Erro ao salvar|Despesa salva|Histórico de veículo|Conversão de data|SettlementFragment|NovaReformaFragment|PanoSelectionDialog|PanoEstoqueRepository|SettlementViewModel|NovaReformaViewModel|PanoEstoqueDao|MesaRepository|MesaDao|Marcando pano|Pano encontrado|Pano marcado como usado|Troca de pano|Seleção de panos|Diálogo de seleção|Mostrando seleção|Pano selecionado|Registrando pano|Continuando salvamento|Salvando reforma|Pano trocado|Pano removido do estoque|Tamanho da mesa|Panos encontrados|Panos disponíveis|Pano confirmado|Diálogo cancelado|Erro ao marcar pano|Erro ao trocar pano|Erro ao atualizar pano|Erro ao carregar panos|Erro ao mostrar diálogo|StockFragment|StockViewModel|StockItemRepository|StockItemDao|AddEditStockItemDialog|StockAdapter|adicionarItemEstoque|Carregando itens do estoque|Itens recebidos do banco|Itens mapeados|Adapter configurado|RecyclerView configurado|Inserindo item|Item inserido com ID|Forçando atualização da lista|Lista atualizada|Itens genéricos recebidos|Grupos de panos recebidos|Item adicionado ao estoque|Erro ao adicionar item|Erro ao carregar itens"
 
 # Padrao focado apenas no fluxo de venda (tag e mensagens chave)
 $patternVenda = "VendaMesaDialog|Clique em Vender|validarCampos|realizarVenda|Transacao concluida|Pos-transacao|Venda concluida|mostrarSeletorMesa|filtrarMesas|mostrarSeletorData|onCreateDialog|onViewCreated|setupClickListeners|setupUI"
@@ -115,14 +124,17 @@ $patternAbastecimento = "ExpenseRegisterViewModel|HistoricoCombustivelVeiculo|Ve
 # Padrao focado apenas no sistema de panos
 $patternPanos = "SettlementFragment|NovaReformaFragment|PanoSelectionDialog|PanoEstoqueRepository|SettlementViewModel|NovaReformaViewModel|PanoEstoqueDao|MesaRepository|MesaDao|Marcando pano|Pano encontrado|Pano marcado como usado|Troca de pano|Seleção de panos|Diálogo de seleção|Mostrando seleção|Pano selecionado|Registrando pano|Continuando salvamento|Salvando reforma|Pano trocado|Pano removido do estoque|Tamanho da mesa|Panos encontrados|Panos disponíveis|Pano confirmado|Diálogo cancelado|Erro ao marcar pano|Erro ao trocar pano|Erro ao atualizar pano|Erro ao carregar panos|Erro ao mostrar diálogo|Criando diálogo|Diálogo criado|Pano confirmado|Pano selecionado|Registrando pano|Continuando salvamento|Salvando reforma|Pano trocado|Pano removido do estoque|Tamanho da mesa|Panos encontrados|Panos disponíveis|Pano confirmado|Diálogo cancelado|Erro ao marcar pano|Erro ao trocar pano|Erro ao atualizar pano|Erro ao carregar panos|Erro ao mostrar diálogo"
 
-$pattern = if ($OnlyVenda) { $patternVenda } elseif ($OnlyAbastecimento) { $patternAbastecimento } elseif ($OnlyPanos) { $patternPanos } else { $patternAll }
+# Padrao focado apenas no sistema de estoque
+$patternEstoque = "StockFragment|StockViewModel|StockItemRepository|StockItemDao|AddEditStockItemDialog|StockAdapter|adicionarItemEstoque|Carregando itens do estoque|Itens recebidos do banco|Itens mapeados|Adapter configurado|RecyclerView configurado|Inserindo item|Item inserido com ID|Forçando atualização da lista|Lista atualizada|Itens genéricos recebidos|Grupos de panos recebidos|Item adicionado ao estoque|Erro ao adicionar item|Erro ao carregar itens|StockItem|StockAdapter|ItemStock|MaterialCardView"
+
+$pattern = if ($OnlyVenda) { $patternVenda } elseif ($OnlyAbastecimento) { $patternAbastecimento } elseif ($OnlyPanos) { $patternPanos } elseif ($OnlyEstoque) { $patternEstoque } else { $patternAll }
 
 # Opcional: salvar em arquivo
 $logDir = Join-Path $PSScriptRoot "logs"
 if ($ToFile) {
     if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
     $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    $logFile = Join-Path $logDir (if ($OnlyVenda) { "logcat-venda-$timestamp.txt" } elseif ($OnlyAbastecimento) { "logcat-abastecimento-$timestamp.txt" } elseif ($OnlyPanos) { "logcat-panos-$timestamp.txt" } else { "logcat-all-$timestamp.txt" })
+    $logFile = Join-Path $logDir (if ($OnlyVenda) { "logcat-venda-$timestamp.txt" } elseif ($OnlyAbastecimento) { "logcat-abastecimento-$timestamp.txt" } elseif ($OnlyPanos) { "logcat-panos-$timestamp.txt" } elseif ($OnlyEstoque) { "logcat-estoque-$timestamp.txt" } else { "logcat-all-$timestamp.txt" })
     Write-Host "Salvando saida tambem em arquivo: $logFile" -ForegroundColor Yellow
 }
 
