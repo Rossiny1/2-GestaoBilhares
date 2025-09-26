@@ -159,41 +159,14 @@
                             android:text="Panos"
                             android:textColor="?attr/colorOnSurface" />
 
-                        <LinearLayout
-                            android:id="@+id/layoutNumeroPanos"
-                            android:layout_width="match_parent"
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnSelecionarPanos"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:visibility="gone"
+                            android:text="Selecionar pano"
                             android:layout_marginStart="32dp"
-                            android:layout_marginTop="8dp">
-
-                            <com.google.android.material.textfield.TextInputLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:hint="Números dos Panos"
-                                app:boxStrokeColor="?attr/colorPrimary"
-                                app:hintTextColor="?attr/colorPrimary">
-
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/etNumeroPanos"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:hint="Ex: P001, P002"
-                                    android:inputType="text" />
-
-                            </com.google.android.material.textfield.TextInputLayout>
-
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btnSelecionarPanos"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Selecionar"
-                                android:layout_marginStart="8dp"
-                                style="@style/Widget.Material3.Button.OutlinedButton" />
-
-                        </LinearLayout>
+                            android:layout_marginTop="8dp"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
 
                     </LinearLayout>
 
