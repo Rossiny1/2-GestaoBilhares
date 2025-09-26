@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentStockBinding
 import com.example.gestaobilhares.ui.inventory.stock.AddPanosLoteDialog
@@ -23,6 +24,7 @@ class StockFragment : Fragment() {
     private lateinit var adapter: StockAdapter
     private lateinit var panosAdapter: PanosEstoqueAdapter
     private lateinit var panoGroupAdapter: PanoGroupAdapter
+    private lateinit var concatAdapter: ConcatAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,26 +57,26 @@ class StockFragment : Fragment() {
         }
         
         binding.rvStock.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvStock.adapter = adapter
+        // Mostrar panos (agrupados) e itens genéricos simultaneamente
+        concatAdapter = ConcatAdapter(panoGroupAdapter, adapter)
+        binding.rvStock.adapter = concatAdapter
+        android.util.Log.d("StockFragment", "RecyclerView configurado com ConcatAdapter (panos + itens)")
     }
 
     private fun observeData() {
+        // Observar itens genéricos do estoque
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.stockItems.collect { items ->
+                android.util.Log.d("StockFragment", "Itens genéricos recebidos: ${items.size}")
                 adapter.submitList(items)
             }
         }
-        
+
+        // Observar grupos de panos (agrupados)
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.panoGroups.collect { panoGroups ->
-                if (panoGroups.isNotEmpty()) {
-                    // Se há grupos de panos, mostrar os grupos no RecyclerView
-                    binding.rvStock.adapter = panoGroupAdapter
-                    panoGroupAdapter.submitList(panoGroups)
-                } else {
-                    // Se não há grupos de panos, mostrar itens genéricos
-                    binding.rvStock.adapter = adapter
-                }
+                android.util.Log.d("StockFragment", "Grupos de panos recebidos: ${panoGroups.size}")
+                panoGroupAdapter.submitList(panoGroups)
             }
         }
     }

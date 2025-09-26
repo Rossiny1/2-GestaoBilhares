@@ -137,7 +137,13 @@ class AddPanosLoteDialog : DialogFragment() {
                 disponivel = true,
                 observacoes = if (observacoes.isNotEmpty()) observacoes else null
             )
+            android.util.Log.d("AddPanosLoteDialog", "Criando pano ${pano.numero}: disponivel=${pano.disponivel}")
             panos.add(pano)
+        }
+        
+        android.util.Log.d("AddPanosLoteDialog", "Total de panos criados: ${panos.size}")
+        panos.forEach { pano ->
+            android.util.Log.d("AddPanosLoteDialog", "Pano ${pano.numero}: disponivel=${pano.disponivel}")
         }
 
         viewModel.adicionarPanosLote(panos)

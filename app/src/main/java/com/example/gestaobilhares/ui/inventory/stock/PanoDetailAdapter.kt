@@ -34,15 +34,19 @@ class PanoDetailAdapter(
         private val tvStatusPano: TextView = itemView.findViewById(R.id.tvPanoStatus)
 
         fun bind(pano: PanoEstoque) {
+            android.util.Log.d("PanoDetailAdapter", "Bind pano ${pano.numero}: disponivel=${pano.disponivel}")
+            
             tvNumeroPano.text = pano.numero
             tvInfoPano.text = "${pano.cor} - ${pano.tamanho} - ${pano.material}"
             
             if (pano.disponivel) {
                 tvStatusPano.text = "Disponível"
                 tvStatusPano.setTextColor(MaterialColors.getColor(itemView, com.google.android.material.R.attr.colorPrimary))
+                android.util.Log.d("PanoDetailAdapter", "Pano ${pano.numero} marcado como DISPONÍVEL")
             } else {
                 tvStatusPano.text = "Em Uso"
                 tvStatusPano.setTextColor(MaterialColors.getColor(itemView, com.google.android.material.R.attr.colorError))
+                android.util.Log.d("PanoDetailAdapter", "Pano ${pano.numero} marcado como EM USO")
             }
             
             itemView.setOnClickListener {

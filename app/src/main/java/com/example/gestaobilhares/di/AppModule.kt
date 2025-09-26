@@ -66,6 +66,14 @@ object AppModule {
     
     // ✅ NOVO: DAO de itens genéricos do estoque
     @Provides fun provideStockItemDao(db: AppDatabase): com.example.gestaobilhares.data.dao.StockItemDao = db.stockItemDao()
+    
+    // ✅ NOVO: Repository de itens genéricos do estoque
+    @Provides
+    @Singleton
+    fun provideStockItemRepository(
+        stockItemDao: com.example.gestaobilhares.data.dao.StockItemDao
+    ): com.example.gestaobilhares.data.repository.StockItemRepository = 
+        com.example.gestaobilhares.data.repository.StockItemRepository(stockItemDao)
 
     @Provides
     @Singleton
