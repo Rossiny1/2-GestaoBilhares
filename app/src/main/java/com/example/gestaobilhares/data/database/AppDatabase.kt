@@ -43,9 +43,10 @@ import com.example.gestaobilhares.data.entities.*
         Veiculo::class, // ✅ NOVO: VEÍCULOS
         HistoricoManutencaoVeiculo::class, // ✅ NOVO: HISTÓRICO DE MANUTENÇÃO DE VEÍCULOS
         HistoricoCombustivelVeiculo::class, // ✅ NOVO: HISTÓRICO DE COMBUSTÍVEL DE VEÍCULOS
-        PanoMesa::class // ✅ NOVO: VINCULAÇÃO PANO-MESA
+        PanoMesa::class, // ✅ NOVO: VINCULAÇÃO PANO-MESA
+        com.example.gestaobilhares.data.entities.StockItem::class // ✅ NOVO: ITENS GENÉRICOS DO ESTOQUE
     ],
-    version = 38, // ✅ MIGRATION: inclusão de sistema de panos
+    version = 39, // ✅ MIGRATION: inclusão de itens genéricos do estoque
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -170,6 +171,9 @@ abstract class AppDatabase : RoomDatabase() {
     
     // ✅ NOVO: DAO de vinculação pano-mesa
     abstract fun panoMesaDao(): PanoMesaDao
+    
+    // ✅ NOVO: DAO de itens genéricos do estoque
+    abstract fun stockItemDao(): com.example.gestaobilhares.data.dao.StockItemDao
 
     companion object {
         

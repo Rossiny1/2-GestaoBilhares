@@ -63,6 +63,9 @@ object AppModule {
     // ✅ NOVO: DAOs de Histórico de Veículos
     @Provides fun provideHistoricoManutencaoVeiculoDao(db: AppDatabase): com.example.gestaobilhares.data.dao.HistoricoManutencaoVeiculoDao = db.historicoManutencaoVeiculoDao()
     @Provides fun provideHistoricoCombustivelVeiculoDao(db: AppDatabase): com.example.gestaobilhares.data.dao.HistoricoCombustivelVeiculoDao = db.historicoCombustivelVeiculoDao()
+    
+    // ✅ NOVO: DAO de itens genéricos do estoque
+    @Provides fun provideStockItemDao(db: AppDatabase): com.example.gestaobilhares.data.dao.StockItemDao = db.stockItemDao()
 
     @Provides
     @Singleton
