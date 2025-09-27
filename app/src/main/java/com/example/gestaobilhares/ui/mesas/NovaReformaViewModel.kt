@@ -11,6 +11,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.Date
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -85,6 +86,33 @@ class NovaReformaViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("NovaReformaViewModel", "Erro ao marcar pano como usado: ${e.message}", e)
                 _errorMessage.value = "Erro ao marcar pano como usado: ${e.message}"
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVO: Atualiza a mesa com o pano selecionado na reforma
+     * Garante que `panoAtualId` e `dataUltimaTrocaPano` sejam persistidos na entidade `Mesa`,
+     * mesmo que a mesa esteja no depósito e só seja locada depois.
+     */
+    fun atualizarPanoDaMesaEmReforma(mesaId: Long, panoId: Long) {
+        viewModelScope.launch {
+            try {
+                Log.d("NovaReformaViewModel", "Atualizando mesa $mesaId com pano $panoId (reforma)")
+                val mesa = appRepository.obterMesaPorId(mesaId)
+                if (mesa == null) {
+                    Log.e("NovaReformaViewModel", "Mesa $mesaId não encontrada para atualizar pano em reforma")
+                    return@launch
+                }
+                val atualizada = mesa.copy(
+                    panoAtualId = panoId,
+                    dataUltimaTrocaPano = Date()
+                )
+                appRepository.atualizarMesa(atualizada)
+                Log.d("NovaReformaViewModel", "Mesa $mesaId atualizada com pano $panoId (reforma) com sucesso")
+            } catch (e: Exception) {
+                Log.e("NovaReformaViewModel", "Erro ao atualizar pano da mesa em reforma: ${e.message}", e)
+                _errorMessage.value = "Erro ao atualizar pano da mesa: ${e.message}"
             }
         }
     }

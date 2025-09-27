@@ -447,6 +447,12 @@ class NovaReformaFragment : Fragment() {
         // Marcar pano como usado no estoque
         viewModel.marcarPanoComoUsado(panoSelecionado.id, "Usado em reforma da mesa ${mesaSelecionada?.numero}")
         
+        // ✅ NOVO: Atualizar a mesa com o pano e data de troca (persistência na entidade Mesa)
+        mesaSelecionada?.let { mesa ->
+            viewModel.atualizarPanoDaMesaEmReforma(mesa.id, panoSelecionado.id)
+            Log.d("NovaReformaFragment", "Mesa ${mesa.numero} atualizada com pano ${panoSelecionado.numero} (reforma)")
+        }
+        
         numeroPanoSelecionado = panoSelecionado.numero
         Log.d("NovaReformaFragment", "Pano selecionado armazenado: $numeroPanoSelecionado")
         Toast.makeText(requireContext(), "Pano ${panoSelecionado.numero} selecionado", Toast.LENGTH_SHORT).show()
