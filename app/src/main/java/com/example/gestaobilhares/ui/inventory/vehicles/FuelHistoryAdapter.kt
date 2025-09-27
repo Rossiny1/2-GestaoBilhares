@@ -37,7 +37,7 @@ class FuelHistoryAdapter(
                 tvFuelDate.text = fuel.date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                 tvFuelGasStation.text = fuel.gasStation
                 tvFuelLiters.text = "${String.format("%.1f", fuel.liters)} L"
-                tvFuelValue.text = "R$ ${NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(fuel.value)}"
+                tvFuelValue.text = NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(fuel.value)
                 tvFuelKm.text = "${String.format("%.0f", fuel.km)} km"
                 
                 // Calcular média km/l para este abastecimento

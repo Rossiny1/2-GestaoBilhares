@@ -186,14 +186,67 @@ class VehicleDetailFragment : Fragment() {
     private fun updateFuelSummary() {
         val fuelList = viewModel.fuelHistory.value
         val totalFuel = fuelList.sumOf { it.value }
-        val totalKm = fuelList.sumOf { it.km }
-        val averageKmPerLiter = if (fuelList.isNotEmpty()) {
-            fuelList.sumOf { it.km } / fuelList.sumOf { it.liters }
+        val totalKmReal = calculateRealKmDriven(fuelList)
+        val averageKmPerLiter = if (fuelList.isNotEmpty() && totalKmReal > 0) {
+            totalKmReal / fuelList.sumOf { it.liters }
         } else 0.0
         
+        // ✅ NOVO: Obter km atual (último abastecimento)
+        val kmAtual = getCurrentMileage(fuelList)
+        
         binding.tvTotalFuel.text = "R$ ${String.format("%.2f", totalFuel)}"
-        binding.tvTotalKm.text = "${String.format("%.0f", totalKm)} km"
+        binding.tvTotalKm.text = "${String.format("%.0f", kmAtual)} km"
         binding.tvAverageKmPerLiter.text = "${String.format("%.1f", averageKmPerLiter)} km/l"
+    }
+    
+    /**
+     * Obtém o km atual (último abastecimento) do veículo.
+     * Implementa a mesma lógica do ViewModel para consistência.
+     */
+    private fun getCurrentMileage(fuelList: List<FuelRecord>): Double {
+        if (fuelList.isEmpty()) {
+            val vehicle = viewModel.vehicle.value
+            return vehicle?.mileage ?: 0.0
+        }
+        
+        // Ordenar por data e pegar o mais recente
+        val ultimoAbastecimento = fuelList.maxByOrNull { it.date }
+        return ultimoAbastecimento?.km ?: (viewModel.vehicle.value?.mileage ?: 0.0)
+    }
+    
+    /**
+     * Calcula o km real rodado considerando o km inicial do veículo.
+     * Implementa a mesma lógica do ViewModel para consistência.
+     */
+    private fun calculateRealKmDriven(fuelList: List<FuelRecord>): Double {
+        if (fuelList.isEmpty()) return 0.0
+        
+        // Obter km inicial do veículo do ViewModel
+        val vehicle = viewModel.vehicle.value
+        val kmInicial = vehicle?.mileage ?: 0.0
+        
+        // Ordenar abastecimentos por data (mais antigo primeiro)
+        val sortedFuelList = fuelList.sortedBy { it.date }
+        
+        var totalKmReal = 0.0
+        var kmAnterior = kmInicial
+        
+        for (fuel in sortedFuelList) {
+            // Para o primeiro abastecimento: subtrair km inicial
+            // Para os demais: usar o km rodado diretamente
+            val kmRodadoNesteAbastecimento = if (kmAnterior == kmInicial) {
+                // Primeiro abastecimento: subtrair km inicial
+                fuel.km - kmInicial
+            } else {
+                // Demais abastecimentos: usar km rodado diretamente
+                fuel.km
+            }
+            
+            totalKmReal += kmRodadoNesteAbastecimento
+            kmAnterior += kmRodadoNesteAbastecimento
+        }
+        
+        return totalKmReal
     }
 
     private fun updateSummaryCards(summary: VehicleSummary) {
