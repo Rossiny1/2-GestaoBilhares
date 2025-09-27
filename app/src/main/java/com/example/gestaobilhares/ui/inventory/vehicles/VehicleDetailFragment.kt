@@ -103,9 +103,12 @@ class VehicleDetailFragment : Fragment() {
         binding.rvMaintenanceHistory.adapter = maintenanceAdapter
 
         // Adapter de abastecimento
-        fuelAdapter = FuelHistoryAdapter { fuel ->
-            // TODO: Implementar navegação para detalhes do abastecimento
-        }
+        fuelAdapter = FuelHistoryAdapter(
+            onFuelClick = { fuel ->
+                // TODO: Implementar navegação para detalhes do abastecimento
+            },
+            vehicleInitialMileage = viewModel.vehicle.value?.mileage ?: 0.0
+        )
         binding.rvFuelHistory.layoutManager = LinearLayoutManager(requireContext())
         binding.rvFuelHistory.adapter = fuelAdapter
     }
@@ -143,6 +146,10 @@ class VehicleDetailFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.fuelHistory.collect { fuelList ->
                 fuelAdapter.submitList(fuelList)
+                // Atualizar km inicial do adapter quando veículo estiver carregado
+                viewModel.vehicle.value?.let { vehicle ->
+                    fuelAdapter.updateVehicleInitialMileage(vehicle.mileage)
+                }
                 updateFuelSummary()
             }
         }
@@ -229,21 +236,20 @@ class VehicleDetailFragment : Fragment() {
         val sortedFuelList = fuelList.sortedBy { it.date }
         
         var totalKmReal = 0.0
-        var kmAnterior = kmInicial
         
-        for (fuel in sortedFuelList) {
-            // Para o primeiro abastecimento: subtrair km inicial
-            // Para os demais: usar o km rodado diretamente
-            val kmRodadoNesteAbastecimento = if (kmAnterior == kmInicial) {
+        for (i in sortedFuelList.indices) {
+            val fuel = sortedFuelList[i]
+            
+            val kmRodadoNesteAbastecimento = if (i == 0) {
                 // Primeiro abastecimento: subtrair km inicial
                 fuel.km - kmInicial
             } else {
-                // Demais abastecimentos: usar km rodado diretamente
-                fuel.km
+                // Demais abastecimentos: km atual - km do abastecimento anterior
+                val abastecimentoAnterior = sortedFuelList[i - 1]
+                fuel.km - abastecimentoAnterior.km
             }
             
             totalKmReal += kmRodadoNesteAbastecimento
-            kmAnterior += kmRodadoNesteAbastecimento
         }
         
         return totalKmReal
