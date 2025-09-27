@@ -143,13 +143,23 @@ class VehicleDetailViewModel @Inject constructor(
                     combustiveisFiltrados.forEach { combustivel ->
                         android.util.Log.d("VehicleDetailViewModel", "Abastecimento FILTRADO: ID=${combustivel.id}, Data=${combustivel.dataAbastecimento}, Litros=${combustivel.litros}, Valor=${combustivel.valor}")
                     }
-                    val fuelList = combustiveisFiltrados.map { combustivel ->
+                    // Construir lista de abastecimentos com hodômetro absoluto consistente
+                    val kmInicial = _vehicle.value?.mileage ?: 0.0
+                    var ultimoHodometro = kmInicial
+                    val ordenadosPorData = combustiveisFiltrados.sortedBy { it.dataAbastecimento }
+                    val fuelList = ordenadosPorData.map { combustivel ->
+                        val hodometroAbsoluto = when {
+                            (combustivel.kmVeiculo != null && combustivel.kmVeiculo > 0L) -> combustivel.kmVeiculo.toDouble()
+                            combustivel.kmRodado > 0.0 -> ultimoHodometro + combustivel.kmRodado
+                            else -> ultimoHodometro
+                        }
+                        ultimoHodometro = hodometroAbsoluto
                         FuelRecord(
                             id = combustivel.id,
                             date = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
                             liters = combustivel.litros,
                             value = combustivel.valor,
-                            km = combustivel.kmRodado,
+                            km = hodometroAbsoluto,
                             gasStation = combustivel.posto ?: "N/A"
                         )
                     }
@@ -167,7 +177,8 @@ class VehicleDetailViewModel @Inject constructor(
         // ✅ CORREÇÃO: Calcular km real rodado considerando km inicial do veículo
         val totalKm = calculateRealKmDriven(fuelList)
         val averageKmPerLiter = if (fuelList.isNotEmpty() && totalKm > 0) {
-            totalKm / fuelList.sumOf { it.liters }
+            val totalLitros = fuelList.sumOf { it.liters }
+            if (totalLitros > 0) totalKm / totalLitros else 0.0
         } else 0.0
         
         // ✅ NOVO: Obter km atual (último abastecimento)
@@ -206,8 +217,8 @@ class VehicleDetailViewModel @Inject constructor(
         // Obter km inicial do veículo
         val kmInicial = _vehicle.value?.mileage ?: 0.0
         
-        // Ordenar abastecimentos por data (mais antigo primeiro)
-        val sortedFuelList = fuelList.sortedBy { it.date }
+        // Ordenar por hodômetro (km) crescente para evitar problemas com datas iguais
+        val sortedFuelList = fuelList.sortedBy { it.km }
         
         var totalKmReal = 0.0
         
@@ -239,8 +250,8 @@ class VehicleDetailViewModel @Inject constructor(
         // Obter km inicial do veículo
         val kmInicial = _vehicle.value?.mileage ?: 0.0
         
-        // Ordenar abastecimentos por data (mais antigo primeiro)
-        val sortedCombustiveis = combustiveis.sortedBy { it.dataAbastecimento }
+        // Ordenar por hodômetro (km) crescente para evitar problemas com datas iguais
+        val sortedCombustiveis = combustiveis.sortedBy { it.kmVeiculo }
         
         var totalKmReal = 0.0
         
