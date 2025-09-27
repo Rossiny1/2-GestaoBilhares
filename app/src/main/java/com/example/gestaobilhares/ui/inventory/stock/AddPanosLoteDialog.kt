@@ -51,8 +51,7 @@ class AddPanosLoteDialog : DialogFragment() {
         val tamanhoAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, tamanhos)
         binding.etTamanhoPano.setAdapter(tamanhoAdapter)
         
-        // Configurar valores padrão
-        binding.etMaterialPano.setText("Veludo")
+        // Removido: material não é mais utilizado
         binding.etNumeroInicial.setText("1")
         
         // Configurar listeners para cálculo automático
@@ -95,12 +94,12 @@ class AddPanosLoteDialog : DialogFragment() {
     private fun atualizarResumo() {
         val quantidade = binding.etQuantidade.text.toString().toIntOrNull() ?: 0
         val numeroInicial = binding.etNumeroInicial.text.toString().toIntOrNull() ?: 1
-        val cor = binding.etCorPano.text.toString().trim()
+        // Removido: cor não utilizada
         val tamanho = binding.etTamanhoPano.text.toString().trim()
         
-        if (quantidade > 0 && cor.isNotEmpty() && tamanho.isNotEmpty()) {
+        if (quantidade > 0 && tamanho.isNotEmpty()) {
             val numeroFinal = numeroInicial + quantidade - 1
-            val resumo = "Serão criados $quantidade panos $tamanho $cor com numeração de $numeroInicial a $numeroFinal"
+            val resumo = "Serão criados $quantidade panos $tamanho com numeração de $numeroInicial a $numeroFinal"
             binding.tvResumo.text = resumo
         } else {
             binding.tvResumo.text = "Preencha todos os campos para ver o resumo"
@@ -112,14 +111,12 @@ class AddPanosLoteDialog : DialogFragment() {
     }
 
     private fun criarPanos() {
-        val cor = binding.etCorPano.text.toString().trim()
         val tamanho = binding.etTamanhoPano.text.toString().trim()
-        val material = binding.etMaterialPano.text.toString().trim()
         val quantidade = binding.etQuantidade.text.toString().toIntOrNull() ?: 0
         val numeroInicial = binding.etNumeroInicial.text.toString().toIntOrNull() ?: 1
         val observacoes = binding.etObservacoes.text.toString().trim()
 
-        if (cor.isEmpty() || tamanho.isEmpty() || material.isEmpty() || quantidade <= 0) {
+        if (tamanho.isEmpty() || quantidade <= 0) {
             // Mostrar erro
             android.widget.Toast.makeText(requireContext(), "Preencha todos os campos obrigatórios", android.widget.Toast.LENGTH_SHORT).show()
             return
@@ -129,14 +126,14 @@ class AddPanosLoteDialog : DialogFragment() {
         
         for (i in 0 until quantidade) {
             val numero = numeroInicial + i
-            val pano = PanoEstoque(
-                numero = "P$numero",
-                cor = cor,
-                tamanho = tamanho,
-                material = material,
-                disponivel = true,
-                observacoes = if (observacoes.isNotEmpty()) observacoes else null
-            )
+                val pano = PanoEstoque(
+                    numero = "P$numero",
+                    cor = "",
+                    tamanho = tamanho,
+                    material = "",
+                    disponivel = true,
+                    observacoes = if (observacoes.isNotEmpty()) observacoes else null
+                )
             android.util.Log.d("AddPanosLoteDialog", "Criando pano ${pano.numero}: disponivel=${pano.disponivel}")
             panos.add(pano)
         }
