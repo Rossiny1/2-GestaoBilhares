@@ -195,7 +195,8 @@ class VehicleDetailFragment : Fragment() {
         val totalFuel = fuelList.sumOf { it.value }
         val totalKmReal = calculateRealKmDriven(fuelList)
         val averageKmPerLiter = if (fuelList.isNotEmpty() && totalKmReal > 0) {
-            totalKmReal / fuelList.sumOf { it.liters }
+            val totalLitros = fuelList.sumOf { it.liters }
+            if (totalLitros > 0) totalKmReal / totalLitros else 0.0
         } else 0.0
         
         // ✅ NOVO: Obter km atual (último abastecimento)

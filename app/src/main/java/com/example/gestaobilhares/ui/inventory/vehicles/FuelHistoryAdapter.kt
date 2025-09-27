@@ -75,12 +75,12 @@ class FuelHistoryAdapter(
 
             return if (currentIndex == 0) {
                 // Primeiro abastecimento: subtrair km inicial do veículo
-                val kmRealRodado = fuel.km - this@FuelHistoryAdapter.vehicleInitialMileage
+                val kmRealRodado = (fuel.km - this@FuelHistoryAdapter.vehicleInitialMileage).coerceAtLeast(0.0)
                 if (kmRealRodado > 0) kmRealRodado / fuel.liters else 0.0
             } else {
                 // Demais: diferença para o abastecimento anterior
                 val abastecimentoAnterior = sortedFuels[currentIndex - 1]
-                val kmRealRodado = fuel.km - abastecimentoAnterior.km
+                val kmRealRodado = (fuel.km - abastecimentoAnterior.km).coerceAtLeast(0.0)
                 if (kmRealRodado > 0) kmRealRodado / fuel.liters else 0.0
             }
         }
