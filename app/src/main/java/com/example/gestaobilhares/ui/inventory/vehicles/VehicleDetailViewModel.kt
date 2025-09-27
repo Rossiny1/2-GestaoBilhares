@@ -198,7 +198,7 @@ class VehicleDetailViewModel @Inject constructor(
     /**
      * Calcula o km real rodado considerando o km inicial do veículo.
      * Para o primeiro abastecimento: kmAtual - kmInicial
-     * Para os demais: diferença entre abastecimentos consecutivos
+     * Para os demais: kmAtual - kmAnterior
      */
     private fun calculateRealKmDriven(fuelList: List<FuelRecord>): Double {
         if (fuelList.isEmpty()) return 0.0
@@ -210,22 +210,20 @@ class VehicleDetailViewModel @Inject constructor(
         val sortedFuelList = fuelList.sortedBy { it.date }
         
         var totalKmReal = 0.0
-        var kmAnterior = kmInicial
         
-        for (fuel in sortedFuelList) {
-            // fuel.km já contém o km rodado desde o último abastecimento
-            // Para o primeiro abastecimento: subtrair km inicial
-            // Para os demais: usar o km rodado diretamente
-            val kmRodadoNesteAbastecimento = if (kmAnterior == kmInicial) {
+        for (i in sortedFuelList.indices) {
+            val fuel = sortedFuelList[i]
+            
+            val kmRodadoNesteAbastecimento = if (i == 0) {
                 // Primeiro abastecimento: subtrair km inicial
                 fuel.km - kmInicial
             } else {
-                // Demais abastecimentos: usar km rodado diretamente
-                fuel.km
+                // Demais abastecimentos: km atual - km do abastecimento anterior
+                val abastecimentoAnterior = sortedFuelList[i - 1]
+                fuel.km - abastecimentoAnterior.km
             }
             
             totalKmReal += kmRodadoNesteAbastecimento
-            kmAnterior += kmRodadoNesteAbastecimento
         }
         
         return totalKmReal
@@ -245,21 +243,20 @@ class VehicleDetailViewModel @Inject constructor(
         val sortedCombustiveis = combustiveis.sortedBy { it.dataAbastecimento }
         
         var totalKmReal = 0.0
-        var kmAnterior = kmInicial
         
-        for (combustivel in sortedCombustiveis) {
-            // Para o primeiro abastecimento: subtrair km inicial
-            // Para os demais: usar o km rodado diretamente
-            val kmRodadoNesteAbastecimento = if (kmAnterior == kmInicial) {
+        for (i in sortedCombustiveis.indices) {
+            val combustivel = sortedCombustiveis[i]
+            
+            val kmRodadoNesteAbastecimento = if (i == 0) {
                 // Primeiro abastecimento: subtrair km inicial
                 combustivel.kmRodado - kmInicial
             } else {
-                // Demais abastecimentos: usar km rodado diretamente
-                combustivel.kmRodado
+                // Demais abastecimentos: km atual - km do abastecimento anterior
+                val abastecimentoAnterior = sortedCombustiveis[i - 1]
+                combustivel.kmRodado - abastecimentoAnterior.kmRodado
             }
             
             totalKmReal += kmRodadoNesteAbastecimento
-            kmAnterior += kmRodadoNesteAbastecimento
         }
         
         return totalKmReal
