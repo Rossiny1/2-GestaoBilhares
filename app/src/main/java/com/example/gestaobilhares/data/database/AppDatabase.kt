@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import android.content.Context
+import com.example.gestaobilhares.BuildConfig
 import com.example.gestaobilhares.data.dao.RotaDao
 import com.example.gestaobilhares.data.dao.ClienteDao
 import com.example.gestaobilhares.data.dao.DespesaDao
@@ -800,20 +801,24 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 
-                val instance = Room.databaseBuilder(
+                val builder = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
                     .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
-                    .fallbackToDestructiveMigration() // ✅ NOVO: Permite recriar banco em caso de erro de migration
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                             super.onOpen(db)
                             android.util.Log.d("AppDatabase", "Banco de dados aberto com sucesso!")
                         }
                     })
-                    .build()
+                // Aplicar fallback destrutivo somente em builds de debug
+                val instance = if (BuildConfig.DEBUG) {
+                    builder.fallbackToDestructiveMigration().build()
+                } else {
+                    builder.build()
+                }
                 INSTANCE = instance
                 instance
             }
