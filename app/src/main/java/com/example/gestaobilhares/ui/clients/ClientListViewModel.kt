@@ -418,6 +418,7 @@ class ClientListViewModel @Inject constructor(
             StatusCicloAcerto.EM_ANDAMENTO -> _statusRota.value = StatusRota.EM_ANDAMENTO
             StatusCicloAcerto.FINALIZADO -> _statusRota.value = StatusRota.FINALIZADA
             StatusCicloAcerto.CANCELADO -> _statusRota.value = StatusRota.PAUSADA
+            StatusCicloAcerto.PLANEJADO -> _statusRota.value = StatusRota.PAUSADA
         }
     }
 

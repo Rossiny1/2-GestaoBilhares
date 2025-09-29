@@ -42,8 +42,13 @@ class MetasFragment : Fragment() {
         setupToolbar()
         setupRecyclerView()
         setupFilters()
-        setupFab()
         observeViewModel()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Atualiza ao voltar de outra tela/diálogo
+        viewModel.carregarMetasRotas()
     }
 
     private fun setupToolbar() {
@@ -67,9 +72,9 @@ class MetasFragment : Fragment() {
                 val bundle = Bundle().apply {
                     putLong("rota_id", metaRota.rota.id)
                 }
-                findNavController().navigate(R.id.colaboradorMetasFragment, bundle)
+                findNavController().navigate(R.id.metaCadastroFragment, bundle)
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Erro ao abrir detalhes: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Erro ao abrir cadastro de metas: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -108,18 +113,12 @@ class MetasFragment : Fragment() {
         }
     }
 
-    private fun setupFab() {
-        binding.fabAddMeta.setOnClickListener {
-            // Navegar para a nova tela de cadastro de metas
-            try {
-                findNavController().navigate(R.id.action_metasFragment_to_metaCadastroFragment)
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Erro ao abrir cadastro de metas: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 
     private fun observeViewModel() {
+        // Recarregar imediatamente quando voltamos para este fragment
+        // (garante que a lista reflita metas recém-criadas sem esperar auto-refresh)
+        viewModel.carregarMetasRotas()
+
         // Observar metas filtradas
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -168,18 +167,8 @@ class MetasFragment : Fragment() {
         // Observar notificações
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.notificacoes.collect { notificacoes ->
-                    if (notificacoes.isNotEmpty()) {
-                        // Mostrar notificações importantes
-                        val notificacoesImportantes = notificacoes.filter { 
-                            it.tipo == TipoNotificacaoMeta.META_ATINGIDA || it.progresso >= 90.0 
-                        }
-                        
-                        notificacoesImportantes.forEach { notificacao ->
-                            Toast.makeText(requireContext(), notificacao.mensagem, Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }
+                // Evitar toasts repetitivos: não exibir notificações automaticamente
+                viewModel.notificacoes.collect { _ -> }
             }
         }
 

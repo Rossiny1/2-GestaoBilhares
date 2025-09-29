@@ -1,16 +1,16 @@
 # ========================================
-# SCRIPT PARA TESTAR SISTEMA DE METAS
+# TESTE EXIBIÇÃO DE METAS - GESTAO BILHARES
 # ========================================
 #
 # INSTRUÇÕES:
 # 1. Conecte seu dispositivo Android com a depuração USB ativada.
 # 2. Execute este script a partir do terminal PowerShell.
-# 3. O script irá monitorar especificamente os logs do sistema de metas.
+# 3. O script irá monitorar os logs relacionados à exibição de metas.
 #
 # ========================================
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "TESTE DO SISTEMA DE METAS - GESTAO BILHARES" -ForegroundColor Cyan
+Write-Host "TESTE EXIBIÇÃO DE METAS - GESTAO BILHARES" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -40,31 +40,51 @@ if (-not $hasDevice) {
     exit 1
 }
 
-Write-Host "Dispositivo conectado. Iniciando monitoramento de metas..." -ForegroundColor Green
-Write-Host ""
+Write-Host "Dispositivo conectado. Monitorando logs de exibição de metas..." -ForegroundColor Green
 
 # Limpar logcat anterior
 Write-Host "Limpando logcat anterior..." -ForegroundColor Yellow
 & $adbPath logcat -c
 
-Write-Host "INSTRUÇÕES PARA O TESTE:" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "INSTRUÇÕES PARA O TESTE:" -ForegroundColor Yellow
 Write-Host "1. Abra o app no dispositivo" -ForegroundColor White
 Write-Host "2. Vá para a tela 'Metas'" -ForegroundColor White
-Write-Host "3. Clique em 'Ver Detalhes' de uma rota" -ForegroundColor White
-Write-Host "4. Tente criar uma meta" -ForegroundColor White
-Write-Host "5. Observe os logs abaixo" -ForegroundColor White
+Write-Host "3. Observe se as metas aparecem nos cards das rotas" -ForegroundColor White
+Write-Host "4. Verifique se o progresso está sendo exibido corretamente" -ForegroundColor White
+Write-Host "5. Teste criar uma nova meta e verificar se aparece no card" -ForegroundColor White
 Write-Host ""
-Write-Host "MONITORANDO LOGS DE METAS..." -ForegroundColor Green
-Write-Host "Pressione Ctrl+C para parar" -ForegroundColor Gray
+
+Write-Host "MONITORANDO LOGS DE EXIBIÇÃO DE METAS..." -ForegroundColor Green
+Write-Host "Pressione Ctrl+C para parar" -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
 
-# Padrão específico para metas
-$patternMetas = "MetaCadastroViewModel|MetaCadastroFragment|MetasViewModel|MetasFragment|buscarCiclosParaMetas|Ciclos encontrados para metas|Colaborador padrão criado|Meta salva com ID|Nenhum colaborador responsável|Criando colaborador padrão|Salvando meta|Erro ao salvar meta|Erro ao carregar ciclos|Ciclo criado com ID|Ciclo futuro criado|PLANEJADO|EM_ANDAMENTO"
+# Padrões de log para monitorar
+$patternMetas = @(
+    "MetasAdapter",
+    "MetaDetalheAdapter", 
+    "MetaCadastroFragment",
+    "MetaCadastroViewModel",
+    "MetasViewModel",
+    "refreshMetas",
+    "Configurando RecyclerView",
+    "metas encontradas",
+    "Meta salva com sucesso",
+    "MetasViewModel notificado",
+    "Forçando refresh das metas",
+    "Carregando metas das rotas",
+    "MetaRotaResumo criado",
+    "Progresso das metas",
+    "Faturamento",
+    "Clientes Acertados",
+    "Mesas Locadas"
+)
 
-# Monitorar logs
+# Comando para filtrar logs
+$filterPattern = $patternMetas -join "|"
+
 try {
-    & $adbPath logcat | Where-Object { $_ -match $patternMetas } | ForEach-Object {
+    & $adbPath logcat | Where-Object { $_ -match $filterPattern } | ForEach-Object {
         $timestamp = Get-Date -Format "HH:mm:ss"
         Write-Host "[$timestamp] $_" -ForegroundColor Green
     }
@@ -73,5 +93,5 @@ try {
 }
 
 Write-Host ""
-Write-Host "Monitoramento finalizado." -ForegroundColor Yellow
+Write-Host "Teste concluído!" -ForegroundColor Cyan
 Read-Host "Pressione Enter para sair"

@@ -74,46 +74,52 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Seleção de Rota -->
+                <!-- Rota Selecionada (somente leitura) -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/tilRota"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    android:hint="Selecionar Rota"
+                    android:hint="Rota Selecionada"
                     app:startIconDrawable="@drawable/ic_route">
 
-                    <AutoCompleteTextView
-                        android:id="@+id/actvRota"
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etRota"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="none"
-                        android:text="Clique para selecionar rota"
-                        android:focusable="false" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Seleção de Ciclo -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilCiclo"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:hint="Selecionar Ciclo"
-                    app:startIconDrawable="@drawable/ic_calendar">
-
-                    <AutoCompleteTextView
-                        android:id="@+id/actvCiclo"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="none"
-                        android:text="Selecione uma rota primeiro"
+                        android:text="Carregando rota..."
                         android:focusable="false"
                         android:enabled="false" />
 
                 </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Seleção de Ciclo -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Selecionar Ciclo"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <Spinner
+                        android:id="@+id/spinnerCiclo"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/spinner_background"
+                        android:padding="12dp"
+                        android:textColor="@color/text_primary"
+                        android:enabled="false" />
+
+                </LinearLayout>
 
                 <!-- Seleção de Tipo de Meta -->
                 <com.google.android.material.textfield.TextInputLayout

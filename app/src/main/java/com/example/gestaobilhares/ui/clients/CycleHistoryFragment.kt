@@ -98,6 +98,9 @@ class CycleHistoryFragment : Fragment() {
                     // Navegar para tela de gerenciamento do ciclo
                     navegarParaGerenciamentoCiclo(ciclo)
                 }
+                com.example.gestaobilhares.data.entities.StatusCicloAcerto.PLANEJADO -> {
+                    mostrarFeedback("Ciclo planejado não pode ser gerenciado ainda", Snackbar.LENGTH_SHORT)
+                }
                 else -> {
                     mostrarFeedback("Ciclo ${ciclo.status.name.lowercase()} não pode ser gerenciado", Snackbar.LENGTH_SHORT)
                 }

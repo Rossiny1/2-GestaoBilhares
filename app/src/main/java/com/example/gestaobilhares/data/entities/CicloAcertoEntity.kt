@@ -114,5 +114,6 @@ data class CicloAcertoEntity(
 enum class StatusCicloAcerto {
     EM_ANDAMENTO,    // Ciclo iniciado mas não finalizado
     FINALIZADO,      // Ciclo finalizado com sucesso
-    CANCELADO        // Ciclo cancelado
+    CANCELADO,       // Ciclo cancelado
+    PLANEJADO        // Ciclo planejado para o futuro
 } 

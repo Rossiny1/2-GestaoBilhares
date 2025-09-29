@@ -476,6 +476,11 @@ class AppRepository(
     // Métodos para metas
     suspend fun buscarMetasPorColaboradorECiclo(colaboradorId: Long, cicloId: Long) = colaboradorDao?.buscarMetasPorColaboradorECiclo(colaboradorId, cicloId) ?: emptyList()
     suspend fun buscarMetasPorRotaECiclo(rotaId: Long, cicloId: Long) = colaboradorDao?.buscarMetasPorRotaECiclo(rotaId, cicloId) ?: emptyList()
+
+    suspend fun existeMetaDuplicada(rotaId: Long, cicloId: Long, tipoMeta: TipoMeta): Boolean {
+        val count = colaboradorDao?.contarMetasPorRotaCicloETipo(rotaId, cicloId, tipoMeta) ?: 0
+        return count > 0
+    }
     
     // ==================== FUNÇÕES PARA SISTEMA DE METAS ====================
     
@@ -542,11 +547,6 @@ class AppRepository(
         colaboradorDao?.inserirColaboradorRota(colaboradorRota)
     }
     
-    // ✅ NOVO: Método para inserir rotas de exemplo
-    suspend fun inserirRotasExemplo() {
-        // Por enquanto, não faz nada
-        // TODO: Implementar quando necessário
-    }
     
     // ==================== CICLO ACERTO ====================
     
@@ -554,6 +554,24 @@ class AppRepository(
     
     suspend fun buscarUltimoCicloFinalizadoPorRota(rotaId: Long) = cicloAcertoDao.buscarUltimoCicloFinalizadoPorRota(rotaId)
     suspend fun buscarCiclosPorRotaEAno(rotaId: Long, ano: Int) = cicloAcertoDao.buscarCiclosPorRotaEAno(rotaId, ano)
+    
+    suspend fun buscarCiclosPorRota(rotaId: Long) = cicloAcertoDao.buscarCiclosPorRota(rotaId)
+    suspend fun buscarProximoNumeroCiclo(rotaId: Long, ano: Int) = cicloAcertoDao.buscarProximoNumeroCiclo(rotaId, ano)
+    suspend fun inserirCicloAcerto(ciclo: CicloAcertoEntity) = cicloAcertoDao.inserir(ciclo)
+
+    /**
+     * Busca ciclos que podem ter metas definidas (em andamento ou planejados)
+     */
+    suspend fun buscarCiclosParaMetas(rotaId: Long): List<CicloAcertoEntity> {
+        val cicloEmAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
+        val ciclosFuturos = cicloAcertoDao.buscarCiclosFuturosPorRota(rotaId)
+        
+        val listaCombinada = mutableListOf<CicloAcertoEntity>()
+        cicloEmAndamento?.let { listaCombinada.add(it) }
+        listaCombinada.addAll(ciclosFuturos)
+        
+        return listaCombinada
+    }
     
     // ==================== MÉTODOS PARA RELATÓRIOS ====================
     
@@ -850,10 +868,24 @@ class AppRepository(
      */
     suspend fun contarMesasLocadasPorRota(rotaId: Long): Int {
         return try {
-            // Consideramos "locadas" como mesas ativas vinculadas a clientes da rota
             mesaDao.buscarMesasPorRota(rotaId).first().size
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao contar mesas locadas: ${e.message}", e)
+            0
+        }
+    }
+
+    /**
+     * Conta novas mesas (instaladas) no período do ciclo em uma rota
+     */
+    suspend fun contarNovasMesasNoCiclo(rotaId: Long, cicloId: Long): Int {
+        return try {
+            val ciclo = cicloAcertoDao.buscarPorId(cicloId) ?: return 0
+            val inicio = ciclo.dataInicio
+            val fim = ciclo.dataFim ?: java.util.Date()
+            mesaDao.contarNovasMesasInstaladas(rotaId, inicio, fim)
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "Erro ao contar novas mesas no ciclo: ${e.message}", e)
             0
         }
     }

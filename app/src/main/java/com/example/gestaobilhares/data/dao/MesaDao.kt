@@ -3,6 +3,7 @@ package com.example.gestaobilhares.data.dao
 import androidx.room.*
 import com.example.gestaobilhares.data.entities.Mesa
 import kotlinx.coroutines.flow.Flow
+import java.util.Date
 
 /**
  * DAO para operações de mesa no banco de dados
@@ -73,6 +74,12 @@ interface MesaDao {
     @Query("SELECT * FROM mesas WHERE cliente_id = :clienteId AND ativa = 1 ORDER BY numero ASC")
     suspend fun obterMesasPorClienteDireto(clienteId: Long): List<Mesa>
     
+    /**
+     * Retorna a mesa de depósito (cliente nulo) por número, se existir.
+     */
+    @Query("SELECT * FROM mesas WHERE cliente_id IS NULL AND numero = :numero LIMIT 1")
+    suspend fun obterPorNumeroENullCliente(numero: String): Mesa?
+    
     @Query("""
         SELECT m.* FROM mesas m
         INNER JOIN clientes c ON m.cliente_id = c.id
@@ -97,6 +104,20 @@ interface MesaDao {
         GROUP BY cliente_id
     """)
     suspend fun contarMesasAtivasPorClientes(clienteIds: List<Long>): List<MesaCountCliente>
+
+    /**
+     * Conta novas mesas instaladas em uma rota dentro de um período (data_instalacao no intervalo)
+     */
+    @Query(
+        """
+        SELECT COUNT(*) FROM mesas m
+        INNER JOIN clientes c ON m.cliente_id = c.id
+        WHERE c.rota_id = :rotaId
+          AND m.ativa = 1
+          AND m.data_instalacao BETWEEN :dataInicio AND :dataFim
+        """
+    )
+    suspend fun contarNovasMesasInstaladas(rotaId: Long, dataInicio: Date, dataFim: Date): Int
 } 
 
 data class MesaCountCliente(
