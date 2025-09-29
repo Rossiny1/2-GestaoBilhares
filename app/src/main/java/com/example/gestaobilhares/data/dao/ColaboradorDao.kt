@@ -140,11 +140,25 @@ interface ColaboradorDao {
      * Busca metas ativas de uma rota para um ciclo específico
      */
     @Query("""
-        SELECT mc.* FROM metas_colaborador mc
-        INNER JOIN colaborador_rotas cr ON mc.colaborador_id = cr.colaborador_id
-        WHERE cr.rota_id = :rotaId AND mc.ciclo_id = :cicloId AND mc.ativo = 1
+        SELECT DISTINCT mc.* FROM metas_colaborador mc
+        LEFT JOIN colaborador_rotas cr ON mc.colaborador_id = cr.colaborador_id
+        WHERE mc.ciclo_id = :cicloId
+          AND mc.ativo = 1
+          AND (
+                cr.rota_id = :rotaId
+             OR mc.rota_id = :rotaId
+          )
     """)
     suspend fun buscarMetasPorRotaECiclo(rotaId: Long, cicloId: Long): List<MetaColaborador>
+
+    /**
+     * Verifica se já existe meta do mesmo tipo para a mesma rota e ciclo
+     */
+    @Query("""
+        SELECT COUNT(*) FROM metas_colaborador
+        WHERE rota_id = :rotaId AND ciclo_id = :cicloId AND tipo_meta = :tipoMeta AND ativo = 1
+    """)
+    suspend fun contarMetasPorRotaCicloETipo(rotaId: Long, cicloId: Long, tipoMeta: TipoMeta): Int
     
     /**
      * Busca colaborador responsável principal de uma rota

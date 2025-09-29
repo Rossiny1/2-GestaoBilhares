@@ -208,17 +208,6 @@
 
     </LinearLayout>
 
-    <!-- FAB para adicionar meta -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddMeta"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contentDescription="Adicionar Meta"
-        app:srcCompat="@drawable/ic_add"
-        app:tint="@android:color/white"
-        app:backgroundTint="@color/accent_teal" />
 
     <!-- Indicador de atualização em tempo real -->
     <LinearLayout

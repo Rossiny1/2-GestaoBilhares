@@ -80,76 +80,7 @@
 
         </LinearLayout>
 
-        <!-- Colaborador responsável -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="4dp">
-
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/ic_person"
-                app:tint="@color/text_secondary" />
-
-            <TextView
-                android:id="@+id/tvColaboradorResponsavel"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp"
-                tools:text="João Silva" />
-
-        </LinearLayout>
-
-        <!-- Progresso geral -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="12dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Progresso Geral"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvProgressoGeral"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/accent_teal"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    tools:text="75%" />
-
-            </LinearLayout>
-
-            <!-- Barra de progresso -->
-            <com.google.android.material.progressindicator.LinearProgressIndicator
-                android:id="@+id/progressBarGeral"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                app:indicatorColor="@color/accent_teal"
-                app:trackColor="@color/progress_track"
-                app:trackThickness="8dp"
-                tools:progress="0.75" />
-
-        </LinearLayout>
+        <!-- Colaborador e progresso geral removidos a pedido do usuário -->
 
         <!-- Lista de metas (RecyclerView aninhado) -->
         <androidx.recyclerview.widget.RecyclerView

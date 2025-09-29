@@ -11,6 +11,7 @@ import com.example.gestaobilhares.data.dao.ClienteDao
 import com.example.gestaobilhares.data.dao.DespesaDao
 import com.example.gestaobilhares.data.dao.PanoMesaDao
 import com.example.gestaobilhares.data.entities.*
+import java.util.Date
 
 /**
  * Banco de dados principal da aplicação usando Room.
@@ -819,11 +820,14 @@ abstract class AppDatabase : RoomDatabase() {
                 } else {
                     builder.build()
                 }
+                
+                // Banco de dados limpo - sem seed automático
+                // Os dados serão inseridos manualmente pelo usuário
+                
                 INSTANCE = instance
                 instance
             }
         }
 
-        // ✅ REMOVIDO: Função seedDatabaseIfNeeded - não é mais necessária
     }
 } 

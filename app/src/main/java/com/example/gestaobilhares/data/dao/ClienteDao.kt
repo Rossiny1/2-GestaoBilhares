@@ -51,6 +51,7 @@ interface ClienteDao {
     """)
     suspend fun calcularDebitoAtualEmTempoReal(clienteId: Long): Double
 
+    @RewriteQueriesToDropUnusedColumns
     @Query("""
         SELECT c.*, 
                COALESCE(ultimo_acerto.debito_atual, 0.0) as debito_atual_calculado

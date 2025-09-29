@@ -39,11 +39,18 @@ class MetasViewModel @Inject constructor(
     val notificacoes: StateFlow<List<NotificacaoMeta>> = _notificacoes.asStateFlow()
 
     // Atualização periódica via corrotina
-    private var isAutoRefreshEnabled: Boolean = true
+    private var isAutoRefreshEnabled: Boolean = false
 
     init {
         carregarMetasRotas()
-        iniciarAutoRefresh()
+    }
+
+    /**
+     * Força o refresh das metas (útil após salvar nova meta)
+     */
+    fun refreshMetas() {
+        Timber.d("Forçando refresh das metas")
+        carregarMetasRotas()
     }
 
     /**
@@ -194,9 +201,9 @@ class MetasViewModel @Inject constructor(
                     clientes
                 }
                 TipoMeta.MESAS_LOCADAS -> {
-                    val mesas = calcularMesasLocadas(rotaId)
-                    Timber.d("Mesas locadas: %s", mesas)
-                    mesas
+                    val novasMesas = calcularNovasMesasNoCiclo(rotaId, cicloId)
+                    Timber.d("Novas mesas no ciclo: %s", novasMesas)
+                    novasMesas
                 }
                 TipoMeta.TICKET_MEDIO -> {
                     val ticket = calcularTicketMedio(rotaId, cicloId)
@@ -241,16 +248,12 @@ class MetasViewModel @Inject constructor(
     }
 
     /**
-     * Calcula o percentual de clientes acertados
+     * Calcula a QUANTIDADE de clientes acertados (contagem absoluta, clientes distintos)
      */
     private suspend fun calcularClientesAcertados(rotaId: Long, cicloId: Long): Double {
         return try {
-            val totalClientes = appRepository.contarClientesAtivosPorRota(rotaId)
             val clientesAcertados = appRepository.contarClientesAcertadosPorRotaECiclo(rotaId, cicloId)
-
-            if (totalClientes > 0) {
-                (clientesAcertados.toDouble() / totalClientes.toDouble()) * 100.0
-            } else 0.0
+            clientesAcertados.toDouble()
         } catch (e: Exception) {
             Timber.e(e, "Erro ao calcular clientes acertados: %s", e.message)
             0.0
@@ -260,12 +263,12 @@ class MetasViewModel @Inject constructor(
     /**
      * Calcula a quantidade de mesas locadas
      */
-    private suspend fun calcularMesasLocadas(rotaId: Long): Double {
+    private suspend fun calcularNovasMesasNoCiclo(rotaId: Long, cicloId: Long): Double {
         return try {
-            val mesasLocadas = appRepository.contarMesasLocadasPorRota(rotaId)
-            mesasLocadas.toDouble()
+            val novas = appRepository.contarNovasMesasNoCiclo(rotaId, cicloId)
+            novas.toDouble()
         } catch (e: Exception) {
-            Timber.e(e, "Erro ao calcular mesas locadas: %s", e.message)
+            Timber.e(e, "Erro ao calcular novas mesas no ciclo: %s", e.message)
             0.0
         }
     }
@@ -276,10 +279,10 @@ class MetasViewModel @Inject constructor(
     private suspend fun calcularTicketMedio(rotaId: Long, cicloId: Long): Double {
         return try {
             val faturamento = calcularFaturamentoAtual(rotaId, cicloId)
-            val mesasLocadas = calcularMesasLocadas(rotaId)
+            val clientesAcertados = calcularClientesAcertados(rotaId, cicloId)
 
-            if (mesasLocadas > 0) {
-                faturamento / mesasLocadas
+            if (clientesAcertados > 0.0) {
+                faturamento / clientesAcertados
             } else 0.0
         } catch (e: Exception) {
             Timber.e(e, "Erro ao calcular ticket medio: %s", e.message)

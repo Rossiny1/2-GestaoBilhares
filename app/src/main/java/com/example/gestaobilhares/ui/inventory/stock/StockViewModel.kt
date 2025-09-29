@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,10 +37,10 @@ class StockViewModel @Inject constructor(
     private fun loadStockItems() {
         viewModelScope.launch {
             try {
-                android.util.Log.d("StockViewModel", "Carregando itens do estoque...")
-                stockItemRepository.listarTodos().collect { stockItems ->
-                    android.util.Log.d("StockViewModel", "Itens recebidos do banco: ${stockItems.size}")
-                    val mappedItems = stockItems.map { entity ->
+                // Tentar carregar itens do banco de dados
+                val itemsFromDb = stockItemRepository.listarTodos().first()
+                if (itemsFromDb.isNotEmpty()) {
+                    _stockItems.value = itemsFromDb.map { entity ->
                         StockItem(
                             id = entity.id,
                             name = entity.name,
@@ -49,13 +50,13 @@ class StockViewModel @Inject constructor(
                             supplier = entity.supplier
                         )
                     }
-                    android.util.Log.d("StockViewModel", "Itens mapeados: ${mappedItems.size}")
-                    _stockItems.value = mappedItems
+                } else {
+                    // Se o banco estiver vazio, não fazer nada
+                    _stockItems.value = emptyList()
                 }
             } catch (e: Exception) {
                 android.util.Log.e("StockViewModel", "Erro ao carregar itens do estoque: ${e.message}", e)
-                // Fallback para dados de exemplo
-                _stockItems.value = getSampleStockItems()
+                _stockItems.value = emptyList()
             }
         }
     }
@@ -111,27 +112,6 @@ class StockViewModel @Inject constructor(
         return grupos
     }
 
-    private fun getSampleStockItems(): List<StockItem> {
-        return listOf(
-            StockItem(
-                id = 1L,
-                name = "Taco de Sinuca",
-                category = "Acessórios",
-                quantity = 10,
-                unitPrice = 25.0,
-                supplier = "Fornecedor A"
-            ),
-            StockItem(
-                id = 2L,
-                name = "Bolas de Sinuca",
-                category = "Acessórios",
-                quantity = 50,
-                unitPrice = 5.0,
-                supplier = "Fornecedor B"
-            )
-        )
-    }
-    
     /**
      * ✅ NOVO: Adiciona panos em lote ao estoque
      */

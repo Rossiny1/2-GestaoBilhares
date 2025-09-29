@@ -72,8 +72,7 @@ class RoutesViewModel @Inject constructor(
             aplicarFiltroAcesso(rotas)
         }
         
-        // Insere rotas de exemplo se necessário
-        inserirRotasExemploSeNecessario()
+        // Banco de dados limpo - sem inserção automática de dados
     }
 
     /**
@@ -234,18 +233,6 @@ class RoutesViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Insere rotas de exemplo se não existirem.
-     */
-    private fun inserirRotasExemploSeNecessario() {
-        viewModelScope.launch {
-            try {
-                appRepository.inserirRotasExemplo()
-            } catch (e: Exception) {
-                // Ignora erros ao inserir dados de exemplo
-            }
-        }
-    }
 
     /**
      * FASE 3: Data class para estatísticas gerais incluindo valores não finalizados.

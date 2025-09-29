@@ -175,6 +175,16 @@ interface CicloAcertoDao {
         ORDER BY ano ASC, numero_ciclo ASC
     """)
     suspend fun buscarCiclosFuturosPorRota(rotaId: Long): List<CicloAcertoEntity>
+    
+    /**
+     * Busca todos os ciclos de uma rota
+     */
+    @Query("""
+        SELECT * FROM ciclos_acerto 
+        WHERE rota_id = :rotaId
+        ORDER BY ano DESC, numero_ciclo DESC
+    """)
+    suspend fun buscarCiclosPorRota(rotaId: Long): List<CicloAcertoEntity>
 }
 
 /**

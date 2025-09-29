@@ -70,6 +70,7 @@ data class MetaRotaResumo(
             StatusCicloAcerto.EM_ANDAMENTO -> "Em Andamento"
             StatusCicloAcerto.FINALIZADO -> "Finalizado"
             StatusCicloAcerto.CANCELADO -> "Cancelado"
+            StatusCicloAcerto.PLANEJADO -> "Planejado"
         }
     }
     

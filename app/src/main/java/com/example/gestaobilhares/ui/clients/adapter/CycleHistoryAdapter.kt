@@ -80,6 +80,12 @@ class CycleHistoryAdapter(
                         tvStatus.background.setTint(root.context.getColor(R.color.red_600))
                         tvStatus.visibility = View.VISIBLE
                     }
+                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.PLANEJADO -> {
+                        tvStatus.text = "Planejado"
+                        tvStatus.setTextColor(root.context.getColor(R.color.white))
+                        tvStatus.background.setTint(root.context.getColor(R.color.blue_600))
+                        tvStatus.visibility = View.VISIBLE
+                    }
                 }
                 // Cor do lucro
                 val profitColor = if (ciclo.lucroLiquido >= 0) {

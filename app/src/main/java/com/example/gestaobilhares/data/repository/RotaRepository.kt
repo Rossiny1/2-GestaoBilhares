@@ -489,28 +489,6 @@ class RotaRepository @Inject constructor(
         return rotaDao.contarRotasAtivas()
     }
     
-    /**
-     * Insere rotas de exemplo para demonstração.
-     * Este método deve ser chamado apenas para popular o banco com dados iniciais.
-     */
-    suspend fun inserirRotasExemplo() {
-        val rotasExemplo = listOf(
-            Rota(nome = "Zona Sul", descricao = "Região sul da cidade", cor = "#6200EA"),
-            Rota(nome = "Zona Norte", descricao = "Região norte da cidade", cor = "#03DAC6"),
-            Rota(nome = "Centro", descricao = "Região central da cidade", cor = "#FF6200"),
-            Rota(nome = "Zona Oeste", descricao = "Região oeste da cidade", cor = "#9C27B0"),
-            Rota(nome = "Zona Leste", descricao = "Região leste da cidade", cor = "#4CAF50")
-        )
-        
-        // Verifica se já existem rotas antes de inserir
-        if (contarRotasAtivas() == 0) {
-            try {
-                rotaDao.insertRotas(rotasExemplo)
-            } catch (e: Exception) {
-                // Ignora erro se as rotas já existirem
-            }
-        }
-    }
     
     /**
      * Atualiza o status da rota.

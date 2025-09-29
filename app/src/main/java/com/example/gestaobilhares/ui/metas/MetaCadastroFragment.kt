@@ -48,6 +48,13 @@ class MetaCadastroFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // Obter rota selecionada dos argumentos
+        val rotaId = arguments?.getLong("rota_id")
+        if (rotaId != null) {
+            viewModel.carregarRotaPorId(rotaId)
+        }
+        
         setupUI()
         setupClickListeners()
         observeViewModel()
@@ -60,22 +67,20 @@ class MetaCadastroFragment : Fragment() {
         val tipoMetaAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, tiposMeta)
         binding.actvTipoMeta.setAdapter(tipoMetaAdapter)
 
-        // Configurar dropdown de rota
-        binding.actvRota.setOnClickListener {
-            if (viewModel.rotas.value.isNotEmpty()) {
-                showRotaSelectionDialog()
-            } else {
-                Toast.makeText(requireContext(), "Carregando rotas...", Toast.LENGTH_SHORT).show()
-            }
-        }
+        // Rota será carregada automaticamente via argumentos
 
-        // Configurar dropdown de ciclo
-        binding.actvCiclo.setOnClickListener {
-            if (rotaSelecionada != null) {
-                showCicloSelectionDialog()
-            } else {
-                Toast.makeText(requireContext(), "Selecione uma rota primeiro", Toast.LENGTH_SHORT).show()
+        // Configurar Spinner de ciclo
+        binding.spinnerCiclo.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                if (position > 0) { // Ignorar o primeiro item (placeholder)
+                    val ciclos = viewModel.ciclos.value
+                    if (position - 1 < ciclos.size) {
+                        cicloSelecionado = ciclos[position - 1]
+                        android.util.Log.d("MetaCadastroFragment", "Ciclo selecionado: ${cicloSelecionado?.numeroCiclo}/${cicloSelecionado?.ano}")
+                    }
+                }
             }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
 
         // Configurar dropdown de tipo de meta
@@ -97,11 +102,12 @@ class MetaCadastroFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        // Observar rotas
+        // Observar rota carregada
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.rotas.collect { rotas ->
                 if (rotas.isNotEmpty()) {
-                    binding.actvRota.setText("Clique para selecionar rota", false)
+                    rotaSelecionada = rotas.first()
+                    binding.etRota.setText(rotaSelecionada!!.nome)
                 }
             }
         }
@@ -110,7 +116,9 @@ class MetaCadastroFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.ciclos.collect { ciclos ->
                 if (ciclos.isNotEmpty() && rotaSelecionada != null) {
-                    binding.actvCiclo.setText("Clique para selecionar ciclo", false)
+                    configurarSpinnerCiclos(ciclos)
+                } else {
+                    configurarSpinnerCiclos(emptyList())
                 }
             }
         }
@@ -130,7 +138,26 @@ class MetaCadastroFragment : Fragment() {
             viewModel.metaSalva.collect { sucesso ->
                 if (sucesso) {
                     Toast.makeText(requireContext(), "Meta salva com sucesso!", Toast.LENGTH_SHORT).show()
+                    
+                    // Notificar o MetasViewModel para recarregar as metas
+                    try {
+                        val metasViewModel = androidx.lifecycle.ViewModelProvider(requireActivity())[MetasViewModel::class.java]
+                        metasViewModel.refreshMetas()
+                        android.util.Log.d("MetaCadastroFragment", "MetasViewModel notificado para refresh")
+                    } catch (e: Exception) {
+                        android.util.Log.e("MetaCadastroFragment", "Erro ao notificar MetasViewModel: ${e.message}")
+                    }
+                    
                     findNavController().navigateUp()
+                }
+            }
+        }
+
+        // Observar ciclo criado
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.cicloCriado.collect { criado ->
+                if (criado) {
+                    viewModel.resetarCicloCriado()
                 }
             }
         }
@@ -140,60 +167,34 @@ class MetaCadastroFragment : Fragment() {
         viewModel.carregarRotas()
     }
 
-    private fun showRotaSelectionDialog() {
-        val rotas = viewModel.rotas.value
-        if (rotas.isEmpty()) return
-
-        val rotaNomes = rotas.map { it.nome }
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, rotaNomes)
-
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Selecionar Rota")
-            .setAdapter(adapter) { _, position ->
-                rotaSelecionada = rotas[position]
-                binding.actvRota.setText(rotaSelecionada!!.nome, false)
-                binding.actvCiclo.setText("", false)
-                binding.actvTipoMeta.setText("", false)
-                binding.etValorMeta.setText("")
-                cicloSelecionado = null
-                tipoMetaSelecionado = null
-                
-                // Carregar ciclos da rota selecionada
-                viewModel.carregarCiclosPorRota(rotaSelecionada!!.id)
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
-
-    private fun showCicloSelectionDialog() {
-        val ciclos = viewModel.ciclos.value
+    private fun configurarSpinnerCiclos(ciclos: List<com.example.gestaobilhares.data.entities.CicloAcertoEntity>) {
+        val items = mutableListOf<String>()
+        
         if (ciclos.isEmpty()) {
-            Toast.makeText(requireContext(), "Nenhum ciclo encontrado para esta rota", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val cicloDescricoes = ciclos.map { ciclo ->
-            val status = when (ciclo.status) {
-                com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO -> "Em Andamento"
-                com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO -> "Finalizado"
-                com.example.gestaobilhares.data.entities.StatusCicloAcerto.CANCELADO -> "Cancelado"
+            items.add("Nenhum ciclo disponível")
+            binding.spinnerCiclo.isEnabled = false
+        } else {
+            items.add("Selecione um ciclo")
+            ciclos.forEach { ciclo ->
+                val status = when (ciclo.status) {
+                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO -> "Em Andamento"
+                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.PLANEJADO -> "Planejado"
+                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO -> "Finalizado"
+                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.CANCELADO -> "Cancelado"
+                }
+                items.add("Ciclo ${ciclo.numeroCiclo}/${ciclo.ano} - $status")
             }
-            "${ciclo.numeroCiclo}º Ciclo ${ciclo.ano} - $status"
+            binding.spinnerCiclo.isEnabled = true
         }
-
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, cicloDescricoes)
-
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Selecionar Ciclo")
-            .setAdapter(adapter) { _, position ->
-                cicloSelecionado = ciclos[position]
-                val descricao = cicloDescricoes[position]
-                binding.actvCiclo.setText(descricao, false)
-                updateValorMetaHint()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
+        
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, items)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerCiclo.adapter = adapter
+        
+        android.util.Log.d("MetaCadastroFragment", "Spinner configurado com ${items.size} itens")
     }
+
+
 
     private fun updateValorMetaHint() {
         val hint = when (tipoMetaSelecionado) {
@@ -209,7 +210,10 @@ class MetaCadastroFragment : Fragment() {
     private fun salvarMeta() {
         if (!validarCampos()) return
 
-        val valorMeta = binding.etValorMeta.text.toString().toDoubleOrNull()
+        // Normalizar entrada monetária: permitir "15.000" -> 15000.00
+        val rawValor = binding.etValorMeta.text.toString().trim()
+        val normalized = rawValor.replace(".", "").replace(",", ".")
+        val valorMeta = normalized.toDoubleOrNull()
         if (valorMeta == null || valorMeta <= 0) {
             Toast.makeText(requireContext(), "Valor da meta deve ser maior que zero", Toast.LENGTH_SHORT).show()
             return
