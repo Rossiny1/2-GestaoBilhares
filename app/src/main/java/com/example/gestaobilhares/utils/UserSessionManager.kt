@@ -2,6 +2,19 @@ package com.example.gestaobilhares.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import com.example.gestaobilhares.data.entities.Colaborador
 import com.example.gestaobilhares.data.entities.NivelAcesso
 import com.example.gestaobilhares.data.database.AppDatabase
@@ -37,6 +50,19 @@ class UserSessionManager private constructor(context: Context) {
     }
     
     private val sharedPrefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val appContext: Context = context
+    private val ioScope = CoroutineScope(Dispatchers.IO)
+
+    // DataStore
+    private val Context.dataStore by preferencesDataStore(name = PREFS_NAME)
+    private object Keys {
+        val USER_ID = longPreferencesKey(KEY_USER_ID)
+        val USER_EMAIL = stringPreferencesKey(KEY_USER_EMAIL)
+        val USER_NAME = stringPreferencesKey(KEY_USER_NAME)
+        val USER_LEVEL = stringPreferencesKey(KEY_USER_NIVEL_ACESSO)
+        val IS_LOGGED = booleanPreferencesKey(KEY_IS_LOGGED_IN)
+        val USER_APPROVED = booleanPreferencesKey(KEY_USER_APPROVED)
+    }
     
     // Estados observáveis
     private val _currentUser = MutableStateFlow<Colaborador?>(null)
@@ -61,7 +87,7 @@ class UserSessionManager private constructor(context: Context) {
         _isLoggedIn.value = true
         _userLevel.value = colaborador.nivelAcesso
         
-        // Salvar no SharedPreferences
+        // Escrita dupla: SharedPreferences (legado) + DataStore
         sharedPrefs.edit().apply {
             putLong(KEY_USER_ID, colaborador.id)
             putString(KEY_USER_EMAIL, colaborador.email)
@@ -70,6 +96,20 @@ class UserSessionManager private constructor(context: Context) {
             putBoolean(KEY_IS_LOGGED_IN, true)
             putBoolean(KEY_USER_APPROVED, colaborador.aprovado)
             apply()
+        }
+        ioScope.launch {
+            try {
+                appContext.dataStore.edit { prefs ->
+                    prefs[Keys.USER_ID] = colaborador.id
+                    prefs[Keys.USER_EMAIL] = colaborador.email
+                    prefs[Keys.USER_NAME] = colaborador.nome
+                    prefs[Keys.USER_LEVEL] = colaborador.nivelAcesso.name
+                    prefs[Keys.IS_LOGGED] = true
+                    prefs[Keys.USER_APPROVED] = colaborador.aprovado
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("UserSessionManager", "Erro ao salvar DataStore: ${e.message}")
+            }
         }
         
         android.util.Log.d("UserSessionManager", "✅ SESSÃO INICIADA - DEBUG COMPLETO:")
@@ -92,6 +132,14 @@ class UserSessionManager private constructor(context: Context) {
         
         // Limpar SharedPreferences
         sharedPrefs.edit().clear().apply()
+        // Limpar DataStore
+        ioScope.launch {
+            try {
+                appContext.dataStore.edit { it.clear() }
+            } catch (e: Exception) {
+                android.util.Log.e("UserSessionManager", "Erro ao limpar DataStore: ${e.message}")
+            }
+        }
         
         android.util.Log.d("UserSessionManager", "🔓 Sessão encerrada")
     }
@@ -100,7 +148,22 @@ class UserSessionManager private constructor(context: Context) {
      * Restaura sessão do SharedPreferences
      */
     private fun restoreSession() {
-        val isLoggedIn = sharedPrefs.getBoolean(KEY_IS_LOGGED_IN, false)
+        // Preferir DataStore; fallback para SharedPreferences
+        var isLoggedIn = false
+        try {
+            // leitura síncrona não é suportada; fazemos melhor esforço com SharedPreferences para boot rápido
+            // e agendamos atualização do StateFlow a partir do DataStore em background
+            isLoggedIn = sharedPrefs.getBoolean(KEY_IS_LOGGED_IN, false)
+            ioScope.launch {
+                try {
+                    val logged = appContext.dataStore.data
+                        .catch { }
+                        .map { prefs -> prefs[Keys.IS_LOGGED] == true }
+                        .firstOrNull() == true
+                    if (logged) restoreFromDataStore()
+                } catch (_: Exception) { }
+            }
+        } catch (_: Exception) { }
         if (isLoggedIn) {
             val userId = sharedPrefs.getLong(KEY_USER_ID, 0)
             val userEmail = sharedPrefs.getString(KEY_USER_EMAIL, "") ?: ""
@@ -136,6 +199,32 @@ class UserSessionManager private constructor(context: Context) {
                 android.util.Log.e("UserSessionManager", "Erro ao restaurar sessão: ${e.message}")
                 endSession()
             }
+        }
+    }
+
+    private suspend fun restoreFromDataStore() {
+        try {
+            val prefs = appContext.dataStore.data.first()
+            val userId = prefs[Keys.USER_ID] ?: 0L
+            val userEmail = prefs[Keys.USER_EMAIL] ?: ""
+            val userName = prefs[Keys.USER_NAME] ?: ""
+            val userLevelString = prefs[Keys.USER_LEVEL] ?: NivelAcesso.USER.name
+            val userApproved = prefs[Keys.USER_APPROVED] ?: false
+
+            val userLevel = NivelAcesso.valueOf(userLevelString)
+            val colaborador = Colaborador(
+                id = userId,
+                email = userEmail,
+                nome = userName,
+                nivelAcesso = userLevel,
+                aprovado = userApproved
+            )
+
+            _currentUser.value = colaborador
+            _isLoggedIn.value = true
+            _userLevel.value = userLevel
+        } catch (e: Exception) {
+            android.util.Log.e("UserSessionManager", "Erro ao restaurar DataStore: ${e.message}")
         }
     }
     

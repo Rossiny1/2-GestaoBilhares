@@ -1,21 +1,32 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Hilt / Dagger
+-keep class dagger.hilt.** { *; }
+-keep class hilt_aggregated_deps.** { *; }
+-keep class **_HiltModules.** { *; }
+-keep class **Hilt_** { *; }
+-keep class javax.inject.** { *; }
+-keepattributes *Annotation*
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Kotlin metadata
+-keep class kotlin.Metadata { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Parcelable
+-keep class * implements android.os.Parcelable {
+    public static final android.os.Parcelable$Creator *;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Room
+-keep class androidx.room.** { *; }
+-keep class com.example.gestaobilhares.data.entities.** { *; }
+-keep class com.example.gestaobilhares.data.dao.** { *; }
+
+# App models (Gson)
+-keep class com.example.gestaobilhares.** { *; }
+-dontwarn sun.misc.**
+
+# Navigation Safe Args
+-keep class **Directions$* { *; }
+-keep class **Args { *; }
+
+# iText warnings
+-dontwarn org.bouncycastle.**
+-dontwarn org.spongycastle.**

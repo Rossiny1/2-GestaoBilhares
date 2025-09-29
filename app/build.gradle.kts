@@ -30,7 +30,12 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     
@@ -92,6 +97,9 @@ dependencies {
 
     // ✅ NOVO: Gráficos (MPAndroidChart)
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // DataStore (Preferences)
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     // Hilt (DI)
     implementation("com.google.dagger:hilt-android:2.51")
