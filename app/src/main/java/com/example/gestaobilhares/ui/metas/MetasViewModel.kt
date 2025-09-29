@@ -6,6 +6,7 @@ import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
@@ -51,30 +52,37 @@ class MetasViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
+                android.util.Log.d("MetasViewModel", "🔄 Iniciando carregamento de metas das rotas")
                 
                 // Buscar todas as rotas ativas
-                val rotas = appRepository.obterTodasRotas().first().filter { it.ativa }
+                val rotas = appRepository.obterTodasRotas().first().filter { rota -> rota.ativa }
+                android.util.Log.d("MetasViewModel", "📊 Encontradas ${rotas.size} rotas ativas")
                 
                 val metasRotasList = mutableListOf<MetaRotaResumo>()
                 
                 for (rota in rotas) {
                     try {
+                        android.util.Log.d("MetasViewModel", "🔍 Processando rota: ${rota.nome} (ID: ${rota.id})")
                         val metaRota = criarMetaRotaResumo(rota)
                         if (metaRota != null) {
+                            android.util.Log.d("MetasViewModel", "✅ MetaRota criada para ${rota.nome}: ${metaRota.metas.size} metas")
                             metasRotasList.add(metaRota)
+                        } else {
+                            android.util.Log.w("MetasViewModel", "⚠️ MetaRota não criada para ${rota.nome}")
                         }
                     } catch (e: Exception) {
-                        android.util.Log.e("MetasViewModel", "Erro ao carregar metas da rota ${rota.nome}: ${e.message}", e)
+                        android.util.Log.e("MetasViewModel", "❌ Erro ao carregar metas da rota ${rota.nome}: ${e.message}", e)
                     }
                 }
                 
+                android.util.Log.d("MetasViewModel", "📋 Total de MetaRotas criadas: ${metasRotasList.size}")
                 _metasRotas.value = metasRotasList
                 
                 // Gerar notificações para metas próximas
                 gerarNotificacoesMetas(metasRotasList)
                 
             } catch (e: Exception) {
-                android.util.Log.e("MetasViewModel", "Erro ao carregar metas: ${e.message}", e)
+                android.util.Log.e("MetasViewModel", "❌ Erro ao carregar metas: ${e.message}", e)
                 _message.value = "Erro ao carregar metas: ${e.message}"
             } finally {
                 _isLoading.value = false
@@ -87,25 +95,60 @@ class MetasViewModel @Inject constructor(
      */
     private suspend fun criarMetaRotaResumo(rota: Rota): MetaRotaResumo? {
         try {
+            android.util.Log.d("MetasViewModel", "🔍 Criando MetaRotaResumo para rota: ${rota.nome} (ID: ${rota.id})")
+            
             // Buscar ciclo atual ou histórico
             val cicloAtual = if (_mostrarHistorico.value) {
-                // Se está mostrando histórico, buscar o último ciclo finalizado
+                android.util.Log.d("MetasViewModel", "📚 Buscando último ciclo finalizado para rota ${rota.nome}")
                 appRepository.buscarUltimoCicloFinalizadoPorRota(rota.id)
             } else {
-                // Caso contrário, buscar ciclo atual (em andamento ou último finalizado)
+                android.util.Log.d("MetasViewModel", "📅 Buscando ciclo atual para rota ${rota.nome}")
                 appRepository.buscarCicloAtualPorRota(rota.id)
-            } ?: return null // Se não há ciclo, não mostrar a rota
+            }
+            
+            if (cicloAtual == null) {
+                android.util.Log.w("MetasViewModel", "⚠️ Nenhum ciclo encontrado para rota ${rota.nome}")
+                return null
+            }
+            
+            android.util.Log.d("MetasViewModel", "✅ Ciclo encontrado: ${cicloAtual.numeroCiclo}/${cicloAtual.ano} (ID: ${cicloAtual.id})")
             
             // Buscar colaborador responsável principal
+            android.util.Log.d("MetasViewModel", "👤 Buscando colaborador responsável principal para rota ${rota.nome}")
             val colaboradorResponsavel = appRepository.buscarColaboradorResponsavelPrincipal(rota.id)
             
+            if (colaboradorResponsavel != null) {
+                android.util.Log.d("MetasViewModel", "✅ Colaborador responsável encontrado: ${colaboradorResponsavel.nome}")
+            } else {
+                android.util.Log.w("MetasViewModel", "⚠️ Nenhum colaborador responsável encontrado para rota ${rota.nome}")
+            }
+            
             // Buscar metas do ciclo atual
+            android.util.Log.d("MetasViewModel", "🎯 Buscando metas para rota ${rota.id} e ciclo ${cicloAtual.id}")
             val metas = appRepository.buscarMetasPorRotaECiclo(rota.id, cicloAtual.id)
+            android.util.Log.d("MetasViewModel", "📊 Metas encontradas: ${metas.size}")
+            
+            if (metas.isEmpty()) {
+                android.util.Log.w("MetasViewModel", "⚠️ Nenhuma meta encontrada para rota ${rota.nome} e ciclo ${cicloAtual.id}")
+                // Retornar MetaRotaResumo mesmo sem metas para mostrar a rota
+                return MetaRotaResumo(
+                    rota = rota,
+                    cicloAtual = cicloAtual.numeroCiclo,
+                    anoCiclo = cicloAtual.ano,
+                    statusCiclo = cicloAtual.status,
+                    colaboradorResponsavel = colaboradorResponsavel,
+                    metas = emptyList(),
+                    dataInicioCiclo = cicloAtual.dataInicio,
+                    dataFimCiclo = cicloAtual.dataFim,
+                    ultimaAtualizacao = Date()
+                )
+            }
             
             // Calcular progresso das metas baseado em dados reais
+            android.util.Log.d("MetasViewModel", "🧮 Calculando progresso das metas")
             val metasComProgresso = calcularProgressoMetas(metas, rota.id, cicloAtual.id)
             
-            return MetaRotaResumo(
+            val metaRotaResumo = MetaRotaResumo(
                 rota = rota,
                 cicloAtual = cicloAtual.numeroCiclo,
                 anoCiclo = cicloAtual.ano,
@@ -117,8 +160,11 @@ class MetasViewModel @Inject constructor(
                 ultimaAtualizacao = Date()
             )
             
+            android.util.Log.d("MetasViewModel", "✅ MetaRotaResumo criado com sucesso para ${rota.nome}")
+            return metaRotaResumo
+            
         } catch (e: Exception) {
-            android.util.Log.e("MetasViewModel", "Erro ao criar resumo de metas para rota ${rota.nome}: ${e.message}", e)
+            android.util.Log.e("MetasViewModel", "❌ Erro ao criar resumo de metas para rota ${rota.nome}: ${e.message}", e)
             return null
         }
     }
@@ -131,23 +177,50 @@ class MetasViewModel @Inject constructor(
         rotaId: Long, 
         cicloId: Long
     ): List<MetaColaborador> {
+        android.util.Log.d("MetasViewModel", "🧮 Calculando progresso para ${metas.size} metas (rota: $rotaId, ciclo: $cicloId)")
         val metasAtualizadas = mutableListOf<MetaColaborador>()
         
         for (meta in metas) {
+            android.util.Log.d("MetasViewModel", "🎯 Processando meta: ${meta.tipoMeta} (ID: ${meta.id})")
+            
             val valorAtual = when (meta.tipoMeta) {
-                TipoMeta.FATURAMENTO -> calcularFaturamentoAtual(rotaId, cicloId)
-                TipoMeta.CLIENTES_ACERTADOS -> calcularClientesAcertados(rotaId, cicloId)
-                TipoMeta.MESAS_LOCADAS -> calcularMesasLocadas(rotaId)
-                TipoMeta.TICKET_MEDIO -> calcularTicketMedio(rotaId, cicloId)
+                TipoMeta.FATURAMENTO -> {
+                    val faturamento = calcularFaturamentoAtual(rotaId, cicloId)
+                    android.util.Log.d("MetasViewModel", "💰 Faturamento calculado: $faturamento")
+                    faturamento
+                }
+                TipoMeta.CLIENTES_ACERTADOS -> {
+                    val clientes = calcularClientesAcertados(rotaId, cicloId)
+                    android.util.Log.d("MetasViewModel", "👥 Clientes acertados calculados: $clientes")
+                    clientes
+                }
+                TipoMeta.MESAS_LOCADAS -> {
+                    val mesas = calcularMesasLocadas(rotaId)
+                    android.util.Log.d("MetasViewModel", "🪑 Mesas locadas calculadas: $mesas")
+                    mesas
+                }
+                TipoMeta.TICKET_MEDIO -> {
+                    val ticket = calcularTicketMedio(rotaId, cicloId)
+                    android.util.Log.d("MetasViewModel", "🎫 Ticket médio calculado: $ticket")
+                    ticket
+                }
             }
             
             val metaAtualizada = meta.copy(valorAtual = valorAtual)
             metasAtualizadas.add(metaAtualizada)
             
+            android.util.Log.d("MetasViewModel", "📊 Meta atualizada: ${meta.tipoMeta} - Atual: $valorAtual / Meta: ${meta.valorMeta}")
+            
             // Atualizar no banco de dados
-            appRepository.atualizarValorAtualMeta(meta.id, valorAtual)
+            try {
+                appRepository.atualizarValorAtualMeta(meta.id, valorAtual)
+                android.util.Log.d("MetasViewModel", "✅ Meta ${meta.id} atualizada no banco")
+            } catch (e: Exception) {
+                android.util.Log.e("MetasViewModel", "❌ Erro ao atualizar meta ${meta.id} no banco: ${e.message}")
+            }
         }
         
+        android.util.Log.d("MetasViewModel", "✅ Progresso calculado para ${metasAtualizadas.size} metas")
         return metasAtualizadas
     }
 

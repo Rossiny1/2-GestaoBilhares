@@ -478,7 +478,19 @@
         android:id="@+id/metasFragment"
         android:name="com.example.gestaobilhares.ui.metas.MetasFragment"
         android:label="Metas"
-        tools:layout="@layout/fragment_metas" />
+        tools:layout="@layout/fragment_metas">
+        <!-- Navegação para cadastro de meta -->
+        <action
+            android:id="@+id/action_metasFragment_to_metaCadastroFragment"
+            app:destination="@id/metaCadastroFragment" />
+    </fragment>
+
+    <!-- ✅ NOVO: Fragment de Cadastro de Meta -->
+    <fragment
+        android:id="@+id/metaCadastroFragment"
+        android:name="com.example.gestaobilhares.ui.metas.MetaCadastroFragment"
+        android:label="Cadastrar Meta"
+        tools:layout="@layout/fragment_meta_cadastro" />
 
     <!-- ✅ NOVO: Telas de Inventário -->
     <fragment

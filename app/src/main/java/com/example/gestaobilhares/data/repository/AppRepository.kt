@@ -463,13 +463,59 @@ class AppRepository(
     suspend fun inserirMeta(meta: MetaColaborador) = colaboradorDao?.inserirMeta(meta) ?: 0L
     suspend fun atualizarMeta(meta: MetaColaborador) = colaboradorDao?.atualizarMeta(meta)
     suspend fun deletarMeta(meta: MetaColaborador) = colaboradorDao?.deletarMeta(meta)
-    suspend fun atualizarValorAtualMeta(metaId: Long, valorAtual: Double) = colaboradorDao?.atualizarValorAtual(metaId, valorAtual)
+    suspend fun atualizarValorAtualMeta(metaId: Long, valorAtual: Double) = colaboradorDao?.atualizarValorAtualMeta(metaId, valorAtual)
+    
+    // ==================== METAS POR ROTA ====================
+    
+    fun obterMetasPorRota(rotaId: Long) = colaboradorDao?.obterMetasPorRota(0L, rotaId) ?: flowOf(emptyList())
+    fun obterMetasPorColaboradorECiclo(colaboradorId: Long, cicloId: Long) = colaboradorDao?.obterMetasPorCiclo(colaboradorId, cicloId) ?: flowOf(emptyList())
+    fun obterMetasPorColaboradorERota(colaboradorId: Long, rotaId: Long) = colaboradorDao?.obterMetasPorRota(colaboradorId, rotaId) ?: flowOf(emptyList())
+    fun obterMetasPorColaboradorCicloERota(colaboradorId: Long, cicloId: Long, rotaId: Long) = colaboradorDao?.obterMetasPorCicloERota(colaboradorId, cicloId, rotaId) ?: flowOf(emptyList())
     suspend fun desativarMetasColaborador(colaboradorId: Long) = colaboradorDao?.desativarMetasColaborador(colaboradorId)
     
     // Métodos para metas
     suspend fun buscarMetasPorColaboradorECiclo(colaboradorId: Long, cicloId: Long) = colaboradorDao?.buscarMetasPorColaboradorECiclo(colaboradorId, cicloId) ?: emptyList()
     suspend fun buscarMetasPorRotaECiclo(rotaId: Long, cicloId: Long) = colaboradorDao?.buscarMetasPorRotaECiclo(rotaId, cicloId) ?: emptyList()
-    suspend fun buscarColaboradorResponsavelPrincipal(rotaId: Long) = colaboradorDao?.buscarColaboradorResponsavelPrincipal(rotaId)
+    
+    // ==================== FUNÇÕES PARA SISTEMA DE METAS ====================
+    
+    /**
+     * Busca colaborador responsável principal por uma rota
+     */
+    suspend fun buscarColaboradorResponsavelPrincipal(rotaId: Long): Colaborador? {
+        return try {
+            colaboradorDao?.buscarColaboradorResponsavelPrincipal(rotaId)
+        } catch (e: Exception) {
+            Log.e("AppRepository", "Erro ao buscar colaborador responsável: ${e.message}", e)
+            null
+        }
+    }
+    
+    /**
+     * Busca ciclo atual (em andamento) para uma rota
+     */
+    suspend fun buscarCicloAtualPorRota(rotaId: Long): CicloAcertoEntity? {
+        return try {
+            cicloAcertoDao.buscarCicloAtualPorRota(rotaId)
+        } catch (e: Exception) {
+            Log.e("AppRepository", "Erro ao buscar ciclo atual: ${e.message}", e)
+            null
+        }
+    }
+    
+    /**
+     * Busca ciclos futuros (planejados) para uma rota
+     */
+    suspend fun buscarCiclosFuturosPorRota(rotaId: Long): List<CicloAcertoEntity> {
+        return try {
+            cicloAcertoDao.buscarCiclosFuturosPorRota(rotaId)
+        } catch (e: Exception) {
+            Log.e("AppRepository", "Erro ao buscar ciclos futuros: ${e.message}", e)
+            emptyList()
+        }
+    }
+    
+    
     fun buscarMetasAtivasPorColaborador(colaboradorId: Long) = colaboradorDao?.buscarMetasAtivasPorColaborador(colaboradorId) ?: flowOf(emptyList())
     suspend fun buscarMetasPorTipoECiclo(tipoMeta: TipoMeta, cicloId: Long) = colaboradorDao?.buscarMetasPorTipoECiclo(tipoMeta, cicloId) ?: emptyList()
     
@@ -506,7 +552,6 @@ class AppRepository(
     
     fun obterTodosCiclos() = cicloAcertoDao.listarTodos()
     
-    suspend fun buscarCicloAtualPorRota(rotaId: Long) = cicloAcertoDao.buscarCicloAtualPorRota(rotaId)
     suspend fun buscarUltimoCicloFinalizadoPorRota(rotaId: Long) = cicloAcertoDao.buscarUltimoCicloFinalizadoPorRota(rotaId)
     suspend fun buscarCiclosPorRotaEAno(rotaId: Long, ano: Int) = cicloAcertoDao.buscarCiclosPorRotaEAno(rotaId, ano)
     

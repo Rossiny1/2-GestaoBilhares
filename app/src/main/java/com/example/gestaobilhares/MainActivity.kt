@@ -5,11 +5,9 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import com.example.gestaobilhares.databinding.ActivityMainBinding
-import com.example.gestaobilhares.utils.DatabasePopulator
+// ✅ REMOVIDO: import DatabasePopulator - não é mais necessário
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+// ✅ REMOVIDO: imports CoroutineScope - não são mais necessários
 /**
  * MainActivity configurada para Navigation Component e ViewBinding.
  * Usando NoActionBar theme - navegação gerenciada pelos próprios fragments.
@@ -26,25 +24,11 @@ class MainActivity : AppCompatActivity() {
         // Navigation Controller configurado automaticamente - gerenciado pelos fragments
         // REMOVIDO: setupActionBarWithNavController() - incompatível com NoActionBar theme
 
-        // ✅ NOVO: Popular banco de dados com dados de teste
-        popularBancoDados()
+        // ✅ REMOVIDO: Popular banco de dados - agora é feito automaticamente no AppDatabase
+        // popularBancoDados()
     }
 
-    /**
-     * Popula o banco de dados com dados de teste
-     * ✅ NOVO: Sistema de população de dados para testes
-     */
-    private fun popularBancoDados() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val populator = DatabasePopulator(this@MainActivity)
-                populator.popularBancoCompleto()
-                Log.d("MainActivity", "🎉 Banco de dados populado com sucesso!")
-            } catch (e: Exception) {
-                Log.e("MainActivity", "❌ Erro ao popular banco: ${e.message}", e)
-            }
-        }
-    }
+    // ✅ REMOVIDO: Função popularBancoDados() - agora é feita automaticamente no AppDatabase
 
     override fun onSupportNavigateUp(): Boolean {
         val navHostFragment = supportFragmentManager
