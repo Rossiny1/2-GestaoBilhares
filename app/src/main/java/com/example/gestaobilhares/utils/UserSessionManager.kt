@@ -2,6 +2,7 @@ package com.example.gestaobilhares.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import timber.log.Timber
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -112,14 +113,8 @@ class UserSessionManager private constructor(context: Context) {
             }
         }
         
-        android.util.Log.d("UserSessionManager", "✅ SESSÃO INICIADA - DEBUG COMPLETO:")
-        android.util.Log.d("UserSessionManager", "   ID: ${colaborador.id}")
-        android.util.Log.d("UserSessionManager", "   Nome: ${colaborador.nome}")
-        android.util.Log.d("UserSessionManager", "   Email: ${colaborador.email}")
-        android.util.Log.d("UserSessionManager", "   Nível: ${colaborador.nivelAcesso}")
-        android.util.Log.d("UserSessionManager", "   Aprovado: ${colaborador.aprovado}")
-        android.util.Log.d("UserSessionManager", "   isAdmin(): ${isAdmin()}")
-        android.util.Log.d("UserSessionManager", "   hasMenuAccess(): ${hasMenuAccess()}")
+        Timber.d("Sessao iniciada: id=%s nome=%s nivel=%s aprovado=%s admin=%s menu=%s",
+            colaborador.id, colaborador.nome, colaborador.nivelAcesso, colaborador.aprovado, isAdmin(), hasMenuAccess())
     }
     
     /**
@@ -141,7 +136,7 @@ class UserSessionManager private constructor(context: Context) {
             }
         }
         
-        android.util.Log.d("UserSessionManager", "🔓 Sessão encerrada")
+        Timber.d("Sessao encerrada")
     }
     
     /**
@@ -187,16 +182,10 @@ class UserSessionManager private constructor(context: Context) {
                 _isLoggedIn.value = true
                 _userLevel.value = userLevel
                 
-                android.util.Log.d("UserSessionManager", "🔄 SESSÃO RESTAURADA - DEBUG COMPLETO:")
-                android.util.Log.d("UserSessionManager", "   ID: $userId")
-                android.util.Log.d("UserSessionManager", "   Nome: $userName")
-                android.util.Log.d("UserSessionManager", "   Email: $userEmail")
-                android.util.Log.d("UserSessionManager", "   Nível: $userLevel")
-                android.util.Log.d("UserSessionManager", "   Aprovado: $userApproved")
-                android.util.Log.d("UserSessionManager", "   isAdmin(): ${isAdmin()}")
-                android.util.Log.d("UserSessionManager", "   hasMenuAccess(): ${hasMenuAccess()}")
+                Timber.d("Sessao restaurada: id=%s nome=%s nivel=%s aprovado=%s admin=%s menu=%s",
+                    userId, userName, userLevel, userApproved, isAdmin(), hasMenuAccess())
             } catch (e: Exception) {
-                android.util.Log.e("UserSessionManager", "Erro ao restaurar sessão: ${e.message}")
+                Timber.e(e, "Erro ao restaurar sessao: %s", e.message)
                 endSession()
             }
         }
@@ -224,7 +213,7 @@ class UserSessionManager private constructor(context: Context) {
             _isLoggedIn.value = true
             _userLevel.value = userLevel
         } catch (e: Exception) {
-            android.util.Log.e("UserSessionManager", "Erro ao restaurar DataStore: ${e.message}")
+            Timber.e(e, "Erro ao restaurar DataStore: %s", e.message)
         }
     }
     
@@ -261,9 +250,7 @@ class UserSessionManager private constructor(context: Context) {
      */
     fun getCurrentUserName(): String {
         val nome = _currentUser.value?.nome ?: ""
-        android.util.Log.d("UserSessionManager", "🔍 getCurrentUserName() chamado:")
-        android.util.Log.d("UserSessionManager", "   _currentUser.value: ${_currentUser.value}")
-        android.util.Log.d("UserSessionManager", "   Nome retornado: '$nome'")
+        Timber.d("getCurrentUserName() nome='%s' user=%s", nome, _currentUser.value)
         return nome
     }
     
@@ -348,7 +335,7 @@ class UserSessionManager private constructor(context: Context) {
                 colaboradorRotas.map { it.rotaId }
             }
         } catch (e: Exception) {
-            android.util.Log.e("UserSessionManager", "Erro ao buscar rotas do usuário: ${e.message}")
+            Timber.e(e, "Erro ao buscar rotas do usuario: %s", e.message)
             emptyList()
         }
     }

@@ -2,6 +2,7 @@ package com.example.gestaobilhares
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
+import timber.log.Timber
 
 /**
  * Application class principal do app.
@@ -12,6 +13,9 @@ class GestaoBilharesApplication : Application() {
     
     override fun onCreate() {
         super.onCreate()
-        android.util.Log.d("GestaoBilharesApp", "Aplicacao iniciada")
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
+        Timber.d("Aplicacao iniciada")
     }
 } 

@@ -2,11 +2,13 @@ package com.example.gestaobilhares.utils
 
 import android.content.Context
 import android.util.Log
+import android.content.SharedPreferences
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.dao.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.first
 import java.util.*
 
 /**
@@ -16,6 +18,8 @@ import java.util.*
 class DatabasePopulator(private val context: Context) {
 
     private val database = AppDatabase.getDatabase(context)
+    private val prefs: SharedPreferences = context.getSharedPreferences("db_populator", Context.MODE_PRIVATE)
+    private val SEED_FLAG_V1 = "seed_v1_completed"
 
     /**
      * Popula o banco de dados com dados de teste completos
@@ -23,6 +27,14 @@ class DatabasePopulator(private val context: Context) {
     suspend fun popularBancoCompleto() = withContext(Dispatchers.IO) {
         try {
             Log.d("DatabasePopulator", "🚀 Iniciando população do banco de dados...")
+
+            // Impedir duplicações: se já populado uma vez, ou já existem rotas, abortar
+            val jaExecutado = prefs.getBoolean(SEED_FLAG_V1, false)
+            val rotasExistentes = try { database.rotaDao().contarRotasAtivas() } catch (_: Exception) { 0 }
+            if (jaExecutado || rotasExistentes > 0) {
+                Log.d("DatabasePopulator", "População ignorada: já executada anteriormente ou dados existentes detectados (rotas=$rotasExistentes)")
+                return@withContext
+            }
 
             // 1. Limpar dados existentes (opcional - comentado para preservar dados)
             // limparDadosExistentes()
@@ -73,6 +85,7 @@ class DatabasePopulator(private val context: Context) {
             Log.d("DatabasePopulator", "✅ Despesas inseridas")
 
             Log.d("DatabasePopulator", "🎉 População do banco concluída com sucesso!")
+            prefs.edit().putBoolean(SEED_FLAG_V1, true).apply()
             
         } catch (e: Exception) {
             Log.e("DatabasePopulator", "❌ Erro ao popular banco: ${e.message}", e)
@@ -180,10 +193,17 @@ class DatabasePopulator(private val context: Context) {
         val rotasComId = mutableListOf<Rota>()
         rotasBase.forEachIndexed { index, rota ->
             try {
-                val id = database.rotaDao().insertRota(rota)
-                val rotaComId = rota.copy(id = id)
-                rotasComId.add(rotaComId)
-                Log.d("DatabasePopulator", "✅ Rota ${index + 1} inserida com ID: $id")
+                // Evitar duplicação por nome (idempotente)
+                val existente = database.rotaDao().getRotaByNome(rota.nome)
+                if (existente != null) {
+                    rotasComId.add(existente)
+                    Log.d("DatabasePopulator", "↩︎ Rota já existia: ${rota.nome} (ID: ${existente.id})")
+                } else {
+                    val id = database.rotaDao().insertRota(rota)
+                    val rotaComId = rota.copy(id = id)
+                    rotasComId.add(rotaComId)
+                    Log.d("DatabasePopulator", "✅ Rota ${index + 1} inserida com ID: $id")
+                }
             } catch (e: Exception) {
                 Log.e("DatabasePopulator", "❌ Erro ao inserir rota ${index + 1}: ${e.message}", e)
             }
@@ -291,14 +311,22 @@ class DatabasePopulator(private val context: Context) {
             )
         )
 
-        Log.d("DatabasePopulator", "📝 Inserindo ${clientesBase.size} clientes no banco...")
+        Log.d("DatabasePopulator", "📝 Inserindo ${clientesBase.size} clientes no banco (idempotente)...")
         val clientesComId = mutableListOf<Cliente>()
         clientesBase.forEachIndexed { index, cliente ->
             try {
-                val id = database.clienteDao().inserir(cliente)
-                val clienteComId = cliente.copy(id = id)
-                clientesComId.add(clienteComId)
-                Log.d("DatabasePopulator", "✅ Cliente ${index + 1} inserido com ID: $id")
+                // idempotência por nome+rota
+                val lista = database.clienteDao().obterTodos().first()
+                val existente = lista.find { it.nome.equals(cliente.nome, ignoreCase = true) && it.rotaId == cliente.rotaId }
+                if (existente != null) {
+                    clientesComId.add(existente)
+                    Log.d("DatabasePopulator", "↩︎ Cliente já existia: ${cliente.nome} (ID: ${existente.id})")
+                } else {
+                    val id = database.clienteDao().inserir(cliente)
+                    val clienteComId = cliente.copy(id = id)
+                    clientesComId.add(clienteComId)
+                    Log.d("DatabasePopulator", "✅ Cliente ${index + 1} inserido com ID: $id")
+                }
             } catch (e: Exception) {
                 Log.e("DatabasePopulator", "❌ Erro ao inserir cliente ${index + 1}: ${e.message}", e)
             }
@@ -458,14 +486,22 @@ class DatabasePopulator(private val context: Context) {
             )
         ))
 
-        Log.d("DatabasePopulator", "📝 Inserindo ${mesasBase.size} mesas no banco...")
+        Log.d("DatabasePopulator", "📝 Inserindo ${mesasBase.size} mesas no banco (idempotente)...")
         val mesasComId = mutableListOf<Mesa>()
         mesasBase.forEachIndexed { index, mesa ->
             try {
-                val id = database.mesaDao().inserir(mesa)
-                val mesaComId = mesa.copy(id = id)
-                mesasComId.add(mesaComId)
-                Log.d("DatabasePopulator", "✅ Mesa ${index + 1} inserida com ID: $id")
+                // idempotência por numero+clienteId
+                val existentesCliente = if (mesa.clienteId != null) database.mesaDao().obterMesasPorClienteDireto(mesa.clienteId) else emptyList()
+                val existente = existentesCliente.firstOrNull { it.numero == mesa.numero }
+                if (existente != null) {
+                    mesasComId.add(existente)
+                    Log.d("DatabasePopulator", "↩︎ Mesa já existia: ${mesa.numero} (ID: ${existente.id})")
+                } else {
+                    val id = database.mesaDao().inserir(mesa)
+                    val mesaComId = mesa.copy(id = id)
+                    mesasComId.add(mesaComId)
+                    Log.d("DatabasePopulator", "✅ Mesa ${index + 1} inserida com ID: $id")
+                }
             } catch (e: Exception) {
                 Log.e("DatabasePopulator", "❌ Erro ao inserir mesa ${index + 1}: ${e.message}", e)
             }
@@ -559,7 +595,9 @@ class DatabasePopulator(private val context: Context) {
         )
 
         categorias.forEach { categoria ->
-            database.categoriaDespesaDao().inserir(categoria)
+            // tenta evitar duplicação por nome
+            val existente = try { database.categoriaDespesaDao().buscarPorNome(categoria.nome) } catch (_: Exception) { null }
+            if (existente == null) database.categoriaDespesaDao().inserir(categoria)
         }
 
         // Tipos de despesas
@@ -575,7 +613,8 @@ class DatabasePopulator(private val context: Context) {
         )
 
         tiposDespesa.forEach { tipo ->
-            database.tipoDespesaDao().inserir(tipo)
+            val existente = try { database.tipoDespesaDao().buscarPorNome(tipo.nome) } catch (_: Exception) { null }
+            if (existente == null) database.tipoDespesaDao().inserir(tipo)
         }
     }
 

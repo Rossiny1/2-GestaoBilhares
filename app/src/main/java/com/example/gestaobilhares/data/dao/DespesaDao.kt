@@ -12,6 +12,7 @@ import java.time.LocalDateTime
  * Fornece métodos para CRUD e consultas específicas relacionadas a despesas.
  */
 @Dao
+@RewriteQueriesToDropUnusedColumns
 interface DespesaDao {
 
     /**
