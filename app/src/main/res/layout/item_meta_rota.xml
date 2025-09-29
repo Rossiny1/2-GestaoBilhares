@@ -151,97 +151,14 @@
 
         </LinearLayout>
 
-        <!-- Lista de metas -->
-        <LinearLayout
-            android:id="@+id/layoutMetas"
+        <!-- Lista de metas (RecyclerView aninhado) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMetas"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="12dp">
-
-            <!-- Meta 1 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="8dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp"
-                        tools:text="Faturamento" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp"
-                        tools:text="R$ 15.000 / R$ 20.000" />
-
-                </LinearLayout>
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    app:indicatorColor="@color/progress_success"
-                    app:trackColor="@color/progress_track"
-                    app:trackThickness="4dp"
-                    tools:progress="0.75" />
-
-            </LinearLayout>
-
-            <!-- Meta 2 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="8dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp"
-                        tools:text="Clientes Acertados" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp"
-                        tools:text="80%" />
-
-                </LinearLayout>
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    app:indicatorColor="@color/progress_warning"
-                    app:trackColor="@color/progress_track"
-                    app:trackThickness="4dp"
-                    tools:progress="0.80" />
-
-            </LinearLayout>
-
-        </LinearLayout>
+            android:layout_marginTop="12dp"
+            android:nestedScrollingEnabled="false"
+            tools:listitem="@layout/item_meta_detalhe" />
 
         <!-- Indicadores de status -->
         <LinearLayout
