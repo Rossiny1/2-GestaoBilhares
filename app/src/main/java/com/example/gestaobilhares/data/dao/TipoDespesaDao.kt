@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
  * DAO para operações com tipos de despesas
  */
 @Dao
+@RewriteQueriesToDropUnusedColumns
 interface TipoDespesaDao {
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
