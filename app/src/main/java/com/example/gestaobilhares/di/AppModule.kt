@@ -15,6 +15,9 @@ import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
 import com.example.gestaobilhares.data.repository.VeiculoRepository
 import com.example.gestaobilhares.utils.UserSessionManager
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -147,6 +150,25 @@ object AppModule {
     @Singleton
     fun provideUserSessionManager(@ApplicationContext context: Context): UserSessionManager =
         UserSessionManager.getInstance(context)
+
+    // Firebase providers centralizados via Hilt (lazy e seguros)
+    @Provides
+    @Singleton
+    fun provideFirebaseApp(@ApplicationContext context: Context): FirebaseApp {
+        return FirebaseApp.initializeApp(context) ?: FirebaseApp.getInstance()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseAuth(firebaseApp: FirebaseApp): FirebaseAuth {
+        return FirebaseAuth.getInstance(firebaseApp)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseFirestore(firebaseApp: FirebaseApp): FirebaseFirestore {
+        return FirebaseFirestore.getInstance(firebaseApp)
+    }
 
     // ✅ NOVO: SISTEMA DE VENDA DE MESAS - Repositories
     @Provides
