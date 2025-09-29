@@ -92,8 +92,6 @@ interface ColaboradorDao {
     @Delete
     suspend fun deletarMeta(meta: MetaColaborador)
     
-    @Query("UPDATE metas_colaborador SET valor_atual = :valorAtual WHERE id = :metaId")
-    suspend fun atualizarValorAtual(metaId: Long, valorAtual: Double)
     
     @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND ciclo_id = :cicloId AND ativo = 1")
     fun obterMetasPorCiclo(colaboradorId: Long, cicloId: Long): Flow<List<MetaColaborador>>

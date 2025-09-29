@@ -110,9 +110,9 @@ class MetasFragment : Fragment() {
 
     private fun setupFab() {
         binding.fabAddMeta.setOnClickListener {
-            // Navegar para a tela de cadastro de metas existente
+            // Navegar para a nova tela de cadastro de metas
             try {
-                findNavController().navigate(R.id.colaboradorMetasFragment)
+                findNavController().navigate(R.id.action_metasFragment_to_metaCadastroFragment)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Erro ao abrir cadastro de metas: ${e.message}", Toast.LENGTH_SHORT).show()
             }

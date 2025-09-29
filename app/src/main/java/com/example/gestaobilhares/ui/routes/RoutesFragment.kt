@@ -28,6 +28,8 @@ import com.example.gestaobilhares.data.entities.Mesa
 import java.text.NumberFormat
 import java.util.Locale
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 
 /**
  * Fragment que exibe a tela de rotas.
@@ -86,14 +88,17 @@ class RoutesFragment : Fragment() {
         viewModel.refresh()
     }
 
+
     /**
      * Configura o RecyclerView com o adapter.
      */
     private fun setupRecyclerView() {
-        routesAdapter = RoutesAdapter { rotaResumo ->
-            // Quando uma rota é clicada, navega para a lista de clientes
-            viewModel.navigateToClients(rotaResumo)
-        }
+        routesAdapter = RoutesAdapter(
+            onItemClick = { rotaResumo ->
+                // Quando uma rota é clicada, navega para a lista de clientes
+                viewModel.navigateToClients(rotaResumo)
+            }
+        )
 
         binding.rotasRecyclerView.apply {
             adapter = routesAdapter

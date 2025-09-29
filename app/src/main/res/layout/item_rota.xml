@@ -73,6 +73,7 @@
 
         <!-- Status da rota com informações detalhadas -->
         <LinearLayout
+            android:id="@+id/rotaInfoContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"

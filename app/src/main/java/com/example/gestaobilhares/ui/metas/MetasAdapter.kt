@@ -2,6 +2,8 @@ package com.example.gestaobilhares.ui.metas
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -39,10 +41,114 @@ class MetasAdapter(private val onDetailsClick: (MetaRotaResumo) -> Unit) :
             binding.tvPeriodoCiclo.text = "Ciclo ${metaRota.cicloAtual} - ${metaRota.anoCiclo}"
             binding.tvProgressoGeral.text = String.format(Locale.getDefault(), "%.0f%%", metaRota.progressoGeral)
 
-            // Preenchemos a seção estática em item_meta_rota.xml em vez de RecyclerView aninhado
+            // ✅ NOVO: Exibir metas dinamicamente
+            exibirMetasDinamicamente(metaRota.metas)
 
             binding.btnDetalhes.setOnClickListener {
                 onDetailsClick(metaRota)
+            }
+        }
+
+        /**
+         * Exibe as metas dinamicamente no layout
+         */
+        private fun exibirMetasDinamicamente(metas: List<MetaColaborador>) {
+            val layoutMetas = binding.root.findViewById<LinearLayout>(R.id.layoutMetas)
+            layoutMetas?.removeAllViews()
+
+            if (metas.isNotEmpty()) {
+                for (meta in metas) {
+                    val metaView = criarViewMeta(meta)
+                    layoutMetas?.addView(metaView)
+                }
+            }
+        }
+
+        /**
+         * Cria uma view para uma meta específica
+         */
+        private fun criarViewMeta(meta: MetaColaborador): LinearLayout {
+            val context = binding.root.context
+            val metaLayout = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, 0, 0, 16)
+            }
+
+            // Linha com nome da meta e valores
+            val linhaMeta = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+
+            val tvNomeMeta = TextView(context).apply {
+                text = getTipoMetaFormatado(meta.tipoMeta)
+                textSize = 13f
+                setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+            val tvValoresMeta = TextView(context).apply {
+                text = formatarValoresMeta(meta)
+                textSize = 13f
+                setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+            }
+
+            linhaMeta.addView(tvNomeMeta)
+            linhaMeta.addView(tvValoresMeta)
+
+            // Barra de progresso
+            val progressBar = com.google.android.material.progressindicator.LinearProgressIndicator(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = 4
+                }
+                progress = calcularProgresso(meta).toInt()
+                setIndicatorColor(ContextCompat.getColor(context, R.color.accent_teal))
+                trackColor = ContextCompat.getColor(context, R.color.progress_track)
+                trackThickness = 8
+            }
+
+            metaLayout.addView(linhaMeta)
+            metaLayout.addView(progressBar)
+
+            return metaLayout
+        }
+
+        /**
+         * Formata os valores da meta
+         */
+        private fun formatarValoresMeta(meta: MetaColaborador): String {
+            return when (meta.tipoMeta) {
+                TipoMeta.FATURAMENTO, TipoMeta.TICKET_MEDIO -> {
+                    val formatador = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+                    "${formatador.format(meta.valorAtual)} / ${formatador.format(meta.valorMeta)}"
+                }
+                TipoMeta.CLIENTES_ACERTADOS, TipoMeta.MESAS_LOCADAS -> {
+                    "${String.format("%.0f", meta.valorAtual)} / ${String.format("%.0f", meta.valorMeta)}"
+                }
+            }
+        }
+
+        /**
+         * Calcula o progresso da meta
+         */
+        private fun calcularProgresso(meta: MetaColaborador): Float {
+            return if (meta.valorMeta > 0) {
+                ((meta.valorAtual / meta.valorMeta) * 100.0).coerceAtMost(100.0).toFloat()
+            } else 0f
+        }
+
+        /**
+         * Formata o tipo de meta para exibição
+         */
+        private fun getTipoMetaFormatado(tipoMeta: TipoMeta): String {
+            return when (tipoMeta) {
+                TipoMeta.FATURAMENTO -> "Faturamento"
+                TipoMeta.CLIENTES_ACERTADOS -> "Clientes Acertados"
+                TipoMeta.MESAS_LOCADAS -> "Mesas Locadas"
+                TipoMeta.TICKET_MEDIO -> "Ticket Médio"
             }
         }
     }

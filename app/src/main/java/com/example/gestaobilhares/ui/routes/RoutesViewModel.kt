@@ -7,6 +7,8 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.RotaResumo
+import com.example.gestaobilhares.data.entities.MetaColaborador
+import com.example.gestaobilhares.data.entities.TipoMeta
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.UserSessionManager
 import kotlinx.coroutines.flow.combine
@@ -195,6 +197,40 @@ class RoutesViewModel @Inject constructor(
             } catch (e: Exception) {
                 android.util.Log.e("RoutesViewModel", "Erro ao fazer refresh: ${e.message}", e)
             }
+        }
+    }
+
+    /**
+     * Carrega metas para uma rota específica
+     */
+    suspend fun carregarMetasPorRota(rotaId: Long): List<MetaColaborador> {
+        return try {
+            appRepository.obterMetasPorRota(rotaId).first()
+        } catch (e: Exception) {
+            android.util.Log.e("RoutesViewModel", "Erro ao carregar metas da rota $rotaId: ${e.message}", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * Calcula o progresso de uma meta baseado no valor atual vs valor meta
+     */
+    fun calcularProgressoMeta(meta: MetaColaborador): Double {
+        return if (meta.valorMeta > 0) {
+            (meta.valorAtual / meta.valorMeta * 100).coerceAtMost(100.0)
+        } else 0.0
+    }
+
+    /**
+     * Formata o texto da meta para exibição
+     */
+    fun formatarTextoMeta(meta: MetaColaborador): String {
+        val progresso = calcularProgressoMeta(meta)
+        return when (meta.tipoMeta) {
+            TipoMeta.FATURAMENTO -> "Faturamento: ${String.format("%.0f", meta.valorAtual)}/${String.format("%.0f", meta.valorMeta)} (${String.format("%.1f", progresso)}%)"
+            TipoMeta.CLIENTES_ACERTADOS -> "Clientes: ${String.format("%.0f", meta.valorAtual)}/${String.format("%.0f", meta.valorMeta)} (${String.format("%.1f", progresso)}%)"
+            TipoMeta.MESAS_LOCADAS -> "Mesas: ${String.format("%.0f", meta.valorAtual)}/${String.format("%.0f", meta.valorMeta)} (${String.format("%.1f", progresso)}%)"
+            TipoMeta.TICKET_MEDIO -> "Ticket Médio: ${String.format("%.2f", meta.valorAtual)}/${String.format("%.2f", meta.valorMeta)} (${String.format("%.1f", progresso)}%)"
         }
     }
 
