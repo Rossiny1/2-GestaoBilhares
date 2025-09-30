@@ -116,21 +116,24 @@ class SyncManager(
 
     private suspend fun syncFromServer() {
         try {
-            // Sincronizar rotas
-            val rotasServer = fetchRotasFromServer()
-            repository.syncRotas(rotasServer)
+            // 🚨 BLOQUEADO: Sincronização do servidor desabilitada para evitar população automática
+            android.util.Log.d("SyncManager", "SYNC FROM SERVER BLOQUEADO - Evitando população automática")
             
-            // Sincronizar clientes
-            val clientesServer = fetchClientesFromServer()
-            repository.syncClientes(clientesServer)
+            // ❌ BLOQUEADO: Sincronizar rotas
+            // val rotasServer = fetchRotasFromServer()
+            // repository.syncRotas(rotasServer)
             
-            // Sincronizar acertos
-            val acertosServer = fetchAcertosFromServer()
-            repository.syncAcertos(acertosServer)
+            // ❌ BLOQUEADO: Sincronizar clientes
+            // val clientesServer = fetchClientesFromServer()
+            // repository.syncClientes(clientesServer)
             
-            // Sincronizar colaboradores
-            val colaboradoresServer = fetchColaboradoresFromServer()
-            repository.syncColaboradores(colaboradoresServer)
+            // ❌ BLOQUEADO: Sincronizar acertos
+            // val acertosServer = fetchAcertosFromServer()
+            // repository.syncAcertos(acertosServer)
+            
+            // ❌ BLOQUEADO: Sincronizar colaboradores
+            // val colaboradoresServer = fetchColaboradoresFromServer()
+            // repository.syncColaboradores(colaboradoresServer)
             
         } catch (e: Exception) {
             throw Exception("Erro ao sincronizar do servidor: ${e.message}")

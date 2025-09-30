@@ -413,9 +413,20 @@ class RotaRepository @Inject constructor(
      * @return O ID da rota inserida ou null se houve erro
      */
     suspend fun insertRota(rota: Rota): Long? {
+        // ✅ LOG DETALHADO PARA RASTREAR INSERÇÃO DE ROTAS
+        val stackTrace = Thread.currentThread().stackTrace
+        android.util.Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+        android.util.Log.w("🔍 DB_POPULATION", "🚨 INSERINDO ROTA: ${rota.nome}")
+        android.util.Log.w("🔍 DB_POPULATION", "📍 Chamado por:")
+        stackTrace.take(10).forEachIndexed { index, element ->
+            android.util.Log.w("🔍 DB_POPULATION", "   [$index] $element")
+        }
+        android.util.Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+        
         return try {
             // Verifica se já existe uma rota com o mesmo nome
             if (rotaDao.existeRotaComNome(rota.nome) > 0) {
+                android.util.Log.w("🔍 DB_POPULATION", "⚠️ ROTA JÁ EXISTE: ${rota.nome}")
                 return null // Rota já existe
             }
             
@@ -424,8 +435,11 @@ class RotaRepository @Inject constructor(
                 dataAtualizacao = System.currentTimeMillis()
             )
             
-            rotaDao.insertRota(rotaComTimestamp)
+            val id = rotaDao.insertRota(rotaComTimestamp)
+            android.util.Log.w("🔍 DB_POPULATION", "✅ ROTA INSERIDA COM SUCESSO: ${rota.nome} (ID: $id)")
+            id
         } catch (e: Exception) {
+            android.util.Log.e("🔍 DB_POPULATION", "❌ ERRO AO INSERIR ROTA: ${rota.nome}", e)
             null
         }
     }

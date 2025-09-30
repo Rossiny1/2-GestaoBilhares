@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import android.util.Log
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.runBlocking
 
 /**
  * ✅ REPOSITORY CONSOLIDADO - AppRepository
@@ -34,7 +36,17 @@ class AppRepository(
     fun obterTodosClientes() = clienteDao.obterTodos()
     fun obterClientesPorRota(rotaId: Long) = clienteDao.obterClientesPorRota(rotaId)
     suspend fun obterClientePorId(id: Long) = clienteDao.obterPorId(id)
-    suspend fun inserirCliente(cliente: Cliente) = clienteDao.inserir(cliente)
+    suspend fun inserirCliente(cliente: Cliente): Long {
+        logDbInsertStart("CLIENTE", "Nome=${cliente.nome}, RotaID=${cliente.rotaId}")
+        return try {
+            val id = clienteDao.inserir(cliente)
+            logDbInsertSuccess("CLIENTE", "Nome=${cliente.nome}, ID=$id")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("CLIENTE", "Nome=${cliente.nome}", e)
+            throw e
+        }
+    }
     suspend fun atualizarCliente(cliente: Cliente) = clienteDao.atualizar(cliente)
     suspend fun deletarCliente(cliente: Cliente) = clienteDao.deletar(cliente)
     suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) = 
@@ -54,7 +66,17 @@ class AppRepository(
     fun buscarAcertosPorCicloId(cicloId: Long) = acertoDao.buscarPorCicloId(cicloId)
     fun buscarClientesPorRota(rotaId: Long) = clienteDao.obterClientesPorRota(rotaId)
     suspend fun buscarRotaPorId(rotaId: Long) = rotaDao.getRotaById(rotaId)
-    suspend fun inserirAcerto(acerto: Acerto) = acertoDao.inserir(acerto)
+    suspend fun inserirAcerto(acerto: Acerto): Long {
+        logDbInsertStart("ACERTO", "ClienteID=${acerto.clienteId}, RotaID=${acerto.rotaId}, Valor=${acerto.valorRecebido}")
+        return try {
+            val id = acertoDao.inserir(acerto)
+            logDbInsertSuccess("ACERTO", "ClienteID=${acerto.clienteId}, ID=$id")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("ACERTO", "ClienteID=${acerto.clienteId}", e)
+            throw e
+        }
+    }
     suspend fun atualizarAcerto(acerto: Acerto) = acertoDao.atualizar(acerto)
     suspend fun deletarAcerto(acerto: Acerto) = acertoDao.deletar(acerto)
     suspend fun buscarUltimoAcertoPorMesa(mesaId: Long) = 
@@ -69,7 +91,17 @@ class AppRepository(
     suspend fun obterMesaPorId(id: Long) = mesaDao.obterMesaPorId(id)
     fun obterMesasPorCliente(clienteId: Long) = mesaDao.obterMesasPorCliente(clienteId)
     fun obterMesasDisponiveis() = mesaDao.obterMesasDisponiveis()
-    suspend fun inserirMesa(mesa: Mesa) = mesaDao.inserir(mesa)
+    suspend fun inserirMesa(mesa: Mesa): Long {
+        logDbInsertStart("MESA", "Numero=${mesa.numero}, ClienteID=${mesa.clienteId}")
+        return try {
+            val id = mesaDao.inserir(mesa)
+            logDbInsertSuccess("MESA", "Numero=${mesa.numero}, ID=$id")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("MESA", "Numero=${mesa.numero}", e)
+            throw e
+        }
+    }
     suspend fun atualizarMesa(mesa: Mesa) = mesaDao.atualizar(mesa)
     suspend fun deletarMesa(mesa: Mesa) = mesaDao.deletar(mesa)
     suspend fun vincularMesaACliente(mesaId: Long, clienteId: Long) = 
@@ -104,6 +136,27 @@ class AppRepository(
             cicloAcertoDao.listarTodos()
         ) { rotas, ciclos ->
             android.util.Log.d("AppRepository", "🔄 Atualizando resumo de rotas: ${rotas.size} rotas, ${ciclos.size} ciclos")
+
+            // 🔍 DEBUG: Identificar origem dos dados
+            android.util.Log.d("AppRepository", "🔍 DEBUG - Origem dos dados:")
+            android.util.Log.d("AppRepository", "   Rotas carregadas de: rotaDao.getAllRotasAtivas()")
+            android.util.Log.d("AppRepository", "   Ciclos carregados de: cicloAcertoDao.listarTodos()")
+
+            // Listar primeiras rotas para debug
+            if (rotas.isNotEmpty()) {
+                android.util.Log.d("AppRepository", "   Primeiras rotas encontradas:")
+                rotas.take(3).forEach { rota ->
+                    android.util.Log.d("AppRepository", "     - Rota: ${rota.nome} (ID: ${rota.id})")
+                }
+            }
+
+            // Listar ciclos para debug
+            if (ciclos.isNotEmpty()) {
+                android.util.Log.d("AppRepository", "   Ciclos encontrados:")
+                ciclos.take(3).forEach { ciclo ->
+                    android.util.Log.d("AppRepository", "     - Ciclo: ${ciclo.numeroCiclo}º (ID: ${ciclo.id}, Status: ${ciclo.status})")
+                }
+            }
             
             rotas.map { rota ->
                 // Calcular dados reais para cada rota
@@ -285,8 +338,28 @@ class AppRepository(
     suspend fun obterRotaPorId(id: Long) = rotaDao.getRotaById(id)
     fun obterRotaPorIdFlow(id: Long) = rotaDao.obterRotaPorId(id)
     suspend fun obterRotaPorNome(nome: String) = rotaDao.getRotaByNome(nome)
-    suspend fun inserirRota(rota: Rota) = rotaDao.insertRota(rota)
-    suspend fun inserirRotas(rotas: List<Rota>) = rotaDao.insertRotas(rotas)
+    suspend fun inserirRota(rota: Rota): Long {
+        logDbInsertStart("ROTA", "Nome=${rota.nome}")
+        return try {
+            val id = rotaDao.insertRota(rota)
+            logDbInsertSuccess("ROTA", "Nome=${rota.nome}, ID=$id")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("ROTA", "Nome=${rota.nome}", e)
+            throw e
+        }
+    }
+    suspend fun inserirRotas(rotas: List<Rota>): List<Long> {
+        logDbInsertStart("ROTA_LIST", "Quantidade=${rotas.size}")
+        return try {
+            val ids = rotaDao.insertRotas(rotas)
+            logDbInsertSuccess("ROTA_LIST", "IDs=${ids.joinToString()}")
+            ids
+        } catch (e: Exception) {
+            logDbInsertError("ROTA_LIST", "Quantidade=${rotas.size}", e)
+            throw e
+        }
+    }
     suspend fun atualizarRota(rota: Rota) = rotaDao.updateRota(rota)
     suspend fun atualizarRotas(rotas: List<Rota>) = rotaDao.updateRotas(rotas)
     suspend fun deletarRota(rota: Rota) = rotaDao.deleteRota(rota)
@@ -311,7 +384,17 @@ class AppRepository(
     fun obterTodasDespesas() = despesaDao.buscarTodasComRota()
     fun obterDespesasPorRota(rotaId: Long) = despesaDao.buscarPorRota(rotaId)
     suspend fun obterDespesaPorId(id: Long) = despesaDao.buscarPorId(id)
-    suspend fun inserirDespesa(despesa: Despesa) = despesaDao.inserir(despesa)
+    suspend fun inserirDespesa(despesa: Despesa): Long {
+        logDbInsertStart("DESPESA", "Descricao=${despesa.descricao}, RotaID=${despesa.rotaId}")
+        return try {
+            val id = despesaDao.inserir(despesa)
+            logDbInsertSuccess("DESPESA", "Descricao=${despesa.descricao}, ID=$id")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("DESPESA", "Descricao=${despesa.descricao}", e)
+            throw e
+        }
+    }
     suspend fun atualizarDespesa(despesa: Despesa) = despesaDao.atualizar(despesa)
     suspend fun deletarDespesa(despesa: Despesa) = despesaDao.deletar(despesa)
     suspend fun calcularTotalPorRota(rotaId: Long) = despesaDao.calcularTotalPorRota(rotaId)
@@ -430,7 +513,17 @@ class AppRepository(
     suspend fun obterColaboradorPorFirebaseUid(firebaseUid: String) = colaboradorDao?.obterPorFirebaseUid(firebaseUid)
     suspend fun obterColaboradorPorGoogleId(googleId: String) = colaboradorDao?.obterPorGoogleId(googleId)
     
-    suspend fun inserirColaborador(colaborador: Colaborador) = colaboradorDao?.inserir(colaborador) ?: 0L
+    suspend fun inserirColaborador(colaborador: Colaborador): Long {
+        logDbInsertStart("COLABORADOR", "Nome=${colaborador.nome}, Email=${colaborador.email}, Nivel=${colaborador.nivelAcesso}")
+        return try {
+            val id = colaboradorDao?.inserir(colaborador) ?: 0L
+            logDbInsertSuccess("COLABORADOR", "Email=${colaborador.email}, ID=$id")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("COLABORADOR", "Email=${colaborador.email}", e)
+            throw e
+        }
+    }
     suspend fun atualizarColaborador(colaborador: Colaborador) = colaboradorDao?.atualizar(colaborador)
     suspend fun deletarColaborador(colaborador: Colaborador) = colaboradorDao?.deletar(colaborador)
     
@@ -460,7 +553,17 @@ class AppRepository(
     
     fun obterMetasPorColaborador(colaboradorId: Long) = colaboradorDao?.obterMetasPorColaborador(colaboradorId) ?: flowOf(emptyList())
     suspend fun obterMetaAtual(colaboradorId: Long, tipoMeta: TipoMeta) = colaboradorDao?.obterMetaAtual(colaboradorId, tipoMeta)
-    suspend fun inserirMeta(meta: MetaColaborador) = colaboradorDao?.inserirMeta(meta) ?: 0L
+    suspend fun inserirMeta(meta: MetaColaborador): Long {
+        logDbInsertStart("META", "ColaboradorID=${meta.colaboradorId}, Tipo=${meta.tipoMeta}, Valor=${meta.valorMeta}")
+        return try {
+            val id = colaboradorDao?.inserirMeta(meta) ?: 0L
+            logDbInsertSuccess("META", "ColaboradorID=${meta.colaboradorId}, ID=$id")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("META", "ColaboradorID=${meta.colaboradorId}", e)
+            throw e
+        }
+    }
     suspend fun atualizarMeta(meta: MetaColaborador) = colaboradorDao?.atualizarMeta(meta)
     suspend fun deletarMeta(meta: MetaColaborador) = colaboradorDao?.deletarMeta(meta)
     suspend fun atualizarValorAtualMeta(metaId: Long, valorAtual: Double) = colaboradorDao?.atualizarValorAtualMeta(metaId, valorAtual)
@@ -529,7 +632,36 @@ class AppRepository(
     fun obterRotasPorColaborador(colaboradorId: Long) = colaboradorDao?.obterRotasPorColaborador(colaboradorId) ?: flowOf(emptyList())
     fun obterColaboradoresPorRota(rotaId: Long) = colaboradorDao?.obterColaboradoresPorRota(rotaId) ?: flowOf(emptyList())
     suspend fun obterRotaPrincipal(colaboradorId: Long) = colaboradorDao?.obterRotaPrincipal(colaboradorId)
-    suspend fun inserirColaboradorRota(colaboradorRota: ColaboradorRota) = colaboradorDao?.inserirColaboradorRota(colaboradorRota)
+    suspend fun inserirColaboradorRota(colaboradorRota: ColaboradorRota): Long {
+        logDbInsertStart(
+            "COLABORADOR_ROTA",
+            "ColaboradorID=${colaboradorRota.colaboradorId}, RotaID=${colaboradorRota.rotaId}, Responsavel=${colaboradorRota.responsavelPrincipal}"
+        )
+
+        val dao = colaboradorDao ?: run {
+            android.util.Log.e(
+                "AppRepository",
+                "❌ colaboradorDao está nulo ao tentar inserir ColaboradorRota. Operação cancelada para evitar crash"
+            )
+            return 0L
+        }
+
+        return try {
+            val id = dao.inserirColaboradorRota(colaboradorRota)
+            logDbInsertSuccess(
+                "COLABORADOR_ROTA",
+                "ColaboradorID=${colaboradorRota.colaboradorId}, RotaID=${colaboradorRota.rotaId}, ID=$id"
+            )
+            id
+        } catch (e: Exception) {
+            logDbInsertError(
+                "COLABORADOR_ROTA",
+                "ColaboradorID=${colaboradorRota.colaboradorId}, RotaID=${colaboradorRota.rotaId}",
+                e
+            )
+            throw e
+        }
+    }
     suspend fun deletarColaboradorRota(colaboradorRota: ColaboradorRota) = colaboradorDao?.deletarColaboradorRota(colaboradorRota)
     suspend fun deletarTodasRotasColaborador(colaboradorId: Long) = colaboradorDao?.deletarTodasRotasColaborador(colaboradorId)
     suspend fun removerResponsavelPrincipal(colaboradorId: Long) = colaboradorDao?.removerResponsavelPrincipal(colaboradorId)
@@ -557,7 +689,17 @@ class AppRepository(
     
     suspend fun buscarCiclosPorRota(rotaId: Long) = cicloAcertoDao.buscarCiclosPorRota(rotaId)
     suspend fun buscarProximoNumeroCiclo(rotaId: Long, ano: Int) = cicloAcertoDao.buscarProximoNumeroCiclo(rotaId, ano)
-    suspend fun inserirCicloAcerto(ciclo: CicloAcertoEntity) = cicloAcertoDao.inserir(ciclo)
+    suspend fun inserirCicloAcerto(ciclo: CicloAcertoEntity): Long {
+        logDbInsertStart("CICLO", "RotaID=${ciclo.rotaId}, Numero=${ciclo.numeroCiclo}, Status=${ciclo.status}")
+        return try {
+            val id = cicloAcertoDao.inserir(ciclo)
+            logDbInsertSuccess("CICLO", "ID=$id, RotaID=${ciclo.rotaId}")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("CICLO", "RotaID=${ciclo.rotaId}", e)
+            throw e
+        }
+    }
 
     /**
      * Busca ciclos que podem ter metas definidas (em andamento ou planejados)
@@ -692,25 +834,25 @@ class AppRepository(
         val observacoes: String?
     )
     
-    // Métodos stub para sincronização
+    // Métodos stub para sincronização - BLOQUEADOS para evitar população automática
     suspend fun syncRotas(rotas: List<Rota>) {
-        // TODO: Implementar lógica de sincronização de rotas
-        println("Sincronizando rotas (stub): ${rotas.size} rotas")
+        // BLOQUEADO: Sincronização de rotas desabilitada para evitar população automática
+        android.util.Log.d("AppRepository", "SYNC ROTAS BLOQUEADO - Evitando população automática")
     }
 
     suspend fun syncClientes(clientes: List<Cliente>) {
-        // TODO: Implementar lógica de sincronização de clientes
-        println("Sincronizando clientes (stub): ${clientes.size} clientes")
+        // BLOQUEADO: Sincronização de clientes desabilitada para evitar população automática
+        android.util.Log.d("AppRepository", "SYNC CLIENTES BLOQUEADO - Evitando população automática")
     }
 
     suspend fun syncAcertos(acertos: List<Acerto>) {
-        // TODO: Implementar lógica de sincronização de acertos
-        println("Sincronizando acertos (stub): ${acertos.size} acertos")
+        // BLOQUEADO: Sincronização de acertos desabilitada para evitar população automática
+        android.util.Log.d("AppRepository", "SYNC ACERTOS BLOQUEADO - Evitando população automática")
     }
 
     suspend fun syncColaboradores(colaboradores: List<Colaborador>) {
-        // TODO: Implementar lógica de sincronização de colaboradores
-        println("Sincronizando colaboradores (stub): ${colaboradores.size} colaboradores")
+        // BLOQUEADO: Sincronização de colaboradores desabilitada para evitar população automática
+        android.util.Log.d("AppRepository", "SYNC COLABORADORES BLOQUEADO - Evitando população automática")
     }
     
     // ==================== CONTRATOS DE LOCAÇÃO ====================
@@ -723,7 +865,17 @@ class AppRepository(
     suspend fun contarContratosGerados() = contratoLocacaoDao.contarContratosGerados()
     suspend fun contarContratosAssinados() = contratoLocacaoDao.contarContratosAssinados()
     suspend fun obterContratosAssinados() = contratoLocacaoDao.obterContratosAssinados()
-    suspend fun inserirContrato(contrato: ContratoLocacao) = contratoLocacaoDao.inserirContrato(contrato)
+    suspend fun inserirContrato(contrato: ContratoLocacao): Long {
+        logDbInsertStart("CONTRATO", "Numero=${contrato.numeroContrato}, ClienteID=${contrato.clienteId}")
+        return try {
+            val id = contratoLocacaoDao.inserirContrato(contrato)
+            logDbInsertSuccess("CONTRATO", "Numero=${contrato.numeroContrato}, ID=$id")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("CONTRATO", "Numero=${contrato.numeroContrato}", e)
+            throw e
+        }
+    }
     suspend fun atualizarContrato(contrato: ContratoLocacao) {
         try {
             Log.d("RepoUpdate", "Atualizando contrato id=${contrato.id} cliente=${contrato.clienteId} status=${contrato.status} encerramento=${contrato.dataEncerramento}")
@@ -754,8 +906,28 @@ class AppRepository(
     suspend fun excluirContrato(contrato: ContratoLocacao) = contratoLocacaoDao.excluirContrato(contrato)
     suspend fun buscarContratoPorId(contratoId: Long) = contratoLocacaoDao.buscarContratoPorId(contratoId)
     suspend fun buscarMesasPorContrato(contratoId: Long) = contratoLocacaoDao.buscarMesasPorContrato(contratoId)
-    suspend fun inserirContratoMesa(contratoMesa: ContratoMesa) = contratoLocacaoDao.inserirContratoMesa(contratoMesa)
-    suspend fun inserirContratoMesas(contratoMesas: List<ContratoMesa>) = contratoLocacaoDao.inserirContratoMesas(contratoMesas)
+    suspend fun inserirContratoMesa(contratoMesa: ContratoMesa): Long {
+        logDbInsertStart("CONTRATO_MESA", "ContratoID=${contratoMesa.contratoId}, MesaID=${contratoMesa.mesaId}")
+        return try {
+            val id = contratoLocacaoDao.inserirContratoMesa(contratoMesa)
+            logDbInsertSuccess("CONTRATO_MESA", "ContratoID=${contratoMesa.contratoId}, ID=$id")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("CONTRATO_MESA", "ContratoID=${contratoMesa.contratoId}", e)
+            throw e
+        }
+    }
+    suspend fun inserirContratoMesas(contratoMesas: List<ContratoMesa>): List<Long> {
+        logDbInsertStart("CONTRATO_MESAS", "Quantidade=${contratoMesas.size}")
+        return try {
+            val ids = contratoLocacaoDao.inserirContratoMesas(contratoMesas)
+            logDbInsertSuccess("CONTRATO_MESAS", "IDs=${ids.joinToString()}")
+            ids
+        } catch (e: Exception) {
+            logDbInsertError("CONTRATO_MESAS", "Quantidade=${contratoMesas.size}", e)
+            throw e
+        }
+    }
     suspend fun excluirContratoMesa(contratoMesa: ContratoMesa) = contratoLocacaoDao.excluirContratoMesa(contratoMesa)
     suspend fun excluirMesasPorContrato(contratoId: Long) = contratoLocacaoDao.excluirMesasPorContrato(contratoId)
     
@@ -768,11 +940,89 @@ class AppRepository(
     suspend fun contarAditivosPorAno(ano: String) = aditivoContratoDao.contarAditivosPorAno(ano)
     suspend fun contarAditivosGerados() = aditivoContratoDao.contarAditivosGerados()
     suspend fun contarAditivosAssinados() = aditivoContratoDao.contarAditivosAssinados()
-    suspend fun inserirAditivo(aditivo: AditivoContrato) = aditivoContratoDao.inserirAditivo(aditivo)
+    suspend fun inserirAditivo(aditivo: AditivoContrato): Long {
+        logDbInsertStart("ADITIVO", "ContratoID=${aditivo.contratoId}, Numero=${aditivo.numeroAditivo}")
+        return try {
+            val id = aditivoContratoDao.inserirAditivo(aditivo)
+            logDbInsertSuccess("ADITIVO", "ContratoID=${aditivo.contratoId}, ID=$id")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("ADITIVO", "ContratoID=${aditivo.contratoId}", e)
+            throw e
+        }
+    }
+
+    suspend fun inserirAditivoMesas(aditivoMesas: List<AditivoMesa>): List<Long> {
+        logDbInsertStart("ADITIVO_MESAS", "Quantidade=${aditivoMesas.size}")
+        return try {
+            val ids = aditivoContratoDao.inserirAditivoMesas(aditivoMesas)
+            logDbInsertSuccess("ADITIVO_MESAS", "IDs=${ids.joinToString()}")
+            ids
+        } catch (e: Exception) {
+            logDbInsertError("ADITIVO_MESAS", "Quantidade=${aditivoMesas.size}", e)
+            throw e
+        }
+    }
+
+    suspend fun inserirAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal): Long {
+        logDbInsertStart(
+            "ASSINATURA",
+            "Representante=${assinatura.nomeRepresentante}, NumeroProcuração=${assinatura.numeroProcuração}"
+        )
+        return try {
+            val id = assinaturaRepresentanteLegalDao.inserirAssinatura(assinatura)
+            logDbInsertSuccess(
+                "ASSINATURA",
+                "Representante=${assinatura.nomeRepresentante}, ID=$id"
+            )
+            id
+        } catch (e: Exception) {
+            logDbInsertError(
+                "ASSINATURA",
+                "Representante=${assinatura.nomeRepresentante}",
+                e
+            )
+            throw e
+        }
+    }
+
+    suspend fun inserirLogAuditoriaAssinatura(log: LogAuditoriaAssinatura): Long {
+        logDbInsertStart(
+            "LOG_ASSINATURA",
+            "Tipo=${log.tipoOperacao}, ContratoID=${log.idContrato ?: "N/A"}"
+        )
+        return try {
+            val id = logAuditoriaAssinaturaDao.inserirLog(log)
+            logDbInsertSuccess(
+                "LOG_ASSINATURA",
+                "Tipo=${log.tipoOperacao}, ID=$id"
+            )
+            id
+        } catch (e: Exception) {
+            logDbInsertError(
+                "LOG_ASSINATURA",
+                "Tipo=${log.tipoOperacao}, ContratoID=${log.idContrato ?: "N/A"}",
+                e
+            )
+            throw e
+        }
+    }
+
+    suspend fun inserirProcuração(procuração: ProcuraçãoRepresentante): Long {
+        logDbInsertStart("PROCURACAO", "Representante=${procuração.representanteOutorgadoNome}, Empresa=${procuração.empresaNome}")
+        return try {
+            val id = procuraçãoRepresentanteDao.inserirProcuração(procuração)
+            logDbInsertSuccess("PROCURACAO", "Representante=${procuração.representanteOutorgadoNome}, ID=$id")
+            id
+        } catch (e: Exception) {
+            logDbInsertError("PROCURACAO", "Representante=${procuração.representanteOutorgadoNome}", e)
+            throw e
+        }
+    }
+
     suspend fun atualizarAditivo(aditivo: AditivoContrato) = aditivoContratoDao.atualizarAditivo(aditivo)
     suspend fun excluirAditivo(aditivo: AditivoContrato) = aditivoContratoDao.excluirAditivo(aditivo)
     suspend fun buscarMesasPorAditivo(aditivoId: Long) = aditivoContratoDao.buscarMesasPorAditivo(aditivoId)
-    suspend fun inserirAditivoMesas(aditivoMesas: List<AditivoMesa>) = aditivoContratoDao.inserirAditivoMesas(aditivoMesas)
     suspend fun excluirAditivoMesa(aditivoMesa: AditivoMesa) = aditivoContratoDao.excluirAditivoMesa(aditivoMesa)
     suspend fun excluirTodasMesasDoAditivo(aditivoId: Long) = aditivoContratoDao.excluirTodasMesasDoAditivo(aditivoId)
     
@@ -783,7 +1033,6 @@ class AppRepository(
     suspend fun obterTodasAssinaturasRepresentanteLegal() = assinaturaRepresentanteLegalDao.obterTodasAssinaturas()
     fun obterTodasAssinaturasRepresentanteLegalFlow() = assinaturaRepresentanteLegalDao.obterTodasAssinaturasFlow()
     suspend fun obterAssinaturaRepresentanteLegalPorId(id: Long) = assinaturaRepresentanteLegalDao.obterAssinaturaPorId(id)
-    suspend fun inserirAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal) = assinaturaRepresentanteLegalDao.inserirAssinatura(assinatura)
     suspend fun atualizarAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal) = assinaturaRepresentanteLegalDao.atualizarAssinatura(assinatura)
     suspend fun desativarAssinaturaRepresentanteLegal(id: Long) = assinaturaRepresentanteLegalDao.desativarAssinatura(id)
     suspend fun incrementarUsoAssinatura(id: Long, dataUso: java.util.Date) = assinaturaRepresentanteLegalDao.incrementarUso(id, dataUso)
@@ -800,7 +1049,6 @@ class AppRepository(
     suspend fun obterLogsAuditoriaPorPeriodo(dataInicio: java.util.Date, dataFim: java.util.Date) = logAuditoriaAssinaturaDao.obterLogsPorPeriodo(dataInicio, dataFim)
     suspend fun obterLogsAuditoriaPorUsuario(usuario: String) = logAuditoriaAssinaturaDao.obterLogsPorUsuario(usuario)
     suspend fun obterLogsAuditoriaComErro() = logAuditoriaAssinaturaDao.obterLogsComErro()
-    suspend fun inserirLogAuditoriaAssinatura(log: LogAuditoriaAssinatura) = logAuditoriaAssinaturaDao.inserirLog(log)
     suspend fun contarLogsAuditoriaDesde(dataInicio: java.util.Date) = logAuditoriaAssinaturaDao.contarLogsDesde(dataInicio)
     suspend fun contarUsosAssinaturaAuditoria(idAssinatura: Long) = logAuditoriaAssinaturaDao.contarUsosAssinatura(idAssinatura)
     suspend fun obterLogsAuditoriaNaoValidados() = logAuditoriaAssinaturaDao.obterLogsNaoValidados()
@@ -817,7 +1065,6 @@ class AppRepository(
     fun obterTodasProcuraçõesFlow() = procuraçãoRepresentanteDao.obterTodasProcuraçõesFlow()
     suspend fun obterProcuraçãoPorId(id: Long) = procuraçãoRepresentanteDao.obterProcuraçãoPorId(id)
     suspend fun obterProcuraçãoPorNumero(numero: String) = procuraçãoRepresentanteDao.obterProcuraçãoPorNumero(numero)
-    suspend fun inserirProcuração(procuração: ProcuraçãoRepresentante) = procuraçãoRepresentanteDao.inserirProcuração(procuração)
     suspend fun atualizarProcuração(procuração: ProcuraçãoRepresentante) = procuraçãoRepresentanteDao.atualizarProcuração(procuração)
     suspend fun revogarProcuração(id: Long, dataRevogacao: java.util.Date, motivo: String) = procuraçãoRepresentanteDao.revogarProcuração(id, dataRevogacao, motivo)
     suspend fun contarProcuraçõesAtivas() = procuraçãoRepresentanteDao.contarProcuraçõesAtivas()
@@ -888,5 +1135,24 @@ class AppRepository(
             android.util.Log.e("AppRepository", "Erro ao contar novas mesas no ciclo: ${e.message}", e)
             0
         }
+    }
+
+    private fun logDbInsertStart(entity: String, details: String) {
+        val stackTrace = Thread.currentThread().stackTrace
+        Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+        Log.w("🔍 DB_POPULATION", "🚨 INSERINDO $entity: $details")
+        Log.w("🔍 DB_POPULATION", "📍 Chamado por:")
+        stackTrace.drop(3).take(8).forEachIndexed { index, element ->
+            Log.w("🔍 DB_POPULATION", "   [${index}] $element")
+        }
+        Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+    }
+
+    private fun logDbInsertSuccess(entity: String, details: String) {
+        Log.w("🔍 DB_POPULATION", "✅ $entity INSERIDO COM SUCESSO: $details")
+    }
+
+    private fun logDbInsertError(entity: String, details: String, throwable: Throwable) {
+        Log.e("🔍 DB_POPULATION", "❌ ERRO AO INSERIR $entity: $details", throwable)
     }
 } 

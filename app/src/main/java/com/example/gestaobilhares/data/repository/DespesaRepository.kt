@@ -20,19 +20,13 @@ class DespesaRepository @Inject constructor(
     private val despesaDao: DespesaDao
 ) {
     
-    // ✅ CORRIGIDO: Usar dados reais do banco de dados
-    private val usarDadosMock = false
     
     /**
      * Busca todas as despesas com informações das rotas.
      * @return Flow com lista de DespesaResumo
      */
     fun buscarTodasComRota(): Flow<List<DespesaResumo>> {
-        return if (usarDadosMock) {
-            flowOf(obterDespesasMock())
-        } else {
-            despesaDao.buscarTodasComRota()
-        }
+        return despesaDao.buscarTodasComRota()
     }
 
     /**
@@ -41,11 +35,7 @@ class DespesaRepository @Inject constructor(
      * @return Flow com lista de despesas da rota
      */
     fun buscarPorRota(rotaId: Long): Flow<List<Despesa>> {
-        return if (usarDadosMock) {
-            flowOf(obterDespesasMockPorRota(rotaId))
-        } else {
-            despesaDao.buscarPorRota(rotaId)
-        }
+        return despesaDao.buscarPorRota(rotaId)
     }
 
     /**
@@ -55,13 +45,7 @@ class DespesaRepository @Inject constructor(
      * @return Flow com lista de DespesaResumo no período
      */
     fun buscarPorPeriodo(dataInicio: LocalDateTime, dataFim: LocalDateTime): Flow<List<DespesaResumo>> {
-        return if (usarDadosMock) {
-            flowOf(obterDespesasMock().filter { 
-                it.dataHora.isAfter(dataInicio) && it.dataHora.isBefore(dataFim)
-            })
-        } else {
-            despesaDao.buscarPorPeriodo(dataInicio, dataFim)
-        }
+        return despesaDao.buscarPorPeriodo(dataInicio, dataFim)
     }
 
     /**
@@ -70,11 +54,7 @@ class DespesaRepository @Inject constructor(
      * @return Flow com lista de DespesaResumo da categoria
      */
     fun buscarPorCategoria(categoria: String): Flow<List<DespesaResumo>> {
-        return if (usarDadosMock) {
-            flowOf(obterDespesasMock().filter { it.categoria == categoria })
-        } else {
-            despesaDao.buscarPorCategoria(categoria)
-        }
+        return despesaDao.buscarPorCategoria(categoria)
     }
 
     /**
@@ -83,12 +63,7 @@ class DespesaRepository @Inject constructor(
      * @return ID da despesa inserida
      */
     suspend fun inserir(despesa: Despesa): Long {
-        return if (usarDadosMock) {
-            // Em modo mock, retorna um ID simulado
-            System.currentTimeMillis()
-        } else {
-            despesaDao.inserir(despesa)
-        }
+        return despesaDao.inserir(despesa)
     }
 
     /**
@@ -96,9 +71,7 @@ class DespesaRepository @Inject constructor(
      * @param despesa Despesa com dados atualizados
      */
     suspend fun atualizar(despesa: Despesa) {
-        if (!usarDadosMock) {
-            despesaDao.atualizar(despesa)
-        }
+        despesaDao.atualizar(despesa)
     }
 
     /**
@@ -107,23 +80,7 @@ class DespesaRepository @Inject constructor(
      * @return Despesa encontrada ou null
      */
     suspend fun buscarPorId(id: Long): Despesa? {
-        return if (usarDadosMock) {
-            // ✅ CORREÇÃO: Converter DespesaResumo para Despesa
-            obterDespesasMock().find { it.id == id }?.let { despesaResumo ->
-                Despesa(
-                    id = despesaResumo.id,
-                    rotaId = despesaResumo.rotaId,
-                    descricao = despesaResumo.descricao,
-                    valor = despesaResumo.valor,
-                    categoria = despesaResumo.categoria,
-                    dataHora = despesaResumo.dataHora,
-                    observacoes = despesaResumo.observacoes,
-                    criadoPor = despesaResumo.criadoPor
-                )
-            }
-        } else {
-            despesaDao.buscarPorId(id)
-        }
+        return despesaDao.buscarPorId(id)
     }
 
     /**
@@ -131,9 +88,7 @@ class DespesaRepository @Inject constructor(
      * @param despesa Despesa a ser deletada
      */
     suspend fun deletar(despesa: Despesa) {
-        if (!usarDadosMock) {
-            despesaDao.deletar(despesa)
-        }
+        despesaDao.deletar(despesa)
     }
 
     /**
@@ -142,11 +97,7 @@ class DespesaRepository @Inject constructor(
      * @return Total das despesas da rota
      */
     suspend fun calcularTotalPorRota(rotaId: Long): Double {
-        return if (usarDadosMock) {
-            obterDespesasMockPorRota(rotaId).sumOf { it.valor }
-        } else {
-            despesaDao.calcularTotalPorRota(rotaId)
-        }
+        return despesaDao.calcularTotalPorRota(rotaId)
     }
 
     /**
@@ -155,11 +106,7 @@ class DespesaRepository @Inject constructor(
      * @return Flow com lista de despesas do ciclo
      */
     fun buscarPorCicloId(cicloId: Long): Flow<List<Despesa>> {
-        return if (usarDadosMock) {
-            flowOf(emptyList()) // Mock vazio para ciclos
-        } else {
-            despesaDao.buscarPorCicloId(cicloId)
-        }
+        return despesaDao.buscarPorCicloId(cicloId)
     }
     
     /**
@@ -174,86 +121,13 @@ class DespesaRepository @Inject constructor(
 
     // ✅ NOVO: Despesas globais por ciclo (ano, número)
     suspend fun buscarGlobaisPorCiclo(ano: Int, numero: Int): List<Despesa> {
-        return if (usarDadosMock) emptyList() else despesaDao.buscarGlobaisPorCiclo(ano, numero)
+        return despesaDao.buscarGlobaisPorCiclo(ano, numero)
     }
 
     // ✅ NOVO: Soma de despesas globais por ciclo (ano, número)
     suspend fun somarGlobaisPorCiclo(ano: Int, numero: Int): Double {
-        return if (usarDadosMock) 0.0 else despesaDao.somarGlobaisPorCiclo(ano, numero)
+        return despesaDao.somarGlobaisPorCiclo(ano, numero)
     }
 
-    /**
-     * Dados mock para desenvolvimento e testes.
-     * Remove quando integrar com dados reais.
-     */
-    private fun obterDespesasMock(): List<DespesaResumo> {
-        val agora = LocalDateTime.now()
-        
-        return listOf(
-            DespesaResumo(
-                id = 1,
-                rotaId = 1,
-                descricao = "Combustível para veículo",
-                valor = 85.50,
-                categoria = CategoriaDespesaEnum.COMBUSTIVEL.displayName,
-                dataHora = agora.minusDays(1),
-                observacoes = "Posto BR - Km 150",
-                criadoPor = "João Silva",
-                nomeRota = "Rota Centro"
-            ),
-            DespesaResumo(
-                id = 2,
-                rotaId = 1,
-                descricao = "Almoço da equipe",
-                valor = 45.00,
-                categoria = CategoriaDespesaEnum.ALIMENTACAO.displayName,
-                dataHora = agora.minusDays(2),
-                observacoes = "Restaurante do João",
-                criadoPor = "João Silva",
-                nomeRota = "Rota Centro"
-            ),
-            DespesaResumo(
-                id = 3,
-                rotaId = 2,
-                descricao = "Manutenção preventiva",
-                valor = 120.00,
-                categoria = CategoriaDespesaEnum.MANUTENCAO.displayName,
-                dataHora = agora.minusDays(3),
-                observacoes = "Troca de óleo e filtros",
-                criadoPor = "Maria Santos",
-                nomeRota = "Rota Periferia"
-            ),
-            DespesaResumo(
-                id = 4,
-                rotaId = 2,
-                descricao = "Material de limpeza",
-                valor = 32.75,
-                categoria = CategoriaDespesaEnum.MATERIAIS.displayName,
-                dataHora = agora.minusDays(4),
-                observacoes = "Produtos para limpeza das mesas",
-                criadoPor = "Maria Santos",
-                nomeRota = "Rota Periferia"
-            ),
-            DespesaResumo(
-                id = 5,
-                rotaId = 3,
-                descricao = "Passagem de ônibus",
-                valor = 8.50,
-                categoria = CategoriaDespesaEnum.TRANSPORTE.displayName,
-                dataHora = agora.minusDays(5),
-                observacoes = "Transporte para cliente",
-                criadoPor = "Carlos Oliveira",
-                nomeRota = "Rota Industrial"
-            )
-        )
-    }
-
-    /**
-     * Filtra despesas mock por rota.
-     */
-    private fun obterDespesasMockPorRota(rotaId: Long): List<Despesa> {
-        return obterDespesasMock()
-            .filter { it.rotaId == rotaId }
-            .map { it.despesa }
-    }
+    // ❌ REMOVIDO: Dados mock excluídos para evitar criação automática de dados
 } 
