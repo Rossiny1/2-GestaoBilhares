@@ -22,27 +22,8 @@ class OthersInventoryViewModel @Inject constructor() : ViewModel() {
     private fun loadOthersItems() {
         viewModelScope.launch {
             // TODO: Implementar carregamento de outros itens do banco de dados
-            _othersItems.value = getSampleOthersItems()
+            _othersItems.value = emptyList()
         }
-    }
-
-    private fun getSampleOthersItems(): List<OtherItem> {
-        return listOf(
-            OtherItem(
-                id = 1L,
-                name = "Giz para Mesa",
-                description = "Giz para marcar jogadas na mesa",
-                quantity = 5,
-                location = "Gaveta Principal"
-            ),
-            OtherItem(
-                id = 2L,
-                name = "Pano de Limpeza",
-                description = "Pano para limpeza das mesas",
-                quantity = 3,
-                location = "Armário de Limpeza"
-            )
-        )
     }
 }
 

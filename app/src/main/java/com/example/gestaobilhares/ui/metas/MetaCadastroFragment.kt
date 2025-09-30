@@ -148,7 +148,8 @@ class MetaCadastroFragment : Fragment() {
                         android.util.Log.e("MetaCadastroFragment", "Erro ao notificar MetasViewModel: ${e.message}")
                     }
                     
-                    findNavController().navigateUp()
+                    // Navegar de volta para a tela de Metas por rota
+                    findNavController().navigate(R.id.metasFragment)
                 }
             }
         }
