@@ -544,16 +544,39 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                     }
                 }
                 
-                // 🚨 BLOQUEADO: Criação automática de colaboradores desabilitada
-                android.util.Log.d("AuthViewModel", "CRIAÇÃO AUTOMÁTICA DE COLABORADORES BLOQUEADA")
-                android.util.Log.w(
-                    "🔍 DB_POPULATION",
-                    "🚨 CRIAÇÃO AUTOMÁTICA DE COLABORADORES BLOQUEADA - GOOGLE SIGN-IN"
-                )
+                // TERCEIRO: Criar novo colaborador automaticamente (pendente de aprovação)
+                android.util.Log.d("AuthViewModel", "Criando novo colaborador automaticamente (pendente de aprovação)...")
                 
-                _errorMessage.value = "Usuário não encontrado. Contate o administrador para criar sua conta."
-                _authState.value = AuthState.Unauthenticated
-                return@launch
+                try {
+                    val novoColaborador = Colaborador(
+                        nome = account.displayName ?: "Usuário Google",
+                        email = account.email ?: "",
+                        telefone = "",
+                        cpf = "",
+                        nivelAcesso = NivelAcesso.USER,
+                        ativo = true,
+                        firebaseUid = account.id ?: "",
+                        googleId = account.id,
+                        aprovado = false, // Fica pendente até aprovação do admin
+                        dataCadastro = Date(),
+                        dataUltimaAtualizacao = Date()
+                    )
+                    
+                    android.util.Log.d("AuthViewModel", "Novo colaborador criado (pendente): ${novoColaborador.nome}")
+                    val colaboradorId = appRepository.inserirColaborador(novoColaborador)
+                    android.util.Log.d("AuthViewModel", "Novo colaborador criado com ID: $colaboradorId")
+                    
+                    _errorMessage.value = "Conta criada com sucesso! Aguarde aprovação do administrador."
+                    _authState.value = AuthState.Unauthenticated
+                    return@launch
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("AuthViewModel", "Erro ao criar colaborador: ${e.message}")
+                    android.util.Log.e("AuthViewModel", "Tipo de erro: ${e.javaClass.simpleName}")
+                    _errorMessage.value = "Erro ao criar conta. Tente novamente."
+                    _authState.value = AuthState.Unauthenticated
+                    return@launch
+                }
                 
             } catch (e: Exception) {
                 android.util.Log.e("AuthViewModel", "❌ ERRO NO GOOGLE SIGN-IN: ${e.message}", e)
