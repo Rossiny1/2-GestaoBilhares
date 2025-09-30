@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.example.gestaobilhares.data.entities.Mesa
@@ -29,7 +30,8 @@ class ClientDetailViewModel(
     private val clienteRepository: com.example.gestaobilhares.data.repository.ClienteRepository,
     private val mesaRepository: MesaRepository,
     private val acertoRepository: AcertoRepository,
-    private val acertoMesaRepository: AcertoMesaRepository
+    private val acertoMesaRepository: AcertoMesaRepository,
+    private val appRepository: com.example.gestaobilhares.data.repository.AppRepository
 ) : ViewModel() {
 
     private val _clientDetails = MutableStateFlow<ClienteResumo?>(null)
@@ -46,6 +48,12 @@ class ClientDetailViewModel(
 
     private val _mesasDisponiveis = MutableStateFlow<List<Mesa>>(emptyList())
     val mesasDisponiveis: StateFlow<List<Mesa>> = _mesasDisponiveis.asStateFlow()
+
+    private val _temContratoAtivo = MutableStateFlow(false)
+    val temContratoAtivo: StateFlow<Boolean> = _temContratoAtivo.asStateFlow()
+
+    private val _cliente = MutableStateFlow<com.example.gestaobilhares.data.entities.Cliente?>(null)
+    val cliente: StateFlow<com.example.gestaobilhares.data.entities.Cliente?> = _cliente.asStateFlow()
 
     init {
         // Removido dados mock - agora carrega do banco de dados real
@@ -405,6 +413,45 @@ class ClientDetailViewModel(
         } catch (e: Exception) {
             Log.e("ClientDetailViewModel", "Erro ao buscar último acerto: ${e.message}")
             null
+        }
+    }
+
+    /**
+     * ✅ NOVO: Carrega dados completos do cliente
+     */
+    fun carregarClienteCompleto(clienteId: Long) {
+        viewModelScope.launch {
+            try {
+                val cliente = appRepository.obterClientePorId(clienteId)
+                _cliente.value = cliente
+                Log.d("ClientDetailViewModel", "Cliente carregado: ${cliente?.nome}")
+            } catch (e: Exception) {
+                Log.e("ClientDetailViewModel", "Erro ao carregar cliente: ${e.message}")
+                _cliente.value = null
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVO: Verifica se o cliente tem contrato ativo
+     */
+    fun verificarContratoAtivo(clienteId: Long) {
+        viewModelScope.launch {
+            try {
+                // Buscar contratos do cliente
+                val contratos = appRepository.buscarContratosPorCliente(clienteId).first()
+                
+                // Verificar se há pelo menos um contrato ativo
+                val temContratoAtivo = contratos.any { contrato: com.example.gestaobilhares.data.entities.ContratoLocacao ->
+                    contrato.status.equals("ATIVO", ignoreCase = true)
+                }
+                
+                _temContratoAtivo.value = temContratoAtivo
+                Log.d("ClientDetailViewModel", "Verificação de contrato ativo para cliente $clienteId: $temContratoAtivo (${contratos.size} contratos encontrados)")
+            } catch (e: Exception) {
+                Log.e("ClientDetailViewModel", "Erro ao verificar contrato ativo: ${e.message}")
+                _temContratoAtivo.value = false
+            }
         }
     }
 }

@@ -222,11 +222,28 @@ class ClientDetailFragment : Fragment() {
         
         // Inicializar ViewModel e repositórios aqui onde o contexto está disponível
         val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao(),
+            database.procuraçãoRepresentanteDao()
+        )
+
         viewModel = ClientDetailViewModel(
             ClienteRepository(database.clienteDao()),
             MesaRepository(database.mesaDao()),
             AcertoRepository(database.acertoDao(), database.clienteDao()),
-            AcertoMesaRepository(database.acertoMesaDao())
+            AcertoMesaRepository(database.acertoMesaDao()),
+            appRepository
         )
         
         // Inicializar repositórios para verificação de rota
@@ -555,7 +572,7 @@ class ClientDetailFragment : Fragment() {
                 ultimoAcerto?.let { acerto ->
                     if (!acerto.observacoes.isNullOrBlank()) {
                         Log.d("ClientDetailFragment", "Observações encontradas no último acerto: ${acerto.observacoes}")
-                        mostrarDialogoObservacoes(acerto.observacoes)
+                        verificarDadosFaltantesEExibirAlerta(acerto.observacoes)
                     } else {
                         Log.d("ClientDetailFragment", "Nenhuma observação no último acerto")
                     }
@@ -567,18 +584,104 @@ class ClientDetailFragment : Fragment() {
     }
     
     /**
-     * ✅ NOVO: Mostra diálogo com observações do último acerto
+     * ✅ NOVO: Verifica dados faltantes e exibe alerta completo
      */
-    private fun mostrarDialogoObservacoes(observacoes: String) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Observação:")
-            .setMessage(observacoes)
+    private fun verificarDadosFaltantesEExibirAlerta(observacoes: String) {
+        lifecycleScope.launch {
+            try {
+                // Carregar dados completos do cliente e verificar contrato ativo
+                viewModel.carregarClienteCompleto(args.clienteId)
+                viewModel.verificarContratoAtivo(args.clienteId)
+                
+                // Aguardar um pouco para o estado ser atualizado
+                kotlinx.coroutines.delay(100)
+                
+                // Buscar dados do cliente
+                val cliente = viewModel.cliente.value
+                if (cliente == null) {
+                    Log.e("ClientDetailFragment", "Cliente não encontrado para verificação")
+                    return@launch
+                }
+
+                // Verificar dados faltantes
+                val dadosFaltantes = mutableListOf<String>()
+                if (cliente.cpfCnpj.isNullOrBlank()) {
+                    dadosFaltantes.add("CPF")
+                }
+                if (cliente.telefone.isNullOrBlank()) {
+                    dadosFaltantes.add("Telefone")
+                }
+                if (cliente.endereco.isNullOrBlank()) {
+                    dadosFaltantes.add("Endereço")
+                }
+
+                // Verificar se cliente tem mesas e se precisa de contrato
+                val temMesas = viewModel.mesasCliente.value.isNotEmpty()
+                val temContratoAtivo = viewModel.temContratoAtivo.value
+                val precisaContrato = temMesas && !temContratoAtivo
+
+                Log.d("ClientDetailFragment", "Verificação: temMesas=$temMesas, temContratoAtivo=$temContratoAtivo, precisaContrato=$precisaContrato")
+
+                // Construir mensagem do alerta
+                val mensagem = buildString {
+                    append("Antes de prosseguir para acerto é necessário:\n\n")
+                    
+                    if (dadosFaltantes.isNotEmpty()) {
+                        append("• Informar os campos faltantes: ${dadosFaltantes.joinToString(", ")}\n")
+                    }
+                    
+                    if (precisaContrato) {
+                        append("• Gerar o contrato para o cliente")
+                        if (observacoes.isNotBlank()) {
+                            append(" - (informações da última observação)")
+                        }
+                        append("\n")
+                    }
+                    
+                    if (dadosFaltantes.isEmpty() && !precisaContrato) {
+                        append("• Nenhuma ação necessária - todos os dados estão completos")
+                    }
+                }
+
+                // Exibir diálogo apenas se houver algo a ser feito
+                if (dadosFaltantes.isNotEmpty() || precisaContrato) {
+                    mostrarDialogoAlerta(mensagem, observacoes)
+                } else {
+                    Log.d("ClientDetailFragment", "Todos os dados estão completos - não exibindo alerta")
+                }
+
+            } catch (e: Exception) {
+                Log.e("ClientDetailFragment", "Erro ao verificar dados faltantes: ${e.message}", e)
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVO: Mostra diálogo de alerta com design destacado
+     */
+    private fun mostrarDialogoAlerta(mensagem: String, observacoes: String) {
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle("🚨 ALERTA")
+            .setMessage(mensagem)
             .setPositiveButton("Confirmar Leitura") { dialog, _ ->
                 dialog.dismiss()
-                Log.d("ClientDetailFragment", "Diálogo de observações fechado pelo usuário")
+                Log.d("ClientDetailFragment", "Alerta confirmado pelo usuário")
             }
             .setCancelable(false)
-            .show()
+            .create()
+
+        dialog.setOnShowListener {
+            // Personalizar cores e estilo do diálogo
+            val positiveButton = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
+            positiveButton?.setTextColor(android.graphics.Color.parseColor("#1976D2"))
+            
+            // Destacar o título
+            val titleView = dialog.findViewById<android.widget.TextView>(android.R.id.title)
+            titleView?.setTextColor(android.graphics.Color.parseColor("#D32F2F"))
+            titleView?.textSize = 18f
+        }
+
+        dialog.show()
     }
 
     /**
