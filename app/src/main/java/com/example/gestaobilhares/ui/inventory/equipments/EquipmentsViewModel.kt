@@ -22,27 +22,8 @@ class EquipmentsViewModel @Inject constructor() : ViewModel() {
     private fun loadEquipments() {
         viewModelScope.launch {
             // TODO: Implementar carregamento de equipamentos do banco de dados
-            _equipments.value = getSampleEquipments()
+            _equipments.value = emptyList()
         }
-    }
-
-    private fun getSampleEquipments(): List<Equipment> {
-        return listOf(
-            Equipment(
-                id = 1L,
-                name = "Mesa de Sinuca 1",
-                type = "Mesa",
-                status = "Ativo",
-                location = "Sala Principal"
-            ),
-            Equipment(
-                id = 2L,
-                name = "Taco de Sinuca",
-                type = "Acessório",
-                status = "Ativo",
-                location = "Estoque"
-            )
-        )
     }
 }
 
