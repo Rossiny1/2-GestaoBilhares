@@ -167,7 +167,13 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                         
                         if (result.user != null) {
                             android.util.Log.d("AuthViewModel", "✅ LOGIN ONLINE SUCESSO!")
-                            
+
+                            // ✅ NOVO: Emitir log específico para criação automática de dados após login
+                            android.util.Log.w(
+                                "🔍 DB_POPULATION",
+                                "🚨 LOGIN ONLINE CONCLUÍDO - DISPARANDO CARREGAMENTO INICIAL DE DADOS"
+                            )
+    
                             // ✅ NOVO: Criar/atualizar colaborador para usuário online
                             criarOuAtualizarColaboradorOnline(result.user!!)
                             
@@ -228,6 +234,11 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                             else -> "desconhecido"
                         }
                         android.util.Log.d("AuthViewModel", "✅ LOGIN OFFLINE SUCESSO! (Tipo: $tipoAutenticacao)")
+
+                        android.util.Log.w(
+                            "🔍 DB_POPULATION",
+                            "🚨 LOGIN OFFLINE CONCLUÍDO - REALIZANDO CONFIGURAÇÃO LOCAL (POTENCIAL POPULAÇÃO)"
+                        )
                         
                         // ✅ NOVO: Verificar se precisa atualizar para ADMIN (email especial)
                         val colaboradorFinal = if (colaborador.email == "rossinys@gmail.com" && colaborador.nivelAcesso != NivelAcesso.ADMIN) {
@@ -274,9 +285,14 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                     }
                 } else {
                     // ✅ NOVO: Se não existe colaborador local, criar automaticamente para emails específicos
+                    // Restaurado e corrigido para rossinys@gmail.com
                     if (email == "rossinys@gmail.com") {
                         android.util.Log.d("AuthViewModel", "🔧 Criando colaborador ADMIN automaticamente para: $email")
-                        
+                        android.util.Log.w(
+                            "🔍 DB_POPULATION",
+                            "🚨 CRIANDO COLABORADOR ADMIN AUTOMATICAMENTE - EMAIL: $email"
+                        )
+
                         val novoColaborador = Colaborador(
                             nome = email.substringBefore("@"),
                             email = email,
@@ -287,20 +303,20 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                             dataAprovacao = java.util.Date(),
                             aprovadoPor = "Sistema (Admin Padrão Offline)"
                         )
-                        
+
                         val colaboradorId = appRepository.inserirColaborador(novoColaborador)
                         val colaboradorComId = novoColaborador.copy(id = colaboradorId)
-                        
+
                         android.util.Log.d("AuthViewModel", "✅ Colaborador ADMIN criado offline: ${colaboradorComId.nome}")
                         userSessionManager.startSession(colaboradorComId)
-                        
+
                         val localUser = LocalUser(
                             uid = colaboradorComId.id.toString(),
                             email = colaboradorComId.email,
                             displayName = colaboradorComId.nome,
                             nivelAcesso = colaboradorComId.nivelAcesso
                         )
-                        
+
                         _authState.value = AuthState.Authenticated(localUser, false)
                         return@launch
                     } else {
@@ -467,21 +483,11 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                                     return@launch
                                 }
                             } else {
-                                // Usuário não existe no banco local - criar automaticamente
-                                android.util.Log.d("AuthViewModel", "Usuário não encontrado no banco local - criando automaticamente")
-                                
-                                try {
-                                    // Criar perfil de colaborador automaticamente
-                                    criarColaboradorAutomatico(result.user!!, account.displayName ?: "")
-                                    _errorMessage.value = "Conta criada com sucesso! Aguarde aprovação do administrador."
-                                    _authState.value = AuthState.Unauthenticated
-                                    return@launch
-                                } catch (e: Exception) {
-                                    android.util.Log.e("AuthViewModel", "Erro ao criar colaborador: ${e.message}")
-                                    _errorMessage.value = "Erro ao criar conta. Tente novamente."
-                                    _authState.value = AuthState.Unauthenticated
-                                    return@launch
-                                }
+                                // Usuário não existe no banco local - BLOQUEADO: criação automática desabilitada
+                                android.util.Log.d("AuthViewModel", "Usuário não encontrado no banco local - criação automática BLOQUEADA")
+                                _errorMessage.value = "Usuário não encontrado. Contate o administrador para criar sua conta."
+                                _authState.value = AuthState.Unauthenticated
+                                return@launch
                             }
                         }
                     } catch (e: Exception) {
@@ -538,39 +544,16 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                     }
                 }
                 
-                // TERCEIRO: Criar novo colaborador automaticamente (offline)
-                android.util.Log.d("AuthViewModel", "Criando novo colaborador automaticamente...")
+                // 🚨 BLOQUEADO: Criação automática de colaboradores desabilitada
+                android.util.Log.d("AuthViewModel", "CRIAÇÃO AUTOMÁTICA DE COLABORADORES BLOQUEADA")
+                android.util.Log.w(
+                    "🔍 DB_POPULATION",
+                    "🚨 CRIAÇÃO AUTOMÁTICA DE COLABORADORES BLOQUEADA - GOOGLE SIGN-IN"
+                )
                 
-                try {
-                    val novoColaborador = Colaborador(
-                        nome = account.displayName ?: "Usuário Google",
-                        email = account.email ?: "",
-                        telefone = "",
-                        cpf = "",
-                        nivelAcesso = NivelAcesso.USER,
-                        ativo = true,
-                        firebaseUid = account.id ?: "",
-                        googleId = account.id,
-                        aprovado = false, // Precisa ser aprovado pelo admin
-                        dataCadastro = Date(),
-                        dataUltimaAtualizacao = Date()
-                    )
-                    
-                    android.util.Log.d("AuthViewModel", "Novo colaborador criado: ${novoColaborador.nome}")
-                    val colaboradorId = appRepository.inserirColaborador(novoColaborador)
-                    android.util.Log.d("AuthViewModel", "Novo colaborador criado com ID: $colaboradorId")
-                    
-                    _errorMessage.value = "Conta criada com sucesso! Aguarde aprovação do administrador."
-                    _authState.value = AuthState.Unauthenticated
-                    return@launch
-                    
-                } catch (e: Exception) {
-                    android.util.Log.e("AuthViewModel", "Erro ao criar colaborador: ${e.message}")
-                    android.util.Log.e("AuthViewModel", "Tipo de erro: ${e.javaClass.simpleName}")
-                    _errorMessage.value = "Erro ao criar conta. Tente novamente."
-                    _authState.value = AuthState.Unauthenticated
-                    return@launch
-                }
+                _errorMessage.value = "Usuário não encontrado. Contate o administrador para criar sua conta."
+                _authState.value = AuthState.Unauthenticated
+                return@launch
                 
             } catch (e: Exception) {
                 android.util.Log.e("AuthViewModel", "❌ ERRO NO GOOGLE SIGN-IN: ${e.message}", e)
@@ -709,6 +692,13 @@ class AuthViewModel @Inject constructor() : ViewModel() {
             val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
             
             if (colaboradorExistente != null) {
+                android.util.Log.d("AuthViewModel", "Colaborador existente encontrado: ${colaboradorExistente.nome}")
+
+                android.util.Log.w(
+                    "🔍 DB_POPULATION",
+                    "🚨 ATUALIZANDO COLABORADOR LOCAL APÓS LOGIN ONLINE: ${colaboradorExistente.email}"
+                )
+
                 // ✅ CORREÇÃO CRÍTICA: Manter nível de acesso original, exceto para admin especial
                 val colaboradorAtualizado = if (email == "rossinys@gmail.com") {
                     // Apenas para o admin especial - forçar ADMIN
@@ -740,32 +730,46 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                 android.util.Log.d("AuthViewModel", "   Nível: ${colaboradorAtualizado.nivelAcesso}")
                 android.util.Log.d("AuthViewModel", "   Aprovado: ${colaboradorAtualizado.aprovado}")
                 android.util.Log.d("AuthViewModel", "   É admin especial: ${email == "rossinys@gmail.com"}")
-                
+
                 userSessionManager.startSession(colaboradorAtualizado)
             } else {
-                // Criar novo colaborador
-                val nivelAcesso = if (email == "rossinys@gmail.com") {
-                    NivelAcesso.ADMIN
-                } else {
-                    NivelAcesso.USER
-                }
-                
-                val novoColaborador = Colaborador(
-                    nome = nome,
-                    email = email,
-                    nivelAcesso = nivelAcesso,
-                    aprovado = true, // Usuários online são aprovados automaticamente
-                    ativo = true,
-                    firebaseUid = firebaseUser.uid,
-                    dataAprovacao = java.util.Date(),
-                    aprovadoPor = if (email == "rossinys@gmail.com") "Sistema (Admin Padrão)" else "Sistema (Login Online)"
+                android.util.Log.d("AuthViewModel", "Colaborador ainda não existe localmente")
+                android.util.Log.w(
+                    "🔍 DB_POPULATION",
+                    "🚨 CRIAÇÃO AUTOMÁTICA DE COLABORADORES BLOQUEADA - LOGIN ONLINE"
+                )
+
+                // 🚨 BLOQUEADO: Criação automática de colaboradores desabilitada
+                android.util.Log.d("AuthViewModel", "CRIAÇÃO AUTOMÁTICA DE COLABORADORES BLOQUEADA")
+                android.util.Log.w(
+                    "🔍 DB_POPULATION",
+                    "🚨 CRIAÇÃO AUTOMÁTICA DE COLABORADORES BLOQUEADA - LOGIN ONLINE"
                 )
                 
-                val colaboradorId = appRepository.inserirColaborador(novoColaborador)
-                val colaboradorComId = novoColaborador.copy(id = colaboradorId)
-                
-                android.util.Log.d("AuthViewModel", "✅ Novo colaborador criado: $nome (${nivelAcesso.name})")
-                userSessionManager.startSession(colaboradorComId)
+                // ❌ BLOQUEADO: Não criar colaborador automaticamente
+                // Apenas para rossinys@gmail.com (admin especial)
+                if (email == "rossinys@gmail.com") {
+                    val novoColaborador = Colaborador(
+                        nome = nome,
+                        email = email,
+                        nivelAcesso = NivelAcesso.ADMIN,
+                        aprovado = true,
+                        ativo = true,
+                        firebaseUid = firebaseUser.uid,
+                        dataAprovacao = java.util.Date(),
+                        aprovadoPor = "Sistema (Admin Padrão)"
+                    )
+                    
+                    val colaboradorId = appRepository.inserirColaborador(novoColaborador)
+                    val colaboradorComId = novoColaborador.copy(id = colaboradorId)
+                    
+                    android.util.Log.d("AuthViewModel", "✅ Admin especial criado: $nome")
+                    userSessionManager.startSession(colaboradorComId)
+                } else {
+                    android.util.Log.d("AuthViewModel", "Usuário não encontrado - criação automática bloqueada")
+                    _errorMessage.value = "Usuário não encontrado. Contate o administrador para criar sua conta."
+                    _authState.value = AuthState.Unauthenticated
+                }
             }
             
         } catch (e: Exception) {

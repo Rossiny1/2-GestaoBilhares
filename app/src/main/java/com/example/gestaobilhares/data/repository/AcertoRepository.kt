@@ -38,6 +38,16 @@ class AcertoRepository @Inject constructor(
     }
 
     suspend fun salvarAcerto(acerto: Acerto): Long {
+        // ✅ LOG DETALHADO PARA RASTREAR INSERÇÃO DE ACERTOS
+        val stackTrace = Thread.currentThread().stackTrace
+        android.util.Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+        android.util.Log.w("🔍 DB_POPULATION", "🚨 INSERINDO ACERTO: Cliente ID ${acerto.clienteId}, Ciclo ${acerto.cicloId}, Valor R$ ${acerto.valorRecebido}")
+        android.util.Log.w("🔍 DB_POPULATION", "📍 Chamado por:")
+        stackTrace.take(10).forEachIndexed { index, element ->
+            android.util.Log.w("🔍 DB_POPULATION", "   [$index] $element")
+        }
+        android.util.Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+        
         AppLogger.log("AcertoRepo", "Tentando salvar acerto para clienteId: ${acerto.clienteId}, ciclo: ${acerto.cicloId}, valorRecebido: ${acerto.valorRecebido}")
         android.util.Log.d("DEBUG_DIAG", "[ACERTO] Salvando acerto: clienteId=${acerto.clienteId}, cicloId=${acerto.cicloId}, valorRecebido=${acerto.valorRecebido}")
         return try {

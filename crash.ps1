@@ -23,6 +23,7 @@ param(
     [switch]$OnlyPanos,     # Mostra apenas logs do sistema de panos
     [switch]$OnlyEstoque,   # Mostra apenas logs do sistema de estoque
     [switch]$OnlyMetas,     # Mostra apenas logs do sistema de metas
+    [switch]$OnlyPopulation, # Mostra apenas logs de população do banco de dados
     [switch]$ToFile         # Salva a saída em arquivo (além de mostrar na tela)
 )
 
@@ -38,6 +39,7 @@ Write-Host "-OnlyAbastecimento: Monitora apenas logs de abastecimento" -Foregrou
 Write-Host "-OnlyPanos: Monitora apenas logs do sistema de panos" -ForegroundColor Gray
 Write-Host "-OnlyEstoque: Monitora apenas logs do sistema de estoque" -ForegroundColor Gray
 Write-Host "-OnlyMetas: Monitora apenas logs do sistema de metas" -ForegroundColor Gray
+Write-Host "-OnlyPopulation: Monitora apenas logs de populacao do banco de dados" -ForegroundColor Gray
 Write-Host "-ToFile: Salva logs em arquivo" -ForegroundColor Gray
 Write-Host ""
 Write-Host "EXEMPLOS:" -ForegroundColor Cyan
@@ -143,14 +145,17 @@ $patternEstoque = "StockFragment|StockViewModel|StockItemRepository|StockItemDao
 # Padrao focado apenas no sistema de metas
 $patternMetas = "MetasFragment|MetasViewModel|MetasAdapter|MetaRotaResumo|MetaColaborador|buscarMetasPorRotaECiclo|criarMetaRotaResumo|calcularProgressoMetas|atualizarValorAtualMeta|carregarMetasRotas|ColaboradorDao|buscarColaboradorResponsavelPrincipal|buscarCicloAtualPorRota|buscarUltimoCicloFinalizadoPorRota|Iniciando carregamento|Encontradas.*rotas ativas|Processando rota|MetaRota criada|Nenhuma meta encontrada|Colaborador responsável encontrado|Nenhum colaborador responsável|Ciclo encontrado|Nenhum ciclo encontrado|Calculando progresso|Meta atualizada|Faturamento calculado|Clientes acertados calculados|Mesas locadas calculadas|Ticket médio calculado|Progresso calculado|Meta.*atualizada no banco|Erro ao atualizar meta|MetaCadastroFragment|MetaCadastroViewModel|carregarCiclosPorRota|carregarRotas|salvarMeta|criarCicloParaRota|criarCicloFuturoParaRota|buscarProximoNumeroCiclo|inserirCicloAcerto|buscarCiclosParaMetas|Ciclos carregados|Ciclos encontrados|Ciclo criado com ID|Ciclo criado com sucesso|Ciclo futuro criado|Nenhum ciclo encontrado para esta rota|Crie um ciclo primeiro|Erro ao carregar ciclos|Erro ao criar ciclo|Erro ao criar ciclo futuro|Rotas carregadas|Selecionar Rota|Selecionar Ciclo|Nenhum Ciclo Encontrado|Criar Ciclo|Criar Ciclo Atual|Criar Ciclo Futuro|Meta salva com sucesso|Erro ao salvar meta|Colaborador responsável encontrado|Nenhum colaborador responsável encontrado|Meta salva com ID|TipoMeta|FATURAMENTO|CLIENTES_ACERTADOS|MESAS_LOCADAS|TICKET_MEDIO|StatusCicloAcerto|EM_ANDAMENTO|FINALIZADO|CANCELADO|PLANEJADO|CicloAcertoEntity"
 
-$pattern = if ($OnlyVenda) { $patternVenda } elseif ($OnlyAbastecimento) { $patternAbastecimento } elseif ($OnlyPanos) { $patternPanos } elseif ($OnlyEstoque) { $patternEstoque } elseif ($OnlyMetas) { $patternMetas } else { $patternAll }
+# Padrao focado apenas na populacao do banco de dados
+$patternPopulation = "DB_POPULATION|INSERINDO ROTA|INSERINDO CLIENTE|INSERINDO ACERTO|INSERINDO MESA|INSERINDO COLABORADOR|INSERINDO DESPESA|INSERINDO CICLO|INSERINDO CONTRATO|INSERINDO ADITIVO|INSERINDO PROCURAÇÃO|LOGIN ONLINE CONCLUÍDO|LOGIN OFFLINE CONCLUÍDO|CRIANDO COLABORADOR ADMIN AUTOMATICAMENTE|CRIANDO COLABORADOR LOCAL A PARTIR DO LOGIN ONLINE|COLABORADOR LOCAL CRIADO VIA SYNC ONLINE"
+
+$pattern = if ($OnlyVenda) { $patternVenda } elseif ($OnlyAbastecimento) { $patternAbastecimento } elseif ($OnlyPanos) { $patternPanos } elseif ($OnlyEstoque) { $patternEstoque } elseif ($OnlyMetas) { $patternMetas } elseif ($OnlyPopulation) { $patternPopulation } else { $patternAll }
 
 # Opcional: salvar em arquivo
 $logDir = Join-Path $PSScriptRoot "logs"
 if ($ToFile) {
     if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
     $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    $logFile = Join-Path $logDir (if ($OnlyVenda) { "logcat-venda-$timestamp.txt" } elseif ($OnlyAbastecimento) { "logcat-abastecimento-$timestamp.txt" } elseif ($OnlyPanos) { "logcat-panos-$timestamp.txt" } elseif ($OnlyEstoque) { "logcat-estoque-$timestamp.txt" } elseif ($OnlyMetas) { "logcat-metas-$timestamp.txt" } else { "logcat-all-$timestamp.txt" })
+    $logFile = Join-Path $logDir (if ($OnlyVenda) { "logcat-venda-$timestamp.txt" } elseif ($OnlyAbastecimento) { "logcat-abastecimento-$timestamp.txt" } elseif ($OnlyPanos) { "logcat-panos-$timestamp.txt" } elseif ($OnlyEstoque) { "logcat-estoque-$timestamp.txt" } elseif ($OnlyMetas) { "logcat-metas-$timestamp.txt" } elseif ($OnlyPopulation) { "logcat-population-$timestamp.txt" } else { "logcat-all-$timestamp.txt" })
     Write-Host "Salvando saida tambem em arquivo: $logFile" -ForegroundColor Yellow
 }
 

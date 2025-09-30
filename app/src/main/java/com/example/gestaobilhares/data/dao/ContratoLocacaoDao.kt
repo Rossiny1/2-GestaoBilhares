@@ -56,7 +56,7 @@ interface ContratoLocacaoDao {
     suspend fun inserirContratoMesa(contratoMesa: ContratoMesa): Long
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun inserirContratoMesas(contratoMesas: List<ContratoMesa>)
+    suspend fun inserirContratoMesas(contratoMesas: List<ContratoMesa>): List<Long>
     
     @Delete
     suspend fun excluirContratoMesa(contratoMesa: ContratoMesa)

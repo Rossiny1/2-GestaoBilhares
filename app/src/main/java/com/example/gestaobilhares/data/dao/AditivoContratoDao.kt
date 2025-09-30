@@ -43,7 +43,7 @@ interface AditivoContratoDao {
     suspend fun buscarMesasPorAditivo(aditivoId: Long): List<AditivoMesa>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun inserirAditivoMesas(aditivoMesas: List<AditivoMesa>)
+    suspend fun inserirAditivoMesas(aditivoMesas: List<AditivoMesa>): List<Long>
     
     @Delete
     suspend fun excluirAditivoMesa(aditivoMesa: AditivoMesa)

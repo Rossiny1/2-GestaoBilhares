@@ -114,7 +114,7 @@ interface ColaboradorDao {
     suspend fun obterRotaPrincipal(colaboradorId: Long): ColaboradorRota?
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun inserirColaboradorRota(colaboradorRota: ColaboradorRota)
+    suspend fun inserirColaboradorRota(colaboradorRota: ColaboradorRota): Long
     
     @Delete
     suspend fun deletarColaboradorRota(colaboradorRota: ColaboradorRota)

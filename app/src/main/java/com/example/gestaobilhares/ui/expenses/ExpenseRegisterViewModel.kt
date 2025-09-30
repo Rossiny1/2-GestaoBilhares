@@ -69,7 +69,8 @@ class ExpenseRegisterViewModel @Inject constructor(
 
     init {
         loadCategories()
-        ensureViagemCategory()
+        // BLOQUEADO: Criação automática de categorias desabilitada
+        // ensureViagemCategory()
     }
 
     /**
@@ -167,8 +168,10 @@ class ExpenseRegisterViewModel @Inject constructor(
     }
 
     /**
-     * ✅ Garante a existência da categoria fixa "Viagem" com tipos "Combustível" e "Manutenção".
+     * ❌ BLOQUEADO: Criação automática de categorias desabilitada
+     * A categoria "Viagem" e tipos "Combustível"/"Manutenção" devem ser criados manualmente
      */
+    /*
     private fun ensureViagemCategory() {
         viewModelScope.launch {
             try {
@@ -192,6 +195,7 @@ class ExpenseRegisterViewModel @Inject constructor(
             }
         }
     }
+    */
 
     /**
      * Carrega os tipos de despesa para uma categoria específica.

@@ -29,12 +29,24 @@ class ClienteRepository @Inject constructor(
      * Insere um novo cliente
      */
     suspend fun inserir(cliente: Cliente): Long {
+        // ✅ LOG DETALHADO PARA RASTREAR INSERÇÃO DE CLIENTES
+        val stackTrace = Thread.currentThread().stackTrace
+        android.util.Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+        android.util.Log.w("🔍 DB_POPULATION", "🚨 INSERINDO CLIENTE: ${cliente.nome} (Rota ID: ${cliente.rotaId})")
+        android.util.Log.w("🔍 DB_POPULATION", "📍 Chamado por:")
+        stackTrace.take(10).forEachIndexed { index, element ->
+            android.util.Log.w("🔍 DB_POPULATION", "   [$index] $element")
+        }
+        android.util.Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+        
         return try {
             android.util.Log.d("ClienteRepository", "Iniciando inserção do cliente: ${cliente.nome}")
             val id = clienteDao.inserir(cliente)
+            android.util.Log.w("🔍 DB_POPULATION", "✅ CLIENTE INSERIDO COM SUCESSO: ${cliente.nome} (ID: $id, Rota: ${cliente.rotaId})")
             android.util.Log.d("ClienteRepository", "Cliente inserido com sucesso, ID: $id")
             id
         } catch (e: Exception) {
+            android.util.Log.e("🔍 DB_POPULATION", "❌ ERRO AO INSERIR CLIENTE: ${cliente.nome}", e)
             android.util.Log.e("ClienteRepository", "Erro ao inserir cliente: ${e.message}", e)
             throw e
         }

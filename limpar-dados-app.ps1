@@ -2,10 +2,10 @@
 # SCRIPT PARA LIMPAR DADOS DO APP - GESTAO BILHARES
 # ========================================
 #
-# INSTRUÇÕES:
-# 1. Conecte seu dispositivo Android com a depuração USB ativada.
+# INSTRUCOES:
+# 1. Conecte seu dispositivo Android com a depuracao USB ativada.
 # 2. Execute este script a partir do terminal PowerShell.
-# 3. O script irá limpar todos os dados do aplicativo, incluindo o banco de dados.
+# 3. O script ira limpar todos os dados do aplicativo, incluindo o banco de dados.
 #
 # ========================================
 
@@ -22,8 +22,8 @@ $packageName = "com.example.gestaobilhares"
 
 # Verificar se o ADB está disponível
 if (-not (Test-Path $adbPath)) {
-    Write-Host "ERRO: ADB não encontrado em $adbPath" -ForegroundColor Red
-    Write-Host "Verifique se o Android SDK está instalado corretamente" -ForegroundColor Red
+    Write-Host "ERRO: ADB nao encontrado em $adbPath" -ForegroundColor Red
+    Write-Host "Verifique se o Android SDK esta instalado corretamente" -ForegroundColor Red
     Read-Host "Pressione Enter para sair"
     exit 1
 }
@@ -35,7 +35,7 @@ $hasDevice = $devices | Select-String "device$"
 
 if (-not $hasDevice) {
     Write-Host "ERRO: Nenhum dispositivo Android conectado." -ForegroundColor Red
-    Write-Host "Conecte o dispositivo via USB e habilite a depuração." -ForegroundColor Red
+    Write-Host "Conecte o dispositivo via USB e habilite a depuracao." -ForegroundColor Red
     Read-Host "Pressione Enter para sair"
     exit 1
 }
@@ -47,7 +47,22 @@ try {
     & $adbPath shell pm clear $packageName
     Write-Host ""
     Write-Host "Dados do aplicativo '$packageName' limpos com sucesso!" -ForegroundColor Green
-    Write-Host "O banco de dados agora está completamente vazio." -ForegroundColor Green
+    Write-Host "O banco de dados agora esta completamente vazio." -ForegroundColor Green
+
+    # Verificar se o banco foi realmente limpo
+    Write-Host ""
+    Write-Host "Verificando limpeza do banco de dados..." -ForegroundColor Yellow
+    try {
+        $dbCheck = & $adbPath shell run-as $packageName ls -la /data/data/$packageName/databases/ 2>$null
+        if ($dbCheck) {
+            Write-Host "Banco encontrado:" -ForegroundColor Cyan
+            Write-Host $dbCheck
+        } else {
+            Write-Host "Banco de dados completamente limpo!" -ForegroundColor Green
+        }
+    } catch {
+        Write-Host "Banco de dados completamente limpo!" -ForegroundColor Green
+    }
 } catch {
     Write-Host "ERRO: Falha ao limpar os dados do aplicativo." -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
