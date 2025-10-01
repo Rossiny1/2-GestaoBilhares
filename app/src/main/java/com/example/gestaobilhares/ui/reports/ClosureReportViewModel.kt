@@ -29,7 +29,8 @@ class ClosureReportViewModel @Inject constructor(
         val despesasRotas: Double,
         val despesasGlobais: Double,
         val comissaoMotorista: Double,
-        val comissaoIltair: Double
+        val comissaoIltair: Double,
+        val totalDescontos: Double
     ) : java.io.Serializable
 
     // Estrutura para dados dos gráficos
@@ -150,6 +151,22 @@ class ClosureReportViewModel @Inject constructor(
                 repository.calcularComissoesPorAnoECiclo(anoSelecionado, acertoSelecionado.numero)
             }
             
+            // ✅ NOVO: Calcular total de descontos
+            val totalDescontos = if (acertoSelecionado.numero == 0) {
+                // Ano inteiro: somar descontos de todos os ciclos do ano
+                val ciclosDoAno = repository.obterTodosCiclos().first().filter { it.ano == anoSelecionado }
+                ciclosDoAno.sumOf { ciclo ->
+                    try { repository.calcularTotalDescontosPorCiclo(ciclo.id) } catch (_: Exception) { 0.0 }
+                }
+            } else {
+                // Acerto específico: somar descontos de todos os ciclos com mesmo número no ano
+                val ciclosDoAnoNumero = repository.obterTodosCiclos().first()
+                    .filter { it.ano == anoSelecionado && it.numeroCiclo == acertoSelecionado.numero }
+                ciclosDoAnoNumero.sumOf { ciclo ->
+                    try { repository.calcularTotalDescontosPorCiclo(ciclo.id) } catch (_: Exception) { 0.0 }
+                }
+            }
+            
             val totalDespesas = totalDespesasRotas + totalDespesasGlobais + totalComissaoMotorista + totalComissaoIltair
             val lucroLiquido = totalFaturamento - totalDespesas
             val lucroRossiny = lucroLiquido * 0.6
@@ -165,7 +182,8 @@ class ClosureReportViewModel @Inject constructor(
                 despesasRotas = totalDespesasRotas,
                 despesasGlobais = totalDespesasGlobais,
                 comissaoMotorista = totalComissaoMotorista,
-                comissaoIltair = totalComissaoIltair
+                comissaoIltair = totalComissaoIltair,
+                totalDescontos = totalDescontos
             )
 
             // ✅ NOVO: calcular total de mesas locadas reais (distintas) no período

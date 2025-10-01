@@ -381,36 +381,19 @@
                                 android:textColor="?attr/colorOnSurface"
                                 android:layout_marginBottom="8dp" />
                             
-                            <!-- Histórico de Últimas Trocas -->
-                            <LinearLayout
+                            <!-- Container para as últimas trocas -->
+                            <ScrollView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:background="?attr/colorSurfaceVariant"
-                                android:padding="12dp"
+                                android:maxHeight="120dp"
                                 android:layout_marginBottom="12dp">
                                 
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Histórico de Últimas Trocas"
-                                    android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:layout_marginBottom="8dp" />
-                                
-                                <!-- Container para as últimas trocas -->
-                                <ScrollView
+                                <LinearLayout
+                                    android:id="@+id/llUltimasTrocasPanos"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:maxHeight="120dp">
-                                    
-                                    <LinearLayout
-                                        android:id="@+id/llUltimasTrocasPanos"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:orientation="vertical" />
-                                </ScrollView>
-                            </LinearLayout>
+                                    android:orientation="vertical" />
+                            </ScrollView>
                             
                             <!-- Botão Trocar Pano -->
                             <com.google.android.material.button.MaterialButton
@@ -428,7 +411,7 @@
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
                                 android:gravity="center_vertical"
-                                android:background="?attr/colorPrimaryContainer"
+                                android:background="@drawable/settlement_history_card_background"
                                 android:padding="12dp"
                                 android:visibility="gone">
                                 
@@ -444,7 +427,7 @@
                                         android:layout_height="wrap_content"
                                         android:text="P002"
                                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                                        android:textColor="?attr/colorOnPrimaryContainer" />
+                                        android:textColor="@color/white" />
                                     
                                     <TextView
                                         android:id="@+id/tvNovoPanoInfo"
@@ -452,7 +435,7 @@
                                         android:layout_height="wrap_content"
                                         android:text="Azul - Grande - Veludo"
                                         android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                                        android:textColor="?attr/colorOnPrimaryContainer" />
+                                        android:textColor="@color/white" />
                                 </LinearLayout>
                                 
                                 <com.google.android.material.button.MaterialButton

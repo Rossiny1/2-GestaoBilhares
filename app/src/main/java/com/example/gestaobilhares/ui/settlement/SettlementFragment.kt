@@ -1332,7 +1332,7 @@ class SettlementFragment : Fragment() {
             text = "$numeroPano - Mesa $numeroMesa"
             textSize = 16f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(requireContext().getColor(android.R.color.black))
+            setTextColor(requireContext().getColor(android.R.color.white))
         }
         
         // Info do pano
