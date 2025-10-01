@@ -60,7 +60,7 @@
         <item
             android:id="@+id/nav_closure_report"
             android:icon="@drawable/ic_assessment"
-            android:title="Fechamento" />
+            android:title="Relatório" />
     </group>
 
     <!-- Grupo: Configurações -->

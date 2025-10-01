@@ -40,7 +40,7 @@ class ClosureReportFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.toolbar.setNavigationOnClickListener { findNavController().popBackStack() }
+        binding.btnBack.setOnClickListener { findNavController().popBackStack() }
 
         adapter = DetalheAdapter(moeda)
         binding.recyclerDetalhes.layoutManager = LinearLayoutManager(requireContext())
@@ -172,6 +172,7 @@ class ClosureReportFragment : Fragment() {
             val despesasGlobais = resumo.despesasGlobais
             val comissaoMotorista = resumo.comissaoMotorista
             val comissaoIltair = resumo.comissaoIltair
+            val totalDescontos = resumo.totalDescontos
             
             val faturamentoPorMesa = if (totalMesas > 0) faturamentoTotal / totalMesas else 0.0
             val lucroPorMesa = if (totalMesas > 0) lucro / totalMesas else 0.0
@@ -185,7 +186,8 @@ class ClosureReportFragment : Fragment() {
                     "Faturamento por mesa: ${moeda.format(faturamentoPorMesa)}\n" +
                     "Lucro por mesa: ${moeda.format(lucroPorMesa)}\n" +
                     "Despesa por mesa: ${moeda.format(despesaPorMesa)}\n" +
-                    "Margem líquida: ${String.format(Locale("pt", "BR"), "%.1f%%", margem)}\n\n" +
+                    "Margem líquida: ${String.format(Locale("pt", "BR"), "%.1f%%", margem)}\n" +
+                    "Total de Descontos: ${moeda.format(totalDescontos)}\n\n" +
                     "Composição das Despesas:\n" +
                     "• Despesas Rota: ${moeda.format(despesasRotas)}\n" +
                     "• Despesas Globais: ${moeda.format(despesasGlobais)}\n" +

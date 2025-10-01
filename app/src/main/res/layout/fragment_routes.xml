@@ -5,7 +5,7 @@
     android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_primary"
+    android:background="@color/background_dark"
     tools:context=".ui.routes.RoutesFragment">
 
     <!-- Conteúdo Principal -->
@@ -50,7 +50,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Rotas"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/text_on_primary"
                         android:textSize="24sp"
                         android:textStyle="bold" />
 

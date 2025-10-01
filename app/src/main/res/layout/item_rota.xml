@@ -43,7 +43,7 @@
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="4dp"
                 android:text="Em andamento"
-                android:textColor="@color/accent_teal"
+                android:textColor="@color/primary_blue"
                 android:textSize="12sp"
                 tools:text="Em andamento" />
 
