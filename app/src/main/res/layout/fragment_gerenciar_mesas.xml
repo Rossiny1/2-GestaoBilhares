@@ -62,14 +62,14 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginTop="16dp"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="12dp"
+            android:gravity="center">
 
             <!-- Card Sinuca -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardSinuca"
-                android:layout_width="0dp"
+                android:layout_width="120dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_marginEnd="6dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp"
@@ -120,9 +120,8 @@
             <!-- Card Jukebox -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardJukebox"
-                android:layout_width="0dp"
+                android:layout_width="120dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_marginStart="6dp"
                 android:layout_marginEnd="6dp"
                 app:cardCornerRadius="12dp"
@@ -174,9 +173,8 @@
             <!-- Card Pembolim -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardPembolim"
-                android:layout_width="0dp"
+                android:layout_width="120dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_marginStart="6dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp"

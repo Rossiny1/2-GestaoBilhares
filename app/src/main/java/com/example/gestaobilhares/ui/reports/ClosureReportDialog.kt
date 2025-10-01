@@ -101,6 +101,10 @@ class ClosureReportDialog : DialogFragment() {
             binding.tvDespesas.text = "Despesas: ${formatCurrency(resumo.despesasTotal)}"
             binding.tvLucro.text = "Lucro: ${formatCurrency(resumo.lucroLiquido)}"
             binding.tvMesas.text = "Mesas: $totalMesas"
+            
+            // Calcular descontos totais de todas as rotas do ciclo
+            val descontosTotais = calcularDescontosTotais()
+            binding.tvDescontosTotais.text = "Descontos Totais: ${formatCurrency(descontosTotais)}"
         }
     }
 
@@ -205,6 +209,12 @@ class ClosureReportDialog : DialogFragment() {
         binding.btnGeneratePdf.isEnabled = true
         binding.btnGeneratePdf.text = "Gerar PDF"
         binding.progressIndicator.visibility = View.GONE
+    }
+
+    private fun calcularDescontosTotais(): Double {
+        // Por enquanto, retorna 0.0 pois a classe LinhaDetalhe não possui campo desconto
+        // TODO: Implementar cálculo de descontos quando a estrutura de dados for atualizada
+        return 0.0
     }
 
     private fun formatCurrency(value: Double): String {

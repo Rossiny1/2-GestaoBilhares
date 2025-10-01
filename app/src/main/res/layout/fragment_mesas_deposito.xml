@@ -52,17 +52,6 @@
                     android:maxLines="1"
                     android:ellipsize="end" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnCadastrarMesa"
-                    style="@style/Widget.Material3.Button.IconButton"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:icon="@drawable/ic_add"
-                    app:iconTint="@color/white"
-                    app:backgroundTint="@color/green_500"
-                    app:strokeColor="@color/green_700"
-                    app:strokeWidth="2dp"
-                    app:elevation="8dp" />
 
             </LinearLayout>
 
@@ -125,8 +114,8 @@
                     </LinearLayout>
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
                         android:src="@drawable/ic_sinuca"
                         app:tint="?attr/colorOnPrimaryContainer" />
 
@@ -180,8 +169,8 @@
                     </LinearLayout>
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
                         android:src="@drawable/ic_music_note"
                         app:tint="@color/blue_600" />
 
@@ -235,8 +224,8 @@
                     </LinearLayout>
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
                         android:src="@drawable/ic_table"
                         app:tint="@color/green_600" />
 
@@ -346,6 +335,18 @@
     </LinearLayout>
 
         <!-- ❌ REMOVIDO: FAB de venda de mesa do local incorreto -->
+
+        <!-- FAB para adicionar mesa -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabAddMesa"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:src="@drawable/ic_add"
+            app:backgroundTint="?attr/colorPrimary"
+            app:tint="?attr/colorOnPrimary"
+            app:fabSize="normal" />
 
     </FrameLayout>
 

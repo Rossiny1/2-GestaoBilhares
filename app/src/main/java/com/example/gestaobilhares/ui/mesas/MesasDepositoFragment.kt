@@ -93,7 +93,7 @@ class MesasDepositoFragment : Fragment() {
         binding.btnBack.setOnClickListener {
             findNavController().popBackStack()
         }
-        binding.btnCadastrarMesa.setOnClickListener {
+        binding.fabAddMesa.setOnClickListener {
             // ✅ NOVO: Verificar permissão antes de navegar
             if (!userSessionManager.canManageTables()) {
                 Toast.makeText(requireContext(), "Acesso negado: Apenas administradores podem cadastrar mesas", Toast.LENGTH_SHORT).show()
@@ -130,12 +130,12 @@ class MesasDepositoFragment : Fragment() {
     private fun setupAccessControl() {
         val canManageTables = userSessionManager.canManageTables()
         
-        // Ocultar botão "Cadastrar Mesa" para usuários USER
-        binding.btnCadastrarMesa.visibility = if (canManageTables) View.VISIBLE else View.GONE
+        // Ocultar FAB "Adicionar Mesa" para usuários USER
+        binding.fabAddMesa.visibility = if (canManageTables) View.VISIBLE else View.GONE
         
         android.util.Log.d("MesasDepositoFragment", 
             "🔒 Controle de acesso aplicado - Usuário: ${userSessionManager.getCurrentUserName()}, " +
-            "Pode gerenciar mesas: $canManageTables, Botão visível: ${binding.btnCadastrarMesa.visibility == View.VISIBLE}")
+            "Pode gerenciar mesas: $canManageTables, FAB visível: ${binding.fabAddMesa.visibility == View.VISIBLE}")
     }
 
     private fun observeViewModel() {
