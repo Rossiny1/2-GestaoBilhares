@@ -334,12 +334,8 @@ class SettlementViewModel @Inject constructor(
                 Log.d("SettlementViewModel", "Observação é vazia? ${dadosAcerto.observacao?.isEmpty()}")
                 Log.d("SettlementViewModel", "Observação é blank? ${dadosAcerto.observacao?.isBlank()}")
                 
-                // ✅ CORREÇÃO: Garantir que observação nunca seja nula ou vazia
-                val observacaoParaSalvar = if (dadosAcerto.observacao.isNullOrBlank()) {
-                    "Acerto realizado via app"
-                } else {
-                    dadosAcerto.observacao.trim()
-                }
+                // ✅ CORREÇÃO: Observação será apenas manual, sem preenchimento automático
+                val observacaoParaSalvar = dadosAcerto.observacao?.trim() ?: ""
                 
                 Log.d("SettlementViewModel", "Observação que será salva no banco: '$observacaoParaSalvar'")
 

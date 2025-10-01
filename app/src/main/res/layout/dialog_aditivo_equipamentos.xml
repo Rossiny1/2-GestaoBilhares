@@ -14,7 +14,7 @@
         android:text="Adicionar Equipamentos"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@color/primary_color"
+        android:textColor="?attr/colorOnSurface"
         android:gravity="center"
         android:layout_marginBottom="16dp" />
 
@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:text="O cliente já possui um contrato ativo. Deseja adicionar novos equipamentos através de um aditivo contratual?"
         android:textSize="16sp"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:gravity="center"
         android:layout_marginBottom="24dp" />
 
@@ -34,7 +34,7 @@
         android:layout_height="wrap_content"
         android:text="Contrato: CONTRATO-001/2024"
         android:textSize="14sp"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:gravity="center"
         android:layout_marginBottom="16dp"
         android:background="@android:color/transparent"

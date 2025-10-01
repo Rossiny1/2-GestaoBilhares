@@ -570,12 +570,30 @@ class ClientDetailFragment : Fragment() {
             try {
                 val ultimoAcerto = viewModel.buscarUltimoAcerto(args.clienteId)
                 ultimoAcerto?.let { acerto ->
-                    if (!acerto.observacoes.isNullOrBlank()) {
-                        Log.d("ClientDetailFragment", "Observações encontradas no último acerto: ${acerto.observacoes}")
-                        verificarDadosFaltantesEExibirAlerta(acerto.observacoes)
+                    // Verificar se há observação manual (não automática)
+                    val observacaoManual = if (!acerto.observacoes.isNullOrBlank()) {
+                        // Filtrar observações automáticas
+                        val observacao = acerto.observacoes.trim()
+                        when {
+                            observacao.contains("acerto realizado via zap", ignoreCase = true) -> null
+                            observacao.contains("acerto via zap", ignoreCase = true) -> null
+                            observacao.contains("via zap", ignoreCase = true) -> null
+                            observacao.contains("zap", ignoreCase = true) -> null
+                            else -> observacao
+                        }
+                    } else null
+                    
+                    if (observacaoManual != null) {
+                        Log.d("ClientDetailFragment", "Observação manual encontrada: $observacaoManual")
+                        verificarDadosFaltantesEExibirAlerta(observacaoManual)
                     } else {
-                        Log.d("ClientDetailFragment", "Nenhuma observação no último acerto")
+                        Log.d("ClientDetailFragment", "Nenhuma observação manual no último acerto")
+                        // Verificar se deve mostrar alerta por outros motivos (CPF, contrato)
+                        verificarDadosFaltantesEExibirAlerta("")
                     }
+                } ?: run {
+                    // Se não há acerto, verificar se deve mostrar alerta por outros motivos
+                    verificarDadosFaltantesEExibirAlerta("")
                 }
             } catch (e: Exception) {
                 Log.e("ClientDetailFragment", "Erro ao verificar observações do último acerto: ${e.message}", e)
@@ -622,6 +640,9 @@ class ClientDetailFragment : Fragment() {
 
                 Log.d("ClientDetailFragment", "Verificação: temMesas=$temMesas, temContratoAtivo=$temContratoAtivo, precisaContrato=$precisaContrato")
 
+                // Verificar se há observação manual
+                val temObservacaoManual = observacoes.isNotBlank()
+                
                 // Construir mensagem do alerta
                 val mensagem = buildString {
                     append("Antes de prosseguir para acerto é necessário:\n\n")
@@ -631,20 +652,20 @@ class ClientDetailFragment : Fragment() {
                     }
                     
                     if (precisaContrato) {
-                        append("• Gerar o contrato para o cliente")
-                        if (observacoes.isNotBlank()) {
-                            append(" - (informações da última observação)")
-                        }
-                        append("\n")
+                        append("• Gerar o contrato para o cliente\n")
                     }
                     
-                    if (dadosFaltantes.isEmpty() && !precisaContrato) {
+                    if (temObservacaoManual) {
+                        append("• $observacoes\n")
+                    }
+                    
+                    if (dadosFaltantes.isEmpty() && !precisaContrato && !temObservacaoManual) {
                         append("• Nenhuma ação necessária - todos os dados estão completos")
                     }
                 }
 
                 // Exibir diálogo apenas se houver algo a ser feito
-                if (dadosFaltantes.isNotEmpty() || precisaContrato) {
+                if (dadosFaltantes.isNotEmpty() || precisaContrato || temObservacaoManual) {
                     mostrarDialogoAlerta(mensagem, observacoes)
                 } else {
                     Log.d("ClientDetailFragment", "Todos os dados estão completos - não exibindo alerta")

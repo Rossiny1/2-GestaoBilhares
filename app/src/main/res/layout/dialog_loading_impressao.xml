@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:text="@string/impressao_conectando"
         android:textSize="16sp"
-        android:textColor="@color/black"
+        android:textColor="?attr/colorOnSurface"
         android:gravity="center" />
 
 </LinearLayout> 

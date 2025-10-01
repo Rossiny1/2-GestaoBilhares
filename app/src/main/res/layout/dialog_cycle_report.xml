@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:text="Deseja gerar um relatório PDF detalhado do fechamento da rota?"
             android:textSize="14sp"
-            android:textColor="@color/gray_600"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:lineSpacingExtra="2dp"
             android:layout_marginBottom="16dp"
             android:gravity="center" />
@@ -76,7 +76,7 @@
                     android:layout_height="wrap_content"
                     android:text="Ciclo 2025 - #001"
                     android:textSize="11sp"
-                    android:textColor="@color/black"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="4dp" />
 
                 <TextView
@@ -85,7 +85,7 @@
                     android:layout_height="wrap_content"
                     android:text="Rota: Centro"
                     android:textSize="11sp"
-                    android:textColor="@color/black"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="4dp" />
 
                 <TextView
@@ -94,7 +94,7 @@
                     android:layout_height="wrap_content"
                     android:text="Início: 01/01/2025 08:00"
                     android:textSize="11sp"
-                    android:textColor="@color/black" />
+                    android:textColor="?attr/colorOnSurface" />
 
             </LinearLayout>
 

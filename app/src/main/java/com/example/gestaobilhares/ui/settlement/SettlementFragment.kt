@@ -769,21 +769,10 @@ class SettlementFragment : Fragment() {
         selected.forEach { metodo ->
             val itemView = layoutInflater.inflate(R.layout.item_payment_method_input, containerInputs, false)
             val tvMethodName = itemView.findViewById<TextView>(R.id.tvPaymentMethodName)
-            val ivPaymentIcon = itemView.findViewById<ImageView>(R.id.ivPaymentIcon)
             val etPaymentValue = itemView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etPaymentValue)
             
             // Configurar nome do método
             tvMethodName.text = metodo
-            
-            // Configurar ícone baseado no método
-            val iconRes = when (metodo.lowercase()) {
-                "pix" -> R.drawable.ic_money // Usar ic_money como fallback
-                "dinheiro" -> R.drawable.ic_money
-                "cartão débito", "cartão crédito" -> R.drawable.ic_money
-                "cheque" -> R.drawable.ic_money
-                else -> R.drawable.ic_money
-            }
-            ivPaymentIcon.setImageResource(iconRes)
             
             // Configurar formatação monetária
             val moneyWatcher = com.example.gestaobilhares.utils.MoneyTextWatcher(etPaymentValue)
@@ -924,8 +913,8 @@ class SettlementFragment : Fragment() {
         Log.d("SettlementFragment", "Observação é blank? ${observacao.isBlank()}")
         Log.d("SettlementFragment", "Tamanho da observação: ${observacao.length}")
         
-        // ✅ CORREÇÃO: Garantir que observação não seja nula
-        val observacaoFinal = if (observacao.isBlank()) "Acerto realizado via app" else observacao
+        // ✅ CORREÇÃO: Observação será apenas manual, sem preenchimento automático
+        val observacaoFinal = observacao.trim()
         Log.d("SettlementFragment", "Observação final que será salva: '$observacaoFinal'")
 
         // ✅ CORREÇÃO CRÍTICA: Usar dados do adapter como fonte única e confiável quando houver mesas
