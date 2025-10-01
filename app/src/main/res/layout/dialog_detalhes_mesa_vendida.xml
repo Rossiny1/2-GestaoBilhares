@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Detalhes da Mesa Vendida"
-            android:textColor="?attr/colorOnSurface"
+            android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
             android:gravity="center"
@@ -31,7 +31,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:strokeColor="?attr/colorPrimary"
+            app:strokeColor="@color/primary_blue"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -44,7 +44,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="📋 Informações da Mesa"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="@color/primary_blue"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp" />
@@ -60,7 +60,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Número:"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -68,7 +68,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="701"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -85,7 +85,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Tipo:"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -93,7 +93,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Sinuca"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -110,7 +110,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Tamanho:"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -118,7 +118,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Grande"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -135,7 +135,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Estado:"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -143,7 +143,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Bom"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -159,7 +159,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Endereço:"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -167,7 +167,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Não informado"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -184,7 +184,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:strokeColor="?attr/colorPrimary"
+            app:strokeColor="@color/primary_blue"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -197,7 +197,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="👤 Dados do Comprador"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="@color/primary_blue"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp" />
@@ -213,7 +213,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Nome:"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -221,7 +221,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="João Silva"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -238,7 +238,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Telefone:"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -246,7 +246,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="(11) 99999-9999"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -262,7 +262,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="CPF/CNPJ:"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -270,7 +270,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="123.456.789-00"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -287,7 +287,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:strokeColor="?attr/colorPrimary"
+            app:strokeColor="@color/primary_blue"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -300,7 +300,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="💰 Dados da Venda"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="@color/primary_blue"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp" />
@@ -316,7 +316,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Valor:"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -324,7 +324,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$ 1.500,00"
-                        android:textColor="?attr/colorPrimary"
+                        android:textColor="@color/primary_blue"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -341,7 +341,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Data da Venda:"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -349,7 +349,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="19/09/2025 14:30"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -365,7 +365,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Data do Registro:"
-                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
                     <TextView
@@ -373,7 +373,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="19/09/2025 14:30"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -390,7 +390,7 @@
             android:layout_marginBottom="24dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:strokeColor="?attr/colorPrimary"
+            app:strokeColor="@color/primary_blue"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -403,7 +403,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="📝 Observações"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="@color/primary_blue"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp" />
@@ -427,7 +427,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Fechar"
-            app:backgroundTint="?attr/colorPrimary"
+            app:backgroundTint="@color/primary_blue"
             app:icon="@drawable/ic_close"
             app:iconGravity="textStart" />
 
