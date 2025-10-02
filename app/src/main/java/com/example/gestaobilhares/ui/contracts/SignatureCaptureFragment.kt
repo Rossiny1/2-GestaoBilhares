@@ -325,7 +325,23 @@ class SignatureCaptureFragment : Fragment() {
                     clipData = android.content.ClipData.newUri(requireContext().contentResolver, "Distrato", pdfUri)
                 }
                 startActivity(android.content.Intent.createChooser(intent, "Enviar distrato via"))
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ findNavController().popBackStack() }, 2000)
+                
+                // ✅ NOVO: Navegar para tela de detalhes do cliente após envio do distrato
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ 
+                    val clienteId = contrato.clienteId
+                    if (clienteId > 0) {
+                        // Navegar para ClientDetailFragment usando o ID do cliente
+                        val bundle = android.os.Bundle().apply {
+                            putLong("clienteId", clienteId)
+                        }
+                        findNavController().navigate(
+                            com.example.gestaobilhares.R.id.clientDetailFragment, 
+                            bundle
+                        )
+                    } else {
+                        findNavController().popBackStack()
+                    }
+                }, 2000)
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Erro ao enviar distrato", e)
                 Toast.makeText(requireContext(), "Erro ao enviar distrato: ${e.message}", Toast.LENGTH_LONG).show()
