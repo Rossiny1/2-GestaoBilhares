@@ -116,7 +116,7 @@ class RouteManagementFragment : Fragment() {
 
         // Observa estado de loading
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            // ProgressBar não existe no layout, apenas desabilitar FAB durante loading
             binding.addRouteFab.isEnabled = !isLoading
         }
 
