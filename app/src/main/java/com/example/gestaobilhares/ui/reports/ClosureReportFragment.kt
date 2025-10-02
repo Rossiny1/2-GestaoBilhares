@@ -76,11 +76,11 @@ class ClosureReportFragment : Fragment() {
         }
 
         viewModel.resumo.observe(viewLifecycleOwner) { r ->
-            binding.txtFaturamentoTotal.text = "Faturamento Total: ${moeda.format(r.faturamentoTotal)}"
-            binding.txtDespesasTotal.text = "Despesas Total: ${moeda.format(r.despesasTotal)}"
-            binding.txtLucroLiquido.text = "Lucro Líquido: ${moeda.format(r.lucroLiquido)}"
-            binding.txtLucroRossiny.text = "Lucro Rossiny: ${moeda.format(r.lucroRossiny)}"
-            binding.txtLucroPetrina.text = "Lucro Petrina: ${moeda.format(r.lucroPetrina)}"
+            binding.txtFaturamentoTotal.text = moeda.format(r.faturamentoTotal)
+            binding.txtDespesasTotal.text = moeda.format(r.despesasTotal)
+            binding.txtLucroLiquido.text = moeda.format(r.lucroLiquido)
+            binding.txtLucroRossiny.text = moeda.format(r.lucroRossiny)
+            binding.txtLucroPetrina.text = moeda.format(r.lucroPetrina)
         }
 
         viewModel.detalhes.observe(viewLifecycleOwner) { linhas ->
