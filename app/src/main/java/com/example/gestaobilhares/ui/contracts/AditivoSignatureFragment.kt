@@ -227,6 +227,23 @@ class AditivoSignatureFragment : Fragment() {
                     }
                     startActivity(android.content.Intent.createChooser(genericIntent, "Enviar aditivo via"))
                 }
+                
+                // ✅ NOVO: Navegar para tela de detalhes do cliente após envio do aditivo
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ 
+                    val clienteId = viewModel.contrato.value?.clienteId ?: 0L
+                    if (clienteId > 0) {
+                        // Navegar para ClientDetailFragment usando o ID do cliente
+                        val bundle = android.os.Bundle().apply {
+                            putLong("clienteId", clienteId)
+                        }
+                        findNavController().navigate(
+                            com.example.gestaobilhares.R.id.clientDetailFragment, 
+                            bundle
+                        )
+                    } else {
+                        findNavController().popBackStack()
+                    }
+                }, 2000)
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao enviar aditivo", e)
                 Toast.makeText(requireContext(), "Erro ao enviar aditivo: ${e.message}", Toast.LENGTH_LONG).show()
