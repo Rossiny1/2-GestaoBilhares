@@ -242,7 +242,22 @@ class SignatureCaptureFragment : Fragment() {
                     }
                     startActivity(android.content.Intent.createChooser(genericIntent, "Enviar contrato via"))
                 }
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ findNavController().popBackStack() }, 2000)
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ 
+                    // Navegar para a tela de detalhes do cliente em vez de voltar para geração de contrato
+                    val clienteId = viewModel.contrato.value?.clienteId ?: 0L
+                    if (clienteId > 0) {
+                        // Navegar para ClientDetailFragment usando o ID do cliente
+                        val bundle = android.os.Bundle().apply {
+                            putLong("clienteId", clienteId)
+                        }
+                        findNavController().navigate(
+                            com.example.gestaobilhares.R.id.clientDetailFragment, 
+                            bundle
+                        )
+                    } else {
+                        findNavController().popBackStack()
+                    }
+                }, 2000)
             } catch (e: Exception) {
                 android.util.Log.e("SignatureCaptureFragment", "Erro ao enviar contrato", e)
                 Toast.makeText(requireContext(), "Erro ao enviar contrato: ${e.message}", Toast.LENGTH_LONG).show()
