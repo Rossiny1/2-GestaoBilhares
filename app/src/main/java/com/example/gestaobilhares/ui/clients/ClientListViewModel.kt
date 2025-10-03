@@ -183,9 +183,9 @@ class ClientListViewModel @Inject constructor(
                 rotaRepository.obterRotaPorId(rotaId).collect { rota ->
                     _rotaInfo.value = rota
                     rota?.let {
-                        // ✅ FASE 8C: Carregar ciclo real do banco de dados
+                        // ✅ CORREÇÃO: Carregar ciclo primeiro, depois status
                         carregarCicloAcertoReal(it)
-                        // Carregar status atual da rota
+                        // ✅ CORREÇÃO: Carregar status após ciclo estar carregado
                         carregarStatusRota(it)
                     }
                 }
@@ -321,6 +321,8 @@ class ClientListViewModel @Inject constructor(
                 val cicloAtual = _cicloAcertoEntity.value ?: return@launch
                 val rota = _rotaInfo.value ?: return@launch
                 
+                android.util.Log.d("ClientListViewModel", "🔄 Iniciando finalização da rota ${rota.nome} - Ciclo ${cicloAtual.numeroCiclo}")
+                
                 // Centralizar a lógica de finalização no repositório
                 cicloAcertoRepository.finalizarCiclo(cicloAtual.id, Date())
                 
@@ -329,10 +331,15 @@ class ClientListViewModel @Inject constructor(
                 
                 // Atualizar estado da UI
                 _cicloAcertoEntity.value = cicloFinalizado
+                _cicloAtivo.value = cicloFinalizado
                 _statusCiclo.value = StatusCicloAcerto.FINALIZADO
                 _statusRota.value = StatusRota.FINALIZADA
                 
                 android.util.Log.d("ClientListViewModel", "✅ Ciclo ${cicloAtual.numeroCiclo} finalizado com sucesso via repositório")
+                android.util.Log.d("ClientListViewModel", "🔄 Status da rota atualizado para: ${_statusRota.value}")
+                
+                // ✅ CORREÇÃO: Não recarregar rota inteira, apenas atualizar status
+                // carregarRota(rota.id) // REMOVIDO para evitar loop
                 
                 // ✅ NOTIFICAR MUDANÇA DE STATUS para atualização em tempo real
                 notificarMudancaStatusRota(rota.id)
@@ -366,6 +373,8 @@ class ClientListViewModel @Inject constructor(
      */
     private suspend fun carregarCicloAcertoReal(rota: Rota) {
         try {
+            android.util.Log.d("ClientListViewModel", "🔄 Carregando ciclo para rota ${rota.nome} (ID: ${rota.id})")
+            
             // ✅ CORREÇÃO: Usar a mesma lógica do AppRepository.obterCicloAtualRota()
             val emAndamento = cicloAcertoRepository.buscarCicloAtivo(rota.id)
             
@@ -377,7 +386,7 @@ class ClientListViewModel @Inject constructor(
                 _statusCiclo.value = emAndamento.status
                 _progressoCiclo.value = emAndamento.percentualConclusao
                 
-                android.util.Log.d("ClientListViewModel", "✅ Ciclo em andamento carregado: ${emAndamento.numeroCiclo}º Acerto (ID: ${emAndamento.id})")
+                android.util.Log.d("ClientListViewModel", "✅ Ciclo em andamento carregado: ${emAndamento.numeroCiclo}º Acerto (ID: ${emAndamento.id}, Status: ${emAndamento.status})")
             } else {
                 // ✅ CORREÇÃO: Nenhum ciclo em andamento - espelhar o AppRepository exibindo o ÚLTIMO ciclo finalizado
                 val ultimoCiclo = cicloAcertoRepository.buscarUltimoCicloPorRota(rota.id)
@@ -387,7 +396,7 @@ class ClientListViewModel @Inject constructor(
                     _cicloAtivo.value = ultimoCiclo
                     _statusCiclo.value = ultimoCiclo.status
                     _progressoCiclo.value = ultimoCiclo.percentualConclusao
-                    android.util.Log.d("ClientListViewModel", "🔄 Nenhum ciclo em andamento, exibindo último finalizado: ${ultimoCiclo.numeroCiclo}º Acerto")
+                    android.util.Log.d("ClientListViewModel", "🔄 Nenhum ciclo em andamento, exibindo último finalizado: ${ultimoCiclo.numeroCiclo}º Acerto (Status: ${ultimoCiclo.status})")
                 } else {
                     _cicloAcerto.value = 1
                     _cicloAcertoEntity.value = null

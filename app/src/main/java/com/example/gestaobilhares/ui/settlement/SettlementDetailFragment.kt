@@ -445,27 +445,9 @@ class SettlementDetailFragment : Fragment() {
         // ✅ CORREÇÃO: Usar lifecycleScope para chamadas suspensas
         lifecycleScope.launch {
             try {
-                val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
-                val mesasCompletas = mutableListOf<Mesa>()
-                
-                for (acertoMesa in settlement.acertoMesas) {
-                    val mesaCompleta = mesaRepository.buscarPorId(acertoMesa.mesaId)
-                    if (mesaCompleta != null) {
-                        // Criar uma mesa com os dados do acerto (fichas inicial/final)
-                        val mesaComAcerto = mesaCompleta.copy(
-                            fichasInicial = acertoMesa.relogioInicial,
-                            fichasFinal = acertoMesa.relogioFinal
-                        )
-                        mesasCompletas.add(mesaComAcerto)
-                    }
-                }
-                
-                // Buscar contrato ativo do cliente
-                val acertoCompleto = viewModel.buscarAcertoPorId(args.acertoId)
-                val contratoAtivo = acertoCompleto?.let { 
-                    viewModel.buscarContratoAtivoPorCliente(it.clienteId) 
-                }
-                val numeroContrato = contratoAtivo?.numeroContrato
+                // ✅ CORREÇÃO: Usar métodos centralizados para garantir consistência
+                val mesasCompletas = obterMesasCompletas(settlement)
+                val numeroContrato = obterNumeroContrato(settlement)
                 
                 // Usar a função centralizada com informações completas das mesas
                 ReciboPrinterHelper.preencherReciboImpressaoCompleto(
@@ -523,27 +505,9 @@ class SettlementDetailFragment : Fragment() {
     private fun compartilharViaWhatsApp(settlement: SettlementDetailViewModel.SettlementDetail) {
         lifecycleScope.launch {
             try {
-                // ✅ CORREÇÃO: Usar a mesma fonte de verdade do recibo impresso
-                val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
-                val mesasCompletas = mutableListOf<Mesa>()
-                
-                for (acertoMesa in settlement.acertoMesas) {
-                    val mesaCompleta = mesaRepository.buscarPorId(acertoMesa.mesaId)
-                    if (mesaCompleta != null) {
-                        val mesaComAcerto = mesaCompleta.copy(
-                            fichasInicial = acertoMesa.relogioInicial,
-                            fichasFinal = acertoMesa.relogioFinal
-                        )
-                        mesasCompletas.add(mesaComAcerto)
-                    }
-                }
-                
-                // Buscar contrato ativo do cliente
-                val acertoCompleto = viewModel.buscarAcertoPorId(args.acertoId)
-                val contratoAtivo = acertoCompleto?.let { 
-                    viewModel.buscarContratoAtivoPorCliente(it.clienteId) 
-                }
-                val numeroContrato = contratoAtivo?.numeroContrato
+                // ✅ CORREÇÃO: Usar exatamente os mesmos dados da impressão
+                val mesasCompletas = obterMesasCompletas(settlement)
+                val numeroContrato = obterNumeroContrato(settlement)
                 
                 // ✅ CORREÇÃO: Usar ReciboPrinterHelper para gerar texto WhatsApp (mesma fonte de verdade)
                 val textoResumo = ReciboPrinterHelper.gerarTextoWhatsApp(
@@ -571,89 +535,38 @@ class SettlementDetailFragment : Fragment() {
         }
     }
 
-    private fun gerarTextoResumo(settlement: SettlementDetailViewModel.SettlementDetail, clienteNome: String): String {
-        val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
-        val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
-        val texto = StringBuilder()
+    /**
+     * ✅ MÉTODO CENTRALIZADO: Obtém mesas completas (FONTE ÚNICA DE VERDADE)
+     */
+    private suspend fun obterMesasCompletas(settlement: SettlementDetailViewModel.SettlementDetail): List<Mesa> {
+        val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
+        val mesasCompletas = mutableListOf<Mesa>()
         
-        texto.append("🎱 *ACERTO DE BILHAR*\n")
-        texto.append("================================\n\n")
-        texto.append("👤 *Cliente:* $clienteNome\n")
-        texto.append("📅 *Data:* $dataAtual\n\n")
-        
-        // Mostrar valor da ficha se disponível
-        if (settlement.valorFicha > 0) {
-            texto.append("*Valor da ficha:* ${formatter.format(settlement.valorFicha)}\n\n")
-        }
-
-        texto.append("🎯 *MESAS ACERTADAS:*\n")
-        var totalFichasJogadas = 0
-        
-        // ✅ CORREÇÃO: Usar número real da mesa e buscar informações completas
-        settlement.acertoMesas.forEach { mesa ->
-            // Buscar informações completas da mesa
-            val mesaCompleta = buscarMesaCompleta(mesa.mesaId)
-            val numeroMesa = mesaCompleta?.numero ?: mesa.mesaId.toString()
-            
-            if (mesa.valorFixo > 0) {
-                texto.append("• *Mesa $numeroMesa*\n${formatter.format(mesa.valorFixo)}/mês\n")
-            } else {
-                val fichasJogadas = mesa.relogioFinal - mesa.relogioInicial
-                totalFichasJogadas += fichasJogadas
-                texto.append("• *Mesa $numeroMesa*: ${mesa.relogioInicial} → ${mesa.relogioFinal} (${fichasJogadas} fichas)\n")
+        for (acertoMesa in settlement.acertoMesas) {
+            val mesaCompleta = mesaRepository.buscarPorId(acertoMesa.mesaId)
+            if (mesaCompleta != null) {
+                val mesaComAcerto = mesaCompleta.copy(
+                    fichasInicial = acertoMesa.relogioInicial,
+                    fichasFinal = acertoMesa.relogioFinal
+                )
+                mesasCompletas.add(mesaComAcerto)
             }
         }
         
-        if (totalFichasJogadas > 0) {
-            texto.append("\n*Total de fichas jogadas: $totalFichasJogadas*\n\n")
-        }
-
-        texto.append("💰 *RESUMO FINANCEIRO:*\n")
-        
-        // ✅ CORREÇÃO: Incluir todos os campos obrigatórios
-        if (settlement.debitoAnterior > 0) {
-            texto.append("• Débito anterior: ${formatter.format(settlement.debitoAnterior)}\n")
-        }
-        
-        texto.append("• Total das mesas: ${formatter.format(settlement.valorTotal)}\n")
-        
-        if (settlement.valorFicha > 0) {
-            texto.append("• Valor da ficha: ${formatter.format(settlement.valorFicha)}\n")
-        }
-        
-        val valorTotal = settlement.valorTotal + settlement.debitoAnterior
-        texto.append("• Valor total: ${formatter.format(valorTotal)}\n")
-        
-        if (settlement.desconto > 0) {
-            texto.append("• Desconto: ${formatter.format(settlement.desconto)}\n")
-        }
-        
-        if (settlement.metodosPagamento.isNotEmpty()) {
-            val valorRecebido = settlement.metodosPagamento.values.sum()
-            texto.append("• Valor recebido: ${formatter.format(valorRecebido)}\n")
-        }
-        
-        if (settlement.debitoAtual > 0) {
-            texto.append("• Débito atual: ${formatter.format(settlement.debitoAtual)}\n")
-        }
-        texto.append("\n")
-
-        if (settlement.metodosPagamento.isNotEmpty()) {
-            texto.append("💳 *FORMA DE PAGAMENTO:*\n")
-            settlement.metodosPagamento.forEach { (metodo, valor) ->
-                texto.append("• $metodo: ${formatter.format(valor)}\n")
-            }
-            texto.append("\n")
-        }
-
-        if (settlement.observacoes.isNotBlank()) {
-            texto.append("📝 *Observações:* ${settlement.observacoes}\n\n")
-        }
-
-        texto.append("--------------------------------\n")
-        texto.append("✅ Acerto realizado via GestaoBilhares")
-        return texto.toString()
+        return mesasCompletas
     }
+    
+    /**
+     * ✅ MÉTODO CENTRALIZADO: Obtém número do contrato (FONTE ÚNICA DE VERDADE)
+     */
+    private suspend fun obterNumeroContrato(settlement: SettlementDetailViewModel.SettlementDetail): String? {
+        val acertoCompleto = viewModel.buscarAcertoPorId(args.acertoId)
+        val contratoAtivo = acertoCompleto?.let { 
+            viewModel.buscarContratoAtivoPorCliente(it.clienteId) 
+        }
+        return contratoAtivo?.numeroContrato
+    }
+
     
     /**
      * ✅ NOVA FUNÇÃO: Busca informações completas da mesa (versão síncrona)

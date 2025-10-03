@@ -282,6 +282,7 @@ object ReciboPrinterHelper {
      * @param valorFicha Valor da ficha do cliente
      * @param acertoId ID do acerto (opcional, para títulos)
      */
+    @Deprecated("Use preencherReciboImpressaoCompleto/gerarTextoWhatsApp com mesas completas para manter a fonte única de verdade e a numeração real das mesas")
     fun preencherReciboImpressao(
         context: Context,
         reciboView: View,

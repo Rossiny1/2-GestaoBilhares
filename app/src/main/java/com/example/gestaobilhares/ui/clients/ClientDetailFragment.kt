@@ -781,9 +781,27 @@ class ClientDetailFragment : Fragment() {
      */
     private fun navegarParaListaClientes() {
         try {
-            // Navegar diretamente para a tela de lista de clientes da rota
-            findNavController().navigate(com.example.gestaobilhares.R.id.clientListFragment)
-            android.util.Log.d("ClientDetailFragment", "✅ Navegando para lista de clientes da rota")
+            // ✅ Necessário passar o rotaId para que a tela Detalhes da Rota funcione corretamente
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    val rotaId = viewModel.buscarRotaIdPorCliente(args.clienteId)
+                    if (rotaId != null) {
+                        val bundle = android.os.Bundle().apply {
+                            putLong("rotaId", rotaId)
+                        }
+                        findNavController().navigate(com.example.gestaobilhares.R.id.clientListFragment, bundle)
+                        android.util.Log.d("ClientDetailFragment", "✅ Navegando para lista de clientes da rota com rotaId=$rotaId")
+                    } else {
+                        android.util.Log.w("ClientDetailFragment", "RotaId não encontrado para clienteId=${args.clienteId}. Voltando para rotas.")
+                        // Fallback: voltar para tela de rotas
+                        findNavController().navigate(com.example.gestaobilhares.R.id.routesFragment)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("ClientDetailFragment", "Erro ao obter rotaId para navegação: ${e.message}", e)
+                    // Fallback: evitar travar a navegação
+                    findNavController().navigate(com.example.gestaobilhares.R.id.routesFragment)
+                }
+            }
         } catch (e: Exception) {
             android.util.Log.w("ClientDetailFragment", "⚠️ Erro ao navegar para lista de clientes: ${e.message}")
             // Fallback: popBackStack normal
