@@ -407,7 +407,7 @@ class SettlementDetailFragment : Fragment() {
      * ✅ NOVA FUNÇÃO: Preenche o layout do recibo com os dados do acerto
      */
     private fun preencherLayoutRecibo(reciboView: android.view.ViewGroup, settlement: SettlementDetailViewModel.SettlementDetail) {
-        // Buscar mesas completas para obter informações de tipo
+        // ✅ CORREÇÃO: Usar lifecycleScope para chamadas suspensas
         lifecycleScope.launch {
             try {
                 val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
@@ -426,31 +426,29 @@ class SettlementDetailFragment : Fragment() {
                 }
                 
                 // Buscar contrato ativo do cliente
-                lifecycleScope.launch {
-                    val acertoCompleto = viewModel.buscarAcertoPorId(args.acertoId)
-                    val contratoAtivo = acertoCompleto?.let { 
-                        viewModel.buscarContratoAtivoPorCliente(it.clienteId) 
-                    }
-                    val numeroContrato = contratoAtivo?.numeroContrato
-                    
-                    // Usar a função centralizada com informações completas das mesas
-                    ReciboPrinterHelper.preencherReciboImpressaoCompleto(
-                        context = requireContext(),
-                        reciboView = reciboView,
-                        clienteNome = settlement.clienteNome,
-                        clienteCpf = settlement.clienteCpf,
-                        mesasCompletas = mesasCompletas,
-                        debitoAnterior = settlement.debitoAnterior,
-                        valorTotalMesas = settlement.valorTotal,
-                        desconto = settlement.desconto,
-                        metodosPagamento = settlement.metodosPagamento,
-                        debitoAtual = settlement.debitoAtual,
-                        observacao = settlement.observacoes,
-                        valorFicha = settlement.valorFicha,
-                        acertoId = settlement.id,
-                        numeroContrato = numeroContrato
-                    )
+                val acertoCompleto = viewModel.buscarAcertoPorId(args.acertoId)
+                val contratoAtivo = acertoCompleto?.let { 
+                    viewModel.buscarContratoAtivoPorCliente(it.clienteId) 
                 }
+                val numeroContrato = contratoAtivo?.numeroContrato
+                
+                // Usar a função centralizada com informações completas das mesas
+                ReciboPrinterHelper.preencherReciboImpressaoCompleto(
+                    context = requireContext(),
+                    reciboView = reciboView,
+                    clienteNome = settlement.clienteNome,
+                    clienteCpf = settlement.clienteCpf,
+                    mesasCompletas = mesasCompletas,
+                    debitoAnterior = settlement.debitoAnterior,
+                    valorTotalMesas = settlement.valorTotal,
+                    desconto = settlement.desconto,
+                    metodosPagamento = settlement.metodosPagamento,
+                    debitoAtual = settlement.debitoAtual,
+                    observacao = settlement.observacoes,
+                    valorFicha = settlement.valorFicha,
+                    acertoId = settlement.id,
+                    numeroContrato = numeroContrato
+                )
             } catch (e: Exception) {
                 Log.e("SettlementDetailFragment", "Erro ao preencher layout do recibo: ${e.message}")
             }
@@ -464,7 +462,8 @@ class SettlementDetailFragment : Fragment() {
         val bluetoothPermissions = arrayOf(
             android.Manifest.permission.BLUETOOTH,
             android.Manifest.permission.BLUETOOTH_ADMIN,
-            android.Manifest.permission.BLUETOOTH_CONNECT
+            android.Manifest.permission.BLUETOOTH_CONNECT,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
         )
         
         return bluetoothPermissions.all {
@@ -479,7 +478,8 @@ class SettlementDetailFragment : Fragment() {
         val bluetoothPermissions = arrayOf(
             android.Manifest.permission.BLUETOOTH,
             android.Manifest.permission.BLUETOOTH_ADMIN,
-            android.Manifest.permission.BLUETOOTH_CONNECT
+            android.Manifest.permission.BLUETOOTH_CONNECT,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
         )
         
         androidx.core.app.ActivityCompat.requestPermissions(requireActivity(), bluetoothPermissions, 1001)

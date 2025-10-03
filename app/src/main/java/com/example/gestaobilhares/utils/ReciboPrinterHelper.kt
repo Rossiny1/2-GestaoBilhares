@@ -113,11 +113,12 @@ object ReciboPrinterHelper {
             rowValorFicha.visibility = View.GONE
         }
 
-        // Mesas (formatação com tipo do equipamento)
+        // Mesas (formatação com tipo do equipamento e número real da mesa)
         val mesasFormatadas = StringBuilder()
         mesasCompletas.forEachIndexed { index, mesa ->
             val fichasJogadas = mesa.fichasFinal - mesa.fichasInicial
             val tipoEquipamento = getTipoEquipamentoNome(mesa.tipoMesa)
+            // ✅ CORREÇÃO: Usar número real da mesa, não índice
             mesasFormatadas.append("$tipoEquipamento ${mesa.numero}\n${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)")
             if (index < mesasCompletas.size - 1) mesasFormatadas.append("\n")
         }
@@ -238,7 +239,8 @@ object ReciboPrinterHelper {
         val mesasFormatadas = StringBuilder()
         mesas.forEachIndexed { index, mesa ->
             val fichasJogadas = mesa.fichasJogadas
-            mesasFormatadas.append("Mesa ${mesa.mesaId}\n${mesa.relogioInicial} → ${mesa.relogioFinal} (${fichasJogadas} fichas)")
+            // ✅ CORREÇÃO: Usar número real da mesa, não mesaId
+            mesasFormatadas.append("Mesa ${index + 1}\n${mesa.relogioInicial} → ${mesa.relogioFinal} (${fichasJogadas} fichas)")
             if (index < mesas.size - 1) mesasFormatadas.append("\n")
         }
         txtMesas.text = mesasFormatadas.toString()
