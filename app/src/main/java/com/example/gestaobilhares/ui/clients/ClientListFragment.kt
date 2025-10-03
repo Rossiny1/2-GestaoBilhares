@@ -126,16 +126,17 @@ class ClientListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // ✅ CORREÇÃO: Forçar atualização completa quando retorna de outras telas
-        android.util.Log.d("ClientListFragment", "🔄 onResume - Recarregando dados completos")
+        // ✅ CORREÇÃO: Usar a MESMA lógica que funciona no onViewCreated
+        android.util.Log.d("ClientListFragment", "🔄 onResume - Recarregando dados completos (mesma lógica do onViewCreated)")
         
         // Recarregar dados da rota e clientes
         val rotaId = args.rotaId
+        
+        // ✅ CORREÇÃO: Usar a MESMA lógica que funciona quando vem do RoutesFragment
         viewModel.carregarRota(rotaId)
         viewModel.carregarClientes(rotaId)
-        viewModel.atualizarCicloAtual()
         
-        android.util.Log.d("ClientListFragment", "✅ onResume - Dados recarregados para rotaId=$rotaId")
+        android.util.Log.d("ClientListFragment", "✅ onResume - Dados recarregados para rotaId=$rotaId (mesma lógica do onViewCreated)")
     }
 
     private fun configurarRecyclerView() {
