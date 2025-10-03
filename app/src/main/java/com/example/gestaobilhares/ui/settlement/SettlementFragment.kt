@@ -237,16 +237,31 @@ class SettlementFragment : Fragment() {
         
         // Inicializar ViewModel aqui onde o contexto está disponível
         val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao(),
+            database.procuraçãoRepresentanteDao()
+        )
         viewModel = SettlementViewModel(
             MesaRepository(database.mesaDao()),
-            ClienteRepository(database.clienteDao()),
+            ClienteRepository(database.clienteDao(), appRepository),
             AcertoRepository(database.acertoDao(), database.clienteDao()),
             AcertoMesaRepository(database.acertoMesaDao()),
             CicloAcertoRepository(
                 database.cicloAcertoDao(),
                 DespesaRepository(database.despesaDao()),
                 AcertoRepository(database.acertoDao(), database.clienteDao()),
-                ClienteRepository(database.clienteDao()) // NOVO
+                ClienteRepository(database.clienteDao(), appRepository) // NOVO
             ),
             com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao()),
             com.example.gestaobilhares.data.repository.PanoEstoqueRepository(database.panoEstoqueDao())
@@ -1093,38 +1108,46 @@ class SettlementFragment : Fragment() {
                 // ✅ CORREÇÃO: Usar valor total das mesas do banco de dados
                 val valorTotalMesas = acerto.valorTotal
                 
-                // ✅ NOVO: Carregar dados do cliente para obter o telefone
+                // ✅ NOVO: Carregar dados do cliente para obter o telefone e buscar contrato ativo
                 viewModel.carregarDadosCliente(args.clienteId) { cliente ->
-                    val dialog = SettlementSummaryDialog.newInstance(
-                        clienteNome = viewModel.clientName.value,
-                        clienteTelefone = cliente?.telefone,
-                        clienteCpf = cliente?.cpfCnpj,
-                        mesas = mesasComNumerosReais,
-                        total = acerto.valorTotal,
-                        metodosPagamento = metodosPagamento,
-                        observacao = acerto.observacoes,
-                        debitoAtual = acerto.debitoAtual,
-                        debitoAnterior = debitoAnterior,
-                        desconto = desconto,
-                        valorTotalMesas = valorTotalMesas,
-                        valorFicha = cliente?.valorFicha ?: 0.0,
-                        comissaoFicha = cliente?.comissaoFicha ?: 0.0
-                    )
-                    dialog.acertoCompartilhadoListener = object : SettlementSummaryDialog.OnAcertoCompartilhadoListener {
-                        override fun onAcertoCompartilhado() {
-                            // ✅ CORREÇÃO: Notificar ClientDetailFragment via cache seguro
-                            val sharedPref = requireActivity().getSharedPreferences("acerto_temp", android.content.Context.MODE_PRIVATE)
-                            with(sharedPref.edit()) {
-                                putLong("cliente_id", args.clienteId)
-                                putBoolean("acerto_salvo", true)
-                                putLong("novo_acerto_id", acertoId)
-                                apply()
+                    // Buscar contrato ativo do cliente
+                    lifecycleScope.launch {
+                        val contratoAtivo = viewModel.buscarContratoAtivoPorCliente(args.clienteId)
+                        val numeroContrato = contratoAtivo?.numeroContrato
+                        
+                        val dialog = SettlementSummaryDialog.newInstance(
+                            clienteNome = viewModel.clientName.value,
+                            clienteTelefone = cliente?.telefone,
+                            clienteCpf = cliente?.cpfCnpj,
+                            mesas = mesasComNumerosReais,
+                            total = acerto.valorTotal,
+                            metodosPagamento = metodosPagamento,
+                            observacao = acerto.observacoes,
+                            debitoAtual = acerto.debitoAtual,
+                            debitoAnterior = debitoAnterior,
+                            desconto = desconto,
+                            valorTotalMesas = valorTotalMesas,
+                            valorFicha = cliente?.valorFicha ?: 0.0,
+                            comissaoFicha = cliente?.comissaoFicha ?: 0.0,
+                            acertoId = acertoId,
+                            numeroContrato = numeroContrato
+                        )
+                        dialog.acertoCompartilhadoListener = object : SettlementSummaryDialog.OnAcertoCompartilhadoListener {
+                            override fun onAcertoCompartilhado() {
+                                // ✅ CORREÇÃO: Notificar ClientDetailFragment via cache seguro
+                                val sharedPref = requireActivity().getSharedPreferences("acerto_temp", android.content.Context.MODE_PRIVATE)
+                                with(sharedPref.edit()) {
+                                    putLong("cliente_id", args.clienteId)
+                                    putBoolean("acerto_salvo", true)
+                                    putLong("novo_acerto_id", acertoId)
+                                    apply()
+                                }
+                                // Voltar para tela Detalhes do Cliente
+                                findNavController().popBackStack(R.id.clientDetailFragment, false)
                             }
-                            // Voltar para tela Detalhes do Cliente
-                            findNavController().popBackStack(R.id.clientDetailFragment, false)
                         }
+                        dialog.show(parentFragmentManager, "SettlementSummaryDialog")
                     }
-                    dialog.show(parentFragmentManager, "SettlementSummaryDialog")
                 }
             } else {
                 Toast.makeText(requireContext(), "Erro ao carregar acerto salvo", Toast.LENGTH_LONG).show()

@@ -47,13 +47,16 @@ object ReciboPrinterHelper {
         debitoAtual: Double,
         observacao: String?,
         valorFicha: Double,
-        acertoId: Long? = null
+        acertoId: Long? = null,
+        numeroContrato: String? = null
     ) {
         // Referências dos elementos
         val txtTitulo = reciboView.findViewById<android.widget.TextView>(R.id.txtTituloRecibo)
         val txtClienteValor = reciboView.findViewById<android.widget.TextView>(R.id.txtClienteValor)
         val rowCpfCliente = reciboView.findViewById<android.widget.LinearLayout>(R.id.rowCpfCliente)
         val txtCpfCliente = reciboView.findViewById<android.widget.TextView>(R.id.txtCpfCliente)
+        val rowNumeroContrato = reciboView.findViewById<android.widget.LinearLayout>(R.id.rowNumeroContrato)
+        val txtNumeroContrato = reciboView.findViewById<android.widget.TextView>(R.id.txtNumeroContrato)
         val txtData = reciboView.findViewById<android.widget.TextView>(R.id.txtData)
         val rowValorFicha = reciboView.findViewById<android.widget.LinearLayout>(R.id.rowValorFicha)
         val txtValorFicha = reciboView.findViewById<android.widget.TextView>(R.id.txtValorFicha)
@@ -89,6 +92,14 @@ object ReciboPrinterHelper {
             rowCpfCliente.visibility = View.VISIBLE
         } else {
             rowCpfCliente.visibility = View.GONE
+        }
+        
+        // Número do contrato
+        if (!numeroContrato.isNullOrBlank()) {
+            txtNumeroContrato.text = numeroContrato
+            rowNumeroContrato.visibility = View.VISIBLE
+        } else {
+            rowNumeroContrato.visibility = View.GONE
         }
         
         // Data

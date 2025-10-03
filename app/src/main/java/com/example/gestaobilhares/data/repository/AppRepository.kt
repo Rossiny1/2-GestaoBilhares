@@ -859,6 +859,7 @@ class AppRepository(
     
     fun buscarContratosPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratosPorCliente(clienteId)
     suspend fun buscarContratoPorNumero(numeroContrato: String) = contratoLocacaoDao.buscarContratoPorNumero(numeroContrato)
+    suspend fun buscarContratoAtivoPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratoAtivoPorCliente(clienteId)
     fun buscarContratosAtivos() = contratoLocacaoDao.buscarContratosAtivos()
     fun buscarTodosContratos() = contratoLocacaoDao.buscarTodosContratos()
     suspend fun contarContratosPorAno(ano: String) = contratoLocacaoDao.contarContratosPorAno(ano)

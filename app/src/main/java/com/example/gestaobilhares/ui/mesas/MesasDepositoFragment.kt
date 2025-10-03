@@ -317,21 +317,17 @@ class MesasDepositoFragment : Fragment() {
                             android.util.Log.d("MesasDepositoFragment", 
                                 "Mesas ativas cliente $clienteId: ${mesasAtivasCliente.size} -> $temMesasAtivas")
                             
-                            // ✅ DECISÃO FINAL: Múltiplas condições para garantir novo contrato após distrato
+                            // ✅ CORREÇÃO: Lógica simplificada - se o último contrato é ATIVO, permite aditivo
                             // Só abre aditivo se:
                             // 1. Último documento é ATIVO
-                            // 2. Não tem dataEncerramento
-                            // 3. Não tem contratos encerrados
-                            // 4. Não tem distrato físico
-                            // 5. Cliente não está "limpo" (sem mesas ativas antigas)
-                            val deveAbrirAditivo = isLatestActive && !hasEncerramento && !temContratoEncerrado && !temDistratoFisico && temMesasAtivas
+                            // 2. Não tem dataEncerramento (não foi distratado)
+                            // 3. Cliente tem mesas ativas
+                            val deveAbrirAditivo = isLatestActive && !hasEncerramento && temMesasAtivas
                             
                             android.util.Log.d("MesasDepositoFragment", 
                                 "=== DECISÃO FINAL ===\n" +
                                 "isLatestActive=$isLatestActive\n" +
                                 "hasEncerramento=$hasEncerramento\n" +
-                                "temContratoEncerrado=$temContratoEncerrado\n" +
-                                "temDistratoFisico=$temDistratoFisico\n" +
                                 "temMesasAtivas=$temMesasAtivas\n" +
                                 "RESULTADO: deveAbrirAditivo=$deveAbrirAditivo")
                             

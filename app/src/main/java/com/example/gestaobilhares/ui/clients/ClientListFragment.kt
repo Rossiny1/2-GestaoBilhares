@@ -59,31 +59,32 @@ class ClientListFragment : Fragment() {
         
         // ✅ FASE 8C: Inicializar ViewModel com todos os repositórios necessários
         val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao(),
+            database.procuraçãoRepresentanteDao()
+        )
         viewModel = ClientListViewModel(
-            ClienteRepository(database.clienteDao()),
+            ClienteRepository(database.clienteDao(), appRepository),
             RotaRepository(database.rotaDao()),
             CicloAcertoRepository(
                 database.cicloAcertoDao(),
                 DespesaRepository(database.despesaDao()),
                 AcertoRepository(database.acertoDao(), database.clienteDao()),
-                ClienteRepository(database.clienteDao()) // NOVO
+                ClienteRepository(database.clienteDao(), appRepository) // NOVO
             ),
             AcertoRepository(database.acertoDao(), database.clienteDao()),
-            AppRepository(
-                database.clienteDao(),
-                database.acertoDao(),
-                database.mesaDao(),
-                database.rotaDao(),
-                database.despesaDao(),
-                database.colaboradorDao(),
-                database.cicloAcertoDao(),
-                database.acertoMesaDao(),
-                database.contratoLocacaoDao(),
-                database.aditivoContratoDao(),
-                database.assinaturaRepresentanteLegalDao(),
-                database.logAuditoriaAssinaturaDao(),
-                database.procuraçãoRepresentanteDao()
-            )
+            appRepository
         )
         
         try {

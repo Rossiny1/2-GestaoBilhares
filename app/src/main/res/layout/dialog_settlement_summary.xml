@@ -373,29 +373,39 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Botões de Ação -->
+        <!-- ✅ CORREÇÃO: Botões de Ação Padronizados -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="end">
+            android:gravity="center">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnImprimir"
                 style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
                 android:text="🖨️ Imprimir"
-                android:layout_marginEnd="12dp"
+                android:textSize="14sp"
+                android:minHeight="48dp"
                 app:strokeColor="@color/purple_600"
-                android:textColor="@color/purple_600" />
+                android:textColor="@color/purple_600"
+                app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnWhatsapp"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
                 android:text="📱 WhatsApp"
-                android:backgroundTint="@color/green_600" />
+                android:textSize="14sp"
+                android:minHeight="48dp"
+                android:backgroundTint="@color/green_600"
+                android:textColor="@android:color/white"
+                app:cornerRadius="8dp" />
 
         </LinearLayout>
 

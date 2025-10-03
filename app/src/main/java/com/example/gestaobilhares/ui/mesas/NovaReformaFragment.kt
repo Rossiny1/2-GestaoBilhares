@@ -25,6 +25,7 @@ import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.example.gestaobilhares.databinding.FragmentNovaReformaBinding
 import com.example.gestaobilhares.ui.settlement.PanoSelectionDialog
+import com.example.gestaobilhares.utils.ImageCompressionUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
@@ -47,6 +48,11 @@ class NovaReformaFragment : Fragment() {
     private var fotoUri: Uri? = null
     private var fotoPath: String? = null
     private var numeroPanoSelecionado: String? = null
+    
+    // ✅ NOVO: Inicialização segura do ImageCompressionUtils
+    private val imageCompressionUtils: ImageCompressionUtils by lazy {
+        ImageCompressionUtils(requireContext())
+    }
 
     private val takePictureLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
@@ -242,6 +248,17 @@ class NovaReformaFragment : Fragment() {
         return try {
             Log.d("NovaReformaFragment", "Obtendo caminho real para URI: $uri")
             
+            // ✅ CORREÇÃO: Tentar comprimir a imagem com fallback seguro
+            try {
+                val compressedPath = imageCompressionUtils.compressImageFromUri(uri)
+                if (compressedPath != null) {
+                    Log.d("NovaReformaFragment", "Imagem comprimida com sucesso: $compressedPath")
+                    return compressedPath
+                }
+            } catch (e: Exception) {
+                Log.w("NovaReformaFragment", "Compressão falhou, usando método original: ${e.message}")
+            }
+            
             // Tentativa 1: Converter URI para caminho real via ContentResolver
             val cursor = requireContext().contentResolver.query(
                 uri, 
@@ -258,6 +275,18 @@ class NovaReformaFragment : Fragment() {
                         val path = it.getString(columnIndex)
                         if (path != null && File(path).exists()) {
                             Log.d("NovaReformaFragment", "Caminho real encontrado via cursor: $path")
+                            
+                            // ✅ CORREÇÃO: Tentar comprimir com fallback
+                            try {
+                                val compressedPath = imageCompressionUtils.compressImageFromPath(path)
+                                if (compressedPath != null) {
+                                    Log.d("NovaReformaFragment", "Imagem comprimida do arquivo: $compressedPath")
+                                    return compressedPath
+                                }
+                            } catch (e: Exception) {
+                                Log.w("NovaReformaFragment", "Compressão do arquivo falhou: ${e.message}")
+                            }
+                            
                             return path
                         }
                     }
@@ -273,6 +302,18 @@ class NovaReformaFragment : Fragment() {
                     inputStream.copyTo(outputStream)
                 }
                 Log.d("NovaReformaFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
+                
+                // ✅ CORREÇÃO: Tentar comprimir com fallback
+                try {
+                    val compressedPath = imageCompressionUtils.compressImageFromPath(tempFile.absolutePath)
+                    if (compressedPath != null) {
+                        Log.d("NovaReformaFragment", "Arquivo temporário comprimido: $compressedPath")
+                        return compressedPath
+                    }
+                } catch (e: Exception) {
+                    Log.w("NovaReformaFragment", "Compressão do arquivo temporário falhou: ${e.message}")
+                }
+                
                 return tempFile.absolutePath
             }
             

@@ -24,6 +24,7 @@ param(
     [switch]$OnlyEstoque,   # Mostra apenas logs do sistema de estoque
     [switch]$OnlyMetas,     # Mostra apenas logs do sistema de metas
     [switch]$OnlyPopulation, # Mostra apenas logs de população do banco de dados
+    [switch]$OnlyNavegacao, # Mostra apenas logs de navegação após envio de contratos/aditivos
     [switch]$ToFile         # Salva a saída em arquivo (além de mostrar na tela)
 )
 
@@ -40,6 +41,7 @@ Write-Host "-OnlyPanos: Monitora apenas logs do sistema de panos" -ForegroundCol
 Write-Host "-OnlyEstoque: Monitora apenas logs do sistema de estoque" -ForegroundColor Gray
 Write-Host "-OnlyMetas: Monitora apenas logs do sistema de metas" -ForegroundColor Gray
 Write-Host "-OnlyPopulation: Monitora apenas logs de populacao do banco de dados" -ForegroundColor Gray
+Write-Host "-OnlyNavegacao: Monitora apenas logs de navegação após envio de contratos/aditivos" -ForegroundColor Gray
 Write-Host "-ToFile: Salva logs em arquivo" -ForegroundColor Gray
 Write-Host ""
 Write-Host "EXEMPLOS:" -ForegroundColor Cyan
@@ -51,6 +53,8 @@ Write-Host ".\crash.ps1 -OnlyEstoque" -ForegroundColor Gray
 Write-Host ".\crash.ps1 -OnlyEstoque -ToFile" -ForegroundColor Gray
 Write-Host ".\crash.ps1 -OnlyMetas" -ForegroundColor Gray
 Write-Host ".\crash.ps1 -OnlyMetas -ToFile" -ForegroundColor Gray
+Write-Host ".\crash.ps1 -OnlyNavegacao" -ForegroundColor Gray
+Write-Host ".\crash.ps1 -OnlyNavegacao -ToFile" -ForegroundColor Gray
 Write-Host ""
 Write-Host "CAMINHO ADB: C:\Users\Rossiny\AppData\Local\Android\Sdk\platform-tools\adb.exe" -ForegroundColor Green
 Write-Host ""
@@ -125,10 +129,14 @@ Write-Host "- MetaCadastroViewModel: criação de ciclos e salvamento de metas" 
 Write-Host "- AppRepository: busca de metas por rota e ciclo" -ForegroundColor Gray
 Write-Host "- ColaboradorDao: operações de banco de dados de metas" -ForegroundColor Gray
 Write-Host "- CicloAcertoDao: criação e gerenciamento de ciclos" -ForegroundColor Gray
+Write-Host "- NAVEGAÇÃO CONTRATOS/ADITIVOS: logs de debug do fluxo de navegação" -ForegroundColor Gray
+Write-Host "- SignatureCaptureFragment: navegação após envio de contratos" -ForegroundColor Gray
+Write-Host "- AditivoSignatureFragment: navegação após envio de aditivos" -ForegroundColor Gray
+Write-Host "- ClientDetailFragment: destino da navegação" -ForegroundColor Gray
 Write-Host ""
 
 # Padrao de filtro expandido para incluir nossos logs de diagnostico e analise de fluxo
-$patternAll = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|FileProvider|Permission Denial|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|RoutesFragment|HistoricoMesasVendidasFragment|HistoricoMesasVendidasViewModel|MesasDepositoFragment|VendaMesaDialog|ExpenseRegisterViewModel|HistoricoCombustivelVeiculo|VehicleDetailViewModel|Salvando abastecimento|Abastecimento salvo|Erro ao salvar|Despesa salva|Histórico de veículo|Conversão de data|SettlementFragment|NovaReformaFragment|PanoSelectionDialog|PanoEstoqueRepository|SettlementViewModel|NovaReformaViewModel|PanoEstoqueDao|MesaRepository|MesaDao|Marcando pano|Pano encontrado|Pano marcado como usado|Troca de pano|Seleção de panos|Diálogo de seleção|Mostrando seleção|Pano selecionado|Registrando pano|Continuando salvamento|Salvando reforma|Pano trocado|Pano removido do estoque|Tamanho da mesa|Panos encontrados|Panos disponíveis|Pano confirmado|Diálogo cancelado|Erro ao marcar pano|Erro ao trocar pano|Erro ao atualizar pano|Erro ao carregar panos|Erro ao mostrar diálogo|StockFragment|StockViewModel|StockItemRepository|StockItemDao|AddEditStockItemDialog|StockAdapter|adicionarItemEstoque|Carregando itens do estoque|Itens recebidos do banco|Itens mapeados|Adapter configurado|RecyclerView configurado|Inserindo item|Item inserido com ID|Forçando atualização da lista|Lista atualizada|Itens genéricos recebidos|Grupos de panos recebidos|Item adicionado ao estoque|Erro ao adicionar item|Erro ao carregar itens|MetasFragment|MetasViewModel|MetasAdapter|MetaRotaResumo|MetaColaborador|buscarMetasPorRotaECiclo|criarMetaRotaResumo|calcularProgressoMetas|atualizarValorAtualMeta|carregarMetasRotas|ColaboradorDao|buscarColaboradorResponsavelPrincipal|buscarCicloAtualPorRota|buscarUltimoCicloFinalizadoPorRota|MetaCadastroFragment|MetaCadastroViewModel|carregarCiclosPorRota|carregarRotas|salvarMeta|criarCicloParaRota|buscarProximoNumeroCiclo|inserirCicloAcerto|Ciclos carregados|Ciclos encontrados|Ciclo criado com ID|Ciclo criado com sucesso|Nenhum ciclo encontrado para esta rota|Crie um ciclo primeiro|Erro ao carregar ciclos|Erro ao criar ciclo|Rotas carregadas|Selecionar Rota|Selecionar Ciclo|Nenhum Ciclo Encontrado|Criar Ciclo|Meta salva com sucesso|Erro ao salvar meta|Colaborador responsável encontrado|Nenhum colaborador responsável encontrado|Meta salva com ID|TipoMeta|FATURAMENTO|CLIENTES_ACERTADOS|MESAS_LOCADAS|TICKET_MEDIO|StatusCicloAcerto|EM_ANDAMENTO|FINALIZADO|CANCELADO"
+$patternAll = "gestaobilhares|FATAL|AndroidRuntime|crash|Exception|Caused by|FileProvider|Permission Denial|AppRepository|RoutesAdapter|RoutesViewModel|RotaRepository|RoutesFragment|HistoricoMesasVendidasFragment|HistoricoMesasVendidasViewModel|MesasDepositoFragment|VendaMesaDialog|ExpenseRegisterViewModel|HistoricoCombustivelVeiculo|VehicleDetailViewModel|Salvando abastecimento|Abastecimento salvo|Erro ao salvar|Despesa salva|Histórico de veículo|Conversão de data|SettlementFragment|NovaReformaFragment|PanoSelectionDialog|PanoEstoqueRepository|SettlementViewModel|NovaReformaViewModel|PanoEstoqueDao|MesaRepository|MesaDao|Marcando pano|Pano encontrado|Pano marcado como usado|Troca de pano|Seleção de panos|Diálogo de seleção|Mostrando seleção|Pano selecionado|Registrando pano|Continuando salvamento|Salvando reforma|Pano trocado|Pano removido do estoque|Tamanho da mesa|Panos encontrados|Panos disponíveis|Pano confirmado|Diálogo cancelado|Erro ao marcar pano|Erro ao trocar pano|Erro ao atualizar pano|Erro ao carregar panos|Erro ao mostrar diálogo|StockFragment|StockViewModel|StockItemRepository|StockItemDao|AddEditStockItemDialog|StockAdapter|adicionarItemEstoque|Carregando itens do estoque|Itens recebidos do banco|Itens mapeados|Adapter configurado|RecyclerView configurado|Inserindo item|Item inserido com ID|Forçando atualização da lista|Lista atualizada|Itens genéricos recebidos|Grupos de panos recebidos|Item adicionado ao estoque|Erro ao adicionar item|Erro ao carregar itens|MetasFragment|MetasViewModel|MetasAdapter|MetaRotaResumo|MetaColaborador|buscarMetasPorRotaECiclo|criarMetaRotaResumo|calcularProgressoMetas|atualizarValorAtualMeta|carregarMetasRotas|ColaboradorDao|buscarColaboradorResponsavelPrincipal|buscarCicloAtualPorRota|buscarUltimoCicloFinalizadoPorRota|MetaCadastroFragment|MetaCadastroViewModel|carregarCiclosPorRota|carregarRotas|salvarMeta|criarCicloParaRota|buscarProximoNumeroCiclo|inserirCicloAcerto|Ciclos carregados|Ciclos encontrados|Ciclo criado com ID|Ciclo criado com sucesso|Nenhum ciclo encontrado para esta rota|Crie um ciclo primeiro|Erro ao carregar ciclos|Erro ao criar ciclo|Rotas carregadas|Selecionar Rota|Selecionar Ciclo|Nenhum Ciclo Encontrado|Criar Ciclo|Meta salva com sucesso|Erro ao salvar meta|Colaborador responsável encontrado|Nenhum colaborador responsável encontrado|Meta salva com ID|TipoMeta|FATURAMENTO|CLIENTES_ACERTADOS|MESAS_LOCADAS|TICKET_MEDIO|StatusCicloAcerto|EM_ANDAMENTO|FINALIZADO|CANCELADO|SignatureCaptureFragment|AditivoSignatureFragment|ClientDetailFragment|INÍCIO NAVEGAÇÃO|FIM NAVEGAÇÃO|DADOS DO CONTRATO|clienteId|contratoNumero|contratoId|assinaturaContexto|Fragment ativo|isAdded|isDetached|isRemoving|clienteId válido|clienteId inválido|Bundle criado|Tentando navegar|Navegação executada|Erro na navegação|Tentando navegação sem bundle|Navegação sem bundle executada|Fazendo popBackStack|CONTRATO CARREGADO|Aditivo assinado|Erro no ViewModel|ESTADO DO CONTRATO ANTES DO ENVIO|INÍCIO ENVIO|Timestamp|Fragment ativo|ESTADO DO CONTRATO ANTES DO ENVIO|Contrato|Cliente ID|Número|Contexto|INÍCIO ENVIO CONTRATO VIA WHATSAPP|INÍCIO ENVIO ADITIVO VIA WHATSAPP|CONTRATO CARREGADO|ID|Número|Cliente ID|Status|Contrato é null no observer|Aditivo assinado - botão habilitado|Erro no ViewModel"
 
 # Padrao focado apenas no fluxo de venda (tag e mensagens chave)
 $patternVenda = "VendaMesaDialog|Clique em Vender|validarCampos|realizarVenda|Transacao concluida|Pos-transacao|Venda concluida|mostrarSeletorMesa|filtrarMesas|mostrarSeletorData|onCreateDialog|onViewCreated|setupClickListeners|setupUI"
@@ -148,14 +156,17 @@ $patternMetas = "MetasFragment|MetasViewModel|MetasAdapter|MetaRotaResumo|MetaCo
 # Padrao focado apenas na populacao do banco de dados
 $patternPopulation = "DB_POPULATION|INSERINDO ROTA|INSERINDO CLIENTE|INSERINDO ACERTO|INSERINDO MESA|INSERINDO COLABORADOR|INSERINDO DESPESA|INSERINDO CICLO|INSERINDO CONTRATO|INSERINDO ADITIVO|INSERINDO PROCURAÇÃO|LOGIN ONLINE CONCLUÍDO|LOGIN OFFLINE CONCLUÍDO|CRIANDO COLABORADOR ADMIN AUTOMATICAMENTE|CRIANDO COLABORADOR LOCAL A PARTIR DO LOGIN ONLINE|COLABORADOR LOCAL CRIADO VIA SYNC ONLINE"
 
-$pattern = if ($OnlyVenda) { $patternVenda } elseif ($OnlyAbastecimento) { $patternAbastecimento } elseif ($OnlyPanos) { $patternPanos } elseif ($OnlyEstoque) { $patternEstoque } elseif ($OnlyMetas) { $patternMetas } elseif ($OnlyPopulation) { $patternPopulation } else { $patternAll }
+# Padrao focado apenas na navegação após envio de contratos/aditivos
+$patternNavegacao = "SignatureCaptureFragment|AditivoSignatureFragment|ClientDetailFragment|INÍCIO NAVEGAÇÃO|FIM NAVEGAÇÃO|DADOS DO CONTRATO|clienteId|contratoNumero|contratoId|assinaturaContexto|Fragment ativo|isAdded|isDetached|isRemoving|clienteId válido|clienteId inválido|Bundle criado|Tentando navegar|Navegação executada|Erro na navegação|Tentando navegação sem bundle|Navegação sem bundle executada|Fazendo popBackStack|CONTRATO CARREGADO|Aditivo assinado|Erro no ViewModel|ESTADO DO CONTRATO ANTES DO ENVIO|INÍCIO ENVIO|Timestamp|Fragment ativo|ESTADO DO CONTRATO ANTES DO ENVIO|Contrato|Cliente ID|Número|Contexto|INÍCIO ENVIO CONTRATO VIA WHATSAPP|INÍCIO ENVIO ADITIVO VIA WHATSAPP|CONTRATO CARREGADO|ID|Número|Cliente ID|Status|Contrato é null no observer|Aditivo assinado - botão habilitado|Erro no ViewModel"
+
+$pattern = if ($OnlyVenda) { $patternVenda } elseif ($OnlyAbastecimento) { $patternAbastecimento } elseif ($OnlyPanos) { $patternPanos } elseif ($OnlyEstoque) { $patternEstoque } elseif ($OnlyMetas) { $patternMetas } elseif ($OnlyPopulation) { $patternPopulation } elseif ($OnlyNavegacao) { $patternNavegacao } else { $patternAll }
 
 # Opcional: salvar em arquivo
 $logDir = Join-Path $PSScriptRoot "logs"
 if ($ToFile) {
     if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
     $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    $logFile = Join-Path $logDir (if ($OnlyVenda) { "logcat-venda-$timestamp.txt" } elseif ($OnlyAbastecimento) { "logcat-abastecimento-$timestamp.txt" } elseif ($OnlyPanos) { "logcat-panos-$timestamp.txt" } elseif ($OnlyEstoque) { "logcat-estoque-$timestamp.txt" } elseif ($OnlyMetas) { "logcat-metas-$timestamp.txt" } elseif ($OnlyPopulation) { "logcat-population-$timestamp.txt" } else { "logcat-all-$timestamp.txt" })
+    $logFile = Join-Path $logDir (if ($OnlyVenda) { "logcat-venda-$timestamp.txt" } elseif ($OnlyAbastecimento) { "logcat-abastecimento-$timestamp.txt" } elseif ($OnlyPanos) { "logcat-panos-$timestamp.txt" } elseif ($OnlyEstoque) { "logcat-estoque-$timestamp.txt" } elseif ($OnlyMetas) { "logcat-metas-$timestamp.txt" } elseif ($OnlyPopulation) { "logcat-population-$timestamp.txt" } elseif ($OnlyNavegacao) { "logcat-navegacao-$timestamp.txt" } else { "logcat-all-$timestamp.txt" })
     Write-Host "Salvando saida tambem em arquivo: $logFile" -ForegroundColor Yellow
 }
 

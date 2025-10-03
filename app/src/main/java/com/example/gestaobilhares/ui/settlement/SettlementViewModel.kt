@@ -633,6 +633,19 @@ class SettlementViewModel @Inject constructor(
     }
     
     /**
+     * ✅ NOVO: Busca o contrato ativo do cliente para exibir no recibo
+     */
+    suspend fun buscarContratoAtivoPorCliente(clienteId: Long): com.example.gestaobilhares.data.entities.ContratoLocacao? {
+        return try {
+            // Usar o AppRepository através do ClienteRepository
+            clienteRepository.buscarContratoAtivoPorCliente(clienteId)
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao buscar contrato ativo do cliente: ${e.message}", e)
+            null
+        }
+    }
+    
+    /**
      * ✅ NOVO: Calcula a média de fichas jogadas dos últimos acertos de uma mesa
      * @param mesaId ID da mesa
      * @param limite Máximo de acertos a considerar (padrão 5)

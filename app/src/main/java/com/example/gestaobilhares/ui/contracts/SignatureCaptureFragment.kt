@@ -204,6 +204,18 @@ class SignatureCaptureFragment : Fragment() {
     }
     
     private fun enviarContratoViaWhatsApp() {
+        // ✅ LOGS PARA MONITORAR ESTADO ANTES DO ENVIO
+        android.util.Log.d("SignatureCaptureFragment", "=== INÍCIO ENVIO CONTRATO VIA WHATSAPP ===")
+        android.util.Log.d("SignatureCaptureFragment", "Timestamp: ${System.currentTimeMillis()}")
+        android.util.Log.d("SignatureCaptureFragment", "Fragment ativo: isAdded=$isAdded, isDetached=$isDetached, isRemoving=$isRemoving")
+        
+        val contratoAtual = viewModel.contrato.value
+        android.util.Log.d("SignatureCaptureFragment", "📋 ESTADO DO CONTRATO ANTES DO ENVIO:")
+        android.util.Log.d("SignatureCaptureFragment", "  - Contrato: $contratoAtual")
+        android.util.Log.d("SignatureCaptureFragment", "  - Cliente ID: ${contratoAtual?.clienteId}")
+        android.util.Log.d("SignatureCaptureFragment", "  - Número: ${contratoAtual?.numeroContrato}")
+        android.util.Log.d("SignatureCaptureFragment", "  - Contexto: $assinaturaContexto")
+        
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val contrato = viewModel.contrato.value ?: return@launch
@@ -224,39 +236,66 @@ class SignatureCaptureFragment : Fragment() {
                     "${requireContext().packageName}.fileprovider",
                     pdfFile
                 )
-                val whatsappIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                // ✅ CORREÇÃO: Usar sempre seletor como no distrato (que funciona)
+                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                     type = "application/pdf"
-                    setPackage("com.whatsapp")
                     putExtra(android.content.Intent.EXTRA_STREAM, pdfUri)
                     putExtra(android.content.Intent.EXTRA_TEXT, message)
                     addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    clipData = android.content.ClipData.newUri(requireContext().contentResolver, "Contrato", pdfUri)
                 }
-                if (whatsappIntent.resolveActivity(requireContext().packageManager) != null) {
-                    startActivity(whatsappIntent)
-                } else {
-                    val genericIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                        type = "application/pdf"
-                        putExtra(android.content.Intent.EXTRA_STREAM, pdfUri)
-                        putExtra(android.content.Intent.EXTRA_TEXT, message)
-                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    startActivity(android.content.Intent.createChooser(genericIntent, "Enviar contrato via"))
-                }
+                startActivity(android.content.Intent.createChooser(intent, "Enviar contrato via"))
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ 
+                    // ✅ LOGS DETALHADOS PARA DIAGNÓSTICO
+                    android.util.Log.d("SignatureCaptureFragment", "=== INÍCIO NAVEGAÇÃO APÓS ENVIO CONTRATO ===")
+                    android.util.Log.d("SignatureCaptureFragment", "Timestamp: ${System.currentTimeMillis()}")
+                    android.util.Log.d("SignatureCaptureFragment", "Fragment ativo: isAdded=$isAdded, isDetached=$isDetached, isRemoving=$isRemoving")
+                    
+                    // Verificar se o Fragment ainda está ativo
+                    if (!isAdded || isDetached || isRemoving) {
+                        android.util.Log.w("SignatureCaptureFragment", "❌ Fragment não está mais ativo - cancelando navegação")
+                        android.util.Log.w("SignatureCaptureFragment", "isAdded: $isAdded, isDetached: $isDetached, isRemoving: $isRemoving")
+                        return@postDelayed
+                    }
+                    
                     // Navegar para a tela de detalhes do cliente em vez de voltar para geração de contrato
                     val clienteId = viewModel.contrato.value?.clienteId ?: 0L
-                    if (clienteId > 0) {
-                        // Navegar para ClientDetailFragment usando o ID do cliente
-                        val bundle = android.os.Bundle().apply {
-                            putLong("clienteId", clienteId)
+                    val contratoNumero = viewModel.contrato.value?.numeroContrato
+                    val contratoId = viewModel.contrato.value?.id
+                    
+                    android.util.Log.d("SignatureCaptureFragment", "📊 DADOS DO CONTRATO:")
+                    android.util.Log.d("SignatureCaptureFragment", "  - clienteId: $clienteId")
+                    android.util.Log.d("SignatureCaptureFragment", "  - contratoNumero: $contratoNumero")
+                    android.util.Log.d("SignatureCaptureFragment", "  - contratoId: $contratoId")
+                    android.util.Log.d("SignatureCaptureFragment", "  - assinaturaContexto: $assinaturaContexto")
+                    
+                    // ✅ CORREÇÃO SIMPLES: Navegar diretamente para ClientDetailFragment
+                    // O ClientDetailFragment já tem lógica para voltar para a rota correta
+                    try {
+                        android.util.Log.d("SignatureCaptureFragment", "🚀 NAVEGANDO DIRETAMENTE PARA ClientDetailFragment")
+                        
+                        if (clienteId > 0) {
+                            val bundle = android.os.Bundle().apply {
+                                putLong("clienteId", clienteId)
+                            }
+                            android.util.Log.d("SignatureCaptureFragment", "📦 Navegando com bundle: $bundle")
+                            
+                            findNavController().navigate(
+                                com.example.gestaobilhares.R.id.clientDetailFragment, 
+                                bundle
+                            )
+                            android.util.Log.d("SignatureCaptureFragment", "✅ Navegação executada com sucesso!")
+                        } else {
+                            android.util.Log.w("SignatureCaptureFragment", "⚠️ ClienteId inválido: $clienteId")
+                            findNavController().popBackStack()
                         }
-                        findNavController().navigate(
-                            com.example.gestaobilhares.R.id.clientDetailFragment, 
-                            bundle
-                        )
-                    } else {
+                        
+                    } catch (e: Exception) {
+                        android.util.Log.e("SignatureCaptureFragment", "❌ Erro na navegação: ${e.message}", e)
                         findNavController().popBackStack()
                     }
+                    
+                    android.util.Log.d("SignatureCaptureFragment", "=== FIM NAVEGAÇÃO APÓS ENVIO CONTRATO ===")
                 }, 2000)
             } catch (e: Exception) {
                 android.util.Log.e("SignatureCaptureFragment", "Erro ao enviar contrato", e)
@@ -326,11 +365,10 @@ class SignatureCaptureFragment : Fragment() {
                 }
                 startActivity(android.content.Intent.createChooser(intent, "Enviar distrato via"))
                 
-                // ✅ NOVO: Navegar para tela de detalhes do cliente após envio do distrato
+                // ✅ CORREÇÃO SIMPLES: Navegar diretamente para ClientDetailFragment após envio do distrato
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ 
                     val clienteId = contrato.clienteId
                     if (clienteId > 0) {
-                        // Navegar para ClientDetailFragment usando o ID do cliente
                         val bundle = android.os.Bundle().apply {
                             putLong("clienteId", clienteId)
                         }

@@ -74,7 +74,23 @@ class ClientRegisterFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar ViewModel aqui onde o contexto está disponível
-        viewModel = ClientRegisterViewModel(ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()))
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao(),
+            database.procuraçãoRepresentanteDao()
+        )
+        viewModel = ClientRegisterViewModel(ClienteRepository(database.clienteDao(), appRepository))
         
         // ✅ NOVO: Inicializar cliente de localização
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())

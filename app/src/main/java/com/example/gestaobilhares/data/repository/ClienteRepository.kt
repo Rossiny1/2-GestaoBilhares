@@ -15,7 +15,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class ClienteRepository @Inject constructor(
-    private val clienteDao: ClienteDao
+    private val clienteDao: ClienteDao,
+    private val appRepository: AppRepository
 ) {
 
     /**
@@ -145,6 +146,18 @@ class ClienteRepository @Inject constructor(
             cliente?.rotaId
         } catch (e: Exception) {
             android.util.Log.e("ClienteRepository", "Erro ao buscar rota ID por cliente: ${e.message}", e)
+            null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Busca o contrato ativo do cliente
+     */
+    suspend fun buscarContratoAtivoPorCliente(clienteId: Long): com.example.gestaobilhares.data.entities.ContratoLocacao? {
+        return try {
+            appRepository.buscarContratoAtivoPorCliente(clienteId)
+        } catch (e: Exception) {
+            android.util.Log.e("ClienteRepository", "Erro ao buscar contrato ativo do cliente: ${e.message}", e)
             null
         }
     }
