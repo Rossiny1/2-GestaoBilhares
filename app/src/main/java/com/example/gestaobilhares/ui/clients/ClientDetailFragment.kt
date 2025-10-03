@@ -101,18 +101,46 @@ class ClientDetailFragment : Fragment() {
 
     private fun abrirFluxoDistrato(clienteId: Long) {
         try {
-            // Abre diálogo simples para confirmar distrato e gerar PDF
-            com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            // ✅ CORREÇÃO: Diálogo do distrato com botões padronizados
+            val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Encerrar contrato (Distrato)")
                 .setMessage("Todas as mesas foram retiradas. Deseja encerrar o contrato e gerar o Distrato?")
                 .setPositiveButton("Gerar Distrato") { _, _ ->
                     abrirAssinaturaDistrato(clienteId)
                 }
                 .setNegativeButton("Cancelar", null)
-                .show()
+                .create()
+            
+            dialog.setOnShowListener {
+                // ✅ CORREÇÃO: Personalizar botões com altura e cores padronizadas
+                val positiveButton = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
+                val negativeButton = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE)
+                
+                // Aplicar altura mínima e cores do projeto
+                positiveButton?.let { button ->
+                    button.minHeight = 48.dpToPx()
+                    button.setTextColor(android.graphics.Color.WHITE)
+                    button.setBackgroundColor(android.graphics.Color.parseColor("#00BCD4")) // accent_teal
+                }
+                
+                negativeButton?.let { button ->
+                    button.minHeight = 48.dpToPx()
+                    button.setTextColor(android.graphics.Color.parseColor("#757575")) // gray_600
+                    button.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                }
+            }
+            
+            dialog.show()
         } catch (e: Exception) {
             android.util.Log.e("ClientDetailFragment", "Erro ao abrir fluxo de distrato: ${e.message}")
         }
+    }
+    
+    /**
+     * ✅ NOVO: Converte dp para pixels
+     */
+    private fun Int.dpToPx(): Int {
+        return (this * requireContext().resources.displayMetrics.density).toInt()
     }
 
     private fun abrirAssinaturaDistrato(clienteId: Long) {
