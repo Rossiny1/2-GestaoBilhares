@@ -106,26 +106,7 @@ class ColaboradorManagementFragment : Fragment() {
             }
         }
 
-        // Menu da toolbar
-        binding.toolbar.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.action_search -> {
-                    // TODO: Implementar pesquisa
-                    Toast.makeText(requireContext(), "Pesquisar colaboradores", Toast.LENGTH_SHORT).show()
-                    true
-                }
-                R.id.action_filter -> {
-                    // TODO: Implementar filtros avançados
-                    Toast.makeText(requireContext(), "Filtros avançados", Toast.LENGTH_SHORT).show()
-                    true
-                }
-                R.id.action_refresh -> {
-                    viewModel.atualizarDados()
-                    true
-                }
-                else -> false
-            }
-        }
+        // ✅ CORREÇÃO: Menu da toolbar removido - sem botões de filtro, configurações e pesquisa
 
         // Chips de filtro
         binding.chipTodos.setOnClickListener { viewModel.aplicarFiltro(FiltroColaborador.TODOS) }
@@ -244,8 +225,16 @@ class ColaboradorManagementFragment : Fragment() {
                         viewModel.alterarStatusColaborador(colaborador.id, false)
                     }
                     "Editar Colaborador" -> {
-                        // TODO: Implementar navegação para edição
-                        Toast.makeText(requireContext(), "Editar ${colaborador.nome}", Toast.LENGTH_SHORT).show()
+                        // ✅ CORREÇÃO: Navegar para edição do colaborador
+                        try {
+                            val bundle = Bundle().apply {
+                                putLong("colaborador_id", colaborador.id)
+                            }
+                            findNavController().navigate(R.id.colaboradorRegisterFragment, bundle)
+                        } catch (e: Exception) {
+                            Log.e("ColaboradorManagementFragment", "Erro ao navegar para edição: ${e.message}", e)
+                            Toast.makeText(requireContext(), "Erro ao abrir edição de colaborador", Toast.LENGTH_SHORT).show()
+                        }
                     }
                     "Excluir Colaborador" -> {
                         confirmarExclusao(colaborador)

@@ -19,6 +19,7 @@
             android:layout_height="?attr/actionBarSize"
             app:title="Gerenciar Colaboradores"
             app:titleTextColor="?attr/colorOnSurface"
+            app:titleTextAppearance="@style/TextAppearance.Material3.TitleMedium"
             app:navigationIcon="@drawable/ic_arrow_back"
             app:menu="@menu/menu_colaborador_management" />
 

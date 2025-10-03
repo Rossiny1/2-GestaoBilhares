@@ -74,11 +74,7 @@ class ColaboradorAdapter(
                 val dataCadastro = dateFormat.format(colaborador.dataCadastro)
                 tvDataCadastro.text = "Cadastrado em $dataCadastro"
 
-                // Click listeners
-                btnEdit.setOnClickListener {
-                    onEditClick(colaborador)
-                }
-
+                // ✅ CORREÇÃO: Apenas botão "Mais opções" (inclui função de editar)
                 btnMore.setOnClickListener {
                     onMoreClick(colaborador)
                 }

@@ -112,35 +112,16 @@
 
         </LinearLayout>
 
-        <!-- Botões de Ação -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginStart="12dp">
-
-            <!-- Botão Editar -->
-            <ImageButton
-                android:id="@+id/btnEdit"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_edit"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Editar colaborador"
-                android:tint="?attr/colorOnSurfaceVariant"
-                android:layout_marginBottom="4dp" />
-
-            <!-- Botão Mais Opções -->
-            <ImageButton
-                android:id="@+id/btnMore"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_menu"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Mais opções"
-                android:tint="?attr/colorOnSurfaceVariant" />
-
-        </LinearLayout>
+        <!-- ✅ CORREÇÃO: Apenas botão "Mais opções" (inclui função de editar) -->
+        <ImageButton
+            android:id="@+id/btnMore"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_menu"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Mais opções"
+            android:tint="?attr/colorOnSurfaceVariant"
+            android:layout_marginStart="12dp" />
 
     </LinearLayout>
 
