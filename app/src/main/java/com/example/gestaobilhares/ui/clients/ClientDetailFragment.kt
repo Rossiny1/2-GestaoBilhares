@@ -220,6 +220,13 @@ class ClientDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        // ✅ CORREÇÃO: Interceptar botão voltar do sistema usando onBackPressedDispatcher
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                navegarParaListaClientes()
+            }
+        })
+        
         // Inicializar ViewModel e repositórios aqui onde o contexto está disponível
         val database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
@@ -737,18 +744,25 @@ class ClientDetailFragment : Fragment() {
         }
     }
 
+    /**
+     * ✅ NOVA FUNÇÃO: Navega para a lista de clientes da rota
+     */
+    private fun navegarParaListaClientes() {
+        try {
+            // Navegar diretamente para a tela de lista de clientes da rota
+            findNavController().navigate(com.example.gestaobilhares.R.id.clientListFragment)
+            android.util.Log.d("ClientDetailFragment", "✅ Navegando para lista de clientes da rota")
+        } catch (e: Exception) {
+            android.util.Log.w("ClientDetailFragment", "⚠️ Erro ao navegar para lista de clientes: ${e.message}")
+            // Fallback: popBackStack normal
+            findNavController().popBackStack()
+        }
+    }
+
     private fun setupUI() {
         // ✅ CORREÇÃO: Botão voltar sempre vai para a tela de detalhes da rota (lista de clientes)
         binding.btnBack.setOnClickListener {
-            try {
-                // Navegar diretamente para a tela de lista de clientes da rota
-                findNavController().navigate(com.example.gestaobilhares.R.id.clientListFragment)
-                android.util.Log.d("ClientDetailFragment", "✅ Navegando para lista de clientes da rota via botão voltar")
-            } catch (e: Exception) {
-                android.util.Log.w("ClientDetailFragment", "⚠️ Erro ao navegar para lista de clientes: ${e.message}")
-                // Fallback: popBackStack normal
-                findNavController().popBackStack()
-            }
+            navegarParaListaClientes()
         }
 
         // Botões de contato
