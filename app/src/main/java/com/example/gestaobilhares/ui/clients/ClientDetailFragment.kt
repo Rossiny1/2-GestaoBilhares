@@ -239,7 +239,7 @@ class ClientDetailFragment : Fragment() {
         )
 
         viewModel = ClientDetailViewModel(
-            ClienteRepository(database.clienteDao()),
+            ClienteRepository(database.clienteDao(), appRepository),
             MesaRepository(database.mesaDao()),
             AcertoRepository(database.acertoDao(), database.clienteDao()),
             AcertoMesaRepository(database.acertoMesaDao()),
@@ -252,7 +252,7 @@ class ClientDetailFragment : Fragment() {
             database.cicloAcertoDao(),
             DespesaRepository(database.despesaDao()),
             AcertoRepository(database.acertoDao(), database.clienteDao()),
-            ClienteRepository(database.clienteDao()),
+            ClienteRepository(database.clienteDao(), appRepository),
             database.rotaDao()
         )
         
@@ -738,9 +738,17 @@ class ClientDetailFragment : Fragment() {
     }
 
     private fun setupUI() {
-        // Botão voltar
+        // ✅ CORREÇÃO: Botão voltar sempre vai para a tela de detalhes da rota (lista de clientes)
         binding.btnBack.setOnClickListener {
-            findNavController().popBackStack()
+            try {
+                // Navegar diretamente para a tela de lista de clientes da rota
+                findNavController().navigate(com.example.gestaobilhares.R.id.clientListFragment)
+                android.util.Log.d("ClientDetailFragment", "✅ Navegando para lista de clientes da rota via botão voltar")
+            } catch (e: Exception) {
+                android.util.Log.w("ClientDetailFragment", "⚠️ Erro ao navegar para lista de clientes: ${e.message}")
+                // Fallback: popBackStack normal
+                findNavController().popBackStack()
+            }
         }
 
         // Botões de contato

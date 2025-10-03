@@ -23,11 +23,12 @@ class ImageCompressionUtils(
     companion object {
         private const val TAG = "ImageCompression"
         
-        // Configurações de compressão
-        private const val MAX_WIDTH = 1024
-        private const val MAX_HEIGHT = 1024
-        private const val COMPRESSION_QUALITY = 85 // 85% de qualidade (balanceado)
-        private const val MAX_FILE_SIZE_KB = 500 // Máximo 500KB por foto
+        // ✅ CONFIGURAÇÕES OTIMIZADAS PARA 100KB
+        private const val MAX_WIDTH = 800  // Reduzido para economizar espaço
+        private const val MAX_HEIGHT = 800 // Reduzido para economizar espaço
+        private const val INITIAL_COMPRESSION_QUALITY = 90 // Qualidade inicial alta
+        private const val MAX_FILE_SIZE_KB = 100 // ✅ NOVO: Máximo 100KB por foto
+        private const val MIN_QUALITY = 20 // Qualidade mínima para evitar perda excessiva
     }
     
     /**
@@ -185,26 +186,16 @@ class ImageCompressionUtils(
             val fileName = "compressed_${timeStamp}.jpg"
             val tempFile = File.createTempFile("compressed_", ".jpg", context.cacheDir)
             
-            // Comprimir e salvar
-            val outputStream = FileOutputStream(tempFile)
-            val success = bitmap.compress(Bitmap.CompressFormat.JPEG, COMPRESSION_QUALITY, outputStream)
-            outputStream.close()
+            // ✅ ESTRATÉGIA INTELIGENTE: Compressão adaptativa para 100KB
+            val result = compressToTargetSize(bitmap, tempFile)
             
-            if (success) {
-                val fileSizeKB = tempFile.length() / 1024
-                Log.d(TAG, "Imagem comprimida salva: ${tempFile.absolutePath}")
+            if (result != null) {
+                val fileSizeKB = result.length() / 1024
+                Log.d(TAG, "Imagem comprimida salva: ${result.absolutePath}")
                 Log.d(TAG, "Tamanho final: ${fileSizeKB}KB")
-                
-                // Verificar se o tamanho está dentro do limite
-                if (fileSizeKB <= MAX_FILE_SIZE_KB) {
-                    tempFile
-                } else {
-                    Log.w(TAG, "Arquivo ainda muito grande (${fileSizeKB}KB), tentando compressão adicional")
-                    // Tentar compressão adicional com qualidade menor
-                    compressWithLowerQuality(bitmap, tempFile)
-                }
+                result
             } else {
-                Log.e(TAG, "Falha ao comprimir bitmap")
+                Log.e(TAG, "Falha ao comprimir bitmap para 100KB")
                 null
             }
             
@@ -219,7 +210,7 @@ class ImageCompressionUtils(
      */
     private fun compressWithLowerQuality(bitmap: Bitmap, file: File): File? {
         return try {
-            var quality = COMPRESSION_QUALITY - 10
+            var quality = INITIAL_COMPRESSION_QUALITY - 10
             var fileSizeKB = 0L
             
             while (quality > 30 && fileSizeKB > MAX_FILE_SIZE_KB) {
@@ -243,6 +234,80 @@ class ImageCompressionUtils(
             
         } catch (e: Exception) {
             Log.e(TAG, "Erro na compressão adicional: ${e.message}", e)
+            null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Compressão inteligente adaptativa para atingir 100KB
+     * Usa estratégia de busca binária para encontrar a melhor qualidade
+     */
+    private fun compressToTargetSize(bitmap: Bitmap, file: File): File? {
+        return try {
+            var bestQuality = INITIAL_COMPRESSION_QUALITY
+            var bestFile: File? = null
+            var minQuality = MIN_QUALITY
+            var maxQuality = INITIAL_COMPRESSION_QUALITY
+            
+            Log.d(TAG, "Iniciando compressão adaptativa para 100KB...")
+            
+            // Estratégia 1: Busca binária para encontrar qualidade ideal
+            while (minQuality <= maxQuality) {
+                val currentQuality = (minQuality + maxQuality) / 2
+                
+                val outputStream = FileOutputStream(file)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, currentQuality, outputStream)
+                outputStream.close()
+                
+                val fileSizeKB = file.length() / 1024
+                Log.d(TAG, "Qualidade $currentQuality%: ${fileSizeKB}KB")
+                
+                if (fileSizeKB <= MAX_FILE_SIZE_KB) {
+                    // Tamanho aceitável, tentar qualidade maior
+                    bestQuality = currentQuality
+                    bestFile = File(file.absolutePath)
+                    minQuality = currentQuality + 1
+                } else {
+                    // Muito grande, reduzir qualidade
+                    maxQuality = currentQuality - 1
+                }
+            }
+            
+            // Estratégia 2: Se ainda não conseguiu, tentar redimensionar
+            if (bestFile == null || bestFile.length() / 1024 > MAX_FILE_SIZE_KB) {
+                Log.d(TAG, "Tentando redimensionamento adicional...")
+                val resizedBitmap = Bitmap.createScaledBitmap(
+                    bitmap, 
+                    (bitmap.width * 0.8).toInt(), 
+                    (bitmap.height * 0.8).toInt(), 
+                    true
+                )
+                
+                val outputStream = FileOutputStream(file)
+                resizedBitmap.compress(Bitmap.CompressFormat.JPEG, bestQuality, outputStream)
+                outputStream.close()
+                
+                val finalSizeKB = file.length() / 1024
+                Log.d(TAG, "Após redimensionamento: ${finalSizeKB}KB")
+                
+                if (finalSizeKB <= MAX_FILE_SIZE_KB) {
+                    bestFile = file
+                }
+                
+                resizedBitmap.recycle()
+            }
+            
+            if (bestFile != null) {
+                val finalSizeKB = bestFile.length() / 1024
+                Log.d(TAG, "✅ Compressão bem-sucedida: ${finalSizeKB}KB com qualidade $bestQuality%")
+            } else {
+                Log.w(TAG, "⚠️ Não foi possível comprimir abaixo de 100KB, usando melhor resultado")
+            }
+            
+            bestFile ?: file
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro na compressão adaptativa: ${e.message}")
             null
         }
     }

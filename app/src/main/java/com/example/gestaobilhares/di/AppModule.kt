@@ -114,8 +114,9 @@ object AppModule {
     @Provides
     @Singleton
     fun provideClienteRepository(
-        clienteDao: ClienteDao
-    ): ClienteRepository = ClienteRepository(clienteDao)
+        clienteDao: ClienteDao,
+        appRepository: AppRepository
+    ): ClienteRepository = ClienteRepository(clienteDao, appRepository)
 
     @Provides
     @Singleton

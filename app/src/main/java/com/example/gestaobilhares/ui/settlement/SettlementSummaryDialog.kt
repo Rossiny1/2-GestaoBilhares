@@ -51,7 +51,9 @@ class SettlementSummaryDialog : DialogFragment() {
             desconto: Double = 0.0,
             valorTotalMesas: Double = 0.0,
             valorFicha: Double = 0.0,
-            comissaoFicha: Double = 0.0
+            comissaoFicha: Double = 0.0,
+            acertoId: Long? = null,
+            numeroContrato: String? = null
         ): SettlementSummaryDialog {
             val args = Bundle().apply {
                 putString("clienteNome", clienteNome)
@@ -67,6 +69,8 @@ class SettlementSummaryDialog : DialogFragment() {
                 putDouble("valorTotalMesas", valorTotalMesas)
                 putDouble("valorFicha", valorFicha)
                 putDouble("comissaoFicha", comissaoFicha)
+                acertoId?.let { putLong("acertoId", it) }
+                numeroContrato?.let { putString("numeroContrato", it) }
             }
             val fragment = SettlementSummaryDialog()
             fragment.arguments = args
@@ -99,6 +103,8 @@ class SettlementSummaryDialog : DialogFragment() {
         val valorTotalMesas = arguments?.getDouble("valorTotalMesas") ?: 0.0
         val valorFicha = arguments?.getDouble("valorFicha") ?: 0.0
         val comissaoFicha = arguments?.getDouble("comissaoFicha") ?: 0.0
+        val acertoId = arguments?.getLong("acertoId")
+        val numeroContrato = arguments?.getString("numeroContrato")
         val valorFichaExibir = if (valorFicha > 0) valorFicha else if (comissaoFicha > 0) comissaoFicha else 0.0
 
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
@@ -210,7 +216,9 @@ class SettlementSummaryDialog : DialogFragment() {
                                     metodosPagamento = metodosPagamento,
                                     debitoAtual = debitoAtual,
                                     observacao = observacao,
-                                    valorFicha = valorFichaExibir
+                                    valorFicha = valorFichaExibir,
+                                    acertoId = acertoId,
+                                    numeroContrato = numeroContrato
                                 )
                                 // Fontes menores já estão no layout XML
                                 // Imprimir

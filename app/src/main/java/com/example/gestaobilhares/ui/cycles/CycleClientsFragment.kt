@@ -15,6 +15,7 @@ import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.cycles.adapter.CycleClientsAdapter
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
@@ -33,13 +34,29 @@ class CycleClientsFragment : Fragment() {
     private var rotaId: Long = 0L
     
     private val viewModel: CycleClientsViewModel by viewModels {
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao(),
+            database.procuraçãoRepresentanteDao()
+        )
         CycleClientsViewModelFactory(
             CicloAcertoRepository(
-                AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
-                DespesaRepository(AppDatabase.getDatabase(requireContext()).despesaDao()),
-                AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao()),
-                ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
-                AppDatabase.getDatabase(requireContext()).rotaDao()
+                database.cicloAcertoDao(),
+                DespesaRepository(database.despesaDao()),
+                AcertoRepository(database.acertoDao(), database.clienteDao()),
+                ClienteRepository(database.clienteDao(), appRepository),
+                database.rotaDao()
             )
         )
     }

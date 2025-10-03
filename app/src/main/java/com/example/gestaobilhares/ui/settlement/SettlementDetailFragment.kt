@@ -66,11 +66,28 @@ class SettlementDetailFragment : Fragment() {
 
     private fun initializeViewModel() {
         // Inicializar ViewModel onde o contexto está disponível
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao(),
+            database.procuraçãoRepresentanteDao()
+        )
         viewModel = SettlementDetailViewModel(
-            AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao()),
-            AcertoMesaRepository(AppDatabase.getDatabase(requireContext()).acertoMesaDao()),
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
+            AcertoMesaRepository(database.acertoMesaDao()),
             com.example.gestaobilhares.data.repository.ClienteRepository(
-                AppDatabase.getDatabase(requireContext()).clienteDao()
+                database.clienteDao(),
+                appRepository
             )
         )
     }
@@ -408,22 +425,32 @@ class SettlementDetailFragment : Fragment() {
                     }
                 }
                 
-                // Usar a função centralizada com informações completas das mesas
-                ReciboPrinterHelper.preencherReciboImpressaoCompleto(
-                    context = requireContext(),
-                    reciboView = reciboView,
-                    clienteNome = settlement.clienteNome,
-                    clienteCpf = settlement.clienteCpf,
-                    mesasCompletas = mesasCompletas,
-                    debitoAnterior = settlement.debitoAnterior,
-                    valorTotalMesas = settlement.valorTotal,
-                    desconto = settlement.desconto,
-                    metodosPagamento = settlement.metodosPagamento,
-                    debitoAtual = settlement.debitoAtual,
-                    observacao = settlement.observacoes,
-                    valorFicha = settlement.valorFicha,
-                    acertoId = settlement.id
-                )
+                // Buscar contrato ativo do cliente
+                lifecycleScope.launch {
+                    val acertoCompleto = viewModel.buscarAcertoPorId(args.acertoId)
+                    val contratoAtivo = acertoCompleto?.let { 
+                        viewModel.buscarContratoAtivoPorCliente(it.clienteId) 
+                    }
+                    val numeroContrato = contratoAtivo?.numeroContrato
+                    
+                    // Usar a função centralizada com informações completas das mesas
+                    ReciboPrinterHelper.preencherReciboImpressaoCompleto(
+                        context = requireContext(),
+                        reciboView = reciboView,
+                        clienteNome = settlement.clienteNome,
+                        clienteCpf = settlement.clienteCpf,
+                        mesasCompletas = mesasCompletas,
+                        debitoAnterior = settlement.debitoAnterior,
+                        valorTotalMesas = settlement.valorTotal,
+                        desconto = settlement.desconto,
+                        metodosPagamento = settlement.metodosPagamento,
+                        debitoAtual = settlement.debitoAtual,
+                        observacao = settlement.observacoes,
+                        valorFicha = settlement.valorFicha,
+                        acertoId = settlement.id,
+                        numeroContrato = numeroContrato
+                    )
+                }
             } catch (e: Exception) {
                 Log.e("SettlementDetailFragment", "Erro ao preencher layout do recibo: ${e.message}")
             }
@@ -672,8 +699,25 @@ class SettlementDetailFragment : Fragment() {
                     AppDatabase.getDatabase(requireContext()).acertoDao(),
                     AppDatabase.getDatabase(requireContext()).clienteDao()
                 )
+                val database = AppDatabase.getDatabase(requireContext())
+                val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+                    database.clienteDao(),
+                    database.acertoDao(),
+                    database.mesaDao(),
+                    database.rotaDao(),
+                    database.despesaDao(),
+                    database.colaboradorDao(),
+                    database.cicloAcertoDao(),
+                    database.acertoMesaDao(),
+                    database.contratoLocacaoDao(),
+                    database.aditivoContratoDao(),
+                    database.assinaturaRepresentanteLegalDao(),
+                    database.logAuditoriaAssinaturaDao(),
+                    database.procuraçãoRepresentanteDao()
+                )
                 val clienteRepo = com.example.gestaobilhares.data.repository.ClienteRepository(
-                    AppDatabase.getDatabase(requireContext()).clienteDao()
+                    database.clienteDao(),
+                    appRepository
                 )
                 val despesaRepo = com.example.gestaobilhares.data.repository.DespesaRepository(
                     AppDatabase.getDatabase(requireContext()).despesaDao()

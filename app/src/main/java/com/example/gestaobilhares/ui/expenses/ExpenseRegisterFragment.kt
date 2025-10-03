@@ -122,6 +122,21 @@ class ExpenseRegisterFragment : Fragment() {
         
         // Inicializar ViewModel
         val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao(),
+            database.procuraçãoRepresentanteDao()
+        )
         viewModel = ExpenseRegisterViewModel(
             DespesaRepository(database.despesaDao()),
             CategoriaDespesaRepository(database.categoriaDespesaDao()),
@@ -130,7 +145,7 @@ class ExpenseRegisterFragment : Fragment() {
                 database.cicloAcertoDao(),
                 DespesaRepository(database.despesaDao()),
                 AcertoRepository(database.acertoDao(), database.clienteDao()),
-                ClienteRepository(database.clienteDao())
+                ClienteRepository(database.clienteDao(), appRepository)
             ),
             HistoricoManutencaoVeiculoRepository(database.historicoManutencaoVeiculoDao()),
             HistoricoCombustivelVeiculoRepository(database.historicoCombustivelVeiculoDao())

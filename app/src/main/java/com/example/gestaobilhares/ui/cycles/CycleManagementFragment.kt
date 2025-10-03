@@ -43,29 +43,31 @@ class CycleManagementFragment : Fragment() {
     var rotaId: Long = 0L
     
     val viewModel: CycleManagementViewModel by viewModels {
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao(),
+            database.procuraçãoRepresentanteDao()
+        )
         CycleManagementViewModelFactory(
             CicloAcertoRepository(
-                AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
-                DespesaRepository(AppDatabase.getDatabase(requireContext()).despesaDao()),
-                AcertoRepository(AppDatabase.getDatabase(requireContext()).acertoDao(), AppDatabase.getDatabase(requireContext()).clienteDao()),
-                ClienteRepository(AppDatabase.getDatabase(requireContext()).clienteDao()),
-                AppDatabase.getDatabase(requireContext()).rotaDao()
+                database.cicloAcertoDao(),
+                DespesaRepository(database.despesaDao()),
+                AcertoRepository(database.acertoDao(), database.clienteDao()),
+                ClienteRepository(database.clienteDao(), appRepository),
+                database.rotaDao()
             ),
-            AppRepository(
-                AppDatabase.getDatabase(requireContext()).clienteDao(),
-                AppDatabase.getDatabase(requireContext()).acertoDao(),
-                AppDatabase.getDatabase(requireContext()).mesaDao(),
-                AppDatabase.getDatabase(requireContext()).rotaDao(),
-                AppDatabase.getDatabase(requireContext()).despesaDao(),
-                AppDatabase.getDatabase(requireContext()).colaboradorDao(),
-                AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
-                AppDatabase.getDatabase(requireContext()).acertoMesaDao(),
-                AppDatabase.getDatabase(requireContext()).contratoLocacaoDao(),
-                AppDatabase.getDatabase(requireContext()).aditivoContratoDao(),
-                AppDatabase.getDatabase(requireContext()).assinaturaRepresentanteLegalDao(),
-                AppDatabase.getDatabase(requireContext()).logAuditoriaAssinaturaDao(),
-                AppDatabase.getDatabase(requireContext()).procuraçãoRepresentanteDao()
-            )
+            appRepository
         )
     }
 

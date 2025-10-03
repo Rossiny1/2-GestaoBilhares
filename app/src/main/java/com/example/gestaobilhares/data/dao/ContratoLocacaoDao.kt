@@ -11,6 +11,9 @@ interface ContratoLocacaoDao {
     @Query("SELECT * FROM contratos_locacao WHERE clienteId = :clienteId ORDER BY dataCriacao DESC")
     fun buscarContratosPorCliente(clienteId: Long): Flow<List<ContratoLocacao>>
     
+    @Query("SELECT * FROM contratos_locacao WHERE clienteId = :clienteId AND status = 'ATIVO' AND dataEncerramento IS NULL ORDER BY dataCriacao DESC LIMIT 1")
+    suspend fun buscarContratoAtivoPorCliente(clienteId: Long): ContratoLocacao?
+    
     @Query("SELECT * FROM contratos_locacao WHERE numeroContrato = :numeroContrato")
     suspend fun buscarContratoPorNumero(numeroContrato: String): ContratoLocacao?
     

@@ -201,4 +201,16 @@ class SettlementDetailViewModel(
     suspend fun buscarAcertoPorId(acertoId: Long): Acerto? {
         return acertoRepository.buscarPorId(acertoId)
     }
+    
+    /**
+     * ✅ NOVO: Busca o contrato ativo do cliente para exibir no recibo
+     */
+    suspend fun buscarContratoAtivoPorCliente(clienteId: Long): com.example.gestaobilhares.data.entities.ContratoLocacao? {
+        return try {
+            clienteRepository.buscarContratoAtivoPorCliente(clienteId)
+        } catch (e: Exception) {
+            AppLogger.log("SettlementDetailViewModel", "Erro ao buscar contrato ativo do cliente: ${e.message}")
+            null
+        }
+    }
 } 

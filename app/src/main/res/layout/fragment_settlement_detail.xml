@@ -445,6 +445,7 @@
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
+                    <!-- ✅ CORREÇÃO: Botões Padronizados -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -457,7 +458,9 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginEnd="8dp"
-                            android:text="Imprimir"
+                            android:text="🖨️ Imprimir"
+                            android:textSize="14sp"
+                            android:minHeight="48dp"
                             android:textColor="?attr/colorOnPrimary"
                             android:backgroundTint="?attr/colorPrimary"
                             app:icon="@drawable/ic_receipt"
@@ -470,7 +473,9 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginStart="8dp"
-                            android:text="WhatsApp"
+                            android:text="📱 WhatsApp"
+                            android:textSize="14sp"
+                            android:minHeight="48dp"
                             android:textColor="@android:color/white"
                             android:backgroundTint="#25D366"
                             app:icon="@drawable/ic_whatsapp"
