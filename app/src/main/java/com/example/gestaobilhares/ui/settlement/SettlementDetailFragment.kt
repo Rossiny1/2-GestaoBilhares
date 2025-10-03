@@ -74,9 +74,11 @@ class SettlementDetailFragment : Fragment() {
             val allPermissionsGranted = grantResults.all { it == android.content.pm.PackageManager.PERMISSION_GRANTED }
             
             if (allPermissionsGranted) {
-                android.widget.Toast.makeText(requireContext(), "Permissões concedidas! Tente imprimir novamente.", android.widget.Toast.LENGTH_SHORT).show()
-                // ✅ CORREÇÃO: Recarregar dados do acerto para tentar imprimir novamente
-                loadData()
+                android.widget.Toast.makeText(requireContext(), "Permissões concedidas! Tentando imprimir novamente...", android.widget.Toast.LENGTH_SHORT).show()
+                // ✅ CORREÇÃO: Tentar imprimir novamente automaticamente (igual SettlementSummaryDialog)
+                currentSettlement?.let { settlement ->
+                    continuarImpressao(settlement)
+                }
             } else {
                 android.widget.Toast.makeText(requireContext(), "Permissões negadas. Não é possível imprimir.", android.widget.Toast.LENGTH_LONG).show()
             }
@@ -489,14 +491,12 @@ class SettlementDetailFragment : Fragment() {
     }
     
     /**
-     * ✅ NOVA FUNÇÃO: Verifica permissões Bluetooth
+     * ✅ NOVA FUNÇÃO: Verifica permissões Bluetooth (mesmo que SettlementSummaryDialog)
      */
     private fun hasBluetoothPermissions(): Boolean {
         val bluetoothPermissions = arrayOf(
-            android.Manifest.permission.BLUETOOTH,
-            android.Manifest.permission.BLUETOOTH_ADMIN,
             android.Manifest.permission.BLUETOOTH_CONNECT,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
+            android.Manifest.permission.BLUETOOTH_SCAN
         )
         
         return bluetoothPermissions.all {
@@ -505,14 +505,12 @@ class SettlementDetailFragment : Fragment() {
     }
     
     /**
-     * ✅ NOVA FUNÇÃO: Solicita permissões Bluetooth
+     * ✅ NOVA FUNÇÃO: Solicita permissões Bluetooth (mesmo que SettlementSummaryDialog)
      */
     private fun requestBluetoothPermissions(settlement: SettlementDetailViewModel.SettlementDetail) {
         val bluetoothPermissions = arrayOf(
-            android.Manifest.permission.BLUETOOTH,
-            android.Manifest.permission.BLUETOOTH_ADMIN,
             android.Manifest.permission.BLUETOOTH_CONNECT,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
+            android.Manifest.permission.BLUETOOTH_SCAN
         )
         
         androidx.core.app.ActivityCompat.requestPermissions(requireActivity(), bluetoothPermissions, 1001)
