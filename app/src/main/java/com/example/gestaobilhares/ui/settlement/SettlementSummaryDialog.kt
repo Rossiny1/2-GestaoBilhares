@@ -259,7 +259,21 @@ class SettlementSummaryDialog : DialogFragment() {
         
         // Botão WhatsApp
         view.findViewById<MaterialButton>(R.id.btnWhatsapp).setOnClickListener {
-            val textoCompleto = gerarTextoResumo(clienteNome, mesas, total, metodosPagamento, observacao, debitoAtual, debitoAnterior, desconto, valorTotalMesas, valorFichaExibir, comissaoFicha)
+            // ✅ CORREÇÃO: Usar a mesma fonte de verdade do recibo impresso
+            val textoCompleto = ReciboPrinterHelper.gerarTextoWhatsApp(
+                clienteNome = clienteNome,
+                clienteCpf = clienteCpf,
+                mesasCompletas = mesas,
+                debitoAnterior = debitoAnterior,
+                valorTotalMesas = valorTotalMesas,
+                desconto = desconto,
+                metodosPagamento = metodosPagamento,
+                debitoAtual = debitoAtual,
+                observacao = observacao,
+                valorFicha = valorFichaExibir,
+                acertoId = acertoId,
+                numeroContrato = numeroContrato
+            )
             enviarViaWhatsAppDireto(clienteTelefone, textoCompleto)
             dismiss()
             acertoCompartilhadoListener?.onAcertoCompartilhado()

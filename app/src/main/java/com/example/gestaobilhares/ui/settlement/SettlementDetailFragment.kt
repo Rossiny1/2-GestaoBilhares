@@ -63,6 +63,25 @@ class SettlementDetailFragment : Fragment() {
         setupUI()
         loadData()
     }
+    
+    /**
+     * ✅ NOVA FUNÇÃO: Callback para resultado das permissões Bluetooth
+     */
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        
+        if (requestCode == 1001) {
+            val allPermissionsGranted = grantResults.all { it == android.content.pm.PackageManager.PERMISSION_GRANTED }
+            
+            if (allPermissionsGranted) {
+                android.widget.Toast.makeText(requireContext(), "Permissões concedidas! Tente imprimir novamente.", android.widget.Toast.LENGTH_SHORT).show()
+                // ✅ CORREÇÃO: Recarregar dados do acerto para tentar imprimir novamente
+                loadData()
+            } else {
+                android.widget.Toast.makeText(requireContext(), "Permissões negadas. Não é possível imprimir.", android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     private fun initializeViewModel() {
         // Inicializar ViewModel onde o contexto está disponível
@@ -305,44 +324,58 @@ class SettlementDetailFragment : Fragment() {
             try {
                 // Verificar permissões Bluetooth
                 if (!hasBluetoothPermissions()) {
-                    requestBluetoothPermissions()
+                    requestBluetoothPermissions(settlement)
                     return@launch
                 }
                 
-                val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
-                if (bluetoothAdapter == null) {
-                    android.widget.Toast.makeText(requireContext(), "Bluetooth não disponível neste dispositivo", android.widget.Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
-                
-                if (!bluetoothAdapter.isEnabled) {
-                    android.widget.Toast.makeText(requireContext(), "Ative o Bluetooth para imprimir", android.widget.Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
-                
-                val pairedDevices = bluetoothAdapter.bondedDevices
-                if (pairedDevices.isEmpty()) {
-                    android.widget.Toast.makeText(requireContext(), "Nenhuma impressora Bluetooth pareada", android.widget.Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
-                
-                // Diálogo de seleção de impressora
-                val deviceList = pairedDevices.toList()
-                val deviceNames = deviceList.map { it.name ?: it.address }.toTypedArray()
-                
-                android.app.AlertDialog.Builder(requireContext())
-                    .setTitle("Selecione a impressora")
-                    .setItems(deviceNames) { _, which ->
-                        val printerDevice = deviceList[which]
-                        imprimirComImpressoraSelecionada(settlement, printerDevice)
-                    }
-                    .setNegativeButton("Cancelar", null)
-                    .show()
+                // Se chegou aqui, as permissões estão OK, continuar com a impressão
+                continuarImpressao(settlement)
                 
             } catch (e: Exception) {
                 AppLogger.log("SettlementDetailFragment", "Erro ao preparar impressão: ${e.message}")
                 android.widget.Toast.makeText(requireContext(), "Erro ao preparar impressão: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+    
+    /**
+     * ✅ NOVA FUNÇÃO: Continua o processo de impressão após verificar permissões
+     */
+    private fun continuarImpressao(settlement: SettlementDetailViewModel.SettlementDetail) {
+        try {
+            val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+            if (bluetoothAdapter == null) {
+                android.widget.Toast.makeText(requireContext(), "Bluetooth não disponível neste dispositivo", android.widget.Toast.LENGTH_SHORT).show()
+                return
+            }
+            
+            if (!bluetoothAdapter.isEnabled) {
+                android.widget.Toast.makeText(requireContext(), "Ative o Bluetooth para imprimir", android.widget.Toast.LENGTH_SHORT).show()
+                return
+            }
+            
+            val pairedDevices = bluetoothAdapter.bondedDevices
+            if (pairedDevices.isEmpty()) {
+                android.widget.Toast.makeText(requireContext(), "Nenhuma impressora Bluetooth pareada", android.widget.Toast.LENGTH_SHORT).show()
+                return
+            }
+            
+            // Diálogo de seleção de impressora
+            val deviceList = pairedDevices.toList()
+            val deviceNames = deviceList.map { it.name ?: it.address }.toTypedArray()
+            
+            android.app.AlertDialog.Builder(requireContext())
+                .setTitle("Selecione a impressora")
+                .setItems(deviceNames) { _, which ->
+                    val printerDevice = deviceList[which]
+                    imprimirComImpressoraSelecionada(settlement, printerDevice)
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+                
+        } catch (e: Exception) {
+            AppLogger.log("SettlementDetailFragment", "Erro ao continuar impressão: ${e.message}")
+            android.widget.Toast.makeText(requireContext(), "Erro ao continuar impressão: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -474,7 +507,7 @@ class SettlementDetailFragment : Fragment() {
     /**
      * ✅ NOVA FUNÇÃO: Solicita permissões Bluetooth
      */
-    private fun requestBluetoothPermissions() {
+    private fun requestBluetoothPermissions(settlement: SettlementDetailViewModel.SettlementDetail) {
         val bluetoothPermissions = arrayOf(
             android.Manifest.permission.BLUETOOTH,
             android.Manifest.permission.BLUETOOTH_ADMIN,
@@ -483,21 +516,55 @@ class SettlementDetailFragment : Fragment() {
         )
         
         androidx.core.app.ActivityCompat.requestPermissions(requireActivity(), bluetoothPermissions, 1001)
+        
+        // ✅ CORREÇÃO: Mostrar mensagem explicativa
+        android.widget.Toast.makeText(requireContext(), "Permissões Bluetooth necessárias para impressão", android.widget.Toast.LENGTH_LONG).show()
     }
 
     // ✅ NOVA FUNCIONALIDADE: Compartilhar via WhatsApp
     private fun compartilharViaWhatsApp(settlement: SettlementDetailViewModel.SettlementDetail) {
         lifecycleScope.launch {
             try {
-                // ✅ NOVO: Usar dados reais do cliente
-                val clienteNome = settlement.clienteNome
-                val clienteTelefone = settlement.clienteTelefone
+                // ✅ CORREÇÃO: Usar a mesma fonte de verdade do recibo impresso
+                val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
+                val mesasCompletas = mutableListOf<Mesa>()
                 
-                // Gerar texto do resumo
-                val textoResumo = gerarTextoResumo(settlement, clienteNome)
+                for (acertoMesa in settlement.acertoMesas) {
+                    val mesaCompleta = mesaRepository.buscarPorId(acertoMesa.mesaId)
+                    if (mesaCompleta != null) {
+                        val mesaComAcerto = mesaCompleta.copy(
+                            fichasInicial = acertoMesa.relogioInicial,
+                            fichasFinal = acertoMesa.relogioFinal
+                        )
+                        mesasCompletas.add(mesaComAcerto)
+                    }
+                }
+                
+                // Buscar contrato ativo do cliente
+                val acertoCompleto = viewModel.buscarAcertoPorId(args.acertoId)
+                val contratoAtivo = acertoCompleto?.let { 
+                    viewModel.buscarContratoAtivoPorCliente(it.clienteId) 
+                }
+                val numeroContrato = contratoAtivo?.numeroContrato
+                
+                // ✅ CORREÇÃO: Usar ReciboPrinterHelper para gerar texto WhatsApp (mesma fonte de verdade)
+                val textoResumo = ReciboPrinterHelper.gerarTextoWhatsApp(
+                    clienteNome = settlement.clienteNome,
+                    clienteCpf = settlement.clienteCpf,
+                    mesasCompletas = mesasCompletas,
+                    debitoAnterior = settlement.debitoAnterior,
+                    valorTotalMesas = settlement.valorTotal,
+                    desconto = settlement.desconto,
+                    metodosPagamento = settlement.metodosPagamento,
+                    debitoAtual = settlement.debitoAtual,
+                    observacao = settlement.observacoes,
+                    valorFicha = settlement.valorFicha,
+                    acertoId = settlement.id,
+                    numeroContrato = numeroContrato
+                )
                 
                 // ✅ NOVO: Enviar via WhatsApp direto com telefone do cliente
-                enviarViaWhatsAppDireto(clienteTelefone, textoResumo)
+                enviarViaWhatsAppDireto(settlement.clienteTelefone, textoResumo)
                 
             } catch (e: Exception) {
                 AppLogger.log("SettlementDetailFragment", "Erro ao compartilhar via WhatsApp: ${e.message}")
@@ -508,46 +575,66 @@ class SettlementDetailFragment : Fragment() {
 
     private fun gerarTextoResumo(settlement: SettlementDetailViewModel.SettlementDetail, clienteNome: String): String {
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+        val dataAtual = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
         val texto = StringBuilder()
         
         texto.append("🎱 *ACERTO DE BILHAR*\n")
         texto.append("================================\n\n")
         texto.append("👤 *Cliente:* $clienteNome\n")
-        texto.append("📅 *Data:* ${settlement.date}\n\n")
+        texto.append("📅 *Data:* $dataAtual\n\n")
+        
+        // Mostrar valor da ficha se disponível
         if (settlement.valorFicha > 0) {
             texto.append("*Valor da ficha:* ${formatter.format(settlement.valorFicha)}\n\n")
         }
 
         texto.append("🎯 *MESAS ACERTADAS:*\n")
         var totalFichasJogadas = 0
+        
+        // ✅ CORREÇÃO: Usar número real da mesa e buscar informações completas
         settlement.acertoMesas.forEach { mesa ->
-            val numeroMesa = mesa.mesaId.toString()
+            // Buscar informações completas da mesa
+            val mesaCompleta = buscarMesaCompleta(mesa.mesaId)
+            val numeroMesa = mesaCompleta?.numero ?: mesa.mesaId.toString()
+            
             if (mesa.valorFixo > 0) {
                 texto.append("• *Mesa $numeroMesa*\n${formatter.format(mesa.valorFixo)}/mês\n")
             } else {
                 val fichasJogadas = mesa.relogioFinal - mesa.relogioInicial
                 totalFichasJogadas += fichasJogadas
-                texto.append("• *Mesa $numeroMesa*\n${mesa.relogioInicial} → ${mesa.relogioFinal} ($fichasJogadas fichas)\n")
+                texto.append("• *Mesa $numeroMesa*: ${mesa.relogioInicial} → ${mesa.relogioFinal} (${fichasJogadas} fichas)\n")
             }
         }
+        
         if (totalFichasJogadas > 0) {
-            texto.append("\n*Total de fichas jogadas: $totalFichasJogadas*\n")
+            texto.append("\n*Total de fichas jogadas: $totalFichasJogadas*\n\n")
         }
-        texto.append("\n")
 
         texto.append("💰 *RESUMO FINANCEIRO:*\n")
+        
+        // ✅ CORREÇÃO: Incluir todos os campos obrigatórios
         if (settlement.debitoAnterior > 0) {
             texto.append("• Débito anterior: ${formatter.format(settlement.debitoAnterior)}\n")
         }
+        
         texto.append("• Total das mesas: ${formatter.format(settlement.valorTotal)}\n")
+        
+        if (settlement.valorFicha > 0) {
+            texto.append("• Valor da ficha: ${formatter.format(settlement.valorFicha)}\n")
+        }
+        
         val valorTotal = settlement.valorTotal + settlement.debitoAnterior
         texto.append("• Valor total: ${formatter.format(valorTotal)}\n")
+        
         if (settlement.desconto > 0) {
             texto.append("• Desconto: ${formatter.format(settlement.desconto)}\n")
         }
-        if (settlement.valorRecebido > 0) {
-            texto.append("• Valor recebido: ${formatter.format(settlement.valorRecebido)}\n")
+        
+        if (settlement.metodosPagamento.isNotEmpty()) {
+            val valorRecebido = settlement.metodosPagamento.values.sum()
+            texto.append("• Valor recebido: ${formatter.format(valorRecebido)}\n")
         }
+        
         if (settlement.debitoAtual > 0) {
             texto.append("• Débito atual: ${formatter.format(settlement.debitoAtual)}\n")
         }
@@ -568,6 +655,22 @@ class SettlementDetailFragment : Fragment() {
         texto.append("--------------------------------\n")
         texto.append("✅ Acerto realizado via GestaoBilhares")
         return texto.toString()
+    }
+    
+    /**
+     * ✅ NOVA FUNÇÃO: Busca informações completas da mesa (versão síncrona)
+     */
+    private fun buscarMesaCompleta(mesaId: Long): Mesa? {
+        return try {
+            // Usar runBlocking para chamar função suspensa de forma síncrona
+            kotlinx.coroutines.runBlocking {
+                val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
+                mesaRepository.buscarPorId(mesaId)
+            }
+        } catch (e: Exception) {
+            Log.e("SettlementDetailFragment", "Erro ao buscar mesa: ${e.message}")
+            null
+        }
     }
 
     /**

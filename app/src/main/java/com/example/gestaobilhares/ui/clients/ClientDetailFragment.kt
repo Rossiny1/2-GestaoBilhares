@@ -116,17 +116,21 @@ class ClientDetailFragment : Fragment() {
                 val positiveButton = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
                 val negativeButton = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE)
                 
-                // Aplicar altura mínima e cores do projeto
+                // Aplicar altura mínima, padding e cores do projeto
                 positiveButton?.let { button ->
                     button.minHeight = 48.dpToPx()
                     button.setTextColor(android.graphics.Color.WHITE)
                     button.setBackgroundColor(android.graphics.Color.parseColor("#00BCD4")) // accent_teal
+                    button.textSize = 12f // Reduzir tamanho da fonte
+                    button.setPadding(16.dpToPx(), 12.dpToPx(), 16.dpToPx(), 12.dpToPx()) // Padding adequado
                 }
                 
                 negativeButton?.let { button ->
                     button.minHeight = 48.dpToPx()
                     button.setTextColor(android.graphics.Color.parseColor("#757575")) // gray_600
                     button.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                    button.textSize = 12f // Reduzir tamanho da fonte
+                    button.setPadding(16.dpToPx(), 12.dpToPx(), 16.dpToPx(), 12.dpToPx()) // Padding adequado
                 }
             }
             

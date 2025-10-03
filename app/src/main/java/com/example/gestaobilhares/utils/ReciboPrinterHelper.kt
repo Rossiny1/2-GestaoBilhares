@@ -164,6 +164,108 @@ object ReciboPrinterHelper {
         txtPagamentos.setTypeface(null, Typeface.BOLD)
         txtObservacoes.setTypeface(null, Typeface.BOLD)
     }
+    
+    /**
+     * ✅ NOVA FUNÇÃO: Gera texto para WhatsApp usando a mesma lógica do recibo impresso
+     * FONTE ÚNICA DE VERDADE - Mesmo conteúdo do recibo impresso
+     */
+    fun gerarTextoWhatsApp(
+        clienteNome: String,
+        clienteCpf: String? = null,
+        mesasCompletas: List<Mesa>,
+        debitoAnterior: Double,
+        valorTotalMesas: Double,
+        desconto: Double,
+        metodosPagamento: Map<String, Double>,
+        debitoAtual: Double,
+        observacao: String?,
+        valorFicha: Double,
+        acertoId: Long? = null,
+        numeroContrato: String? = null
+    ): String {
+        val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+        val dataAtual = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
+        val texto = StringBuilder()
+        
+        // ✅ TÍTULO (mesmo do recibo impresso)
+        val titulo = if (acertoId != null) {
+            "🎱 *RECIBO DE ACERTO #${acertoId.toString().padStart(4, '0')}*"
+        } else {
+            "🎱 *RECIBO DE ACERTO*"
+        }
+        texto.append("$titulo\n")
+        texto.append("================================\n\n")
+        
+        // ✅ CLIENTE E CPF (mesmo do recibo impresso)
+        texto.append("👤 *Cliente:* $clienteNome\n")
+        if (!clienteCpf.isNullOrBlank()) {
+            texto.append("📄 *CPF:* $clienteCpf\n")
+        }
+        if (!numeroContrato.isNullOrBlank()) {
+            texto.append("📋 *Contrato:* $numeroContrato\n")
+        }
+        texto.append("📅 *Data:* $dataAtual\n\n")
+        
+        // ✅ VALOR DA FICHA (mesmo do recibo impresso)
+        if (valorFicha > 0) {
+            texto.append("💰 *Preço da ficha:* ${formatter.format(valorFicha)}\n\n")
+        }
+        
+        // ✅ MESAS (mesmo do recibo impresso - número real da mesa)
+        texto.append("🎯 *MESAS ACERTADAS:*\n")
+        var totalFichasJogadas = 0
+        mesasCompletas.forEach { mesa ->
+            val fichasJogadas = mesa.fichasFinal - mesa.fichasInicial
+            totalFichasJogadas += fichasJogadas
+            val tipoEquipamento = getTipoEquipamentoNome(mesa.tipoMesa)
+            // ✅ CORREÇÃO: Usar número real da mesa, não índice
+            texto.append("• *$tipoEquipamento ${mesa.numero}*: ${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)\n")
+        }
+        if (totalFichasJogadas > 0) {
+            texto.append("\n*Total de fichas jogadas: $totalFichasJogadas*\n\n")
+        }
+        
+        // ✅ RESUMO FINANCEIRO (mesmo do recibo impresso)
+        texto.append("💰 *RESUMO FINANCEIRO:*\n")
+        if (debitoAnterior > 0) {
+            texto.append("• Débito anterior: ${formatter.format(debitoAnterior)}\n")
+        }
+        texto.append("• Total das mesas: ${formatter.format(valorTotalMesas)}\n")
+        if (valorFicha > 0) {
+            texto.append("• Valor da ficha: ${formatter.format(valorFicha)}\n")
+        }
+        val valorTotal = valorTotalMesas + debitoAnterior
+        texto.append("• Valor total: ${formatter.format(valorTotal)}\n")
+        if (desconto > 0) {
+            texto.append("• Desconto: ${formatter.format(desconto)}\n")
+        }
+        if (metodosPagamento.isNotEmpty()) {
+            val valorRecebido = metodosPagamento.values.sum()
+            texto.append("• Valor recebido: ${formatter.format(valorRecebido)}\n")
+        }
+        if (debitoAtual > 0) {
+            texto.append("• Débito atual: ${formatter.format(debitoAtual)}\n")
+        }
+        texto.append("\n")
+        
+        // ✅ FORMA DE PAGAMENTO (mesmo do recibo impresso)
+        if (metodosPagamento.isNotEmpty()) {
+            texto.append("💳 *FORMA DE PAGAMENTO:*\n")
+            metodosPagamento.forEach { (metodo, valor) ->
+                texto.append("• $metodo: ${formatter.format(valor)}\n")
+            }
+            texto.append("\n")
+        }
+        
+        // ✅ OBSERVAÇÕES (mesmo do recibo impresso)
+        if (!observacao.isNullOrBlank()) {
+            texto.append("📝 *Observações:* $observacao\n\n")
+        }
+        
+        texto.append("--------------------------------\n")
+        texto.append("✅ Acerto realizado via GestaoBilhares")
+        return texto.toString()
+    }
 
     /**
      * Preenche o layout de recibo com os dados fornecidos (versão compatível com AcertoMesa)

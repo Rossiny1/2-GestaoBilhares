@@ -57,6 +57,13 @@ class ClientListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         android.util.Log.d("DEBUG_DIAG", "onViewCreated chamado - TESTE DE LOG")
         
+        // ✅ CORREÇÃO: Interceptar botão voltar do sistema
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                navegarParaRotas()
+            }
+        })
+        
         // ✅ FASE 8C: Inicializar ViewModel com todos os repositórios necessários
         val database = AppDatabase.getDatabase(requireContext())
         val appRepository = AppRepository(
@@ -119,9 +126,16 @@ class ClientListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // ✅ CORREÇÃO: Forçar atualização do ciclo quando retorna de outras telas
-        android.util.Log.d("ClientListFragment", "🔄 onResume - Forçando atualização do ciclo atual")
+        // ✅ CORREÇÃO: Forçar atualização completa quando retorna de outras telas
+        android.util.Log.d("ClientListFragment", "🔄 onResume - Recarregando dados completos")
+        
+        // Recarregar dados da rota e clientes
+        val rotaId = args.rotaId
+        viewModel.carregarRota(rotaId)
+        viewModel.carregarClientes(rotaId)
         viewModel.atualizarCicloAtual()
+        
+        android.util.Log.d("ClientListFragment", "✅ onResume - Dados recarregados para rotaId=$rotaId")
     }
 
     private fun configurarRecyclerView() {
@@ -147,9 +161,9 @@ class ClientListFragment : Fragment() {
     
     private fun configurarBotoes() {
         _binding?.let { binding ->
-            // Botão voltar
+            // ✅ CORREÇÃO: Botão voltar navega para tela de rotas
             binding.btnBack.setOnClickListener {
-                findNavController().popBackStack()
+                navegarParaRotas()
             }
             
             // ✅ NOVO: Botão buscar - abrir diálogo de pesquisa avançada
@@ -819,6 +833,21 @@ class ClientListFragment : Fragment() {
                 FiltroCliente.PENDENCIAS -> "Pendências"
             }
         }
+
+    /**
+     * ✅ NOVA FUNÇÃO: Navega para a tela de rotas
+     */
+    private fun navegarParaRotas() {
+        try {
+            // Navegar diretamente para a tela de rotas
+            findNavController().navigate(com.example.gestaobilhares.R.id.routesFragment)
+            android.util.Log.d("ClientListFragment", "✅ Navegando para tela de rotas")
+        } catch (e: Exception) {
+            android.util.Log.w("ClientListFragment", "⚠️ Erro ao navegar para rotas: ${e.message}")
+            // Fallback: popBackStack normal
+            findNavController().popBackStack()
+        }
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
