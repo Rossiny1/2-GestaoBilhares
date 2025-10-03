@@ -41,7 +41,7 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:text="Outra mesa"
+            android:text="+ Outra mesa"
             android:textSize="12sp"
             android:minHeight="48dp"
             android:paddingHorizontal="8dp"
