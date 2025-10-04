@@ -54,6 +54,13 @@ class SettlementDetailFragment : Fragment() {
         return binding.root
     }
 
+    // ✅ NOVA FUNÇÃO: Regra unificada para exibição do valor da ficha
+    private fun obterValorFichaExibir(settlement: SettlementDetailViewModel.SettlementDetail): Double {
+        // Mantemos o mesmo critério do SummaryDialog: prioriza valorFicha; se 0, usa comissaoFicha se houver
+        // Atualmente SettlementDetail não expõe comissaoFicha; se necessário, obter do cliente no futuro
+        return if (settlement.valorFicha > 0) settlement.valorFicha else 0.0
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
@@ -462,7 +469,7 @@ class SettlementDetailFragment : Fragment() {
                     metodosPagamento = settlement.metodosPagamento,
                     debitoAtual = settlement.debitoAtual,
                     observacao = settlement.observacoes,
-                    valorFicha = settlement.valorFicha,
+                    valorFicha = obterValorFichaExibir(settlement),
                     acertoId = settlement.id,
                     numeroContrato = numeroContrato
                 )
@@ -508,6 +515,7 @@ class SettlementDetailFragment : Fragment() {
                 // ✅ CORREÇÃO: Usar exatamente os mesmos dados da impressão
                 val mesasCompletas = obterMesasCompletas(settlement)
                 val numeroContrato = obterNumeroContrato(settlement)
+                val valorFichaExibirLocal = obterValorFichaExibir(settlement)
                 
                 // ✅ CORREÇÃO: Usar ReciboPrinterHelper para gerar texto WhatsApp (mesma fonte de verdade)
                 val textoResumo = ReciboPrinterHelper.gerarTextoWhatsApp(
@@ -520,7 +528,7 @@ class SettlementDetailFragment : Fragment() {
                     metodosPagamento = settlement.metodosPagamento,
                     debitoAtual = settlement.debitoAtual,
                     observacao = settlement.observacoes,
-                    valorFicha = settlement.valorFicha,
+                    valorFicha = valorFichaExibirLocal,
                     acertoId = settlement.id,
                     numeroContrato = numeroContrato
                 )
