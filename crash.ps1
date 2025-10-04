@@ -25,6 +25,7 @@ param(
     [switch]$OnlyMetas,     # Mostra apenas logs do sistema de metas
     [switch]$OnlyPopulation, # Mostra apenas logs de população do banco de dados
     [switch]$OnlyNavegacao, # Mostra apenas logs de navegação após envio de contratos/aditivos
+    [switch]$OnlyReceipts,  # Mostra apenas logs de recibos (impressão e WhatsApp)
     [switch]$ToFile         # Salva a saída em arquivo (além de mostrar na tela)
 )
 
@@ -42,6 +43,7 @@ Write-Host "-OnlyEstoque: Monitora apenas logs do sistema de estoque" -Foregroun
 Write-Host "-OnlyMetas: Monitora apenas logs do sistema de metas" -ForegroundColor Gray
 Write-Host "-OnlyPopulation: Monitora apenas logs de populacao do banco de dados" -ForegroundColor Gray
 Write-Host "-OnlyNavegacao: Monitora apenas logs de navegação após envio de contratos/aditivos" -ForegroundColor Gray
+Write-Host "-OnlyReceipts: Monitora apenas logs de recibos (impressão e WhatsApp)" -ForegroundColor Gray
 Write-Host "-ToFile: Salva logs em arquivo" -ForegroundColor Gray
 Write-Host ""
 Write-Host "EXEMPLOS:" -ForegroundColor Cyan
@@ -55,6 +57,8 @@ Write-Host ".\crash.ps1 -OnlyMetas" -ForegroundColor Gray
 Write-Host ".\crash.ps1 -OnlyMetas -ToFile" -ForegroundColor Gray
 Write-Host ".\crash.ps1 -OnlyNavegacao" -ForegroundColor Gray
 Write-Host ".\crash.ps1 -OnlyNavegacao -ToFile" -ForegroundColor Gray
+Write-Host ".\crash.ps1 -OnlyReceipts" -ForegroundColor Gray
+Write-Host ".\crash.ps1 -OnlyReceipts -ToFile" -ForegroundColor Gray
 Write-Host ""
 Write-Host "CAMINHO ADB: C:\Users\Rossiny\AppData\Local\Android\Sdk\platform-tools\adb.exe" -ForegroundColor Green
 Write-Host ""
@@ -133,6 +137,11 @@ Write-Host "- NAVEGAÇÃO CONTRATOS/ADITIVOS: logs de debug do fluxo de navegaç
 Write-Host "- SignatureCaptureFragment: navegação após envio de contratos" -ForegroundColor Gray
 Write-Host "- AditivoSignatureFragment: navegação após envio de aditivos" -ForegroundColor Gray
 Write-Host "- ClientDetailFragment: destino da navegação" -ForegroundColor Gray
+Write-Host "- SISTEMA DE RECIBOS: logs de debug da geração e impressão de recibos" -ForegroundColor Gray
+Write-Host "- SettlementDetailFragment: impressão e WhatsApp de recibos" -ForegroundColor Gray
+Write-Host "- SettlementSummaryDialog: impressão e WhatsApp de recibos" -ForegroundColor Gray
+Write-Host "- ReciboPrinterHelper: geração de conteúdo dos recibos" -ForegroundColor Gray
+Write-Host "- SettlementDetailViewModel: carregamento de dados para recibos" -ForegroundColor Gray
 Write-Host ""
 
 # Padrao de filtro expandido para incluir nossos logs de diagnostico e analise de fluxo
@@ -159,14 +168,17 @@ $patternPopulation = "DB_POPULATION|INSERINDO ROTA|INSERINDO CLIENTE|INSERINDO A
 # Padrao focado apenas na navegação após envio de contratos/aditivos
 $patternNavegacao = "SignatureCaptureFragment|AditivoSignatureFragment|ClientDetailFragment|INÍCIO NAVEGAÇÃO|FIM NAVEGAÇÃO|DADOS DO CONTRATO|clienteId|contratoNumero|contratoId|assinaturaContexto|Fragment ativo|isAdded|isDetached|isRemoving|clienteId válido|clienteId inválido|Bundle criado|Tentando navegar|Navegação executada|Erro na navegação|Tentando navegação sem bundle|Navegação sem bundle executada|Fazendo popBackStack|CONTRATO CARREGADO|Aditivo assinado|Erro no ViewModel|ESTADO DO CONTRATO ANTES DO ENVIO|INÍCIO ENVIO|Timestamp|Fragment ativo|ESTADO DO CONTRATO ANTES DO ENVIO|Contrato|Cliente ID|Número|Contexto|INÍCIO ENVIO CONTRATO VIA WHATSAPP|INÍCIO ENVIO ADITIVO VIA WHATSAPP|CONTRATO CARREGADO|ID|Número|Cliente ID|Status|Contrato é null no observer|Aditivo assinado - botão habilitado|Erro no ViewModel"
 
-$pattern = if ($OnlyVenda) { $patternVenda } elseif ($OnlyAbastecimento) { $patternAbastecimento } elseif ($OnlyPanos) { $patternPanos } elseif ($OnlyEstoque) { $patternEstoque } elseif ($OnlyMetas) { $patternMetas } elseif ($OnlyPopulation) { $patternPopulation } elseif ($OnlyNavegacao) { $patternNavegacao } else { $patternAll }
+# Padrao focado apenas nos logs de recibos (impressão e WhatsApp)
+$patternReceipts = "SettlementDetailFragment|SettlementSummaryDialog|ReciboPrinterHelper|SettlementDetailViewModel|DADOS DO CLIENTE CARREGADOS|Cliente encontrado|Nome|ValorFicha|DADOS PARA IMPRESSÃO|Cliente Nome|Cliente CPF|Valor Ficha|Acerto ID|Número Contrato|Mesas Completas|BUSCA CONTRATO|Acerto ID|Cliente ID|Contrato encontrado|Número do contrato|preencherReciboImpressaoCompleto|gerarTextoWhatsApp|compartilharViaWhatsApp|imprimirRecibo|preencherLayoutRecibo|obterMesasCompletas|obterNumeroContrato|obterValorFichaExibir|DADOS DO CLIENTE|Cliente ID|Nome do cliente|Telefone do cliente|CPF do cliente|ValorFicha|DADOS DO ACERTO|Acerto ID|Data|Status|Valor Total|Desconto|Débito Anterior|Débito Atual|Observações|Métodos de Pagamento|Pano trocado|Número do pano|Data finalização|DADOS DO CONTRATO|Contrato ID|Número|Cliente ID|Status|Data criação|Data assinatura|Data encerramento|Representante|Tipo|Observações|DADOS DAS MESAS|Mesa ID|Acerto ID|Relógio inicial|Relógio final|Fichas jogadas|Valor fixo|Subtotal|Com defeito|Relógio reiniciou|DADOS COMPLETOS DAS MESAS|Mesa encontrada|Número da mesa|Tipo da mesa|Status|Data criação|Data atualização|Observações|DADOS DO CONTRATO ATIVO|Contrato ativo encontrado|Número do contrato|Cliente ID|Status|Data criação|Data assinatura|Representante|Tipo|Observações|DADOS PARA IMPRESSÃO|Cliente Nome|Cliente CPF|Valor Ficha|Acerto ID|Número Contrato|Mesas Completas|DADOS PARA WHATSAPP|Cliente Nome|Cliente CPF|Valor Ficha|Acerto ID|Número Contrato|Mesas Completas|DADOS DO CLIENTE CARREGADOS|Cliente encontrado|Nome|ValorFicha|DADOS DO CLIENTE|Cliente ID|Nome do cliente|Telefone do cliente|CPF do cliente|ValorFicha|DADOS DO ACERTO|Acerto ID|Data|Status|Valor Total|Desconto|Débito Anterior|Débito Atual|Observações|Métodos de Pagamento|Pano trocado|Número do pano|Data finalização|DADOS DO CONTRATO|Contrato ID|Número|Cliente ID|Status|Data criação|Data assinatura|Data encerramento|Representante|Tipo|Observações|DADOS DAS MESAS|Mesa ID|Acerto ID|Relógio inicial|Relógio final|Fichas jogadas|Valor fixo|Subtotal|Com defeito|Relógio reiniciou|DADOS COMPLETOS DAS MESAS|Mesa encontrada|Número da mesa|Tipo da mesa|Status|Data criação|Data atualização|Observações|DADOS DO CONTRATO ATIVO|Contrato ativo encontrado|Número do contrato|Cliente ID|Status|Data criação|Data assinatura|Representante|Tipo|Observações|DADOS PARA IMPRESSÃO|Cliente Nome|Cliente CPF|Valor Ficha|Acerto ID|Número Contrato|Mesas Completas|DADOS PARA WHATSAPP|Cliente Nome|Cliente CPF|Valor Ficha|Acerto ID|Número Contrato|Mesas Completas"
+
+$pattern = if ($OnlyVenda) { $patternVenda } elseif ($OnlyAbastecimento) { $patternAbastecimento } elseif ($OnlyPanos) { $patternPanos } elseif ($OnlyEstoque) { $patternEstoque } elseif ($OnlyMetas) { $patternMetas } elseif ($OnlyPopulation) { $patternPopulation } elseif ($OnlyNavegacao) { $patternNavegacao } elseif ($OnlyReceipts) { $patternReceipts } else { $patternAll }
 
 # Opcional: salvar em arquivo
 $logDir = Join-Path $PSScriptRoot "logs"
 if ($ToFile) {
     if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
     $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    $logFile = Join-Path $logDir (if ($OnlyVenda) { "logcat-venda-$timestamp.txt" } elseif ($OnlyAbastecimento) { "logcat-abastecimento-$timestamp.txt" } elseif ($OnlyPanos) { "logcat-panos-$timestamp.txt" } elseif ($OnlyEstoque) { "logcat-estoque-$timestamp.txt" } elseif ($OnlyMetas) { "logcat-metas-$timestamp.txt" } elseif ($OnlyPopulation) { "logcat-population-$timestamp.txt" } elseif ($OnlyNavegacao) { "logcat-navegacao-$timestamp.txt" } else { "logcat-all-$timestamp.txt" })
+    $logFile = Join-Path $logDir (if ($OnlyVenda) { "logcat-venda-$timestamp.txt" } elseif ($OnlyAbastecimento) { "logcat-abastecimento-$timestamp.txt" } elseif ($OnlyPanos) { "logcat-panos-$timestamp.txt" } elseif ($OnlyEstoque) { "logcat-estoque-$timestamp.txt" } elseif ($OnlyMetas) { "logcat-metas-$timestamp.txt" } elseif ($OnlyPopulation) { "logcat-population-$timestamp.txt" } elseif ($OnlyNavegacao) { "logcat-navegacao-$timestamp.txt" } elseif ($OnlyReceipts) { "logcat-receipts-$timestamp.txt" } else { "logcat-all-$timestamp.txt" })
     Write-Host "Salvando saida tambem em arquivo: $logFile" -ForegroundColor Yellow
 }
 
