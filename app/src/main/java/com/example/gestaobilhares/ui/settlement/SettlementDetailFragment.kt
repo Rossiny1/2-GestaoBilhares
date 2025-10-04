@@ -54,11 +54,10 @@ class SettlementDetailFragment : Fragment() {
         return binding.root
     }
 
-    // ✅ NOVA FUNÇÃO: Regra unificada para exibição do valor da ficha
+    // ✅ CORREÇÃO: Regra unificada para exibição do valor da ficha (igual ao SummaryDialog)
     private fun obterValorFichaExibir(settlement: SettlementDetailViewModel.SettlementDetail): Double {
-        // Mantemos o mesmo critério do SummaryDialog: prioriza valorFicha; se 0, usa comissaoFicha se houver
-        // Atualmente SettlementDetail não expõe comissaoFicha; se necessário, obter do cliente no futuro
-        return if (settlement.valorFicha > 0) settlement.valorFicha else 0.0
+        // ✅ CORREÇÃO: Usar a mesma lógica do SummaryDialog: prioriza valorFicha; se 0, usa comissaoFicha
+        return if (settlement.valorFicha > 0) settlement.valorFicha else if (settlement.comissaoFicha > 0) settlement.comissaoFicha else 0.0
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -456,6 +455,17 @@ class SettlementDetailFragment : Fragment() {
                 val mesasCompletas = obterMesasCompletas(settlement)
                 val numeroContrato = obterNumeroContrato(settlement)
                 
+                // ✅ LOGS CRÍTICOS: Verificar dados antes de imprimir
+                AppLogger.log("SettlementDetailFragment", "=== DADOS PARA IMPRESSÃO ===")
+                AppLogger.log("SettlementDetailFragment", "Cliente Nome: '${settlement.clienteNome}'")
+                AppLogger.log("SettlementDetailFragment", "Cliente CPF: '${settlement.clienteCpf}'")
+                AppLogger.log("SettlementDetailFragment", "ValorFicha original: ${settlement.valorFicha}")
+                AppLogger.log("SettlementDetailFragment", "ComissaoFicha original: ${settlement.comissaoFicha}")
+                AppLogger.log("SettlementDetailFragment", "Valor Ficha Exibir: ${obterValorFichaExibir(settlement)}")
+                AppLogger.log("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
+                AppLogger.log("SettlementDetailFragment", "Número Contrato: '$numeroContrato'")
+                AppLogger.log("SettlementDetailFragment", "Mesas Completas: ${mesasCompletas.size}")
+                
                 // Usar a função centralizada com informações completas das mesas
                 ReciboPrinterHelper.preencherReciboImpressaoCompleto(
                     context = requireContext(),
@@ -517,6 +527,17 @@ class SettlementDetailFragment : Fragment() {
                 val numeroContrato = obterNumeroContrato(settlement)
                 val valorFichaExibirLocal = obterValorFichaExibir(settlement)
                 
+                // ✅ LOGS CRÍTICOS: Verificar dados antes do WhatsApp
+                AppLogger.log("SettlementDetailFragment", "=== DADOS PARA WHATSAPP ===")
+                AppLogger.log("SettlementDetailFragment", "Cliente Nome: '${settlement.clienteNome}'")
+                AppLogger.log("SettlementDetailFragment", "Cliente CPF: '${settlement.clienteCpf}'")
+                AppLogger.log("SettlementDetailFragment", "ValorFicha original: ${settlement.valorFicha}")
+                AppLogger.log("SettlementDetailFragment", "ComissaoFicha original: ${settlement.comissaoFicha}")
+                AppLogger.log("SettlementDetailFragment", "Valor Ficha Exibir: $valorFichaExibirLocal")
+                AppLogger.log("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
+                AppLogger.log("SettlementDetailFragment", "Número Contrato: '$numeroContrato'")
+                AppLogger.log("SettlementDetailFragment", "Mesas Completas: ${mesasCompletas.size}")
+                
                 // ✅ CORREÇÃO: Usar ReciboPrinterHelper para gerar texto WhatsApp (mesma fonte de verdade)
                 val textoResumo = ReciboPrinterHelper.gerarTextoWhatsApp(
                     clienteNome = settlement.clienteNome,
@@ -568,10 +589,16 @@ class SettlementDetailFragment : Fragment() {
      * ✅ MÉTODO CENTRALIZADO: Obtém número do contrato (FONTE ÚNICA DE VERDADE)
      */
     private suspend fun obterNumeroContrato(settlement: SettlementDetailViewModel.SettlementDetail): String? {
-        val acertoCompleto = viewModel.buscarAcertoPorId(args.acertoId)
+        // ✅ CORREÇÃO: Usar settlement.id em vez de args.acertoId para garantir consistência
+        val acertoCompleto = viewModel.buscarAcertoPorId(settlement.id)
         val contratoAtivo = acertoCompleto?.let { 
             viewModel.buscarContratoAtivoPorCliente(it.clienteId) 
         }
+        AppLogger.log("SettlementDetailFragment", "=== BUSCA CONTRATO ===")
+        AppLogger.log("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
+        AppLogger.log("SettlementDetailFragment", "Cliente ID: ${acertoCompleto?.clienteId}")
+        AppLogger.log("SettlementDetailFragment", "Contrato encontrado: ${contratoAtivo != null}")
+        AppLogger.log("SettlementDetailFragment", "Número do contrato: ${contratoAtivo?.numeroContrato}")
         return contratoAtivo?.numeroContrato
     }
 

@@ -115,12 +115,20 @@ class SettlementDetailViewModel(
                     AppLogger.log("SettlementDetail", "Métodos de pagamento: $metodosPagamento")
                     AppLogger.log("SettlementDetail", "Data finalização: ${acerto.dataFinalizacao}")
 
-                    // ✅ NOVO: Carregar dados do cliente
+                    // ✅ CORREÇÃO CRÍTICA: Sempre carregar dados do cliente para garantir dados completos
                     val cliente = clienteRepository.obterPorId(acerto.clienteId)
                     val clienteNome = cliente?.nome ?: "Cliente #${acerto.clienteId}"
                     val clienteTelefone = cliente?.telefone
                     val clienteCpf = cliente?.cpfCnpj
-                    val clienteValorFicha = cliente?.valorFicha ?: 0.0
+                    // ✅ CORREÇÃO: Sempre usar valorFicha do cliente (fonte de verdade)
+                    val valorFichaCliente = cliente?.valorFicha ?: 0.0
+                    val comissaoFichaCliente = cliente?.comissaoFicha ?: 0.0
+                    
+                    AppLogger.log("SettlementDetail", "=== DADOS DO CLIENTE CARREGADOS ===")
+                    AppLogger.log("SettlementDetail", "Cliente encontrado: ${cliente != null}")
+                    AppLogger.log("SettlementDetail", "Nome: $clienteNome")
+                    AppLogger.log("SettlementDetail", "ValorFicha: $valorFichaCliente")
+                    AppLogger.log("SettlementDetail", "ComissaoFicha: $comissaoFichaCliente")
                     
                     AppLogger.log("SettlementDetail", "=== DADOS DO CLIENTE ===")
                     AppLogger.log("SettlementDetail", "Cliente ID: ${acerto.clienteId}")
@@ -150,7 +158,8 @@ class SettlementDetailViewModel(
                         clienteNome = clienteNome,
                         clienteTelefone = clienteTelefone,
                         clienteCpf = clienteCpf,
-                        valorFicha = clienteValorFicha
+                        valorFicha = valorFichaCliente,
+                        comissaoFicha = comissaoFichaCliente
                     )
                     
                     _settlementDetail.value = settlementDetail
@@ -192,7 +201,8 @@ class SettlementDetailViewModel(
         val clienteNome: String,
         val clienteTelefone: String?,
         val clienteCpf: String?,
-        val valorFicha: Double
+        val valorFicha: Double,
+        val comissaoFicha: Double
     )
 
     /**

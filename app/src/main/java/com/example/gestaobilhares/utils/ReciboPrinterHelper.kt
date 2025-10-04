@@ -102,8 +102,8 @@ object ReciboPrinterHelper {
             rowNumeroContrato.visibility = View.GONE
         }
         
-        // Data
-        txtData.text = "Data: $dataFormatada"
+        // Data (apenas o valor, o rótulo já existe no layout)
+        txtData.text = dataFormatada
 
         // Valor da ficha - SEMPRE exibir
         txtValorFicha.text = formatter.format(valorFicha)
@@ -200,12 +200,14 @@ object ReciboPrinterHelper {
         if (!numeroContrato.isNullOrBlank()) {
             texto.append("📋 *Contrato:* $numeroContrato\n")
         }
-        texto.append("📅 *Data:* $dataAtual\n\n")
+        // Linha única entre Data e Preço da ficha (sem linha em branco)
+        texto.append("📅 *Data:* $dataAtual\n")
         
-        // ✅ VALOR DA FICHA (mesmo do recibo impresso)
-        if (valorFicha > 0) {
-            texto.append("💰 *Preço da ficha:* ${formatter.format(valorFicha)}\n\n")
-        }
+        // ✅ CORREÇÃO: Sempre exibir preço da ficha, mesmo se for 0
+        texto.append("💰 *Preço da ficha:* ${formatter.format(valorFicha)}\n")
+        
+        // ✅ CORREÇÃO: Quebra dupla antes de MESAS ACERTADAS
+        texto.append("\n")
         
         // ✅ MESAS (formatação igual ao recibo impresso - nome da mesa em uma linha, relógios na linha de baixo)
         texto.append("🎯 *MESAS ACERTADAS:*\n")
