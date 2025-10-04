@@ -127,39 +127,13 @@
             android:textSize="7sp" />
     </LinearLayout>
 
-    <!-- Valor da Ficha -->
-    <LinearLayout
-        android:id="@+id/rowValorFicha"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginBottom="2dp"
-        android:visibility="gone">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Preço da ficha: "
-            android:textStyle="bold"
-            android:textColor="#000000"
-            android:textSize="7sp" />
-        <TextView
-            android:id="@+id/txtValorFicha"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textStyle="bold|italic"
-            android:textColor="#000000"
-            android:textSize="7sp" />
-    </LinearLayout>
-
     <!-- Data -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginBottom="4dp">
+        android:layout_marginBottom="2dp">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -172,6 +146,32 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="08/07/2025"
+            android:textStyle="bold|italic"
+            android:textColor="#000000"
+            android:textSize="7sp" />
+    </LinearLayout>
+
+    <!-- Valor da Ficha -->
+    <LinearLayout
+        android:id="@+id/rowValorFicha"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="4dp"
+        android:visibility="visible">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Preço da ficha: "
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:textSize="7sp" />
+        <TextView
+            android:id="@+id/txtValorFicha"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
             android:textStyle="bold|italic"
             android:textColor="#000000"
             android:textSize="7sp" />

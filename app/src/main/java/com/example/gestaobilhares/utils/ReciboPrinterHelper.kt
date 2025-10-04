@@ -83,7 +83,7 @@ object ReciboPrinterHelper {
         }
         txtTitulo.text = titulo
 
-        // Cliente e CPF
+        // Cliente e CPF - SEMPRE exibir
         txtClienteValor.text = clienteNome
         
         // CPF do cliente
@@ -94,7 +94,7 @@ object ReciboPrinterHelper {
             rowCpfCliente.visibility = View.GONE
         }
         
-        // Número do contrato
+        // Número do contrato - SEMPRE exibir se disponível
         if (!numeroContrato.isNullOrBlank()) {
             txtNumeroContrato.text = numeroContrato
             rowNumeroContrato.visibility = View.VISIBLE
@@ -105,13 +105,9 @@ object ReciboPrinterHelper {
         // Data
         txtData.text = "Data: $dataFormatada"
 
-        // Valor da ficha
-        if (valorFicha > 0) {
-            txtValorFicha.text = formatter.format(valorFicha)
-            rowValorFicha.visibility = View.VISIBLE
-        } else {
-            rowValorFicha.visibility = View.GONE
-        }
+        // Valor da ficha - SEMPRE exibir
+        txtValorFicha.text = formatter.format(valorFicha)
+        rowValorFicha.visibility = View.VISIBLE
 
         // Mesas (formatação com tipo do equipamento e número real da mesa)
         val mesasFormatadas = StringBuilder()
@@ -146,9 +142,9 @@ object ReciboPrinterHelper {
         }
         txtPagamentos.text = pagamentosFormatados
 
-        // Observações
+        // Observações - SEMPRE exibir
         if (observacao.isNullOrBlank()) {
-            txtObservacoes.text = "-"
+            txtObservacoes.text = "Nenhuma observação registrada."
         } else {
             txtObservacoes.text = observacao
         }
@@ -211,55 +207,50 @@ object ReciboPrinterHelper {
             texto.append("💰 *Preço da ficha:* ${formatter.format(valorFicha)}\n\n")
         }
         
-        // ✅ MESAS (mesmo do recibo impresso - número real da mesa)
+        // ✅ MESAS (formatação igual ao recibo impresso - nome da mesa em uma linha, relógios na linha de baixo)
         texto.append("🎯 *MESAS ACERTADAS:*\n")
         var totalFichasJogadas = 0
         mesasCompletas.forEach { mesa ->
             val fichasJogadas = mesa.fichasFinal - mesa.fichasInicial
             totalFichasJogadas += fichasJogadas
             val tipoEquipamento = getTipoEquipamentoNome(mesa.tipoMesa)
-            // ✅ CORREÇÃO: Usar número real da mesa, não índice
-            texto.append("• *$tipoEquipamento ${mesa.numero}*: ${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)\n")
+            // ✅ CORREÇÃO: Formatação igual ao impresso - nome da mesa em uma linha, relógios na linha de baixo
+            texto.append("• *$tipoEquipamento ${mesa.numero}*\n")
+            texto.append("  ${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)\n")
         }
         if (totalFichasJogadas > 0) {
             texto.append("\n*Total de fichas jogadas: $totalFichasJogadas*\n\n")
         }
         
-        // ✅ RESUMO FINANCEIRO (mesmo do recibo impresso)
+        // ✅ RESUMO FINANCEIRO (sempre exibe todos os campos, como no recibo impresso)
         texto.append("💰 *RESUMO FINANCEIRO:*\n")
-        if (debitoAnterior > 0) {
-            texto.append("• Débito anterior: ${formatter.format(debitoAnterior)}\n")
-        }
+        texto.append("• Débito anterior: ${formatter.format(debitoAnterior)}\n")
         texto.append("• Total das mesas: ${formatter.format(valorTotalMesas)}\n")
-        if (valorFicha > 0) {
-            texto.append("• Valor da ficha: ${formatter.format(valorFicha)}\n")
-        }
+        texto.append("• Valor da ficha: ${formatter.format(valorFicha)}\n")
         val valorTotal = valorTotalMesas + debitoAnterior
         texto.append("• Valor total: ${formatter.format(valorTotal)}\n")
-        if (desconto > 0) {
-            texto.append("• Desconto: ${formatter.format(desconto)}\n")
-        }
-        if (metodosPagamento.isNotEmpty()) {
-            val valorRecebido = metodosPagamento.values.sum()
-            texto.append("• Valor recebido: ${formatter.format(valorRecebido)}\n")
-        }
-        if (debitoAtual > 0) {
-            texto.append("• Débito atual: ${formatter.format(debitoAtual)}\n")
-        }
+        texto.append("• Desconto: ${formatter.format(desconto)}\n")
+        val valorRecebido = metodosPagamento.values.sum()
+        texto.append("• Valor recebido: ${formatter.format(valorRecebido)}\n")
+        texto.append("• Débito atual: ${formatter.format(debitoAtual)}\n")
         texto.append("\n")
         
         // ✅ FORMA DE PAGAMENTO (mesmo do recibo impresso)
+        texto.append("💳 *FORMA DE PAGAMENTO:*\n")
         if (metodosPagamento.isNotEmpty()) {
-            texto.append("💳 *FORMA DE PAGAMENTO:*\n")
             metodosPagamento.forEach { (metodo, valor) ->
                 texto.append("• $metodo: ${formatter.format(valor)}\n")
             }
-            texto.append("\n")
+        } else {
+            texto.append("Não informado\n")
         }
+        texto.append("\n")
         
-        // ✅ OBSERVAÇÕES (mesmo do recibo impresso)
+        // ✅ OBSERVAÇÕES - SEMPRE exibir (mesmo do recibo impresso)
         if (!observacao.isNullOrBlank()) {
             texto.append("📝 *Observações:* $observacao\n\n")
+        } else {
+            texto.append("📝 *Observações:* Nenhuma observação registrada.\n\n")
         }
         
         texto.append("--------------------------------\n")
@@ -370,9 +361,9 @@ object ReciboPrinterHelper {
         }
         txtPagamentos.text = pagamentosFormatados
 
-        // Observações
+        // Observações - SEMPRE exibir
         if (observacao.isNullOrBlank()) {
-            txtObservacoes.text = "-"
+            txtObservacoes.text = "Nenhuma observação registrada."
         } else {
             txtObservacoes.text = observacao
         }
