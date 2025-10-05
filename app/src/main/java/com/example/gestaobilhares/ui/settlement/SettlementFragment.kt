@@ -1088,7 +1088,7 @@ class SettlementFragment : Fragment() {
                     Gson().fromJson(it, object : TypeToken<Map<String, Double>>() {}.type)
                 } ?: emptyMap()
                 
-                // ✅ CORREÇÃO: Obter números reais das mesas
+                // ✅ CORREÇÃO: Obter números reais das mesas com tipoMesa correto
                 val mesasComNumerosReais = mesas.map { mesaAcerto ->
                     val mesaReal = viewModel.buscarMesaPorId(mesaAcerto.mesaId)
                     Mesa(
@@ -1097,7 +1097,7 @@ class SettlementFragment : Fragment() {
                         fichasInicial = mesaAcerto.relogioInicial,
                         fichasFinal = mesaAcerto.relogioFinal,
                         valorFixo = mesaAcerto.valorFixo,
-                        tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA
+                        tipoMesa = mesaReal?.tipoMesa ?: com.example.gestaobilhares.data.entities.TipoMesa.SINUCA // ✅ CORREÇÃO: Usar tipoMesa real
                     )
                 }
                 

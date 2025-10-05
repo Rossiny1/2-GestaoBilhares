@@ -83,7 +83,7 @@ object ReciboPrinterHelper {
         }
         txtTitulo.text = titulo
 
-        // Cliente e CPF - SEMPRE exibir
+        // ✅ CORREÇÃO: Cliente - SEMPRE exibir (mesma lógica da data)
         txtClienteValor.text = clienteNome
         
         // CPF do cliente
@@ -94,13 +94,15 @@ object ReciboPrinterHelper {
             rowCpfCliente.visibility = View.GONE
         }
         
-        // Número do contrato - SEMPRE exibir se disponível
-        if (!numeroContrato.isNullOrBlank()) {
-            txtNumeroContrato.text = numeroContrato
-            rowNumeroContrato.visibility = View.VISIBLE
-        } else {
-            rowNumeroContrato.visibility = View.GONE
-        }
+        // ✅ CORREÇÃO: Número do recibo - SEMPRE exibir (mesma lógica da data)
+        val rowNumeroRecibo = reciboView.findViewById<android.widget.LinearLayout>(R.id.rowNumeroRecibo)
+        val txtNumeroRecibo = reciboView.findViewById<android.widget.TextView>(R.id.txtNumeroRecibo)
+        txtNumeroRecibo.text = acertoId?.toString() ?: "N/A"
+        rowNumeroRecibo.visibility = View.VISIBLE
+        
+        // ✅ CORREÇÃO: Número do contrato - SEMPRE exibir (mesma lógica da data)
+        txtNumeroContrato.text = numeroContrato ?: "N/A"
+        rowNumeroContrato.visibility = View.VISIBLE
         
         // Data (apenas o valor, o rótulo já existe no layout)
         txtData.text = dataFormatada

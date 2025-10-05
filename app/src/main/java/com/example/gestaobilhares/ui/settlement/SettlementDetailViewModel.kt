@@ -126,7 +126,9 @@ class SettlementDetailViewModel(
                     
                     AppLogger.log("SettlementDetail", "=== DADOS DO CLIENTE CARREGADOS ===")
                     AppLogger.log("SettlementDetail", "Cliente encontrado: ${cliente != null}")
-                    AppLogger.log("SettlementDetail", "Nome: $clienteNome")
+                    AppLogger.log("SettlementDetail", "Nome: '$clienteNome'")
+                    AppLogger.log("SettlementDetail", "Telefone: '$clienteTelefone'")
+                    AppLogger.log("SettlementDetail", "CPF: '$clienteCpf'")
                     AppLogger.log("SettlementDetail", "ValorFicha: $valorFichaCliente")
                     AppLogger.log("SettlementDetail", "ComissaoFicha: $comissaoFichaCliente")
                     
@@ -159,7 +161,8 @@ class SettlementDetailViewModel(
                         clienteTelefone = clienteTelefone,
                         clienteCpf = clienteCpf,
                         valorFicha = valorFichaCliente,
-                        comissaoFicha = comissaoFichaCliente
+                        comissaoFicha = comissaoFichaCliente,
+                        dataAcerto = acerto.dataAcerto
                     )
                     
                     _settlementDetail.value = settlementDetail
@@ -202,7 +205,9 @@ class SettlementDetailViewModel(
         val clienteTelefone: String?,
         val clienteCpf: String?,
         val valorFicha: Double,
-        val comissaoFicha: Double
+        val comissaoFicha: Double,
+        // ✅ CORREÇÃO CRÍTICA: Adicionar dataAcerto que estava faltando
+        val dataAcerto: Date
     )
 
     /**

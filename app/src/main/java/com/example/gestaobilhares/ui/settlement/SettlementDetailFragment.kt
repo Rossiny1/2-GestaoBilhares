@@ -54,11 +54,7 @@ class SettlementDetailFragment : Fragment() {
         return binding.root
     }
 
-    // ✅ CORREÇÃO: Regra unificada para exibição do valor da ficha (igual ao SummaryDialog)
-    private fun obterValorFichaExibir(settlement: SettlementDetailViewModel.SettlementDetail): Double {
-        // ✅ CORREÇÃO: Usar a mesma lógica do SummaryDialog: prioriza valorFicha; se 0, usa comissaoFicha
-        return if (settlement.valorFicha > 0) settlement.valorFicha else if (settlement.comissaoFicha > 0) settlement.comissaoFicha else 0.0
-    }
+    // ✅ REMOVIDO: Função obterValorFichaExibir() - agora usamos lógica inline idêntica ao SettlementSummaryDialog
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -446,6 +442,7 @@ class SettlementDetailFragment : Fragment() {
     
     /**
      * ✅ NOVA FUNÇÃO: Preenche o layout do recibo com os dados do acerto
+     * CORREÇÃO: Usar exatamente a mesma lógica do SettlementSummaryDialog
      */
     private fun preencherLayoutRecibo(reciboView: android.view.ViewGroup, settlement: SettlementDetailViewModel.SettlementDetail) {
         // ✅ CORREÇÃO: Usar lifecycleScope para chamadas suspensas
@@ -455,18 +452,28 @@ class SettlementDetailFragment : Fragment() {
                 val mesasCompletas = obterMesasCompletas(settlement)
                 val numeroContrato = obterNumeroContrato(settlement)
                 
+                // ✅ CORREÇÃO CRÍTICA: Usar exatamente a mesma lógica do SettlementSummaryDialog
+                val valorFichaExibir = if (settlement.valorFicha > 0) settlement.valorFicha else if (settlement.comissaoFicha > 0) settlement.comissaoFicha else 0.0
+                
                 // ✅ LOGS CRÍTICOS: Verificar dados antes de imprimir
                 AppLogger.log("SettlementDetailFragment", "=== DADOS PARA IMPRESSÃO ===")
                 AppLogger.log("SettlementDetailFragment", "Cliente Nome: '${settlement.clienteNome}'")
                 AppLogger.log("SettlementDetailFragment", "Cliente CPF: '${settlement.clienteCpf}'")
                 AppLogger.log("SettlementDetailFragment", "ValorFicha original: ${settlement.valorFicha}")
                 AppLogger.log("SettlementDetailFragment", "ComissaoFicha original: ${settlement.comissaoFicha}")
-                AppLogger.log("SettlementDetailFragment", "Valor Ficha Exibir: ${obterValorFichaExibir(settlement)}")
+                AppLogger.log("SettlementDetailFragment", "Valor Ficha Exibir (CORRIGIDO): $valorFichaExibir")
                 AppLogger.log("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
                 AppLogger.log("SettlementDetailFragment", "Número Contrato: '$numeroContrato'")
                 AppLogger.log("SettlementDetailFragment", "Mesas Completas: ${mesasCompletas.size}")
+                AppLogger.log("SettlementDetailFragment", "Débito Anterior: ${settlement.debitoAnterior}")
+                AppLogger.log("SettlementDetailFragment", "Valor Total: ${settlement.valorTotal}")
+                AppLogger.log("SettlementDetailFragment", "Desconto: ${settlement.desconto}")
+                AppLogger.log("SettlementDetailFragment", "Débito Atual: ${settlement.debitoAtual}")
+                AppLogger.log("SettlementDetailFragment", "Observações: '${settlement.observacoes}'")
+                AppLogger.log("SettlementDetailFragment", "Data Acerto: ${settlement.dataAcerto}")
+                AppLogger.log("SettlementDetailFragment", "Métodos Pagamento: ${settlement.metodosPagamento}")
                 
-                // Usar a função centralizada com informações completas das mesas
+                // ✅ CORREÇÃO: Usar exatamente a mesma função e parâmetros do SettlementSummaryDialog
                 ReciboPrinterHelper.preencherReciboImpressaoCompleto(
                     context = requireContext(),
                     reciboView = reciboView,
@@ -479,7 +486,7 @@ class SettlementDetailFragment : Fragment() {
                     metodosPagamento = settlement.metodosPagamento,
                     debitoAtual = settlement.debitoAtual,
                     observacao = settlement.observacoes,
-                    valorFicha = obterValorFichaExibir(settlement),
+                    valorFicha = valorFichaExibir, // ✅ CORREÇÃO: Usar lógica idêntica
                     acertoId = settlement.id,
                     numeroContrato = numeroContrato
                 )
@@ -525,7 +532,9 @@ class SettlementDetailFragment : Fragment() {
                 // ✅ CORREÇÃO: Usar exatamente os mesmos dados da impressão
                 val mesasCompletas = obterMesasCompletas(settlement)
                 val numeroContrato = obterNumeroContrato(settlement)
-                val valorFichaExibirLocal = obterValorFichaExibir(settlement)
+                
+                // ✅ CORREÇÃO CRÍTICA: Usar exatamente a mesma lógica do SettlementSummaryDialog
+                val valorFichaExibir = if (settlement.valorFicha > 0) settlement.valorFicha else if (settlement.comissaoFicha > 0) settlement.comissaoFicha else 0.0
                 
                 // ✅ LOGS CRÍTICOS: Verificar dados antes do WhatsApp
                 AppLogger.log("SettlementDetailFragment", "=== DADOS PARA WHATSAPP ===")
@@ -533,7 +542,7 @@ class SettlementDetailFragment : Fragment() {
                 AppLogger.log("SettlementDetailFragment", "Cliente CPF: '${settlement.clienteCpf}'")
                 AppLogger.log("SettlementDetailFragment", "ValorFicha original: ${settlement.valorFicha}")
                 AppLogger.log("SettlementDetailFragment", "ComissaoFicha original: ${settlement.comissaoFicha}")
-                AppLogger.log("SettlementDetailFragment", "Valor Ficha Exibir: $valorFichaExibirLocal")
+                AppLogger.log("SettlementDetailFragment", "Valor Ficha Exibir (CORRIGIDO): $valorFichaExibir")
                 AppLogger.log("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
                 AppLogger.log("SettlementDetailFragment", "Número Contrato: '$numeroContrato'")
                 AppLogger.log("SettlementDetailFragment", "Mesas Completas: ${mesasCompletas.size}")
@@ -549,7 +558,7 @@ class SettlementDetailFragment : Fragment() {
                     metodosPagamento = settlement.metodosPagamento,
                     debitoAtual = settlement.debitoAtual,
                     observacao = settlement.observacoes,
-                    valorFicha = valorFichaExibirLocal,
+                    valorFicha = valorFichaExibir, // ✅ CORREÇÃO: Usar lógica idêntica
                     acertoId = settlement.id,
                     numeroContrato = numeroContrato
                 )
@@ -571,17 +580,26 @@ class SettlementDetailFragment : Fragment() {
         val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
         val mesasCompletas = mutableListOf<Mesa>()
         
+        AppLogger.log("SettlementDetailFragment", "=== BUSCANDO MESAS COMPLETAS ===")
+        AppLogger.log("SettlementDetailFragment", "Total acertoMesas: ${settlement.acertoMesas.size}")
+        
         for (acertoMesa in settlement.acertoMesas) {
+            AppLogger.log("SettlementDetailFragment", "Buscando mesa ID: ${acertoMesa.mesaId}")
             val mesaCompleta = mesaRepository.buscarPorId(acertoMesa.mesaId)
             if (mesaCompleta != null) {
+                AppLogger.log("SettlementDetailFragment", "Mesa encontrada: ${mesaCompleta.numero} (${mesaCompleta.tipoMesa})")
                 val mesaComAcerto = mesaCompleta.copy(
                     fichasInicial = acertoMesa.relogioInicial,
                     fichasFinal = acertoMesa.relogioFinal
                 )
                 mesasCompletas.add(mesaComAcerto)
+                AppLogger.log("SettlementDetailFragment", "Mesa adicionada: ${mesaComAcerto.numero} - ${mesaComAcerto.fichasInicial} → ${mesaComAcerto.fichasFinal}")
+            } else {
+                AppLogger.log("SettlementDetailFragment", "❌ Mesa não encontrada: ${acertoMesa.mesaId}")
             }
         }
         
+        AppLogger.log("SettlementDetailFragment", "Total mesas completas: ${mesasCompletas.size}")
         return mesasCompletas
     }
     
