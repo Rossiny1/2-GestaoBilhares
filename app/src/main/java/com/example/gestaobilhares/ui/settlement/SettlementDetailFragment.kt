@@ -66,26 +66,7 @@ class SettlementDetailFragment : Fragment() {
         loadData()
     }
     
-    /**
-     * ✅ NOVA FUNÇÃO: Callback para resultado das permissões Bluetooth
-     */
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        
-        if (requestCode == 1001) {
-            val allPermissionsGranted = grantResults.all { it == android.content.pm.PackageManager.PERMISSION_GRANTED }
-            
-            if (allPermissionsGranted) {
-                android.widget.Toast.makeText(requireContext(), "Permissões concedidas! Tentando imprimir novamente...", android.widget.Toast.LENGTH_SHORT).show()
-                // ✅ CORREÇÃO: Tentar imprimir novamente automaticamente (igual SettlementSummaryDialog)
-                currentSettlement?.let { settlement ->
-                    continuarImpressao(settlement)
-                }
-            } else {
-                android.widget.Toast.makeText(requireContext(), "Permissões negadas. Não é possível imprimir.", android.widget.Toast.LENGTH_LONG).show()
-            }
-        }
-    }
+    // ✅ REMOVIDO: Callback de permissões - agora centralizado no ReciboPrinterHelper
 
     private fun initializeViewModel() {
         // Inicializar ViewModel onde o contexto está disponível
@@ -322,18 +303,45 @@ class SettlementDetailFragment : Fragment() {
         }
     }
 
-    // ✅ NOVA FUNCIONALIDADE: Imprimir recibo
+    // ✅ FUNCIONALIDADE UNIFICADA: Imprimir recibo usando função centralizada
     private fun imprimirRecibo(settlement: SettlementDetailViewModel.SettlementDetail) {
         lifecycleScope.launch {
             try {
-                // Verificar permissões Bluetooth
-                if (!hasBluetoothPermissions()) {
-                    requestBluetoothPermissions(settlement)
-                    return@launch
-                }
+                // Obter dados necessários
+                val mesasCompletas = obterMesasCompletas(settlement)
+                val numeroContrato = obterNumeroContrato(settlement)
+                val valorFichaExibir = if (settlement.valorFicha > 0) settlement.valorFicha else if (settlement.comissaoFicha > 0) settlement.comissaoFicha else 0.0
                 
-                // Se chegou aqui, as permissões estão OK, continuar com a impressão
-                continuarImpressao(settlement)
+                // ✅ USAR FUNÇÃO CENTRALIZADA
+                ReciboPrinterHelper.imprimirReciboUnificado(
+                    context = requireContext(),
+                    clienteNome = settlement.clienteNome,
+                    clienteCpf = settlement.clienteCpf,
+                    clienteTelefone = settlement.clienteTelefone,
+                    mesasCompletas = mesasCompletas,
+                    debitoAnterior = settlement.debitoAnterior,
+                    valorTotalMesas = settlement.valorTotal,
+                    desconto = settlement.desconto,
+                    metodosPagamento = settlement.metodosPagamento,
+                    debitoAtual = settlement.debitoAtual,
+                    observacao = settlement.observacoes,
+                    valorFicha = valorFichaExibir,
+                    acertoId = settlement.id,
+                    numeroContrato = numeroContrato,
+                    onSucesso = {
+                        android.widget.Toast.makeText(requireContext(), "Recibo enviado para impressão!", android.widget.Toast.LENGTH_SHORT).show()
+                    },
+                    onErro = { erro ->
+                        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                            .setTitle("Erro na impressão")
+                            .setMessage(erro)
+                            .setPositiveButton("Tentar novamente") { _, _ ->
+                                imprimirRecibo(settlement)
+                            }
+                            .setNegativeButton("Cancelar", null)
+                            .show()
+                    }
+                )
                 
             } catch (e: Exception) {
                 AppLogger.log("SettlementDetailFragment", "Erro ao preparar impressão: ${e.message}")
@@ -342,198 +350,17 @@ class SettlementDetailFragment : Fragment() {
         }
     }
     
-    /**
-     * ✅ NOVA FUNÇÃO: Continua o processo de impressão após verificar permissões
-     */
-    private fun continuarImpressao(settlement: SettlementDetailViewModel.SettlementDetail) {
-        try {
-            val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
-            if (bluetoothAdapter == null) {
-                android.widget.Toast.makeText(requireContext(), "Bluetooth não disponível neste dispositivo", android.widget.Toast.LENGTH_SHORT).show()
-                return
-            }
-            
-            if (!bluetoothAdapter.isEnabled) {
-                android.widget.Toast.makeText(requireContext(), "Ative o Bluetooth para imprimir", android.widget.Toast.LENGTH_SHORT).show()
-                return
-            }
-            
-            val pairedDevices = bluetoothAdapter.bondedDevices
-            if (pairedDevices.isEmpty()) {
-                android.widget.Toast.makeText(requireContext(), "Nenhuma impressora Bluetooth pareada", android.widget.Toast.LENGTH_SHORT).show()
-                return
-            }
-            
-            // Diálogo de seleção de impressora
-            val deviceList = pairedDevices.toList()
-            val deviceNames = deviceList.map { it.name ?: it.address }.toTypedArray()
-            
-            android.app.AlertDialog.Builder(requireContext())
-                .setTitle("Selecione a impressora")
-                .setItems(deviceNames) { _, which ->
-                    val printerDevice = deviceList[which]
-                    imprimirComImpressoraSelecionada(settlement, printerDevice)
-                }
-                .setNegativeButton("Cancelar", null)
-                .show()
-                
-        } catch (e: Exception) {
-            AppLogger.log("SettlementDetailFragment", "Erro ao continuar impressão: ${e.message}")
-            android.widget.Toast.makeText(requireContext(), "Erro ao continuar impressão: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
-        }
-    }
+    // ✅ REMOVIDO: Funções duplicadas - agora usamos funções centralizadas do ReciboPrinterHelper
     
-    /**
-     * ✅ NOVA FUNÇÃO: Imprime com a impressora selecionada
-     */
-    private fun imprimirComImpressoraSelecionada(settlement: SettlementDetailViewModel.SettlementDetail, printerDevice: android.bluetooth.BluetoothDevice) {
-        // Mostrar diálogo de loading
-        val loadingDialog = android.app.AlertDialog.Builder(requireContext())
-            .setMessage("Imprimindo recibo...")
-            .setCancelable(false)
-            .create()
-        loadingDialog.show()
-        
-        // Executar impressão em thread separada
-        Thread {
-            var erro: String? = null
-            try {
-                val printerHelper = BluetoothPrinterHelper(printerDevice)
-                if (printerHelper.connect()) {
-                    // Inflar o layout do recibo
-                    val inflater = android.view.LayoutInflater.from(requireContext())
-                    val reciboView = inflater.inflate(com.example.gestaobilhares.R.layout.layout_recibo_impressao, null) as android.view.ViewGroup
-                    
-                    // Preencher campos do recibo
-                    preencherLayoutRecibo(reciboView, settlement)
-                    
-                    // Imprimir
-                    printerHelper.printReciboLayoutBitmap(reciboView)
-                    printerHelper.disconnect()
-                } else {
-                    erro = "Falha ao conectar à impressora"
-                }
-            } catch (e: Exception) {
-                erro = when {
-                    e.message?.contains("socket") == true -> "Impressora desligada ou fora de alcance"
-                    e.message?.contains("broken pipe") == true -> "Falha ao enviar dados. Impressora pode estar desconectada"
-                    else -> "Erro inesperado: ${e.message ?: "Desconhecido"}"
-                }
-            }
-            
-            // Atualizar UI na thread principal
-            requireActivity().runOnUiThread {
-                loadingDialog.dismiss()
-                if (erro == null) {
-                    android.widget.Toast.makeText(requireContext(), "Recibo enviado para impressão!", android.widget.Toast.LENGTH_SHORT).show()
-                } else {
-                    android.app.AlertDialog.Builder(requireContext())
-                        .setTitle("Erro na impressão")
-                        .setMessage(erro)
-                        .setPositiveButton("Tentar novamente") { _, _ ->
-                            imprimirComImpressoraSelecionada(settlement, printerDevice)
-                        }
-                        .setNegativeButton("Cancelar", null)
-                        .show()
-                }
-            }
-        }.start()
-    }
-    
-    /**
-     * ✅ NOVA FUNÇÃO: Preenche o layout do recibo com os dados do acerto
-     * CORREÇÃO: Usar exatamente a mesma lógica do SettlementSummaryDialog
-     */
-    private fun preencherLayoutRecibo(reciboView: android.view.ViewGroup, settlement: SettlementDetailViewModel.SettlementDetail) {
-        // ✅ CORREÇÃO: Usar lifecycleScope para chamadas suspensas
-        lifecycleScope.launch {
-            try {
-                // ✅ CORREÇÃO: Usar métodos centralizados para garantir consistência
-                val mesasCompletas = obterMesasCompletas(settlement)
-                val numeroContrato = obterNumeroContrato(settlement)
-                
-                // ✅ CORREÇÃO CRÍTICA: Usar exatamente a mesma lógica do SettlementSummaryDialog
-                val valorFichaExibir = if (settlement.valorFicha > 0) settlement.valorFicha else if (settlement.comissaoFicha > 0) settlement.comissaoFicha else 0.0
-                
-                // ✅ LOGS CRÍTICOS: Verificar dados antes de imprimir
-                AppLogger.log("SettlementDetailFragment", "=== DADOS PARA IMPRESSÃO ===")
-                AppLogger.log("SettlementDetailFragment", "Cliente Nome: '${settlement.clienteNome}'")
-                AppLogger.log("SettlementDetailFragment", "Cliente CPF: '${settlement.clienteCpf}'")
-                AppLogger.log("SettlementDetailFragment", "ValorFicha original: ${settlement.valorFicha}")
-                AppLogger.log("SettlementDetailFragment", "ComissaoFicha original: ${settlement.comissaoFicha}")
-                AppLogger.log("SettlementDetailFragment", "Valor Ficha Exibir (CORRIGIDO): $valorFichaExibir")
-                AppLogger.log("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
-                AppLogger.log("SettlementDetailFragment", "Número Contrato: '$numeroContrato'")
-                AppLogger.log("SettlementDetailFragment", "Mesas Completas: ${mesasCompletas.size}")
-                AppLogger.log("SettlementDetailFragment", "Débito Anterior: ${settlement.debitoAnterior}")
-                AppLogger.log("SettlementDetailFragment", "Valor Total: ${settlement.valorTotal}")
-                AppLogger.log("SettlementDetailFragment", "Desconto: ${settlement.desconto}")
-                AppLogger.log("SettlementDetailFragment", "Débito Atual: ${settlement.debitoAtual}")
-                AppLogger.log("SettlementDetailFragment", "Observações: '${settlement.observacoes}'")
-                AppLogger.log("SettlementDetailFragment", "Data Acerto: ${settlement.dataAcerto}")
-                AppLogger.log("SettlementDetailFragment", "Métodos Pagamento: ${settlement.metodosPagamento}")
-                
-                // ✅ CORREÇÃO: Usar exatamente a mesma função e parâmetros do SettlementSummaryDialog
-                ReciboPrinterHelper.preencherReciboImpressaoCompleto(
-                    context = requireContext(),
-                    reciboView = reciboView,
-                    clienteNome = settlement.clienteNome,
-                    clienteCpf = settlement.clienteCpf,
-                    mesasCompletas = mesasCompletas,
-                    debitoAnterior = settlement.debitoAnterior,
-                    valorTotalMesas = settlement.valorTotal,
-                    desconto = settlement.desconto,
-                    metodosPagamento = settlement.metodosPagamento,
-                    debitoAtual = settlement.debitoAtual,
-                    observacao = settlement.observacoes,
-                    valorFicha = valorFichaExibir, // ✅ CORREÇÃO: Usar lógica idêntica
-                    acertoId = settlement.id,
-                    numeroContrato = numeroContrato
-                )
-            } catch (e: Exception) {
-                Log.e("SettlementDetailFragment", "Erro ao preencher layout do recibo: ${e.message}")
-            }
-        }
-    }
-    
-    /**
-     * ✅ NOVA FUNÇÃO: Verifica permissões Bluetooth (mesmo que SettlementSummaryDialog)
-     */
-    private fun hasBluetoothPermissions(): Boolean {
-        val bluetoothPermissions = arrayOf(
-            android.Manifest.permission.BLUETOOTH_CONNECT,
-            android.Manifest.permission.BLUETOOTH_SCAN
-        )
-        
-        return bluetoothPermissions.all {
-            androidx.core.content.ContextCompat.checkSelfPermission(requireContext(), it) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        }
-    }
-    
-    /**
-     * ✅ NOVA FUNÇÃO: Solicita permissões Bluetooth (mesmo que SettlementSummaryDialog)
-     */
-    private fun requestBluetoothPermissions(settlement: SettlementDetailViewModel.SettlementDetail) {
-        val bluetoothPermissions = arrayOf(
-            android.Manifest.permission.BLUETOOTH_CONNECT,
-            android.Manifest.permission.BLUETOOTH_SCAN
-        )
-        
-        androidx.core.app.ActivityCompat.requestPermissions(requireActivity(), bluetoothPermissions, 1001)
-        
-        // ✅ CORREÇÃO: Mostrar mensagem explicativa
-        android.widget.Toast.makeText(requireContext(), "Permissões Bluetooth necessárias para impressão", android.widget.Toast.LENGTH_LONG).show()
-    }
+    // ✅ REMOVIDO: Funções de permissões Bluetooth - agora centralizadas no ReciboPrinterHelper
 
-    // ✅ NOVA FUNCIONALIDADE: Compartilhar via WhatsApp
+    // ✅ FUNCIONALIDADE UNIFICADA: Compartilhar via WhatsApp usando função centralizada
     private fun compartilharViaWhatsApp(settlement: SettlementDetailViewModel.SettlementDetail) {
         lifecycleScope.launch {
             try {
-                // ✅ CORREÇÃO: Usar exatamente os mesmos dados da impressão
+                // Obter dados necessários
                 val mesasCompletas = obterMesasCompletas(settlement)
                 val numeroContrato = obterNumeroContrato(settlement)
-                
-                // ✅ CORREÇÃO CRÍTICA: Usar exatamente a mesma lógica do SettlementSummaryDialog
                 val valorFichaExibir = if (settlement.valorFicha > 0) settlement.valorFicha else if (settlement.comissaoFicha > 0) settlement.comissaoFicha else 0.0
                 
                 // ✅ LOGS CRÍTICOS: Verificar dados antes do WhatsApp
@@ -547,10 +374,12 @@ class SettlementDetailFragment : Fragment() {
                 AppLogger.log("SettlementDetailFragment", "Número Contrato: '$numeroContrato'")
                 AppLogger.log("SettlementDetailFragment", "Mesas Completas: ${mesasCompletas.size}")
                 
-                // ✅ CORREÇÃO: Usar ReciboPrinterHelper para gerar texto WhatsApp (mesma fonte de verdade)
-                val textoResumo = ReciboPrinterHelper.gerarTextoWhatsApp(
+                // ✅ USAR FUNÇÃO CENTRALIZADA
+                ReciboPrinterHelper.enviarWhatsAppUnificado(
+                    context = requireContext(),
                     clienteNome = settlement.clienteNome,
                     clienteCpf = settlement.clienteCpf,
+                    clienteTelefone = settlement.clienteTelefone,
                     mesasCompletas = mesasCompletas,
                     debitoAnterior = settlement.debitoAnterior,
                     valorTotalMesas = settlement.valorTotal,
@@ -558,13 +387,16 @@ class SettlementDetailFragment : Fragment() {
                     metodosPagamento = settlement.metodosPagamento,
                     debitoAtual = settlement.debitoAtual,
                     observacao = settlement.observacoes,
-                    valorFicha = valorFichaExibir, // ✅ CORREÇÃO: Usar lógica idêntica
+                    valorFicha = valorFichaExibir,
                     acertoId = settlement.id,
-                    numeroContrato = numeroContrato
+                    numeroContrato = numeroContrato,
+                    onSucesso = {
+                        // WhatsApp aberto com sucesso
+                    },
+                    onErro = { erro ->
+                        android.widget.Toast.makeText(requireContext(), erro, android.widget.Toast.LENGTH_LONG).show()
+                    }
                 )
-                
-                // ✅ NOVO: Enviar via WhatsApp direto com telefone do cliente
-                enviarViaWhatsAppDireto(settlement.clienteTelefone, textoResumo)
                 
             } catch (e: Exception) {
                 AppLogger.log("SettlementDetailFragment", "Erro ao compartilhar via WhatsApp: ${e.message}")
@@ -637,117 +469,7 @@ class SettlementDetailFragment : Fragment() {
         }
     }
 
-    /**
-     * ✅ SOLUÇÃO DEFINITIVA: Abre WhatsApp diretamente com o número do cliente
-     * Baseado na documentação oficial WhatsApp e Android Intents
-     * ELIMINA COMPLETAMENTE o seletor de apps
-     */
-    private fun enviarViaWhatsAppDireto(telefone: String?, texto: String) {
-        if (telefone.isNullOrEmpty()) {
-            android.widget.Toast.makeText(requireContext(), "Cliente não possui telefone cadastrado", android.widget.Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        try {
-            // Limpar formatação do telefone
-            val numeroLimpo = telefone.replace(Regex("[^0-9]"), "")
-            
-            // Adicionar código do país se necessário (Brasil +55)
-            val numeroCompleto = if (numeroLimpo.length == 11) {
-                "55$numeroLimpo" // Adiciona código do Brasil
-            } else if (numeroLimpo.length == 10) {
-                "55$numeroLimpo" // Adiciona código do Brasil
-            } else {
-                numeroLimpo
-            }
-            
-            AppLogger.log("SettlementDetailFragment", "Número original: $telefone")
-            AppLogger.log("SettlementDetailFragment", "Número limpo: $numeroLimpo")
-            AppLogger.log("SettlementDetailFragment", "Número completo: $numeroCompleto")
-            
-            // ✅ ESTRATÉGIA 1: Esquema nativo whatsapp://send (FORÇA direcionamento direto)
-            try {
-                val uri = android.net.Uri.parse("whatsapp://send?phone=$numeroCompleto&text=${android.net.Uri.encode(texto)}")
-                val intentWhatsApp = Intent(Intent.ACTION_VIEW, uri).apply {
-                    // ✅ CRÍTICO: Força o direcionamento direto sem seletor
-                    setPackage("com.whatsapp")
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-                }
-                
-                startActivity(intentWhatsApp)
-                AppLogger.log("SettlementDetailFragment", "✅ WhatsApp aberto diretamente via esquema nativo")
-                return
-            } catch (e: Exception) {
-                AppLogger.log("SettlementDetailFragment", "Esquema nativo não funcionou: ${e.message}")
-            }
-            
-            // ✅ ESTRATÉGIA 2: URL wa.me (funciona mesmo sem app instalado)
-            try {
-                val url = "https://wa.me/$numeroCompleto?text=${android.net.Uri.encode(texto)}"
-                val intentUrl = Intent(Intent.ACTION_VIEW).apply {
-                    data = android.net.Uri.parse(url)
-                    // ✅ CRÍTICO: Força o direcionamento direto
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-                }
-                
-                startActivity(intentUrl)
-                AppLogger.log("SettlementDetailFragment", "✅ WhatsApp aberto via URL wa.me")
-                return
-            } catch (e: Exception) {
-                AppLogger.log("SettlementDetailFragment", "URL wa.me não funcionou: ${e.message}")
-            }
-            
-            // ✅ ESTRATÉGIA 3: Tentar WhatsApp Business via esquema nativo
-            try {
-                val uri = android.net.Uri.parse("whatsapp://send?phone=$numeroCompleto&text=${android.net.Uri.encode(texto)}")
-                val intentBusiness = Intent(Intent.ACTION_VIEW, uri).apply {
-                    setPackage("com.whatsapp.w4b")
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-                }
-                
-                startActivity(intentBusiness)
-                AppLogger.log("SettlementDetailFragment", "✅ WhatsApp Business aberto via esquema nativo")
-                return
-            } catch (e: Exception) {
-                AppLogger.log("SettlementDetailFragment", "WhatsApp Business não disponível: ${e.message}")
-            }
-            
-            // ✅ ESTRATÉGIA 4: Intent direto com ACTION_SEND mas SEM chooser
-            try {
-                val intentDirect = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, texto)
-                    setPackage("com.whatsapp")
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-                }
-                
-                startActivity(intentDirect)
-                AppLogger.log("SettlementDetailFragment", "✅ WhatsApp aberto via intent direto")
-                return
-            } catch (e: Exception) {
-                AppLogger.log("SettlementDetailFragment", "Intent direto falhou: ${e.message}")
-            }
-            
-            // ✅ ÚLTIMA OPÇÃO: Mostrar mensagem de erro
-            android.widget.Toast.makeText(requireContext(), "Não foi possível abrir o WhatsApp. Verifique se está instalado.", android.widget.Toast.LENGTH_LONG).show()
-            AppLogger.log("SettlementDetailFragment", "❌ Todas as estratégias falharam")
-            
-        } catch (e: Exception) {
-            AppLogger.log("SettlementDetailFragment", "Erro geral ao abrir WhatsApp: ${e.message}")
-            android.widget.Toast.makeText(requireContext(), "Erro ao abrir WhatsApp: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    /**
-     * ✅ MANTIDO: Método original para compatibilidade
-     */
-    private fun enviarViaWhatsApp(texto: String) {
-        enviarViaWhatsAppDireto(null, texto)
-    }
+    // ✅ REMOVIDO: Funções de WhatsApp duplicadas - agora centralizadas no ReciboPrinterHelper
 
     /**
      * ✅ NOVA FUNCIONALIDADE: Verifica se o acerto pode ser editado
