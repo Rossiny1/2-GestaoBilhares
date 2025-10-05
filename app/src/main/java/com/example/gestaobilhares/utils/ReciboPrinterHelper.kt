@@ -385,6 +385,329 @@ object ReciboPrinterHelper {
     }
 
     /**
+     * ✅ NOVA FUNÇÃO CENTRALIZADA: Imprime recibo com dados unificados
+     * FONTE ÚNICA DE VERDADE para impressão - elimina duplicação de código
+     */
+    fun imprimirReciboUnificado(
+        context: Context,
+        clienteNome: String,
+        clienteCpf: String? = null,
+        clienteTelefone: String? = null,
+        mesasCompletas: List<Mesa>,
+        debitoAnterior: Double,
+        valorTotalMesas: Double,
+        desconto: Double,
+        metodosPagamento: Map<String, Double>,
+        debitoAtual: Double,
+        observacao: String?,
+        valorFicha: Double,
+        acertoId: Long? = null,
+        numeroContrato: String? = null,
+        onSucesso: () -> Unit = {},
+        onErro: (String) -> Unit = {}
+    ) {
+        try {
+            // Verificar permissões Bluetooth
+            val bluetoothPermissions = arrayOf(
+                android.Manifest.permission.BLUETOOTH_CONNECT,
+                android.Manifest.permission.BLUETOOTH_SCAN
+            )
+            
+            val hasPermissions = bluetoothPermissions.all {
+                androidx.core.content.ContextCompat.checkSelfPermission(context, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            }
+            
+            if (!hasPermissions) {
+                onErro("Permissões Bluetooth necessárias para impressão")
+                return
+            }
+            
+            val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+            if (bluetoothAdapter == null) {
+                onErro("Bluetooth não disponível neste dispositivo")
+                return
+            }
+            
+            if (!bluetoothAdapter.isEnabled) {
+                onErro("Ative o Bluetooth para imprimir")
+                return
+            }
+            
+            val pairedDevices = bluetoothAdapter.bondedDevices
+            if (pairedDevices.isEmpty()) {
+                onErro("Nenhuma impressora Bluetooth pareada")
+                return
+            }
+            
+            // Diálogo de seleção de impressora
+            val deviceList = pairedDevices.toList()
+            val deviceNames = deviceList.map { it.name ?: it.address }.toTypedArray()
+            
+            androidx.appcompat.app.AlertDialog.Builder(context)
+                .setTitle("Selecione a impressora")
+                .setItems(deviceNames) { _, which ->
+                    val printerDevice = deviceList[which]
+                    imprimirComImpressoraSelecionada(
+                        context = context,
+                        printerDevice = printerDevice,
+                        clienteNome = clienteNome,
+                        clienteCpf = clienteCpf,
+                        mesasCompletas = mesasCompletas,
+                        debitoAnterior = debitoAnterior,
+                        valorTotalMesas = valorTotalMesas,
+                        desconto = desconto,
+                        metodosPagamento = metodosPagamento,
+                        debitoAtual = debitoAtual,
+                        observacao = observacao,
+                        valorFicha = valorFicha,
+                        acertoId = acertoId,
+                        numeroContrato = numeroContrato,
+                        onSucesso = onSucesso,
+                        onErro = onErro
+                    )
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+                
+        } catch (e: Exception) {
+            onErro("Erro ao preparar impressão: ${e.message}")
+        }
+    }
+    
+    /**
+     * ✅ NOVA FUNÇÃO CENTRALIZADA: Imprime com impressora selecionada
+     */
+    private fun imprimirComImpressoraSelecionada(
+        context: Context,
+        printerDevice: android.bluetooth.BluetoothDevice,
+        clienteNome: String,
+        clienteCpf: String?,
+        mesasCompletas: List<Mesa>,
+        debitoAnterior: Double,
+        valorTotalMesas: Double,
+        desconto: Double,
+        metodosPagamento: Map<String, Double>,
+        debitoAtual: Double,
+        observacao: String?,
+        valorFicha: Double,
+        acertoId: Long?,
+        numeroContrato: String?,
+        onSucesso: () -> Unit,
+        onErro: (String) -> Unit
+    ) {
+        // Mostrar diálogo de loading
+        val loadingDialog = androidx.appcompat.app.AlertDialog.Builder(context)
+            .setMessage("Imprimindo recibo...")
+            .setCancelable(false)
+            .create()
+        loadingDialog.show()
+        
+        // Executar impressão em thread separada
+        Thread {
+            var erro: String? = null
+            try {
+                val printerHelper = com.example.gestaobilhares.ui.settlement.BluetoothPrinterHelper(printerDevice)
+                if (printerHelper.connect()) {
+                    // Inflar o layout do recibo
+                    val inflater = android.view.LayoutInflater.from(context)
+                    val reciboView = inflater.inflate(com.example.gestaobilhares.R.layout.layout_recibo_impressao, null) as android.view.ViewGroup
+                    
+                    // Preencher campos do recibo usando função centralizada
+                    preencherReciboImpressaoCompleto(
+                        context = context,
+                        reciboView = reciboView,
+                        clienteNome = clienteNome,
+                        clienteCpf = clienteCpf,
+                        mesasCompletas = mesasCompletas,
+                        debitoAnterior = debitoAnterior,
+                        valorTotalMesas = valorTotalMesas,
+                        desconto = desconto,
+                        metodosPagamento = metodosPagamento,
+                        debitoAtual = debitoAtual,
+                        observacao = observacao,
+                        valorFicha = valorFicha,
+                        acertoId = acertoId,
+                        numeroContrato = numeroContrato
+                    )
+                    
+                    // Imprimir
+                    printerHelper.printReciboLayoutBitmap(reciboView)
+                    printerHelper.disconnect()
+                } else {
+                    erro = "Falha ao conectar à impressora"
+                }
+            } catch (e: Exception) {
+                erro = when {
+                    e.message?.contains("socket") == true -> "Impressora desligada ou fora de alcance"
+                    e.message?.contains("broken pipe") == true -> "Falha ao enviar dados. Impressora pode estar desconectada"
+                    else -> "Erro inesperado: ${e.message ?: "Desconhecido"}"
+                }
+            }
+            
+            // Atualizar UI na thread principal
+            if (context is android.app.Activity) {
+                context.runOnUiThread {
+                    loadingDialog.dismiss()
+                    if (erro == null) {
+                        onSucesso()
+                    } else {
+                        onErro(erro)
+                    }
+                }
+            }
+        }.start()
+    }
+    
+    /**
+     * ✅ NOVA FUNÇÃO CENTRALIZADA: Envia via WhatsApp com dados unificados
+     * FONTE ÚNICA DE VERDADE para WhatsApp - elimina duplicação de código
+     */
+    fun enviarWhatsAppUnificado(
+        context: Context,
+        clienteNome: String,
+        clienteCpf: String? = null,
+        clienteTelefone: String?,
+        mesasCompletas: List<Mesa>,
+        debitoAnterior: Double,
+        valorTotalMesas: Double,
+        desconto: Double,
+        metodosPagamento: Map<String, Double>,
+        debitoAtual: Double,
+        observacao: String?,
+        valorFicha: Double,
+        acertoId: Long? = null,
+        numeroContrato: String? = null,
+        onSucesso: () -> Unit = {},
+        onErro: (String) -> Unit = {}
+    ) {
+        if (clienteTelefone.isNullOrEmpty()) {
+            onErro("Cliente não possui telefone cadastrado")
+            return
+        }
+        
+        try {
+            // Gerar texto usando função centralizada
+            val textoCompleto = gerarTextoWhatsApp(
+                clienteNome = clienteNome,
+                clienteCpf = clienteCpf,
+                mesasCompletas = mesasCompletas,
+                debitoAnterior = debitoAnterior,
+                valorTotalMesas = valorTotalMesas,
+                desconto = desconto,
+                metodosPagamento = metodosPagamento,
+                debitoAtual = debitoAtual,
+                observacao = observacao,
+                valorFicha = valorFicha,
+                acertoId = acertoId,
+                numeroContrato = numeroContrato
+            )
+            
+            // Enviar via WhatsApp
+            enviarViaWhatsAppDireto(context, clienteTelefone, textoCompleto, onSucesso, onErro)
+            
+        } catch (e: Exception) {
+            onErro("Erro ao compartilhar via WhatsApp: ${e.message}")
+        }
+    }
+    
+    /**
+     * ✅ NOVA FUNÇÃO CENTRALIZADA: Envia via WhatsApp direto
+     */
+    private fun enviarViaWhatsAppDireto(
+        context: Context,
+        telefone: String,
+        texto: String,
+        onSucesso: () -> Unit,
+        onErro: (String) -> Unit
+    ) {
+        try {
+            // Limpar formatação do telefone
+            val numeroLimpo = telefone.replace(Regex("[^0-9]"), "")
+            
+            // Adicionar código do país se necessário (Brasil +55)
+            val numeroCompleto = if (numeroLimpo.length == 11) {
+                "55$numeroLimpo" // Adiciona código do Brasil
+            } else if (numeroLimpo.length == 10) {
+                "55$numeroLimpo" // Adiciona código do Brasil
+            } else {
+                numeroLimpo
+            }
+            
+            // ✅ ESTRATÉGIA 1: Esquema nativo whatsapp://send (FORÇA direcionamento direto)
+            try {
+                val uri = android.net.Uri.parse("whatsapp://send?phone=$numeroCompleto&text=${android.net.Uri.encode(texto)}")
+                val intentWhatsApp = android.content.Intent(android.content.Intent.ACTION_VIEW, uri).apply {
+                    // ✅ CRÍTICO: Força o direcionamento direto sem seletor
+                    setPackage("com.whatsapp")
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NO_HISTORY)
+                }
+                
+                context.startActivity(intentWhatsApp)
+                onSucesso()
+                return
+            } catch (e: Exception) {
+                // Estratégia 1 falhou, tentar próxima
+            }
+            
+            // ✅ ESTRATÉGIA 2: URL wa.me (funciona mesmo sem app instalado)
+            try {
+                val url = "https://wa.me/$numeroCompleto?text=${android.net.Uri.encode(texto)}"
+                val intentUrl = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                    data = android.net.Uri.parse(url)
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NO_HISTORY)
+                }
+                
+                context.startActivity(intentUrl)
+                onSucesso()
+                return
+            } catch (e: Exception) {
+                // Estratégia 2 falhou, tentar próxima
+            }
+            
+            // ✅ ESTRATÉGIA 3: Tentar WhatsApp Business via esquema nativo
+            try {
+                val uri = android.net.Uri.parse("whatsapp://send?phone=$numeroCompleto&text=${android.net.Uri.encode(texto)}")
+                val intentBusiness = android.content.Intent(android.content.Intent.ACTION_VIEW, uri).apply {
+                    setPackage("com.whatsapp.w4b")
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NO_HISTORY)
+                }
+                
+                context.startActivity(intentBusiness)
+                onSucesso()
+                return
+            } catch (e: Exception) {
+                // Estratégia 3 falhou, tentar próxima
+            }
+            
+            // ✅ ESTRATÉGIA 4: Intent direto com ACTION_SEND mas SEM chooser
+            try {
+                val intentDirect = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(android.content.Intent.EXTRA_TEXT, texto)
+                    setPackage("com.whatsapp")
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NO_HISTORY)
+                }
+                
+                context.startActivity(intentDirect)
+                onSucesso()
+                return
+            } catch (e: Exception) {
+                // Todas as estratégias falharam
+            }
+            
+            // ✅ ÚLTIMA OPÇÃO: Mostrar mensagem de erro
+            onErro("Não foi possível abrir o WhatsApp. Verifique se está instalado.")
+            
+        } catch (e: Exception) {
+            onErro("Erro ao abrir WhatsApp: ${e.message}")
+        }
+    }
+
+    /**
      * Retorna o nome do tipo do equipamento para exibição
      */
     private fun getTipoEquipamentoNome(tipoMesa: TipoMesa): String {

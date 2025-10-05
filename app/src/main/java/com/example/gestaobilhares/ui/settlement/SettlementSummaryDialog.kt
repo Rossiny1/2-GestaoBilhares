@@ -148,121 +148,13 @@ class SettlementSummaryDialog : DialogFragment() {
         // Observação
         view.findViewById<TextView>(R.id.tvResumoObservacao).text = observacao
 
-        // Botão Imprimir
+        // ✅ BOTÃO IMPRIMIR UNIFICADO: Usa função centralizada
         view.findViewById<MaterialButton>(R.id.btnImprimir).setOnClickListener {
-            if (!hasBluetoothPermissions()) {
-                requestBluetoothPermissions()
-                return@setOnClickListener
-            }
-            val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
-            if (bluetoothAdapter == null) {
-                android.widget.Toast.makeText(requireContext(), getString(R.string.impressao_bluetooth_nao_disponivel), android.widget.Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (!bluetoothAdapter.isEnabled) {
-                android.widget.Toast.makeText(requireContext(), getString(R.string.impressao_bluetooth_ativar), android.widget.Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            val pairedDevices = bluetoothAdapter.bondedDevices
-            if (pairedDevices.isEmpty()) {
-                android.widget.Toast.makeText(requireContext(), getString(R.string.impressao_nenhuma_impressora), android.widget.Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            // Diálogo de seleção de impressora
-            val deviceList = pairedDevices.toList()
-            val deviceNames = deviceList.map { it.name ?: it.address }.toTypedArray()
-            AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.impressao_selecione_impressora))
-                .setItems(deviceNames) { _, which ->
-                    val printerDevice = deviceList[which]
-                    val loadingDialog = LoadingDialog()
-                    loadingDialog.show(childFragmentManager, "loading")
-                    Thread {
-                        var erro: String? = null
-                        try {
-                            val printerHelper = BluetoothPrinterHelper(printerDevice)
-                            if (printerHelper.connect()) {
-                                // Inflar o layout do recibo
-                                val inflater = LayoutInflater.from(requireContext())
-                                val reciboView = inflater.inflate(R.layout.layout_recibo_impressao, null) as ViewGroup
-                                // Preencher campos
-                                val txtTitulo = reciboView.findViewById<TextView>(R.id.txtTituloRecibo)
-                                val txtClienteValor = reciboView.findViewById<TextView>(R.id.txtClienteValor)
-                                val txtData = reciboView.findViewById<TextView>(R.id.txtData)
-                                val txtMesas = reciboView.findViewById<TextView>(R.id.txtMesas)
-                                val txtFichasJogadas = reciboView.findViewById<TextView>(R.id.txtFichasJogadas)
-                                val txtDebitoAnterior = reciboView.findViewById<TextView>(R.id.txtDebitoAnterior)
-                                val txtSubtotalMesas = reciboView.findViewById<TextView>(R.id.txtSubtotalMesas)
-                                val txtTotal = reciboView.findViewById<TextView>(R.id.txtTotal)
-                                val txtDesconto = reciboView.findViewById<TextView>(R.id.txtDesconto)
-                                val txtValorRecebido = reciboView.findViewById<TextView>(R.id.txtValorRecebido)
-                                val txtDebitoAtual = reciboView.findViewById<TextView>(R.id.txtDebitoAtual)
-                                val txtPagamentos = reciboView.findViewById<TextView>(R.id.txtPagamentos)
-                                val txtObservacoes = reciboView.findViewById<TextView>(R.id.txtObservacoes)
-                                val imgLogo = reciboView.findViewById<ImageView>(R.id.imgLogoRecibo)
-                                val txtValorFichaImpressao = reciboView.findViewById<TextView>(R.id.txtValorFicha)
-                                val rowValorFicha = reciboView.findViewById<android.widget.LinearLayout>(R.id.rowValorFicha)
-
-                                // Preencher dados do recibo usando função centralizada com informações completas das mesas
-                                ReciboPrinterHelper.preencherReciboImpressaoCompleto(
-                                    context = requireContext(),
-                                    reciboView = reciboView,
-                                    clienteNome = clienteNome,
-                                    clienteCpf = clienteCpf,
-                                    mesasCompletas = mesas,
-                                    debitoAnterior = debitoAnterior,
-                                    valorTotalMesas = valorTotalMesas,
-                                    desconto = desconto,
-                                    metodosPagamento = metodosPagamento,
-                                    debitoAtual = debitoAtual,
-                                    observacao = observacao,
-                                    valorFicha = valorFichaExibir,
-                                    acertoId = acertoId,
-                                    numeroContrato = numeroContrato
-                                )
-                                // Fontes menores já estão no layout XML
-                                // Imprimir
-                                printerHelper.printReciboLayoutBitmap(reciboView)
-                                printerHelper.disconnect()
-                            } else {
-                                erro = getString(R.string.impressao_erro_conexao)
-                            }
-                        } catch (e: Exception) {
-                            erro = when {
-                                e.message?.contains("socket") == true -> getString(R.string.impressao_erro_desligada)
-                                e.message?.contains("broken pipe") == true -> getString(R.string.impressao_erro_envio)
-                                else -> getString(R.string.impressao_erro_generico, e.message ?: "Desconhecido")
-                            }
-                        }
-                        requireActivity().runOnUiThread {
-                            loadingDialog.dismiss()
-                            if (erro == null) {
-                                android.widget.Toast.makeText(requireContext(), getString(R.string.impressao_sucesso), android.widget.Toast.LENGTH_SHORT).show()
-                                dismiss()
-                                acertoCompartilhadoListener?.onAcertoCompartilhado()
-                            } else {
-                                AlertDialog.Builder(requireContext())
-                                    .setTitle(getString(R.string.impressao_erro_titulo))
-                                    .setMessage(erro)
-                                    .setPositiveButton(getString(R.string.impressao_erro_tentar_novamente)) { _, _ ->
-                                        view?.findViewById<MaterialButton>(R.id.btnImprimir)?.performClick()
-                                    }
-                                    .setNegativeButton(getString(R.string.impressao_erro_cancelar), null)
-                                    .show()
-                            }
-                        }
-                    }.start()
-                }
-                .setNegativeButton(getString(R.string.impressao_erro_cancelar), null)
-                .show()
-        }
-        
-        // Botão WhatsApp
-        view.findViewById<MaterialButton>(R.id.btnWhatsapp).setOnClickListener {
-            // ✅ CORREÇÃO: Usar a mesma fonte de verdade do recibo impresso
-            val textoCompleto = ReciboPrinterHelper.gerarTextoWhatsApp(
+            ReciboPrinterHelper.imprimirReciboUnificado(
+                context = requireContext(),
                 clienteNome = clienteNome,
                 clienteCpf = clienteCpf,
+                clienteTelefone = clienteTelefone,
                 mesasCompletas = mesas,
                 debitoAnterior = debitoAnterior,
                 valorTotalMesas = valorTotalMesas,
@@ -272,11 +164,50 @@ class SettlementSummaryDialog : DialogFragment() {
                 observacao = observacao,
                 valorFicha = valorFichaExibir,
                 acertoId = acertoId,
-                numeroContrato = numeroContrato
+                numeroContrato = numeroContrato,
+                onSucesso = {
+                    android.widget.Toast.makeText(requireContext(), getString(R.string.impressao_sucesso), android.widget.Toast.LENGTH_SHORT).show()
+                    dismiss()
+                    acertoCompartilhadoListener?.onAcertoCompartilhado()
+                },
+                onErro = { erro ->
+                    androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle(getString(R.string.impressao_erro_titulo))
+                        .setMessage(erro)
+                        .setPositiveButton(getString(R.string.impressao_erro_tentar_novamente)) { _, _ ->
+                            view?.findViewById<MaterialButton>(R.id.btnImprimir)?.performClick()
+                        }
+                        .setNegativeButton(getString(R.string.impressao_erro_cancelar), null)
+                        .show()
+                }
             )
-            enviarViaWhatsAppDireto(clienteTelefone, textoCompleto)
-            dismiss()
-            acertoCompartilhadoListener?.onAcertoCompartilhado()
+        }
+        
+        // ✅ BOTÃO WHATSAPP UNIFICADO: Usa função centralizada
+        view.findViewById<MaterialButton>(R.id.btnWhatsapp).setOnClickListener {
+            ReciboPrinterHelper.enviarWhatsAppUnificado(
+                context = requireContext(),
+                clienteNome = clienteNome,
+                clienteCpf = clienteCpf,
+                clienteTelefone = clienteTelefone,
+                mesasCompletas = mesas,
+                debitoAnterior = debitoAnterior,
+                valorTotalMesas = valorTotalMesas,
+                desconto = desconto,
+                metodosPagamento = metodosPagamento,
+                debitoAtual = debitoAtual,
+                observacao = observacao,
+                valorFicha = valorFichaExibir,
+                acertoId = acertoId,
+                numeroContrato = numeroContrato,
+                onSucesso = {
+                    dismiss()
+                    acertoCompartilhadoListener?.onAcertoCompartilhado()
+                },
+                onErro = { erro ->
+                    android.widget.Toast.makeText(requireContext(), erro, android.widget.Toast.LENGTH_LONG).show()
+                }
+            )
         }
         
         return android.app.AlertDialog.Builder(requireContext())
