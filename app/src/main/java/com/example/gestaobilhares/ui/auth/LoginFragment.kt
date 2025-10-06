@@ -174,25 +174,33 @@ class LoginFragment : Fragment() {
      * Observa mudanças no estado de autenticação
      */
     private fun observeAuthState() {
-        // Observa o estado de autenticação
-        authViewModel.authState.observe(viewLifecycleOwner, Observer { authState ->
-            when (authState) {
-                is AuthState.Authenticated -> {
-                    // Navegar para a tela de rotas em caso de sucesso
-                    findNavController().navigate(R.id.action_loginFragment_to_routesFragment)
-                }
-                AuthState.Unauthenticated -> {
-                    // Manter na tela de login
+        // ✅ MODERNIZADO: Observa o estado de autenticação com StateFlow
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.authState.collect { authState ->
+                    when (authState) {
+                        is AuthState.Authenticated -> {
+                            // Navegar para a tela de rotas em caso de sucesso
+                            findNavController().navigate(R.id.action_loginFragment_to_routesFragment)
+                        }
+                        AuthState.Unauthenticated -> {
+                            // Manter na tela de login
+                        }
+                    }
                 }
             }
-        })
+        }
 
-        // Observa mensagens de erro
-        authViewModel.errorMessage.observe(viewLifecycleOwner, Observer { message ->
-            if (message.isNotEmpty()) {
-                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+        // ✅ MODERNIZADO: Observa mensagens de erro com StateFlow
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.errorMessage.collect { message ->
+                    if (!message.isNullOrEmpty()) {
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+                    }
+                }
             }
-        })
+        }
 
         // Observa estado de loading
         viewLifecycleOwner.lifecycleScope.launch {
@@ -214,13 +222,17 @@ class LoginFragment : Fragment() {
             }
         }
         
-        // Observa estado de conexão (status removido da UI conforme solicitado)
-        authViewModel.isOnline.observe(viewLifecycleOwner, Observer { isOnline ->
-            if (!isOnline) {
-                // Apenas mostrar toast quando estiver offline
-                Toast.makeText(requireContext(), "Modo offline ativo", Toast.LENGTH_SHORT).show()
+        // ✅ MODERNIZADO: Observa estado de conexão com StateFlow
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.isOnline.collect { isOnline ->
+                    if (!isOnline) {
+                        // Apenas mostrar toast quando estiver offline
+                        Toast.makeText(requireContext(), "Modo offline ativo", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
-        })
+        }
     }
 
     override fun onDestroyView() {

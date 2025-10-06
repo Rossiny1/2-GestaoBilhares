@@ -1,9 +1,11 @@
 package com.example.gestaobilhares.ui.routes
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.RotaResumo
@@ -32,44 +34,54 @@ class RoutesViewModel @Inject constructor(
     private val userSessionManager: UserSessionManager
 ) : ViewModel() {
 
-    // LiveData privado para controlar o estado de loading
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    // ✅ MODERNIZADO: StateFlow para controlar o estado de loading
+    private val _isLoading = MutableStateFlow<Boolean>(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // LiveData privado para mensagens de erro
-    private val _errorMessage = MutableLiveData<String?>()
-    val errorMessage: LiveData<String?> = _errorMessage
+    // ✅ MODERNIZADO: StateFlow para mensagens de erro
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    // LiveData privado para mensagens de sucesso
-    private val _successMessage = MutableLiveData<String?>()
-    val successMessage: LiveData<String?> = _successMessage
+    // ✅ MODERNIZADO: StateFlow para mensagens de sucesso
+    private val _successMessage = MutableStateFlow<String?>(null)
+    val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
 
-    // LiveData privado para controlar a navegação
-    private val _navigateToClients = MutableLiveData<Long?>()
-    val navigateToClients: LiveData<Long?> = _navigateToClients
-
-
+    // ✅ MODERNIZADO: StateFlow para controlar a navegação
+    private val _navigateToClients = MutableStateFlow<Long?>(null)
+    val navigateToClients: StateFlow<Long?> = _navigateToClients.asStateFlow()
 
 
 
-    // ✅ NOVO: Rotas filtradas baseado no acesso do usuário
-    private val _rotasResumoFiltradas = MutableLiveData<List<RotaResumo>>()
-    val rotasResumo: LiveData<List<RotaResumo>> = _rotasResumoFiltradas
+
+
+    // ✅ MODERNIZADO: Rotas filtradas baseado no acesso do usuário
+    private val _rotasResumoFiltradas = MutableStateFlow<List<RotaResumo>>(emptyList())
+    val rotasResumo: StateFlow<List<RotaResumo>> = _rotasResumoFiltradas.asStateFlow()
     
-    // Observa as rotas resumo do repository e aplica filtro de acesso
-    private val rotasResumoOriginal: LiveData<List<RotaResumo>> = appRepository.getRotasResumoComAtualizacaoTempoReal().asLiveData()
+    // ✅ MODERNIZADO: Observa as rotas resumo do repository e aplica filtro de acesso
+    private val rotasResumoOriginal: StateFlow<List<RotaResumo>> = appRepository.getRotasResumoComAtualizacaoTempoReal().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
-    // Estatísticas gerais calculadas a partir das rotas
-    val estatisticas: LiveData<EstatisticasGerais> = combine(
+    // ✅ MODERNIZADO: Estatísticas gerais calculadas a partir das rotas
+    val estatisticas: StateFlow<EstatisticasGerais> = combine(
         appRepository.getRotasResumoComAtualizacaoTempoReal()
     ) { rotas ->
         calcularEstatisticas(rotas.first())
-    }.asLiveData()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = EstatisticasGerais(0, 0, 0, 0.0, 0.0)
+    )
 
     init {
-        // Observar mudanças nas rotas originais e aplicar filtro de acesso
-        rotasResumoOriginal.observeForever { rotas ->
-            aplicarFiltroAcesso(rotas)
+        // ✅ MODERNIZADO: Observar mudanças nas rotas originais e aplicar filtro de acesso
+        viewModelScope.launch {
+            rotasResumoOriginal.collect { rotas ->
+                aplicarFiltroAcesso(rotas)
+            }
         }
         
         // Banco de dados limpo - sem inserção automática de dados
