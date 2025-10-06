@@ -8,7 +8,11 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.core.content.ContextCompat
 import android.text.SpannableString
@@ -419,46 +423,66 @@ class RoutesFragment : Fragment() {
      * Observa as mudanças no ViewModel e atualiza a UI.
      */
     private fun observeViewModel() {
-        // Observa a lista de rotas
-        viewModel.rotasResumo.observe(viewLifecycleOwner) { rotas ->
-            routesAdapter.submitList(rotas)
-        }
-
-        // Observa as estatísticas gerais com dados reais
-        viewModel.estatisticas.observe(viewLifecycleOwner) { stats ->
-            binding.totalMesasCount.text = stats.totalMesas.toString()
-            binding.totalClientesCount.text = stats.totalClientesAtivos.toString()
-            binding.totalPendenciasCount.text = stats.totalPendencias.toString()
-        }
-
-
-
-
-
-        // Observa mensagens de erro
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
-                viewModel.clearMessages()
-            }
-        }
-
-        // Observa mensagens de sucesso
-        viewModel.successMessage.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
-                viewModel.clearMessages()
-            }
-        }
-
-        // Observa navegação para clientes
-        viewModel.navigateToClients.observe(viewLifecycleOwner) { rotaId ->
-            rotaId?.let {
-                val bundle = Bundle().apply {
-                    putLong("rotaId", it)
+        // ✅ MODERNIZADO: Observa a lista de rotas com StateFlow
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.rotasResumo.collect { rotas ->
+                    routesAdapter.submitList(rotas)
                 }
-                findNavController().navigate(R.id.action_routesFragment_to_clientListFragment, bundle)
-                viewModel.navigationToClientsCompleted()
+            }
+        }
+
+        // ✅ MODERNIZADO: Observa as estatísticas gerais com StateFlow
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.estatisticas.collect { stats ->
+                    binding.totalMesasCount.text = stats.totalMesas.toString()
+                    binding.totalClientesCount.text = stats.totalClientesAtivos.toString()
+                    binding.totalPendenciasCount.text = stats.totalPendencias.toString()
+                }
+            }
+        }
+
+
+
+
+
+        // ✅ MODERNIZADO: Observa mensagens de erro com StateFlow
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorMessage.collect { message ->
+                    message?.let {
+                        Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+                        viewModel.clearMessages()
+                    }
+                }
+            }
+        }
+
+        // ✅ MODERNIZADO: Observa mensagens de sucesso com StateFlow
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.successMessage.collect { message ->
+                    message?.let {
+                        Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                        viewModel.clearMessages()
+                    }
+                }
+            }
+        }
+
+        // ✅ MODERNIZADO: Observa navegação para clientes com StateFlow
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.navigateToClients.collect { rotaId ->
+                    rotaId?.let {
+                        val bundle = Bundle().apply {
+                            putLong("rotaId", it)
+                        }
+                        findNavController().navigate(R.id.action_routesFragment_to_clientListFragment, bundle)
+                        viewModel.navigationToClientsCompleted()
+                    }
+                }
             }
         }
 

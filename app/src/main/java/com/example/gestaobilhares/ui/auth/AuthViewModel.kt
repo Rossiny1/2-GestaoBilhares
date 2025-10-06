@@ -1,9 +1,10 @@
 package com.example.gestaobilhares.ui.auth
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.entities.Colaborador
@@ -46,19 +47,19 @@ class AuthViewModel @Inject constructor() : BaseViewModel() {
     // Gerenciador de sessão do usuário
     private lateinit var userSessionManager: UserSessionManager
     
-    // LiveData para estado da autenticação
-    private val _authState = MutableLiveData<AuthState>()
-    val authState: LiveData<AuthState> = _authState
+    // ✅ MODERNIZADO: StateFlow para estado da autenticação
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
+    val authState: StateFlow<AuthState> = _authState.asStateFlow()
     
-    // LiveData para mensagens de erro
-    private val _errorMessage = MutableLiveData<String>()
-    val errorMessage: LiveData<String> = _errorMessage
+    // ✅ MODERNIZADO: StateFlow para mensagens de erro
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
     
     // isLoading já existe na BaseViewModel
     
-    // LiveData para modo de conexão
-    private val _isOnline = MutableLiveData<Boolean>()
-    val isOnline: LiveData<Boolean> = _isOnline
+    // ✅ MODERNIZADO: StateFlow para modo de conexão
+    private val _isOnline = MutableStateFlow<Boolean>(false)
+    val isOnline: StateFlow<Boolean> = _isOnline.asStateFlow()
     
     init {
         // Inicializar sempre como não autenticado para mostrar tela de login
