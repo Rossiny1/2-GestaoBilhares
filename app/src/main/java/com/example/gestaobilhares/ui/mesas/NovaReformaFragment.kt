@@ -13,8 +13,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.MesaReformada
@@ -155,40 +160,56 @@ class NovaReformaFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.mesasDisponiveis.observe(viewLifecycleOwner) { mesas ->
-            if (mesas.isNotEmpty()) {
-                val nomesMesas = mesas.map { "Mesa ${it.numero} - ${it.tipoMesa} (${it.tamanho})" }
-                
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Selecionar Mesa")
-                    .setItems(nomesMesas.toTypedArray()) { _, which ->
-                        mesaSelecionada = mesas[which]
-                        binding.tvMesaSelecionada.text = "Mesa ${mesaSelecionada!!.numero} - ${mesaSelecionada!!.tipoMesa} (${mesaSelecionada!!.tamanho})"
-                        binding.tvMesaSelecionada.visibility = View.VISIBLE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.mesasDisponiveis.collect { mesas ->
+                    if (mesas.isNotEmpty()) {
+                        val nomesMesas = mesas.map { "Mesa ${it.numero} - ${it.tipoMesa} (${it.tamanho})" }
+                        
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Selecionar Mesa")
+                            .setItems(nomesMesas.toTypedArray()) { _, which ->
+                                mesaSelecionada = mesas[which]
+                                binding.tvMesaSelecionada.text = "Mesa ${mesaSelecionada!!.numero} - ${mesaSelecionada!!.tipoMesa} (${mesaSelecionada!!.tamanho})"
+                                binding.tvMesaSelecionada.visibility = View.VISIBLE
+                            }
+                            .setNegativeButton("Cancelar", null)
+                            .show()
+                    } else {
+                        Toast.makeText(requireContext(), "Nenhuma mesa disponível no depósito", Toast.LENGTH_SHORT).show()
                     }
-                    .setNegativeButton("Cancelar", null)
-                    .show()
-            } else {
-                Toast.makeText(requireContext(), "Nenhuma mesa disponível no depósito", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // TODO: Implementar loading state
-        }
-
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
-                viewModel.clearError()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isLoading.collect { isLoading ->
+                    // TODO: Implementar loading state
+                }
             }
         }
 
-        viewModel.successMessage.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
-                viewModel.clearSuccess()
-                findNavController().navigateUp()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorMessage.collect { message ->
+                    message?.let {
+                        Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+                        viewModel.clearError()
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.successMessage.collect { message ->
+                    message?.let {
+                        Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                        viewModel.clearSuccess()
+                        findNavController().navigateUp()
+                    }
+                }
             }
         }
     }

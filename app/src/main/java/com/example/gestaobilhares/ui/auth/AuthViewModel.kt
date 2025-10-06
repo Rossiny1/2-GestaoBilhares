@@ -9,6 +9,7 @@ import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.entities.Colaborador
 import com.example.gestaobilhares.data.entities.NivelAcesso
 import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import com.example.gestaobilhares.utils.NetworkUtils
 import com.example.gestaobilhares.utils.SyncManager
 import com.example.gestaobilhares.utils.UserSessionManager
@@ -28,7 +29,7 @@ import javax.inject.Inject
  * Suporta autenticação online (Firebase) e offline (Room Database).
  */
 @HiltViewModel
-class AuthViewModel @Inject constructor() : ViewModel() {
+class AuthViewModel @Inject constructor() : BaseViewModel() {
     
     // Instância do Firebase Auth
     private val firebaseAuth = FirebaseAuth.getInstance()
@@ -53,9 +54,7 @@ class AuthViewModel @Inject constructor() : ViewModel() {
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> = _errorMessage
     
-    // LiveData para estado de loading
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    // isLoading já existe na BaseViewModel
     
     // LiveData para modo de conexão
     private val _isOnline = MutableLiveData<Boolean>()
@@ -152,7 +151,7 @@ class AuthViewModel @Inject constructor() : ViewModel() {
         
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 _errorMessage.value = ""
                 
                 // Verificar conectividade
@@ -331,7 +330,7 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                 _authState.value = AuthState.Unauthenticated
                 _errorMessage.value = getFirebaseErrorMessage(e)
             } finally {
-                _isLoading.value = false
+                hideLoading()
                 android.util.Log.d("AuthViewModel", "=== FIM DO LOGIN HÍBRIDO ===")
             }
         }
@@ -364,7 +363,7 @@ class AuthViewModel @Inject constructor() : ViewModel() {
         
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 _errorMessage.value = ""
                 
                 // Criar usuário no Firebase
@@ -381,7 +380,7 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                 _authState.value = AuthState.Unauthenticated
                 _errorMessage.value = getFirebaseErrorMessage(e)
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -398,7 +397,7 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                 android.util.Log.d("AuthViewModel", "ID Token: ${account.idToken?.take(20)}...")
                 android.util.Log.d("AuthViewModel", "Account ID: ${account.id}")
                 
-                _isLoading.value = true
+                showLoading()
                 _errorMessage.value = ""
                 
                 // Verificar se o repositório foi inicializado
@@ -584,7 +583,7 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                 _authState.value = AuthState.Unauthenticated
                 _errorMessage.value = "Erro no login com Google: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
                 android.util.Log.d("AuthViewModel", "=== FIM DO GOOGLE SIGN-IN HÍBRIDO ===")
             }
         }
@@ -685,13 +684,13 @@ class AuthViewModel @Inject constructor() : ViewModel() {
         
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 firebaseAuth.sendPasswordResetEmail(email).await()
                 _errorMessage.value = "Email de recuperação enviado!"
             } catch (e: Exception) {
                 _errorMessage.value = getFirebaseErrorMessage(e)
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }

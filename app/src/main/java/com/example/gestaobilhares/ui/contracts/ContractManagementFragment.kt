@@ -8,9 +8,13 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentContractManagementBinding
@@ -415,29 +419,41 @@ class ContractManagementFragment : Fragment() {
 
     private fun observeViewModel() {
         // Observar estatísticas
-        viewModel.statistics.observe(viewLifecycleOwner) { stats ->
-            binding.tvTotalClientes.text = stats.totalClientes.toString()
-            binding.tvContratosGerados.text = stats.contratosGerados.toString()
-            binding.tvContratosAssinados.text = stats.contratosAssinados.toString()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.statistics.collect { stats ->
+                    binding.tvTotalClientes.text = stats.totalClientes.toString()
+                    binding.tvContratosGerados.text = stats.contratosGerados.toString()
+                    binding.tvContratosAssinados.text = stats.contratosAssinados.toString()
+                }
+            }
         }
 
         // Observar lista de contratos
-        viewModel.contracts.observe(viewLifecycleOwner) { contracts ->
-            contractAdapter.submitList(contracts)
-            
-            // Mostrar/ocultar estado vazio
-            if (contracts.isEmpty()) {
-                binding.layoutEmpty.visibility = View.VISIBLE
-                binding.rvContracts.visibility = View.GONE
-            } else {
-                binding.layoutEmpty.visibility = View.GONE
-                binding.rvContracts.visibility = View.VISIBLE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.contracts.collect { contracts ->
+                    contractAdapter.submitList(contracts)
+                    
+                    // Mostrar/ocultar estado vazio
+                    if (contracts.isEmpty()) {
+                        binding.layoutEmpty.visibility = View.VISIBLE
+                        binding.rvContracts.visibility = View.GONE
+                    } else {
+                        binding.layoutEmpty.visibility = View.GONE
+                        binding.rvContracts.visibility = View.VISIBLE
+                    }
+                }
             }
         }
 
         // Observar loading
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // Implementar loading se necessário
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isLoading.collect { isLoading ->
+                    // Implementar loading se necessário
+                }
+            }
         }
     }
 

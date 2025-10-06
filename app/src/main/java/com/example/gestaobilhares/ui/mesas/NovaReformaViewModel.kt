@@ -1,9 +1,8 @@
 package com.example.gestaobilhares.ui.mesas
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.MesaReformada
@@ -12,6 +11,9 @@ import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Date
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,30 +26,29 @@ class NovaReformaViewModel @Inject constructor(
     private val appRepository: AppRepository,
     private val mesaReformadaRepository: MesaReformadaRepository,
     private val panoEstoqueRepository: PanoEstoqueRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
-    private val _mesasDisponiveis = MutableLiveData<List<Mesa>>()
-    val mesasDisponiveis: LiveData<List<Mesa>> = _mesasDisponiveis
+    private val _mesasDisponiveis = MutableStateFlow<List<Mesa>>(emptyList())
+    val mesasDisponiveis: StateFlow<List<Mesa>> = _mesasDisponiveis.asStateFlow()
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    // isLoading já existe na BaseViewModel
 
-    private val _errorMessage = MutableLiveData<String?>()
-    val errorMessage: LiveData<String?> = _errorMessage
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    private val _successMessage = MutableLiveData<String?>()
-    val successMessage: LiveData<String?> = _successMessage
+    private val _successMessage = MutableStateFlow<String?>(null)
+    val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
 
     fun carregarMesasDisponiveis() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 val mesas = appRepository.obterMesasDisponiveis().first()
                 _mesasDisponiveis.value = mesas
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar mesas: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -55,20 +56,18 @@ class NovaReformaViewModel @Inject constructor(
     fun salvarReforma(mesaReformada: MesaReformada) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 mesaReformadaRepository.inserir(mesaReformada)
                 _successMessage.value = "Reforma salva com sucesso!"
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao salvar reforma: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
 
-    fun clearError() {
-        _errorMessage.value = null
-    }
+    // clearError já existe na BaseViewModel
 
     fun clearSuccess() {
         _successMessage.value = null

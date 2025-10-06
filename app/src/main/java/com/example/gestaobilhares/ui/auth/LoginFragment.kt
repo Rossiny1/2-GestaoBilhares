@@ -10,7 +10,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentLoginBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -191,20 +195,24 @@ class LoginFragment : Fragment() {
         })
 
         // Observa estado de loading
-        authViewModel.isLoading.observe(viewLifecycleOwner, Observer { isLoading ->
-            binding.loginButton.isEnabled = !isLoading
-            binding.googleSignInButton.isEnabled = !isLoading
-            binding.forgotPasswordTextView.isEnabled = !isLoading
-            
-            // Mostrar/esconder loading
-            if (isLoading) {
-                binding.loginButton.text = "Entrando..."
-                binding.googleSignInButton.text = "Entrando..."
-            } else {
-                binding.loginButton.text = "Entrar"
-                binding.googleSignInButton.text = "Entrar com Google"
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.isLoading.collect { isLoading ->
+                    binding.loginButton.isEnabled = !isLoading
+                    binding.googleSignInButton.isEnabled = !isLoading
+                    binding.forgotPasswordTextView.isEnabled = !isLoading
+                    
+                    // Mostrar/esconder loading
+                    if (isLoading) {
+                        binding.loginButton.text = "Entrando..."
+                        binding.googleSignInButton.text = "Entrando..."
+                    } else {
+                        binding.loginButton.text = "Entrar"
+                        binding.googleSignInButton.text = "Entrar com Google"
+                    }
+                }
             }
-        })
+        }
         
         // Observa estado de conexão (status removido da UI conforme solicitado)
         authViewModel.isOnline.observe(viewLifecycleOwner, Observer { isOnline ->

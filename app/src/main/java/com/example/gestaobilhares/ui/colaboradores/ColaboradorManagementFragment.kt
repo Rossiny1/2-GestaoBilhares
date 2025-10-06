@@ -8,8 +8,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.coroutines.launch
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentColaboradorManagementBinding
 import com.example.gestaobilhares.data.entities.Colaborador
@@ -117,56 +122,92 @@ class ColaboradorManagementFragment : Fragment() {
 
     private fun setupObservers() {
         // Observa lista de colaboradores
-        viewModel.colaboradores.observe(viewLifecycleOwner) { colaboradores ->
-            colaboradorAdapter.submitList(colaboradores)
-            atualizarEstadoVazio(colaboradores.isEmpty())
-        }
-
-        // Observa estatísticas
-        viewModel.totalColaboradores.observe(viewLifecycleOwner) { total ->
-            binding.tvTotalColaboradores.text = total.toString()
-        }
-
-        viewModel.colaboradoresAtivos.observe(viewLifecycleOwner) { ativos ->
-            binding.tvColaboradoresAtivos.text = ativos.toString()
-        }
-
-        viewModel.pendentesAprovacao.observe(viewLifecycleOwner) { pendentes ->
-            binding.tvPendentesAprovacao.text = pendentes.toString()
-        }
-
-        // Observa estado de loading
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            binding.fabAddColaborador.isEnabled = !isLoading
-        }
-
-        // Observa mensagens
-        viewModel.message.observe(viewLifecycleOwner) { message ->
-            if (message.isNotEmpty()) {
-                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-                viewModel.limparMensagens()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.colaboradores.collect { colaboradores ->
+                    colaboradorAdapter.submitList(colaboradores)
+                    atualizarEstadoVazio(colaboradores.isEmpty())
+                }
             }
         }
 
-        viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
-            if (error.isNotEmpty()) {
-                Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
-                viewModel.limparMensagens()
+        // Observa estatísticas
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.totalColaboradores.collect { total ->
+                    binding.tvTotalColaboradores.text = total.toString()
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.colaboradoresAtivos.collect { ativos ->
+                    binding.tvColaboradoresAtivos.text = ativos.toString()
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.pendentesAprovacao.collect { pendentes ->
+                    binding.tvPendentesAprovacao.text = pendentes.toString()
+                }
+            }
+        }
+
+        // Observa estado de loading
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isLoading.collect { isLoading ->
+                    binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+                    binding.fabAddColaborador.isEnabled = !isLoading
+                }
+            }
+        }
+
+        // Observa mensagens
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.message.collect { message ->
+                    message?.let {
+                        Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                        viewModel.clearMessage()
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorMessage.collect { error ->
+                    error?.let {
+                        Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+                        viewModel.clearError()
+                    }
+                }
             }
         }
 
         // Observa verificação de acesso admin
-        viewModel.hasAdminAccess.observe(viewLifecycleOwner) { hasAccess ->
-            if (!hasAccess) {
-                Toast.makeText(requireContext(), "Acesso negado. Apenas administradores podem gerenciar colaboradores.", Toast.LENGTH_LONG).show()
-                findNavController().navigateUp()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.hasAdminAccess.collect { hasAccess ->
+                    if (!hasAccess) {
+                        Toast.makeText(requireContext(), "Acesso negado. Apenas administradores podem gerenciar colaboradores.", Toast.LENGTH_LONG).show()
+                        findNavController().navigateUp()
+                    }
+                }
             }
         }
 
         // Observa filtro atual
-        viewModel.filtroAtual.observe(viewLifecycleOwner) { filtro ->
-            atualizarChipsFiltro(filtro)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.filtroAtual.collect { filtro ->
+                    atualizarChipsFiltro(filtro)
+                }
+            }
         }
     }
 

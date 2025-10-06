@@ -23,6 +23,8 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.databinding.FragmentSettlementDetailBinding
 import com.example.gestaobilhares.utils.AppLogger
 import com.example.gestaobilhares.utils.ReciboPrinterHelper
+import com.example.gestaobilhares.utils.StringUtils
+import com.example.gestaobilhares.utils.DateUtils
 import com.example.gestaobilhares.R
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -107,10 +109,12 @@ class SettlementDetailFragment : Fragment() {
         }
         
         // Observer para loading
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // TODO: Mostrar loading se necessário
-            if (isLoading) {
-                AppLogger.log("SettlementDetailFragment", "Carregando detalhes...")
+        lifecycleScope.launch {
+            viewModel.isLoading.collect { isLoading ->
+                // TODO: Mostrar loading se necessário
+                if (isLoading) {
+                    AppLogger.log("SettlementDetailFragment", "Carregando detalhes...")
+                }
             }
         }
     }
@@ -156,7 +160,8 @@ class SettlementDetailFragment : Fragment() {
     }
 
     private fun updateUI(settlement: SettlementDetailViewModel.SettlementDetail) {
-        val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+        // Formatação centralizada via utilitários
+        // val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
         // Informações básicas
         binding.tvSettlementId.text = "#${settlement.id.toString().padStart(4, '0')}"
@@ -171,13 +176,13 @@ class SettlementDetailFragment : Fragment() {
             else -> binding.tvSettlementStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorOnSurface))
         }
         
-        // Valores financeiros
-        binding.tvInitialChips.text = formatter.format(settlement.debitoAnterior)
-        binding.tvFinalChips.text = formatter.format(settlement.valorTotal)
-        binding.tvPlayedChips.text = formatter.format(settlement.valorRecebido)
+        // Valores financeiros usando StringUtils
+        binding.tvInitialChips.text = StringUtils.formatarMoedaComSeparadores(settlement.debitoAnterior)
+        binding.tvFinalChips.text = StringUtils.formatarMoedaComSeparadores(settlement.valorTotal)
+        binding.tvPlayedChips.text = StringUtils.formatarMoedaComSeparadores(settlement.valorRecebido)
         binding.tvPlayedChips.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark))
-        binding.tvChipValue.text = formatter.format(settlement.desconto)
-        binding.tvTotalValue.text = formatter.format(settlement.debitoAtual)
+        binding.tvChipValue.text = StringUtils.formatarMoedaComSeparadores(settlement.desconto)
+        binding.tvTotalValue.text = StringUtils.formatarMoedaComSeparadores(settlement.debitoAtual)
         binding.tvTotalValue.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark))
         
         // Observações
@@ -796,8 +801,7 @@ class SettlementDetailFragment : Fragment() {
                     topMargin = 8
                 }
                 text = dataFoto?.let {
-                    val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale("pt", "BR"))
-                    "Capturada em: ${dateFormat.format(it)}"
+                    "Capturada em: ${DateUtils.formatarDataBrasileiraComHora(it)}"
                 } ?: "Data não disponível"
                 textSize = 12f
                 gravity = android.view.Gravity.CENTER
@@ -905,8 +909,7 @@ class SettlementDetailFragment : Fragment() {
                     topMargin = 8
                 }
                 text = dataFoto?.let {
-                    val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale("pt", "BR"))
-                    "Capturada em: ${dateFormat.format(it)}"
+                    "Capturada em: ${DateUtils.formatarDataBrasileiraComHora(it)}"
                 } ?: "Data não disponível"
                 textSize = 12f
                 gravity = android.view.Gravity.CENTER

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,13 +39,12 @@ data class CycleExpenseItem(
 class CycleExpensesViewModel(
     private val cicloAcertoRepository: CicloAcertoRepository,
     private val despesaRepository: DespesaRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _despesas = MutableStateFlow<List<CycleExpenseItem>>(emptyList())
     val despesas: StateFlow<List<CycleExpenseItem>> = _despesas.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    // isLoading já existe na BaseViewModel
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
@@ -59,7 +59,7 @@ class CycleExpensesViewModel(
     fun carregarDespesas(cicloId: Long) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 _errorMessage.value = null
 
                 // Buscar despesas reais do ciclo
@@ -83,7 +83,7 @@ class CycleExpensesViewModel(
                 android.util.Log.e("CycleExpensesViewModel", "Erro ao carregar despesas: ${e.message}")
                 _errorMessage.value = "Erro ao carregar despesas: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -95,7 +95,7 @@ class CycleExpensesViewModel(
     fun removerDespesa(despesaId: Long) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 _errorMessage.value = null
 
                 // ✅ CORREÇÃO: Buscar despesa real no banco e remover
@@ -117,7 +117,7 @@ class CycleExpensesViewModel(
                 android.util.Log.e("CycleExpensesViewModel", "Erro ao remover despesa: ${e.message}")
                 _errorMessage.value = "Erro ao remover despesa: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -129,7 +129,7 @@ class CycleExpensesViewModel(
     fun editarDespesa(despesaId: Long, descricao: String, valor: Double, categoria: String, observacoes: String) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 _errorMessage.value = null
 
                 // ✅ CORREÇÃO: Buscar despesa real no banco e atualizar
@@ -158,7 +158,7 @@ class CycleExpensesViewModel(
                 android.util.Log.e("CycleExpensesViewModel", "Erro ao editar despesa: ${e.message}")
                 _errorMessage.value = "Erro ao editar despesa: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }

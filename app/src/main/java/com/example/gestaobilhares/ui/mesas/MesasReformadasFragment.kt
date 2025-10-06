@@ -5,8 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.MesaReformada
@@ -69,21 +74,33 @@ class MesasReformadasFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.mesasReformadas.observe(viewLifecycleOwner) { mesas ->
-            adapter.submitList(mesas)
-            
-            // Mostrar/ocultar estado vazio
-            binding.emptyStateLayout.visibility = if (mesas.isEmpty()) View.VISIBLE else View.GONE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.mesasReformadas.collect { mesas ->
+                    adapter.submitList(mesas)
+                    
+                    // Mostrar/ocultar estado vazio
+                    binding.emptyStateLayout.visibility = if (mesas.isEmpty()) View.VISIBLE else View.GONE
+                }
+            }
         }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // TODO: Implementar loading state se necessário
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isLoading.collect { isLoading ->
+                    // TODO: Implementar loading state se necessário
+                }
+            }
         }
 
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                // TODO: Mostrar erro
-                viewModel.clearError()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorMessage.collect { message ->
+                    message?.let {
+                        // TODO: Mostrar erro
+                        viewModel.clearError()
+                    }
+                }
             }
         }
     }

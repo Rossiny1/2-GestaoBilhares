@@ -9,7 +9,10 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
 import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.databinding.FragmentEditMesaBinding
 import com.example.gestaobilhares.data.entities.TipoMesa
@@ -116,40 +119,56 @@ class EditMesaFragment : Fragment() {
             }
         }
 
-        // ✅ NOVO: Observar histórico de manutenção (LiveData)
-        historicoViewModel.ultimaPintura.observe(viewLifecycleOwner) { pintura ->
-            binding.tvDataPintura.text = if (pintura != null) {
-                val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
-                dateFormat.format(pintura.dataManutencao)
-            } else {
-                "Nunca pintada"
+        // ✅ NOVO: Observar histórico de manutenção (StateFlow)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                historicoViewModel.ultimaPintura.collect { pintura ->
+                    binding.tvDataPintura.text = if (pintura != null) {
+                        val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                        dateFormat.format(pintura.dataManutencao)
+                    } else {
+                        "Nunca pintada"
+                    }
+                }
             }
         }
 
-        historicoViewModel.ultimaTrocaPano.observe(viewLifecycleOwner) { pano ->
-            binding.tvPanoAtual.text = if (pano != null) {
-                val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
-                val numeroPano = pano.descricao ?: "N/A"
-                "$numeroPano - ${dateFormat.format(pano.dataManutencao)}"
-            } else {
-                "Nunca trocado"
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                historicoViewModel.ultimaTrocaPano.collect { pano ->
+                    binding.tvPanoAtual.text = if (pano != null) {
+                        val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                        val numeroPano = pano.descricao ?: "N/A"
+                        "$numeroPano - ${dateFormat.format(pano.dataManutencao)}"
+                    } else {
+                        "Nunca trocado"
+                    }
+                }
             }
         }
 
-        historicoViewModel.ultimaTrocaTabela.observe(viewLifecycleOwner) { tabela ->
-            binding.tvDataTrocaTabela.text = if (tabela != null) {
-                val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
-                dateFormat.format(tabela.dataManutencao)
-            } else {
-                "Nunca trocada"
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                historicoViewModel.ultimaTrocaTabela.collect { tabela ->
+                    binding.tvDataTrocaTabela.text = if (tabela != null) {
+                        val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                        dateFormat.format(tabela.dataManutencao)
+                    } else {
+                        "Nunca trocada"
+                    }
+                }
             }
         }
 
-        historicoViewModel.outrasManutencoes.observe(viewLifecycleOwner) { outras ->
-            binding.tvOutrasManutencoes.text = if (!outras.isNullOrEmpty()) {
-                "${outras.size} manutenção(ões)"
-            } else {
-                "Nenhuma"
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                historicoViewModel.outrasManutencoes.collect { outras ->
+                    binding.tvOutrasManutencoes.text = if (!outras.isNullOrEmpty()) {
+                        "${outras.size} manutenção(ões)"
+                    } else {
+                        "Nenhuma"
+                    }
+                }
             }
         }
     }

@@ -1,12 +1,13 @@
 package com.example.gestaobilhares.ui.settlement
 
-import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
+import android.util.Log
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.data.repository.MesaRepository
@@ -40,7 +41,7 @@ class SettlementViewModel @Inject constructor(
     private val cicloAcertoRepository: CicloAcertoRepository,
     private val historicoManutencaoMesaRepository: HistoricoManutencaoMesaRepository,
     private val panoEstoqueRepository: PanoEstoqueRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     /**
      * ✅ NOVA CLASSE: Resultado específico para salvamento de acerto
@@ -51,8 +52,7 @@ class SettlementViewModel @Inject constructor(
         data class AcertoJaExiste(val acertoExistente: Acerto) : ResultadoSalvamento()
     }
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    // Estados de loading e error já estão no BaseViewModel
 
     private val _clientName = MutableStateFlow("")
     val clientName: StateFlow<String> = _clientName.asStateFlow()
@@ -102,24 +102,24 @@ class SettlementViewModel @Inject constructor(
 
     fun loadClientForSettlement(clienteId: Long) {
         viewModelScope.launch {
-            _isLoading.value = true
+                showLoading()
             try {
                 val cliente = clienteRepository.obterPorId(clienteId)
                 if (cliente != null) {
                     _clientName.value = cliente.nome
                     _clientAddress.value = cliente.endereco ?: "---"
-                    Log.d("SettlementViewModel", "Nome do cliente carregado: ${cliente.nome}, endereço: ${cliente.endereco}")
+                    logOperation("SETTLEMENT", "Nome do cliente carregado: ${cliente.nome}, endereço: ${cliente.endereco}")
                 } else {
                     _clientName.value = "Cliente não encontrado"
                     _clientAddress.value = "---"
-                    Log.d("SettlementViewModel", "Cliente não encontrado para ID: $clienteId")
+                    logOperation("SETTLEMENT", "Cliente não encontrado para ID: $clienteId")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 _clientName.value = "Erro ao carregar cliente"
                 _clientAddress.value = "---"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -135,7 +135,7 @@ class SettlementViewModel @Inject constructor(
         
         return mesasCliente.map { mesa ->
             try {
-                Log.d("SettlementViewModel", "Processando mesa ${mesa.numero} (ID: ${mesa.id})")
+                logOperation("SETTLEMENT", "Processando mesa ${mesa.numero} (ID: ${mesa.id})")
                 
                 if (acertoIdParaEdicao != null) {
                     // ✅ MODO EDIÇÃO: Carregar dados do acerto sendo editado
@@ -144,15 +144,15 @@ class SettlementViewModel @Inject constructor(
                         // Usar o relógio inicial do acerto sendo editado
                         val relogioInicial = acertoMesa.relogioInicial
                         val relogioFinal = acertoMesa.relogioFinal
-                        Log.d("SettlementViewModel", "Mesa ${mesa.numero}: MODO EDIÇÃO - relógio inicial: $relogioInicial, relógio final: $relogioFinal")
+                        logOperation("SETTLEMENT", "Mesa ${mesa.numero}: MODO EDIÇÃO - relógio inicial: $relogioInicial, relógio final: $relogioFinal")
                         mesa.copy(
                             fichasInicial = relogioInicial,
                             fichasFinal = relogioFinal
                         )
                     } else {
                         // Fallback: usar dados da mesa
-                        val relogioInicial = mesa.fichasInicial ?: 0
-                        Log.d("SettlementViewModel", "Mesa ${mesa.numero}: MODO EDIÇÃO - acerto não encontrado, usando dados da mesa: $relogioInicial")
+                        val relogioInicial = mesa.fichasInicial
+                        logOperation("SETTLEMENT", "Mesa ${mesa.numero}: MODO EDIÇÃO - acerto não encontrado, usando dados da mesa: $relogioInicial")
                         mesa.copy(fichasInicial = relogioInicial)
                     }
                 } else {
@@ -162,24 +162,24 @@ class SettlementViewModel @Inject constructor(
                     if (ultimoAcertoMesa != null) {
                         // Usar o relógio final do último acerto como inicial do próximo
                         val relogioInicial = ultimoAcertoMesa.relogioFinal
-                        Log.d("SettlementViewModel", "Mesa ${mesa.numero}: MODO NOVO ACERTO - relógio final: ${ultimoAcertoMesa.relogioFinal} -> novo relógio inicial: $relogioInicial")
+                        logOperation("SETTLEMENT", "Mesa ${mesa.numero}: MODO NOVO ACERTO - relógio final: ${ultimoAcertoMesa.relogioFinal} -> novo relógio inicial: $relogioInicial")
                         mesa.copy(fichasInicial = relogioInicial)
                     } else {
                         // Primeiro acerto - usar relógio inicial cadastrado ou 0
-                        val relogioInicial = mesa.fichasInicial ?: 0
-                        Log.d("SettlementViewModel", "Mesa ${mesa.numero}: MODO NOVO ACERTO - primeiro acerto, usando relógio inicial cadastrado: $relogioInicial")
+                        val relogioInicial = mesa.fichasInicial
+                        logOperation("SETTLEMENT", "Mesa ${mesa.numero}: MODO NOVO ACERTO - primeiro acerto, usando relógio inicial cadastrado: $relogioInicial")
                         mesa.copy(fichasInicial = relogioInicial)
                     }
                 }
             } catch (e: Exception) {
-                Log.e("SettlementViewModel", "Erro ao preparar mesa ${mesa.numero}: ${e.message}")
-                val relogioInicial = mesa.fichasInicial ?: 0
+                logError("SETTLEMENT", "Erro ao preparar mesa ${mesa.numero}: ${e.message}")
+                val relogioInicial = mesa.fichasInicial
                 mesa.copy(fichasInicial = relogioInicial)
             }
         }.also { mesasPreparadas ->
             Log.d("SettlementViewModel", "=== MESAS PREPARADAS ===")
             mesasPreparadas.forEach { mesa ->
-                Log.d("SettlementViewModel", "Mesa ${mesa.numero}: relógio inicial=${mesa.fichasInicial}, relógio final=${mesa.fichasFinal}")
+                logOperation("SETTLEMENT", "Mesa ${mesa.numero}: relógio inicial=${mesa.fichasInicial}, relógio final=${mesa.fichasFinal}")
             }
         }
     }
@@ -190,7 +190,7 @@ class SettlementViewModel @Inject constructor(
                 val cliente = clienteRepository.obterPorId(clienteId)
                 callback(cliente)
             } catch (e: Exception) {
-                Log.e("SettlementViewModel", "Erro ao carregar dados do cliente: ${e.localizedMessage}", e)
+                logError("SETTLEMENT", "Erro ao carregar dados do cliente: ${e.localizedMessage}", e)
                 callback(null)
             }
         }
@@ -238,24 +238,24 @@ class SettlementViewModel @Inject constructor(
                     val acertoParaEdicao = acertoRepository.buscarPorId(acertoIdParaEdicao)
                     if (acertoParaEdicao != null) {
                         _debitoAnterior.value = acertoParaEdicao.debitoAnterior
-                        Log.d("SettlementViewModel", "MODO EDIÇÃO: Débito ANTERIOR do acerto sendo editado: R$ ${acertoParaEdicao.debitoAnterior}")
+                        logOperation("SETTLEMENT", "MODO EDIÇÃO: Débito ANTERIOR do acerto sendo editado: R$ ${acertoParaEdicao.debitoAnterior}")
                     } else {
                         _debitoAnterior.value = 0.0
-                        Log.w("SettlementViewModel", "MODO EDIÇÃO: Acerto para edição não encontrado, débito anterior: R$ 0,00")
+                        logError("SETTLEMENT", "MODO EDIÇÃO: Acerto para edição não encontrado, débito anterior: R$ 0,00")
                     }
                 } else {
                     // ✅ MODO NOVO ACERTO: Usar débito do último acerto como anterior
                     val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
                     if (ultimoAcerto != null) {
                         _debitoAnterior.value = ultimoAcerto.debitoAtual
-                        Log.d("SettlementViewModel", "MODO NOVO ACERTO: Débito anterior carregado: R$ ${ultimoAcerto.debitoAtual}")
+                        logOperation("SETTLEMENT", "MODO NOVO ACERTO: Débito anterior carregado: R$ ${ultimoAcerto.debitoAtual}")
                     } else {
                         _debitoAnterior.value = 0.0
-                        Log.d("SettlementViewModel", "MODO NOVO ACERTO: Nenhum acerto anterior encontrado, débito anterior: R$ 0,00")
+                        logOperation("SETTLEMENT", "MODO NOVO ACERTO: Nenhum acerto anterior encontrado, débito anterior: R$ 0,00")
                     }
                 }
             } catch (e: Exception) {
-                Log.e("SettlementViewModel", "Erro ao buscar débito anterior: ${e.message}")
+                logError("SETTLEMENT", "Erro ao buscar débito anterior: ${e.message}")
                 _debitoAnterior.value = 0.0
             }
         }
@@ -271,9 +271,9 @@ class SettlementViewModel @Inject constructor(
      */
     fun salvarAcerto(clienteId: Long, dadosAcerto: DadosAcerto, metodosPagamento: Map<String, Double>, desconto: Double = 0.0, acertoIdParaEdicao: Long? = null) {
         viewModelScope.launch {
-            _isLoading.value = true
+                showLoading()
             try {
-                Log.d("SettlementViewModel", "Salvando acerto com clienteId=$clienteId, mesas=${dadosAcerto.mesas.map { it.numero }}, modoEdicao=${acertoIdParaEdicao != null}")
+                logOperation("SETTLEMENT", "Salvando acerto com clienteId=$clienteId, mesas=${dadosAcerto.mesas.map { it.numero }}, modoEdicao=${acertoIdParaEdicao != null}")
                 
                 // Buscar cliente uma única vez
                 val cliente = clienteRepository.obterPorId(clienteId) ?: throw IllegalStateException("Cliente não encontrado para o ID: $clienteId")
@@ -282,62 +282,78 @@ class SettlementViewModel @Inject constructor(
                 // Buscar ciclo atual da rota
                 val cicloAtivo = cicloAcertoRepository.buscarCicloAtivo(rotaId)
                 val cicloId = cicloAtivo?.id ?: run {
-                    Log.w("SettlementViewModel", "Nenhum ciclo ativo encontrado para a rota $rotaId. Tentando buscar o último ciclo existente.")
+                    logError("SETTLEMENT", "Nenhum ciclo ativo encontrado para a rota $rotaId. Tentando buscar o último ciclo existente.")
                     val ultimoCiclo = cicloAcertoRepository.buscarEstatisticasRota(rotaId)
                     ultimoCiclo?.id ?: throw IllegalStateException("Nenhum ciclo encontrado para a rota $rotaId.")
                 }
                 
-                android.util.Log.d("DEBUG_DIAG", "[SALVAR_ACERTO] cicloId usado: $cicloId | rotaId: $rotaId | status ciclo ativo: ${cicloAtivo?.status} | modoEdicao: ${acertoIdParaEdicao != null}")
+                logOperation("SETTLEMENT", "[SALVAR_ACERTO] cicloId usado: $cicloId | rotaId: $rotaId | status ciclo ativo: ${cicloAtivo?.status} | modoEdicao: ${acertoIdParaEdicao != null}")
 
                 // ✅ CORREÇÃO: Validação apenas para novos acertos (não para edição)
                 if (acertoIdParaEdicao == null) {
                     val acertoExistente = acertoRepository.verificarAcertoExistente(clienteId, cicloId)
                     if (acertoExistente != null) {
-                        Log.w("SettlementViewModel", "⚠️ ACERTO JÁ EXISTE: Cliente $clienteId já possui acerto (ID: ${acertoExistente.id}) no ciclo $cicloId")
+                        logError("SETTLEMENT", "⚠️ ACERTO JÁ EXISTE: Cliente $clienteId já possui acerto (ID: ${acertoExistente.id}) no ciclo $cicloId")
                         _resultadoSalvamento.value = ResultadoSalvamento.AcertoJaExiste(acertoExistente)
-                        _isLoading.value = false
+                        hideLoading()
                         return@launch
                     }
                 } else {
-                    Log.d("SettlementViewModel", "✅ Modo edição ativo (acertoId: $acertoIdParaEdicao). Pulando validação de acerto único.")
+                    logOperation("SETTLEMENT", "✅ Modo edição ativo (acertoId: $acertoIdParaEdicao). Pulando validação de acerto único.")
                 }
 
-                // Calcular valores do acerto
-                val valorRecebido = metodosPagamento.values.sum()
+                // ✅ FASE 1: Usar FinancialCalculator centralizado
+                val valorRecebido = com.example.gestaobilhares.utils.FinancialCalculator.calcularValorRecebido(metodosPagamento)
                 val debitoAnterior = _debitoAnterior.value
-                val valorTotal = dadosAcerto.mesas.sumOf { mesa ->
-                    if (mesa.valorFixo > 0) {
-                        mesa.valorFixo
-                    } else {
-                        val fichasJogadas = (mesa.fichasFinal - mesa.fichasInicial).coerceAtLeast(0)
-                        fichasJogadas * (cliente.comissaoFicha)
-                    }
+                
+                // Converter mesas para formato do FinancialCalculator
+                val mesasCalculo = dadosAcerto.mesas.map { mesa ->
+                    com.example.gestaobilhares.utils.FinancialCalculator.MesaAcertoCalculo(
+                        fichasInicial = mesa.fichasInicial,
+                        fichasFinal = mesa.fichasFinal,
+                        valorFixo = mesa.valorFixo
+                    )
                 }
-                val valorComDesconto = valorTotal - desconto
-                val debitoAtual = debitoAnterior + valorComDesconto - valorRecebido
+                
+                val valorTotal = com.example.gestaobilhares.utils.FinancialCalculator.calcularValorTotalMesas(
+                    mesas = mesasCalculo,
+                    comissaoFicha = cliente.comissaoFicha
+                )
+                
+                val valorComDesconto = com.example.gestaobilhares.utils.FinancialCalculator.calcularValorComDesconto(
+                    valorTotal = valorTotal,
+                    desconto = desconto
+                )
+                
+                val debitoAtual = com.example.gestaobilhares.utils.FinancialCalculator.calcularDebitoAtual(
+                    debitoAnterior = debitoAnterior,
+                    valorTotal = valorTotal,
+                    desconto = desconto,
+                    valorRecebido = valorRecebido
+                )
                 
                 // ✅ CORREÇÃO: Logs detalhados para debug do cálculo do débito
-                Log.d("SettlementViewModel", "=== CÁLCULO DO DÉBITO ATUAL ===")
-                Log.d("SettlementViewModel", "Débito anterior: R$ $debitoAnterior")
-                Log.d("SettlementViewModel", "Valor total das mesas: R$ $valorTotal")
-                Log.d("SettlementViewModel", "Desconto aplicado: R$ $desconto")
-                Log.d("SettlementViewModel", "Valor com desconto: R$ $valorComDesconto")
-                Log.d("SettlementViewModel", "Valor recebido: R$ $valorRecebido")
-                Log.d("SettlementViewModel", "Débito atual calculado: R$ $debitoAtual")
-                Log.d("SettlementViewModel", "Fórmula: $debitoAnterior + $valorComDesconto - $valorRecebido = $debitoAtual")
+                logOperation("SETTLEMENT", "=== CÁLCULO DO DÉBITO ATUAL ===")
+                logOperation("SETTLEMENT", "Débito anterior: R$ $debitoAnterior")
+                logOperation("SETTLEMENT", "Valor total das mesas: R$ $valorTotal")
+                logOperation("SETTLEMENT", "Desconto aplicado: R$ $desconto")
+                logOperation("SETTLEMENT", "Valor com desconto: R$ $valorComDesconto")
+                logOperation("SETTLEMENT", "Valor recebido: R$ $valorRecebido")
+                logOperation("SETTLEMENT", "Débito atual calculado: R$ $debitoAtual")
+                logOperation("SETTLEMENT", "Fórmula: $debitoAnterior + $valorComDesconto - $valorRecebido = $debitoAtual")
                 
                 val metodosPagamentoJson = Gson().toJson(metodosPagamento)
                 // ✅ CORREÇÃO: Logs detalhados para debug das observações
-                Log.d("SettlementViewModel", "=== SALVANDO ACERTO NO BANCO - DEBUG OBSERVAÇÕES ===")
-                Log.d("SettlementViewModel", "Observação recebida dos dados: '${dadosAcerto.observacao}'")
-                Log.d("SettlementViewModel", "Observação é nula? ${dadosAcerto.observacao == null}")
-                Log.d("SettlementViewModel", "Observação é vazia? ${dadosAcerto.observacao?.isEmpty()}")
-                Log.d("SettlementViewModel", "Observação é blank? ${dadosAcerto.observacao?.isBlank()}")
+                logOperation("SETTLEMENT", "=== SALVANDO ACERTO NO BANCO - DEBUG OBSERVAÇÕES ===")
+                logOperation("SETTLEMENT", "Observação recebida dos dados: '${dadosAcerto.observacao}'")
+                logOperation("SETTLEMENT", "Observação é nula? ${dadosAcerto.observacao == null}")
+                logOperation("SETTLEMENT", "Observação é vazia? ${dadosAcerto.observacao.isEmpty()}")
+                logOperation("SETTLEMENT", "Observação é blank? ${dadosAcerto.observacao.isBlank()}")
                 
                 // ✅ CORREÇÃO: Observação será apenas manual, sem preenchimento automático
-                val observacaoParaSalvar = dadosAcerto.observacao?.trim() ?: ""
+                val observacaoParaSalvar = dadosAcerto.observacao.trim()
                 
-                Log.d("SettlementViewModel", "Observação que será salva no banco: '$observacaoParaSalvar'")
+                logOperation("SETTLEMENT", "Observação que será salva no banco: '$observacaoParaSalvar'")
 
                 // ✅ CORREÇÃO: Criar dados extras JSON para campos adicionais
                 val dadosExtras = mapOf(
@@ -346,12 +362,12 @@ class SettlementViewModel @Inject constructor(
                 )
                 val dadosExtrasJson = Gson().toJson(dadosExtras)
                 
-                Log.d("SettlementViewModel", "=== SALVANDO TODOS OS DADOS ===")
-                Log.d("SettlementViewModel", "Representante: '${dadosAcerto.representante}'")
-                Log.d("SettlementViewModel", "Tipo de acerto: '${dadosAcerto.tipoAcerto}'")
-                Log.d("SettlementViewModel", "Pano trocado: ${dadosAcerto.panoTrocado}")
-                Log.d("SettlementViewModel", "Número do pano: '${dadosAcerto.numeroPano}'")
-                Log.d("SettlementViewModel", "Métodos de pagamento: $metodosPagamento")
+                logOperation("SETTLEMENT", "=== SALVANDO TODOS OS DADOS ===")
+                logOperation("SETTLEMENT", "Representante: '${dadosAcerto.representante}'")
+                logOperation("SETTLEMENT", "Tipo de acerto: '${dadosAcerto.tipoAcerto}'")
+                logOperation("SETTLEMENT", "Pano trocado: ${dadosAcerto.panoTrocado}")
+                logOperation("SETTLEMENT", "Número do pano: '${dadosAcerto.numeroPano}'")
+                logOperation("SETTLEMENT", "Métodos de pagamento: $metodosPagamento")
 
                 // ✅ CORREÇÃO CRÍTICA: Vínculos com rota e ciclo
                 android.util.Log.d("SettlementViewModel", "=== VINCULANDO ACERTO À ROTA E CICLO ===")
@@ -363,14 +379,14 @@ class SettlementViewModel @Inject constructor(
                 val acertoId: Long
                 if (acertoIdParaEdicao != null) {
                     // MODO EDIÇÃO: Atualizar acerto existente
-                    Log.d("SettlementViewModel", "🔄 MODO EDIÇÃO: Atualizando acerto existente ID: $acertoIdParaEdicao")
+                    logOperation("SETTLEMENT", "🔄 MODO EDIÇÃO: Atualizando acerto existente ID: $acertoIdParaEdicao")
                     
                     // Buscar acerto existente
                     val acertoExistente = acertoRepository.buscarPorId(acertoIdParaEdicao)
                     if (acertoExistente == null) {
-                        Log.e("SettlementViewModel", "❌ Acerto para edição não encontrado: ID $acertoIdParaEdicao")
+                        logError("SETTLEMENT", "❌ Acerto para edição não encontrado: ID $acertoIdParaEdicao")
                         _resultadoSalvamento.value = ResultadoSalvamento.Erro("Acerto para edição não encontrado")
-                        _isLoading.value = false
+                        hideLoading()
                         return@launch
                     }
                     
@@ -384,7 +400,7 @@ class SettlementViewModel @Inject constructor(
                         valorRecebido = valorRecebido,
                         debitoAtual = debitoAtual,
                         observacoes = observacaoParaSalvar,
-                        dataFinalizacao = java.util.Date(),
+                        dataFinalizacao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
                         metodosPagamentoJson = metodosPagamentoJson,
                         representante = dadosAcerto.representante,
                         tipoAcerto = dadosAcerto.tipoAcerto,
@@ -395,17 +411,17 @@ class SettlementViewModel @Inject constructor(
                     
                     acertoRepository.atualizar(acertoAtualizado)
                     acertoId = acertoIdParaEdicao
-                    Log.d("SettlementViewModel", "✅ Acerto atualizado com sucesso! ID: $acertoId")
+                    logOperation("SETTLEMENT", "✅ Acerto atualizado com sucesso! ID: $acertoId")
                     
                 } else {
                     // MODO NOVO ACERTO: Criar novo acerto
-                    Log.d("SettlementViewModel", "🆕 MODO NOVO ACERTO: Criando novo acerto")
+                    logOperation("SETTLEMENT", "🆕 MODO NOVO ACERTO: Criando novo acerto")
                     
                     val acerto = Acerto(
                         clienteId = clienteId,
                         colaboradorId = null,
-                        periodoInicio = java.util.Date(),
-                        periodoFim = java.util.Date(),
+                        periodoInicio = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
+                        periodoFim = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
                         totalMesas = dadosAcerto.mesas.size.toDouble(),
                         debitoAnterior = debitoAnterior,
                         valorTotal = valorTotal,
@@ -415,7 +431,7 @@ class SettlementViewModel @Inject constructor(
                         debitoAtual = debitoAtual,
                         status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
                         observacoes = observacaoParaSalvar,
-                        dataFinalizacao = java.util.Date(),
+                        dataFinalizacao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
                         metodosPagamentoJson = metodosPagamentoJson,
                         representante = dadosAcerto.representante,
                         tipoAcerto = dadosAcerto.tipoAcerto,
@@ -427,7 +443,7 @@ class SettlementViewModel @Inject constructor(
                     )
                     
                     acertoId = acertoRepository.salvarAcerto(acerto)
-                    Log.d("SettlementViewModel", "✅ Novo acerto salvo com ID: $acertoId")
+                    logOperation("SETTLEMENT", "✅ Novo acerto salvo com ID: $acertoId")
                 }
                 
                 // NOVO: Atualizar valores do ciclo após salvar acerto
@@ -437,17 +453,17 @@ class SettlementViewModel @Inject constructor(
 
                 // ✅ CORREÇÃO: Verificar se realmente foi salvo
                 val acertoSalvo = acertoRepository.buscarPorId(acertoId)
-                Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Observação no banco após salvamento: '${acertoSalvo?.observacoes}'")
+                logOperation("SETTLEMENT", "🔍 VERIFICAÇÃO: Observação no banco após salvamento: '${acertoSalvo?.observacoes}'")
 
                 // Somar os valores anteriores com o valor do acerto ATUAL
                 val valorTotalAcertado = acertosAnteriores.sumOf { it.valorRecebido } + (acertoSalvo?.valorRecebido ?: 0.0)
                 val valorTotalDespesas = despesasDoCiclo.sumOf { it.valor }
                 val clientesAcertados = (acertosAnteriores.map { it.clienteId } + (acertoSalvo?.clienteId ?: 0L)).distinct().size
                 
-                Log.d("SettlementViewModel", "=== ATUALIZANDO VALORES DO CICLO $cicloId ===")
-                Log.d("SettlementViewModel", "Total Acertado: $valorTotalAcertado (Anteriores: ${acertosAnteriores.sumOf { it.valorRecebido }} + Atual: ${acertoSalvo?.valorRecebido})")
-                Log.d("SettlementViewModel", "Total Despesas: $valorTotalDespesas")
-                Log.d("SettlementViewModel", "Clientes Acertados: $clientesAcertados")
+                logOperation("SETTLEMENT", "=== ATUALIZANDO VALORES DO CICLO $cicloId ===")
+                logOperation("SETTLEMENT", "Total Acertado: $valorTotalAcertado (Anteriores: ${acertosAnteriores.sumOf { it.valorRecebido }} + Atual: ${acertoSalvo?.valorRecebido})")
+                logOperation("SETTLEMENT", "Total Despesas: $valorTotalDespesas")
+                logOperation("SETTLEMENT", "Clientes Acertados: $clientesAcertados")
 
                 cicloAcertoRepository.atualizarValoresCiclo(
                     cicloId = cicloId,
@@ -457,21 +473,21 @@ class SettlementViewModel @Inject constructor(
                 )
                 
                 // ✅ CORREÇÃO CRÍTICA: Salvar dados detalhados de cada mesa do acerto com logs
-                Log.d("SettlementViewModel", "=== SALVANDO MESAS DO ACERTO ===")
-                Log.d("SettlementViewModel", "Total de mesas recebidas: ${dadosAcerto.mesas.size}")
-                Log.d("SettlementViewModel", "Cliente encontrado: ${cliente.nome}")
-                Log.d("SettlementViewModel", "Valor ficha do cliente: R$ ${cliente.valorFicha}")
-                Log.d("SettlementViewModel", "Comissão ficha do cliente: R$ ${cliente.comissaoFicha}")
+                logOperation("SETTLEMENT", "=== SALVANDO MESAS DO ACERTO ===")
+                logOperation("SETTLEMENT", "Total de mesas recebidas: ${dadosAcerto.mesas.size}")
+                logOperation("SETTLEMENT", "Cliente encontrado: ${cliente.nome}")
+                logOperation("SETTLEMENT", "Valor ficha do cliente: R$ ${cliente.valorFicha}")
+                logOperation("SETTLEMENT", "Comissão ficha do cliente: R$ ${cliente.comissaoFicha}")
                 
                 // Garantir que não há duplicidade de mesaId
                 val mesaIds = dadosAcerto.mesas.map { it.id }
                 val duplicados = mesaIds.groupBy { it }.filter { it.value.size > 1 }.keys
                 if (duplicados.isNotEmpty()) {
-                    Log.e("SettlementViewModel", "DUPLICIDADE DETECTADA nos IDs das mesas: $duplicados")
+                    logError("SETTLEMENT", "DUPLICIDADE DETECTADA nos IDs das mesas: $duplicados")
                 }
                 val mesasUnicas = dadosAcerto.mesas.distinctBy { it.id }
                 if (mesasUnicas.size != dadosAcerto.mesas.size) {
-                    Log.w("SettlementViewModel", "Removendo mesas duplicadas antes de salvar. Total antes: ${dadosAcerto.mesas.size}, depois: ${mesasUnicas.size}")
+                    logError("SETTLEMENT", "Removendo mesas duplicadas antes de salvar. Total antes: ${dadosAcerto.mesas.size}, depois: ${mesasUnicas.size}")
                 }
                 val acertoMesas = mesasUnicas.mapIndexed { index, mesa ->
                     val fichasJogadas = if (mesa.valorFixo > 0) {
@@ -486,16 +502,16 @@ class SettlementViewModel @Inject constructor(
                         fichasJogadas * (cliente.comissaoFicha)
                     }
                     
-                    Log.d("SettlementViewModel", "=== MESA ${index + 1} ===")
-                    Log.d("SettlementViewModel", "ID da mesa: ${mesa.id}")
-                    Log.d("SettlementViewModel", "Número da mesa: ${mesa.numero}")
-                    Log.d("SettlementViewModel", "Relógio inicial: ${mesa.fichasInicial}")
-                    Log.d("SettlementViewModel", "Relógio final: ${mesa.fichasFinal}")
-                    Log.d("SettlementViewModel", "Fichas jogadas: $fichasJogadas")
-                    Log.d("SettlementViewModel", "Valor fixo: R$ ${mesa.valorFixo}")
-                    Log.d("SettlementViewModel", "Subtotal calculado: R$ $subtotal")
-                    Log.d("SettlementViewModel", "Com defeito: ${mesa.comDefeito}")
-                    Log.d("SettlementViewModel", "Relógio reiniciou: ${mesa.relogioReiniciou}")
+                    logOperation("SETTLEMENT", "=== MESA ${index + 1} ===")
+                    logOperation("SETTLEMENT", "ID da mesa: ${mesa.id}")
+                    logOperation("SETTLEMENT", "Número da mesa: ${mesa.numero}")
+                    logOperation("SETTLEMENT", "Relógio inicial: ${mesa.fichasInicial}")
+                    logOperation("SETTLEMENT", "Relógio final: ${mesa.fichasFinal}")
+                    logOperation("SETTLEMENT", "Fichas jogadas: $fichasJogadas")
+                    logOperation("SETTLEMENT", "Valor fixo: R$ ${mesa.valorFixo}")
+                    logOperation("SETTLEMENT", "Subtotal calculado: R$ $subtotal")
+                    logOperation("SETTLEMENT", "Com defeito: ${mesa.comDefeito}")
+                    logOperation("SETTLEMENT", "Relógio reiniciou: ${mesa.relogioReiniciou}")
                     
                     com.example.gestaobilhares.data.entities.AcertoMesa(
                         acertoId = acertoId,
@@ -516,17 +532,17 @@ class SettlementViewModel @Inject constructor(
                     )
                 }
                 
-                Log.d("SettlementViewModel", "=== INSERINDO MESAS NO BANCO ===")
-                Log.d("SettlementViewModel", "Total de AcertoMesa a inserir: ${acertoMesas.size}")
+                logOperation("SETTLEMENT", "=== INSERINDO MESAS NO BANCO ===")
+                logOperation("SETTLEMENT", "Total de AcertoMesa a inserir: ${acertoMesas.size}")
                 acertoMesas.forEachIndexed { index, acertoMesa ->
-                    Log.d("SettlementViewModel", "AcertoMesa ${index + 1}: Mesa ${acertoMesa.mesaId} - Subtotal: R$ ${acertoMesa.subtotal}")
+                    logOperation("SETTLEMENT", "AcertoMesa ${index + 1}: Mesa ${acertoMesa.mesaId} - Subtotal: R$ ${acertoMesa.subtotal}")
                 }
                 
                 acertoMesaRepository.inserirLista(acertoMesas)
-                Log.d("SettlementViewModel", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
+                logOperation("SETTLEMENT", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
                 
                 // ✅ NOVO: Registrar troca de pano no histórico de manutenção
-                if (dadosAcerto.panoTrocado && !dadosAcerto.numeroPano.isNullOrBlank()) {
+                if (dadosAcerto.panoTrocado && com.example.gestaobilhares.utils.StringUtils.isNaoVazia(dadosAcerto.numeroPano)) {
                     registrarTrocaPanoNoHistorico(dadosAcerto.mesas.map { mesa ->
                         com.example.gestaobilhares.ui.settlement.MesaDTO(
                             id = mesa.id,
@@ -541,23 +557,23 @@ class SettlementViewModel @Inject constructor(
                             comissaoFicha = 0.0,
                             ativa = true
                         )
-                    }, dadosAcerto.numeroPano)
+                    }, dadosAcerto.numeroPano ?: "")
                 }
                 
                 // ✅ CRÍTICO: Atualizar o débito atual na tabela de clientes
                 clienteRepository.atualizarDebitoAtual(clienteId, debitoAtual)
-                Log.d("SettlementViewModel", "Débito atual atualizado na tabela clientes: R$ $debitoAtual")
+                logOperation("SETTLEMENT", "Débito atual atualizado na tabela clientes: R$ $debitoAtual")
                 
                 // ✅ NOVO: Verificar se a atualização foi bem-sucedida
                 val clienteAtualizado = clienteRepository.obterPorId(clienteId)
-                Log.d("SettlementViewModel", "🔍 VERIFICAÇÃO: Débito atual na tabela clientes após atualização: R$ ${clienteAtualizado?.debitoAtual}")
+                logOperation("SETTLEMENT", "🔍 VERIFICAÇÃO: Débito atual na tabela clientes após atualização: R$ ${clienteAtualizado?.debitoAtual}")
                 
                 _resultadoSalvamento.value = ResultadoSalvamento.Sucesso(acertoId)
             } catch (e: Exception) {
-                Log.e("SettlementViewModel", "Erro ao salvar acerto: ${e.localizedMessage}", e)
+                logError("SETTLEMENT", "Erro ao salvar acerto: ${e.localizedMessage}", e)
                 _resultadoSalvamento.value = ResultadoSalvamento.Erro(e.localizedMessage ?: "Erro desconhecido")
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -581,11 +597,11 @@ class SettlementViewModel @Inject constructor(
                     descricao = "Troca de pano durante acerto - Número: $numeroPano",
                     responsavel = "Sistema de Acerto",
                     observacoes = "Troca de pano registrada automaticamente durante o acerto",
-                    dataManutencao = java.util.Date()
+                    dataManutencao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
                 )
                 
                 historicoManutencaoMesaRepository.inserir(historico)
-                Log.d("SettlementViewModel", "Histórico de troca de pano registrado para mesa ${mesa.numero}")
+                logOperation("SETTLEMENT", "Histórico de troca de pano registrado para mesa ${mesa.numero}")
             }
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao registrar troca de pano no histórico: ${e.message}", e)
@@ -605,7 +621,11 @@ class SettlementViewModel @Inject constructor(
     }
 
     fun setLoading(isLoading: Boolean) {
-        _isLoading.value = isLoading
+        if (isLoading) {
+            showLoading()
+        } else {
+            hideLoading()
+        }
     }
 
     /**
@@ -681,7 +701,7 @@ class SettlementViewModel @Inject constructor(
             // 1. Buscar o pano no estoque
             val pano = panoEstoqueRepository.buscarPorNumero(numeroPano)
             if (pano == null) {
-                Log.e("SettlementViewModel", "Pano $numeroPano não encontrado no estoque")
+                logError("SETTLEMENT", "Pano $numeroPano não encontrado no estoque")
                 return
             }
             
@@ -707,7 +727,7 @@ class SettlementViewModel @Inject constructor(
             // 1. Buscar o pano no estoque
             val pano = panoEstoqueRepository.buscarPorNumero(numeroPano)
             if (pano == null) {
-                Log.e("SettlementViewModel", "Pano $numeroPano não encontrado no estoque")
+                logError("SETTLEMENT", "Pano $numeroPano não encontrado no estoque")
                 return
             }
             
@@ -737,17 +757,17 @@ class SettlementViewModel @Inject constructor(
             // Buscar a mesa atual
             val mesa = mesaRepository.buscarPorId(mesaId)
             if (mesa != null) {
-                Log.d("SettlementViewModel", "Mesa encontrada: ${mesa.numero}")
+                logOperation("SETTLEMENT", "Mesa encontrada: ${mesa.numero}")
                 
                 // Atualizar mesa com novo pano e data
                 val mesaAtualizada = mesa.copy(
                     panoAtualId = panoId,
-                    dataUltimaTrocaPano = Date()
+                    dataUltimaTrocaPano = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
                 )
                 mesaRepository.atualizar(mesaAtualizada)
-                Log.d("SettlementViewModel", "Mesa $mesaId atualizada com pano $panoId com sucesso")
+                logOperation("SETTLEMENT", "Mesa $mesaId atualizada com pano $panoId com sucesso")
             } else {
-                Log.e("SettlementViewModel", "Mesa $mesaId não encontrada")
+                logError("SETTLEMENT", "Mesa $mesaId não encontrada")
             }
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao atualizar pano da mesa: ${e.message}", e)
@@ -762,14 +782,14 @@ class SettlementViewModel @Inject constructor(
             // 1. Buscar a mesa
             val mesa = mesaRepository.buscarPorId(mesaId)
             if (mesa?.panoAtualId == null) {
-                Log.d("SettlementViewModel", "Mesa $mesaId não possui pano atual")
+                logOperation("SETTLEMENT", "Mesa $mesaId não possui pano atual")
                 return null
             }
             
             // 2. Buscar o pano atual
             val pano = panoEstoqueRepository.buscarPorId(mesa.panoAtualId)
             if (pano == null) {
-                Log.w("SettlementViewModel", "Pano ${mesa.panoAtualId} não encontrado no estoque")
+                logError("SETTLEMENT", "Pano ${mesa.panoAtualId} não encontrado no estoque")
                 return null
             }
             

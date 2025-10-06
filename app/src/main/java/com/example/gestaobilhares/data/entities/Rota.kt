@@ -76,16 +76,14 @@ data class RotaResumo(
      * ✅ NOVO: Mostra data de início e fim quando disponível
      */
     fun getCicloFormatado(): String {
-        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
-        
         val dataInicioFormatada = if (dataInicioCiclo != null) {
-            sdf.format(java.util.Date(dataInicioCiclo))
+            com.example.gestaobilhares.utils.DateUtils.formatarDataBrasileira(java.util.Date(dataInicioCiclo))
         } else {
             "Data não definida"
         }
         
         val dataFimFormatada = if (dataFimCiclo != null) {
-            sdf.format(java.util.Date(dataFimCiclo))
+            com.example.gestaobilhares.utils.DateUtils.formatarDataBrasileira(java.util.Date(dataFimCiclo))
         } else {
             "Em andamento"
         }

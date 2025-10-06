@@ -1,12 +1,13 @@
 package com.example.gestaobilhares.ui.colaboradores
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.asLiveData
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 
@@ -16,42 +17,38 @@ import kotlinx.coroutines.flow.first
  */
 class ColaboradorManagementViewModel(
     private val appRepository: AppRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     // ==================== DADOS OBSERVÁVEIS ====================
     
     // Lista de colaboradores filtrada
-    private val _colaboradores = MutableLiveData<List<Colaborador>>()
-    val colaboradores: LiveData<List<Colaborador>> = _colaboradores
+    private val _colaboradores = MutableStateFlow<List<Colaborador>>(emptyList())
+    val colaboradores: StateFlow<List<Colaborador>> = _colaboradores.asStateFlow()
     
     // Estatísticas
-    private val _totalColaboradores = MutableLiveData(0)
-    val totalColaboradores: LiveData<Int> = _totalColaboradores
+    private val _totalColaboradores = MutableStateFlow(0)
+    val totalColaboradores: StateFlow<Int> = _totalColaboradores.asStateFlow()
     
-    private val _colaboradoresAtivos = MutableLiveData(0)
-    val colaboradoresAtivos: LiveData<Int> = _colaboradoresAtivos
+    private val _colaboradoresAtivos = MutableStateFlow(0)
+    val colaboradoresAtivos: StateFlow<Int> = _colaboradoresAtivos.asStateFlow()
     
-    private val _pendentesAprovacao = MutableLiveData(0)
-    val pendentesAprovacao: LiveData<Int> = _pendentesAprovacao
+    private val _pendentesAprovacao = MutableStateFlow(0)
+    val pendentesAprovacao: StateFlow<Int> = _pendentesAprovacao.asStateFlow()
     
-    // Estado de loading
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    // isLoading já existe na BaseViewModel
     
-    // Mensagens
-    private val _message = MutableLiveData<String>()
-    val message: LiveData<String> = _message
+    // message já existe na BaseViewModel
     
-    private val _errorMessage = MutableLiveData<String>()
-    val errorMessage: LiveData<String> = _errorMessage
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
     
     // Controle de acesso admin
-    private val _hasAdminAccess = MutableLiveData<Boolean>()
-    val hasAdminAccess: LiveData<Boolean> = _hasAdminAccess
+    private val _hasAdminAccess = MutableStateFlow<Boolean>(false)
+    val hasAdminAccess: StateFlow<Boolean> = _hasAdminAccess.asStateFlow()
     
     // Filtro atual
-    private val _filtroAtual = MutableLiveData(FiltroColaborador.TODOS)
-    val filtroAtual: LiveData<FiltroColaborador> = _filtroAtual
+    private val _filtroAtual = MutableStateFlow(FiltroColaborador.TODOS)
+    val filtroAtual: StateFlow<FiltroColaborador> = _filtroAtual.asStateFlow()
     
     // ==================== INICIALIZAÇÃO ====================
     
@@ -68,7 +65,7 @@ class ColaboradorManagementViewModel(
     fun carregarDados() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 // Carregar estatísticas
                 carregarEstatisticas()
@@ -79,7 +76,7 @@ class ColaboradorManagementViewModel(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar dados: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -114,7 +111,7 @@ class ColaboradorManagementViewModel(
     fun aplicarFiltro(filtro: FiltroColaborador) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 _filtroAtual.value = filtro
                 
                 val colaboradoresFiltrados = when (filtro) {
@@ -137,7 +134,7 @@ class ColaboradorManagementViewModel(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao aplicar filtro: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -150,7 +147,7 @@ class ColaboradorManagementViewModel(
     fun aprovarColaborador(colaboradorId: Long, aprovadoPor: String) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 appRepository.aprovarColaborador(
                     colaboradorId = colaboradorId,
@@ -158,13 +155,13 @@ class ColaboradorManagementViewModel(
                     aprovadoPor = aprovadoPor
                 )
                 
-                _message.value = "Colaborador aprovado com sucesso!"
+                showMessage("Colaborador aprovado com sucesso!")
                 carregarDados() // Recarregar dados
                 
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao aprovar colaborador: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -182,7 +179,7 @@ class ColaboradorManagementViewModel(
     ) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 // Atualizar colaborador com credenciais e aprovação
                 appRepository.aprovarColaboradorComCredenciais(
@@ -195,13 +192,13 @@ class ColaboradorManagementViewModel(
                     aprovadoPor = aprovadoPor
                 )
                 
-                _message.value = "Colaborador aprovado com credenciais geradas!"
+                showMessage("Colaborador aprovado com credenciais geradas!")
                 carregarDados() // Recarregar dados
                 
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao aprovar colaborador: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -212,18 +209,18 @@ class ColaboradorManagementViewModel(
     fun alterarStatusColaborador(colaboradorId: Long, ativo: Boolean) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 appRepository.alterarStatusColaborador(colaboradorId, ativo)
                 
                 val status = if (ativo) "ativado" else "desativado"
-                _message.value = "Colaborador $status com sucesso!"
+                showMessage("Colaborador $status com sucesso!")
                 carregarDados() // Recarregar dados
                 
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao alterar status: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -234,17 +231,17 @@ class ColaboradorManagementViewModel(
     fun deletarColaborador(colaborador: Colaborador) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 appRepository.deletarColaborador(colaborador)
                 
-                _message.value = "Colaborador excluído com sucesso!"
+                showMessage("Colaborador excluído com sucesso!")
                 carregarDados() // Recarregar dados
                 
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao excluir colaborador: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -273,7 +270,7 @@ class ColaboradorManagementViewModel(
      * Limpa mensagens
      */
     fun limparMensagens() {
-        _message.value = ""
+        showMessage("")
         _errorMessage.value = ""
     }
     

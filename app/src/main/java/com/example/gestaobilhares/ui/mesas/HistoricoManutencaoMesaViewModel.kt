@@ -1,14 +1,16 @@
 package com.example.gestaobilhares.ui.mesas
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,37 +21,36 @@ import javax.inject.Inject
 @HiltViewModel
 class HistoricoManutencaoMesaViewModel @Inject constructor(
     private val historicoManutencaoMesaRepository: HistoricoManutencaoMesaRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
-    private val _mesa = MutableLiveData<Mesa?>()
-    val mesa: LiveData<Mesa?> = _mesa
+    private val _mesa = MutableStateFlow<Mesa?>(null)
+    val mesa: StateFlow<Mesa?> = _mesa.asStateFlow()
 
-    private val _historicoManutencao = MutableLiveData<List<HistoricoManutencaoMesa>>()
-    val historicoManutencao: LiveData<List<HistoricoManutencaoMesa>> = _historicoManutencao
+    private val _historicoManutencao = MutableStateFlow<List<HistoricoManutencaoMesa>>(emptyList())
+    val historicoManutencao: StateFlow<List<HistoricoManutencaoMesa>> = _historicoManutencao.asStateFlow()
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    // isLoading já existe na BaseViewModel
 
-    private val _errorMessage = MutableLiveData<String?>()
-    val errorMessage: LiveData<String?> = _errorMessage
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     // Dados resumidos para exibição no EditMesaFragment
-    private val _ultimaPintura = MutableLiveData<HistoricoManutencaoMesa?>()
-    val ultimaPintura: LiveData<HistoricoManutencaoMesa?> = _ultimaPintura
+    private val _ultimaPintura = MutableStateFlow<HistoricoManutencaoMesa?>(null)
+    val ultimaPintura: StateFlow<HistoricoManutencaoMesa?> = _ultimaPintura.asStateFlow()
 
-    private val _ultimaTrocaPano = MutableLiveData<HistoricoManutencaoMesa?>()
-    val ultimaTrocaPano: LiveData<HistoricoManutencaoMesa?> = _ultimaTrocaPano
+    private val _ultimaTrocaPano = MutableStateFlow<HistoricoManutencaoMesa?>(null)
+    val ultimaTrocaPano: StateFlow<HistoricoManutencaoMesa?> = _ultimaTrocaPano.asStateFlow()
 
-    private val _ultimaTrocaTabela = MutableLiveData<HistoricoManutencaoMesa?>()
-    val ultimaTrocaTabela: LiveData<HistoricoManutencaoMesa?> = _ultimaTrocaTabela
+    private val _ultimaTrocaTabela = MutableStateFlow<HistoricoManutencaoMesa?>(null)
+    val ultimaTrocaTabela: StateFlow<HistoricoManutencaoMesa?> = _ultimaTrocaTabela.asStateFlow()
 
-    private val _outrasManutencoes = MutableLiveData<List<HistoricoManutencaoMesa>>()
-    val outrasManutencoes: LiveData<List<HistoricoManutencaoMesa>> = _outrasManutencoes
+    private val _outrasManutencoes = MutableStateFlow<List<HistoricoManutencaoMesa>>(emptyList())
+    val outrasManutencoes: StateFlow<List<HistoricoManutencaoMesa>> = _outrasManutencoes.asStateFlow()
 
     fun carregarHistoricoMesa(mesaId: Long) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 // Carregar histórico completo
                 val historico = historicoManutencaoMesaRepository.buscarPorMesaId(mesaId).first()
@@ -76,7 +77,7 @@ class HistoricoManutencaoMesaViewModel @Inject constructor(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar histórico: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -84,7 +85,7 @@ class HistoricoManutencaoMesaViewModel @Inject constructor(
     fun carregarHistoricoPorNumeroMesa(numeroMesa: String) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 val historico = historicoManutencaoMesaRepository.buscarPorNumeroMesa(numeroMesa).first()
                 _historicoManutencao.value = historico
@@ -92,7 +93,7 @@ class HistoricoManutencaoMesaViewModel @Inject constructor(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar histórico: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -108,7 +109,7 @@ class HistoricoManutencaoMesaViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 val historico = HistoricoManutencaoMesa(
                     mesaId = mesaId,
@@ -129,12 +130,10 @@ class HistoricoManutencaoMesaViewModel @Inject constructor(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao registrar manutenção: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
 
-    fun clearError() {
-        _errorMessage.value = null
-    }
+    // clearError já existe na BaseViewModel
 }

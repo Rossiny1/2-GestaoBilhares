@@ -8,8 +8,13 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRouteManagementBinding
@@ -91,40 +96,60 @@ class RouteManagementFragment : Fragment() {
      */
     private fun observeViewModel() {
         // Observa a lista de rotas
-        viewModel.rotas.observe(viewLifecycleOwner) { rotas ->
-            routeAdapter.submitList(rotas)
-            
-            // Atualiza contador
-            binding.totalRoutesCount.text = rotas.size.toString()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.rotas.collect { rotas ->
+                    routeAdapter.submitList(rotas)
+                    
+                    // Atualiza contador
+                    binding.totalRoutesCount.text = rotas.size.toString()
+                }
+            }
         }
 
         // Observa mensagens de erro
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
-                viewModel.clearMessages()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorMessage.collect { message ->
+                    message?.let {
+                        Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+                        viewModel.clearMessages()
+                    }
+                }
             }
         }
 
         // Observa mensagens de sucesso
-        viewModel.successMessage.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
-                viewModel.clearMessages()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.successMessage.collect { message ->
+                    message?.let {
+                        Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                        viewModel.clearMessages()
+                    }
+                }
             }
         }
 
         // Observa estado de loading
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // ProgressBar não existe no layout, apenas desabilitar FAB durante loading
-            binding.addRouteFab.isEnabled = !isLoading
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isLoading.collect { isLoading ->
+                    // ProgressBar não existe no layout, apenas desabilitar FAB durante loading
+                    binding.addRouteFab.isEnabled = !isLoading
+                }
+            }
         }
 
         // Observa verificação de acesso admin
-        viewModel.hasAdminAccess.observe(viewLifecycleOwner) { hasAccess ->
-            if (!hasAccess) {
-                Toast.makeText(requireContext(), "Acesso negado. Apenas administradores podem gerenciar rotas.", Toast.LENGTH_LONG).show()
-                findNavController().navigateUp()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.hasAdminAccess.collect { hasAccess ->
+                    if (!hasAccess) {
+                        Toast.makeText(requireContext(), "Acesso negado. Apenas administradores podem gerenciar rotas.", Toast.LENGTH_LONG).show()
+                        findNavController().navigateUp()
+                    }
+                }
             }
         }
     }

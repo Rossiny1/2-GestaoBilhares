@@ -1,6 +1,7 @@
 package com.example.gestaobilhares.ui.settlement
 
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.LiveData
@@ -19,22 +20,17 @@ class SettlementDetailViewModel(
     private val acertoRepository: AcertoRepository,
     private val acertoMesaRepository: AcertoMesaRepository,
     private val clienteRepository: com.example.gestaobilhares.data.repository.ClienteRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _settlementDetail = MutableLiveData<SettlementDetail?>()
     val settlementDetail: LiveData<SettlementDetail?> = _settlementDetail
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
-
-    private val _error = MutableLiveData<String?>()
-    val error: LiveData<String?> = _error
+    // Estados de loading e error já estão no BaseViewModel
 
     fun loadSettlementDetails(acertoId: Long) {
         viewModelScope.launch {
-            _isLoading.value = true
-            AppLogger.log("SettlementDetail", "=== CARREGANDO DETALHES DO ACERTO ===")
-            AppLogger.log("SettlementDetail", "Acerto ID: $acertoId")
+            showLoading()
+            logOperation("SETTLEMENT_DETAIL", "Carregando detalhes do acerto ID: $acertoId")
             
             try {
                 val acerto = acertoRepository.buscarPorId(acertoId)
@@ -172,10 +168,11 @@ class SettlementDetailViewModel(
                     _settlementDetail.value = null
                 }
             } catch (e: Exception) {
-                AppLogger.log("SettlementDetail", "Erro ao carregar detalhes do acerto: ${e.message}")
+                logError("SETTLEMENT_DETAIL", "Erro ao carregar detalhes do acerto: ${e.message}", e)
+                showError("Erro ao carregar detalhes: ${e.message}", e)
                 _settlementDetail.value = null
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }

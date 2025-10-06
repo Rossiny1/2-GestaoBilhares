@@ -319,7 +319,7 @@ class ClientListFragment : Fragment() {
         
         // ✅ FASE 9A: Observar mensagens de erro e feedback
         lifecycleScope.launch {
-            viewModel.errorMessage.collect { mensagem ->
+            viewModel.error.collect { mensagem ->
                 mensagem?.let {
                     mostrarFeedback("Erro: $it", Snackbar.LENGTH_LONG)
                     viewModel.limparErro()

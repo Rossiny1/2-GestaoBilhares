@@ -2,6 +2,7 @@ package com.example.gestaobilhares.ui.cycles
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.Acerto
@@ -64,7 +65,7 @@ data class PaymentMethodStats(
 class CycleManagementViewModel(
     private val cicloAcertoRepository: CicloAcertoRepository,
     private val appRepository: AppRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _dadosCiclo = MutableStateFlow<CycleManagementData?>(null)
     val dadosCiclo: StateFlow<CycleManagementData?> = _dadosCiclo.asStateFlow()
@@ -75,11 +76,7 @@ class CycleManagementViewModel(
     private val _estatisticasModalidade = MutableStateFlow(PaymentMethodStats())
     val estatisticasModalidade: StateFlow<PaymentMethodStats> = _estatisticasModalidade.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    // Estados de loading e error já estão no BaseViewModel
 
     /**
      * Carrega dados do ciclo
@@ -87,8 +84,8 @@ class CycleManagementViewModel(
     fun carregarDadosCiclo(cicloId: Long, rotaId: Long) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
-                _errorMessage.value = null
+                showLoading()
+                clearError()
 
                 // Buscar dados do ciclo
                 val ciclo = cicloAcertoRepository.buscarCicloPorId(cicloId)
@@ -109,70 +106,57 @@ class CycleManagementViewModel(
                     // Calcular estatísticas financeiras
                     calcularEstatisticasFinanceiras(cicloId, rotaId)
                 } else {
-                    _errorMessage.value = "Ciclo não encontrado"
+                    showError("Ciclo não encontrado")
                 }
 
             } catch (e: Exception) {
-                android.util.Log.e("CycleManagementViewModel", "Erro ao carregar dados do ciclo: ${e.message}")
-                _errorMessage.value = "Erro ao carregar dados: ${e.message}"
+                logError("CYCLE_LOAD", "Erro ao carregar dados do ciclo: ${e.message}", e)
+                showError("Erro ao carregar dados: ${e.message}", e)
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
 
     /**
-     * Calcula estatísticas financeiras do ciclo (como no PDF)
+     * ✅ FASE 1: Calcula estatísticas financeiras do ciclo usando FinancialCalculator centralizado
      */
-    private suspend fun calcularEstatisticasFinanceiras(cicloId: Long, rotaId: Long) {
+    private suspend fun calcularEstatisticasFinanceiras(cicloId: Long, @Suppress("UNUSED_PARAMETER") rotaId: Long) {
         try {
             // Buscar dados
             val acertos = buscarAcertosPorCiclo(cicloId)
             val despesas = buscarDespesasPorCiclo(cicloId)
 
-            // Calcular valores conforme especificação do PDF
-            val totalRecebido = acertos.sumOf { it.valorRecebido }
-            val despesasViagem = despesas.filter { it.categoria.equals("Viagem", ignoreCase = true) }.sumOf { it.valor }
-            val subtotal = totalRecebido - despesasViagem
-            val comissaoMotorista = subtotal * 0.03 // 3% do subtotal
-            val comissaoIltair = totalRecebido * 0.02 // 2% do faturamento total
-
-            // Calcular totais por modalidade
-            val totaisPorModalidade = calcularTotaisPorModalidade(acertos)
-            val somaPix = totaisPorModalidade["PIX"] ?: 0.0
-            val somaCartao = totaisPorModalidade["Cartão"] ?: 0.0
-            val totalCheques = totaisPorModalidade["Cheque"] ?: 0.0
-
-            // Soma despesas = Total geral das despesas - despesas de viagem
-            val totalGeralDespesas = despesas.sumOf { it.valor }
-            val somaDespesas = totalGeralDespesas - despesasViagem
-
-            val totalGeral = subtotal - comissaoMotorista - comissaoIltair - somaPix - somaCartao - somaDespesas - totalCheques
+            // ✅ FASE 1: Usar FinancialCalculator centralizado
+            val estatisticas = com.example.gestaobilhares.utils.FinancialCalculator.calcularEstatisticasCiclo(
+                acertos = acertos,
+                despesas = despesas
+            )
 
             // Atualizar estatísticas financeiras
             _estatisticas.value = CycleFinancialStats(
-                totalRecebido = totalRecebido,
-                despesasViagem = despesasViagem,
-                subtotal = subtotal,
-                comissaoMotorista = comissaoMotorista,
-                comissaoIltair = comissaoIltair,
-                somaPix = somaPix,
-                somaDespesas = somaDespesas,
-                cheques = totalCheques,
-                totalGeral = totalGeral
+                totalRecebido = estatisticas.totalRecebido,
+                despesasViagem = estatisticas.despesasViagem,
+                subtotal = estatisticas.subtotal,
+                comissaoMotorista = estatisticas.comissaoMotorista,
+                comissaoIltair = estatisticas.comissaoIltair,
+                somaPix = estatisticas.somaPix,
+                somaDespesas = estatisticas.somaDespesas,
+                cheques = estatisticas.cheques,
+                totalGeral = estatisticas.totalGeral
             )
 
             // Atualizar estatísticas por modalidade
             _estatisticasModalidade.value = PaymentMethodStats(
-                pix = somaPix,
-                cartao = somaCartao,
-                cheque = totalCheques,
-                dinheiro = totaisPorModalidade["Dinheiro"] ?: 0.0,
-                totalRecebido = totalRecebido
+                pix = estatisticas.somaPix,
+                cartao = estatisticas.somaCartao,
+                cheque = estatisticas.cheques,
+                dinheiro = 0.0, // TODO: Implementar cálculo de dinheiro se necessário
+                totalRecebido = estatisticas.totalRecebido
             )
 
         } catch (e: Exception) {
-            android.util.Log.e("CycleManagementViewModel", "Erro ao calcular estatísticas: ${e.message}")
+            logError("STATS_CALC", "Erro ao calcular estatísticas: ${e.message}", e)
         }
     }
 
@@ -183,7 +167,7 @@ class CycleManagementViewModel(
         return try {
             appRepository.buscarAcertosPorCicloId(cicloId).first()
         } catch (e: Exception) {
-            android.util.Log.e("CycleManagementViewModel", "Erro ao buscar acertos: ${e.message}")
+            logError("ACERTOS_SEARCH", "Erro ao buscar acertos: ${e.message}", e)
             emptyList()
         }
     }
@@ -195,7 +179,7 @@ class CycleManagementViewModel(
         return try {
             appRepository.buscarDespesasPorCicloId(cicloId).first()
         } catch (e: Exception) {
-            android.util.Log.e("CycleManagementViewModel", "Erro ao buscar despesas: ${e.message}")
+            logError("DESPESAS_SEARCH", "Erro ao buscar despesas: ${e.message}", e)
             emptyList()
         }
     }
@@ -207,7 +191,7 @@ class CycleManagementViewModel(
         return try {
             appRepository.buscarClientesPorRota(rotaId).first()
         } catch (e: Exception) {
-            android.util.Log.e("CycleManagementViewModel", "Erro ao buscar clientes: ${e.message}")
+            logError("CLIENTES_SEARCH", "Erro ao buscar clientes: ${e.message}", e)
             emptyList()
         }
     }
@@ -219,7 +203,7 @@ class CycleManagementViewModel(
         return try {
             cicloAcertoRepository.buscarCicloPorId(cicloId)
         } catch (e: Exception) {
-            android.util.Log.e("CycleManagementViewModel", "Erro ao buscar ciclo: ${e.message}")
+            logError("CICLO_SEARCH", "Erro ao buscar ciclo: ${e.message}", e)
             null
         }
     }
@@ -231,7 +215,7 @@ class CycleManagementViewModel(
         return try {
             appRepository.buscarRotaPorId(rotaId)
         } catch (e: Exception) {
-            android.util.Log.e("CycleManagementViewModel", "Erro ao buscar rota: ${e.message}")
+            logError("ROTA_SEARCH", "Erro ao buscar rota: ${e.message}", e)
             null
         }
     }
@@ -271,14 +255,14 @@ class CycleManagementViewModel(
      */
     private fun processarMetodosPagamento(metodosPagamentoJson: String?): Map<String, Double> {
         return try {
-            if (metodosPagamentoJson.isNullOrBlank()) {
+            if (com.example.gestaobilhares.utils.StringUtils.isVazia(metodosPagamentoJson)) {
                 mapOf("Dinheiro" to 0.0)
             } else {
                 val tipo = object : TypeToken<Map<String, Double>>() {}.type
                 Gson().fromJson(metodosPagamentoJson, tipo) ?: mapOf("Dinheiro" to 0.0)
             }
         } catch (e: Exception) {
-            android.util.Log.e("CycleManagementViewModel", "Erro ao processar métodos de pagamento: ${e.message}")
+            logError("PAYMENT_METHODS", "Erro ao processar métodos de pagamento: ${e.message}", e)
             mapOf("Dinheiro" to 0.0)
         }
     }

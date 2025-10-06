@@ -24,6 +24,8 @@ import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
+import com.example.gestaobilhares.utils.DateUtils
+import com.example.gestaobilhares.utils.StringUtils
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.view.Gravity
@@ -71,8 +73,9 @@ class CycleManagementFragment : Fragment() {
         )
     }
 
-    private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
-    private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
+    // Formatação centralizada via utilitários
+    // private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+    // private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -157,14 +160,14 @@ class CycleManagementFragment : Fragment() {
         
         lifecycleScope.launch {
             // Observar loading
-            viewModel.isLoading.collect { isLoading ->
+            viewModel.isLoading.collect { _ ->
                 // TODO: Implementar loading se necessário
             }
         }
         
         lifecycleScope.launch {
             // Observar erros
-            viewModel.errorMessage.collect { error ->
+            viewModel.error.collect { error ->
                 error?.let {
                     mostrarFeedback(it, Snackbar.LENGTH_LONG)
                 }
@@ -176,9 +179,9 @@ class CycleManagementFragment : Fragment() {
         binding.tvCycleTitle.text = dados.titulo
         
         val periodo = if (dados.dataFim != null) {
-            "${dateFormatter.format(dados.dataInicio)} - ${dateFormatter.format(dados.dataFim)}"
+            "${DateUtils.formatarDataBrasileira(dados.dataInicio)} - ${DateUtils.formatarDataBrasileira(dados.dataFim)}"
         } else {
-            "Iniciado em ${dateFormatter.format(dados.dataInicio)}"
+            "Iniciado em ${DateUtils.formatarDataBrasileira(dados.dataInicio)}"
         }
         binding.tvCyclePeriod.text = periodo
         
@@ -211,12 +214,12 @@ class CycleManagementFragment : Fragment() {
         }
     }
 
-    private fun atualizarEstatisticasFinanceiras(stats: CycleFinancialStats) {
+    private fun atualizarEstatisticasFinanceiras(@Suppress("UNUSED_PARAMETER") stats: CycleFinancialStats) {
         // Remover referências às views que foram movidas para o CycleSummaryFragment
         // Essas views agora são atualizadas diretamente no fragment de resumo
     }
 
-    private fun atualizarEstatisticasModalidade(stats: PaymentMethodStats) {
+    private fun atualizarEstatisticasModalidade(@Suppress("UNUSED_PARAMETER") stats: PaymentMethodStats) {
         // Remover referências às views que foram movidas para o CycleSummaryFragment
         // Essas views agora são atualizadas diretamente no fragment de resumo
     }

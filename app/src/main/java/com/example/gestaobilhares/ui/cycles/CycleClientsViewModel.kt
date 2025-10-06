@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,13 +27,12 @@ data class CycleClientItem(
  */
 class CycleClientsViewModel(
     private val cicloAcertoRepository: CicloAcertoRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _clientes = MutableStateFlow<List<CycleClientItem>>(emptyList())
     val clientes: StateFlow<List<CycleClientItem>> = _clientes.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    // isLoading já existe na BaseViewModel
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
@@ -43,7 +43,7 @@ class CycleClientsViewModel(
     fun carregarClientes(cicloId: Long, rotaId: Long) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 _errorMessage.value = null
 
                 // Buscar acertos reais do ciclo
@@ -71,7 +71,7 @@ class CycleClientsViewModel(
                 android.util.Log.e("CycleClientsViewModel", "Erro ao carregar clientes: ${e.message}")
                 _errorMessage.value = "Erro ao carregar clientes: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }

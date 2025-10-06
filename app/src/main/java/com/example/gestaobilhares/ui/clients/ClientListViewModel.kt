@@ -1,7 +1,8 @@
 package com.example.gestaobilhares.ui.clients
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.StatusRota
@@ -48,7 +49,7 @@ class ClientListViewModel @Inject constructor(
     private val cicloAcertoRepository: CicloAcertoRepository,
     private val acertoRepository: AcertoRepository,
     private val appRepository: AppRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _rotaInfo = MutableStateFlow<Rota?>(null)
     val rotaInfo: StateFlow<Rota?> = _rotaInfo.asStateFlow()
@@ -90,11 +91,7 @@ class ClientListViewModel @Inject constructor(
     private val _clientes = MutableStateFlow<List<Cliente>>(emptyList())
     val clientes: StateFlow<List<Cliente>> = _clientes.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    // Estados de loading e error já estão no BaseViewModel
 
     private val _rotaIdFlow = MutableStateFlow<Long?>(null)
 
@@ -179,25 +176,25 @@ class ClientListViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 rotaRepository.obterRotaPorId(rotaId).collect { rota ->
                     _rotaInfo.value = rota
                     rota?.let {
                         // ✅ CORREÇÃO: Carregar ciclo primeiro, depois status
                         carregarCicloAcertoReal(it)
                         // ✅ CORREÇÃO: Carregar status após ciclo estar carregado
-                        carregarStatusRota(it)
+                        carregarStatusRota()
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao carregar rota: ${e.message}")
-                _errorMessage.value = "Erro ao carregar informações da rota: ${e.message}"
+                logError("ROTA_LOAD", "Erro ao carregar rota: ${e.message}", e)
+                showError("Erro ao carregar informações da rota: ${e.message}", e)
                 // Definir valores padrão para evitar crash
                 _rotaInfo.value = Rota(id = rotaId, nome = "Rota $rotaId", ativa = true)
                 _statusRota.value = StatusRota.PAUSADA
                 _cicloAcerto.value = 1
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -215,7 +212,7 @@ class ClientListViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 clienteRepository.obterClientesPorRota(rotaId).collect { clientes ->
                     _clientesTodos.value = clientes
                     aplicarFiltrosCombinados() // Aplicar filtros após carregar
@@ -224,13 +221,13 @@ class ClientListViewModel @Inject constructor(
                     calcularDadosProgressoCiclo(clientes)
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao carregar clientes: ${e.message}")
-                _errorMessage.value = "Erro ao carregar clientes: ${e.message}"
+                logError("CLIENTES_LOAD", "Erro ao carregar clientes: ${e.message}", e)
+                showError("Erro ao carregar clientes: ${e.message}", e)
                 // Definir lista vazia para evitar crash
                 _clientesTodos.value = emptyList()
                 _clientes.value = emptyList()
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -244,8 +241,8 @@ class ClientListViewModel @Inject constructor(
                 _filtroAtual.value = filtro
                 aplicarFiltrosCombinados()
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao aplicar filtro: ${e.message}")
-                _errorMessage.value = "Erro ao aplicar filtro: ${e.message}"
+                logError("FILTRO_APPLY", "Erro ao aplicar filtro: ${e.message}", e)
+                showError("Erro ao aplicar filtro: ${e.message}", e)
             }
         }
     }
@@ -256,10 +253,10 @@ class ClientListViewModel @Inject constructor(
     fun iniciarRota() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 val rota = _rotaInfo.value ?: return@launch
-                val anoAtual = Calendar.getInstance().get(Calendar.YEAR)
+                val anoAtual = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
                 
                 // Buscar próximo número de ciclo
                 val proximoCiclo = cicloAcertoRepository.buscarProximoNumeroCiclo(rota.id, anoAtual)
@@ -272,10 +269,10 @@ class ClientListViewModel @Inject constructor(
                     rotaId = rota.id,
                     numeroCiclo = proximoCiclo,
                     ano = anoAtual,
-                    dataInicio = Date(),
+                    dataInicio = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
                     dataFim = Date(), // Será atualizado quando finalizar
                     status = StatusCicloAcerto.EM_ANDAMENTO,
-                    criadoPor = "Sistema" // TODO: Pegar usuário atual
+                    criadoPor = "Sistema" // TODO: Implementar UserSessionManager para pegar usuário atual
                 )
                 
                 val cicloId = cicloAcertoRepository.inserirOuAtualizarCiclo(novoCiclo)
@@ -295,17 +292,17 @@ class ClientListViewModel @Inject constructor(
                 // ✅ NOVO: Manter pendências do ciclo anterior
                 _pendencias.value = pendenciasCicloAnterior
                 
-                android.util.Log.d("ClientListViewModel", "✅ Ciclo $proximoCiclo iniciado com sucesso - campos reinicializados, pendências mantidas: $pendenciasCicloAnterior")
-                android.util.Log.d("ClientListViewModel", "🔄 Atualizando _cicloAtivo com novo ciclo: ID=$cicloId, Número=$proximoCiclo, Status=EM_ANDAMENTO")
+                logState("CICLO_INICIAR", "Ciclo $proximoCiclo iniciado com sucesso - campos reinicializados, pendências mantidas: $pendenciasCicloAnterior")
+                logState("CICLO_INICIAR", "Atualizando _cicloAtivo com novo ciclo: ID=$cicloId, Número=$proximoCiclo, Status=EM_ANDAMENTO")
                 
                 // ✅ NOTIFICAR MUDANÇA DE STATUS para atualização em tempo real
                 notificarMudancaStatusRota(rota.id)
                 
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao iniciar rota: ${e.message}", e)
-                _errorMessage.value = "Erro ao iniciar rota: ${e.message}"
+                logError("CICLO_INICIAR", "Erro ao iniciar rota: ${e.message}", e)
+                showError("Erro ao iniciar rota: ${e.message}", e)
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -316,12 +313,12 @@ class ClientListViewModel @Inject constructor(
     fun finalizarRota() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 val cicloAtual = _cicloAcertoEntity.value ?: return@launch
                 val rota = _rotaInfo.value ?: return@launch
                 
-                android.util.Log.d("ClientListViewModel", "🔄 Iniciando finalização da rota ${rota.nome} - Ciclo ${cicloAtual.numeroCiclo}")
+                logState("CICLO_FINALIZAR", "Iniciando finalização da rota ${rota.nome} - Ciclo ${cicloAtual.numeroCiclo}")
                 
                 // Centralizar a lógica de finalização no repositório
                 cicloAcertoRepository.finalizarCiclo(cicloAtual.id, Date())
@@ -335,8 +332,8 @@ class ClientListViewModel @Inject constructor(
                 _statusCiclo.value = StatusCicloAcerto.FINALIZADO
                 _statusRota.value = StatusRota.FINALIZADA
                 
-                android.util.Log.d("ClientListViewModel", "✅ Ciclo ${cicloAtual.numeroCiclo} finalizado com sucesso via repositório")
-                android.util.Log.d("ClientListViewModel", "🔄 Status da rota atualizado para: ${_statusRota.value}")
+                logState("CICLO_FINALIZAR", "Ciclo ${cicloAtual.numeroCiclo} finalizado com sucesso via repositório")
+                logState("CICLO_FINALIZAR", "Status da rota atualizado para: ${_statusRota.value}")
                 
                 // ✅ CORREÇÃO: Não recarregar rota inteira, apenas atualizar status
                 // carregarRota(rota.id) // REMOVIDO para evitar loop
@@ -345,10 +342,10 @@ class ClientListViewModel @Inject constructor(
                 notificarMudancaStatusRota(rota.id)
                 
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao finalizar rota: ${e.message}", e)
-                _errorMessage.value = "Erro ao finalizar rota: ${e.message}"
+                logError("CICLO_FINALIZAR", "Erro ao finalizar rota: ${e.message}", e)
+                showError("Erro ao finalizar rota: ${e.message}", e)
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -421,7 +418,7 @@ class ClientListViewModel @Inject constructor(
     /**
      * ✅ FASE 8C: Carrega o status atual da rota baseado no ciclo
      */
-    private fun carregarStatusRota(rota: Rota) {
+    private fun carregarStatusRota() {
         // O status da rota será determinado pelo status do ciclo
         when (_statusCiclo.value) {
             StatusCicloAcerto.EM_ANDAMENTO -> _statusRota.value = StatusRota.EM_ANDAMENTO
@@ -452,8 +449,8 @@ class ClientListViewModel @Inject constructor(
                 _searchCriteria.value = ""
                 aplicarFiltrosCombinados()
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro na busca: ${e.message}")
-                _errorMessage.value = "Erro na busca: ${e.message}"
+                logError("BUSCA", "Erro na busca: ${e.message}", e)
+                showError("Erro na busca: ${e.message}", e)
             }
         }
     }
@@ -470,8 +467,8 @@ class ClientListViewModel @Inject constructor(
                 _buscaAtual.value = ""
                 aplicarFiltrosCombinados()
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro na pesquisa avançada: ${e.message}")
-                _errorMessage.value = "Erro na pesquisa avançada: ${e.message}"
+                logError("PESQUISA_AVANCADA", "Erro na pesquisa avançada: ${e.message}", e)
+                showError("Erro na pesquisa avançada: ${e.message}", e)
             }
         }
     }
@@ -508,12 +505,12 @@ class ClientListViewModel @Inject constructor(
      * ✅ FASE 9B: Aplica filtro à lista de clientes com filtros combinados
      */
     private suspend fun aplicarFiltrosCombinados() {
-        val query = _buscaAtual.value.trim()
-        val filtro = _filtroAtual.value ?: FiltroCliente.NAO_ACERTADOS
+        val query = com.example.gestaobilhares.utils.StringUtils.removerEspacosExtras(_buscaAtual.value)
+        val filtro = _filtroAtual.value
         val todos = _clientesTodos.value
-        val isAdvancedSearch = _isAdvancedSearch.value ?: false
+        val isAdvancedSearch = _isAdvancedSearch.value
         val searchType = _searchType.value
-        val searchCriteria = _searchCriteria.value.trim()
+        val searchCriteria = com.example.gestaobilhares.utils.StringUtils.removerEspacosExtras(_searchCriteria.value)
         
         // ✅ CORREÇÃO: Filtro PENDENCIAS agora é inclusivo - mostra todos os clientes com pendências
         val filtradosPorStatus = when (filtro) {
@@ -596,7 +593,7 @@ class ClientListViewModel @Inject constructor(
         
         for (cliente in clientes) {
             // ✅ DEBUG: Log para verificar o débito de cada cliente
-            android.util.Log.d("ClientListViewModel", "Verificando cliente ${cliente.nome}: débitoAtual = R$ ${cliente.debitoAtual}")
+            android.util.Log.d("ClientListViewModel", "Verificando cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
             
             // ✅ CRITÉRIO INCLUSIVO: Se o cliente tem pendências, incluir independente do status de acerto
             if (clienteTemPendencias(cliente.id)) {
@@ -636,7 +633,7 @@ class ClientListViewModel @Inject constructor(
             val cliente = appRepository.obterClientePorId(clienteId) ?: return false
             
             // ✅ DEBUG: Log para verificar o débito do cliente
-            android.util.Log.d("ClientListViewModel", "Verificando pendências - Cliente ${cliente.nome}: débitoAtual = R$ ${cliente.debitoAtual}")
+            android.util.Log.d("ClientListViewModel", "Verificando pendências - Cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
             
             // ✅ CRITÉRIO 1: Débito > R$300
             val temDebitoAlto = cliente.debitoAtual > 300.0
@@ -659,7 +656,7 @@ class ClientListViewModel @Inject constructor(
             android.util.Log.d("ClientListViewModel", "Cliente ${cliente.nome}: temDebitoAlto=$temDebitoAlto, semAcertoRecente=$semAcertoRecente, temPendencia=$temPendencia")
             
             if (temPendencia) {
-                android.util.Log.d("ClientListViewModel", "✅ Cliente ${cliente.nome} tem pendência: Débito=R$${cliente.debitoAtual}, SemAcertoRecente=$semAcertoRecente")
+                android.util.Log.d("ClientListViewModel", "✅ Cliente ${cliente.nome} tem pendência: Débito=${com.example.gestaobilhares.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}, SemAcertoRecente=$semAcertoRecente")
             }
             
             temPendencia
@@ -711,6 +708,8 @@ class ClientListViewModel @Inject constructor(
             }
             SearchType.CPF -> {
                 clientes.filter { cliente ->
+                    val cpfFormatado = com.example.gestaobilhares.utils.StringUtils.formatarCPF(cliente.cpfCnpj)
+                    cpfFormatado.contains(criteria, ignoreCase = true) || 
                     cliente.cpfCnpj?.contains(criteria, ignoreCase = true) == true
                 }
             }
@@ -740,14 +739,14 @@ class ClientListViewModel @Inject constructor(
      * ✅ FASE 9A: Obtém o filtro atual para uso na UI
      */
     fun getFiltroAtual(): FiltroCliente {
-        return _filtroAtual.value ?: FiltroCliente.NAO_ACERTADOS
+        return _filtroAtual.value
     }
 
     /**
      * Limpa mensagens de erro
      */
     fun limparErro() {
-        _errorMessage.value = null
+        clearError()
     }
 
     /**
@@ -814,7 +813,6 @@ class ClientListViewModel @Inject constructor(
      */
     private suspend fun calcularPendencias(clientes: List<Cliente>): Int {
         return try {
-            val agora = java.util.Calendar.getInstance().time
             val quatroMesesAtras = java.util.Calendar.getInstance().apply {
                 add(java.util.Calendar.MONTH, -4)
             }.time

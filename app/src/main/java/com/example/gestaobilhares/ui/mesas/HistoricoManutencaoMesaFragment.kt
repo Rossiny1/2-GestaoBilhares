@@ -5,9 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentHistoricoManutencaoMesaBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -61,28 +66,44 @@ class HistoricoManutencaoMesaFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.mesa.observe(viewLifecycleOwner) { mesa ->
-            mesa?.let {
-                binding.tvNumeroMesa.text = "Mesa ${it.numero}"
-                binding.tvTipoTamanhoMesa.text = "${it.tipoMesa} - ${it.tamanho}"
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.mesa.collect { mesa ->
+                    mesa?.let {
+                        binding.tvNumeroMesa.text = "Mesa ${it.numero}"
+                        binding.tvTipoTamanhoMesa.text = "${it.tipoMesa} - ${it.tamanho}"
+                    }
+                }
             }
         }
 
-        viewModel.historicoManutencao.observe(viewLifecycleOwner) { historico ->
-            adapter.submitList(historico)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.historicoManutencao.collect { historico ->
+                    adapter.submitList(historico)
 
-            // Mostrar/ocultar estado vazio
-            binding.emptyStateLayout.visibility = if (historico.isEmpty()) View.VISIBLE else View.GONE
+                    // Mostrar/ocultar estado vazio
+                    binding.emptyStateLayout.visibility = if (historico.isEmpty()) View.VISIBLE else View.GONE
+                }
+            }
         }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // TODO: Implementar loading state se necessário
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isLoading.collect { isLoading ->
+                    // TODO: Implementar loading state se necessário
+                }
+            }
         }
 
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                // TODO: Mostrar erro
-                viewModel.clearError()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorMessage.collect { message ->
+                    message?.let {
+                        // TODO: Mostrar erro
+                        viewModel.clearError()
+                    }
+                }
             }
         }
     }

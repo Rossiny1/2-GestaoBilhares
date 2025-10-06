@@ -529,25 +529,21 @@ class MesasAcertoAdapter(
         return mesaStates.values.all { state ->
             val mesa = currentList.find { it.id == state.mesaId }
             
-            // Validação básica existente
-            val validacaoBasica = if (mesa?.valorFixo ?: 0.0 > 0) {
-                true
-            } else if (state.comDefeito && state.mediaFichasJogadas > 0) {
+            // ✅ FASE 2: Usar DataValidator centralizado
+            val resultadoValidacao = com.example.gestaobilhares.utils.DataValidator.validarDadosMesa(
+                relogioInicial = state.relogioInicial,
+                relogioFinal = state.relogioFinal,
+                comDefeito = state.comDefeito,
+                relogioReiniciou = state.relogioReiniciou,
+                fotoRelogioFinal = state.fotoRelogioFinal
+            )
+            
+            // Para mesas com valor fixo, sempre válido
+            if (mesa?.valorFixo ?: 0.0 > 0) {
                 true
             } else {
-                validarRelogioFinal(state.relogioInicial, state.relogioFinal, state.comDefeito, state.relogioReiniciou)
+                resultadoValidacao.isSucesso()
             }
-            
-            // ✅ NOVO: Validação de foto obrigatória quando checkbox marcado
-            val fotoObrigatoria = if (state.comDefeito || state.relogioReiniciou) {
-                // Se algum checkbox está marcado, foto é obrigatória
-                !state.fotoRelogioFinal.isNullOrEmpty()
-            } else {
-                // Se nenhum checkbox está marcado, foto não é obrigatória
-                true
-            }
-            
-            validacaoBasica && fotoObrigatoria
         }
     }
     

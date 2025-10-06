@@ -1,6 +1,7 @@
 package com.example.gestaobilhares.ui.clients
 
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 // Data classes definidas no final do arquivo
 // Hilt removido - usando instanciação direta
@@ -32,7 +33,7 @@ class ClientDetailViewModel(
     private val acertoRepository: AcertoRepository,
     private val acertoMesaRepository: AcertoMesaRepository,
     private val appRepository: com.example.gestaobilhares.data.repository.AppRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _clientDetails = MutableStateFlow<ClienteResumo?>(null)
     val clientDetails: StateFlow<ClienteResumo?> = _clientDetails.asStateFlow()
@@ -40,8 +41,7 @@ class ClientDetailViewModel(
     private val _settlementHistory = MutableStateFlow<List<AcertoResumo>>(emptyList())
     val settlementHistory: StateFlow<List<AcertoResumo>> = _settlementHistory.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    // isLoading já existe na BaseViewModel
 
     private val _mesasCliente = MutableStateFlow<List<Mesa>>(emptyList())
     val mesasCliente: StateFlow<List<Mesa>> = _mesasCliente.asStateFlow()
@@ -61,7 +61,7 @@ class ClientDetailViewModel(
 
     fun loadClientDetails(clienteId: Long) {
         viewModelScope.launch {
-            _isLoading.value = true
+            showLoading()
             Log.d("ClientDetailViewModel", "=== CARREGANDO DETALHES DO CLIENTE $clienteId ===")
             try {
                 val cliente = clienteRepository.obterPorId(clienteId)
@@ -169,7 +169,7 @@ class ClientDetailViewModel(
                 Log.e("ClientDetailViewModel", "Erro ao carregar detalhes do cliente", e)
                 e.printStackTrace()
             } finally {
-                _isLoading.value = false
+                hideLoading()
                 Log.d("ClientDetailViewModel", "=== CARREGAMENTO CONCLUÍDO ===")
             }
         }

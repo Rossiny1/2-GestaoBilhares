@@ -1,13 +1,14 @@
 package com.example.gestaobilhares.ui.routes.management
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.asLiveData
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.NivelAcesso
 import com.example.gestaobilhares.data.repository.RotaRepository
+import com.example.gestaobilhares.ui.common.BaseViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -16,26 +17,25 @@ import kotlinx.coroutines.launch
  */
 class RouteManagementViewModel(
     private val rotaRepository: RotaRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     // Lista de rotas observável
-    val rotas: LiveData<List<Rota>> = rotaRepository.getAllRotas().asLiveData()
+    private val _rotas = MutableStateFlow<List<Rota>>(emptyList())
+    val rotas: StateFlow<List<Rota>> = _rotas.asStateFlow()
 
     // Mensagens de erro
-    private val _errorMessage = MutableLiveData<String?>()
-    val errorMessage: LiveData<String?> = _errorMessage
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     // Mensagens de sucesso
-    private val _successMessage = MutableLiveData<String?>()
-    val successMessage: LiveData<String?> = _successMessage
+    private val _successMessage = MutableStateFlow<String?>(null)
+    val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
 
-    // Estado de loading
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    // Estado de loading - removido pois já existe na BaseViewModel
 
     // Controle de acesso admin
-    private val _hasAdminAccess = MutableLiveData<Boolean>()
-    val hasAdminAccess: LiveData<Boolean> = _hasAdminAccess
+    private val _hasAdminAccess = MutableStateFlow<Boolean>(false)
+    val hasAdminAccess: StateFlow<Boolean> = _hasAdminAccess.asStateFlow()
 
     /**
      * Verifica se o usuário atual tem acesso de administrador.
@@ -66,7 +66,7 @@ class RouteManagementViewModel(
     fun createRoute(nome: String, colaboradorResponsavel: String, cidades: String) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 // Verificar se já existe uma rota com o mesmo nome
                 val existingRoute = rotaRepository.getRotaByNome(nome)
@@ -94,7 +94,7 @@ class RouteManagementViewModel(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao criar rota: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -105,7 +105,7 @@ class RouteManagementViewModel(
     fun updateRoute(rota: Rota) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 val success = rotaRepository.updateRota(rota)
                 
@@ -118,7 +118,7 @@ class RouteManagementViewModel(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao atualizar rota: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -129,7 +129,7 @@ class RouteManagementViewModel(
     fun deleteRoute(rota: Rota) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 // TODO: Verificar se a rota tem clientes associados
                 // Em uma implementação completa, deveria:
@@ -151,7 +151,7 @@ class RouteManagementViewModel(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao excluir rota: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }

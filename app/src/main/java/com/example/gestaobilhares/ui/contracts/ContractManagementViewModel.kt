@@ -1,8 +1,7 @@
 package com.example.gestaobilhares.ui.contracts
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.first
 import com.example.gestaobilhares.data.entities.ContratoLocacao
@@ -12,6 +11,9 @@ import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.AppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,16 +23,15 @@ import javax.inject.Inject
 @HiltViewModel
 class ContractManagementViewModel @Inject constructor(
     private val repository: AppRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
-    private val _statistics = MutableLiveData<ContractStatistics>()
-    val statistics: LiveData<ContractStatistics> = _statistics
+    private val _statistics = MutableStateFlow<ContractStatistics>(ContractStatistics(0, 0, 0))
+    val statistics: StateFlow<ContractStatistics> = _statistics.asStateFlow()
 
-    private val _contracts = MutableLiveData<List<ContractItem>>()
-    val contracts: LiveData<List<ContractItem>> = _contracts
+    private val _contracts = MutableStateFlow<List<ContractItem>>(emptyList())
+    val contracts: StateFlow<List<ContractItem>> = _contracts.asStateFlow()
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    // isLoading já existe na BaseViewModel
 
     private var currentFilter = ContractFilter.WITH_CONTRACT
 
@@ -39,14 +40,14 @@ class ContractManagementViewModel @Inject constructor(
      */
     fun loadContractData() {
         viewModelScope.launch {
-            _isLoading.value = true
+            showLoading()
             try {
                 loadStatistics()
                 loadContracts()
             } catch (e: Exception) {
                 // Tratar erro
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -235,7 +236,7 @@ class ContractManagementViewModel @Inject constructor(
      */
     fun searchContracts(query: String) {
         viewModelScope.launch {
-            _isLoading.value = true
+            showLoading()
             try {
                 val allContracts = repository.buscarTodosContratos().first()
                 val allClients = repository.obterTodosClientes().first()
@@ -271,7 +272,7 @@ class ContractManagementViewModel @Inject constructor(
             } catch (e: Exception) {
                 _contracts.value = emptyList()
             }
-            _isLoading.value = false
+            hideLoading()
         }
     }
     
@@ -280,7 +281,7 @@ class ContractManagementViewModel @Inject constructor(
      */
     fun setFilterByRoute(routeId: Long) {
         viewModelScope.launch {
-            _isLoading.value = true
+            showLoading()
             try {
                 val allContracts = repository.buscarTodosContratos().first()
                 val allClients = repository.obterTodosClientes().first()
@@ -315,7 +316,7 @@ class ContractManagementViewModel @Inject constructor(
             } catch (e: Exception) {
                 _contracts.value = emptyList()
             }
-            _isLoading.value = false
+            hideLoading()
         }
     }
 

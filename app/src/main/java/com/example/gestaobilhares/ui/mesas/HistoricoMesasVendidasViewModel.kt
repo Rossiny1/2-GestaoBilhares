@@ -1,6 +1,7 @@
 package com.example.gestaobilhares.ui.mesas
 
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.MesaVendida
 import com.example.gestaobilhares.data.repository.MesaVendidaRepository
@@ -18,13 +19,12 @@ import javax.inject.Inject
 @HiltViewModel
 class HistoricoMesasVendidasViewModel @Inject constructor(
     private val mesaVendidaRepository: MesaVendidaRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _mesasVendidas = MutableStateFlow<List<MesaVendida>>(emptyList())
     val mesasVendidas: StateFlow<List<MesaVendida>> = _mesasVendidas.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    // isLoading já existe na BaseViewModel
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
@@ -39,7 +39,7 @@ class HistoricoMesasVendidasViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 android.util.Log.d("HistoricoMesasVendidasViewModel", "🔍 Iniciando carregamento de mesas vendidas...")
-                _isLoading.value = true
+                showLoading()
                 
                 // Usar try-catch para capturar cancelamento de job
                 try {
@@ -60,7 +60,7 @@ class HistoricoMesasVendidasViewModel @Inject constructor(
                 android.util.Log.e("HistoricoMesasVendidasViewModel", "❌ Erro ao carregar mesas vendidas: ${e.message}", e)
                 _errorMessage.value = "Erro ao carregar histórico: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -71,7 +71,7 @@ class HistoricoMesasVendidasViewModel @Inject constructor(
     fun filtrarPorNumero(numero: String) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 if (numero.isBlank()) {
                     carregarMesasVendidas()
                 } else {
@@ -83,7 +83,7 @@ class HistoricoMesasVendidasViewModel @Inject constructor(
                 android.util.Log.e("HistoricoMesasVendidasViewModel", "Erro ao filtrar por número: ${e.message}")
                 _errorMessage.value = "Erro ao filtrar: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -94,7 +94,7 @@ class HistoricoMesasVendidasViewModel @Inject constructor(
     fun filtrarPorComprador(nome: String) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 if (nome.isBlank()) {
                     carregarMesasVendidas()
                 } else {
@@ -106,7 +106,7 @@ class HistoricoMesasVendidasViewModel @Inject constructor(
                 android.util.Log.e("HistoricoMesasVendidasViewModel", "Erro ao filtrar por comprador: ${e.message}")
                 _errorMessage.value = "Erro ao filtrar: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
