@@ -418,7 +418,12 @@ object ReciboPrinterHelper {
             }
             
             if (!hasPermissions) {
-                onErro("Permissões Bluetooth necessárias para impressão")
+                // ✅ NOVO: Solicitar permissões automaticamente
+                if (context is androidx.fragment.app.FragmentActivity) {
+                    solicitarPermissoesBluetooth(context, bluetoothPermissions, onSucesso, onErro)
+                } else {
+                    onErro("Permissões Bluetooth necessárias para impressão. Vá em Configurações > Aplicativos > Gestão Bilhares > Permissões e ative o Bluetooth.")
+                }
                 return
             }
             
@@ -717,5 +722,43 @@ object ReciboPrinterHelper {
             TipoMesa.JUKEBOX -> "Jukebox"
             TipoMesa.OUTROS -> "Equipamento"
         }
+    }
+
+    /**
+     * ✅ NOVO: Solicita permissões Bluetooth automaticamente
+     */
+    private fun solicitarPermissoesBluetooth(
+        activity: androidx.fragment.app.FragmentActivity,
+        permissions: Array<String>,
+        onSucesso: () -> Unit,
+        onErro: (String) -> Unit
+    ) {
+        // Verificar se já temos permissões
+        val hasPermissions = permissions.all {
+            androidx.core.content.ContextCompat.checkSelfPermission(activity, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+        
+        if (hasPermissions) {
+            onSucesso()
+            return
+        }
+        
+        // Mostrar diálogo explicativo
+        androidx.appcompat.app.AlertDialog.Builder(activity)
+            .setTitle("🔗 Permissões Bluetooth Necessárias")
+            .setMessage("O app precisa de permissões Bluetooth para imprimir recibos na impressora térmica. Clique em 'Permitir' para continuar.")
+            .setPositiveButton("Permitir") { _, _ ->
+                // Solicitar permissões
+                androidx.core.app.ActivityCompat.requestPermissions(
+                    activity,
+                    permissions,
+                    1001 // REQUEST_BLUETOOTH_PERMISSIONS
+                )
+            }
+            .setNegativeButton("Cancelar") { _, _ ->
+                onErro("Permissões Bluetooth necessárias para impressão")
+            }
+            .setCancelable(false)
+            .show()
     }
 }

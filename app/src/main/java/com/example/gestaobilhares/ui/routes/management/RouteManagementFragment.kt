@@ -55,6 +55,9 @@ class RouteManagementFragment : Fragment() {
         
         // Verificar se o usuário é admin
         viewModel.checkAdminAccess()
+        
+        // ✅ NOVO: Carregar rotas ao inicializar o Fragment
+        viewModel.loadRotas()
     }
 
     /**
