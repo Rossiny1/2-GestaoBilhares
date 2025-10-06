@@ -9,6 +9,7 @@ import com.example.gestaobilhares.ui.common.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -36,6 +37,24 @@ class RouteManagementViewModel(
     // Controle de acesso admin
     private val _hasAdminAccess = MutableStateFlow<Boolean>(false)
     val hasAdminAccess: StateFlow<Boolean> = _hasAdminAccess.asStateFlow()
+
+    /**
+     * ✅ NOVO: Carrega todas as rotas do banco de dados
+     */
+    fun loadRotas() {
+        viewModelScope.launch {
+            try {
+                showLoading()
+                // ✅ CORREÇÃO: Usar first() para obter a primeira emissão do Flow
+                val rotasList = rotaRepository.getAllRotasAtivas().first()
+                _rotas.value = rotasList
+            } catch (e: Exception) {
+                _errorMessage.value = "Erro ao carregar rotas: ${e.message}"
+            } finally {
+                hideLoading()
+            }
+        }
+    }
 
     /**
      * Verifica se o usuário atual tem acesso de administrador.
@@ -87,6 +106,8 @@ class RouteManagementViewModel(
                 
                 if (rotaId != null) {
                     _successMessage.value = "Rota \"$nome\" criada com sucesso"
+                    // ✅ NOVO: Recarregar lista de rotas após criação
+                    loadRotas()
                 } else {
                     _errorMessage.value = "Erro ao criar rota. Verifique se já existe uma rota com este nome."
                 }
@@ -111,6 +132,8 @@ class RouteManagementViewModel(
                 
                 if (success) {
                     _successMessage.value = "Rota \"${rota.nome}\" atualizada com sucesso"
+                    // ✅ NOVO: Recarregar lista de rotas após atualização
+                    loadRotas()
                 } else {
                     _errorMessage.value = "Erro ao atualizar rota. Verifique se já existe uma rota com este nome."
                 }
@@ -144,6 +167,8 @@ class RouteManagementViewModel(
                 
                 if (success) {
                     _successMessage.value = "Rota \"${rota.nome}\" excluída com sucesso"
+                    // ✅ NOVO: Recarregar lista de rotas após exclusão
+                    loadRotas()
                 } else {
                     _errorMessage.value = "Erro ao excluir rota"
                 }

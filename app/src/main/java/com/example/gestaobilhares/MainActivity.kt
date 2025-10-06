@@ -1,8 +1,10 @@
 package com.example.gestaobilhares
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.navigation.fragment.NavHostFragment
 import com.example.gestaobilhares.databinding.ActivityMainBinding
 // ✅ REMOVIDO: import DatabasePopulator - não é mais necessário
@@ -34,5 +36,32 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         return navHostFragment.navController.navigateUp() || super.onSupportNavigateUp()
+    }
+
+    /**
+     * ✅ NOVO: Tratamento de permissões Bluetooth para impressão
+     */
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        
+        if (requestCode == 1001) { // REQUEST_BLUETOOTH_PERMISSIONS
+            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                // Permissões concedidas - notificar que pode tentar imprimir novamente
+                Log.d("MainActivity", "Permissões Bluetooth concedidas")
+                // O usuário pode tentar imprimir novamente
+            } else {
+                Log.w("MainActivity", "Permissões Bluetooth negadas")
+                // Mostrar mensagem explicativa
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("🔗 Permissões Bluetooth Negadas")
+                    .setMessage("Para imprimir recibos, é necessário permitir o acesso ao Bluetooth. Vá em Configurações > Aplicativos > Gestão Bilhares > Permissões e ative o Bluetooth.")
+                    .setPositiveButton("Entendi", null)
+                    .show()
+            }
+        }
     }
 } 
