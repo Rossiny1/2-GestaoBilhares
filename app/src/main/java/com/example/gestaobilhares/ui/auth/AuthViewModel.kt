@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.auth
+﻿package com.example.gestaobilhares.ui.auth
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -21,16 +21,15 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Date
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
+// import dagger.hilt.android.lifecycle.HiltViewModel // REMOVIDO: Hilt nao e mais usado
+// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 
 /**
  * ViewModel responsável pela lógica de autenticação híbrida (Firebase + Local).
  * Implementa padrão MVVM para separar lógica de negócio da UI.
  * Suporta autenticação online (Firebase) e offline (Room Database).
  */
-@HiltViewModel
-class AuthViewModel @Inject constructor() : BaseViewModel() {
+class AuthViewModel constructor() : BaseViewModel() {
     
     // Instância do Firebase Auth
     private val firebaseAuth = FirebaseAuth.getInstance()
@@ -86,8 +85,7 @@ class AuthViewModel @Inject constructor() : BaseViewModel() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
         
         networkUtils = NetworkUtils(context)
@@ -832,3 +830,4 @@ data class LocalUser(
     val displayName: String,
     val nivelAcesso: NivelAcesso
 ) 
+

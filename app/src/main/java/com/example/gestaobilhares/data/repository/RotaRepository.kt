@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.data.repository
+﻿package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.RotaDao
 import com.example.gestaobilhares.data.dao.ClienteDao
@@ -14,16 +14,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.runBlocking
-import javax.inject.Inject
-import javax.inject.Singleton
-
 /**
  * Repository para gerenciar dados das rotas.
  * Atua como uma única fonte de verdade para os dados das rotas.
  * Coordena entre o banco de dados local e futuras fontes remotas.
  */
-@Singleton
-class RotaRepository @Inject constructor(
+class RotaRepository constructor(
     private val rotaDao: RotaDao,
     private val clienteDao: ClienteDao? = null,
     private val mesaDao: MesaDao? = null,
@@ -542,3 +538,4 @@ class RotaRepository @Inject constructor(
         }
     }
 } 
+

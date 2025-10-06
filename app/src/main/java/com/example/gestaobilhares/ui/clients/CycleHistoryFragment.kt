@@ -48,8 +48,7 @@ class CycleHistoryFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
         CycleHistoryViewModelFactory(
             CicloAcertoRepository(

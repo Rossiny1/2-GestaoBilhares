@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.contracts
+﻿package com.example.gestaobilhares.ui.contracts
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -18,7 +18,6 @@ import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRepresentanteLegalSignatureBinding
 import com.example.gestaobilhares.ui.contracts.SignatureView
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
@@ -26,7 +25,6 @@ import org.json.JSONObject
  * Fragment para captura da assinatura digital do representante legal
  * Implementa todos os requisitos de segurança da Cláusula 9.3 do contrato
  */
-@AndroidEntryPoint
 class RepresentanteLegalSignatureFragment : Fragment() {
     
     private var _binding: FragmentRepresentanteLegalSignatureBinding? = null
@@ -231,3 +229,4 @@ class RepresentanteLegalSignatureFragment : Fragment() {
         _binding = null
     }
 }
+

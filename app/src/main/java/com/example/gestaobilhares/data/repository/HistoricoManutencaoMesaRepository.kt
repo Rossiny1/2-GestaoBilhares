@@ -1,14 +1,10 @@
-package com.example.gestaobilhares.data.repository
+﻿package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.HistoricoManutencaoMesaDao
 import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
-class HistoricoManutencaoMesaRepository @Inject constructor(
+class HistoricoManutencaoMesaRepository constructor(
     private val historicoManutencaoMesaDao: HistoricoManutencaoMesaDao
 ) {
 
@@ -69,3 +65,4 @@ class HistoricoManutencaoMesaRepository @Inject constructor(
         return historicoManutencaoMesaDao.obterUltimaTrocaTabela(mesaId)
     }
 }
+

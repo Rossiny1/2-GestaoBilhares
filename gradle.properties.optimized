@@ -1,0 +1,51 @@
+# Project-wide Gradle settings.
+# IDE (e.g. Android Studio) users:
+# Gradle settings configured through the IDE *will override*
+# any settings specified in this file.
+# For more details on how to configure your build environment visit
+# http://www.gradle.org/docs/current/userguide/build_environment.html
+
+# ==================== CONFIGURAÇÕES BÁSICAS ====================
+android.useAndroidX=true
+android.nonTransitiveRClass=true
+kotlin.code.style=official
+
+# ==================== CONFIGURAÇÕES DE PERFORMANCE (OTIMIZADAS) ====================
+# Memória otimizada para projetos Android modernos
+org.gradle.jvmargs=-Xmx6g -Dfile.encoding=UTF-8 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication
+
+# Daemon e cache
+org.gradle.daemon=true
+org.gradle.caching=true
+org.gradle.configuration-cache=true
+
+# Parallel execution (otimizado para projetos Android)
+org.gradle.parallel=true
+org.gradle.workers.max=4
+
+# ==================== CONFIGURAÇÕES KOTLIN (OTIMIZADAS) ====================
+# Kotlin daemon com configurações otimizadas
+kotlin.daemon.jvmargs=-Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=100
+
+# Incremental compilation
+kotlin.incremental=true
+kotlin.incremental.useClasspathSnapshot=true
+kotlin.incremental.usePreciseJavaTracking=true
+
+# ==================== CONFIGURAÇÕES KAPT (OTIMIZADAS) ====================
+# KAPT otimizado para Hilt
+kapt.incremental=true
+kapt.use.worker.api=true
+kapt.include.compile.classpath=true
+
+# ==================== CONFIGURAÇÕES ANDROID (OTIMIZADAS) ====================
+# R8 otimizado
+android.enableR8.fullMode=true
+android.enableJetifier=true
+
+# Dependency resolution otimizado
+android.enableDependencyResolutionAtConfigurationTime=true
+
+# ==================== CONFIGURAÇÕES ESPECÍFICAS DO PROJETO ====================
+# JDK path (ajuste conforme sua instalação)
+org.gradle.java.home=C:/Program Files/Android/Android Studio1/jbr

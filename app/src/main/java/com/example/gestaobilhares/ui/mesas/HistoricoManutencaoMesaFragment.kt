@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -15,12 +15,11 @@ import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentHistoricoManutencaoMesaBinding
-import dagger.hilt.android.AndroidEntryPoint
+// import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 
 /**
  * Fragment que exibe o histórico completo de manutenção de uma mesa.
  */
-@AndroidEntryPoint
 class HistoricoManutencaoMesaFragment : Fragment() {
 
     private var _binding: FragmentHistoricoManutencaoMesaBinding? = null
@@ -113,3 +112,4 @@ class HistoricoManutencaoMesaFragment : Fragment() {
         _binding = null
     }
 }
+

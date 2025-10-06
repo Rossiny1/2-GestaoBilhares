@@ -1,17 +1,13 @@
-package com.example.gestaobilhares.data.repository
+﻿package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.MesaVendidaDao
 import com.example.gestaobilhares.data.entities.MesaVendida
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
-
 /**
  * Repositório para operações com mesas vendidas
  * ✅ NOVO: SISTEMA DE VENDA DE MESAS
  */
-@Singleton
-class MesaVendidaRepository @Inject constructor(
+class MesaVendidaRepository constructor(
     private val mesaVendidaDao: MesaVendidaDao
 ) {
 
@@ -106,3 +102,4 @@ class MesaVendidaRepository @Inject constructor(
         mesaVendidaDao.deletarPorId(id)
     }
 }
+

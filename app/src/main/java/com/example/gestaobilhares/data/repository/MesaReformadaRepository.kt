@@ -1,16 +1,12 @@
-package com.example.gestaobilhares.data.repository
+﻿package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.MesaReformadaDao
 import com.example.gestaobilhares.data.entities.MesaReformada
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
-
 /**
  * Repositório para operações com mesas reformadas.
  */
-@Singleton
-class MesaReformadaRepository @Inject constructor(
+class MesaReformadaRepository constructor(
     private val mesaReformadaDao: MesaReformadaDao
 ) {
 
@@ -58,3 +54,4 @@ class MesaReformadaRepository @Inject constructor(
         mesaReformadaDao.deletarPorId(id)
     }
 }
+

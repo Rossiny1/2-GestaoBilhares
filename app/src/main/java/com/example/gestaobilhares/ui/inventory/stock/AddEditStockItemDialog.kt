@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.inventory.stock
+﻿package com.example.gestaobilhares.ui.inventory.stock
 
 import android.app.Dialog
 import android.os.Bundle
@@ -10,9 +10,6 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import com.example.gestaobilhares.databinding.DialogAddEditStockItemBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dagger.hilt.android.AndroidEntryPoint
-
-@AndroidEntryPoint
 class AddEditStockItemDialog : DialogFragment() {
     
     private var _binding: DialogAddEditStockItemBinding? = null
@@ -107,3 +104,4 @@ class AddEditStockItemDialog : DialogFragment() {
         _binding = null
     }
 }
+

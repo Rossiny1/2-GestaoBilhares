@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import android.app.DatePickerDialog
 import android.app.Dialog
@@ -67,21 +67,6 @@ class VendaMesaDialog : DialogFragment() {
         try {
             android.util.Log.d(TAG, "onCreateDialog() - inicializando dependencias e UI")
             database = AppDatabase.getDatabase(requireContext())
-            appRepository = AppRepository(
-                database.clienteDao(),
-                database.acertoDao(),
-                database.mesaDao(),
-                database.rotaDao(),
-                database.despesaDao(),
-                database.colaboradorDao(),
-                database.cicloAcertoDao(),
-                database.acertoMesaDao(),
-                database.contratoLocacaoDao(),
-                database.aditivoContratoDao(),
-                database.assinaturaRepresentanteLegalDao(),
-                database.logAuditoriaAssinaturaDao(),
-                database.procuraçãoRepresentanteDao()
-            )
             mesaVendidaRepository = MesaVendidaRepository(database.mesaVendidaDao())
 
             setupUI()
@@ -374,3 +359,9 @@ class VendaMesaDialog : DialogFragment() {
         _binding = null
     }
 }
+
+
+
+
+
+

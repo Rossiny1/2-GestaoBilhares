@@ -197,7 +197,7 @@ class CycleHistoryViewModel(
     /**
      * Exporta relatório financeiro
      */
-    fun exportarRelatorio(rotaId: Long, callback: (Boolean) -> Unit) {
+    fun exportarRelatorio(_rotaId: Long, callback: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
                 showLoading()
@@ -328,7 +328,7 @@ class CycleHistoryViewModel(
     /**
      * ✅ NOVA FUNÇÃO: Calcula clientes acertados em tempo real para ciclos em andamento
      */
-    private suspend fun calcularClientesAcertadosEmTempoReal(cicloId: Long, rotaId: Long): Int {
+    private suspend fun calcularClientesAcertadosEmTempoReal(cicloId: Long, _rotaId: Long): Int {
         return try {
             // Buscar acertos reais do banco de dados para este ciclo
             val acertos = appRepository.buscarAcertosPorCicloId(cicloId).first()

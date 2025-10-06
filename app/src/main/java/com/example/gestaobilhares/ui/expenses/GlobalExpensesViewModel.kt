@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.expenses
+﻿package com.example.gestaobilhares.ui.expenses
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -7,20 +7,16 @@ import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.Despesa
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.DespesaRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import javax.inject.Inject
-
 /**
  * ViewModel para gerenciar despesas globais
  * Controla listagem, filtros por ciclo e resumos
  */
-@HiltViewModel
-class GlobalExpensesViewModel @Inject constructor(
+class GlobalExpensesViewModel constructor(
     private val despesaRepository: DespesaRepository,
     private val cicloAcertoRepository: CicloAcertoRepository
 ) : BaseViewModel() {
@@ -214,3 +210,4 @@ class GlobalExpensesViewModel @Inject constructor(
         loadAllGlobalExpenses()
     }
 }
+

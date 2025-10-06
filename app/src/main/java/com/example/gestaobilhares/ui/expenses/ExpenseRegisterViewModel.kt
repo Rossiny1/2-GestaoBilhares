@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.expenses
+﻿package com.example.gestaobilhares.ui.expenses
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,15 +10,11 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-
 /**
  * ViewModel para o cadastro de despesas.
  * Gerencia o estado da tela de cadastro e integra com o ciclo de acertos.
  */
-@HiltViewModel
-class ExpenseRegisterViewModel @Inject constructor(
+class ExpenseRegisterViewModel constructor(
     private val despesaRepository: DespesaRepository,
     private val categoriaDespesaRepository: CategoriaDespesaRepository,
     private val tipoDespesaRepository: TipoDespesaRepository,

@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -21,11 +21,10 @@ import com.example.gestaobilhares.data.entities.EstadoConservacao
 import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dagger.hilt.android.AndroidEntryPoint
+// import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
 
-@AndroidEntryPoint
 class EditMesaFragment : Fragment() {
 
     private var _binding: FragmentEditMesaBinding? = null

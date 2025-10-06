@@ -1,18 +1,14 @@
-package com.example.gestaobilhares.ui.contracts
+﻿package com.example.gestaobilhares.ui.contracts
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.inject.Inject
-
-@HiltViewModel
-class ContractGenerationViewModel @Inject constructor(
+class ContractGenerationViewModel constructor(
     private val repository: AppRepository
 ) : ViewModel() {
     
@@ -198,3 +194,4 @@ class ContractGenerationViewModel @Inject constructor(
         }
     }
 }
+

@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.reports
+﻿package com.example.gestaobilhares.ui.reports
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -15,11 +15,9 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.databinding.FragmentClosureReportBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dagger.hilt.android.AndroidEntryPoint
 import java.text.NumberFormat
 import java.util.Locale
 
-@AndroidEntryPoint
 class ClosureReportFragment : Fragment() {
 
     private var _binding: FragmentClosureReportBinding? = null
@@ -250,5 +248,6 @@ class ClosureReportFragment : Fragment() {
         _binding = null
     }
 }
+
 
 

@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.contracts
+﻿package com.example.gestaobilhares.ui.contracts
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -21,13 +21,9 @@ import com.example.gestaobilhares.databinding.FragmentSignatureCaptureBinding
 import com.example.gestaobilhares.utils.DocumentIntegrityManager
 import com.example.gestaobilhares.utils.LegalLogger
 import com.example.gestaobilhares.utils.SignatureMetadataCollector
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import java.io.ByteArrayOutputStream
-import javax.inject.Inject
-
-@AndroidEntryPoint
 class SignatureCaptureFragment : Fragment() {
     
     companion object {
@@ -39,13 +35,10 @@ class SignatureCaptureFragment : Fragment() {
     
     private val viewModel: SignatureCaptureViewModel by viewModels()
     
-    @Inject
     lateinit var legalLogger: LegalLogger
     
-    @Inject
     lateinit var documentIntegrityManager: DocumentIntegrityManager
     
-    @Inject
     lateinit var metadataCollector: SignatureMetadataCollector
     
     private var signatureBitmap: Bitmap? = null
@@ -166,9 +159,18 @@ class SignatureCaptureFragment : Fragment() {
                     
                     val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
                     val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                        db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                        db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                        db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
+                        db.clienteDao(),
+                        db.acertoDao(),
+                        db.mesaDao(),
+                        db.rotaDao(),
+                        db.despesaDao(),
+                        db.colaboradorDao(),
+                        db.cicloAcertoDao(),
+                        db.acertoMesaDao(),
+                        db.contratoLocacaoDao(),
+                        db.aditivoContratoDao(),
+                        db.assinaturaRepresentanteLegalDao(),
+                        db.logAuditoriaAssinaturaDao()
                     )
                     val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
                     val agora = java.util.Date()
@@ -330,9 +332,18 @@ class SignatureCaptureFragment : Fragment() {
                 try {
                     val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
                     val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                        db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                        db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                        db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
+                        db.clienteDao(),
+                        db.acertoDao(),
+                        db.mesaDao(),
+                        db.rotaDao(),
+                        db.despesaDao(),
+                        db.colaboradorDao(),
+                        db.cicloAcertoDao(),
+                        db.acertoMesaDao(),
+                        db.contratoLocacaoDao(),
+                        db.aditivoContratoDao(),
+                        db.assinaturaRepresentanteLegalDao(),
+                        db.logAuditoriaAssinaturaDao()
                     )
                     val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
                     val agora = java.util.Date()
@@ -392,3 +403,7 @@ class SignatureCaptureFragment : Fragment() {
         _binding = null
     }
 }
+
+
+
+

@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.colaboradores
+﻿package com.example.gestaobilhares.ui.colaboradores
 
 import android.app.DatePickerDialog
 import android.os.Bundle
@@ -83,8 +83,7 @@ class ColaboradorMetasFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
     }
 
@@ -309,3 +308,6 @@ class ColaboradorMetasFragment : Fragment() {
         _binding = null
     }
 }
+
+
+

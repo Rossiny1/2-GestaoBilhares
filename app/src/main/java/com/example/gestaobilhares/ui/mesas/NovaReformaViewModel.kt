@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -9,20 +9,19 @@ import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
+// import dagger.hilt.android.lifecycle.HiltViewModel // REMOVIDO: Hilt nao e mais usado
 import java.util.Date
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 
 /**
  * ViewModel para a tela de nova reforma.
  */
-@HiltViewModel
-class NovaReformaViewModel @Inject constructor(
+class NovaReformaViewModel constructor(
     private val appRepository: AppRepository,
     private val mesaReformadaRepository: MesaReformadaRepository,
     private val panoEstoqueRepository: PanoEstoqueRepository
@@ -116,3 +115,4 @@ class NovaReformaViewModel @Inject constructor(
         }
     }
 }
+

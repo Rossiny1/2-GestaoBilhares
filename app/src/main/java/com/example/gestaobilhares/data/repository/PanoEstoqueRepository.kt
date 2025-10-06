@@ -1,17 +1,13 @@
-package com.example.gestaobilhares.data.repository
+﻿package com.example.gestaobilhares.data.repository
 
 import android.util.Log
 import com.example.gestaobilhares.data.dao.PanoEstoqueDao
 import com.example.gestaobilhares.data.entities.PanoEstoque
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
-
 /**
  * Repository para operações de PanoEstoque
  */
-@Singleton
-class PanoEstoqueRepository @Inject constructor(
+class PanoEstoqueRepository constructor(
     private val panoEstoqueDao: PanoEstoqueDao
 ) {
     
@@ -87,3 +83,4 @@ class PanoEstoqueRepository @Inject constructor(
         }
     }
 }
+

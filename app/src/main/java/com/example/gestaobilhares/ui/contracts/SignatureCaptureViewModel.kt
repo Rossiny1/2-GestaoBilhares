@@ -1,17 +1,13 @@
-package com.example.gestaobilhares.ui.contracts
+﻿package com.example.gestaobilhares.ui.contracts
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.ContratoLocacao
 import com.example.gestaobilhares.data.repository.AppRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
-import javax.inject.Inject
-
-@HiltViewModel
-class SignatureCaptureViewModel @Inject constructor(
+class SignatureCaptureViewModel constructor(
     private val repository: AppRepository
 ) : ViewModel() {
     
@@ -140,3 +136,4 @@ class SignatureCaptureViewModel @Inject constructor(
         }
     }
 }
+

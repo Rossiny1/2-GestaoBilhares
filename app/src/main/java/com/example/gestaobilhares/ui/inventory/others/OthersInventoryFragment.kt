@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.inventory.others
+﻿package com.example.gestaobilhares.ui.inventory.others
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,10 +9,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentOthersInventoryBinding
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class OthersInventoryFragment : Fragment() {
     private var _binding: FragmentOthersInventoryBinding? = null
     private val binding get() = _binding!!
@@ -63,3 +61,4 @@ class OthersInventoryFragment : Fragment() {
         _binding = null
     }
 }
+

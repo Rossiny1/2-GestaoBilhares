@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.inventory.stock
+﻿package com.example.gestaobilhares.ui.inventory.stock
 
 import android.app.Dialog
 import android.os.Bundle
@@ -12,14 +12,12 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.databinding.DialogAddPanosLoteBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dagger.hilt.android.AndroidEntryPoint
 import java.util.Date
 
 /**
  * Dialog para adicionar panos em lote no estoque.
  * Permite criar múltiplos panos com numeração sequencial.
  */
-@AndroidEntryPoint
 class AddPanosLoteDialog : DialogFragment() {
 
     private var _binding: DialogAddPanosLoteBinding? = null
@@ -155,3 +153,4 @@ class AddPanosLoteDialog : DialogFragment() {
         _binding = null
     }
 }
+

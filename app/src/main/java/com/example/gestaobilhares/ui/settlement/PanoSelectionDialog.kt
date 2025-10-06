@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.settlement
+﻿package com.example.gestaobilhares.ui.settlement
 
 import android.app.Dialog
 import android.os.Bundle
@@ -18,15 +18,11 @@ import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
 import com.example.gestaobilhares.databinding.DialogSelectPanoBinding
 import com.example.gestaobilhares.databinding.ItemPanoSelectionBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
 /**
  * Dialog para seleção de pano no acerto.
  * Permite escolher um pano disponível do estoque para trocar na mesa.
  */
-@AndroidEntryPoint
 class PanoSelectionDialog : DialogFragment() {
 
     private var _binding: DialogSelectPanoBinding? = null
@@ -37,7 +33,6 @@ class PanoSelectionDialog : DialogFragment() {
     private var selectedPano: PanoEstoque? = null
     private var onPanoSelected: ((PanoEstoque) -> Unit)? = null
     
-    @Inject
     lateinit var panoEstoqueRepository: PanoEstoqueRepository
 
     companion object {
@@ -236,3 +231,4 @@ class PanoSelectionAdapter(
         }
     }
 }
+

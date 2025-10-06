@@ -1,17 +1,13 @@
-package com.example.gestaobilhares.data.repository
+﻿package com.example.gestaobilhares.data.repository
 
 import android.util.Log
 import com.example.gestaobilhares.data.dao.StockItemDao
 import com.example.gestaobilhares.data.entities.StockItem
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
-
 /**
  * Repository para operações de StockItem
  */
-@Singleton
-class StockItemRepository @Inject constructor(
+class StockItemRepository constructor(
     private val stockItemDao: StockItemDao
 ) {
     
@@ -79,3 +75,4 @@ class StockItemRepository @Inject constructor(
         }
     }
 }
+

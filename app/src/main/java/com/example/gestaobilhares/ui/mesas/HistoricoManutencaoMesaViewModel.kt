@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -7,19 +7,18 @@ import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
+// import dagger.hilt.android.lifecycle.HiltViewModel // REMOVIDO: Hilt nao e mais usado
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 
 /**
  * ViewModel para o histórico de manutenção de uma mesa.
  */
-@HiltViewModel
-class HistoricoManutencaoMesaViewModel @Inject constructor(
+class HistoricoManutencaoMesaViewModel constructor(
     private val historicoManutencaoMesaRepository: HistoricoManutencaoMesaRepository
 ) : BaseViewModel() {
 
@@ -137,3 +136,4 @@ class HistoricoManutencaoMesaViewModel @Inject constructor(
 
     // clearError já existe na BaseViewModel
 }
+

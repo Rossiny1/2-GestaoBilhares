@@ -1,16 +1,12 @@
-package com.example.gestaobilhares.ui.inventory.others
+﻿package com.example.gestaobilhares.ui.inventory.others
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-@HiltViewModel
-class OthersInventoryViewModel @Inject constructor() : ViewModel() {
+class OthersInventoryViewModel constructor() : ViewModel() {
     
     private val _othersItems = MutableStateFlow<List<OtherItem>>(emptyList())
     val othersItems: StateFlow<List<OtherItem>> = _othersItems.asStateFlow()
@@ -34,3 +30,4 @@ data class OtherItem(
     val quantity: Int,
     val location: String
 )
+

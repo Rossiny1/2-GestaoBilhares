@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,16 +8,12 @@ import com.example.gestaobilhares.data.entities.TipoMesa
 import com.example.gestaobilhares.data.entities.TamanhoMesa
 import com.example.gestaobilhares.data.entities.EstadoConservacao
 import com.example.gestaobilhares.data.repository.AppRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-@HiltViewModel
-class EditMesaViewModel @Inject constructor(
+class EditMesaViewModel constructor(
     private val repository: AppRepository
 ) : ViewModel() {
 

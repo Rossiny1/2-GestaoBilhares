@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.dashboard
+﻿package com.example.gestaobilhares.ui.dashboard
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -6,15 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.repository.AppRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
-@HiltViewModel
-class DashboardViewModel @Inject constructor(
+class DashboardViewModel constructor(
     private val repository: AppRepository
 ) : ViewModel() {
 
@@ -129,5 +126,6 @@ class DashboardViewModel @Inject constructor(
         }
     }
 }
+
 
 

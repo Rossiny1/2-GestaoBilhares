@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,10 +11,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.gestaobilhares.databinding.FragmentRotaMesasBinding
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class RotaMesasFragment : Fragment() {
 
     private var _binding: FragmentRotaMesasBinding? = null

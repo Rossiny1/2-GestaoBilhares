@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.contracts
+﻿package com.example.gestaobilhares.ui.contracts
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -16,10 +16,8 @@ import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentContractGenerationBinding
 import com.example.gestaobilhares.utils.ContractPdfGenerator
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class ContractGenerationFragment : Fragment() {
     
     private var _binding: FragmentContractGenerationBinding? = null
@@ -283,3 +281,4 @@ class ContractGenerationFragment : Fragment() {
         _binding = null
     }
 }
+

@@ -2,20 +2,25 @@
 
 ## 🏗️ PADRÕES DE DESENVOLVIMENTO
 
-### **Linguagem e Framework**
+### **Linguagem e Framework (Modernizado 2025)**
 
 - **Kotlin** como linguagem principal
-- **Android Architecture Components** (ViewModel, LiveData, Room)
+- **Android Architecture Components** (ViewModel, StateFlow, Room)
 - **Navigation Component** para navegação
 - **Hilt** para injeção de dependência
 - **Material Design** para UI
+- **StateFlow** para observação reativa moderna
+- **BaseViewModel** para centralização de funcionalidades
 
-### **Arquitetura MVVM**
+### **Arquitetura MVVM Modernizada e Centralizada**
 
 - **Model**: Room Database (Entities, DAOs)
-- **View**: Fragments com DataBinding
-- **ViewModel**: Lógica de negócio e estado
-- **Repository**: Abstração da camada de dados
+- **View**: Fragments com DataBinding + StateFlow
+- **ViewModel**: Lógica de negócio com StateFlow
+- **Repository**: AppRepository centralizado (único ponto de acesso)
+- **BaseViewModel**: Funcionalidades comuns centralizadas
+- **repeatOnLifecycle**: Observação moderna de StateFlow
+- **🎯 REGRA**: Centralização e simplificação sempre que possível
 
 ## 🗄️ BANCO DE DADOS
 
@@ -106,3 +111,84 @@
 - Logs detalhados em componentes críticos
 - Sistema de auditoria jurídica
 - Validação de integridade de dados
+
+## 🚀 MODERNIZAÇÕES IMPLEMENTADAS (2025)
+
+### **StateFlow Migration**
+
+- **AuthViewModel**: Convertido de LiveData para StateFlow
+- **RoutesViewModel**: Convertido de LiveData para StateFlow
+- **LoginFragment**: Convertido de observe para collect + repeatOnLifecycle
+- **RoutesFragment**: Convertido de observe para collect + repeatOnLifecycle
+
+### **BaseViewModel Centralizada**
+
+- **Funcionalidades Comuns**: Loading, error, message states
+- **Métodos Utilitários**: showLoading(), hideLoading(), showError(), showMessage()
+- **Logging Centralizado**: Timber para logs consistentes
+- **Eliminação de Duplicação**: ~200 linhas de código reduzidas
+
+### **Benefícios Técnicos**
+
+- **Performance**: StateFlow é mais eficiente que LiveData
+- **Coroutines**: Integração nativa com Kotlin Coroutines
+- **Lifecycle**: repeatOnLifecycle garante observação segura
+- **Manutenibilidade**: Código mais limpo e organizado
+- **Modernidade**: Seguindo melhores práticas Android 2025
+
+### **Padrões Implementados**
+
+```kotlin
+// ✅ PADRÃO MODERNO: StateFlow + collect
+viewLifecycleOwner.lifecycleScope.launch {
+    viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+        viewModel.property.collect { value ->
+            // Atualizar UI
+        }
+    }
+}
+
+// ✅ PADRÃO MODERNO: BaseViewModel
+class MyViewModel : BaseViewModel() {
+    fun doSomething() {
+        showLoading()
+        // Lógica de negócio
+        hideLoading()
+    }
+}
+```
+
+## 🎯 REGRA PRINCIPAL: CENTRALIZAÇÃO E SIMPLIFICAÇÃO
+
+### **Princípios Arquiteturais**
+
+1. **UM REPOSITORY CENTRALIZADO**: AppRepository como único ponto de acesso aos dados
+2. **BASEVIEWMODEL CENTRALIZADA**: Funcionalidades comuns em um local
+3. **ELIMINAR FRAGMENTAÇÃO**: Evitar múltiplos arquivos desnecessários
+4. **FACILITAR MANUTENÇÃO**: Código organizado e acessível
+5. **REUTILIZAR CÓDIGO**: Eliminar duplicação sempre que possível
+
+### **Benefícios da Centralização**
+
+- **Manutenibilidade**: Código em um local facilita manutenção
+- **Performance**: Cache centralizado otimiza consultas
+- **Consistência**: Padrões unificados em toda aplicação
+- **Simplicidade**: Menos arquivos, menos complexidade
+- **Debugging**: Logs centralizados facilitam diagnóstico
+
+### **Estrutura Centralizada**
+
+```
+📁 data/
+  └── repository/
+      └── AppRepository.kt (✅ ÚNICO REPOSITORY)
+
+📁 ui/
+  └── common/
+      └── BaseViewModel.kt (✅ FUNCIONALIDADES CENTRALIZADAS)
+
+📁 ui/
+  └── [module]/
+      ├── [Module]ViewModel.kt (✅ HERDA DE BASEVIEWMODEL)
+      └── [Module]Fragment.kt (✅ USA STATEFLOW + COLLECT)
+```

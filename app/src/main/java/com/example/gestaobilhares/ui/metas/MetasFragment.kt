@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.metas
+﻿package com.example.gestaobilhares.ui.metas
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -17,10 +17,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.TipoMeta
 import com.example.gestaobilhares.databinding.FragmentMetasBinding
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class MetasFragment : Fragment() {
 
     private var _binding: FragmentMetasBinding? = null
@@ -202,3 +200,4 @@ class MetasFragment : Fragment() {
         _binding = null
     }
 }
+

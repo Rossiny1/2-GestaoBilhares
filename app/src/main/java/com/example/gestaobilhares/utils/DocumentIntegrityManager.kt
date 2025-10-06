@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.utils
+﻿package com.example.gestaobilhares.utils
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -6,15 +6,11 @@ import android.util.Base64
 import android.util.Log
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
-import javax.inject.Inject
-import javax.inject.Singleton
-
 /**
  * Gerenciador de integridade de documentos para garantir validade jurídica
  * Implementa hash SHA-256 para verificação de integridade conforme Lei 14.063/2020
  */
-@Singleton
-class DocumentIntegrityManager @Inject constructor(
+class DocumentIntegrityManager constructor(
     private val context: Context
 ) {
     
@@ -201,3 +197,4 @@ data class SignaturePoint(
     val timestamp: Long,
     val velocity: Float
 )
+

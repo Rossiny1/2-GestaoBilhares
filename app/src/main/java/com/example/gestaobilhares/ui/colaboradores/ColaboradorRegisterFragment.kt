@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.colaboradores
+﻿package com.example.gestaobilhares.ui.colaboradores
 
 import android.app.DatePickerDialog
 import android.os.Bundle
@@ -72,7 +72,7 @@ class ColaboradorRegisterFragment : Fragment() {
 
     private fun setupRepository() {
         val database = AppDatabase.getDatabase(requireContext())
-        appRepository =         AppRepository(
+        appRepository = AppRepository(
             database.clienteDao(),
             database.acertoDao(),
             database.mesaDao(),
@@ -84,8 +84,7 @@ class ColaboradorRegisterFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
     }
 
@@ -395,3 +394,6 @@ class ColaboradorRegisterFragment : Fragment() {
         _binding = null
     }
 }
+
+
+

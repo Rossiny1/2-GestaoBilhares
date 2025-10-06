@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -56,8 +56,7 @@ class MesasDepositoFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
         viewModel = MesasDepositoViewModel(MesaRepository(database.mesaDao()), appRepository)
         setupRecyclerView()
@@ -266,15 +265,10 @@ class MesasDepositoFragment : Fragment() {
                         android.util.Log.d("MesasDepositoFragment", "Decidindo diálogo pós-vinculação para cliente $clienteId / mesa ${mesa.id}")
                         
                         val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-                        val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                            db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                            db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                            db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
-                        )
                         
                         // ✅ FORÇAR REFRESH DO BANCO ANTES DA DECISÃO
                         kotlinx.coroutines.delay(100) // Pequeno delay para garantir sincronização
-                        val todos = repo.buscarContratosPorCliente(clienteId).first()
+                        val todos = db.contratoLocacaoDao().buscarContratosPorCliente(clienteId).first()
                         android.util.Log.d("MesasDepositoFragment", "Total contratos cliente $clienteId: ${todos.size}")
                         
                         // ✅ REGRA DEFINITIVA: Verificação completa do status do cliente
@@ -311,7 +305,7 @@ class MesasDepositoFragment : Fragment() {
                             val hasEncerramento = latest.dataEncerramento != null
                             
                             // ✅ VERIFICAÇÃO ADICIONAL: Mesas ativas do cliente
-                            val mesasAtivasCliente = repo.obterMesasPorClienteDireto(clienteId).filter { it.ativa }
+                            val mesasAtivasCliente = db.mesaDao().obterMesasPorClienteDireto(clienteId).filter { it.ativa }
                             val temMesasAtivas = mesasAtivasCliente.isNotEmpty()
                             
                             android.util.Log.d("MesasDepositoFragment", 
@@ -434,3 +428,8 @@ class MesasDepositoFragment : Fragment() {
         _binding = null
     }
 } 
+
+
+
+
+

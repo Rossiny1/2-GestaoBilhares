@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.routes
+﻿package com.example.gestaobilhares.ui.routes
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -10,16 +10,12 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.RotaRepository
 import com.example.gestaobilhares.data.repository.MesaRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
-import javax.inject.Inject
-
 /**
  * ViewModel para gerenciar a transferência de clientes entre rotas.
  */
-@HiltViewModel
-class TransferClientViewModel @Inject constructor(
+class TransferClientViewModel constructor(
     private val clienteRepository: ClienteRepository,
     private val rotaRepository: RotaRepository,
     private val mesaRepository: MesaRepository
@@ -90,3 +86,4 @@ class TransferClientViewModel @Inject constructor(
         _errorMessage.value = null
     }
 }
+

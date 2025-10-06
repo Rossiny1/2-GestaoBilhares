@@ -1,23 +1,19 @@
-package com.example.gestaobilhares.ui.contracts
+﻿package com.example.gestaobilhares.ui.contracts
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal
 import com.example.gestaobilhares.data.entities.LogAuditoriaAssinatura
 import com.example.gestaobilhares.data.repository.AppRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.util.*
-import javax.inject.Inject
-
 /**
  * ViewModel para gerenciar a assinatura digital do representante legal
  * Implementa todos os requisitos de segurança da Cláusula 9.3 do contrato
  */
-@HiltViewModel
-class RepresentanteLegalSignatureViewModel @Inject constructor(
+class RepresentanteLegalSignatureViewModel constructor(
     private val repository: AppRepository
 ) : ViewModel() {
     
@@ -234,3 +230,4 @@ class RepresentanteLegalSignatureViewModel @Inject constructor(
         _success.value = null
     }
 }
+

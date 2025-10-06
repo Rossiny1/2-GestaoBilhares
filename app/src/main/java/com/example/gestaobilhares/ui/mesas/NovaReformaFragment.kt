@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -32,7 +32,7 @@ import com.example.gestaobilhares.databinding.FragmentNovaReformaBinding
 import com.example.gestaobilhares.ui.settlement.PanoSelectionDialog
 import com.example.gestaobilhares.utils.ImageCompressionUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dagger.hilt.android.AndroidEntryPoint
+// import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -40,7 +40,6 @@ import java.util.*
 /**
  * Fragment para cadastrar uma nova reforma de mesa.
  */
-@AndroidEntryPoint
 class NovaReformaFragment : Fragment() {
 
     private var _binding: FragmentNovaReformaBinding? = null
@@ -525,3 +524,4 @@ class NovaReformaFragment : Fragment() {
         _binding = null
     }
 }
+

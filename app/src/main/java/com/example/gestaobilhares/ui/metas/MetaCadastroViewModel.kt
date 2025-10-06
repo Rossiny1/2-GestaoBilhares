@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.metas
+﻿package com.example.gestaobilhares.ui.metas
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,19 +6,15 @@ import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.MetaColaborador
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.repository.AppRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
 /**
  * ViewModel para cadastro de metas
  */
-@HiltViewModel
-class MetaCadastroViewModel @Inject constructor(
+class MetaCadastroViewModel constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
 
@@ -252,3 +248,4 @@ class MetaCadastroViewModel @Inject constructor(
         _cicloCriado.value = false
     }
 }
+

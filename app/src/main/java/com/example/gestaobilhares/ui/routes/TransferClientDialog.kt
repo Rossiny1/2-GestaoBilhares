@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.routes
+﻿package com.example.gestaobilhares.ui.routes
 
 import android.app.Dialog
 import android.os.Bundle
@@ -15,13 +15,10 @@ import com.example.gestaobilhares.databinding.DialogTransferClientBinding
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
-import dagger.hilt.android.AndroidEntryPoint
-
 /**
  * DialogFragment para transferir um cliente de uma rota para outra.
  * Exibe informações do cliente e permite selecionar a rota de destino.
  */
-@AndroidEntryPoint
 class TransferClientDialog : DialogFragment() {
 
     private var _binding: DialogTransferClientBinding? = null
@@ -164,3 +161,4 @@ class TransferClientDialog : DialogFragment() {
         _binding = null
     }
 }
+
