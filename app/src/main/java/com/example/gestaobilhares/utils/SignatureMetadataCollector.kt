@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.utils
+﻿package com.example.gestaobilhares.utils
 
 import android.content.Context
 import android.os.Build
@@ -9,15 +9,11 @@ import android.view.WindowManager
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
-
 /**
  * Coletor de metadados para assinatura eletrônica simples
  * Implementa requisitos da Lei 14.063/2020 para identificação do signatário
  */
-@Singleton
-class SignatureMetadataCollector @Inject constructor(
+class SignatureMetadataCollector constructor(
     private val context: Context
 ) {
     
@@ -191,3 +187,4 @@ class SignatureMetadataCollector @Inject constructor(
         }
     }
 }
+

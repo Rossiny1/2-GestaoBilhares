@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.inventory.stock
+﻿package com.example.gestaobilhares.ui.inventory.stock
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,10 +12,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentStockBinding
 import com.example.gestaobilhares.ui.inventory.stock.AddPanosLoteDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class StockFragment : Fragment() {
     private var _binding: FragmentStockBinding? = null
     private val binding get() = _binding!!
@@ -106,3 +104,4 @@ class StockFragment : Fragment() {
         _binding = null
     }
 }
+

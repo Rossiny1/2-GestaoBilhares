@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.colaboradores
+﻿package com.example.gestaobilhares.ui.colaboradores
 
 import android.app.AlertDialog
 import android.os.Bundle
@@ -50,19 +50,18 @@ class ColaboradorManagementFragment : Fragment() {
         // Inicializar ViewModel
         val database = AppDatabase.getDatabase(requireContext())
         val appRepository = AppRepository(
-            clienteDao = database.clienteDao(),
-            acertoDao = database.acertoDao(),
-            mesaDao = database.mesaDao(),
-            rotaDao = database.rotaDao(),
-            despesaDao = database.despesaDao(),
-            colaboradorDao = database.colaboradorDao(),
-            cicloAcertoDao = database.cicloAcertoDao(),
-            acertoMesaDao = database.acertoMesaDao(),
-            contratoLocacaoDao = database.contratoLocacaoDao(),
-            aditivoContratoDao = database.aditivoContratoDao(),
-            assinaturaRepresentanteLegalDao = database.assinaturaRepresentanteLegalDao(),
-            logAuditoriaAssinaturaDao = database.logAuditoriaAssinaturaDao(),
-            procuraçãoRepresentanteDao = database.procuraçãoRepresentanteDao()
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao()
         )
         viewModel = ColaboradorManagementViewModel(appRepository)
         
@@ -321,3 +320,6 @@ class ColaboradorManagementFragment : Fragment() {
         _binding = null
     }
 }
+
+
+

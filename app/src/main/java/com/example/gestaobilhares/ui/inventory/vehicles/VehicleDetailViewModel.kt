@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.inventory.vehicles
+﻿package com.example.gestaobilhares.ui.inventory.vehicles
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,7 +8,6 @@ import com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo
 import com.example.gestaobilhares.data.repository.VeiculoRepository
 import com.example.gestaobilhares.data.repository.HistoricoManutencaoVeiculoRepository
 import com.example.gestaobilhares.data.repository.HistoricoCombustivelVeiculoRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,10 +16,7 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.time.LocalDate
 import java.time.ZoneId
-import javax.inject.Inject
-
-@HiltViewModel
-class VehicleDetailViewModel @Inject constructor(
+class VehicleDetailViewModel constructor(
     private val veiculoRepository: VeiculoRepository,
     private val historicoManutencaoRepository: HistoricoManutencaoVeiculoRepository,
     private val historicoCombustivelRepository: HistoricoCombustivelVeiculoRepository
@@ -374,3 +370,4 @@ data class VehicleSummary(
     val totalKm: Double = 0.0,
     val averageKmPerLiter: Double = 0.0
 )
+

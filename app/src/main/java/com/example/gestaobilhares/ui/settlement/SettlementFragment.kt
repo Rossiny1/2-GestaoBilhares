@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.settlement
+﻿package com.example.gestaobilhares.ui.settlement
 
 import android.Manifest
 import android.app.Activity
@@ -52,7 +52,7 @@ import com.example.gestaobilhares.ui.clients.AcertoResumo
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.first
-import javax.inject.Inject
+// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.example.gestaobilhares.utils.ImageCompressionUtils
@@ -237,7 +237,7 @@ class SettlementFragment : Fragment() {
         
         // Inicializar ViewModel aqui onde o contexto está disponível
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+        val appRepository = AppRepository(
             database.clienteDao(),
             database.acertoDao(),
             database.mesaDao(),
@@ -249,8 +249,7 @@ class SettlementFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
         viewModel = SettlementViewModel(
             MesaRepository(database.mesaDao()),
@@ -261,7 +260,7 @@ class SettlementFragment : Fragment() {
                 database.cicloAcertoDao(),
                 DespesaRepository(database.despesaDao()),
                 AcertoRepository(database.acertoDao(), database.clienteDao()),
-                ClienteRepository(database.clienteDao(), appRepository) // NOVO
+                ClienteRepository(database.clienteDao(), appRepository)
             ),
             com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao()),
             com.example.gestaobilhares.data.repository.PanoEstoqueRepository(database.panoEstoqueDao())
@@ -1493,3 +1492,12 @@ class SettlementFragment : Fragment() {
         _binding = null
     }
 } 
+
+
+
+
+
+
+
+
+

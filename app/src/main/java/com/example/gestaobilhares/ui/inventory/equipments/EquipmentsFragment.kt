@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.inventory.equipments
+﻿package com.example.gestaobilhares.ui.inventory.equipments
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,10 +9,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentEquipmentsBinding
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class EquipmentsFragment : Fragment() {
     private var _binding: FragmentEquipmentsBinding? = null
     private val binding get() = _binding!!
@@ -63,3 +61,4 @@ class EquipmentsFragment : Fragment() {
         _binding = null
     }
 }
+

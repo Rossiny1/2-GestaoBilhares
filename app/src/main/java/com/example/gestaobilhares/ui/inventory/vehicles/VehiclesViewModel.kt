@@ -1,18 +1,14 @@
-package com.example.gestaobilhares.ui.inventory.vehicles
+﻿package com.example.gestaobilhares.ui.inventory.vehicles
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Veiculo
 import com.example.gestaobilhares.data.repository.VeiculoRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-@HiltViewModel
-class VehiclesViewModel @Inject constructor(
+class VehiclesViewModel constructor(
     private val repository: VeiculoRepository
 ) : ViewModel() {
 
@@ -34,5 +30,6 @@ class VehiclesViewModel @Inject constructor(
         }
     }
 }
+
 
 

@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.contracts
+﻿package com.example.gestaobilhares.ui.contracts
 
 import android.app.Dialog
 import android.os.Bundle
@@ -11,9 +11,6 @@ import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.DialogContractFinalizationBinding
 import com.example.gestaobilhares.ui.mesas.MesasDepositoViewModel
-import dagger.hilt.android.AndroidEntryPoint
-
-@AndroidEntryPoint
 class ContractFinalizationDialog : DialogFragment() {
     
     private var _binding: DialogContractFinalizationBinding? = null
@@ -108,3 +105,4 @@ class ContractFinalizationDialog : DialogFragment() {
         _binding = null
     }
 }
+

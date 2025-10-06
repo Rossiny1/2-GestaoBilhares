@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,14 +13,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentHistoricoMesasVendidasBinding
 import com.example.gestaobilhares.ui.mesas.adapter.MesasVendidasAdapter
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
  * Fragment para exibir o histórico de mesas vendidas
  * ✅ NOVO: SISTEMA DE VENDA DE MESAS
  */
-@AndroidEntryPoint
 class HistoricoMesasVendidasFragment : Fragment() {
 
     private var _binding: FragmentHistoricoMesasVendidasBinding? = null
@@ -151,3 +149,4 @@ class HistoricoMesasVendidasFragment : Fragment() {
         _binding = null
     }
 }
+

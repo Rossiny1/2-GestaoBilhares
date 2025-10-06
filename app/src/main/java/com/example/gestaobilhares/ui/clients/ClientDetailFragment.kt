@@ -74,8 +74,7 @@ class ClientDetailFragment : Fragment() {
                 val repo = com.example.gestaobilhares.data.repository.AppRepository(
                     db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
                     db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
-                )
+                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao()                )
                 val contratos = repo.buscarContratosPorCliente(clienteId).first()
                 // ✅ CORRIGIDO: Buscar APENAS contrato ATIVO para aditivo
                 // Se não houver contrato ativo, não pode gerar aditivo
@@ -154,8 +153,7 @@ class ClientDetailFragment : Fragment() {
                 val repo = com.example.gestaobilhares.data.repository.AppRepository(
                     db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
                     db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
-                )
+                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao()                )
                 val contratos = repo.buscarContratosPorCliente(clienteId).first()
                 val contrato = contratos.maxByOrNull { it.dataCriacao.time } ?: return@launch
                 val bundle = android.os.Bundle().apply {
@@ -169,7 +167,7 @@ class ClientDetailFragment : Fragment() {
         }
     }
 
-    private fun obterContratoAtivoOuMaisRecente(clienteId: Long): Long = 0L
+    private fun obterContratoAtivoOuMaisRecente(_clienteId: Long): Long = 0L
 
     private fun gerarEDisponibilizarDistrato(clienteId: Long) {
         lifecycleScope.launch {
@@ -179,8 +177,7 @@ class ClientDetailFragment : Fragment() {
                 val repo = com.example.gestaobilhares.data.repository.AppRepository(
                     db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
                     db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
-                )
+                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao()                )
                 val contratos = repo.buscarContratosPorCliente(clienteId).first()
                 val contrato = contratos.maxByOrNull { it.dataCriacao.time }
                 if (contrato == null) {
@@ -223,8 +220,8 @@ class ClientDetailFragment : Fragment() {
                 // Verificação imediata (diagnóstico)
                 try {
                     val apos = repo.buscarContratosPorCliente(contrato.clienteId).first()
-                    val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
-                    android.util.Log.d("DistratoFlow", "Após atualizar (ClientDetail): ${'$'}resumo")
+                    val _resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
+                    android.util.Log.d("DistratoFlow", "Após atualizar (ClientDetail): ${'$'}_resumo")
                 } catch (e: Exception) {
                     android.util.Log.e("DistratoFlow", "Falha verificação pós-atualização (ClientDetail)", e)
                 }
@@ -273,8 +270,7 @@ class ClientDetailFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
 
         viewModel = ClientDetailViewModel(
@@ -391,8 +387,7 @@ class ClientDetailFragment : Fragment() {
                         val repo = com.example.gestaobilhares.data.repository.AppRepository(
                             db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
                             db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                            db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
-                        )
+                            db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao()                        )
                         val contratos = repo.buscarContratosPorCliente(args.clienteId).first()
                         val contratoMaisRecente = contratos.maxByOrNull { c ->
                             (c.dataEncerramento?.time ?: c.dataAtualizacao?.time ?: c.dataCriacao.time)
@@ -493,13 +488,11 @@ class ClientDetailFragment : Fragment() {
                     Log.d("NovoAcerto", "Mesas: ${mesasDTO.joinToString { "Mesa ${it.numero} (ID: ${it.id})" }}")
                     Log.d("NovoAcerto", "Valor Ficha: $valorFicha, Comissão Ficha: $comissaoFicha")
                     
-                    // Navegar para tela de acerto
-                    val action = ClientDetailFragmentDirections
-                        .actionClientDetailFragmentToSettlementFragment(
-                            clienteId = args.clienteId,
-                            mesasDTO = mesasDTO
-                        )
-                    findNavController().navigate(action)
+                    // ✅ MODERNIZADO: Usar launcher em vez de startActivityForResult
+                    acertoLauncher.launch(Intent(requireContext(), com.example.gestaobilhares.ui.settlement.SettlementFragment::class.java).apply {
+                        putExtra("clienteId", args.clienteId)
+                        putExtra("mesasDTO", mesasDTO)
+                    })
                     Log.d("ClientDetailFragment", "Navegando para Novo Acerto - Cliente ID: ${args.clienteId} com ${mesasDTO.size} mesas")
                     
                 } catch (e: Exception) {
@@ -719,7 +712,7 @@ class ClientDetailFragment : Fragment() {
     /**
      * ✅ NOVO: Mostra diálogo de alerta com design destacado
      */
-    private fun mostrarDialogoAlerta(mensagem: String, observacoes: String) {
+    private fun mostrarDialogoAlerta(mensagem: String, _observacoes: String) {
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle("🚨 ALERTA")
             .setMessage(mensagem)
@@ -917,11 +910,11 @@ class ClientDetailFragment : Fragment() {
                                     )
                                 }.toTypedArray()
                                 
-                                val action = ClientDetailFragmentDirections.actionClientDetailFragmentToSettlementFragment(
-                                    clienteId = args.clienteId,
-                                    mesasDTO = mesasDTO
-                                )
-                                findNavController().navigate(action)
+                                // ✅ MODERNIZADO: Usar launcher em vez de startActivityForResult
+                                acertoLauncher.launch(Intent(requireContext(), com.example.gestaobilhares.ui.settlement.SettlementFragment::class.java).apply {
+                                    putExtra("clienteId", args.clienteId)
+                                    putExtra("mesasDTO", mesasDTO)
+                                })
                             }
                             .setNegativeButton("Cancelar", null)
                             .show()
@@ -1062,10 +1055,12 @@ class ClientDetailFragment : Fragment() {
         _binding = null
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_NOVO_ACERTO && resultCode == Activity.RESULT_OK) {
-            val resumo = data?.getParcelableExtra<AcertoResumo>("resumoAcerto")
+    // ✅ MODERNIZADO: ActivityResultLauncher substitui onActivityResult depreciado
+    private val acertoLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val resumo = result.data?.getParcelableExtra<AcertoResumo>("resumoAcerto")
             resumo?.let {
                 viewModel.adicionarAcertoNoHistorico(it)
             }

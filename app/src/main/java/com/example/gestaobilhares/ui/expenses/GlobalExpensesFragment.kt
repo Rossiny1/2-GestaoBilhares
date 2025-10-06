@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.expenses
+﻿package com.example.gestaobilhares.ui.expenses
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -22,7 +22,6 @@ import com.example.gestaobilhares.ui.expenses.adapter.GlobalExpensesAdapter
 import com.example.gestaobilhares.ui.expenses.dialog.CycleSelectionDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
@@ -31,7 +30,6 @@ import java.util.*
  * Fragment para listagem e gerenciamento de despesas globais
  * Permite filtrar por ciclo e adicionar novas despesas
  */
-@AndroidEntryPoint
 class GlobalExpensesFragment : Fragment() {
 
     private var _binding: FragmentGlobalExpensesBinding? = null
@@ -269,3 +267,4 @@ class GlobalExpensesFragment : Fragment() {
         _binding = null
     }
 }
+

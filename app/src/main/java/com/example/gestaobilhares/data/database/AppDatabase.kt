@@ -37,7 +37,7 @@ import java.util.Date
         AditivoMesa::class, // ✅ NOVO: VINCULAÇÃO ADITIVO-MESAS
         AssinaturaRepresentanteLegal::class, // ✅ NOVO: ASSINATURA DIGITAL DO REPRESENTANTE
         LogAuditoriaAssinatura::class, // ✅ NOVO: LOGS DE AUDITORIA
-        ProcuraçãoRepresentante::class, // ✅ NOVO: PROCURAÇÕES E DELEGAÇÃO DE PODERES
+        // ProcuraçãoRepresentante::class, // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
         MesaVendida::class, // ✅ NOVO: MESAS VENDIDAS
         MesaReformada::class, // ✅ NOVO: MESAS REFORMADAS
         PanoEstoque::class, // ✅ NOVO: PANOS EM ESTOQUE
@@ -136,7 +136,7 @@ abstract class AppDatabase : RoomDatabase() {
      * DAO para operações com procurações de representantes.
      * ✅ NOVO: PROCURAÇÕES E DELEGAÇÃO DE PODERES
      */
-    abstract fun procuraçãoRepresentanteDao(): com.example.gestaobilhares.data.dao.ProcuraçãoRepresentanteDao
+    // abstract fun procuraçãoRepresentanteDao(): com.example.gestaobilhares.data.dao.ProcuraçãoRepresentanteDao // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
     
     /**
      * DAO para operações com mesas vendidas.

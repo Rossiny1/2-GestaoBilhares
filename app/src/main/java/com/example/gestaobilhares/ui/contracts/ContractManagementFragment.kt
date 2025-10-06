@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.contracts
+﻿package com.example.gestaobilhares.ui.contracts
 
 import android.content.Intent
 import android.os.Bundle
@@ -31,8 +31,6 @@ import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.*
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.flow.first
@@ -41,7 +39,6 @@ import kotlinx.coroutines.flow.first
  * Fragment para gerenciamento de contratos
  * Permite visualizar, filtrar e gerenciar todos os contratos de locação
  */
-@AndroidEntryPoint
 class ContractManagementFragment : Fragment() {
 
     private var _binding: FragmentContractManagementBinding? = null
@@ -50,7 +47,6 @@ class ContractManagementFragment : Fragment() {
     private val viewModel: ContractManagementViewModel by viewModels()
     private lateinit var contractAdapter: ContractManagementAdapter
 
-    @Inject
     lateinit var database: AppDatabase
 
     override fun onCreateView(
@@ -122,9 +118,18 @@ class ContractManagementFragment : Fragment() {
     private fun showDocumentsDialog(item: ContractManagementViewModel.ContractItem) {
         val cliente = item.cliente ?: return
         val repo = AppRepository(
-            database.clienteDao(), database.acertoDao(), database.mesaDao(), database.rotaDao(), database.despesaDao(),
-            database.colaboradorDao(), database.cicloAcertoDao(), database.acertoMesaDao(), database.contratoLocacaoDao(), database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(), database.logAuditoriaAssinaturaDao(), database.procuraçãoRepresentanteDao()
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao()
         )
         lifecycleScope.launch {
             val contratosFlow = repo.buscarContratosPorCliente(cliente.id)
@@ -684,9 +689,18 @@ class ContractManagementFragment : Fragment() {
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
             val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
             val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
+                db.clienteDao(),
+                db.acertoDao(),
+                db.mesaDao(),
+                db.rotaDao(),
+                db.despesaDao(),
+                db.colaboradorDao(),
+                db.cicloAcertoDao(),
+                db.acertoMesaDao(),
+                db.contratoLocacaoDao(),
+                db.aditivoContratoDao(),
+                db.assinaturaRepresentanteLegalDao(),
+                db.logAuditoriaAssinaturaDao()
             )
             val ultimo = repo.buscarUltimoAcertoPorCliente(contrato.clienteId)
             val totalRecebido = ultimo?.valorRecebido ?: 0.0
@@ -725,9 +739,18 @@ class ContractManagementFragment : Fragment() {
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
             val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
             val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
+                db.clienteDao(),
+                db.acertoDao(),
+                db.mesaDao(),
+                db.rotaDao(),
+                db.despesaDao(),
+                db.colaboradorDao(),
+                db.cicloAcertoDao(),
+                db.acertoMesaDao(),
+                db.contratoLocacaoDao(),
+                db.aditivoContratoDao(),
+                db.assinaturaRepresentanteLegalDao(),
+                db.logAuditoriaAssinaturaDao()
             )
             val ultimo = repo.buscarUltimoAcertoPorCliente(contrato.clienteId)
             val totalRecebido = ultimo?.valorRecebido ?: 0.0
@@ -877,3 +900,7 @@ class ContractManagementFragment : Fragment() {
     }
 
 }
+
+
+
+

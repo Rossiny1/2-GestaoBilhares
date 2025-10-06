@@ -1,13 +1,9 @@
-package com.example.gestaobilhares.data.repository
+﻿package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.HistoricoManutencaoVeiculoDao
 import com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
-class HistoricoManutencaoVeiculoRepository @Inject constructor(
+class HistoricoManutencaoVeiculoRepository constructor(
     private val dao: HistoricoManutencaoVeiculoDao
 ) {
     fun listarPorVeiculo(veiculoId: Long): Flow<List<HistoricoManutencaoVeiculo>> = dao.listarPorVeiculo(veiculoId)
@@ -17,3 +13,4 @@ class HistoricoManutencaoVeiculoRepository @Inject constructor(
     suspend fun deletar(historico: HistoricoManutencaoVeiculo) = dao.deletar(historico)
     suspend fun obterTotalGastoPorAno(veiculoId: Long, ano: String): Double? = dao.obterTotalGastoPorAno(veiculoId, ano)
 }
+

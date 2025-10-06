@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.dashboard
+﻿package com.example.gestaobilhares.ui.dashboard
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,11 +13,9 @@ import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.utils.ColorTemplate
-import dagger.hilt.android.AndroidEntryPoint
 import java.text.NumberFormat
 import java.util.Locale
 
-@AndroidEntryPoint
 class DashboardFragment : Fragment() {
 
     private var _binding: FragmentDashboardBinding? = null
@@ -106,5 +104,6 @@ class DashboardFragment : Fragment() {
         _binding = null
     }
 }
+
 
 

@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.data.repository
+﻿package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.AcertoDao
 import com.example.gestaobilhares.data.dao.ClienteDao
@@ -9,11 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
-class AcertoRepository @Inject constructor(
+class AcertoRepository constructor(
     private val acertoDao: AcertoDao, 
     private val clienteDao: ClienteDao
 ) {

@@ -17,9 +17,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-
 /**
  * ViewModel para a tela de rotas.
  * Gerencia o estado da UI e coordena com o Repository para obter dados.
@@ -28,8 +25,7 @@ import javax.inject.Inject
  * FASE 3: Inclui controle de acesso administrativo e cálculo de valores acertados.
  * ✅ NOVO: Controle de acesso baseado em nível de usuário e rotas responsáveis.
  */
-@HiltViewModel
-class RoutesViewModel @Inject constructor(
+class RoutesViewModel constructor(
     private val appRepository: AppRepository,
     private val userSessionManager: UserSessionManager
 ) : ViewModel() {

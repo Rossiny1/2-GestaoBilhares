@@ -78,8 +78,7 @@ class ClientListFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
         viewModel = ClientListViewModel(
             ClienteRepository(database.clienteDao(), appRepository),
@@ -304,7 +303,7 @@ class ClientListFragment : Fragment() {
                     clientAdapter.submitList(clientes)
                     // Card de progresso é atualizado automaticamente via fluxo reativo
                     // Mostrar/esconder empty state com animação
-        _binding?.let { binding ->
+        _binding?.let { _ ->
                         if (clientes.isEmpty()) {
                             atualizarEmptyState(true)
                         } else {
@@ -374,8 +373,6 @@ class ClientListFragment : Fragment() {
     
     private fun atualizarStatusRota(status: StatusRota) {
         _binding?.let { binding ->
-            val context = requireContext()
-            
             when (status) {
                 StatusRota.EM_ANDAMENTO -> {
                     binding.tvRouteStatus.text = "Em Andamento"
@@ -405,7 +402,7 @@ class ClientListFragment : Fragment() {
         }
     }
     
-    private fun atualizarEstadoBotoesRota(botaoAtivo: com.google.android.material.button.MaterialButton?, botaoInativo: com.google.android.material.button.MaterialButton?) {
+    private fun atualizarEstadoBotoesRota(botaoAtivo: com.google.android.material.button.MaterialButton?, _botaoInativo: com.google.android.material.button.MaterialButton?) {
         _binding?.let { binding ->
             val context = requireContext()
             val corSelecionada = context.getColor(R.color.primary_blue)

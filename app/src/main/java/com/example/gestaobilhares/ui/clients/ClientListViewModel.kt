@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.clients
+﻿package com.example.gestaobilhares.ui.clients
 
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModel
@@ -27,8 +27,8 @@ import java.util.Calendar
 import java.util.Date
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
+// // import dagger.hilt.android.lifecycle.HiltViewModel // REMOVIDO: Hilt nao e mais usado // ✅ REMOVIDO: Hilt não é mais usado
+// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 
 /**
  * Filtros disponíveis para a lista de clientes
@@ -42,8 +42,7 @@ enum class FiltroCliente {
  * ✅ FASE 8C: Integração com sistema de ciclo de acerto real
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-@HiltViewModel
-class ClientListViewModel @Inject constructor(
+class ClientListViewModel constructor(
     private val clienteRepository: ClienteRepository,
     private val rotaRepository: RotaRepository,
     private val cicloAcertoRepository: CicloAcertoRepository,
@@ -929,3 +928,4 @@ data class DadosRotaReais(
     val totalClientes: Int,
     val totalMesas: Int
 ) 
+

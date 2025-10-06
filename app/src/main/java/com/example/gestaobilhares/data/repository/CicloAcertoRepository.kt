@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.data.repository
+﻿package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.CicloAcertoDao
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
@@ -12,15 +12,11 @@ import java.util.Date
 import java.util.Calendar
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import java.time.ZoneId
-import javax.inject.Inject
-import javax.inject.Singleton
-
 /**
  * Repositório para operações de ciclos de acerto
  * ✅ FASE 9C: REPOSITÓRIO PARA HISTÓRICO DE CICLOS
  */
-@Singleton
-class CicloAcertoRepository @Inject constructor(
+class CicloAcertoRepository constructor(
     private val cicloAcertoDao: CicloAcertoDao,
     private val despesaRepository: DespesaRepository,
     private val acertoRepository: com.example.gestaobilhares.data.repository.AcertoRepository,

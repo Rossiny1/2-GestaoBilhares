@@ -30,13 +30,16 @@
 
 ## 🔧 COMPONENTES TÉCNICOS
 
-### **Arquitetura**
+### **Arquitetura Modernizada (2025)**
 
-- ✅ **MVVM**: ViewModel, LiveData, Repository
+- ✅ **MVVM**: ViewModel com StateFlow (modernizado)
+- ✅ **StateFlow**: Substituição de LiveData por StateFlow
 - ✅ **Room Database**: Entidades e DAOs
 - ✅ **Navigation Component**: Navegação entre telas
 - ✅ **Hilt**: Injeção de dependência
 - ✅ **Material Design**: UI consistente
+- ✅ **BaseViewModel**: Centralização de funcionalidades comuns
+- ✅ **repeatOnLifecycle**: Observação moderna de StateFlow
 
 ### **Funcionalidades Avançadas**
 
@@ -64,15 +67,49 @@
 - **Performance**: Otimizada
 - **Logs**: Sistema completo de debug
 
+## 🚀 MODERNIZAÇÕES IMPLEMENTADAS (2025)
+
+### **Fase 1: Fundação Moderna (CONCLUÍDA)**
+
+- ✅ **StateFlow Migration**: AuthViewModel e RoutesViewModel modernizados
+- ✅ **BaseViewModel**: Centralização de funcionalidades comuns
+- ✅ **repeatOnLifecycle**: Padrão moderno de observação
+- ✅ **Performance**: StateFlow é mais eficiente que LiveData
+- ✅ **Manutenibilidade**: Código mais limpo e organizado
+
+### **Benefícios Alcançados**
+
+- 🚀 **Performance**: StateFlow otimizado para coroutines
+- 🧹 **Código Limpo**: Padrão consistente em toda aplicação
+- 🔧 **Manutenibilidade**: BaseViewModel elimina duplicação
+- 📱 **Modernidade**: Seguindo melhores práticas Android 2025
+- 🎯 **Centralização**: AppRepository único ponto de acesso
+- ⚡ **Simplificação**: Menos arquivos, menos complexidade
+
 ## 🎯 PRÓXIMOS PASSOS
 
-### **Melhorias Opcionais**
+### **Fase 2: Centralização e Simplificação (CONCLUÍDA)**
 
-- 🔄 **Remoção de Logs**: Limpeza de logs de debug (opcional)
-- 🔄 **Otimizações**: Performance e UX
-- 🔄 **Novas Funcionalidades**: Baseado em feedback
+- ✅ **AppRepository Centralizado**: Mantido como único ponto de acesso
+- ✅ **StateFlow Cache**: Performance otimizada com cache centralizado
+- ✅ **BaseViewModel**: Funcionalidades comuns centralizadas
+- ✅ **Regra Principal**: Centralização e simplificação sempre que possível
 
-### **Manutenção**
+### **Fase 4: Modernização UI (EM ANDAMENTO)**
+
+- ✅ **Jetpack Compose Setup**: Dependências e tema configurados
+- ✅ **Componentes Base**: CommonComponents criados
+- ✅ **LoginScreen**: Primeira tela migrada para Compose
+- ✅ **Migração Conservadora**: Design atual mantido
+- 🔄 **Migração Gradual**: Próximas telas em desenvolvimento
+
+### **Fase 5: Performance (FUTURO)**
+
+- 🔄 **Otimizações Avançadas**: Build e runtime
+- 🔄 **Material Design 3**: Componentes modernos
+- 🔄 **Testes**: Implementação de testes automatizados
+
+### **Manutenção Contínua**
 
 - 🔄 **Atualizações**: Dependências e SDK
 - 🔄 **Bug Fixes**: Correções conforme necessário

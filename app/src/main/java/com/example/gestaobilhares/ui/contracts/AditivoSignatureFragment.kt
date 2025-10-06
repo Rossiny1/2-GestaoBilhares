@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.contracts
+﻿package com.example.gestaobilhares.ui.contracts
 
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -17,12 +17,8 @@ import com.example.gestaobilhares.databinding.FragmentAditivoSignatureBinding
 import com.example.gestaobilhares.utils.DocumentIntegrityManager
 import com.example.gestaobilhares.utils.LegalLogger
 import com.example.gestaobilhares.utils.SignatureMetadataCollector
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
-import javax.inject.Inject
-
-@AndroidEntryPoint
 class AditivoSignatureFragment : Fragment() {
     
     companion object {
@@ -36,13 +32,10 @@ class AditivoSignatureFragment : Fragment() {
     
     private var contratoId: Long = 0L
     
-    @Inject
     lateinit var legalLogger: LegalLogger
     
-    @Inject
     lateinit var documentIntegrityManager: DocumentIntegrityManager
     
-    @Inject
     lateinit var metadataCollector: SignatureMetadataCollector
     
     // Assinatura será capturada diretamente do SignatureView
@@ -273,9 +266,18 @@ class AditivoSignatureFragment : Fragment() {
                                 lifecycleScope.launch {
                                     val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
                                     val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                                        db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                                        db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                                        db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao(), db.procuraçãoRepresentanteDao()
+                                        db.clienteDao(),
+                                        db.acertoDao(),
+                                        db.mesaDao(),
+                                        db.rotaDao(),
+                                        db.despesaDao(),
+                                        db.colaboradorDao(),
+                                        db.cicloAcertoDao(),
+                                        db.acertoMesaDao(),
+                                        db.contratoLocacaoDao(),
+                                        db.aditivoContratoDao(),
+                                        db.assinaturaRepresentanteLegalDao(),
+                                        db.logAuditoriaAssinaturaDao()
                                     )
                                     val contratoCompleto = repo.buscarContratoPorId(contratoId)
                                     val novoClienteId = contratoCompleto?.clienteId ?: 0L
@@ -350,3 +352,7 @@ class AditivoSignatureFragment : Fragment() {
         _binding = null
     }
 }
+
+
+
+

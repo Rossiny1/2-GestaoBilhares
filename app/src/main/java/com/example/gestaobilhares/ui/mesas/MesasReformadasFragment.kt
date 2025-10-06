@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -16,13 +16,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.databinding.FragmentMesasReformadasBinding
-import dagger.hilt.android.AndroidEntryPoint
+// import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 
 /**
  * Fragment que exibe a lista de mesas reformadas.
  * Permite visualizar o histórico de reformas e adicionar novas reformas.
  */
-@AndroidEntryPoint
 class MesasReformadasFragment : Fragment() {
 
     private var _binding: FragmentMesasReformadasBinding? = null
@@ -119,3 +118,4 @@ class MesasReformadasFragment : Fragment() {
         _binding = null
     }
 }
+

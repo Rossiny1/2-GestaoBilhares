@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.inventory.stock
+﻿package com.example.gestaobilhares.ui.inventory.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,16 +6,12 @@ import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.data.entities.StockItem as StockItemEntity
 import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
 import com.example.gestaobilhares.data.repository.StockItemRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-@HiltViewModel
-class StockViewModel @Inject constructor(
+class StockViewModel constructor(
     private val panoEstoqueRepository: PanoEstoqueRepository,
     private val stockItemRepository: StockItemRepository
 ) : ViewModel() {
@@ -169,3 +165,4 @@ data class StockItem(
     val unitPrice: Double,
     val supplier: String
 )
+

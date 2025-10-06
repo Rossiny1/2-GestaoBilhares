@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.settlement
+﻿package com.example.gestaobilhares.ui.settlement
 
 import android.content.Intent
 import android.os.Bundle
@@ -19,6 +19,7 @@ import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.databinding.FragmentSettlementDetailBinding
 import com.example.gestaobilhares.utils.AppLogger
@@ -73,7 +74,7 @@ class SettlementDetailFragment : Fragment() {
     private fun initializeViewModel() {
         // Inicializar ViewModel onde o contexto está disponível
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+        val appRepository = AppRepository(
             database.clienteDao(),
             database.acertoDao(),
             database.mesaDao(),
@@ -85,8 +86,7 @@ class SettlementDetailFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
         viewModel = SettlementDetailViewModel(
             AcertoRepository(database.acertoDao(), database.clienteDao()),
@@ -488,13 +488,13 @@ class SettlementDetailFragment : Fragment() {
                 // Mostrar loading
                 binding.btnEdit.isEnabled = false
                 
-                // Inicializar repositórios com construtores corretos
+                // Usar o repositório já inicializado no ViewModel
                 val acertoRepo = AcertoRepository(
                     AppDatabase.getDatabase(requireContext()).acertoDao(),
                     AppDatabase.getDatabase(requireContext()).clienteDao()
                 )
                 val database = AppDatabase.getDatabase(requireContext())
-                val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+                val appRepository = AppRepository(
                     database.clienteDao(),
                     database.acertoDao(),
                     database.mesaDao(),
@@ -506,8 +506,7 @@ class SettlementDetailFragment : Fragment() {
                     database.contratoLocacaoDao(),
                     database.aditivoContratoDao(),
                     database.assinaturaRepresentanteLegalDao(),
-                    database.logAuditoriaAssinaturaDao(),
-                    database.procuraçãoRepresentanteDao()
+                    database.logAuditoriaAssinaturaDao()
                 )
                 val clienteRepo = com.example.gestaobilhares.data.repository.ClienteRepository(
                     database.clienteDao(),
@@ -946,3 +945,10 @@ class SettlementDetailFragment : Fragment() {
         _binding = null
     }
 } 
+
+
+
+
+
+
+

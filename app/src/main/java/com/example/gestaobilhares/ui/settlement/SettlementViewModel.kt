@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.settlement
+﻿package com.example.gestaobilhares.ui.settlement
 
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,15 +25,11 @@ import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-
 /**
  * ViewModel para SettlementFragment
  * FASE 4A - Implementação básica para desbloqueio
  */
-@HiltViewModel
-class SettlementViewModel @Inject constructor(
+class SettlementViewModel constructor(
     private val mesaRepository: MesaRepository,
     private val clienteRepository: ClienteRepository,
     private val acertoRepository: AcertoRepository,

@@ -1,20 +1,16 @@
-package com.example.gestaobilhares.ui.metas
+﻿package com.example.gestaobilhares.ui.metas
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.*
-import javax.inject.Inject
-
-@HiltViewModel
-class MetasViewModel @Inject constructor(
+class MetasViewModel constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 
@@ -503,3 +499,4 @@ enum class TipoNotificacaoMeta {
     META_PROXIMA,   // Meta próxima de ser atingida (80%+)
     META_ATINGIDA   // Meta atingida (100%)
 }
+

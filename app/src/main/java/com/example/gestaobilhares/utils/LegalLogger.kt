@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.utils
+﻿package com.example.gestaobilhares.utils
 
 import android.content.Context
 import android.util.Log
@@ -7,15 +7,11 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
-
 /**
  * Sistema de logs jurídicos para garantir validade jurídica das assinaturas eletrônicas
  * Implementa requisitos da Lei 14.063/2020 para assinatura eletrônica simples
  */
-@Singleton
-class LegalLogger @Inject constructor(
+class LegalLogger constructor(
     private val context: Context
 ) {
     
@@ -224,3 +220,4 @@ data class AuditEntry(
     val documentHash: String,
     val signatureHash: String
 )
+

@@ -1,4 +1,4 @@
-package com.example.gestaobilhares
+﻿package com.example.gestaobilhares
 
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -8,13 +8,12 @@ import androidx.core.app.ActivityCompat
 import androidx.navigation.fragment.NavHostFragment
 import com.example.gestaobilhares.databinding.ActivityMainBinding
 // ✅ REMOVIDO: import DatabasePopulator - não é mais necessário
-import dagger.hilt.android.AndroidEntryPoint
+// import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 // ✅ REMOVIDO: imports CoroutineScope - não são mais necessários
 /**
  * MainActivity configurada para Navigation Component e ViewBinding.
  * Usando NoActionBar theme - navegação gerenciada pelos próprios fragments.
  */
-@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 

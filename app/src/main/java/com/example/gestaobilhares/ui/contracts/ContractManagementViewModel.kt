@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.contracts
+﻿package com.example.gestaobilhares.ui.contracts
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -10,18 +10,17 @@ import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.AppRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
+// import dagger.hilt.android.lifecycle.HiltViewModel // REMOVIDO: Hilt nao e mais usado
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 
 /**
  * ViewModel para gerenciamento de contratos
  */
-@HiltViewModel
-class ContractManagementViewModel @Inject constructor(
+class ContractManagementViewModel constructor(
     private val repository: AppRepository
 ) : BaseViewModel() {
 
@@ -389,3 +388,4 @@ class ContractManagementViewModel @Inject constructor(
         WITHOUT_CONTRACT
     }
 }
+

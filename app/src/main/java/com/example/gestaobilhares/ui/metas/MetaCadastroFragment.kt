@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.metas
+﻿package com.example.gestaobilhares.ui.metas
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -16,7 +16,6 @@ import com.example.gestaobilhares.data.entities.MetaColaborador
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.TipoMeta
 import com.example.gestaobilhares.databinding.FragmentMetaCadastroBinding
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Date
 
@@ -24,7 +23,6 @@ import java.util.Date
  * Fragment para cadastro de metas
  * Fluxo: Selecionar Rota → Selecionar Ciclo → Definir Tipo e Valor da Meta
  */
-@AndroidEntryPoint
 class MetaCadastroFragment : Fragment() {
 
     private var _binding: FragmentMetaCadastroBinding? = null
@@ -272,3 +270,4 @@ class MetaCadastroFragment : Fragment() {
         _binding = null
     }
 }
+

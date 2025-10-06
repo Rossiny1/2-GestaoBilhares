@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.inventory.vehicles
+﻿package com.example.gestaobilhares.ui.inventory.vehicles
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,11 +10,9 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentVehicleDetailBinding
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-@AndroidEntryPoint
 class VehicleDetailFragment : Fragment() {
     private var _binding: FragmentVehicleDetailBinding? = null
     private val binding get() = _binding!!
@@ -268,3 +266,4 @@ class VehicleDetailFragment : Fragment() {
         _binding = null
     }
 }
+

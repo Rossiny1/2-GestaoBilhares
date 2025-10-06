@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.expenses
+﻿package com.example.gestaobilhares.ui.expenses
 
 import android.app.DatePickerDialog
 import android.content.Intent
@@ -30,7 +30,7 @@ import java.io.File
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-import javax.inject.Inject
+// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -123,7 +123,7 @@ class ExpenseRegisterFragment : Fragment() {
         
         // Inicializar ViewModel
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+        val appRepository = AppRepository(
             database.clienteDao(),
             database.acertoDao(),
             database.mesaDao(),
@@ -135,8 +135,7 @@ class ExpenseRegisterFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
         viewModel = ExpenseRegisterViewModel(
             DespesaRepository(database.despesaDao()),
@@ -146,7 +145,8 @@ class ExpenseRegisterFragment : Fragment() {
                 database.cicloAcertoDao(),
                 DespesaRepository(database.despesaDao()),
                 AcertoRepository(database.acertoDao(), database.clienteDao()),
-                ClienteRepository(database.clienteDao(), appRepository)
+                ClienteRepository(database.clienteDao(), appRepository),
+                database.rotaDao()
             ),
             HistoricoManutencaoVeiculoRepository(database.historicoManutencaoVeiculoDao()),
             HistoricoCombustivelVeiculoRepository(database.historicoCombustivelVeiculoDao())
@@ -1000,3 +1000,9 @@ class ExpenseRegisterFragment : Fragment() {
         _binding = null
     }
 } 
+
+
+
+
+
+

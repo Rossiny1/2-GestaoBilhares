@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.cycles
+﻿package com.example.gestaobilhares.ui.cycles
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -58,8 +58,7 @@ class CycleManagementFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
         CycleManagementViewModelFactory(
             CicloAcertoRepository(
@@ -313,3 +312,5 @@ class CycleManagementPagerAdapter(
         }
     }
 }
+
+

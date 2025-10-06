@@ -9,6 +9,21 @@
 - **SEMPRE** fazer builds intermediários para validação
 - **SEMPRE** trabalhar em paralelo para otimização
 
+### **🎯 REGRA PRINCIPAL: CENTRALIZAÇÃO E SIMPLIFICAÇÃO**
+
+- **CENTRALIZAR**: Manter funcionalidades relacionadas em um único local
+- **SIMPLIFICAR**: Evitar fragmentação desnecessária de código
+- **UM ARQUIVO, UMA RESPONSABILIDADE**: Manter coesão alta
+- **ELIMINAR DUPLICAÇÃO**: Reutilizar código existente
+- **FACILITAR MANUTENÇÃO**: Código organizado e acessível
+
+### **Modernização Incremental (2025)**
+
+- **StateFlow First**: Priorizar StateFlow sobre LiveData
+- **BaseViewModel**: Usar funcionalidades centralizadas
+- **repeatOnLifecycle**: Padrão moderno de observação
+- **Performance**: Otimizar com coroutines e StateFlow
+
 ### **Responsabilidades do Usuário**
 
 - **Builds**: Usuário executa todos os builds e geração de APK
@@ -120,3 +135,137 @@ taskkill /f /im java.exe
 - **Trabalhar em paralelo** quando possível
 - **Usar** ferramentas apropriadas para cada tarefa
 - **Otimizar** tempo de desenvolvimento
+
+## 🚀 PADRÕES MODERNOS DE DESENVOLVIMENTO (2025)
+
+### **StateFlow Migration**
+
+```kotlin
+// ❌ PADRÃO ANTIGO: LiveData
+private val _data = MutableLiveData<String>()
+val data: LiveData<String> = _data
+
+// ✅ PADRÃO MODERNO: StateFlow
+private val _data = MutableStateFlow<String>("")
+val data: StateFlow<String> = _data.asStateFlow()
+```
+
+### **Observação Moderna**
+
+```kotlin
+// ❌ PADRÃO ANTIGO: observe
+viewModel.data.observe(viewLifecycleOwner) { value ->
+    // Atualizar UI
+}
+
+// ✅ PADRÃO MODERNO: collect + repeatOnLifecycle
+viewLifecycleOwner.lifecycleScope.launch {
+    viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+        viewModel.data.collect { value ->
+            // Atualizar UI
+        }
+    }
+}
+```
+
+### **BaseViewModel Usage**
+
+```kotlin
+// ✅ PADRÃO MODERNO: Herdar de BaseViewModel
+class MyViewModel : BaseViewModel() {
+    fun doSomething() {
+        showLoading()
+        try {
+            // Lógica de negócio
+            showMessage("Sucesso!")
+        } catch (e: Exception) {
+            showError("Erro: ${e.message}")
+        } finally {
+            hideLoading()
+        }
+    }
+}
+```
+
+### **Imports Necessários**
+
+```kotlin
+// Para StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+// Para repeatOnLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
+import kotlinx.coroutines.launch
+```
+
+## 🎯 EXEMPLOS DE CENTRALIZAÇÃO E SIMPLIFICAÇÃO
+
+### **✅ CORRETO: Centralização**
+
+```kotlin
+// ✅ UM REPOSITORY CENTRALIZADO
+@Singleton
+class AppRepository @Inject constructor(...) {
+    // Todas as operações de dados em um local
+    fun obterTodosClientes(): Flow<List<Cliente>>
+    fun obterTodasRotas(): Flow<List<Rota>>
+    fun obterTodasMesas(): Flow<List<Mesa>>
+    
+    // Cache centralizado
+    private val _clientesCache = MutableStateFlow<List<Cliente>>(emptyList())
+    val clientesCache: StateFlow<List<Cliente>> = _clientesCache.asStateFlow()
+}
+```
+
+### **❌ INCORRETO: Fragmentação Desnecessária**
+
+```kotlin
+// ❌ MÚLTIPLOS REPOSITORIES FRAGMENTADOS
+class ClientRepository @Inject constructor(...)
+class RouteRepository @Inject constructor(...)
+class MesaRepository @Inject constructor(...)
+class SettlementRepository @Inject constructor(...)
+// ... mais 10 repositories
+```
+
+### **✅ CORRETO: BaseViewModel Centralizada**
+
+```kotlin
+// ✅ FUNCIONALIDADES COMUNS CENTRALIZADAS
+abstract class BaseViewModel : ViewModel() {
+    protected fun showLoading()
+    protected fun hideLoading()
+    protected fun showError(message: String)
+    protected fun showMessage(message: String)
+    // Todas as funcionalidades comuns em um local
+}
+```
+
+### **❌ INCORRETO: Duplicação de Código**
+
+```kotlin
+// ❌ DUPLICAÇÃO EM CADA VIEWMODEL
+class AuthViewModel : ViewModel() {
+    private val _isLoading = MutableStateFlow(false)
+    private val _error = MutableStateFlow<String?>(null)
+    // ... duplicação
+}
+
+class RoutesViewModel : ViewModel() {
+    private val _isLoading = MutableStateFlow(false)
+    private val _error = MutableStateFlow<String?>(null)
+    // ... mesma duplicação
+}
+```
+
+### **🎯 PRINCÍPIOS APLICADOS:**
+
+1. **UM ARQUIVO, UMA RESPONSABILIDADE**: AppRepository para dados, BaseViewModel para estados
+2. **ELIMINAR DUPLICAÇÃO**: Funcionalidades comuns centralizadas
+3. **FACILITAR MANUTENÇÃO**: Código organizado e acessível
+4. **CENTRALIZAR**: Funcionalidades relacionadas em um local
+5. **SIMPLIFICAR**: Evitar fragmentação desnecessária

@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.routes
+﻿package com.example.gestaobilhares.ui.routes
 
 import android.app.Dialog
 import android.os.Bundle
@@ -15,13 +15,10 @@ import com.example.gestaobilhares.databinding.DialogSelectClientBinding
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
-import dagger.hilt.android.AndroidEntryPoint
-
 /**
  * DialogFragment para selecionar um cliente para transferência.
  * Inclui busca por nome e exibe informações do cliente, rota e mesas.
  */
-@AndroidEntryPoint
 class ClientSelectionDialog : DialogFragment() {
 
     private var _binding: DialogSelectClientBinding? = null
@@ -123,3 +120,4 @@ class ClientSelectionDialog : DialogFragment() {
         _binding = null
     }
 }
+

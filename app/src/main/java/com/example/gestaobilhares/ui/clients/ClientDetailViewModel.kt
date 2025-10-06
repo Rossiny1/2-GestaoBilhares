@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.clients
+﻿package com.example.gestaobilhares.ui.clients
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
@@ -185,7 +185,7 @@ class ClientDetailViewModel(
     /**
      * ✅ NOVO FLUXO: Verifica se mesa pode ser retirada ou precisa de acerto
      */
-    suspend fun verificarSeRetiradaEPermitida(mesaId: Long, clienteId: Long): RetiradaStatus {
+    suspend fun verificarSeRetiradaEPermitida(mesaId: Long, _clienteId: Long): RetiradaStatus {
         return try {
             // Buscar último acerto da mesa
             val ultimoAcertoMesa = acertoRepository.buscarUltimoAcertoMesa(mesaId)
@@ -491,3 +491,4 @@ enum class RetiradaStatus {
     PODE_RETIRAR,      // Mesa foi acertada hoje, pode ser retirada
     PRECISA_ACERTO     // Mesa precisa ser acertada antes de retirar
 } 
+

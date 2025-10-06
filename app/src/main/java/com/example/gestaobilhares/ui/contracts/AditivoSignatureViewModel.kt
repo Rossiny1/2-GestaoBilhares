@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.contracts
+﻿package com.example.gestaobilhares.ui.contracts
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -8,13 +8,9 @@ import com.example.gestaobilhares.data.entities.AditivoContrato
 import com.example.gestaobilhares.data.entities.ContratoLocacao
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.AppRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.util.*
-import javax.inject.Inject
-
-@HiltViewModel
-class AditivoSignatureViewModel @Inject constructor(
+class AditivoSignatureViewModel constructor(
     private val repository: AppRepository
 ) : ViewModel() {
     
@@ -189,3 +185,4 @@ class AditivoSignatureViewModel @Inject constructor(
         }
     }
 }
+

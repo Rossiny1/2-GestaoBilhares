@@ -88,8 +88,7 @@ class ClientRegisterFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.procuraçãoRepresentanteDao()
+            database.logAuditoriaAssinaturaDao()
         )
         viewModel = ClientRegisterViewModel(ClienteRepository(database.clienteDao(), appRepository))
         
@@ -431,14 +430,14 @@ class ClientRegisterFragment : Fragment() {
             etObservations.setText(cliente.observacoes ?: "")
             
             // ✅ NOVO: Preencher data de cadastro
-            val dataCadastro = if (cliente.dataCadastro != null) {
+            val _dataCadastro = if (cliente.dataCadastro != null) {
                 java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
                     .format(cliente.dataCadastro)
             } else {
                 java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
                     .format(java.util.Date())
             }
-            etClienteDesde.setText(dataCadastro)
+            etClienteDesde.setText(_dataCadastro)
             
             // ✅ NOVO: Carregar dados de geolocalização se existirem
             if (cliente.latitude != null && cliente.longitude != null) {
@@ -626,7 +625,7 @@ class ClientRegisterFragment : Fragment() {
     /**
      * Atualiza a interface com os dados da localização capturada
      */
-    private fun atualizarUILocalizacao(location: Location) {
+    private fun atualizarUILocalizacao(_location: Location) {
         // Método mantido apenas para futura UI; agora feedback é via Toast e campos internos
     }
     

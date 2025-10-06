@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.data.repository
+﻿package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.DespesaDao
 import com.example.gestaobilhares.data.entities.*
@@ -6,17 +6,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
-import javax.inject.Inject
-import javax.inject.Singleton
-
 /**
  * Repository para gerenciar despesas.
  * Centraliza o acesso aos dados de despesas, seja do banco local ou dados mock.
  * 
  * @property despesaDao DAO para operações no banco de dados
  */
-@Singleton
-class DespesaRepository @Inject constructor(
+class DespesaRepository constructor(
     private val despesaDao: DespesaDao
 ) {
     
@@ -131,3 +127,4 @@ class DespesaRepository @Inject constructor(
 
     // ❌ REMOVIDO: Dados mock excluídos para evitar criação automática de dados
 } 
+

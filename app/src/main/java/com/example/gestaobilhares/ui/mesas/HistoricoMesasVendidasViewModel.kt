@@ -1,23 +1,19 @@
-package com.example.gestaobilhares.ui.mesas
+﻿package com.example.gestaobilhares.ui.mesas
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.MesaVendida
 import com.example.gestaobilhares.data.repository.MesaVendidaRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
 /**
  * ViewModel para gerenciar o histórico de mesas vendidas
  * ✅ NOVO: SISTEMA DE VENDA DE MESAS
  */
-@HiltViewModel
-class HistoricoMesasVendidasViewModel @Inject constructor(
+class HistoricoMesasVendidasViewModel constructor(
     private val mesaVendidaRepository: MesaVendidaRepository
 ) : BaseViewModel() {
 
@@ -139,3 +135,4 @@ class HistoricoMesasVendidasViewModel @Inject constructor(
         carregarMesasVendidas()
     }
 }
+
