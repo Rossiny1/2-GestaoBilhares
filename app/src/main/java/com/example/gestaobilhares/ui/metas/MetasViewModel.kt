@@ -1,6 +1,7 @@
 package com.example.gestaobilhares.ui.metas
 
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
@@ -15,16 +16,12 @@ import javax.inject.Inject
 @HiltViewModel
 class MetasViewModel @Inject constructor(
     private val appRepository: AppRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _metasRotas = MutableStateFlow<List<MetaRotaResumo>>(emptyList())
     val metasRotas: StateFlow<List<MetaRotaResumo>> = _metasRotas.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    private val _message = MutableStateFlow<String?>(null)
-    val message: StateFlow<String?> = _message.asStateFlow()
+    // Estados de loading e message já estão no BaseViewModel
 
     private val _filtroTipoMeta = MutableStateFlow<TipoMeta?>(null)
     val filtroTipoMeta: StateFlow<TipoMeta?> = _filtroTipoMeta.asStateFlow()
@@ -49,7 +46,7 @@ class MetasViewModel @Inject constructor(
      * Força o refresh das metas (útil após salvar nova meta)
      */
     fun refreshMetas() {
-        Timber.d("Forçando refresh das metas")
+        logOperation("REFRESH", "Forçando refresh das metas")
         carregarMetasRotas()
     }
 
@@ -59,7 +56,7 @@ class MetasViewModel @Inject constructor(
     fun carregarMetasRotas() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 Timber.d("Carregando metas das rotas")
 
                 // Buscar todas as rotas ativas
@@ -90,9 +87,9 @@ class MetasViewModel @Inject constructor(
                 gerarNotificacoesMetas(metasRotasList)
             } catch (e: Exception) {
                 Timber.e(e, "Erro ao carregar metas: %s", e.message)
-                _message.value = "Erro ao carregar metas: ${e.message}"
+                showError("Erro ao carregar metas: ${e.message}")
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -147,7 +144,7 @@ class MetasViewModel @Inject constructor(
                     metas = emptyList(),
                     dataInicioCiclo = cicloAtual.dataInicio,
                     dataFimCiclo = cicloAtual.dataFim,
-                    ultimaAtualizacao = Date()
+                    ultimaAtualizacao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
                 )
             }
 
@@ -164,7 +161,7 @@ class MetasViewModel @Inject constructor(
                 metas = metasComProgresso,
                 dataInicioCiclo = cicloAtual.dataInicio,
                 dataFimCiclo = cicloAtual.dataFim,
-                ultimaAtualizacao = Date()
+                ultimaAtualizacao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
             )
 
             Timber.d("MetaRotaResumo criado para %s", rota.nome)
@@ -339,7 +336,7 @@ class MetasViewModel @Inject constructor(
      * Limpa mensagem
      */
     fun limparMensagem() {
-        _message.value = null
+        clearMessage()
     }
 
     /**
@@ -496,7 +493,7 @@ enum class StatusFiltroMeta {
     val meta: String,
     val progresso: Double,
     val mensagem: String,
-    val timestamp: Date = Date()
+    val timestamp: Date = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
 )
 
 /**

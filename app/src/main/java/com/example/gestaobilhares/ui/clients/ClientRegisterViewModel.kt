@@ -1,6 +1,7 @@
 package com.example.gestaobilhares.ui.clients
 
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.repository.ClienteRepository
@@ -14,11 +15,10 @@ import kotlinx.coroutines.launch
  */
 class ClientRegisterViewModel(
     private val clienteRepository: ClienteRepository
-) : ViewModel() {
+) : BaseViewModel() {
     private val _novoClienteId = MutableStateFlow<Long?>(null)
     val novoClienteId: StateFlow<Long?> = _novoClienteId.asStateFlow()
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    // isLoading já existe na BaseViewModel
     private val _debitoAtual = MutableStateFlow(0.0)
     val debitoAtual: StateFlow<Double> = _debitoAtual.asStateFlow()
     
@@ -49,7 +49,7 @@ class ClientRegisterViewModel(
         viewModelScope.launch {
             try {
                 android.util.Log.d("ClientRegisterViewModel", "Iniciando cadastro do cliente: ${cliente.nome}")
-                _isLoading.value = true
+                showLoading()
                 
                 // ✅ CORRIGIDO: Detectar se é edição ou novo cadastro
                 val clienteExistente = _clienteParaEdicao.value
@@ -89,7 +89,7 @@ class ClientRegisterViewModel(
                 _clienteAtualizado.value = false
             } finally {
                 android.util.Log.d("ClientRegisterViewModel", "Finalizando operação, isLoading = false")
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -106,7 +106,7 @@ class ClientRegisterViewModel(
         viewModelScope.launch {
             try {
                 android.util.Log.d("ClientRegisterViewModel", "Carregando cliente para edição: $clienteId")
-                _isLoading.value = true
+                showLoading()
                 
                 val cliente = clienteRepository.obterPorId(clienteId)
                 _clienteParaEdicao.value = cliente
@@ -121,7 +121,7 @@ class ClientRegisterViewModel(
                 android.util.Log.e("ClientRegisterViewModel", "Erro ao carregar cliente: ${e.message}", e)
                 _clienteParaEdicao.value = null
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }

@@ -6,9 +6,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
@@ -89,47 +93,73 @@ class GlobalExpensesFragment : Fragment() {
     private fun setupObservers() {
         // Observar despesas globais
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.globalExpenses.collect { expenses ->
-                globalExpensesAdapter.submitList(expenses)
-                updateEmptyState(expenses.isEmpty())
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.globalExpenses.collect { expenses ->
+                    globalExpensesAdapter.submitList(expenses)
+                    updateEmptyState(expenses.isEmpty())
+                }
             }
         }
 
         // Observar ano selecionado
-        viewModel.selectedYear.observe(viewLifecycleOwner) { year ->
-            binding.etYearSelection.setText(year.toString())
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.selectedYear.collect { year ->
+                    binding.etYearSelection.setText(year.toString())
+                }
+            }
         }
 
         // Observar ciclo selecionado
-        viewModel.selectedCycle.observe(viewLifecycleOwner) { cycle ->
-            val cycleText = if (cycle != null) {
-                "${cycle.numeroCiclo}º Acerto"
-            } else {
-                "Selecionar Ciclo"
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.selectedCycle.collect { cycle ->
+                    val cycleText = if (cycle != null) {
+                        "${cycle.numeroCiclo}º Acerto"
+                    } else {
+                        "Selecionar Ciclo"
+                    }
+                    binding.etCycleSelection.setText(cycleText)
+                }
             }
-            binding.etCycleSelection.setText(cycleText)
         }
 
         // Observar total de despesas
-        viewModel.totalExpenses.observe(viewLifecycleOwner) { total ->
-            binding.tvTotalExpenses.text = currencyFormat.format(total)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.totalExpenses.collect { total ->
+                    binding.tvTotalExpenses.text = currencyFormat.format(total)
+                }
+            }
         }
 
         // Observar quantidade de despesas
-        viewModel.expensesCount.observe(viewLifecycleOwner) { count ->
-            binding.tvExpensesCount.text = count.toString()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.expensesCount.collect { count ->
+                    binding.tvExpensesCount.text = count.toString()
+                }
+            }
         }
 
         // Observar estado de carregamento
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // Aqui você pode mostrar/esconder um progress indicator se necessário
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isLoading.collect { isLoading ->
+                    // Aqui você pode mostrar/esconder um progress indicator se necessário
+                }
+            }
         }
 
         // Observar mensagens de erro
-        viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
-            error?.let {
-                Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
-                viewModel.clearError()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorMessage.collect { error ->
+                    error?.let {
+                        Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+                        viewModel.clearError()
+                    }
+                }
             }
         }
     }

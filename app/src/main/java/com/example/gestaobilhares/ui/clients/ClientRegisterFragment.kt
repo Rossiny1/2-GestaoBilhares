@@ -18,6 +18,7 @@ import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.databinding.FragmentClientRegisterBinding
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.ClienteRepository
+import com.example.gestaobilhares.utils.DataValidator
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -284,49 +285,45 @@ class ClientRegisterFragment : Fragment() {
             
             android.util.Log.d("ClientRegister", "Valores obtidos: nome=$name, endereco=$address")
             
-            // Validações
-            if (name.isEmpty()) {
-                binding.etClientName.error = "Nome é obrigatório"
-                binding.etClientName.requestFocus()
-                return
-            }
+            // ✅ FASE 2: Usar DataValidator centralizado
+            val resultadoValidacao = com.example.gestaobilhares.utils.DataValidator.validarCliente(
+                nome = name,
+                endereco = address,
+                comissaoFicha = comissaoFicha,
+                email = email,
+                telefone = phone,
+                cpf = cpfCnpj
+            )
             
-            if (name.length < 3) {
-                binding.etClientName.error = "Nome deve ter pelo menos 3 caracteres"
-                binding.etClientName.requestFocus()
-                return
-            }
-            
-            if (address.isEmpty()) {
-                binding.etAddress.error = "Endereço é obrigatório"
-                binding.etAddress.requestFocus()
-                return
-            }
-            
-            if (address.length < 10) {
-                binding.etAddress.error = "Endereço deve ser mais detalhado"
-                binding.etAddress.requestFocus()
-                return
-            }
-
-            // ✅ NOVA VALIDAÇÃO: Comissão por ficha é obrigatória
-            if (comissaoFicha <= 0) {
-                binding.etComissaoFicha.error = "Comissão por ficha é obrigatória"
-                binding.etComissaoFicha.requestFocus()
-                return
-            }
-            
-            // Validação opcional de email
-            if (email.isNotEmpty() && !isValidEmail(email)) {
-                binding.etEmail.error = "E-mail inválido"
-                binding.etEmail.requestFocus()
-                return
-            }
-            
-            // Validação opcional de telefone
-            if (phone.isNotEmpty() && phone.length < 10) {
-                binding.etPhone.error = "Telefone inválido"
-                binding.etPhone.requestFocus()
+            if (resultadoValidacao.isErro()) {
+                val erros = (resultadoValidacao as DataValidator.ResultadoValidacao.Erro).mensagens
+                // Mostrar primeiro erro no campo correspondente
+                when {
+                    erros.any { it.contains("Nome") } -> {
+                        binding.etClientName.error = erros.first { it.contains("Nome") }
+                        binding.etClientName.requestFocus()
+                    }
+                    erros.any { it.contains("Endereço") } -> {
+                        binding.etAddress.error = erros.first { it.contains("Endereço") }
+                        binding.etAddress.requestFocus()
+                    }
+                    erros.any { it.contains("Comissão") } -> {
+                        binding.etComissaoFicha.error = erros.first { it.contains("Comissão") }
+                        binding.etComissaoFicha.requestFocus()
+                    }
+                    erros.any { it.contains("E-mail") } -> {
+                        binding.etEmail.error = erros.first { it.contains("E-mail") }
+                        binding.etEmail.requestFocus()
+                    }
+                    erros.any { it.contains("Telefone") } -> {
+                        binding.etPhone.error = erros.first { it.contains("Telefone") }
+                        binding.etPhone.requestFocus()
+                    }
+                    erros.any { it.contains("CPF") } -> {
+                        binding.etCpfCnpj.error = erros.first { it.contains("CPF") }
+                        binding.etCpfCnpj.requestFocus()
+                    }
+                }
                 return
             }
             

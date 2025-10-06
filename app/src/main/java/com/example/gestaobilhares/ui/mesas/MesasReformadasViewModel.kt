@@ -1,12 +1,14 @@
 package com.example.gestaobilhares.ui.mesas
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,33 +19,30 @@ import javax.inject.Inject
 @HiltViewModel
 class MesasReformadasViewModel @Inject constructor(
     private val mesaReformadaRepository: MesaReformadaRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
-    private val _mesasReformadas = MutableLiveData<List<MesaReformada>>()
-    val mesasReformadas: LiveData<List<MesaReformada>> = _mesasReformadas
+    private val _mesasReformadas = MutableStateFlow<List<MesaReformada>>(emptyList())
+    val mesasReformadas: StateFlow<List<MesaReformada>> = _mesasReformadas.asStateFlow()
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    // isLoading já existe na BaseViewModel
 
-    private val _errorMessage = MutableLiveData<String?>()
-    val errorMessage: LiveData<String?> = _errorMessage
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     fun carregarMesasReformadas() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 mesaReformadaRepository.listarTodas().collect { mesas ->
                     _mesasReformadas.value = mesas
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar mesas reformadas: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
 
-    fun clearError() {
-        _errorMessage.value = null
-    }
+    // clearError já existe na BaseViewModel
 }

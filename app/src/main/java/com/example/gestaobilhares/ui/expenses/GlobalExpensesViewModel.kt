@@ -1,8 +1,7 @@
 package com.example.gestaobilhares.ui.expenses
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.Despesa
@@ -24,32 +23,31 @@ import javax.inject.Inject
 class GlobalExpensesViewModel @Inject constructor(
     private val despesaRepository: DespesaRepository,
     private val cicloAcertoRepository: CicloAcertoRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     // Estados da UI
     private val _globalExpenses = MutableStateFlow<List<Despesa>>(emptyList())
     val globalExpenses: StateFlow<List<Despesa>> = _globalExpenses.asStateFlow()
-
+    
     private val _availableCycles = MutableStateFlow<List<CicloAcertoEntity>>(emptyList())
     val availableCycles: StateFlow<List<CicloAcertoEntity>> = _availableCycles.asStateFlow()
 
-    private val _selectedCycle = MutableLiveData<CicloAcertoEntity?>()
-    val selectedCycle: LiveData<CicloAcertoEntity?> = _selectedCycle
+    private val _selectedCycle = MutableStateFlow<CicloAcertoEntity?>(null)
+    val selectedCycle: StateFlow<CicloAcertoEntity?> = _selectedCycle.asStateFlow()
 
-    private val _selectedYear = MutableLiveData<Int>()
-    val selectedYear: LiveData<Int> = _selectedYear
+    private val _selectedYear = MutableStateFlow<Int>(Calendar.getInstance().get(Calendar.YEAR))
+    val selectedYear: StateFlow<Int> = _selectedYear.asStateFlow()
 
-    private val _totalExpenses = MutableLiveData<Double>()
-    val totalExpenses: LiveData<Double> = _totalExpenses
+    private val _totalExpenses = MutableStateFlow<Double>(0.0)
+    val totalExpenses: StateFlow<Double> = _totalExpenses.asStateFlow()
 
-    private val _expensesCount = MutableLiveData<Int>()
-    val expensesCount: LiveData<Int> = _expensesCount
+    private val _expensesCount = MutableStateFlow<Int>(0)
+    val expensesCount: StateFlow<Int> = _expensesCount.asStateFlow()
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    // isLoading já existe na BaseViewModel
 
-    private val _errorMessage = MutableLiveData<String?>()
-    val errorMessage: LiveData<String?> = _errorMessage
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     init {
         // Inicializar com o ano atual
@@ -107,7 +105,7 @@ class GlobalExpensesViewModel @Inject constructor(
     fun loadAllGlobalExpenses() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 _selectedCycle.value = null
                 
                 val currentYear = _selectedYear.value ?: Calendar.getInstance().get(Calendar.YEAR)
@@ -126,7 +124,7 @@ class GlobalExpensesViewModel @Inject constructor(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar despesas: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -137,7 +135,7 @@ class GlobalExpensesViewModel @Inject constructor(
     fun filterByCycle(cycle: CicloAcertoEntity) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 _selectedCycle.value = cycle
                 
                 val expenses = despesaRepository.buscarGlobaisPorCiclo(cycle.ano, cycle.numeroCiclo)
@@ -147,7 +145,7 @@ class GlobalExpensesViewModel @Inject constructor(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao filtrar despesas: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -186,9 +184,7 @@ class GlobalExpensesViewModel @Inject constructor(
     /**
      * Limpa mensagens de erro
      */
-    fun clearError() {
-        _errorMessage.value = null
-    }
+    // clearError já existe na BaseViewModel
 
     /**
      * Obtém o texto formatado do ciclo selecionado

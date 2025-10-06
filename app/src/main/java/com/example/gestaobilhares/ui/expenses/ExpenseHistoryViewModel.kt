@@ -3,6 +3,7 @@ package com.example.gestaobilhares.ui.expenses
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.DespesaResumo
@@ -20,11 +21,10 @@ import kotlinx.coroutines.launch
  */
 class ExpenseHistoryViewModel(
     private val despesaRepository: DespesaRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
     // Estado de carregamento
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    // isLoading já existe na BaseViewModel
 
     // Filtro de categoria selecionado
     private val _selectedCategory = MutableStateFlow<String?>(null)
@@ -57,7 +57,7 @@ class ExpenseHistoryViewModel(
      */
     private fun loadExpenses() {
         viewModelScope.launch {
-            _isLoading.value = true
+            showLoading()
             
             try {
                 // Combina despesas com filtro de categoria
@@ -73,7 +73,7 @@ class ExpenseHistoryViewModel(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar despesas: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -107,13 +107,13 @@ class ExpenseHistoryViewModel(
     fun deleteExpense(despesaResumo: DespesaResumo) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 despesaRepository.deletar(despesaResumo.despesa)
                 _successMessage.value = "Despesa deletada com sucesso"
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao deletar despesa: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -130,7 +130,7 @@ class ExpenseHistoryViewModel(
             }
             
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 allExpenses.collect { expenses ->
                     val filteredBySearch = expenses.filter { despesaResumo ->
@@ -144,7 +144,7 @@ class ExpenseHistoryViewModel(
             } catch (e: Exception) {
                 _errorMessage.value = "Erro na busca: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -155,13 +155,13 @@ class ExpenseHistoryViewModel(
     fun exportExpensesReport() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 // TODO: Implementar lógica de exportação (CSV, PDF, etc.)
                 _successMessage.value = "Relatório exportado com sucesso"
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao exportar relatório: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }

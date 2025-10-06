@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.*
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -24,15 +25,11 @@ class ExpenseRegisterViewModel @Inject constructor(
     private val cicloAcertoRepository: CicloAcertoRepository,
     private val historicoManutencaoRepository: HistoricoManutencaoVeiculoRepository,
     private val historicoCombustivelRepository: HistoricoCombustivelVeiculoRepository
-) : ViewModel() {
+) : BaseViewModel() {
 
-    // Estado de carregamento
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    // Estado de carregamento - já existe na BaseViewModel
 
-    // Mensagens de feedback
-    private val _message = MutableStateFlow<String?>(null)
-    val message: StateFlow<String?> = _message.asStateFlow()
+    // Mensagens de feedback - já existe na BaseViewModel
 
     // Estado de sucesso
     private val _success = MutableStateFlow(false)
@@ -83,7 +80,7 @@ class ExpenseRegisterViewModel @Inject constructor(
                     _categories.value = categorias
                 }
             } catch (e: Exception) {
-                _message.value = "Erro ao carregar categorias: ${e.message}"
+                showMessage("Erro ao carregar categorias: ${e.message}")
             }
         }
     }
@@ -98,7 +95,7 @@ class ExpenseRegisterViewModel @Inject constructor(
                     _cycles.value = lista
                 }
             } catch (e: Exception) {
-                _message.value = "Erro ao carregar ciclos: ${e.message}"
+                showMessage("Erro ao carregar ciclos: ${e.message}")
             }
         }
     }
@@ -191,7 +188,7 @@ class ExpenseRegisterViewModel @Inject constructor(
                     loadCategories()
                 }
             } catch (e: Exception) {
-                _message.value = "Erro ao configurar categoria Viagem: ${e.message}"
+                showMessage("Erro ao configurar categoria Viagem: ${e.message}")
             }
         }
     }
@@ -207,7 +204,7 @@ class ExpenseRegisterViewModel @Inject constructor(
                     _types.value = tipos
                 }
             } catch (e: Exception) {
-                _message.value = "Erro ao carregar tipos: ${e.message}"
+                showMessage("Erro ao carregar tipos: ${e.message}")
             }
         }
     }
@@ -218,11 +215,11 @@ class ExpenseRegisterViewModel @Inject constructor(
     fun createCategory(nome: String, descricao: String = "") {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 // Verificar se categoria já existe
                 if (categoriaDespesaRepository.categoriaExiste(nome)) {
-                    _message.value = "Categoria '$nome' já existe"
+                    showMessage("Categoria '$nome' já existe")
                     return@launch
                 }
 
@@ -233,15 +230,15 @@ class ExpenseRegisterViewModel @Inject constructor(
                 )
 
                 val categoriaId = categoriaDespesaRepository.criarCategoria(novaCategoria)
-                _message.value = "Categoria criada com sucesso"
+                showMessage("Categoria criada com sucesso")
                 
                 // Recarregar categorias
                 loadCategories()
                 
             } catch (e: Exception) {
-                _message.value = "Erro ao criar categoria: ${e.message}"
+                showMessage("Erro ao criar categoria: ${e.message}")
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -252,11 +249,11 @@ class ExpenseRegisterViewModel @Inject constructor(
     fun createType(categoriaId: Long, nome: String, descricao: String = "") {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 // Verificar se tipo já existe na categoria
                 if (tipoDespesaRepository.tipoExiste(nome, categoriaId)) {
-                    _message.value = "Tipo '$nome' já existe nesta categoria"
+                    showMessage("Tipo '$nome' já existe nesta categoria")
                     return@launch
                 }
 
@@ -268,15 +265,15 @@ class ExpenseRegisterViewModel @Inject constructor(
                 )
 
                 val tipoId = tipoDespesaRepository.criarTipo(novoTipo)
-                _message.value = "Tipo criado com sucesso"
+                showMessage("Tipo criado com sucesso")
                 
                 // Recarregar tipos da categoria
                 loadTypesForCategory(categoriaId)
                 
             } catch (e: Exception) {
-                _message.value = "Erro ao criar tipo: ${e.message}"
+                showMessage("Erro ao criar tipo: ${e.message}")
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -301,12 +298,12 @@ class ExpenseRegisterViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 val cicloAtivo = if (rotaId == 0L) {
                     // Fluxo global: seleção do ciclo apenas para ler ano/número; não usamos cicloId na gravação
                     val selecionado = _selectedCycle.value
                     if (selecionado == null) {
-                        _message.value = "Selecione um ciclo para lançar a despesa."
+                        showMessage("Selecione um ciclo para lançar a despesa.")
                         return@launch
                     }
                     selecionado
@@ -314,7 +311,7 @@ class ExpenseRegisterViewModel @Inject constructor(
                     // Fluxo normal por rota
                     val ativo = cicloAcertoRepository.buscarCicloAtivo(rotaId)
                     if (ativo == null || ativo.status != StatusCicloAcerto.EM_ANDAMENTO) {
-                        _message.value = "Não é possível cadastrar despesas. O ciclo de acerto não está em andamento."
+                        showMessage("Não é possível cadastrar despesas. O ciclo de acerto não está em andamento.")
                         return@launch
                     }
                     ativo
@@ -322,18 +319,18 @@ class ExpenseRegisterViewModel @Inject constructor(
 
                 // Validações
                 if (descricao.isBlank()) {
-                    _message.value = "Descrição é obrigatória"
+                    showMessage("Descrição é obrigatória")
                     return@launch
                 }
 
                 if (valor <= 0) {
-                    _message.value = "Valor deve ser maior que zero"
+                    showMessage("Valor deve ser maior que zero")
                     return@launch
                 }
 
                 val categoria = _selectedCategory.value
                 if (categoria == null) {
-                    _message.value = "Selecione uma categoria"
+                    showMessage("Selecione uma categoria")
                     return@launch
                 }
 
@@ -367,10 +364,10 @@ class ExpenseRegisterViewModel @Inject constructor(
                         )
                         
                         despesaRepository.atualizar(despesaAtualizada)
-                        _message.value = "Despesa atualizada com sucesso"
+                        showMessage("Despesa atualizada com sucesso")
                         _success.value = true
                     } else {
-                        _message.value = "Despesa não encontrada"
+                        showMessage("Despesa não encontrada")
                     }
                 } else {
                     // ✅ NOVO: Modo de criação - criar nova despesa
@@ -404,18 +401,18 @@ class ExpenseRegisterViewModel @Inject constructor(
                             android.util.Log.d("ExpenseRegisterViewModel", "Histórico de veículo salvo com sucesso")
                         } catch (e: Exception) {
                             android.util.Log.e("ExpenseRegisterViewModel", "Erro ao salvar histórico de veículo: ${e.message}", e)
-                            _message.value = "Despesa salva, mas erro ao salvar no histórico do veículo: ${e.message}"
+                            showMessage("Despesa salva, mas erro ao salvar no histórico do veículo: ${e.message}")
                         }
                     }
                     
-                    _message.value = "Despesa salva com sucesso"
+                    showMessage("Despesa salva com sucesso")
                     _success.value = true
                 }
                 
             } catch (e: Exception) {
-                _message.value = "Erro ao salvar despesa: ${e.message}"
+                showMessage("Erro ao salvar despesa: ${e.message}")
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -430,9 +427,7 @@ class ExpenseRegisterViewModel @Inject constructor(
     /**
      * Limpa as mensagens.
      */
-    fun clearMessage() {
-        _message.value = null
-    }
+    // clearMessage já existe na BaseViewModel
 
     /**
      * Reseta o estado de sucesso.

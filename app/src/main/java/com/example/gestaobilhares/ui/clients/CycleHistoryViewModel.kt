@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.ui.common.BaseViewModel
 import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -71,7 +72,7 @@ data class CycleHistoryItem(
 class CycleHistoryViewModel(
     private val cicloAcertoRepository: CicloAcertoRepository,
     private val appRepository: AppRepository
-) : ViewModel() {
+) : BaseViewModel() {
     
 
 
@@ -81,8 +82,7 @@ class CycleHistoryViewModel(
     private val _estatisticas = MutableStateFlow(CycleStatistics())
     val estatisticas: StateFlow<CycleStatistics> = _estatisticas.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    // isLoading já existe na BaseViewModel
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
@@ -93,7 +93,7 @@ class CycleHistoryViewModel(
     fun carregarHistoricoCiclos(rotaId: Long) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
 
                 // Buscar os dados brutos do repositório
                 val ciclosEntity = cicloAcertoRepository.buscarCiclosPorRota(rotaId)
@@ -150,7 +150,7 @@ class CycleHistoryViewModel(
                 android.util.Log.e("CycleHistoryViewModel", "Erro ao carregar histórico: ${e.message}")
                 _errorMessage.value = "Erro ao carregar histórico: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -200,7 +200,7 @@ class CycleHistoryViewModel(
     fun exportarRelatorio(rotaId: Long, callback: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 // TODO: Implementar exportação real
                 // Por enquanto, simular sucesso
@@ -214,7 +214,7 @@ class CycleHistoryViewModel(
                 _errorMessage.value = "Erro ao exportar relatório: ${e.message}"
                 callback(false)
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }
@@ -225,7 +225,7 @@ class CycleHistoryViewModel(
     fun filtrarPorPeriodo(rotaId: Long, dataInicio: Date, dataFim: Date) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                showLoading()
                 
                 val ciclosFiltrados = _ciclos.value.filter { ciclo ->
                     ciclo.dataInicio >= dataInicio && ciclo.dataFim <= dataFim
@@ -238,7 +238,7 @@ class CycleHistoryViewModel(
                 android.util.Log.e("CycleHistoryViewModel", "Erro ao filtrar: "+e.message)
                 _errorMessage.value = "Erro ao filtrar: ${e.message}"
             } finally {
-                _isLoading.value = false
+                hideLoading()
             }
         }
     }

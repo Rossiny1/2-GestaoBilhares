@@ -18,6 +18,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.utils.DataValidator
 import com.example.gestaobilhares.data.entities.CategoriaDespesa
 import com.example.gestaobilhares.data.entities.TipoDespesa
 import com.example.gestaobilhares.data.repository.*
@@ -738,6 +739,7 @@ class ExpenseRegisterFragment : Fragment() {
             return
         }
 
+        // ✅ FASE 2: Usar DataValidator centralizado
         val valor = try {
             valorText.toDouble()
         } catch (e: NumberFormatException) {
@@ -752,13 +754,28 @@ class ExpenseRegisterFragment : Fragment() {
             return
         }
 
-        if (valor <= 0) {
-            binding.tilValorDespesa.error = "Valor deve ser maior que zero"
-            return
-        }
+        val resultadoValidacao = com.example.gestaobilhares.utils.DataValidator.validarDespesa(
+            valor = valor,
+            quantidade = quantidade,
+            categoria = viewModel.selectedCategory.value?.nome,
+            tipo = viewModel.selectedType.value?.nome,
+            veiculoId = selectedVehicleId
+        )
 
-        if (quantidade <= 0) {
-            binding.tilQuantidade.error = "Quantidade deve ser maior que zero"
+        if (resultadoValidacao.isErro()) {
+            val erros = (resultadoValidacao as DataValidator.ResultadoValidacao.Erro).mensagens
+            // Mostrar primeiro erro no campo correspondente
+            when {
+                erros.any { it.contains("Valor") } -> {
+                    binding.tilValorDespesa.error = erros.first { it.contains("Valor") }
+                }
+                erros.any { it.contains("Quantidade") } -> {
+                    binding.tilQuantidade.error = erros.first { it.contains("Quantidade") }
+                }
+                erros.any { it.contains("veículo") } -> {
+                    binding.tilVeiculo.error = erros.first { it.contains("veículo") }
+                }
+            }
             return
         }
 
