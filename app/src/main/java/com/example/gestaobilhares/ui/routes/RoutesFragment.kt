@@ -48,8 +48,26 @@ class RoutesFragment : Fragment() {
     private var _binding: FragmentRoutesBinding? = null
     private val binding get() = _binding!!
 
-    // ViewModel com Hilt
-    private val viewModel: RoutesViewModel by viewModels()
+    // ✅ CORREÇÃO: ViewModel com Factory customizada
+    private val viewModel: RoutesViewModel by viewModels {
+        RoutesViewModelFactory(
+            AppRepository(
+                AppDatabase.getDatabase(requireContext()).clienteDao(),
+                AppDatabase.getDatabase(requireContext()).acertoDao(),
+                AppDatabase.getDatabase(requireContext()).mesaDao(),
+                AppDatabase.getDatabase(requireContext()).rotaDao(),
+                AppDatabase.getDatabase(requireContext()).despesaDao(),
+                AppDatabase.getDatabase(requireContext()).colaboradorDao(),
+                AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
+                AppDatabase.getDatabase(requireContext()).acertoMesaDao(),
+                AppDatabase.getDatabase(requireContext()).contratoLocacaoDao(),
+                AppDatabase.getDatabase(requireContext()).aditivoContratoDao(),
+                AppDatabase.getDatabase(requireContext()).assinaturaRepresentanteLegalDao(),
+                AppDatabase.getDatabase(requireContext()).logAuditoriaAssinaturaDao()
+            ),
+            UserSessionManager.getInstance(requireContext())
+        )
+    }
 
     // Adapter para a lista de rotas
     private lateinit var routesAdapter: RoutesAdapter
@@ -72,13 +90,31 @@ class RoutesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // Inicializar gerenciador de sessão primeiro
-        userSessionManager = UserSessionManager.getInstance(requireContext())
+        // ✅ LOG CRASH: Início da tela
+        Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - INÍCIO")
         
-        setupRecyclerView()
-        setupClickListeners()
-        setupNavigationDrawer()
-        observeViewModel()
+        try {
+            // Inicializar gerenciador de sessão primeiro
+            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Inicializando UserSessionManager")
+            userSessionManager = UserSessionManager.getInstance(requireContext())
+            
+            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando RecyclerView")
+            setupRecyclerView()
+            
+            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando ClickListeners")
+            setupClickListeners()
+            
+            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando NavigationDrawer")
+            setupNavigationDrawer()
+            
+            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando Observers")
+            observeViewModel()
+            
+            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - CONFIGURAÇÃO COMPLETA")
+        } catch (e: Exception) {
+            Log.e("LOG_CRASH", "RoutesFragment.onViewCreated - ERRO: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao configurar tela de rotas: ${e.message}", Toast.LENGTH_LONG).show()
+        }
 
         // Submenu de despesas começa recolhido
         collapseExpenseSubmenu()
@@ -388,29 +424,42 @@ class RoutesFragment : Fragment() {
      * Configura os listeners de clique dos botões.
      */
     private fun setupClickListeners() {
-        // Botão de menu lateral
-        binding.btnMenu.setOnClickListener {
-            binding.drawerLayout.openDrawer(binding.navigationView)
-        }
+        // ✅ LOG CRASH: Início do setup de click listeners
+        Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - INÍCIO")
+        
+        try {
+            // Botão de menu lateral
+            Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Configurando botão de menu")
+            binding.btnMenu.setOnClickListener {
+                Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Clique no botão de menu")
+                binding.drawerLayout.openDrawer(binding.navigationView)
+            }
 
 
 
 
 
         // Botão de reforma de mesas
+        Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Configurando botão de reforma")
         binding.reformaButton.setOnClickListener {
+            Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Clique no botão de reforma")
             // Navegar para a tela de mesas reformadas
             try {
+                Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Navegando para mesas reformadas")
                 findNavController().navigate(R.id.mesasReformadasFragment)
+                Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Navegação para mesas reformadas bem-sucedida")
             } catch (e: Exception) {
-                Log.e("RoutesFragment", "Erro ao navegar para mesas reformadas: ${e.message}", e)
+                Log.e("LOG_CRASH", "RoutesFragment.setupClickListeners - ERRO ao navegar para mesas reformadas: ${e.message}", e)
                 Toast.makeText(requireContext(), "Erro ao abrir reforma de mesas: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Botão de transferência
-        binding.transferButton.setOnClickListener {
-            showTransferClientDialog()
+            // Botão de transferência
+            binding.transferButton.setOnClickListener {
+                showTransferClientDialog()
+            }
+        } catch (e: Exception) {
+            Log.e("LOG_CRASH", "RoutesFragment.setupClickListeners - ERRO: ${e.message}", e)
         }
     }
 
@@ -422,40 +471,56 @@ class RoutesFragment : Fragment() {
      * Observa as mudanças no ViewModel e atualiza a UI.
      */
     private fun observeViewModel() {
-        // ✅ MODERNIZADO: Observa a lista de rotas com StateFlow
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.rotasResumo.collect { rotas ->
-                    routesAdapter.submitList(rotas)
-                }
-            }
-        }
-
-        // ✅ MODERNIZADO: Observa as estatísticas gerais com StateFlow
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.estatisticas.collect { stats ->
-                    binding.totalMesasCount.text = stats.totalMesas.toString()
-                    binding.totalClientesCount.text = stats.totalClientesAtivos.toString()
-                    binding.totalPendenciasCount.text = stats.totalPendencias.toString()
-                }
-            }
-        }
-
-
-
-
-
-        // ✅ MODERNIZADO: Observa mensagens de erro com StateFlow
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.errorMessage.collect { message ->
-                    message?.let {
-                        Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
-                        viewModel.clearMessages()
+        // ✅ LOG CRASH: Início do observeViewModel
+        Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - INÍCIO")
+        
+        try {
+            // ✅ MODERNIZADO: Observa a lista de rotas com StateFlow
+            Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - Configurando observer de rotas")
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.rotasResumo.collect { rotas ->
+                        Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - Recebidas ${rotas.size} rotas")
+                        routesAdapter.submitList(rotas)
                     }
                 }
             }
+
+            // ✅ MODERNIZADO: Observa as estatísticas gerais com StateFlow
+            Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - Configurando observer de estatísticas")
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.estatisticas.collect { stats ->
+                        Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - Recebidas estatísticas: mesas=${stats.totalMesas}, clientes=${stats.totalClientesAtivos}, pendências=${stats.totalPendencias}")
+                        binding.totalMesasCount.text = stats.totalMesas.toString()
+                        binding.totalClientesCount.text = stats.totalClientesAtivos.toString()
+                        binding.totalPendenciasCount.text = stats.totalPendencias.toString()
+                    }
+                }
+            }
+
+
+
+
+
+            // ✅ MODERNIZADO: Observa mensagens de erro com StateFlow
+            Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - Configurando observer de mensagens de erro")
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.errorMessage.collect { message ->
+                        message?.let {
+                            Log.e("LOG_CRASH", "RoutesFragment.observeViewModel - ERRO recebido: $it")
+                            Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+                            viewModel.clearMessages()
+                        }
+                    }
+                }
+            }
+            
+            Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - CONFIGURAÇÃO COMPLETA")
+        } catch (e: Exception) {
+            Log.e("LOG_CRASH", "RoutesFragment.observeViewModel - ERRO: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao configurar observadores: ${e.message}", Toast.LENGTH_LONG).show()
         }
 
         // ✅ MODERNIZADO: Observa mensagens de sucesso com StateFlow
@@ -484,8 +549,6 @@ class RoutesFragment : Fragment() {
                 }
             }
         }
-
-
     }
 
 

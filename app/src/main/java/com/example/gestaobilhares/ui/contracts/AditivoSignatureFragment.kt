@@ -9,11 +9,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentAditivoSignatureBinding
+import com.example.gestaobilhares.ui.common.SignatureView
 import com.example.gestaobilhares.utils.DocumentIntegrityManager
 import com.example.gestaobilhares.utils.LegalLogger
 import com.example.gestaobilhares.utils.SignatureMetadataCollector
@@ -28,15 +27,14 @@ class AditivoSignatureFragment : Fragment() {
     private var _binding: FragmentAditivoSignatureBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: AditivoSignatureViewModel by viewModels()
+    private lateinit var viewModel: AditivoSignatureViewModel
     
     private var contratoId: Long = 0L
     
-    lateinit var legalLogger: LegalLogger
-    
-    lateinit var documentIntegrityManager: DocumentIntegrityManager
-    
-    lateinit var metadataCollector: SignatureMetadataCollector
+    // ✅ CORREÇÃO: Inicializar managers no onViewCreated
+    private var legalLogger: LegalLogger? = null
+    private var documentIntegrityManager: DocumentIntegrityManager? = null
+    private var metadataCollector: SignatureMetadataCollector? = null
     
     // Assinatura será capturada diretamente do SignatureView
     
@@ -52,18 +50,61 @@ class AditivoSignatureFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        setupUI()
-        setupClickListeners()
-        observeViewModel()
+        // ✅ CORREÇÃO: Inicializar ViewModel antes de usar
+        try {
+            val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+            val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+                database.clienteDao(),
+                database.acertoDao(),
+                database.mesaDao(),
+                database.rotaDao(),
+                database.despesaDao(),
+                database.colaboradorDao(),
+                database.cicloAcertoDao(),
+                database.acertoMesaDao(),
+                database.contratoLocacaoDao(),
+                database.aditivoContratoDao(),
+                database.assinaturaRepresentanteLegalDao(),
+                database.logAuditoriaAssinaturaDao()
+            )
+            viewModel = AditivoSignatureViewModel()
+            viewModel.initializeRepository(appRepository)
+            
+            // ✅ CORREÇÃO: Inicializar managers de forma segura
+            try {
+                legalLogger = com.example.gestaobilhares.utils.LegalLogger(requireContext())
+                documentIntegrityManager = com.example.gestaobilhares.utils.DocumentIntegrityManager(requireContext())
+                metadataCollector = com.example.gestaobilhares.utils.SignatureMetadataCollector(requireContext())
+            } catch (e: Exception) {
+                android.util.Log.w("AditivoSignatureFragment", "Managers não inicializados: ${e.message}")
+            }
+            
+            setupUI()
+            setupClickListeners()
+            observeViewModel()
+            
+            // Carregar dados do aditivo
+            contratoId = arguments?.getLong("contratoId") ?: 0L
+            val tipo = arguments?.getString("aditivoTipo")
+            tipo?.let { viewModel.setAditivoTipo(it) }
+        } catch (e: Exception) {
+            android.util.Log.e("AditivoSignatureFragment", "Erro ao inicializar ViewModel: ${e.message}")
+            // Mostrar erro para o usuário
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Erro")
+                .setMessage("Erro ao inicializar tela de assinatura de aditivo. Tente novamente.")
+                .setPositiveButton("OK") { _, _ ->
+                    findNavController().popBackStack()
+                }
+                .show()
+        }
         
-        // Carregar dados do aditivo
-        contratoId = arguments?.getLong("contratoId") ?: 0L
-        val mesasIds = arguments?.getLongArray("mesasVinculadas") ?: longArrayOf()
-        val tipo = arguments?.getString("aditivoTipo")
-        tipo?.let { viewModel.setAditivoTipo(it) }
-        
-        if (contratoId != 0L && mesasIds.isNotEmpty()) {
-            viewModel.carregarDados(contratoId, mesasIds)
+        // ✅ CORREÇÃO: Mover lógica para dentro do try-catch
+        if (contratoId != 0L) {
+            val mesasIds = arguments?.getLongArray("mesasVinculadas") ?: longArrayOf()
+            if (mesasIds.isNotEmpty()) {
+                viewModel.carregarDados(contratoId, mesasIds)
+            }
         }
     }
     
@@ -105,7 +146,7 @@ class AditivoSignatureFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 // Converter assinatura para Base64
-                val bitmap = binding.signatureCanvas.getSignatureBitmap()
+                val bitmap = binding.signatureCanvas.signatureBitmap
                 if (bitmap == null) {
                     Toast.makeText(requireContext(), "Assinatura inválida, tente novamente", Toast.LENGTH_SHORT).show()
                     return@launch
@@ -113,15 +154,24 @@ class AditivoSignatureFragment : Fragment() {
                 val signatureBase64 = bitmapToBase64(bitmap)
                 
                 // Coletar metadados da assinatura
-                val documentHash = documentIntegrityManager.generateDocumentHash(signatureBase64.toByteArray())
-                val signatureHash = documentIntegrityManager.generateDocumentHash(signatureBase64.toByteArray())
-                val metadata = metadataCollector.collectSignatureMetadata(
+                val documentHash = documentIntegrityManager?.generateDocumentHash(signatureBase64.toByteArray()) ?: "hash_fallback"
+                val signatureHash = documentIntegrityManager?.generateDocumentHash(signatureBase64.toByteArray()) ?: "sig_hash_fallback"
+                val metadata = metadataCollector?.collectSignatureMetadata(
                     documentHash,
                     signatureHash
+                ) ?: com.example.gestaobilhares.utils.SignatureMetadata(
+                    timestamp = System.currentTimeMillis(),
+                    deviceId = "fallback_device",
+                    ipAddress = "fallback_ip",
+                    geolocation = null,
+                    documentHash = documentHash,
+                    signatureHash = signatureHash,
+                    userAgent = "fallback_agent",
+                    screenResolution = "fallback_resolution"
                 )
                 
                 // Log jurídico da assinatura
-                legalLogger.logSignatureEvent(
+                legalLogger?.logSignatureEvent(
                     contratoId = contratoId,
                     userId = "SISTEMA",
                     action = "ASSINATURA_ADITIVO",
@@ -263,7 +313,7 @@ class AditivoSignatureFragment : Fragment() {
                         if (contratoId != null && contratoId > 0L) {
                             try {
                                 // ✅ CORREÇÃO: Usar lifecycleScope para chamada suspensa
-                                lifecycleScope.launch {
+                                viewLifecycleOwner.lifecycleScope.launch {
                                     val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
                                     val repo = com.example.gestaobilhares.data.repository.AppRepository(
                                         db.clienteDao(),

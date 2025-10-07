@@ -110,7 +110,7 @@
                 android:layout_marginBottom="16dp" />
 
             <!-- View personalizada para captura de assinatura -->
-            <com.example.gestaobilhares.ui.contracts.SignatureView
+            <com.example.gestaobilhares.ui.common.SignatureView
                 android:id="@+id/signatureView"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"

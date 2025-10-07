@@ -22,7 +22,7 @@ class ClosureReportFragment : Fragment() {
 
     private var _binding: FragmentClosureReportBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: ClosureReportViewModel by viewModels()
+    private lateinit var viewModel: ClosureReportViewModel
     private val moeda = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
     private lateinit var adapter: DetalheAdapter
@@ -38,6 +38,25 @@ class ClosureReportFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao()
+        )
+        viewModel = ClosureReportViewModel(appRepository)
+        
         binding.btnBack.setOnClickListener { findNavController().popBackStack() }
 
         adapter = DetalheAdapter(moeda)

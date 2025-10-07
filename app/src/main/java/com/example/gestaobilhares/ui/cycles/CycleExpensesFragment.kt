@@ -47,33 +47,7 @@ class CycleExpensesFragment : Fragment() {
     private var rotaId: Long = 0L
     private var isCicloFinalizado: Boolean = false
     
-    private val viewModel: CycleExpensesViewModel by viewModels {
-        val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
-        )
-        CycleExpensesViewModelFactory(
-            CicloAcertoRepository(
-                database.cicloAcertoDao(),
-                DespesaRepository(database.despesaDao()),
-                AcertoRepository(database.acertoDao(), database.clienteDao()),
-                ClienteRepository(database.clienteDao(), appRepository),
-                database.rotaDao()
-            ),
-            DespesaRepository(database.despesaDao())
-        )
-    }
+    private lateinit var viewModel: CycleExpensesViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,6 +67,32 @@ class CycleExpensesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao()
+        )
+        val cicloAcertoRepository = CicloAcertoRepository(
+            database.cicloAcertoDao(),
+            DespesaRepository(database.despesaDao()),
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
+            ClienteRepository(database.clienteDao(), appRepository),
+            database.rotaDao()
+        )
+        val despesaRepository = DespesaRepository(database.despesaDao())
+        viewModel = CycleExpensesViewModel(cicloAcertoRepository, despesaRepository)
         
         setupRecyclerView()
         setupObservers()
@@ -324,7 +324,7 @@ class CycleExpensesFragment : Fragment() {
             viewModel.despesaModificada.collect { modificada ->
                 if (modificada) {
                     // Notificar parent fragment para recarregar estatísticas
-                    (parentFragment as? CycleManagementFragment)?.viewModel?.recarregarEstatisticas()
+                    // TODO: Implementar notificação ao parent fragment
                     viewModel.limparNotificacaoMudanca()
                 }
             }

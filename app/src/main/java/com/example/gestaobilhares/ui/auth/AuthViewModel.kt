@@ -70,43 +70,78 @@ class AuthViewModel constructor() : BaseViewModel() {
      * Inicializa o repositório local, utilitário de rede e gerenciador de sessão
      */
     fun initializeRepository(context: Context) {
-        android.util.Log.d("AuthViewModel", "=== INICIANDO REPOSITÓRIO ===")
-        
-        val database = AppDatabase.getDatabase(context)
-        appRepository = AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
-        )
-        
-        networkUtils = NetworkUtils(context)
-        syncManager = SyncManager(context, appRepository)
-        userSessionManager = UserSessionManager.getInstance(context)
-        
-        android.util.Log.d("AuthViewModel", "✅ Repositório local inicializado")
-        android.util.Log.d("AuthViewModel", "✅ UserSessionManager inicializado: ${userSessionManager != null}")
-        android.util.Log.d("AuthViewModel", "✅ NetworkUtils inicializado: ${networkUtils != null}")
-        
-        // Observar mudanças na conectividade
-        viewModelScope.launch {
-            networkUtils.isNetworkAvailable.collect { isAvailable ->
-                val wasOffline = _isOnline.value == false
-                _isOnline.value = isAvailable
-                
-                // Se voltou a ter conexão, sincronizar dados
-                if (wasOffline && isAvailable) {
-                    syncManager.onConnectionRestored()
+        try {
+            android.util.Log.d("AuthViewModel", "🚨 INICIANDO REPOSITORIO - CONTEXT: ${context.javaClass.simpleName}")
+            android.util.Log.d("AuthViewModel", "🚨 CONTEXT PACKAGE: ${context.packageName}")
+            
+            // Inicializar banco de dados de forma segura
+            android.util.Log.d("AuthViewModel", "🔧 CRIANDO APPDATABASE...")
+            val database = AppDatabase.getDatabase(context)
+            android.util.Log.d("AuthViewModel", "✅ AppDatabase inicializado")
+            
+            appRepository = AppRepository(
+                database.clienteDao(),
+                database.acertoDao(),
+                database.mesaDao(),
+                database.rotaDao(),
+                database.despesaDao(),
+                database.colaboradorDao(),
+                database.cicloAcertoDao(),
+                database.acertoMesaDao(),
+                database.contratoLocacaoDao(),
+                database.aditivoContratoDao(),
+                database.assinaturaRepresentanteLegalDao(),
+                database.logAuditoriaAssinaturaDao()
+            )
+            android.util.Log.d("AuthViewModel", "AppRepository inicializado com sucesso")
+            
+            // Inicializar utilitários de forma segura
+            try {
+                networkUtils = NetworkUtils(context)
+                android.util.Log.d("AuthViewModel", "✅ NetworkUtils inicializado")
+            } catch (e: Exception) {
+                android.util.Log.e("AuthViewModel", "Erro ao inicializar NetworkUtils: ${e.message}")
+                // Continuar sem NetworkUtils (modo offline)
+            }
+            
+            try {
+                syncManager = SyncManager(context, appRepository)
+                android.util.Log.d("AuthViewModel", "✅ SyncManager inicializado")
+            } catch (e: Exception) {
+                android.util.Log.e("AuthViewModel", "Erro ao inicializar SyncManager: ${e.message}")
+                // Continuar sem SyncManager
+            }
+            
+            try {
+                userSessionManager = UserSessionManager.getInstance(context)
+                android.util.Log.d("AuthViewModel", "✅ UserSessionManager inicializado")
+            } catch (e: Exception) {
+                android.util.Log.e("AuthViewModel", "Erro ao inicializar UserSessionManager: ${e.message}")
+                // Continuar sem UserSessionManager
+            }
+            
+            android.util.Log.d("AuthViewModel", "✅ Repositório local inicializado com sucesso")
+            
+            // Observar mudanças na conectividade
+            viewModelScope.launch {
+                try {
+                    networkUtils.isNetworkAvailable.collect { isAvailable ->
+                        val wasOffline = _isOnline.value == false
+                        _isOnline.value = isAvailable
+                        
+                        // Se voltou a ter conexão, sincronizar dados
+                        if (wasOffline && isAvailable && ::syncManager.isInitialized) {
+                            syncManager.onConnectionRestored()
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("AuthViewModel", "Erro ao observar conectividade: ${e.message}")
                 }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("AuthViewModel", "Erro crítico ao inicializar repositório: ${e.message}")
+            // Definir como offline em caso de erro
+            _isOnline.value = false
         }
     }
     
@@ -128,6 +163,13 @@ class AuthViewModel constructor() : BaseViewModel() {
         android.util.Log.d("AuthViewModel", "=== INICIANDO LOGIN HÍBRIDO ===")
         android.util.Log.d("AuthViewModel", "Email: $email")
         android.util.Log.d("AuthViewModel", "Senha: ${senha.length} caracteres")
+        
+        // Verificar se o repositório foi inicializado
+        if (!::appRepository.isInitialized) {
+            android.util.Log.e("AuthViewModel", "ERRO: appRepository nao foi inicializado")
+            _errorMessage.value = "Erro de inicializacao. Reinicie o app."
+            return
+        }
         
         // Validação básica
         if (email.isBlank() || senha.isBlank()) {
@@ -401,9 +443,9 @@ class AuthViewModel constructor() : BaseViewModel() {
                 
                 // Verificar se o repositório foi inicializado
                 if (!::appRepository.isInitialized) {
-                    android.util.Log.e("AuthViewModel", "Repositório não inicializado")
-                    _errorMessage.value = "Erro interno: Repositório não inicializado"
-                    _authState.value = AuthState.Unauthenticated
+                    android.util.Log.e("AuthViewModel", "ERRO: Repositorio nao foi inicializado")
+                    _errorMessage.value = "Erro de inicializacao. Reinicie o app."
+                    hideLoading()
                     return@launch
                 }
                 

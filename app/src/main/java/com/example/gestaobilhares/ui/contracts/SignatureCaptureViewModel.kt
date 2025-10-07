@@ -7,9 +7,10 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
-class SignatureCaptureViewModel constructor(
-    private val repository: AppRepository
-) : ViewModel() {
+class SignatureCaptureViewModel : ViewModel() {
+    
+    // ✅ CORREÇÃO: Repository como lateinit para inicialização posterior
+    private lateinit var repository: AppRepository
     
     private val _contrato = MutableStateFlow<ContratoLocacao?>(null)
     val contrato: StateFlow<ContratoLocacao?> = _contrato.asStateFlow()
@@ -19,6 +20,13 @@ class SignatureCaptureViewModel constructor(
     
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+    
+    /**
+     * ✅ CORREÇÃO: Inicializar repository
+     */
+    fun initializeRepository(repository: AppRepository) {
+        this.repository = repository
+    }
     
     private val _assinaturaSalva = MutableStateFlow(false)
     val assinaturaSalva: StateFlow<Boolean> = _assinaturaSalva.asStateFlow()

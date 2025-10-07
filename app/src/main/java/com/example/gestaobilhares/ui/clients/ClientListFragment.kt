@@ -55,6 +55,9 @@ class ClientListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ LOG CRASH: Início da tela
+        Log.d("LOG_CRASH", "ClientListFragment.onViewCreated - INÍCIO")
         android.util.Log.d("DEBUG_DIAG", "onViewCreated chamado - TESTE DE LOG")
         
         // ✅ CORREÇÃO: Interceptar botão voltar do sistema
@@ -139,30 +142,51 @@ class ClientListFragment : Fragment() {
     }
 
     private fun configurarRecyclerView() {
-        clientAdapter = ClientAdapter { cliente ->
-            // ✅ NOVO: Sempre permitir navegação para detalhes do cliente, independente do status da rota
-            // O bloqueio deve acontecer apenas no botão "Novo Acerto" dentro dos detalhes
-            val action = ClientListFragmentDirections
-                .actionClientListFragmentToClientDetailFragment(
-                    clienteId = cliente.id,
-                    mostrarDialogoObservacoes = false // Não usar mais este parâmetro
-                )
-            findNavController().navigate(action)
-            
-            // Definir o flag no SavedStateHandle do destino
-            findNavController().currentBackStackEntry?.savedStateHandle?.set("show_observations_dialog", true)
-        }
+        // ✅ LOG CRASH: Início da configuração do RecyclerView
+        Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - INÍCIO")
         
-        _binding?.rvClients?.apply {
-            adapter = clientAdapter
-            layoutManager = LinearLayoutManager(requireContext())
+        try {
+            clientAdapter = ClientAdapter { cliente ->
+                // ✅ LOG CRASH: Clique em cliente
+                Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Clique em cliente: ${cliente.id}")
+                
+                // ✅ NOVO: Sempre permitir navegação para detalhes do cliente, independente do status da rota
+                // O bloqueio deve acontecer apenas no botão "Novo Acerto" dentro dos detalhes
+                try {
+                    val action = ClientListFragmentDirections
+                        .actionClientListFragmentToClientDetailFragment(
+                            clienteId = cliente.id,
+                            mostrarDialogoObservacoes = false // Não usar mais este parâmetro
+                        )
+                    Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Navegando para detalhes do cliente")
+                    findNavController().navigate(action)
+                    
+                    // Definir o flag no SavedStateHandle do destino
+                    findNavController().currentBackStackEntry?.savedStateHandle?.set("show_observations_dialog", true)
+                    Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Navegação bem-sucedida")
+                } catch (e: Exception) {
+                    Log.e("LOG_CRASH", "ClientListFragment.configurarRecyclerView - ERRO ao navegar para detalhes: ${e.message}", e)
+                }
+            }
+            
+            _binding?.rvClients?.apply {
+                adapter = clientAdapter
+                layoutManager = LinearLayoutManager(requireContext())
+            }
+        } catch (e: Exception) {
+            Log.e("LOG_CRASH", "ClientListFragment.configurarRecyclerView - ERRO: ${e.message}", e)
         }
     }
     
     private fun configurarBotoes() {
+        // ✅ LOG CRASH: Início da configuração dos botões
+        Log.d("LOG_CRASH", "ClientListFragment.configurarBotoes - INÍCIO")
+        
         _binding?.let { binding ->
             // ✅ CORREÇÃO: Botão voltar navega para tela de rotas
+            Log.d("LOG_CRASH", "ClientListFragment.configurarBotoes - Configurando botão voltar")
             binding.btnBack.setOnClickListener {
+                Log.d("LOG_CRASH", "ClientListFragment.configurarBotoes - Clique no botão voltar")
                 navegarParaRotas()
             }
             

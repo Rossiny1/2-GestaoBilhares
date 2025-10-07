@@ -16,6 +16,9 @@ import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentContractGenerationBinding
 import com.example.gestaobilhares.utils.ContractPdfGenerator
+// ✅ CORREÇÃO: Imports para Factory
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.launch
 
 class ContractGenerationFragment : Fragment() {
@@ -23,7 +26,8 @@ class ContractGenerationFragment : Fragment() {
     private var _binding: FragmentContractGenerationBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: ContractGenerationViewModel by viewModels()
+    // ✅ CORREÇÃO: ViewModel com Factory customizada
+    private lateinit var viewModel: ContractGenerationViewModel
     
     // ✅ PROTEÇÃO: Flag para evitar múltiplos cliques
     private var isGenerating = false
@@ -50,15 +54,50 @@ class ContractGenerationFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        val clienteId = arguments?.getLong("cliente_id") ?: 0L
-        val mesasVinculadas = arguments?.getLongArray("mesas_vinculadas")?.toList() ?: emptyList()
-        val tipoFixo = arguments?.getBoolean("tipo_fixo") ?: false
-        val valorFixo = arguments?.getDouble("valor_fixo") ?: 0.0
+        // ✅ LOG CRASH: Início da tela
+        android.util.Log.d("LOG_CRASH", "ContractGenerationFragment.onViewCreated - INÍCIO")
         
-        viewModel.carregarDados(clienteId, mesasVinculadas, tipoFixo, valorFixo)
-        setupObservers()
-        setupClickListeners()
-        preencherCamposAutomaticamente(tipoFixo, valorFixo)
+        // ✅ CORREÇÃO: Inicializar ViewModel antes de usar
+        try {
+            // ✅ LOG CRASH: Inicializando ViewModel
+            android.util.Log.d("LOG_CRASH", "ContractGenerationFragment.onViewCreated - Inicializando ViewModel")
+            val database = AppDatabase.getDatabase(requireContext())
+            val appRepository = AppRepository(
+                database.clienteDao(),
+                database.acertoDao(),
+                database.mesaDao(),
+                database.rotaDao(),
+                database.despesaDao(),
+                database.colaboradorDao(),
+                database.cicloAcertoDao(),
+                database.acertoMesaDao(),
+                database.contratoLocacaoDao(),
+                database.aditivoContratoDao(),
+                database.assinaturaRepresentanteLegalDao(),
+                database.logAuditoriaAssinaturaDao()
+            )
+            viewModel = ContractGenerationViewModel(appRepository)
+            
+            val clienteId = arguments?.getLong("cliente_id") ?: 0L
+            val mesasVinculadas = arguments?.getLongArray("mesas_vinculadas")?.toList() ?: emptyList()
+            val tipoFixo = arguments?.getBoolean("tipo_fixo") ?: false
+            val valorFixo = arguments?.getDouble("valor_fixo") ?: 0.0
+            
+            viewModel.carregarDados(clienteId, mesasVinculadas, tipoFixo, valorFixo)
+            setupObservers()
+            setupClickListeners()
+            preencherCamposAutomaticamente(tipoFixo, valorFixo)
+        } catch (e: Exception) {
+            android.util.Log.e("ContractGenerationFragment", "Erro ao inicializar ViewModel: ${e.message}")
+            // Mostrar erro para o usuário
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Erro")
+                .setMessage("Erro ao inicializar tela de contrato. Tente novamente.")
+                .setPositiveButton("OK") { _, _ ->
+                    findNavController().popBackStack()
+                }
+                .show()
+        }
     }
     
     private fun setupObservers() {
@@ -182,7 +221,11 @@ class ContractGenerationFragment : Fragment() {
     }
     
     private fun gerarContrato() {
+        // ✅ LOG CRASH: Início da geração de contrato
+        android.util.Log.d("LOG_CRASH", "ContractGenerationFragment.gerarContrato - INÍCIO")
+        
         if (isGenerating) {
+            android.util.Log.d("LOG_CRASH", "ContractGenerationFragment.gerarContrato - Geração já em andamento, ignorando clique")
             android.util.Log.d("ContractGeneration", "Geração já em andamento, ignorando clique")
             return
         }
@@ -190,6 +233,7 @@ class ContractGenerationFragment : Fragment() {
         isGenerating = true
         binding.btnGerarContrato.isEnabled = false
         binding.btnGerarContrato.text = "Gerando..."
+        android.util.Log.d("LOG_CRASH", "ContractGenerationFragment.gerarContrato - Botão desabilitado, iniciando geração")
         android.util.Log.d("ContractGeneration", "Iniciando geração de contrato")
         
         val tipoPagamento = if (binding.rbValorFixo.isChecked) "FIXO" else "PERCENTUAL"
@@ -227,8 +271,17 @@ class ContractGenerationFragment : Fragment() {
             return
         }
         
+        // ✅ LOG CRASH: Chamando ViewModel para gerar contrato
+        android.util.Log.d("LOG_CRASH", "ContractGenerationFragment.gerarContrato - Chamando ViewModel para gerar contrato")
+        
         // Gerar contrato - a reabilitação do botão será feita pelo observer do contrato
-        viewModel.gerarContrato(valorMensal, diaVencimento, tipoPagamento, percentualReceita)
+        try {
+            viewModel.gerarContrato(valorMensal, diaVencimento, tipoPagamento, percentualReceita)
+            android.util.Log.d("LOG_CRASH", "ContractGenerationFragment.gerarContrato - ViewModel chamado com sucesso")
+        } catch (e: Exception) {
+            android.util.Log.e("LOG_CRASH", "ContractGenerationFragment.gerarContrato - ERRO ao chamar ViewModel: ${e.message}", e)
+            resetButton()
+        }
     }
     
     private fun resetButton() {

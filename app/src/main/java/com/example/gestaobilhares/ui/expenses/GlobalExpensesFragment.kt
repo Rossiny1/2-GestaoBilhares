@@ -35,7 +35,7 @@ class GlobalExpensesFragment : Fragment() {
     private var _binding: FragmentGlobalExpensesBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: GlobalExpensesViewModel by viewModels()
+    private lateinit var viewModel: GlobalExpensesViewModel
     private lateinit var globalExpensesAdapter: GlobalExpensesAdapter
 
     private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
@@ -51,6 +51,33 @@ class GlobalExpensesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao()
+        )
+        val despesaRepository = com.example.gestaobilhares.data.repository.DespesaRepository(database.despesaDao())
+        val cicloAcertoRepository = com.example.gestaobilhares.data.repository.CicloAcertoRepository(
+            database.cicloAcertoDao(),
+            despesaRepository,
+            com.example.gestaobilhares.data.repository.AcertoRepository(database.acertoDao(), database.clienteDao()),
+            com.example.gestaobilhares.data.repository.ClienteRepository(database.clienteDao(), appRepository),
+            database.rotaDao()
+        )
+        viewModel = GlobalExpensesViewModel(despesaRepository, cicloAcertoRepository)
+        
         setupUI()
         setupRecyclerView()
         setupObservers()
