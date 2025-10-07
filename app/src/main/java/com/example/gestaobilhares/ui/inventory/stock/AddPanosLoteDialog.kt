@@ -7,10 +7,12 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.widget.ArrayAdapter
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.viewModels
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.databinding.DialogAddPanosLoteBinding
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
+import com.example.gestaobilhares.data.repository.StockItemRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.Date
 
@@ -23,10 +25,16 @@ class AddPanosLoteDialog : DialogFragment() {
     private var _binding: DialogAddPanosLoteBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: StockViewModel by viewModels({ requireParentFragment() })
+    private lateinit var viewModel: StockViewModel
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddPanosLoteBinding.inflate(LayoutInflater.from(requireContext()))
+
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val panoEstoqueRepository = PanoEstoqueRepository(database.panoEstoqueDao())
+        val stockItemRepository = StockItemRepository(database.stockItemDao())
+        viewModel = StockViewModel(panoEstoqueRepository, stockItemRepository)
 
         setupUI()
         setupClickListeners()

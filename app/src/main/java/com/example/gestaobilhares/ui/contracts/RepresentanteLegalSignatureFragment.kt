@@ -12,12 +12,13 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRepresentanteLegalSignatureBinding
 import com.example.gestaobilhares.ui.contracts.SignatureView
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
@@ -30,7 +31,7 @@ class RepresentanteLegalSignatureFragment : Fragment() {
     private var _binding: FragmentRepresentanteLegalSignatureBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: RepresentanteLegalSignatureViewModel by viewModels()
+    private lateinit var viewModel: RepresentanteLegalSignatureViewModel
     
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -53,6 +54,24 @@ class RepresentanteLegalSignatureFragment : Fragment() {
     
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao()
+        )
+        viewModel = RepresentanteLegalSignatureViewModel(appRepository)
         
         setupUI()
         setupObservers()

@@ -175,7 +175,16 @@ class SignatureCaptureFragment : Fragment() {
         
         val statistics = binding.signatureView.getSignatureStatistics()
         Log.d(TAG, "Assinatura válida: ${statistics.isValidSignature()}")
-        if (!statistics.isValidSignature()) {
+        Log.d(TAG, "Point count: ${statistics.pointCount}, isEmpty: ${statistics.isEmpty}")
+        
+        // ✅ CORREÇÃO: Validação mais permissiva
+        if (statistics.isEmpty) {
+            Toast.makeText(requireContext(), "Por favor, assine", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        // Validação mínima: apenas verificar se não está vazia
+        if (statistics.pointCount < 1) {
             Toast.makeText(requireContext(), "Assinatura muito simples. Por favor, assine novamente.", Toast.LENGTH_LONG).show()
             return
         }

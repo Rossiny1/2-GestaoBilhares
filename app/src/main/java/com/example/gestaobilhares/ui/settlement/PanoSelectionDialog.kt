@@ -28,7 +28,7 @@ class PanoSelectionDialog : DialogFragment() {
     private var _binding: DialogSelectPanoBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: SettlementViewModel by viewModels({ requireParentFragment() })
+    // Dialog não depende mais do ViewModel do fragmento pai
     private lateinit var adapter: PanoSelectionAdapter
     private var selectedPano: PanoEstoque? = null
     private var onPanoSelected: ((PanoEstoque) -> Unit)? = null
@@ -107,7 +107,7 @@ class PanoSelectionDialog : DialogFragment() {
     private fun loadPanos() {
         // Carregar panos disponíveis do banco de dados
         // Usar lifecycleScope do DialogFragment, pois onCreateDialog é chamado antes da View existir
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val tamanhoMesa = arguments?.getString("tamanho_mesa")
                 

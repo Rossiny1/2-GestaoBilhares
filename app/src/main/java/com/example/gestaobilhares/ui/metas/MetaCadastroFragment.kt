@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.R
@@ -16,6 +15,8 @@ import com.example.gestaobilhares.data.entities.MetaColaborador
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.TipoMeta
 import com.example.gestaobilhares.databinding.FragmentMetaCadastroBinding
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.launch
 import java.util.Date
 
@@ -28,7 +29,7 @@ class MetaCadastroFragment : Fragment() {
     private var _binding: FragmentMetaCadastroBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: MetaCadastroViewModel by viewModels()
+    private lateinit var viewModel: MetaCadastroViewModel
 
     // Dados selecionados
     private var rotaSelecionada: Rota? = null
@@ -46,6 +47,24 @@ class MetaCadastroFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao()
+        )
+        viewModel = MetaCadastroViewModel(appRepository)
         
         // Obter rota selecionada dos argumentos
         val rotaId = arguments?.getLong("rota_id")
