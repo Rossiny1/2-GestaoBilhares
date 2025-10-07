@@ -235,6 +235,9 @@ class SettlementFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        // ✅ LOG CRASH: Início da tela
+        Log.d("LOG_CRASH", "SettlementFragment.onViewCreated - INÍCIO")
+        
         // Inicializar ViewModel aqui onde o contexto está disponível
         val database = AppDatabase.getDatabase(requireContext())
         val appRepository = AppRepository(
@@ -488,6 +491,8 @@ class SettlementFragment : Fragment() {
     }
     
     private fun setupRecyclerViewComDados(mesasDTO: List<MesaDTO>) {
+        // ✅ LOG CRASH: Início da configuração do RecyclerView
+        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - INÍCIO")
         Log.d("SettlementFragment", "=== CONFIGURANDO RECYCLERVIEW COM DADOS COMPLETOS ===")
         Log.d("SettlementFragment", "Total de mesas recebidas: ${mesasDTO.size}")
         
@@ -496,9 +501,17 @@ class SettlementFragment : Fragment() {
             Log.d("SettlementFragment", "Mesa $index: ID=${mesa.id}, Número=${mesa.numero}, Tipo=${mesa.tipoMesa}, Ativa=${mesa.ativa}")
         }
         
+        // ✅ LOG CRASH: Configurando adapter
+        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Configurando adapter")
+        
         mesasAcertoAdapter = MesasAcertoAdapter(
-            onDataChanged = { updateCalculations() },
+            onDataChanged = { 
+                Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Dados alterados, atualizando cálculos")
+                updateCalculations() 
+            },
             onCalcularMedia = { mesaId -> 
+                // ✅ LOG CRASH: Solicitação de cálculo de média
+                Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Solicitando cálculo de média para mesa $mesaId")
                 // ✅ NOVO: Calcular média de fichas jogadas dos últimos acertos
                 Log.d("SettlementFragment", "Solicitando cálculo de média para mesa $mesaId")
                 
@@ -535,8 +548,13 @@ class SettlementFragment : Fragment() {
             }
         )
         
+        // ✅ LOG CRASH: Configurando RecyclerView
+        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Configurando RecyclerView")
+        
         binding.rvMesasAcerto.adapter = mesasAcertoAdapter
         binding.rvMesasAcerto.layoutManager = LinearLayoutManager(requireContext())
+        
+        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - RecyclerView configurado com sucesso")
         
         // ✅ CORREÇÃO: Usar as mesas preparadas com relógio inicial correto
         Log.d("SettlementFragment", "Carregando ${mesasDTO.size} mesas preparadas para o acerto")
@@ -548,7 +566,12 @@ class SettlementFragment : Fragment() {
         Log.d("SettlementFragment", "Adapter configurado: ${mesasAcertoAdapter.itemCount} itens")
         Log.d("SettlementFragment", "LayoutManager configurado: ${binding.rvMesasAcerto.layoutManager}")
         
+        // ✅ LOG CRASH: Submetendo lista de mesas
+        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Submetendo lista de ${mesasDTO.size} mesas")
+        
         mesasAcertoAdapter.submitList(mesasDTO)
+        
+        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Lista submetida com sucesso")
         
         // ✅ DIAGNÓSTICO: Verificar após submitList
         Log.d("SettlementFragment", "Após submitList: ${mesasAcertoAdapter.itemCount} itens no adapter")
@@ -891,16 +914,25 @@ class SettlementFragment : Fragment() {
     }
 
     private fun salvarAcertoComCamposExtras() {
+        // ✅ LOG CRASH: Início do salvamento do acerto
+        Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - INÍCIO")
+        
         // Impedir múltiplos cliques
         if (viewModel.isLoading.value) {
+            Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Já está salvando, ignorando clique adicional")
             Log.d("SettlementFragment", "Já está salvando, ignorando clique adicional")
             return
         }
         
+        // ✅ LOG CRASH: Validando dados
+        Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Validando dados")
+        
         // ✅ CORREÇÃO: Validar dados ANTES de desabilitar o botão
         if (!isDebtOnlyMode) {
+            Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Modo normal (não débito)")
             if (!::mesasAcertoAdapter.isInitialized || !mesasAcertoAdapter.isDataValid()) {
                 val errorMessage = if (::mesasAcertoAdapter.isInitialized) mesasAcertoAdapter.getValidationErrorMessage() else "Dados de mesas não disponíveis"
+                Log.e("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ERRO de validação: $errorMessage")
                 Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show()
                 return
             }
@@ -980,17 +1012,28 @@ class SettlementFragment : Fragment() {
             metodosPagamento = paymentValues
         )
 
+        // ✅ LOG CRASH: Chamando ViewModel para salvar
+        Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Chamando ViewModel para salvar")
+        
         Log.d("SettlementFragment", "Iniciando salvamento do acerto...")
         Log.d("SettlementFragment", "Desconto aplicado: R$ $desconto")
         Log.d("SettlementFragment", "Observação enviada para ViewModel: '$observacaoFinal'")
         Log.d("SettlementFragment", "Tipo de acerto: $tipoAcerto")
-        viewModel.salvarAcerto(
-            clienteId = args.clienteId,
-            dadosAcerto = dadosAcerto,
-            metodosPagamento = paymentValues,
-            desconto = desconto,
-            acertoIdParaEdicao = args.acertoIdParaEdicao.takeIf { it != 0L }
-        )
+        
+        try {
+            viewModel.salvarAcerto(
+                clienteId = args.clienteId,
+                dadosAcerto = dadosAcerto,
+                metodosPagamento = paymentValues,
+                desconto = desconto,
+                acertoIdParaEdicao = args.acertoIdParaEdicao.takeIf { it != 0L }
+            )
+            
+            Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ViewModel chamado com sucesso")
+        } catch (e: Exception) {
+            Log.e("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ERRO ao chamar ViewModel: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao salvar acerto: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun observeViewModel() {

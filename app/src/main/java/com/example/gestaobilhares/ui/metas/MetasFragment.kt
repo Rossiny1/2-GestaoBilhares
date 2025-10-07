@@ -24,7 +24,7 @@ class MetasFragment : Fragment() {
     private var _binding: FragmentMetasBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: MetasViewModel by viewModels()
+    private lateinit var viewModel: MetasViewModel
     private lateinit var metasAdapter: MetasAdapter
 
     override fun onCreateView(
@@ -37,6 +37,26 @@ class MetasFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao()
+        )
+        viewModel = MetasViewModel()
+        viewModel.initializeRepository(appRepository)
+        
         setupToolbar()
         setupRecyclerView()
         setupFilters()

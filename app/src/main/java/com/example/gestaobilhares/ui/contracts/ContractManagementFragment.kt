@@ -44,10 +44,11 @@ class ContractManagementFragment : Fragment() {
     private var _binding: FragmentContractManagementBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: ContractManagementViewModel by viewModels()
+    private lateinit var viewModel: ContractManagementViewModel
     private lateinit var contractAdapter: ContractManagementAdapter
 
-    lateinit var database: AppDatabase
+    // ✅ CORREÇÃO: Database inicializado no onViewCreated
+    private var database: AppDatabase? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -60,6 +61,28 @@ class ContractManagementFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        try {
+            database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+            val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+                database!!.clienteDao(),
+                database!!.acertoDao(),
+                database!!.mesaDao(),
+                database!!.rotaDao(),
+                database!!.despesaDao(),
+                database!!.colaboradorDao(),
+                database!!.cicloAcertoDao(),
+                database!!.acertoMesaDao(),
+                database!!.contratoLocacaoDao(),
+                database!!.aditivoContratoDao(),
+                database!!.assinaturaRepresentanteLegalDao(),
+                database!!.logAuditoriaAssinaturaDao()
+            )
+            viewModel = ContractManagementViewModel(appRepository)
+        } catch (e: Exception) {
+            android.util.Log.w("ContractManagementFragment", "Erro ao inicializar ViewModel: ${e.message}")
+        }
         
         setupRecyclerView()
         setupClickListeners()
@@ -117,19 +140,20 @@ class ContractManagementFragment : Fragment() {
      */
     private fun showDocumentsDialog(item: ContractManagementViewModel.ContractItem) {
         val cliente = item.cliente ?: return
+        val db = database ?: com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
         val repo = AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
+            db.clienteDao(),
+            db.acertoDao(),
+            db.mesaDao(),
+            db.rotaDao(),
+            db.despesaDao(),
+            db.colaboradorDao(),
+            db.cicloAcertoDao(),
+            db.acertoMesaDao(),
+            db.contratoLocacaoDao(),
+            db.aditivoContratoDao(),
+            db.assinaturaRepresentanteLegalDao(),
+            db.logAuditoriaAssinaturaDao()
         )
         lifecycleScope.launch {
             val contratosFlow = repo.buscarContratosPorCliente(cliente.id)

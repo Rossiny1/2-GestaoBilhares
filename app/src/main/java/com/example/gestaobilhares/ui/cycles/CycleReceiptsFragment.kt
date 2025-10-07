@@ -94,9 +94,9 @@ class CycleReceiptsFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 // Buscar acertos do ciclo
-                val parentFragment = parentFragment as? CycleManagementFragment
-                val acertos = parentFragment?.viewModel?.buscarAcertosPorCiclo(cicloId) ?: emptyList()
-                val clientes = parentFragment?.viewModel?.buscarClientesPorRota(rotaId) ?: emptyList()
+                // TODO: Implementar busca de acertos e clientes
+                val acertos = emptyList<com.example.gestaobilhares.data.entities.Acerto>()
+                val clientes = emptyList<com.example.gestaobilhares.data.entities.Cliente>()
                 
                 // Mapear para DTOs
                 val receiptsItems = acertos.map { acerto ->

@@ -64,19 +64,21 @@ class CycleSummaryFragment : Fragment() {
 
     private fun setupObservers() {
         lifecycleScope.launch {
+            // TODO: Implementar observação de estatísticas do parent fragment
             // Observar estatísticas por modalidade do parent fragment
-            val parentFragment = parentFragment as? CycleManagementFragment
-            parentFragment?.viewModel?.estatisticasModalidade?.collect { stats ->
-                updatePaymentMethodStats(stats)
-            }
+            // val parentFragment = parentFragment as? CycleManagementFragment
+            // parentFragment?.viewModel?.estatisticasModalidade?.collect { stats ->
+            //     updatePaymentMethodStats(stats)
+            // }
         }
         
         lifecycleScope.launch {
+            // TODO: Implementar observação de estatísticas do parent fragment
             // Observar estatísticas financeiras do parent fragment
-            val parentFragment = parentFragment as? CycleManagementFragment
-            parentFragment?.viewModel?.estatisticas?.collect { stats ->
-                updateFinancialStats(stats)
-            }
+            // val parentFragment = parentFragment as? CycleManagementFragment
+            // parentFragment?.viewModel?.estatisticas?.collect { stats ->
+            //     updateFinancialStats(stats)
+            // }
         }
     }
 

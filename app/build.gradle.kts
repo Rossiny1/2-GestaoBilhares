@@ -3,8 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("androidx.navigation.safeargs.kotlin")
-    // ✅ REMOVIDO: KAPT (não é mais necessário sem Hilt)
-    // id("kotlin-kapt")
+    // ✅ CORREÇÃO: KSP (compatível com Java 11+)
+    id("com.google.devtools.ksp")
     id("kotlin-parcelize")
     // ✅ REMOVIDO: Hilt (pode causar conflito com Compose)
     // id("com.google.dagger.hilt.android")
@@ -61,10 +61,12 @@ android {
     }
 }
 
-// ✅ REMOVIDO: KAPT (não é mais necessário sem Hilt)
-// kapt {
-//     correctErrorTypes = true
-// }
+// ✅ CORREÇÃO: KSP para Room (compatível com Java 11+)
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+    arg("room.incremental", "true")
+    arg("room.exportSchema", "true")
+}
 
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
@@ -77,8 +79,8 @@ dependencies {
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
-    // ✅ REMOVIDO: KAPT (usar annotationProcessor para Room)
-    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    // ✅ CORREÇÃO: KSP para Room (compatível com Java 11+)
+    ksp("androidx.room:room-compiler:2.6.1")
     implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
@@ -106,6 +108,8 @@ dependencies {
 
     // ✅ NOVO: Gráficos (MPAndroidChart)
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    
+    // ✅ REMOVIDO: SignaturePad problemático - implementação nativa será usada
     
     // ✅ FASE 4: Jetpack Compose Dependencies (Versões Estáveis e Comprovadas)
     implementation("androidx.compose.ui:ui:1.5.4")

@@ -44,33 +44,7 @@ class CycleManagementFragment : Fragment() {
     var cicloId: Long = 0L
     var rotaId: Long = 0L
     
-    val viewModel: CycleManagementViewModel by viewModels {
-        val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
-        )
-        CycleManagementViewModelFactory(
-            CicloAcertoRepository(
-                database.cicloAcertoDao(),
-                DespesaRepository(database.despesaDao()),
-                AcertoRepository(database.acertoDao(), database.clienteDao()),
-                ClienteRepository(database.clienteDao(), appRepository),
-                database.rotaDao()
-            ),
-            appRepository
-        )
-    }
+    private lateinit var viewModel: CycleManagementViewModel
 
     // Formatação centralizada via utilitários
     // private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
@@ -93,6 +67,31 @@ class CycleManagementFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao()
+        )
+        val cicloAcertoRepository = CicloAcertoRepository(
+            database.cicloAcertoDao(),
+            DespesaRepository(database.despesaDao()),
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
+            ClienteRepository(database.clienteDao(), appRepository),
+            database.rotaDao()
+        )
+        viewModel = CycleManagementViewModel(cicloAcertoRepository, appRepository)
         
         setupViews()
         setupViewPager()

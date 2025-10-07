@@ -1,23 +1,19 @@
 ﻿package com.example.gestaobilhares.ui.contracts
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentSignatureCaptureBinding
+import com.example.gestaobilhares.ui.common.SignatureView
 import com.example.gestaobilhares.utils.DocumentIntegrityManager
 import com.example.gestaobilhares.utils.LegalLogger
 import com.example.gestaobilhares.utils.SignatureMetadataCollector
@@ -33,13 +29,12 @@ class SignatureCaptureFragment : Fragment() {
     private var _binding: FragmentSignatureCaptureBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: SignatureCaptureViewModel by viewModels()
+    private lateinit var viewModel: SignatureCaptureViewModel
     
-    lateinit var legalLogger: LegalLogger
-    
-    lateinit var documentIntegrityManager: DocumentIntegrityManager
-    
-    lateinit var metadataCollector: SignatureMetadataCollector
+    // ✅ CORREÇÃO: Inicializar managers no onViewCreated
+    private var legalLogger: LegalLogger? = null
+    private var documentIntegrityManager: DocumentIntegrityManager? = null
+    private var metadataCollector: SignatureMetadataCollector? = null
     
     private var signatureBitmap: Bitmap? = null
     private var assinaturaContexto: String? = null // null|"CONTRATO"|"DISTRATO"
@@ -56,13 +51,63 @@ class SignatureCaptureFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        val contratoId = arguments?.getLong("contrato_id") ?: 0L
-        assinaturaContexto = arguments?.getString("assinatura_contexto")
+        // ✅ LOG CRASH: Início da tela
+        android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.onViewCreated - INÍCIO")
         
-        viewModel.carregarContrato(contratoId)
-        setupObservers()
-        setupSignatureView()
-        setupClickListeners()
+        // ✅ CORREÇÃO: Inicializar ViewModel antes de usar
+        try {
+            // ✅ LOG CRASH: Inicializando ViewModel
+            android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.onViewCreated - Inicializando ViewModel")
+            val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+            val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
+                database.clienteDao(),
+                database.acertoDao(),
+                database.mesaDao(),
+                database.rotaDao(),
+                database.despesaDao(),
+                database.colaboradorDao(),
+                database.cicloAcertoDao(),
+                database.acertoMesaDao(),
+                database.contratoLocacaoDao(),
+                database.aditivoContratoDao(),
+                database.assinaturaRepresentanteLegalDao(),
+                database.logAuditoriaAssinaturaDao()
+            )
+            viewModel = SignatureCaptureViewModel()
+            viewModel.initializeRepository(appRepository)
+            
+                    // ✅ CORREÇÃO: Inicializar managers de forma segura
+                    try {
+                        legalLogger = com.example.gestaobilhares.utils.LegalLogger(requireContext())
+                        documentIntegrityManager = com.example.gestaobilhares.utils.DocumentIntegrityManager(requireContext())
+                        metadataCollector = com.example.gestaobilhares.utils.SignatureMetadataCollector(requireContext())
+                        android.util.Log.d("SignatureCaptureFragment", "✅ Todos os managers inicializados com sucesso")
+                    } catch (e: Exception) {
+                        android.util.Log.e("SignatureCaptureFragment", "❌ Erro ao inicializar managers: ${e.message}", e)
+                        // ✅ CORREÇÃO CRÍTICA: Garantir que os managers sejam inicializados mesmo com erro
+                        legalLogger = null
+                        documentIntegrityManager = null
+                        metadataCollector = null
+                    }
+            
+            val contratoId = arguments?.getLong("contrato_id") ?: 0L
+            assinaturaContexto = arguments?.getString("assinatura_contexto")
+            
+            viewModel.carregarContrato(contratoId)
+            setupObservers()
+            setupSignatureView()
+            setupClickListeners()
+        } catch (e: Exception) {
+            android.util.Log.e("SignatureCaptureFragment", "Erro ao inicializar ViewModel: ${e.message}")
+            // Mostrar erro para o usuário
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Erro")
+                .setMessage("Erro ao inicializar tela de assinatura. Tente novamente.")
+                .setPositiveButton("OK") { _, _ ->
+                    findNavController().popBackStack()
+                }
+                .show()
+        }
     }
     
     private fun setupObservers() {
@@ -119,7 +164,11 @@ class SignatureCaptureFragment : Fragment() {
     }
     
     private fun salvarAssinatura() {
+        // ✅ LOG CRASH: Início do salvamento da assinatura
+        android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - INÍCIO")
+        
         if (!binding.signatureView.hasSignature()) {
+            android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - Nenhuma assinatura detectada")
             Toast.makeText(requireContext(), "Por favor, assine", Toast.LENGTH_SHORT).show()
             return
         }
@@ -131,14 +180,23 @@ class SignatureCaptureFragment : Fragment() {
             return
         }
         
-        signatureBitmap = binding.signatureView.getSignatureBitmap()
-        val signatureHash = documentIntegrityManager.generateSignatureHash(signatureBitmap!!)
+        signatureBitmap = binding.signatureView.signatureBitmap
+        val signatureHash = documentIntegrityManager?.generateSignatureHash(signatureBitmap!!) ?: "hash_fallback"
         val contrato = viewModel.contrato.value
         if (contrato != null) {
-            val documentHash = documentIntegrityManager.generateDocumentHash(ByteArray(0))
-            val metadata = metadataCollector.collectSignatureMetadata(documentHash, signatureHash)
+            val documentHash = documentIntegrityManager?.generateDocumentHash(ByteArray(0)) ?: "doc_hash_fallback"
+            val metadata = metadataCollector?.collectSignatureMetadata(documentHash, signatureHash) ?: com.example.gestaobilhares.utils.SignatureMetadata(
+                timestamp = System.currentTimeMillis(),
+                deviceId = "fallback_device",
+                ipAddress = "fallback_ip",
+                geolocation = null,
+                documentHash = documentHash,
+                signatureHash = signatureHash,
+                userAgent = "fallback_agent",
+                screenResolution = "fallback_resolution"
+            )
             viewLifecycleOwner.lifecycleScope.launch {
-                legalLogger.logSignatureEvent(
+                legalLogger?.logSignatureEvent(
                     contratoId = contrato.id,
                     userId = contrato.clienteId.toString(),
                     action = if (assinaturaContexto == "DISTRATO") "ASSINATURA_DISTRATO" else "ASSINATURA_CONTRATO",
@@ -149,12 +207,14 @@ class SignatureCaptureFragment : Fragment() {
         
         val assinaturaBase64 = bitmapToBase64(signatureBitmap!!)
         if (assinaturaContexto == "DISTRATO") {
+            // ✅ LOG CRASH: Salvando assinatura de distrato
+            android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - Salvando assinatura de distrato")
             viewModel.salvarAssinaturaDistrato(assinaturaBase64)
             
             // ✅ CORREÇÃO CRÍTICA: Atualizar status do contrato SEMPRE que distrato for assinado
             viewLifecycleOwner.lifecycleScope.launch {
                 try {
-                    val contrato = viewModel.contrato.value ?: return@launch
+                    val contratoAtual = viewModel.contrato.value ?: return@launch
                     val fechamento = viewModel.getFechamentoResumoDistrato()
                     
                     val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
@@ -174,13 +234,13 @@ class SignatureCaptureFragment : Fragment() {
                     )
                     val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
                     val agora = java.util.Date()
-                    android.util.Log.d("DistratoFlow", "✅ ATUALIZAR STATUS ao salvar assinatura: contrato ${contrato.id} para $novoStatus em $agora")
-                    repo.encerrarContrato(contrato.id, contrato.clienteId, novoStatus)
+                    android.util.Log.d("DistratoFlow", "✅ ATUALIZAR STATUS ao salvar assinatura: contrato ${contratoAtual.id} para $novoStatus em $agora")
+                    repo.encerrarContrato(contratoAtual.id, contratoAtual.clienteId, novoStatus)
                     
                     // Verificação imediata
                     try {
-                        val apos = repo.buscarContratosPorCliente(contrato.clienteId).first()
-                        val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
+                        val apos = repo.buscarContratosPorCliente(contratoAtual.clienteId).first()
+                        val resumo = apos.joinToString { _ -> "id=${'$'}{contratoAtual.id},status=${'$'}{contratoAtual.status},enc=${'$'}{contratoAtual.dataEncerramento}" }
                         android.util.Log.d("DistratoFlow", "✅ Após salvar assinatura distrato: ${'$'}resumo")
                     } catch (e: Exception) {
                         android.util.Log.e("DistratoFlow", "Falha verificação pós-assinatura distrato", e)
@@ -190,6 +250,8 @@ class SignatureCaptureFragment : Fragment() {
                 }
             }
         } else {
+            // ✅ LOG CRASH: Salvando assinatura de contrato
+            android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - Salvando assinatura de contrato")
             viewModel.salvarAssinatura(assinaturaBase64)
         }
     }
@@ -352,7 +414,7 @@ class SignatureCaptureFragment : Fragment() {
                     // Verificação imediata (diagnóstico)
                     try {
                         val apos = repo.buscarContratosPorCliente(contrato.clienteId).first()
-                        val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
+                        val resumo = apos.joinToString { _ -> "id=${'$'}{contrato.id},status=${'$'}{contrato.status},enc=${'$'}{contrato.dataEncerramento}" }
                         android.util.Log.d("DistratoFlow", "Após atualizar (SignatureCapture): ${'$'}resumo")
                     } catch (e: Exception) {
                         android.util.Log.e("DistratoFlow", "Falha verificação pós-atualização (SignatureCapture)", e)

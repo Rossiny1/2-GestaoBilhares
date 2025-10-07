@@ -36,43 +36,88 @@ class LoginFragment : Fragment() {
     private lateinit var googleSignInClient: GoogleSignInClient
     private val RC_SIGN_IN = 9001
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        android.util.Log.d("LoginFragment", "🚨 LOGINFRAGMENT ONCREATE CHAMADO")
+        android.util.Log.d("LoginFragment", "🚨 SavedInstanceState: ${savedInstanceState != null}")
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        android.util.Log.d("LoginFragment", "🚨 LOGINFRAGMENT ONCREATEVIEW CHAMADO")
+        android.util.Log.d("LoginFragment", "🚨 Container: ${container?.javaClass?.simpleName}")
+        android.util.Log.d("LoginFragment", "🚨 SavedInstanceState: ${savedInstanceState != null}")
+        
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
+        android.util.Log.d("LoginFragment", "✅ Binding criado com sucesso")
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        android.util.Log.d("LoginFragment", "🚨 LOGINFRAGMENT ONVIEWCREATED CHAMADO")
+        android.util.Log.d("LoginFragment", "🚨 Context: ${requireContext()}")
+        android.util.Log.d("LoginFragment", "🚨 View: ${view.javaClass.simpleName}")
 
-        // ✅ CORREÇÃO: Inicializar ViewModel corretamente
-        authViewModel = AuthViewModel()
-        
-        // Inicializar repositório local
-        authViewModel.initializeRepository(requireContext())
-        
-        // Configurar Google Sign-In
-        setupGoogleSignIn()
-        
-        setupClickListeners()
-        observeAuthState()
+        try {
+            android.util.Log.d("LoginFragment", "=== INICIANDO LOGINFRAGMENT ===")
+            
+            // ✅ CORREÇÃO: Inicializar ViewModel corretamente
+            authViewModel = AuthViewModel()
+            android.util.Log.d("LoginFragment", "✅ AuthViewModel criado")
+            
+            // Inicializar repositório local de forma segura
+            android.util.Log.d("LoginFragment", "🔧 CHAMANDO initializeRepository...")
+            authViewModel.initializeRepository(requireContext())
+            android.util.Log.d("LoginFragment", "✅ Repositório inicializado")
+            
+            // Configurar Google Sign-In
+            setupGoogleSignIn()
+            android.util.Log.d("LoginFragment", "✅ Google Sign-In configurado")
+            
+            setupClickListeners()
+            android.util.Log.d("LoginFragment", "✅ Click listeners configurados")
+            
+            observeAuthState()
+            android.util.Log.d("LoginFragment", "✅ Observers configurados")
+            
+            android.util.Log.d("LoginFragment", "✅ LoginFragment inicializado com sucesso")
+        } catch (e: Exception) {
+            android.util.Log.e("LoginFragment", "ERRO CRÍTICO ao inicializar LoginFragment: ${e.message}")
+            android.util.Log.e("LoginFragment", "Stack trace: ${e.stackTraceToString()}")
+            // Mostrar mensagem de erro para o usuário
+            android.widget.Toast.makeText(requireContext(), "Erro crítico ao inicializar o app. Reinicie o aplicativo.", android.widget.Toast.LENGTH_LONG).show()
+        }
     }
 
     /**
      * Configura o Google Sign-In
      */
     private fun setupGoogleSignIn() {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("1089459035145-d55o1h307gaedp4v03cuchr6s6nn2lhg.apps.googleusercontent.com")
-            .requestEmail()
-            .build()
-        
-        googleSignInClient = GoogleSignIn.getClient(requireActivity(), gso)
-        
-        android.util.Log.d("LoginFragment", "Google Sign-In configurado")
-        android.util.Log.d("LoginFragment", "Web Client ID: 1089459035145-d55o1h307gaedp4v03cuchr6s6nn2lhg.apps.googleusercontent.com")
+        try {
+            android.util.Log.d("LoginFragment", "=== CONFIGURANDO GOOGLE SIGN-IN ===")
+            
+            // ✅ CORREÇÃO: Configuração mais simples e robusta
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .requestIdToken("1089459035145-d55o1h307gaedp4v03cuchr6s6nn2lhg.apps.googleusercontent.com")
+                .build()
+            
+            android.util.Log.d("LoginFragment", "✅ GoogleSignInOptions criado")
+            
+            googleSignInClient = GoogleSignIn.getClient(requireActivity(), gso)
+            
+            android.util.Log.d("LoginFragment", "✅ GoogleSignInClient criado")
+            android.util.Log.d("LoginFragment", "Google Sign-In configurado com sucesso")
+            android.util.Log.d("LoginFragment", "Web Client ID: 1089459035145-d55o1h307gaedp4v03cuchr6s6nn2lhg.apps.googleusercontent.com")
+        } catch (e: Exception) {
+            android.util.Log.e("LoginFragment", "ERRO ao configurar Google Sign-In: ${e.message}")
+            android.util.Log.e("LoginFragment", "Stack trace: ${e.stackTraceToString()}")
+            // Continuar sem Google Sign-In (modo offline)
+        }
     }
     
     /**
@@ -97,23 +142,19 @@ class LoginFragment : Fragment() {
     
     /**
      * Inicia o processo de login com Google
-     * ✅ CORREÇÃO: SEMPRE forçar seleção de conta para permitir múltiplos usuários
+     * ✅ CORREÇÃO: Método mais simples e robusto
      */
     private fun signInWithGoogle() {
-        android.util.Log.d("LoginFragment", "=== INICIANDO GOOGLE SIGN-IN ===")
-        
-        // ✅ CORREÇÃO CRÍTICA: SEMPRE fazer sign out primeiro para forçar seleção de conta
-        // Isso garante que o usuário SEMPRE veja a tela de seleção de conta
-        googleSignInClient.signOut().addOnCompleteListener {
-            android.util.Log.d("LoginFragment", "✅ Sign out realizado - forçando seleção de conta")
+        try {
+            android.util.Log.d("LoginFragment", "=== INICIANDO GOOGLE SIGN-IN ===")
             
-            // Aguardar um pouco para garantir que o sign out foi processado
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                // Agora iniciar o processo de sign in que SEMPRE mostrará a seleção de conta
-                val signInIntent = googleSignInClient.signInIntent
-                startActivityForResult(signInIntent, RC_SIGN_IN)
-                android.util.Log.d("LoginFragment", "✅ Intent de seleção de conta iniciado")
-            }, 500) // Aguardar 500ms
+            // ✅ CORREÇÃO: Método mais simples - apenas iniciar o sign in
+            val signInIntent = googleSignInClient.signInIntent
+            startActivityForResult(signInIntent, RC_SIGN_IN)
+            android.util.Log.d("LoginFragment", "✅ Intent de seleção de conta iniciado")
+        } catch (e: Exception) {
+            android.util.Log.e("LoginFragment", "ERRO ao iniciar Google Sign-In: ${e.message}")
+            Toast.makeText(requireContext(), "Erro ao iniciar login com Google", Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -123,11 +164,11 @@ class LoginFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         
-                        android.util.Log.d("LoginFragment", "onActivityResult: requestCode=$requestCode, resultCode=$resultCode")
-                
-                if (requestCode == RC_SIGN_IN) {
-                    try {
-                                        android.util.Log.d("LoginFragment", "=== PROCESSANDO RESULTADO DO GOOGLE SIGN-IN ===")
+        android.util.Log.d("LoginFragment", "onActivityResult: requestCode=$requestCode, resultCode=$resultCode")
+        
+        if (requestCode == RC_SIGN_IN) {
+            try {
+                android.util.Log.d("LoginFragment", "=== PROCESSANDO RESULTADO DO GOOGLE SIGN-IN ===")
                 
                 val task = GoogleSignIn.getSignedInAccountFromIntent(data)
                 val account = task.getResult(ApiException::class.java)
@@ -136,14 +177,6 @@ class LoginFragment : Fragment() {
                 android.util.Log.d("LoginFragment", "   Email: ${account.email}")
                 android.util.Log.d("LoginFragment", "   Nome: ${account.displayName}")
                 android.util.Log.d("LoginFragment", "   ID: ${account.id}")
-                
-                // ✅ NOVO: Verificar se é uma conta diferente da anterior
-                val lastAccount = GoogleSignIn.getLastSignedInAccount(requireContext())
-                if (lastAccount != null && lastAccount.email != account.email) {
-                    android.util.Log.d("LoginFragment", "🔄 CONTA DIFERENTE SELECIONADA!")
-                    android.util.Log.d("LoginFragment", "   Conta anterior: ${lastAccount.email}")
-                    android.util.Log.d("LoginFragment", "   Nova conta: ${account.email}")
-                }
                 
                 // Chamar o ViewModel para processar o login
                 authViewModel.signInWithGoogle(account)

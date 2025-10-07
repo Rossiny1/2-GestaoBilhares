@@ -1,6 +1,7 @@
 package com.example.gestaobilhares
 
 import android.app.Application
+import com.google.firebase.FirebaseApp
 import timber.log.Timber
 
 /**
@@ -11,9 +12,23 @@ class GestaoBilharesApplication : Application() {
     
     override fun onCreate() {
         super.onCreate()
+        
+        try {
+            // Inicializar Firebase de forma segura
+            if (FirebaseApp.getApps(this).isEmpty()) {
+                FirebaseApp.initializeApp(this)
+                Timber.d("Firebase inicializado com sucesso")
+            } else {
+                Timber.d("Firebase já estava inicializado")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao inicializar Firebase: ${e.message}")
+            // Continuar mesmo se Firebase falhar (modo offline)
+        }
+        
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
-        Timber.d("Aplicacao iniciada")
+        Timber.d("Aplicacao iniciada com sucesso")
     }
 } 

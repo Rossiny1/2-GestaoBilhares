@@ -488,11 +488,13 @@ class ClientDetailFragment : Fragment() {
                     Log.d("NovoAcerto", "Mesas: ${mesasDTO.joinToString { "Mesa ${it.numero} (ID: ${it.id})" }}")
                     Log.d("NovoAcerto", "Valor Ficha: $valorFicha, Comissão Ficha: $comissaoFicha")
                     
-                    // ✅ MODERNIZADO: Usar launcher em vez de startActivityForResult
-                    acertoLauncher.launch(Intent(requireContext(), com.example.gestaobilhares.ui.settlement.SettlementFragment::class.java).apply {
-                        putExtra("clienteId", args.clienteId)
-                        putExtra("mesasDTO", mesasDTO)
-                    })
+                    // ✅ CORREÇÃO CRÍTICA: SettlementFragment é um Fragment, não uma Activity
+                    // Usar Navigation Component para navegar para o Fragment
+                    val bundle = Bundle().apply {
+                        putLong("clienteId", args.clienteId)
+                        putSerializable("mesasDTO", mesasDTO)
+                    }
+                    findNavController().navigate(R.id.settlementFragment, bundle)
                     Log.d("ClientDetailFragment", "Navegando para Novo Acerto - Cliente ID: ${args.clienteId} com ${mesasDTO.size} mesas")
                     
                 } catch (e: Exception) {
@@ -910,11 +912,13 @@ class ClientDetailFragment : Fragment() {
                                     )
                                 }.toTypedArray()
                                 
-                                // ✅ MODERNIZADO: Usar launcher em vez de startActivityForResult
-                                acertoLauncher.launch(Intent(requireContext(), com.example.gestaobilhares.ui.settlement.SettlementFragment::class.java).apply {
-                                    putExtra("clienteId", args.clienteId)
-                                    putExtra("mesasDTO", mesasDTO)
-                                })
+                                // ✅ CORREÇÃO CRÍTICA: SettlementFragment é um Fragment, não uma Activity
+                                // Usar Navigation Component para navegar para o Fragment
+                                val bundle = Bundle().apply {
+                                    putLong("clienteId", args.clienteId)
+                                    putSerializable("mesasDTO", mesasDTO)
+                                }
+                                findNavController().navigate(R.id.settlementFragment, bundle)
                             }
                             .setNegativeButton("Cancelar", null)
                             .show()

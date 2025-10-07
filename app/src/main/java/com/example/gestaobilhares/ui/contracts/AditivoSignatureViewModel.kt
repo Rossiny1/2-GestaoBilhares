@@ -10,12 +10,20 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.launch
 import java.util.*
-class AditivoSignatureViewModel constructor(
-    private val repository: AppRepository
-) : ViewModel() {
+class AditivoSignatureViewModel : ViewModel() {
+    
+    // ✅ CORREÇÃO: Repository como lateinit para inicialização posterior
+    private lateinit var repository: AppRepository
     
     // Assinatura pendente para evitar segundo clique caso o aditivo ainda não exista
     private var pendingSignatureBase64: String? = null
+    
+    /**
+     * ✅ CORREÇÃO: Inicializar repository
+     */
+    fun initializeRepository(repository: AppRepository) {
+        this.repository = repository
+    }
 
     // Tipo do aditivo: INCLUSAO (default) ou RETIRADA
     private var aditivoTipo: String = "INCLUSAO"

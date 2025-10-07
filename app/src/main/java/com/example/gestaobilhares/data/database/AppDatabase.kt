@@ -802,30 +802,47 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 
-                val builder = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    DATABASE_NAME
-                )
-                    .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
-                    .addCallback(object : RoomDatabase.Callback() {
-                        override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
-                            super.onOpen(db)
-                            android.util.Log.d("AppDatabase", "Banco de dados aberto com sucesso!")
-                        }
-                    })
-                // Aplicar fallback destrutivo somente em builds de debug
-                val instance = if (BuildConfig.DEBUG) {
-                    builder.fallbackToDestructiveMigration().build()
-                } else {
-                    builder.build()
+                try {
+                    val builder = Room.databaseBuilder(
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        DATABASE_NAME
+                    )
+                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
+                        .addCallback(object : RoomDatabase.Callback() {
+                            override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                                super.onOpen(db)
+                                android.util.Log.d("AppDatabase", "Banco de dados aberto com sucesso!")
+                            }
+                        })
+                    
+                    // Aplicar fallback destrutivo somente em builds de debug
+                    val instance = if (BuildConfig.DEBUG) {
+                        builder.fallbackToDestructiveMigration().build()
+                    } else {
+                        builder.build()
+                    }
+                    
+                    // Banco de dados limpo - sem seed automático
+                    // Os dados serão inseridos manualmente pelo usuário
+                    
+                    INSTANCE = instance
+                    android.util.Log.d("AppDatabase", "✅ Banco de dados inicializado com sucesso")
+                    instance
+                } catch (e: Exception) {
+                    android.util.Log.e("AppDatabase", "Erro crítico ao inicializar banco de dados: ${e.message}")
+                    // Em caso de erro crítico, usar fallback destrutivo
+                    val fallbackBuilder = Room.databaseBuilder(
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        DATABASE_NAME
+                    ).fallbackToDestructiveMigration()
+                    
+                    val fallbackInstance = fallbackBuilder.build()
+                    INSTANCE = fallbackInstance
+                    android.util.Log.w("AppDatabase", "⚠️ Usando fallback destrutivo devido a erro")
+                    fallbackInstance
                 }
-                
-                // Banco de dados limpo - sem seed automático
-                // Os dados serão inseridos manualmente pelo usuário
-                
-                INSTANCE = instance
-                instance
             }
         }
 

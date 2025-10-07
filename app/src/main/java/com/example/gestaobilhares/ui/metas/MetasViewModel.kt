@@ -10,9 +10,15 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.*
-class MetasViewModel constructor(
-    private val appRepository: AppRepository
-) : BaseViewModel() {
+class MetasViewModel constructor() : BaseViewModel() {
+    
+    // ✅ CORREÇÃO: Repository como lateinit para inicialização manual
+    private lateinit var appRepository: AppRepository
+    
+    // ✅ CORREÇÃO: Método para inicializar o repository
+    fun initializeRepository(repository: AppRepository) {
+        this.appRepository = repository
+    }
 
     private val _metasRotas = MutableStateFlow<List<MetaRotaResumo>>(emptyList())
     val metasRotas: StateFlow<List<MetaRotaResumo>> = _metasRotas.asStateFlow()
