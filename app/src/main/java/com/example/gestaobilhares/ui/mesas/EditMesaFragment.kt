@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
@@ -20,6 +19,9 @@ import com.example.gestaobilhares.data.entities.TamanhoMesa
 import com.example.gestaobilhares.data.entities.EstadoConservacao
 import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 // import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 import kotlinx.coroutines.launch
@@ -30,8 +32,8 @@ class EditMesaFragment : Fragment() {
     private var _binding: FragmentEditMesaBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: EditMesaViewModel by viewModels()
-    private val historicoViewModel: HistoricoManutencaoMesaViewModel by viewModels()
+    private lateinit var viewModel: EditMesaViewModel
+    private lateinit var historicoViewModel: HistoricoManutencaoMesaViewModel
     private val args: EditMesaFragmentArgs by navArgs()
 
     override fun onCreateView(
@@ -45,6 +47,26 @@ class EditMesaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // ✅ CORREÇÃO: Inicializar ViewModels manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao()
+        )
+        val historicoManutencaoRepository = HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao())
+        viewModel = EditMesaViewModel(appRepository)
+        historicoViewModel = HistoricoManutencaoMesaViewModel(historicoManutencaoRepository)
 
         setupSpinners()
         setupClickListeners()

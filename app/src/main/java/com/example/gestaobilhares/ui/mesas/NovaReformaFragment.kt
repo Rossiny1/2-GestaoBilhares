@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
@@ -31,6 +30,11 @@ import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.example.gestaobilhares.databinding.FragmentNovaReformaBinding
 import com.example.gestaobilhares.ui.settlement.PanoSelectionDialog
 import com.example.gestaobilhares.utils.ImageCompressionUtils
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.data.repository.MesaReformadaRepository
+import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
+import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 // import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 import java.io.File
@@ -45,8 +49,8 @@ class NovaReformaFragment : Fragment() {
     private var _binding: FragmentNovaReformaBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: NovaReformaViewModel by viewModels()
-    private val historicoViewModel: HistoricoManutencaoMesaViewModel by viewModels()
+    private lateinit var viewModel: NovaReformaViewModel
+    private lateinit var historicoViewModel: HistoricoManutencaoMesaViewModel
     
     private var mesaSelecionada: Mesa? = null
     private var fotoUri: Uri? = null
@@ -116,6 +120,28 @@ class NovaReformaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModels manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = AppRepository(
+            database.clienteDao(),
+            database.acertoDao(),
+            database.mesaDao(),
+            database.rotaDao(),
+            database.despesaDao(),
+            database.colaboradorDao(),
+            database.cicloAcertoDao(),
+            database.acertoMesaDao(),
+            database.contratoLocacaoDao(),
+            database.aditivoContratoDao(),
+            database.assinaturaRepresentanteLegalDao(),
+            database.logAuditoriaAssinaturaDao()
+        )
+        val mesaReformadaRepository = MesaReformadaRepository(database.mesaReformadaDao())
+        val panoEstoqueRepository = PanoEstoqueRepository(database.panoEstoqueDao())
+        val historicoManutencaoRepository = HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao())
+        viewModel = NovaReformaViewModel(appRepository, mesaReformadaRepository, panoEstoqueRepository)
+        historicoViewModel = HistoricoManutencaoMesaViewModel(historicoManutencaoRepository)
         
         setupClickListeners()
         observeViewModel()

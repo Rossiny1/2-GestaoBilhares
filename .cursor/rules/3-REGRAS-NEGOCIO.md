@@ -48,6 +48,38 @@
 
 - **Vincular**: Mesa sai do depósito → vai para cliente
 - **Retirar**: Mesa volta para depósito
+
+## 🚗 GESTÃO DE VEÍCULOS
+
+### **Histórico de Manutenção**
+
+- **Registro Completo**: Data, descrição, valor, quilometragem, tipo
+- **Filtros por Ano**: Visualização por período específico
+- **Resumo Financeiro**: Total gasto em manutenções
+- **Tipos de Manutenção**: Preventiva, corretiva, revisão
+
+### **Histórico de Abastecimento**
+
+- **Registro de Combustível**: Data, valor, litros, quilometragem
+- **Cálculo de Consumo**: Km/litro automático
+- **Filtros por Ano**: Visualização por período específico
+- **Resumo Financeiro**: Total gasto em combustível
+
+## 👥 GESTÃO DE COLABORADORES
+
+### **Transferência de Clientes**
+
+- **Entre Rotas**: Cliente pode ser transferido de uma rota para outra
+- **Preservação de Dados**: Histórico e mesas mantidos
+- **Validação**: Apenas rotas diferentes permitidas
+- **Log de Auditoria**: Registro de todas as transferências
+
+### **Sistema de Metas**
+
+- **Vinculação**: Ciclo de acerto + rota + colaborador
+- **Métricas**: % clientes cobrados, faturamento, novas mesas, média por mesa
+- **Acompanhamento**: Progresso em tempo real
+- **Relatórios**: Performance por colaborador
 - **Cadastro**: Todas as mesas criadas no depósito
 
 ### **Tipos de Mesa**

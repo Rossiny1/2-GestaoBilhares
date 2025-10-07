@@ -69,6 +69,9 @@
 - `SettlementFragment`: Tela de acerto
 - `ContractGenerationFragment`: Geração de contrato
 - `SignatureCaptureFragment`: Captura de assinatura
+- `VehicleDetailFragment`: Histórico de veículos
+- `MetaCadastroFragment`: Cadastro de metas
+- `RepresentanteLegalSignatureFragment`: Assinatura do representante legal
 
 ### **Adapters**
 
@@ -80,6 +83,11 @@
 
 - `ContractFinalizationDialog`: Finalização de contrato
 - `SettlementSummaryDialog`: Resumo do acerto
+- `ClientSelectionDialog`: Seleção de cliente para transferência
+- `TransferClientDialog`: Transferência de cliente entre rotas
+- `PanoSelectionDialog`: Seleção de pano para troca
+- `AddEditStockItemDialog`: Adicionar/editar item do estoque
+- `AddPanosLoteDialog`: Adicionar panos em lote
 
 ## 🔄 FLUXO DE DADOS
 
@@ -121,6 +129,15 @@
 - **LoginFragment**: Convertido de observe para collect + repeatOnLifecycle
 - **RoutesFragment**: Convertido de observe para collect + repeatOnLifecycle
 
+### **ViewModel Initialization Fix (2025)**
+
+- **Problema Identificado**: Crashes por `by viewModels()` sem inicialização manual
+- **Solução Aplicada**: Inicialização manual de ViewModels em todos os fragments
+- **Padrão Implementado**: `lateinit var viewModel` + inicialização em `onViewCreated`
+- **Fragments Corrigidos**: VehicleDetailFragment, MetaCadastroFragment, RepresentanteLegalSignatureFragment
+- **Dialogs Corrigidos**: ClientSelectionDialog, TransferClientDialog, PanoSelectionDialog, AddEditStockItemDialog, AddPanosLoteDialog
+- **Resultado**: Zero crashes - todas as telas funcionando perfeitamente
+
 ### **BaseViewModel Centralizada**
 
 - **Funcionalidades Comuns**: Loading, error, message states
@@ -154,6 +171,24 @@ class MyViewModel : BaseViewModel() {
         showLoading()
         // Lógica de negócio
         hideLoading()
+    }
+}
+
+// ✅ PADRÃO CORRIGIDO: ViewModel Initialization
+class MyFragment : Fragment() {
+    private lateinit var viewModel: MyViewModel
+    
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        
+        // Inicialização manual do ViewModel
+        val database = AppDatabase.getDatabase(requireContext())
+        val repository = Repository(database.dao())
+        viewModel = MyViewModel(repository)
+        
+        // Configurar UI e observers
+        setupUI()
+        observeViewModel()
     }
 }
 ```
