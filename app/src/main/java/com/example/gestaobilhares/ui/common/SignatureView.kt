@@ -157,7 +157,7 @@ class SignatureView @JvmOverloads constructor(
      */
     fun getSignatureStatistics(): SignatureStatistics {
         return SignatureStatistics(
-            pointCount = paths.size * 10, // Aproximação simples
+            pointCount = paths.size * 5, // Aproximação mais realista
             isEmpty = isEmpty()
         )
     }
@@ -179,6 +179,6 @@ class SignatureView @JvmOverloads constructor(
         val pointCount: Int,
         val isEmpty: Boolean
     ) {
-        fun isValidSignature(): Boolean = pointCount > 10 && !isEmpty
+        fun isValidSignature(): Boolean = pointCount > 3 && !isEmpty
     }
 }

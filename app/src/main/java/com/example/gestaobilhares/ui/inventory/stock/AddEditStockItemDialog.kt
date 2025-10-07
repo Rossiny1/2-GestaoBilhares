@@ -7,18 +7,26 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.viewModels
 import com.example.gestaobilhares.databinding.DialogAddEditStockItemBinding
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
+import com.example.gestaobilhares.data.repository.StockItemRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 class AddEditStockItemDialog : DialogFragment() {
     
     private var _binding: DialogAddEditStockItemBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: StockViewModel by viewModels({ requireParentFragment() })
+    private lateinit var viewModel: StockViewModel
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddEditStockItemBinding.inflate(layoutInflater)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val panoEstoqueRepository = PanoEstoqueRepository(database.panoEstoqueDao())
+        val stockItemRepository = StockItemRepository(database.stockItemDao())
+        viewModel = StockViewModel(panoEstoqueRepository, stockItemRepository)
         
         setupSpinners()
         setupClickListeners()

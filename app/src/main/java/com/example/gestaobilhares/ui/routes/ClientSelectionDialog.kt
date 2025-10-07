@@ -15,6 +15,10 @@ import com.example.gestaobilhares.databinding.DialogSelectClientBinding
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.ClienteRepository
+import com.example.gestaobilhares.data.repository.RotaRepository
+import com.example.gestaobilhares.data.repository.MesaRepository
 /**
  * DialogFragment para selecionar um cliente para transferência.
  * Inclui busca por nome e exibe informações do cliente, rota e mesas.
@@ -24,7 +28,7 @@ class ClientSelectionDialog : DialogFragment() {
     private var _binding: DialogSelectClientBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: ClientSelectionViewModel by viewModels()
+    private lateinit var viewModel: ClientSelectionViewModel
 
     private lateinit var clientAdapter: ClientSelectionAdapter
 
@@ -53,6 +57,28 @@ class ClientSelectionDialog : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Inicialização manual do ViewModel com repositórios necessários
+        val database = AppDatabase.getDatabase(requireContext())
+        val clienteRepository = ClienteRepository(database.clienteDao(),
+            com.example.gestaobilhares.data.repository.AppRepository(
+                database.clienteDao(),
+                database.acertoDao(),
+                database.mesaDao(),
+                database.rotaDao(),
+                database.despesaDao(),
+                database.colaboradorDao(),
+                database.cicloAcertoDao(),
+                database.acertoMesaDao(),
+                database.contratoLocacaoDao(),
+                database.aditivoContratoDao(),
+                database.assinaturaRepresentanteLegalDao(),
+                database.logAuditoriaAssinaturaDao()
+            )
+        )
+        val rotaRepository = RotaRepository(database.rotaDao())
+        val mesaRepository = MesaRepository(database.mesaDao())
+        viewModel = ClientSelectionViewModel(clienteRepository, rotaRepository, mesaRepository)
 
         setupRecyclerView()
         setupClickListeners()

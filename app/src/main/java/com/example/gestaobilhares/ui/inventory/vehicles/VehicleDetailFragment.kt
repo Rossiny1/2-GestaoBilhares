@@ -6,10 +6,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentVehicleDetailBinding
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.VeiculoRepository
+import com.example.gestaobilhares.data.repository.HistoricoManutencaoVeiculoRepository
+import com.example.gestaobilhares.data.repository.HistoricoCombustivelVeiculoRepository
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -17,7 +20,7 @@ class VehicleDetailFragment : Fragment() {
     private var _binding: FragmentVehicleDetailBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: VehicleDetailViewModel by viewModels()
+    private lateinit var viewModel: VehicleDetailViewModel
     private lateinit var maintenanceAdapter: MaintenanceHistoryAdapter
     private lateinit var fuelAdapter: FuelHistoryAdapter
 
@@ -36,6 +39,13 @@ class VehicleDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         vehicleId = arguments?.getLong("vehicleId", 0L) ?: 0L
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val veiculoRepository = VeiculoRepository(database.veiculoDao())
+        val historicoManutencaoRepository = HistoricoManutencaoVeiculoRepository(database.historicoManutencaoVeiculoDao())
+        val historicoCombustivelRepository = HistoricoCombustivelVeiculoRepository(database.historicoCombustivelVeiculoDao())
+        viewModel = VehicleDetailViewModel(veiculoRepository, historicoManutencaoRepository, historicoCombustivelRepository)
         
         setupUI()
         setupRecyclerViews()
