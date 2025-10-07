@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
@@ -15,6 +14,8 @@ import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentHistoricoManutencaoMesaBinding
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
 // import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 
 /**
@@ -25,7 +26,7 @@ class HistoricoManutencaoMesaFragment : Fragment() {
     private var _binding: FragmentHistoricoManutencaoMesaBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: HistoricoManutencaoMesaViewModel by viewModels()
+    private lateinit var viewModel: HistoricoManutencaoMesaViewModel
     private val args: HistoricoManutencaoMesaFragmentArgs by navArgs()
     private lateinit var adapter: HistoricoManutencaoMesaAdapter
 
@@ -40,6 +41,11 @@ class HistoricoManutencaoMesaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val historicoManutencaoRepository = HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao())
+        viewModel = HistoricoManutencaoMesaViewModel(historicoManutencaoRepository)
 
         setupRecyclerView()
         setupClickListeners()

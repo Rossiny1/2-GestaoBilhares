@@ -23,6 +23,8 @@
 - **BaseViewModel**: Usar funcionalidades centralizadas
 - **repeatOnLifecycle**: Padrão moderno de observação
 - **Performance**: Otimizar com coroutines e StateFlow
+- **ViewModel Initialization**: SEMPRE usar inicialização manual
+- **Zero Crashes**: Garantir estabilidade em todas as telas
 
 ### **Responsabilidades do Usuário**
 
@@ -242,6 +244,41 @@ abstract class BaseViewModel : ViewModel() {
     protected fun showError(message: String)
     protected fun showMessage(message: String)
     // Todas as funcionalidades comuns em um local
+}
+```
+
+### **✅ CORRETO: ViewModel Initialization**
+
+```kotlin
+// ✅ PADRÃO CORRIGIDO: Inicialização Manual
+class MyFragment : Fragment() {
+    private lateinit var viewModel: MyViewModel
+    
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ SEMPRE inicializar manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val repository = Repository(database.dao())
+        viewModel = MyViewModel(repository)
+        
+        setupUI()
+        observeViewModel()
+    }
+}
+```
+
+### **❌ INCORRETO: by viewModels() sem inicialização**
+
+```kotlin
+// ❌ CAUSA CRASH: by viewModels() sem inicialização
+class MyFragment : Fragment() {
+    private val viewModel: MyViewModel by viewModels() // ❌ CRASH!
+    
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // ViewModel não inicializado = CRASH
+    }
 }
 ```
 

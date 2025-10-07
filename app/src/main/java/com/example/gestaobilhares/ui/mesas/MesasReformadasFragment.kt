@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
@@ -16,6 +15,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.databinding.FragmentMesasReformadasBinding
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 // import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 
 /**
@@ -27,7 +28,7 @@ class MesasReformadasFragment : Fragment() {
     private var _binding: FragmentMesasReformadasBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: MesasReformadasViewModel by viewModels()
+    private lateinit var viewModel: MesasReformadasViewModel
     private lateinit var adapter: MesasReformadasAdapter
 
     override fun onCreateView(
@@ -41,6 +42,11 @@ class MesasReformadasFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val mesaReformadaRepository = MesaReformadaRepository(database.mesaReformadaDao())
+        viewModel = MesasReformadasViewModel(mesaReformadaRepository)
         
         setupRecyclerView()
         setupClickListeners()

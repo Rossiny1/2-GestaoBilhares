@@ -13,12 +13,11 @@ import android.widget.Button
 import android.widget.ListView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import com.example.gestaobilhares.R
 
 class LogViewerFragment : Fragment() {
 
-    private val viewModel: LogViewerViewModel by viewModels()
+    private lateinit var viewModel: LogViewerViewModel
     private lateinit var logsListView: ListView
     private lateinit var adapter: ArrayAdapter<String>
 
@@ -47,6 +46,10 @@ class LogViewerFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        viewModel = LogViewerViewModel() // Construtor padrão
+        
         viewModel.logs.observe(viewLifecycleOwner) { logs ->
             adapter.clear()
             adapter.addAll(logs)

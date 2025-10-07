@@ -5,17 +5,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentOthersInventoryBinding
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.StockItemRepository
 import kotlinx.coroutines.launch
 
 class OthersInventoryFragment : Fragment() {
     private var _binding: FragmentOthersInventoryBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: OthersInventoryViewModel by viewModels()
+    private lateinit var viewModel: OthersInventoryViewModel
     private lateinit var adapter: OthersInventoryAdapter
 
     override fun onCreateView(
@@ -29,6 +30,10 @@ class OthersInventoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        viewModel = OthersInventoryViewModel() // Construtor padrão
+        
         setupRecyclerView()
         observeData()
         setupClickListeners()

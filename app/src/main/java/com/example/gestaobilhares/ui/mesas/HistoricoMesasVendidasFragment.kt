@@ -6,13 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentHistoricoMesasVendidasBinding
 import com.example.gestaobilhares.ui.mesas.adapter.MesasVendidasAdapter
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.MesaVendidaRepository
 import kotlinx.coroutines.launch
 
 /**
@@ -24,7 +25,7 @@ class HistoricoMesasVendidasFragment : Fragment() {
     private var _binding: FragmentHistoricoMesasVendidasBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: HistoricoMesasVendidasViewModel by viewModels()
+    private lateinit var viewModel: HistoricoMesasVendidasViewModel
     private lateinit var adapter: MesasVendidasAdapter
 
     override fun onCreateView(
@@ -40,6 +41,11 @@ class HistoricoMesasVendidasFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         android.util.Log.d("HistoricoMesasVendidasFragment", "🚀 Inicializando fragment de histórico de mesas vendidas...")
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val mesaVendidaRepository = MesaVendidaRepository(database.mesaVendidaDao())
+        viewModel = HistoricoMesasVendidasViewModel(mesaVendidaRepository)
         
         setupRecyclerView()
         setupClickListeners()
