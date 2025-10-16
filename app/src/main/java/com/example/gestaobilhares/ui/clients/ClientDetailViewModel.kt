@@ -125,6 +125,9 @@ class ClientDetailViewModel(
                     val debitoAtualReal = ultimoAcerto?.debitoAtual ?: 0.0
                     Log.d("ClientDetailViewModel", "Débito atual REAL (do último acerto): R$ $debitoAtualReal")
                     
+                    // Atualizar o cliente para exibição na UI
+                    _cliente.value = it
+                    
                     _clientDetails.value = ClienteResumo(
                         id = it.id,
                         nome = it.nome,
