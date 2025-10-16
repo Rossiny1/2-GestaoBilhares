@@ -9,7 +9,6 @@ import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
-// import dagger.hilt.android.lifecycle.HiltViewModel // REMOVIDO: Hilt nao e mais usado
 import java.util.Date
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -113,7 +113,4 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("com.jakewharton.timber:timber:5.0.1")
 
-    // ✅ REMOVIDO: Hilt (pode causar conflito com Compose)
-    // implementation("com.google.dagger:hilt-android:2.51")
-    // kapt("com.google.dagger:hilt-android-compiler:2.51")
 } 

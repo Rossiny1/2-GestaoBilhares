@@ -36,7 +36,6 @@ import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
 import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-// import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*

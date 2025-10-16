@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentHistoricoManutencaoMesaBinding
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
-// import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 
 /**
  * Fragment que exibe o histórico completo de manutenção de uma mesa.

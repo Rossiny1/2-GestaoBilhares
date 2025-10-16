@@ -17,7 +17,6 @@ import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.databinding.FragmentMesasReformadasBinding
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.MesaReformadaRepository
-// import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 
 /**
  * Fragment que exibe a lista de mesas reformadas.
