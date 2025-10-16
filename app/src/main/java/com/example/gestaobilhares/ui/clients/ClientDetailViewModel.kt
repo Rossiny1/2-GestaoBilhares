@@ -10,28 +10,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 import com.example.gestaobilhares.data.entities.Mesa
-import com.example.gestaobilhares.data.repository.MesaRepository
-import com.example.gestaobilhares.data.repository.ClienteRepository
 import kotlinx.coroutines.flow.collect
 import kotlinx.parcelize.Parcelize
 import android.os.Parcelable
-import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.entities.Acerto
 import com.example.gestaobilhares.data.entities.TipoMesa
+import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import android.util.Log
-import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 
 /**
  * ViewModel para ClientDetailFragment
  * FASE 4A - Implementação crítica com dados mock
  */
 class ClientDetailViewModel(
-    private val clienteRepository: com.example.gestaobilhares.data.repository.ClienteRepository,
-    private val mesaRepository: MesaRepository,
-    private val acertoRepository: AcertoRepository,
-    private val acertoMesaRepository: AcertoMesaRepository,
     private val appRepository: com.example.gestaobilhares.data.repository.AppRepository
 ) : BaseViewModel() {
 
@@ -64,7 +56,7 @@ class ClientDetailViewModel(
             showLoading()
             Log.d("ClientDetailViewModel", "=== CARREGANDO DETALHES DO CLIENTE $clienteId ===")
             try {
-                val cliente = clienteRepository.obterPorId(clienteId)
+                val cliente = appRepository.obterClientePorId(clienteId)
                 cliente?.let {
                     Log.d("ClientDetailViewModel", "Cliente encontrado: ${it.nome}")
                     Log.d("ClientDetailViewModel", "Endereço: ${it.endereco}")
@@ -73,7 +65,7 @@ class ClientDetailViewModel(
                     Log.d("ClientDetailViewModel", "Data última atualização: ${it.dataUltimaAtualizacao}")
 
                     // Buscar data do último acerto REAL
-                    val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
+                    val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(clienteId)
                     val ultimaVisita = if (ultimoAcerto != null) {
                         Log.d("ClientDetailViewModel", "Último acerto encontrado em: ${ultimoAcerto.dataAcerto}")
                         
@@ -95,7 +87,7 @@ class ClientDetailViewModel(
                     Log.d("ClientDetailViewModel", "Última visita calculada: $ultimaVisita")
 
                     // ✅ CORREÇÃO: Buscar observação do último acerto em vez da observação do cliente
-                    val observacaoUltimoAcerto = acertoRepository.buscarObservacaoUltimoAcerto(clienteId)
+                    val observacaoUltimoAcerto = appRepository.buscarObservacaoUltimoAcerto(clienteId)
                     val observacaoExibir = observacaoUltimoAcerto ?: "Nenhuma observação registrada."
                     Log.d("ClientDetailViewModel", "Observação do último acerto: $observacaoExibir")
 
@@ -152,7 +144,7 @@ class ClientDetailViewModel(
                     Log.d("ClientDetailViewModel", "ClienteResumo criado: ${_clientDetails.value?.nome}")
 
                     // Tentar carregar mesas reais do banco
-                    mesaRepository.obterMesasPorCliente(clienteId).collect { mesas ->
+                    appRepository.obterMesasPorCliente(clienteId).collect { mesas: List<Mesa> ->
                         Log.d("ClientDetailViewModel", "Mesas reais encontradas: ${mesas.size}")
                         _mesasCliente.value = mesas
                         _clientDetails.value = _clientDetails.value?.copy(mesasAtivas = mesas.size)
@@ -177,7 +169,7 @@ class ClientDetailViewModel(
 
     fun adicionarMesaAoCliente(mesaId: Long, clienteId: Long) {
         viewModelScope.launch {
-            mesaRepository.vincularMesa(mesaId, clienteId)
+            appRepository.vincularMesaACliente(mesaId, clienteId)
             loadClientDetails(clienteId)
         }
     }
@@ -188,7 +180,7 @@ class ClientDetailViewModel(
     suspend fun verificarSeRetiradaEPermitida(mesaId: Long, _clienteId: Long): RetiradaStatus {
         return try {
             // Buscar último acerto da mesa
-            val ultimoAcertoMesa = acertoRepository.buscarUltimoAcertoMesa(mesaId)
+            val ultimoAcertoMesa = appRepository.buscarUltimoAcertoPorMesa(mesaId)
             val hoje = java.util.Calendar.getInstance()
             hoje.set(java.util.Calendar.HOUR_OF_DAY, 0)
             hoje.set(java.util.Calendar.MINUTE, 0)
@@ -220,10 +212,10 @@ class ClientDetailViewModel(
         viewModelScope.launch {
             try {
                 // ✅ NOVO: Atualizar mesa com relógio final informado pelo usuário
-                mesaRepository.atualizarRelogioFinal(mesaId, relogioFinal)
+                appRepository.atualizarRelogioFinal(mesaId, relogioFinal)
                 
                 // Retirar mesa (volta para depósito com relógio final como inicial)
-                mesaRepository.retirarMesa(mesaId)
+                appRepository.retirarMesa(mesaId)
                 
                 Log.d("ClientDetailViewModel", "Mesa $mesaId retirada do cliente $clienteId")
                 Log.d("ClientDetailViewModel", "Relógio final: $relogioFinal, Valor recebido: R$ $valorRecebido")
@@ -239,7 +231,7 @@ class ClientDetailViewModel(
 
     fun loadMesasDisponiveis() {
         viewModelScope.launch {
-            mesaRepository.obterMesasDisponiveis().collect { mesas ->
+            appRepository.obterMesasDisponiveis().collect { mesas ->
                 _mesasDisponiveis.value = mesas
             }
         }
@@ -254,7 +246,8 @@ class ClientDetailViewModel(
     fun salvarObservacaoCliente(clienteId: Long, observacao: String) {
         viewModelScope.launch {
             try {
-                clienteRepository.atualizarObservacao(clienteId, observacao)
+                // TODO: Implementar atualização de observação do cliente
+                // appRepository.atualizarObservacaoCliente(clienteId, observacao)
                 loadClientDetails(clienteId)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -284,11 +277,11 @@ class ClientDetailViewModel(
         viewModelScope.launch {
             Log.d("ClientDetailViewModel", "Carregando histórico de acertos para cliente: $clienteId")
             try {
-                acertoRepository.buscarPorCliente(clienteId).collect { acertos ->
+                appRepository.obterAcertosPorCliente(clienteId).collect { acertos: List<Acerto> ->
                     Log.d("ClientDetailViewModel", "=== CARREGANDO HISTÓRICO - DEBUG OBSERVAÇÕES ===")
                     Log.d("ClientDetailViewModel", "Acertos encontrados no banco: ${acertos.size}")
                     
-                    val acertosResumo = acertos.map { acerto ->
+                    val acertosResumo = acertos.map { acerto: Acerto ->
                         Log.d("ClientDetailViewModel", "🔍 Acerto ID ${acerto.id}:")
                         Log.d("ClientDetailViewModel", "  - Observação no banco: '${acerto.observacoes}'")
                         Log.d("ClientDetailViewModel", "  - Observação é nula? ${acerto.observacoes == null}")
@@ -316,7 +309,7 @@ class ClientDetailViewModel(
                     Log.d("ClientDetailViewModel", "✅ Histórico atualizado: ${_settlementHistory.value.size} acertos")
                     
                     // ✅ CORREÇÃO: Log detalhado do que foi salvo no histórico
-                    acertosResumo.forEach { resumo ->
+                    acertosResumo.forEach { resumo: AcertoResumo ->
                         Log.d("ClientDetailViewModel", "📋 Resumo ID ${resumo.id}: observação = '${resumo.observacao}'")
                     }
                 }
@@ -336,7 +329,7 @@ class ClientDetailViewModel(
     fun buscarDataUltimoAcerto(clienteId: Long, callback: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
+                val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(clienteId)
                 if (ultimoAcerto != null) {
                     val formatter = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR"))
                     val dataFormatada = formatter.format(ultimoAcerto.dataAcerto)
@@ -373,7 +366,9 @@ class ClientDetailViewModel(
      */
     suspend fun buscarRelogioFinalUltimoAcerto(mesaId: Long): Int? {
         return try {
-            acertoMesaRepository.buscarRelogioFinalUltimoAcerto(mesaId)
+            // TODO: Implementar busca de relógio final do último acerto
+            // appRepository.buscarRelogioFinalUltimoAcerto(mesaId)
+            null
         } catch (e: Exception) {
             Log.e("ClientDetailViewModel", "Erro ao buscar relógio final do último acerto: ${e.message}")
             null
@@ -385,7 +380,9 @@ class ClientDetailViewModel(
      */
     suspend fun buscarCicloIdPorAcerto(acertoId: Long): Long? {
         return try {
-            acertoRepository.buscarCicloIdPorAcerto(acertoId)
+            // TODO: Implementar busca de ciclo ID por acerto
+            // appRepository.buscarCicloIdPorAcerto(acertoId)
+            null
         } catch (e: Exception) {
             Log.e("ClientDetailViewModel", "Erro ao buscar ciclo ID por acerto: ${e.message}")
             null
@@ -397,7 +394,9 @@ class ClientDetailViewModel(
      */
     suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? {
         return try {
-            clienteRepository.buscarRotaIdPorCliente(clienteId)
+            // TODO: Implementar busca de rota ID por cliente
+            // appRepository.buscarRotaIdPorCliente(clienteId)
+            null
         } catch (e: Exception) {
             Log.e("ClientDetailViewModel", "Erro ao buscar rota ID por cliente: ${e.message}")
             null
@@ -409,9 +408,18 @@ class ClientDetailViewModel(
      */
     suspend fun buscarUltimoAcerto(clienteId: Long): Acerto? {
         return try {
-            acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
+            appRepository.buscarUltimoAcertoPorCliente(clienteId)
         } catch (e: Exception) {
             Log.e("ClientDetailViewModel", "Erro ao buscar último acerto: ${e.message}")
+            null
+        }
+    }
+    
+    suspend fun buscarCicloAtualPorRota(rotaId: Long): CicloAcertoEntity? {
+        return try {
+            appRepository.buscarCicloAtualPorRota(rotaId)
+        } catch (e: Exception) {
+            Log.e("ClientDetailViewModel", "Erro ao buscar ciclo atual por rota: ${e.message}")
             null
         }
     }

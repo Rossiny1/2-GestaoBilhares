@@ -7,13 +7,11 @@ import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
-// import dagger.hilt.android.lifecycle.HiltViewModel // REMOVIDO: Hilt nao e mais usado
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 
 /**
  * ViewModel para o histórico de manutenção de uma mesa.

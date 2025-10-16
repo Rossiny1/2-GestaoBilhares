@@ -23,7 +23,6 @@ import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-// import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
 

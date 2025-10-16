@@ -24,8 +24,6 @@ import java.util.Date
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-// // import dagger.hilt.android.lifecycle.HiltViewModel // REMOVIDO: Hilt nao e mais usado // ✅ REMOVIDO: Hilt não é mais usado
-// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 
 /**
  * Filtros disponíveis para a lista de clientes

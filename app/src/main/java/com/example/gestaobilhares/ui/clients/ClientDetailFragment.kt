@@ -28,10 +28,6 @@ import com.example.gestaobilhares.ui.settlement.MesaDTO
 import android.widget.Toast
 
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.ClienteRepository
-import com.example.gestaobilhares.data.repository.MesaRepository
-import com.example.gestaobilhares.data.repository.AcertoRepository
-import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 import com.example.gestaobilhares.data.repository.RotaRepository
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.DespesaRepository
@@ -53,8 +49,7 @@ class ClientDetailFragment : Fragment() {
     private lateinit var mesasAdapter: MesasAdapter
     
     // Repositórios para verificação de status da rota
-    private lateinit var rotaRepository: RotaRepository
-    private lateinit var cicloAcertoRepository: CicloAcertoRepository
+    // Repositórios individuais removidos - usando apenas AppRepository
 
     private val REQUEST_CODE_NOVO_ACERTO = 1001
 
@@ -273,23 +268,10 @@ class ClientDetailFragment : Fragment() {
             database.logAuditoriaAssinaturaDao()
         )
 
-        viewModel = ClientDetailViewModel(
-            ClienteRepository(database.clienteDao(), appRepository),
-            MesaRepository(database.mesaDao()),
-            AcertoRepository(database.acertoDao(), database.clienteDao()),
-            AcertoMesaRepository(database.acertoMesaDao()),
-            appRepository
-        )
+        viewModel = ClientDetailViewModel(appRepository)
         
         // Inicializar repositórios para verificação de rota
-        rotaRepository = RotaRepository(database.rotaDao())
-        cicloAcertoRepository = CicloAcertoRepository(
-            database.cicloAcertoDao(),
-            DespesaRepository(database.despesaDao()),
-            AcertoRepository(database.acertoDao(), database.clienteDao()),
-            ClienteRepository(database.clienteDao(), appRepository),
-            database.rotaDao()
-        )
+        // Repositórios individuais removidos - usando apenas AppRepository
         
         // Inicializar views e configurar listeners
         setupRecyclerView()
@@ -443,7 +425,7 @@ class ClientDetailFragment : Fragment() {
                         return@launch
                     }
                     
-                    val cicloEmAndamento = cicloAcertoRepository.buscarCicloAtivo(rotaId)
+                    val cicloEmAndamento = viewModel.buscarCicloAtualPorRota(rotaId)
                     
                     if (cicloEmAndamento == null || cicloEmAndamento.status != StatusCicloAcerto.EM_ANDAMENTO) {
                         // Mostrar diálogo de rota não iniciada

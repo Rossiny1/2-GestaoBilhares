@@ -31,7 +31,6 @@ import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
 import java.text.NumberFormat
 import java.util.Locale
-// import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 
