@@ -51,7 +51,7 @@ import kotlinx.coroutines.flow.first
 class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.ConfirmarRetiradaDialogListener, AdicionarMesaDialogFragment.AdicionarMesaDialogListener, AdicionarObservacaoDialogFragment.AdicionarObservacaoDialogListener, GerarRelatorioDialogFragment.GerarRelatorioDialogListener {
 
     private var _binding: FragmentClientDetailBinding? = null
-    private val binding get() = _binding!!
+    private val binding get() = _binding ?: throw IllegalStateException("Binding is null. Fragment may be destroyed.")
     private val args: ClientDetailFragmentArgs by navArgs()
     private lateinit var viewModel: ClientDetailViewModel
     private lateinit var mesasAdapter: MesasAdapter
@@ -76,6 +76,9 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         setupRecyclerView()
         observeViewModel()
         setupListeners(clientId)
+        
+        // Carregar dados do cliente
+        viewModel.loadClientDetails(clientId)
 
         return binding.root
     }
@@ -218,6 +221,8 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
     }
 
     private fun expandirFabMenu() {
+        if (_binding == null) return // Verificar se o binding ainda existe
+        
         ObjectAnimator.ofFloat(binding.fabMain, "rotation", 0f, 45f).setDuration(300).start()
         binding.fabExpandedContainer.visibility = View.VISIBLE
         animateFabContainer(binding.fabAddTableContainer, 0, 50)
@@ -226,15 +231,21 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
     }
 
     private fun recolherFabMenu() {
+        if (_binding == null) return // Verificar se o binding ainda existe
+        
         ObjectAnimator.ofFloat(binding.fabMain, "rotation", 45f, 0f).setDuration(300).start()
         animateFabContainer(binding.fabNewSettlementContainer, 2, 150, false)
         animateFabContainer(binding.fabContractContainer, 1, 100, false)
         animateFabContainer(binding.fabAddTableContainer, 0, 50, false) {
-            binding.fabExpandedContainer.visibility = View.GONE
+            if (_binding != null) { // Verificar novamente antes de acessar binding
+                binding.fabExpandedContainer.visibility = View.GONE
+            }
         }
     }
 
     private fun animateFabContainer(container: View, index: Int, startDelay: Long, show: Boolean = true, onEndAction: (() -> Unit)? = null) {
+        if (_binding == null) return // Verificar se o binding ainda existe
+        
         val translationY = if (show) 0f else 100f
         val alpha = if (show) 1f else 0f
         container.animate()
@@ -242,7 +253,11 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
             .alpha(alpha)
             .setDuration(200)
             .setStartDelay(startDelay)
-            .withEndAction { onEndAction?.invoke() }
+            .withEndAction { 
+                if (_binding != null) { // Verificar novamente antes de executar callback
+                    onEndAction?.invoke() 
+                }
+            }
             .start()
     }
 
