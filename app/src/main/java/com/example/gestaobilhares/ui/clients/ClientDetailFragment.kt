@@ -47,8 +47,9 @@ import com.example.gestaobilhares.ui.dialogs.ConfirmarRetiradaMesaDialogFragment
 import com.example.gestaobilhares.ui.dialogs.GerarRelatorioDialogFragment
 import com.example.gestaobilhares.ui.dialogs.RotaNaoIniciadaDialogFragment
 import kotlinx.coroutines.flow.first
+import com.example.gestaobilhares.ui.clients.RetiradaStatus
 
-class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.ConfirmarRetiradaDialogListener, AdicionarMesaDialogFragment.AdicionarMesaDialogListener, AdicionarObservacaoDialogFragment.AdicionarObservacaoDialogListener, GerarRelatorioDialogFragment.GerarRelatorioDialogListener {
+class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.ConfirmarRetiradaDialogListener, AdicionarObservacaoDialogFragment.AdicionarObservacaoDialogListener, GerarRelatorioDialogFragment.GerarRelatorioDialogListener {
 
     private var _binding: FragmentClientDetailBinding? = null
     private val binding get() = _binding ?: throw IllegalStateException("Binding is null. Fragment may be destroyed.")
@@ -86,8 +87,25 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
     private fun setupRecyclerView() {
         mesasAdapter = MesasAdapter(
             onRetirarMesa = { mesa ->
-                mesaParaRemover = mesa
-                ConfirmarRetiradaMesaDialogFragment.newInstance().show(childFragmentManager, ConfirmarRetiradaMesaDialogFragment.TAG)
+                // Verificar se a mesa pode ser retirada (se foi acertada hoje)
+                lifecycleScope.launch {
+                    val statusRetirada = viewModel.verificarSeRetiradaEPermitida(mesa.id, args.clienteId)
+                    when (statusRetirada) {
+                        RetiradaStatus.PODE_RETIRAR -> {
+                            // Mesa foi acertada hoje - pode retirar
+                            mesaParaRemover = mesa
+                            ConfirmarRetiradaMesaDialogFragment.newInstance().show(childFragmentManager, ConfirmarRetiradaMesaDialogFragment.TAG)
+                        }
+                        RetiradaStatus.PRECISA_ACERTO -> {
+                            // Mesa não foi acertada hoje - precisa acertar primeiro
+                            Toast.makeText(
+                                requireContext(),
+                                "Esta mesa precisa ser acertada antes de ser removida. Faça um novo acerto primeiro.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
             }
         )
         binding.rvMesasCliente.apply {
@@ -138,7 +156,12 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         }
 
         binding.fabAddTableContainer.setOnClickListener {
-            AdicionarMesaDialogFragment.newInstance(clientId).show(childFragmentManager, AdicionarMesaDialogFragment.TAG)
+            val action = ClientDetailFragmentDirections.actionClientDetailFragmentToMesasDepositoFragment(
+                clienteId = clientId,
+                isFromGerenciarMesas = false,
+                isFromClientRegister = false
+            )
+            findNavController().navigate(action)
             recolherFabMenu()
         }
 
@@ -193,8 +216,26 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         }
 
         binding.fabContractContainer.setOnClickListener {
-            Toast.makeText(requireContext(), "Geração de contrato será habilitada em seguida.", Toast.LENGTH_SHORT).show()
-            recolherFabMenu()
+            // Verificar se o cliente já tem contrato ativo
+            lifecycleScope.launch {
+                viewModel.verificarContratoAtivo(clientId)
+                val temContratoAtivo = viewModel.temContratoAtivo.first()
+                
+                if (temContratoAtivo) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Este cliente já possui um contrato ativo. Não é possível gerar um novo contrato.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    val action = ClientDetailFragmentDirections.actionClientDetailFragmentToContractGenerationFragment(
+                        clienteId = clientId,
+                        mesasVinculadas = longArrayOf() // Array vazio para novo contrato
+                    )
+                    findNavController().navigate(action)
+                }
+                recolherFabMenu()
+            }
         }
 
         binding.fabWhatsApp.setOnClickListener {
@@ -261,9 +302,6 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
             .start()
     }
 
-    override fun onMesaAdicionada(novaMesa: Mesa) {
-        viewModel.adicionarMesaAoCliente(novaMesa.id, args.clienteId)
-    }
 
     override fun onDialogPositiveClick(dialog: DialogFragment) {
         mesaParaRemover?.let {
