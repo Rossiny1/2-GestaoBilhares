@@ -55,7 +55,9 @@ class ClientDetailViewModel(
             showLoading()
             Log.d("ClientDetailViewModel", "=== CARREGANDO DETALHES DO CLIENTE $clienteId ===")
             try {
+                Log.d("ClientDetailViewModel", "Buscando cliente no banco com ID: $clienteId")
                 val cliente = appRepository.obterClientePorId(clienteId)
+                Log.d("ClientDetailViewModel", "Cliente encontrado no banco: ${cliente?.nome}, rotaId: ${cliente?.rotaId}")
                 cliente?.let {
                     Log.d("ClientDetailViewModel", "Cliente encontrado: ${it.nome}")
                     Log.d("ClientDetailViewModel", "Endereço: ${it.endereco}")
@@ -393,9 +395,7 @@ class ClientDetailViewModel(
      */
     suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? {
         return try {
-            // TODO: Implementar busca de rota ID por cliente
-            // appRepository.buscarRotaIdPorCliente(clienteId)
-            null
+            appRepository.buscarRotaIdPorCliente(clienteId)
         } catch (e: Exception) {
             Log.e("ClientDetailViewModel", "Erro ao buscar rota ID por cliente: ${e.message}")
             null

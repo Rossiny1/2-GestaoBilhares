@@ -278,8 +278,12 @@ class ClientDetailFragment : Fragment() {
         observeViewModel()
         
         // Carregar dados do cliente apenas se não estiverem carregados
+        Log.d("ClientDetailFragment", "Args.clienteId: ${args.clienteId}")
         if (viewModel.clientDetails.value == null) {
+            Log.d("ClientDetailFragment", "Carregando detalhes do cliente...")
             viewModel.loadClientDetails(args.clienteId)
+        } else {
+            Log.d("ClientDetailFragment", "Cliente já carregado: ${viewModel.clientDetails.value?.nome}")
         }
         
         // ✅ CORREÇÃO OFICIAL: Usar SavedStateHandle para controlar o diálogo de observações
@@ -409,6 +413,7 @@ class ClientDetailFragment : Fragment() {
                 try {
                     // Obter dados do cliente para verificar a rota
                     val cliente = viewModel.clientDetails.value
+                    Log.d("ClientDetailFragment", "Cliente obtido do ViewModel: ${cliente?.nome}, ID: ${cliente?.id}")
                     if (cliente == null) {
                         Toast.makeText(requireContext(), "Erro: dados do cliente não carregados.", Toast.LENGTH_LONG).show()
                         recolherFabMenu()
@@ -416,8 +421,11 @@ class ClientDetailFragment : Fragment() {
                     }
                     
                     // Verificar se existe ciclo em andamento para a rota do cliente
+                    Log.d("ClientDetailFragment", "Buscando rotaId para cliente ID: ${cliente.id}")
                     val rotaId = viewModel.buscarRotaIdPorCliente(cliente.id)
+                    Log.d("ClientDetailFragment", "RotaId encontrado: $rotaId")
                     if (rotaId == null) {
+                        Log.e("ClientDetailFragment", "Erro: rotaId é null para cliente ID: ${cliente.id}")
                         Toast.makeText(requireContext(), "Erro: não foi possível obter a rota do cliente.", Toast.LENGTH_LONG).show()
                         recolherFabMenu()
                         return@launch
