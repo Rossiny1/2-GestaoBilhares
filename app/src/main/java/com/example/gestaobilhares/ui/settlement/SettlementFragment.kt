@@ -52,7 +52,7 @@ import com.example.gestaobilhares.ui.clients.AcertoResumo
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.first
-// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
+// ✅ REMOVIDO: Hilt não é mais usado
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.example.gestaobilhares.utils.ImageCompressionUtils

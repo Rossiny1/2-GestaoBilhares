@@ -30,7 +30,7 @@ import java.io.File
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
+// ✅ REMOVIDO: Hilt não é mais usado
 import java.time.format.DateTimeFormatter
 import java.util.*
 

@@ -15,8 +15,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.flow.first
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import com.example.gestaobilhares.databinding.FragmentClientDetailBinding
 import com.example.gestaobilhares.data.entities.Mesa
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -28,9 +28,7 @@ import com.example.gestaobilhares.ui.settlement.MesaDTO
 import android.widget.Toast
 
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.RotaRepository
-import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.DespesaRepository
+// ✅ REMOVIDO: Imports não utilizados - repositórios individuais foram consolidados no AppRepository
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 
 /**

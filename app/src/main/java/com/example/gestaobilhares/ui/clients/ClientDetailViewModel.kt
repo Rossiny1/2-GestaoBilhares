@@ -3,8 +3,7 @@
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
-// Data classes definidas no final do arquivo
-// Hilt removido - usando instanciação direta
+// ✅ REMOVIDO: Comentários desnecessários
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +14,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.parcelize.Parcelize
 import android.os.Parcelable
 import com.example.gestaobilhares.data.entities.Acerto
-import com.example.gestaobilhares.data.entities.TipoMesa
+// ✅ REMOVIDO: TipoMesa não utilizado neste ViewModel
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import android.util.Log
 
