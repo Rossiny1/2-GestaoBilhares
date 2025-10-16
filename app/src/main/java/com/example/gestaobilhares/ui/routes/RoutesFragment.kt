@@ -50,20 +50,7 @@ class RoutesFragment : Fragment() {
     // ✅ CORREÇÃO: ViewModel com Factory customizada
     private val viewModel: RoutesViewModel by viewModels {
         RoutesViewModelFactory(
-            AppRepository(
-                AppDatabase.getDatabase(requireContext()).clienteDao(),
-                AppDatabase.getDatabase(requireContext()).acertoDao(),
-                AppDatabase.getDatabase(requireContext()).mesaDao(),
-                AppDatabase.getDatabase(requireContext()).rotaDao(),
-                AppDatabase.getDatabase(requireContext()).despesaDao(),
-                AppDatabase.getDatabase(requireContext()).colaboradorDao(),
-                AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
-                AppDatabase.getDatabase(requireContext()).acertoMesaDao(),
-                AppDatabase.getDatabase(requireContext()).contratoLocacaoDao(),
-                AppDatabase.getDatabase(requireContext()).aditivoContratoDao(),
-                AppDatabase.getDatabase(requireContext()).assinaturaRepresentanteLegalDao(),
-                AppDatabase.getDatabase(requireContext()).logAuditoriaAssinaturaDao()
-            ),
+            com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext()),
             UserSessionManager.getInstance(requireContext())
         )
     }

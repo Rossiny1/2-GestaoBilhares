@@ -93,6 +93,17 @@ interface CicloAcertoDao {
      */
     @Query("SELECT * FROM ciclos_acerto WHERE rota_id = :rotaId AND status = 'EM_ANDAMENTO' LIMIT 1")
     fun observarCicloEmAndamento(rotaId: Long): Flow<CicloAcertoEntity?>
+
+    /**
+     * Atualiza os valores agregados do ciclo (totais, despesas e clientes acertados)
+     */
+    @Query("UPDATE ciclos_acerto SET valor_total_acertado = :valorTotalAcertado, valor_total_despesas = :valorTotalDespesas, clientes_acertados = :clientesAcertados WHERE id = :cicloId")
+    suspend fun atualizarValoresCiclo(
+        cicloId: Long,
+        valorTotalAcertado: Double,
+        valorTotalDespesas: Double,
+        clientesAcertados: Int
+    )
     
     /**
      * Lista ciclos por período (para relatórios).

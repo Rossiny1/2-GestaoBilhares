@@ -52,21 +52,7 @@ class AditivoSignatureFragment : Fragment() {
         
         // ✅ CORREÇÃO: Inicializar ViewModel antes de usar
         try {
-            val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-            val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
-                database.clienteDao(),
-                database.acertoDao(),
-                database.mesaDao(),
-                database.rotaDao(),
-                database.despesaDao(),
-                database.colaboradorDao(),
-                database.cicloAcertoDao(),
-                database.acertoMesaDao(),
-                database.contratoLocacaoDao(),
-                database.aditivoContratoDao(),
-                database.assinaturaRepresentanteLegalDao(),
-                database.logAuditoriaAssinaturaDao()
-            )
+            val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
             viewModel = AditivoSignatureViewModel()
             viewModel.initializeRepository(appRepository)
             
@@ -314,21 +300,7 @@ class AditivoSignatureFragment : Fragment() {
                             try {
                                 // ✅ CORREÇÃO: Usar lifecycleScope para chamada suspensa
                                 viewLifecycleOwner.lifecycleScope.launch {
-                                    val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-                                    val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                                        db.clienteDao(),
-                                        db.acertoDao(),
-                                        db.mesaDao(),
-                                        db.rotaDao(),
-                                        db.despesaDao(),
-                                        db.colaboradorDao(),
-                                        db.cicloAcertoDao(),
-                                        db.acertoMesaDao(),
-                                        db.contratoLocacaoDao(),
-                                        db.aditivoContratoDao(),
-                                        db.assinaturaRepresentanteLegalDao(),
-                                        db.logAuditoriaAssinaturaDao()
-                                    )
+                                    val repo = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
                                     val contratoCompleto = repo.buscarContratoPorId(contratoId)
                                     val novoClienteId = contratoCompleto?.clienteId ?: 0L
                                     android.util.Log.d("AditivoSignatureFragment", "✅ ClienteId obtido do banco: $novoClienteId")

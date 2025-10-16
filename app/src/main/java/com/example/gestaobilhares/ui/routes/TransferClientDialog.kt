@@ -69,23 +69,11 @@ class TransferClientDialog : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Inicialização manual do ViewModel com repositórios necessários
-        val database = AppDatabase.getDatabase(requireContext())
-        val clienteRepository = ClienteRepository(database.clienteDao(),
-            com.example.gestaobilhares.data.repository.AppRepository(
-                database.clienteDao(),
-                database.acertoDao(),
-                database.mesaDao(),
-                database.rotaDao(),
-                database.despesaDao(),
-                database.colaboradorDao(),
-                database.cicloAcertoDao(),
-                database.acertoMesaDao(),
-                database.contratoLocacaoDao(),
-                database.aditivoContratoDao(),
-                database.assinaturaRepresentanteLegalDao(),
-                database.logAuditoriaAssinaturaDao()
-            )
+        // Inicializar repositórios e ViewModel
+        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+        val clienteRepository = com.example.gestaobilhares.data.repository.ClienteRepository(
+            database.clienteDao(),
+            com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         )
         val rotaRepository = RotaRepository(database.rotaDao())
         val mesaRepository = MesaRepository(database.mesaDao())

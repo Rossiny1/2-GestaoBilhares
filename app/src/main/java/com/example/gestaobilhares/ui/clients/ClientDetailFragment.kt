@@ -8,19 +8,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import kotlinx.coroutines.flow.first
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.gestaobilhares.databinding.FragmentClientDetailBinding
 import com.example.gestaobilhares.data.entities.Mesa
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-// Hilt removido - usando instanciação direta
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.R
 import android.util.Log
@@ -28,8 +25,11 @@ import com.example.gestaobilhares.ui.settlement.MesaDTO
 import android.widget.Toast
 
 import com.example.gestaobilhares.data.database.AppDatabase
-// ✅ REMOVIDO: Imports não utilizados - repositórios individuais foram consolidados no AppRepository
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
+import com.example.gestaobilhares.BuildConfig
+import com.example.gestaobilhares.data.factory.RepositoryFactory
+import com.example.gestaobilhares.data.entities.ContratoLocacao
+import kotlinx.coroutines.flow.first
 
 /**
  * Fragment para exibir detalhes do cliente e histórico de acertos
@@ -64,10 +64,7 @@ class ClientDetailFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-                val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                    db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao()                )
+                val repo = RepositoryFactory.getAppRepository(requireContext())
                 val contratos = repo.buscarContratosPorCliente(clienteId).first()
                 // ✅ CORRIGIDO: Buscar APENAS contrato ATIVO para aditivo
                 // Se não houver contrato ativo, não pode gerar aditivo
@@ -143,12 +140,9 @@ class ClientDetailFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-                val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                    db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao()                )
+                val repo = RepositoryFactory.getAppRepository(requireContext())
                 val contratos = repo.buscarContratosPorCliente(clienteId).first()
-                val contrato = contratos.maxByOrNull { it.dataCriacao.time } ?: return@launch
+                val contrato = contratos.maxByOrNull { contrato: ContratoLocacao -> contrato.dataCriacao.time } ?: return@launch
                 val bundle = android.os.Bundle().apply {
                     putLong("contrato_id", contrato.id)
                     putString("assinatura_contexto", "DISTRATO")
@@ -167,12 +161,9 @@ class ClientDetailFragment : Fragment() {
             try {
                 // Carregar contrato e mesas remanescentes (já vazias)
                 val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-                val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                    db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                    db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                    db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao()                )
+                val repo = RepositoryFactory.getAppRepository(requireContext())
                 val contratos = repo.buscarContratosPorCliente(clienteId).first()
-                val contrato = contratos.maxByOrNull { it.dataCriacao.time }
+                val contrato = contratos.maxByOrNull { contrato: ContratoLocacao -> contrato.dataCriacao.time }
                 if (contrato == null) {
                     android.widget.Toast.makeText(requireContext(), "Contrato não encontrado", android.widget.Toast.LENGTH_SHORT).show()
                     return@launch
@@ -249,22 +240,8 @@ class ClientDetailFragment : Fragment() {
             }
         })
         
-        // Inicializar ViewModel e repositórios aqui onde o contexto está disponível
-        val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
-        )
+        // ✅ MELHORIA: Usar RepositoryFactory para centralizar inicialização
+        val appRepository = RepositoryFactory.getAppRepository(requireContext())
 
         viewModel = ClientDetailViewModel(appRepository)
         
@@ -278,12 +255,18 @@ class ClientDetailFragment : Fragment() {
         observeViewModel()
         
         // Carregar dados do cliente apenas se não estiverem carregados
-        Log.d("ClientDetailFragment", "Args.clienteId: ${args.clienteId}")
+        if (BuildConfig.DEBUG) {
+            Log.d("ClientDetailFragment", "Args.clienteId: ${args.clienteId}")
+        }
         if (viewModel.clientDetails.value == null) {
-            Log.d("ClientDetailFragment", "Carregando detalhes do cliente...")
+            if (BuildConfig.DEBUG) {
+                Log.d("ClientDetailFragment", "Carregando detalhes do cliente...")
+            }
             viewModel.loadClientDetails(args.clienteId)
         } else {
-            Log.d("ClientDetailFragment", "Cliente já carregado: ${viewModel.clientDetails.value?.nome}")
+            if (BuildConfig.DEBUG) {
+                Log.d("ClientDetailFragment", "Cliente já carregado: ${viewModel.clientDetails.value?.nome}")
+            }
         }
         
         // ✅ CORREÇÃO OFICIAL: Usar SavedStateHandle para controlar o diálogo de observações
@@ -368,12 +351,9 @@ class ClientDetailFragment : Fragment() {
                     if (mesasAtivas.isNotEmpty()) {
                         // ✅ BLOQUEIO: Não permitir gerar novo contrato se já houver contrato ATIVO
                         val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-                        val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                            db.clienteDao(), db.acertoDao(), db.mesaDao(), db.rotaDao(), db.despesaDao(),
-                            db.colaboradorDao(), db.cicloAcertoDao(), db.acertoMesaDao(), db.contratoLocacaoDao(), db.aditivoContratoDao(),
-                            db.assinaturaRepresentanteLegalDao(), db.logAuditoriaAssinaturaDao()                        )
+                        val repo = RepositoryFactory.getAppRepository(requireContext())
                         val contratos = repo.buscarContratosPorCliente(args.clienteId).first()
-                        val contratoMaisRecente = contratos.maxByOrNull { c ->
+                        val contratoMaisRecente = contratos.maxByOrNull { c: ContratoLocacao ->
                             (c.dataEncerramento?.time ?: c.dataAtualizacao?.time ?: c.dataCriacao.time)
                         }
                         val isAtivo = contratoMaisRecente?.status?.equals("ATIVO", ignoreCase = true) == true
@@ -413,7 +393,9 @@ class ClientDetailFragment : Fragment() {
                 try {
                     // Obter dados do cliente para verificar a rota
                     val cliente = viewModel.clientDetails.value
-                    Log.d("ClientDetailFragment", "Cliente obtido do ViewModel: ${cliente?.nome}, ID: ${cliente?.id}")
+                    if (BuildConfig.DEBUG) {
+                        Log.d("ClientDetailFragment", "Cliente obtido do ViewModel: ${cliente?.nome}, ID: ${cliente?.id}")
+                    }
                     if (cliente == null) {
                         Toast.makeText(requireContext(), "Erro: dados do cliente não carregados.", Toast.LENGTH_LONG).show()
                         recolherFabMenu()
@@ -421,9 +403,13 @@ class ClientDetailFragment : Fragment() {
                     }
                     
                     // Verificar se existe ciclo em andamento para a rota do cliente
-                    Log.d("ClientDetailFragment", "Buscando rotaId para cliente ID: ${cliente.id}")
+                    if (BuildConfig.DEBUG) {
+                        Log.d("ClientDetailFragment", "Buscando rotaId para cliente ID: ${cliente.id}")
+                    }
                     val rotaId = viewModel.buscarRotaIdPorCliente(cliente.id)
-                    Log.d("ClientDetailFragment", "RotaId encontrado: $rotaId")
+                    if (BuildConfig.DEBUG) {
+                        Log.d("ClientDetailFragment", "RotaId encontrado: $rotaId")
+                    }
                     if (rotaId == null) {
                         Log.e("ClientDetailFragment", "Erro: rotaId é null para cliente ID: ${cliente.id}")
                         Toast.makeText(requireContext(), "Erro: não foi possível obter a rota do cliente.", Toast.LENGTH_LONG).show()

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import android.util.Log
+import com.example.gestaobilhares.BuildConfig
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 // ✅ REMOVIDO: Hilt não é mais usado
@@ -37,8 +38,41 @@ class AppRepository constructor(
     private val aditivoContratoDao: AditivoContratoDao,
     private val assinaturaRepresentanteLegalDao: AssinaturaRepresentanteLegalDao,
     private val logAuditoriaAssinaturaDao: LogAuditoriaAssinaturaDao,
-    // private val  // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
+    private val panoEstoqueDao: com.example.gestaobilhares.data.dao.PanoEstoqueDao,
+    private val categoriaDespesaDao: CategoriaDespesaDao,
+    private val tipoDespesaDao: TipoDespesaDao,
+    private val historicoManutencaoVeiculoDao: HistoricoManutencaoVeiculoDao,
+    private val historicoCombustivelVeiculoDao: HistoricoCombustivelVeiculoDao,
+    private val historicoManutencaoMesaDao: HistoricoManutencaoMesaDao
 ) {
+    // ==================== CATEGORIAS E TIPOS DE DESPESA ====================
+    fun buscarCategoriasAtivas() = categoriaDespesaDao.buscarAtivas()
+    suspend fun buscarCategoriaPorNome(nome: String) = categoriaDespesaDao.buscarPorNome(nome)
+    suspend fun categoriaExiste(nome: String): Boolean = categoriaDespesaDao.contarPorNome(nome) > 0
+    suspend fun criarCategoria(nova: NovaCategoriaDespesa): Long {
+        val entity = CategoriaDespesa(
+            nome = nova.nome,
+            descricao = nova.descricao,
+            criadoPor = nova.criadoPor
+        )
+        return categoriaDespesaDao.inserir(entity)
+    }
+    fun buscarTiposPorCategoria(categoriaId: Long) = tipoDespesaDao.buscarPorCategoria(categoriaId)
+    suspend fun buscarTipoPorNome(nome: String) = tipoDespesaDao.buscarPorNome(nome)
+    suspend fun tipoExiste(nome: String, categoriaId: Long): Boolean {
+        val tipo = tipoDespesaDao.buscarPorNome(nome)
+        return tipo != null && tipo.categoriaId == categoriaId
+    }
+    suspend fun criarTipo(novo: NovoTipoDespesa): Long {
+        val entity = TipoDespesa(
+            categoriaId = novo.categoriaId,
+            nome = novo.nome,
+            descricao = novo.descricao,
+            criadoPor = novo.criadoPor
+        )
+        return tipoDespesaDao.inserir(entity)
+    }
+
     
     // ==================== STATEFLOW CACHE (MODERNIZAÇÃO 2025) ====================
     
@@ -95,17 +129,21 @@ class AppRepository constructor(
     /**
      * ✅ NOVO: Busca o ID da rota associada a um cliente
      */
-    suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? {
-        return try {
-            android.util.Log.d("AppRepository", "Buscando cliente ID: $clienteId")
-            val cliente = obterClientePorId(clienteId)
-            android.util.Log.d("AppRepository", "Cliente encontrado: ${cliente?.nome}, rotaId: ${cliente?.rotaId}")
-            cliente?.rotaId
-        } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao buscar rota ID por cliente: ${e.message}", e)
-            null
-        }
-    }
+                suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? {
+                    return try {
+                        if (BuildConfig.DEBUG) {
+                            android.util.Log.d("AppRepository", "Buscando cliente ID: $clienteId")
+                        }
+                        val cliente = obterClientePorId(clienteId)
+                        if (BuildConfig.DEBUG) {
+                            android.util.Log.d("AppRepository", "Cliente encontrado: ${cliente?.nome}, rotaId: ${cliente?.rotaId}")
+                        }
+                        cliente?.rotaId
+                    } catch (e: Exception) {
+                        android.util.Log.e("AppRepository", "Erro ao buscar rota ID por cliente: ${e.message}", e)
+                        null
+                    }
+                }
     
     // ==================== ACERTO ====================
     
@@ -132,10 +170,32 @@ class AppRepository constructor(
     suspend fun deletarAcerto(acerto: Acerto) = acertoDao.deletar(acerto)
     suspend fun buscarUltimoAcertoPorMesa(mesaId: Long) = 
         acertoDao.buscarUltimoAcertoPorMesa(mesaId)
+    suspend fun buscarUltimoAcertoMesaItem(mesaId: Long) =
+        acertoMesaDao.buscarUltimoAcertoMesa(mesaId)
     suspend fun buscarObservacaoUltimoAcerto(clienteId: Long) = 
         acertoDao.buscarObservacaoUltimoAcerto(clienteId)
     suspend fun buscarUltimosAcertosPorClientes(clienteIds: List<Long>) =
         acertoDao.buscarUltimosAcertosPorClientes(clienteIds)
+    suspend fun buscarCicloAtivo(rotaId: Long) = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
+    fun buscarPorRotaECicloId(rotaId: Long, cicloId: Long) = acertoDao.buscarPorRotaECicloId(rotaId, cicloId)
+    suspend fun buscarAcertoMesaPorMesa(mesaId: Long) = acertoMesaDao.buscarUltimoAcertoMesa(mesaId)
+    suspend fun salvarAcerto(acerto: Acerto): Long = acertoDao.inserir(acerto)
+    suspend fun buscarPorId(id: Long) = acertoDao.buscarPorId(id)
+    suspend fun atualizarValoresCiclo(
+        cicloId: Long,
+        valorTotalAcertado: Double,
+        valorTotalDespesas: Double,
+        clientesAcertados: Int
+    ) = cicloAcertoDao.atualizarValoresCiclo(cicloId, valorTotalAcertado, valorTotalDespesas, clientesAcertados)
+    suspend fun obterPanoPorId(id: Long) = panoEstoqueDao.buscarPorId(id)
+    suspend fun marcarPanoComoUsadoPorNumero(numeroPano: String, motivo: String) {
+        val pano = panoEstoqueDao.buscarPorNumero(numeroPano)
+        if (pano != null) {
+            panoEstoqueDao.atualizarDisponibilidade(pano.id, false)
+        }
+    }
+    suspend fun buscarPorNumero(numeroPano: String) = panoEstoqueDao.buscarPorNumero(numeroPano)
+    suspend fun marcarPanoComoUsado(panoId: Long, motivo: String) = panoEstoqueDao.atualizarDisponibilidade(panoId, false)
     
     // ==================== MESA ====================
     
@@ -902,7 +962,6 @@ class AppRepository constructor(
     
     fun buscarContratosPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratosPorCliente(clienteId)
     suspend fun buscarContratoPorNumero(numeroContrato: String) = contratoLocacaoDao.buscarContratoPorNumero(numeroContrato)
-    suspend fun buscarContratoAtivoPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratoAtivoPorCliente(clienteId)
     fun buscarContratosAtivos() = contratoLocacaoDao.buscarContratosAtivos()
     fun buscarTodosContratos() = contratoLocacaoDao.buscarTodosContratos()
     suspend fun contarContratosPorAno(ano: String) = contratoLocacaoDao.contarContratosPorAno(ano)
@@ -1255,6 +1314,21 @@ class AppRepository constructor(
         refreshMesasCache()
         Log.d("AppRepository", "✅ Todos os caches atualizados com sucesso")
     }
+    
+    // ==================== MÉTODOS ADICIONAIS PARA CORREÇÃO DE ERROS ====================
+    
+    suspend fun inserirHistoricoManutencao(historico: HistoricoManutencaoVeiculo): Long = historicoManutencaoVeiculoDao.inserir(historico)
+    suspend fun inserirHistoricoCombustivel(historico: HistoricoCombustivelVeiculo): Long = historicoCombustivelVeiculoDao.inserir(historico)
+    suspend fun inserirAcertoMesa(acertoMesa: AcertoMesa): Long = acertoMesaDao.inserir(acertoMesa)
+    suspend fun calcularMediaFichasJogadas(mesaId: Long, limite: Int): Double {
+        val acertos = acertoMesaDao.buscarPorMesa(mesaId).first().take(limite)
+        return if (acertos.isNotEmpty()) {
+            acertos.map { acerto -> acerto.fichasJogadas }.average()
+        } else 0.0
+    }
+    suspend fun buscarAcertoMesasPorAcerto(acertoId: Long) = acertoMesaDao.buscarPorAcerto(acertoId)
+    suspend fun buscarContratoAtivoPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratoAtivoPorCliente(clienteId)
+    suspend fun inserirHistoricoManutencaoMesa(historico: HistoricoManutencaoMesa): Long = historicoManutencaoMesaDao.inserir(historico)
 } 
 
 

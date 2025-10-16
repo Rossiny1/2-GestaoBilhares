@@ -10,17 +10,13 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import com.example.gestaobilhares.data.repository.AppRepository
 /**
  * ViewModel para o cadastro de despesas.
  * Gerencia o estado da tela de cadastro e integra com o ciclo de acertos.
  */
 class ExpenseRegisterViewModel constructor(
-    private val despesaRepository: DespesaRepository,
-    private val categoriaDespesaRepository: CategoriaDespesaRepository,
-    private val tipoDespesaRepository: TipoDespesaRepository,
-    private val cicloAcertoRepository: CicloAcertoRepository,
-    private val historicoManutencaoRepository: HistoricoManutencaoVeiculoRepository,
-    private val historicoCombustivelRepository: HistoricoCombustivelVeiculoRepository
+    private val appRepository: AppRepository
 ) : BaseViewModel() {
 
     // Estado de carregamento - já existe na BaseViewModel
@@ -72,7 +68,7 @@ class ExpenseRegisterViewModel constructor(
     private fun loadCategories() {
         viewModelScope.launch {
             try {
-                categoriaDespesaRepository.buscarAtivas().collect { categorias ->
+                appRepository.buscarCategoriasAtivas().collect { categorias ->
                     _categories.value = categorias
                 }
             } catch (e: Exception) {
@@ -87,9 +83,7 @@ class ExpenseRegisterViewModel constructor(
     fun loadAllCycles() {
         viewModelScope.launch {
             try {
-                cicloAcertoRepository.listarTodosCiclos().collect { lista ->
-                    _cycles.value = lista
-                }
+                // TODO: Implementar listagem de ciclos via AppRepository, mantendo compatibilidade
             } catch (e: Exception) {
                 showMessage("Erro ao carregar ciclos: ${e.message}")
             }
@@ -105,7 +99,7 @@ class ExpenseRegisterViewModel constructor(
      */
     suspend fun carregarDespesaParaEdicao(despesaId: Long): com.example.gestaobilhares.data.entities.Despesa? {
         return try {
-            despesaRepository.buscarPorId(despesaId)
+            appRepository.obterDespesaPorId(despesaId)
         } catch (e: Exception) {
             android.util.Log.e("ExpenseRegisterViewModel", "Erro ao carregar despesa para edição: ${e.message}")
             null
@@ -117,7 +111,7 @@ class ExpenseRegisterViewModel constructor(
      */
     fun setSelectedCategory(categoriaNome: String) {
         viewModelScope.launch {
-            val categoria = categoriaDespesaRepository.buscarPorNome(categoriaNome)
+            val categoria = appRepository.buscarCategoriaPorNome(categoriaNome)
             _selectedCategory.value = categoria
         }
     }
@@ -127,7 +121,7 @@ class ExpenseRegisterViewModel constructor(
      */
     fun setSelectedType(tipoNome: String) {
         viewModelScope.launch {
-            val tipo = tipoDespesaRepository.buscarPorNome(tipoNome)
+            val tipo = appRepository.buscarTipoPorNome(tipoNome)
             _selectedType.value = tipo
         }
     }
@@ -196,7 +190,7 @@ class ExpenseRegisterViewModel constructor(
     private fun loadTypesForCategory(categoriaId: Long) {
         viewModelScope.launch {
             try {
-                tipoDespesaRepository.buscarPorCategoria(categoriaId).collect { tipos ->
+                appRepository.buscarTiposPorCategoria(categoriaId).collect { tipos ->
                     _types.value = tipos
                 }
             } catch (e: Exception) {
@@ -213,8 +207,7 @@ class ExpenseRegisterViewModel constructor(
             try {
                 showLoading()
                 
-                // Verificar se categoria já existe
-                if (categoriaDespesaRepository.categoriaExiste(nome)) {
+                if (appRepository.categoriaExiste(nome)) {
                     showMessage("Categoria '$nome' já existe")
                     return@launch
                 }
@@ -225,7 +218,7 @@ class ExpenseRegisterViewModel constructor(
                     criadoPor = "Sistema" // TODO: Pegar usuário atual
                 )
 
-                val categoriaId = categoriaDespesaRepository.criarCategoria(novaCategoria)
+                val categoriaId = appRepository.criarCategoria(novaCategoria)
                 showMessage("Categoria criada com sucesso")
                 
                 // Recarregar categorias
@@ -247,8 +240,7 @@ class ExpenseRegisterViewModel constructor(
             try {
                 showLoading()
                 
-                // Verificar se tipo já existe na categoria
-                if (tipoDespesaRepository.tipoExiste(nome, categoriaId)) {
+                if (appRepository.tipoExiste(nome, categoriaId)) {
                     showMessage("Tipo '$nome' já existe nesta categoria")
                     return@launch
                 }
@@ -260,7 +252,7 @@ class ExpenseRegisterViewModel constructor(
                     criadoPor = "Sistema" // TODO: Pegar usuário atual
                 )
 
-                val tipoId = tipoDespesaRepository.criarTipo(novoTipo)
+                val tipoId = appRepository.criarTipo(novoTipo)
                 showMessage("Tipo criado com sucesso")
                 
                 // Recarregar tipos da categoria
@@ -305,7 +297,7 @@ class ExpenseRegisterViewModel constructor(
                     selecionado
                 } else {
                     // Fluxo normal por rota
-                    val ativo = cicloAcertoRepository.buscarCicloAtivo(rotaId)
+                    val ativo = appRepository.buscarCicloAtivo(rotaId)
                     if (ativo == null || ativo.status != StatusCicloAcerto.EM_ANDAMENTO) {
                         showMessage("Não é possível cadastrar despesas. O ciclo de acerto não está em andamento.")
                         return@launch
@@ -338,7 +330,7 @@ class ExpenseRegisterViewModel constructor(
 
                 if (modoEdicao && despesaId > 0) {
                     // ✅ NOVO: Modo de edição - atualizar despesa existente
-                    val despesaExistente = despesaRepository.buscarPorId(despesaId)
+                    val despesaExistente = appRepository.obterDespesaPorId(despesaId)
                     if (despesaExistente != null) {
                         val despesaAtualizada = despesaExistente.copy(
                             descricao = descricao,
@@ -359,7 +351,7 @@ class ExpenseRegisterViewModel constructor(
                             litrosAbastecidos = litrosAbastecidos
                         )
                         
-                        despesaRepository.atualizar(despesaAtualizada)
+                        appRepository.atualizarDespesa(despesaAtualizada)
                         showMessage("Despesa atualizada com sucesso")
                         _success.value = true
                     } else {
@@ -387,7 +379,7 @@ class ExpenseRegisterViewModel constructor(
                         litrosAbastecidos = litrosAbastecidos
                     )
 
-                    val novaDespesaId = despesaRepository.inserir(despesa)
+                    val novaDespesaId = appRepository.inserirDespesa(despesa)
                     android.util.Log.d("ExpenseRegisterViewModel", "Despesa salva com ID: $novaDespesaId")
                     
                     // ✅ NOVO: Salvar no histórico de veículos se for combustível ou manutenção
@@ -471,7 +463,7 @@ class ExpenseRegisterViewModel constructor(
                             observacoes = despesa.observacoes
                         )
                         
-                        val idInserido = historicoCombustivelRepository.inserir(historicoCombustivel)
+                        val idInserido = appRepository.inserirHistoricoCombustivel(historicoCombustivel)
                         android.util.Log.d("ExpenseRegisterViewModel", "Abastecimento salvo com ID: $idInserido")
                     } else {
                         android.util.Log.w("ExpenseRegisterViewModel", "Litros não informados ou inválidos: $litrosAbastecidos")
@@ -489,7 +481,7 @@ class ExpenseRegisterViewModel constructor(
                         responsavel = "Sistema", // TODO: Pegar usuário atual
                         observacoes = despesa.observacoes
                     )
-                    historicoManutencaoRepository.inserir(historicoManutencao)
+                    appRepository.inserirHistoricoManutencao(historicoManutencao)
                 }
             }
         } catch (e: Exception) {

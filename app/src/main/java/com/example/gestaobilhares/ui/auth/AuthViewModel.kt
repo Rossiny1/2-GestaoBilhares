@@ -77,20 +77,7 @@ class AuthViewModel constructor() : BaseViewModel() {
             val database = AppDatabase.getDatabase(context)
             android.util.Log.d("AuthViewModel", "✅ AppDatabase inicializado")
             
-            appRepository = AppRepository(
-                database.clienteDao(),
-                database.acertoDao(),
-                database.mesaDao(),
-                database.rotaDao(),
-                database.despesaDao(),
-                database.colaboradorDao(),
-                database.cicloAcertoDao(),
-                database.acertoMesaDao(),
-                database.contratoLocacaoDao(),
-                database.aditivoContratoDao(),
-                database.assinaturaRepresentanteLegalDao(),
-                database.logAuditoriaAssinaturaDao()
-            )
+            appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(context)
             android.util.Log.d("AuthViewModel", "AppRepository inicializado com sucesso")
             
             // Inicializar utilitários de forma segura

@@ -8,19 +8,14 @@ import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import android.util.Log
+import com.example.gestaobilhares.BuildConfig
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.PanoEstoque
-import com.example.gestaobilhares.data.repository.MesaRepository
-import com.example.gestaobilhares.data.repository.ClienteRepository
-import com.example.gestaobilhares.data.repository.AcertoRepository
-import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.entities.Acerto
 import java.util.Date
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import com.example.gestaobilhares.data.repository.AcertoMesaRepository
-import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
-import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
 import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.google.gson.Gson
@@ -30,13 +25,7 @@ import com.google.gson.reflect.TypeToken
  * FASE 4A - Implementação básica para desbloqueio
  */
 class SettlementViewModel constructor(
-    private val mesaRepository: MesaRepository,
-    private val clienteRepository: ClienteRepository,
-    private val acertoRepository: AcertoRepository,
-    private val acertoMesaRepository: AcertoMesaRepository,
-    private val cicloAcertoRepository: CicloAcertoRepository,
-    private val historicoManutencaoMesaRepository: HistoricoManutencaoMesaRepository,
-    private val panoEstoqueRepository: PanoEstoqueRepository
+    private val appRepository: AppRepository
 ) : BaseViewModel() {
 
     /**
@@ -100,7 +89,7 @@ class SettlementViewModel constructor(
         viewModelScope.launch {
                 showLoading()
             try {
-                val cliente = clienteRepository.obterPorId(clienteId)
+                val cliente = appRepository.obterClientePorId(clienteId)
                 if (cliente != null) {
                     _clientName.value = cliente.nome
                     _clientAddress.value = cliente.endereco ?: "---"
@@ -135,7 +124,7 @@ class SettlementViewModel constructor(
                 
                 if (acertoIdParaEdicao != null) {
                     // ✅ MODO EDIÇÃO: Carregar dados do acerto sendo editado
-                    val acertoMesa = acertoMesaRepository.buscarAcertoMesaPorAcertoEMesa(acertoIdParaEdicao, mesa.id)
+                    val acertoMesa = appRepository.buscarAcertoMesaPorMesa(mesa.id)
                     if (acertoMesa != null) {
                         // Usar o relógio inicial do acerto sendo editado
                         val relogioInicial = acertoMesa.relogioInicial
@@ -153,7 +142,7 @@ class SettlementViewModel constructor(
                     }
                 } else {
                     // ✅ MODO NOVO ACERTO: Usar lógica original
-                    val ultimoAcertoMesa = acertoMesaRepository.buscarUltimoAcertoMesa(mesa.id)
+                    val ultimoAcertoMesa = appRepository.buscarUltimoAcertoMesaItem(mesa.id)
                     
                     if (ultimoAcertoMesa != null) {
                         // Usar o relógio final do último acerto como inicial do próximo
@@ -183,7 +172,7 @@ class SettlementViewModel constructor(
     fun carregarDadosCliente(clienteId: Long, callback: (com.example.gestaobilhares.data.entities.Cliente?) -> Unit) {
         viewModelScope.launch {
             try {
-                val cliente = clienteRepository.obterPorId(clienteId)
+                val cliente = appRepository.obterClientePorId(clienteId)
                 callback(cliente)
             } catch (e: Exception) {
                 logError("SETTLEMENT", "Erro ao carregar dados do cliente: ${e.localizedMessage}", e)
@@ -194,7 +183,7 @@ class SettlementViewModel constructor(
 
     fun loadMesasCliente(clienteId: Long) {
         viewModelScope.launch {
-            mesaRepository.obterMesasPorCliente(clienteId).collect { mesas ->
+            appRepository.obterMesasPorCliente(clienteId).collect { mesas: List<Mesa> ->
                 _mesasCliente.value = mesas
             }
         }
@@ -206,7 +195,7 @@ class SettlementViewModel constructor(
     suspend fun carregarMesasClienteDireto(clienteId: Long): List<Mesa> {
         return try {
             Log.d("SettlementViewModel", "Carregando mesas diretamente para cliente $clienteId")
-            mesaRepository.obterMesasPorClienteDireto(clienteId)
+            appRepository.obterMesasPorClienteDireto(clienteId)
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao carregar mesas direto: ${e.message}")
             emptyList()
@@ -215,7 +204,7 @@ class SettlementViewModel constructor(
 
     fun carregarHistoricoAcertos(clienteId: Long) {
         viewModelScope.launch {
-            acertoRepository.buscarPorCliente(clienteId).collect { acertos ->
+            appRepository.obterAcertosPorCliente(clienteId).collect { acertos: List<Acerto> ->
                 _historicoAcertos.value = acertos
             }
         }
@@ -231,7 +220,7 @@ class SettlementViewModel constructor(
             try {
                 if (acertoIdParaEdicao != null) {
                     // ✅ MODO EDIÇÃO: Usar débito ANTERIOR do acerto sendo editado (não o atual!)
-                    val acertoParaEdicao = acertoRepository.buscarPorId(acertoIdParaEdicao)
+                    val acertoParaEdicao = appRepository.buscarPorId(acertoIdParaEdicao)
                     if (acertoParaEdicao != null) {
                         _debitoAnterior.value = acertoParaEdicao.debitoAnterior
                         logOperation("SETTLEMENT", "MODO EDIÇÃO: Débito ANTERIOR do acerto sendo editado: R$ ${acertoParaEdicao.debitoAnterior}")
@@ -241,7 +230,7 @@ class SettlementViewModel constructor(
                     }
                 } else {
                     // ✅ MODO NOVO ACERTO: Usar débito do último acerto como anterior
-                    val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(clienteId)
+                    val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(clienteId)
                     if (ultimoAcerto != null) {
                         _debitoAnterior.value = ultimoAcerto.debitoAtual
                         logOperation("SETTLEMENT", "MODO NOVO ACERTO: Débito anterior carregado: R$ ${ultimoAcerto.debitoAtual}")
@@ -272,14 +261,14 @@ class SettlementViewModel constructor(
                 logOperation("SETTLEMENT", "Salvando acerto com clienteId=$clienteId, mesas=${dadosAcerto.mesas.map { it.numero }}, modoEdicao=${acertoIdParaEdicao != null}")
                 
                 // Buscar cliente uma única vez
-                val cliente = clienteRepository.obterPorId(clienteId) ?: throw IllegalStateException("Cliente não encontrado para o ID: $clienteId")
+                val cliente = appRepository.obterClientePorId(clienteId) ?: throw IllegalStateException("Cliente não encontrado para o ID: $clienteId")
                 val rotaId = cliente.rotaId
                 
                 // Buscar ciclo atual da rota
-                val cicloAtivo = cicloAcertoRepository.buscarCicloAtivo(rotaId)
+                val cicloAtivo = appRepository.buscarCicloAtivo(rotaId)
                 val cicloId = cicloAtivo?.id ?: run {
                     logError("SETTLEMENT", "Nenhum ciclo ativo encontrado para a rota $rotaId. Tentando buscar o último ciclo existente.")
-                    val ultimoCiclo = cicloAcertoRepository.buscarEstatisticasRota(rotaId)
+                    val ultimoCiclo = appRepository.buscarCicloAtivo(rotaId)
                     ultimoCiclo?.id ?: throw IllegalStateException("Nenhum ciclo encontrado para a rota $rotaId.")
                 }
                 
@@ -287,10 +276,12 @@ class SettlementViewModel constructor(
 
                 // ✅ CORREÇÃO: Validação apenas para novos acertos (não para edição)
                 if (acertoIdParaEdicao == null) {
-                    val acertoExistente = acertoRepository.verificarAcertoExistente(clienteId, cicloId)
-                    if (acertoExistente != null) {
-                        logError("SETTLEMENT", "⚠️ ACERTO JÁ EXISTE: Cliente $clienteId já possui acerto (ID: ${acertoExistente.id}) no ciclo $cicloId")
-                        _resultadoSalvamento.value = ResultadoSalvamento.AcertoJaExiste(acertoExistente)
+                    val acertoExistenteId = appRepository.obterAcertosPorCliente(clienteId).first().firstOrNull { it.cicloId == cicloId }?.id
+                    if (acertoExistenteId != null) {
+                        logError("SETTLEMENT", "ACERTO JÁ EXISTE: Cliente $clienteId já possui acerto (ID: $acertoExistenteId) no ciclo $cicloId")
+                        _resultadoSalvamento.value = ResultadoSalvamento.AcertoJaExiste(
+                            appRepository.obterAcertoPorId(acertoExistenteId) ?: return@launch
+                        )
                         hideLoading()
                         return@launch
                     }
@@ -378,7 +369,7 @@ class SettlementViewModel constructor(
                     logOperation("SETTLEMENT", "🔄 MODO EDIÇÃO: Atualizando acerto existente ID: $acertoIdParaEdicao")
                     
                     // Buscar acerto existente
-                    val acertoExistente = acertoRepository.buscarPorId(acertoIdParaEdicao)
+                    val acertoExistente = appRepository.buscarPorId(acertoIdParaEdicao)
                     if (acertoExistente == null) {
                         logError("SETTLEMENT", "❌ Acerto para edição não encontrado: ID $acertoIdParaEdicao")
                         _resultadoSalvamento.value = ResultadoSalvamento.Erro("Acerto para edição não encontrado")
@@ -405,7 +396,7 @@ class SettlementViewModel constructor(
                         dadosExtrasJson = dadosExtrasJson
                     )
                     
-                    acertoRepository.atualizar(acertoAtualizado)
+                    appRepository.atualizarAcerto(acertoAtualizado)
                     acertoId = acertoIdParaEdicao
                     logOperation("SETTLEMENT", "✅ Acerto atualizado com sucesso! ID: $acertoId")
                     
@@ -438,30 +429,30 @@ class SettlementViewModel constructor(
                         cicloId = cicloId
                     )
                     
-                    acertoId = acertoRepository.salvarAcerto(acerto)
+                    acertoId = appRepository.salvarAcerto(acerto)
                     logOperation("SETTLEMENT", "✅ Novo acerto salvo com ID: $acertoId")
                 }
                 
                 // NOVO: Atualizar valores do ciclo após salvar acerto
                 // Buscar todos os acertos e despesas ANTERIORES do ciclo para calcular os totais
-                val acertosAnteriores = acertoRepository.buscarPorRotaECicloId(rotaId, cicloId).first().filter { it.id != acertoId }
-                val despesasDoCiclo = cicloAcertoRepository.buscarDespesasPorCicloId(cicloId)
+                val acertosAnteriores = appRepository.buscarPorRotaECicloId(rotaId, cicloId).first().filter { acerto: Acerto -> acerto.id != acertoId }
+                val despesasDoCiclo = appRepository.buscarDespesasPorCicloId(cicloId)
 
                 // ✅ CORREÇÃO: Verificar se realmente foi salvo
-                val acertoSalvo = acertoRepository.buscarPorId(acertoId)
+                val acertoSalvo = appRepository.buscarPorId(acertoId)
                 logOperation("SETTLEMENT", "🔍 VERIFICAÇÃO: Observação no banco após salvamento: '${acertoSalvo?.observacoes}'")
 
                 // Somar os valores anteriores com o valor do acerto ATUAL
-                val valorTotalAcertado = acertosAnteriores.sumOf { it.valorRecebido } + (acertoSalvo?.valorRecebido ?: 0.0)
-                val valorTotalDespesas = despesasDoCiclo.sumOf { it.valor }
-                val clientesAcertados = (acertosAnteriores.map { it.clienteId } + (acertoSalvo?.clienteId ?: 0L)).distinct().size
+                val valorTotalAcertado = acertosAnteriores.sumOf { acerto: Acerto -> acerto.valorRecebido } + (acertoSalvo?.valorRecebido ?: 0.0)
+                val valorTotalDespesas = despesasDoCiclo.first().sumOf { despesa -> despesa.valor }
+                val clientesAcertados = (acertosAnteriores.map { acerto: Acerto -> acerto.clienteId } + (acertoSalvo?.clienteId ?: 0L)).distinct().size
                 
                 logOperation("SETTLEMENT", "=== ATUALIZANDO VALORES DO CICLO $cicloId ===")
-                logOperation("SETTLEMENT", "Total Acertado: $valorTotalAcertado (Anteriores: ${acertosAnteriores.sumOf { it.valorRecebido }} + Atual: ${acertoSalvo?.valorRecebido})")
+                logOperation("SETTLEMENT", "Total Acertado: $valorTotalAcertado (Anteriores: ${acertosAnteriores.sumOf { acerto: Acerto -> acerto.valorRecebido }} + Atual: ${acertoSalvo?.valorRecebido})")
                 logOperation("SETTLEMENT", "Total Despesas: $valorTotalDespesas")
                 logOperation("SETTLEMENT", "Clientes Acertados: $clientesAcertados")
 
-                cicloAcertoRepository.atualizarValoresCiclo(
+                appRepository.atualizarValoresCiclo(
                     cicloId = cicloId,
                     valorTotalAcertado = valorTotalAcertado,
                     valorTotalDespesas = valorTotalDespesas,
@@ -534,7 +525,7 @@ class SettlementViewModel constructor(
                     logOperation("SETTLEMENT", "AcertoMesa ${index + 1}: Mesa ${acertoMesa.mesaId} - Subtotal: R$ ${acertoMesa.subtotal}")
                 }
                 
-                acertoMesaRepository.inserirLista(acertoMesas)
+                acertoMesas.forEach { appRepository.inserirAcertoMesa(it) }
                 logOperation("SETTLEMENT", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
                 
                 // ✅ NOVO: Registrar troca de pano no histórico de manutenção
@@ -557,11 +548,11 @@ class SettlementViewModel constructor(
                 }
                 
                 // ✅ CRÍTICO: Atualizar o débito atual na tabela de clientes
-                clienteRepository.atualizarDebitoAtual(clienteId, debitoAtual)
+                appRepository.atualizarDebitoAtual(clienteId, debitoAtual)
                 logOperation("SETTLEMENT", "Débito atual atualizado na tabela clientes: R$ $debitoAtual")
                 
                 // ✅ NOVO: Verificar se a atualização foi bem-sucedida
-                val clienteAtualizado = clienteRepository.obterPorId(clienteId)
+                val clienteAtualizado = appRepository.obterClientePorId(clienteId)
                 logOperation("SETTLEMENT", "🔍 VERIFICAÇÃO: Débito atual na tabela clientes após atualização: R$ ${clienteAtualizado?.debitoAtual}")
                 
                 _resultadoSalvamento.value = ResultadoSalvamento.Sucesso(acertoId)
@@ -596,7 +587,7 @@ class SettlementViewModel constructor(
                     dataManutencao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
                 )
                 
-                historicoManutencaoMesaRepository.inserir(historico)
+                appRepository.inserirHistoricoManutencaoMesa(historico)
                 logOperation("SETTLEMENT", "Histórico de troca de pano registrado para mesa ${mesa.numero}")
             }
         } catch (e: Exception) {
@@ -609,11 +600,11 @@ class SettlementViewModel constructor(
     }
 
     suspend fun buscarAcertoPorId(acertoId: Long): Acerto? {
-        return acertoRepository.buscarPorId(acertoId)
+        return appRepository.buscarPorId(acertoId)
     }
 
     suspend fun buscarMesasDoAcerto(acertoId: Long): List<com.example.gestaobilhares.data.entities.AcertoMesa> {
-        return acertoMesaRepository.buscarPorAcertoId(acertoId)
+        return appRepository.buscarAcertoMesasPorAcerto(acertoId).first()
     }
 
     fun setLoading(isLoading: Boolean) {
@@ -629,7 +620,7 @@ class SettlementViewModel constructor(
      */
     suspend fun buscarMesaPorId(mesaId: Long): Mesa? {
         return try {
-            mesaRepository.buscarPorId(mesaId)
+            appRepository.obterMesaPorId(mesaId)
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao buscar mesa por ID: ${e.message}", e)
             null
@@ -641,7 +632,7 @@ class SettlementViewModel constructor(
      */
     suspend fun obterClientePorId(clienteId: Long): com.example.gestaobilhares.data.entities.Cliente? {
         return try {
-            clienteRepository.obterPorId(clienteId)
+            appRepository.obterClientePorId(clienteId)
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao buscar cliente por ID: ${e.message}", e)
             null
@@ -654,7 +645,7 @@ class SettlementViewModel constructor(
     suspend fun buscarContratoAtivoPorCliente(clienteId: Long): com.example.gestaobilhares.data.entities.ContratoLocacao? {
         return try {
             // Usar o AppRepository através do ClienteRepository
-            clienteRepository.buscarContratoAtivoPorCliente(clienteId)
+            appRepository.buscarContratoAtivoPorCliente(clienteId)
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao buscar contrato ativo do cliente: ${e.message}", e)
             null
@@ -669,7 +660,7 @@ class SettlementViewModel constructor(
      */
     suspend fun calcularMediaFichasJogadas(mesaId: Long, limite: Int = 5): Double {
         return try {
-            acertoMesaRepository.calcularMediaFichasJogadas(mesaId, limite)
+            appRepository.calcularMediaFichasJogadas(mesaId, limite)
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao calcular média de fichas: ${e.message}", e)
             0.0
@@ -682,7 +673,7 @@ class SettlementViewModel constructor(
     suspend fun marcarPanoComoUsado(numeroPano: String, motivo: String = "Usado no acerto") {
         try {
             Log.d("SettlementViewModel", "Marcando pano $numeroPano como usado: $motivo")
-            panoEstoqueRepository.marcarPanoComoUsadoPorNumero(numeroPano, motivo)
+            appRepository.marcarPanoComoUsadoPorNumero(numeroPano, motivo)
             Log.d("SettlementViewModel", "Pano $numeroPano marcado como usado com sucesso")
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao marcar pano como usado: ${e.message}", e)
@@ -695,14 +686,14 @@ class SettlementViewModel constructor(
     suspend fun trocarPanoNaMesa(numeroPano: String, motivo: String = "Usado no acerto") {
         try {
             // 1. Buscar o pano no estoque
-            val pano = panoEstoqueRepository.buscarPorNumero(numeroPano)
+            val pano = appRepository.buscarPorNumero(numeroPano)
             if (pano == null) {
                 logError("SETTLEMENT", "Pano $numeroPano não encontrado no estoque")
                 return
             }
             
             // 2. Marcar pano como usado no estoque
-            panoEstoqueRepository.marcarPanoComoUsado(pano.id, motivo)
+            appRepository.marcarPanoComoUsado(pano.id, motivo)
             
             // 3. TODO: Vincular pano à mesa (precisa do ID da mesa)
             // Por enquanto, apenas log
@@ -721,7 +712,7 @@ class SettlementViewModel constructor(
             Log.d("SettlementViewModel", "Iniciando troca de pano $numeroPano na mesa $mesaId")
             
             // 1. Buscar o pano no estoque
-            val pano = panoEstoqueRepository.buscarPorNumero(numeroPano)
+            val pano = appRepository.buscarPorNumero(numeroPano)
             if (pano == null) {
                 logError("SETTLEMENT", "Pano $numeroPano não encontrado no estoque")
                 return
@@ -730,7 +721,7 @@ class SettlementViewModel constructor(
             Log.d("SettlementViewModel", "Pano encontrado: ${pano.numero} (ID: ${pano.id})")
             
             // 2. Marcar pano como usado no estoque
-            panoEstoqueRepository.marcarPanoComoUsado(pano.id, motivo)
+            appRepository.marcarPanoComoUsado(pano.id, motivo)
             Log.d("SettlementViewModel", "Pano ${pano.id} marcado como usado no estoque")
             
             // 3. Atualizar mesa com novo pano
@@ -751,7 +742,7 @@ class SettlementViewModel constructor(
             Log.d("SettlementViewModel", "Atualizando pano da mesa $mesaId com pano $panoId")
             
             // Buscar a mesa atual
-            val mesa = mesaRepository.buscarPorId(mesaId)
+            val mesa = appRepository.obterMesaPorId(mesaId)
             if (mesa != null) {
                 logOperation("SETTLEMENT", "Mesa encontrada: ${mesa.numero}")
                 
@@ -760,7 +751,7 @@ class SettlementViewModel constructor(
                     panoAtualId = panoId,
                     dataUltimaTrocaPano = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
                 )
-                mesaRepository.atualizar(mesaAtualizada)
+                appRepository.atualizarMesa(mesaAtualizada)
                 logOperation("SETTLEMENT", "Mesa $mesaId atualizada com pano $panoId com sucesso")
             } else {
                 logError("SETTLEMENT", "Mesa $mesaId não encontrada")
@@ -776,14 +767,14 @@ class SettlementViewModel constructor(
     suspend fun carregarPanoAtualDaMesa(mesaId: Long): PanoEstoque? {
         return try {
             // 1. Buscar a mesa
-            val mesa = mesaRepository.buscarPorId(mesaId)
+            val mesa = appRepository.obterMesaPorId(mesaId)
             if (mesa?.panoAtualId == null) {
                 logOperation("SETTLEMENT", "Mesa $mesaId não possui pano atual")
                 return null
             }
             
             // 2. Buscar o pano atual
-            val pano = panoEstoqueRepository.buscarPorId(mesa.panoAtualId)
+            val pano = appRepository.obterPanoPorId(mesa.panoAtualId)
             if (pano == null) {
                 logError("SETTLEMENT", "Pano ${mesa.panoAtualId} não encontrado no estoque")
                 return null
