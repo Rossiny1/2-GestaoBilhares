@@ -17,10 +17,21 @@ class GerarRelatorioDialogFragment : DialogFragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        try {
-            listener = parentFragment as GerarRelatorioDialogListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$parentFragment must implement GerarRelatorioDialogListener")
+        // Buscar o fragment que implementa o listener na hierarquia
+        var fragment = parentFragment
+        while (fragment != null) {
+            if (fragment is GerarRelatorioDialogListener) {
+                listener = fragment
+                return
+            }
+            fragment = fragment.parentFragment
+        }
+        
+        // Se não encontrou, tentar na activity
+        if (context is GerarRelatorioDialogListener) {
+            listener = context
+        } else {
+            throw ClassCastException("No fragment or activity implements GerarRelatorioDialogListener")
         }
     }
 
