@@ -16,12 +16,6 @@
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- ✅ FASE 4: Activity Compose para migração conservadora -->
-    <activity
-        android:id="@+id/loginActivity"
-        android:name="com.example.gestaobilhares.ui.auth.LoginActivity"
-        android:label="LoginActivity"
-        android:exported="false" />
 
     <fragment
         android:id="@+id/routesFragment"
