@@ -14,6 +14,12 @@ import android.util.Log
 import com.example.gestaobilhares.BuildConfig
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 // ✅ REMOVIDO: Hilt não é mais usado
 
 /**
@@ -240,102 +246,88 @@ class AppRepository constructor(
     fun obterRotasAtivas() = rotaDao.getAllRotasAtivas()
     
     // ✅ NOVO: Método para obter resumo de rotas com atualização em tempo real
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun getRotasResumoComAtualizacaoTempoReal(): Flow<List<RotaResumo>> {
-        // ✅ CORREÇÃO: Combinar Flow de rotas com Flow de ciclos para atualização em tempo real
-        return kotlinx.coroutines.flow.combine(
+        // Combina os fluxos que devem disparar uma atualização no resumo das rotas
+        return combine(
             rotaDao.getAllRotasAtivas(),
-            cicloAcertoDao.listarTodos()
-        ) { rotas, ciclos ->
-            android.util.Log.d("AppRepository", "🔄 Atualizando resumo de rotas: ${rotas.size} rotas, ${ciclos.size} ciclos")
-
-            // 🔍 DEBUG: Identificar origem dos dados
-            android.util.Log.d("AppRepository", "🔍 DEBUG - Origem dos dados:")
-            android.util.Log.d("AppRepository", "   Rotas carregadas de: rotaDao.getAllRotasAtivas()")
-            android.util.Log.d("AppRepository", "   Ciclos carregados de: cicloAcertoDao.listarTodos()")
-
-            // Listar primeiras rotas para debug
-            if (rotas.isNotEmpty()) {
-                android.util.Log.d("AppRepository", "   Primeiras rotas encontradas:")
-                rotas.take(3).forEach { rota ->
-                    android.util.Log.d("AppRepository", "     - Rota: ${rota.nome} (ID: ${rota.id})")
+            cicloAcertoDao.listarTodos(),
+            clienteDao.obterTodos(),
+            acertoDao.listarTodos(),
+            mesaDao.obterTodasMesas()
+        ) { rotas, _, _, _, _ ->
+            rotas
+        }.flatMapLatest { rotas ->
+            flow {
+                if (rotas.isEmpty()) {
+                    emit(emptyList())
+                    return@flow
                 }
-            }
 
-            // Listar ciclos para debug
-            if (ciclos.isNotEmpty()) {
-                android.util.Log.d("AppRepository", "   Ciclos encontrados:")
-                ciclos.take(3).forEach { ciclo ->
-                    android.util.Log.d("AppRepository", "     - Ciclo: ${ciclo.numeroCiclo}º (ID: ${ciclo.id}, Status: ${ciclo.status})")
+                // Usa um coroutineScope para executar todos os cálculos de resumo em paralelo
+                val resumos = coroutineScope {
+                    rotas.map { rota ->
+                        async {
+                            // Todas as chamadas internas agora são suspend functions, sem runBlocking
+                            val clientesAtivos = calcularClientesAtivosPorRota(rota.id)
+                            val (cicloAtualNumero, cicloAtualId, _) = obterCicloAtualRota(rota.id)
+                            val pendencias = calcularPendenciasReaisPorRota(rota.id)
+                            val quantidadeMesas = calcularQuantidadeMesasPorRota(rota.id)
+                            val percentualAcertados = calcularPercentualClientesAcertados(rota.id, cicloAtualId, clientesAtivos)
+                            val valorAcertado = calcularValorAcertadoPorRotaECiclo(rota.id, cicloAtualId)
+                            val statusAtual = determinarStatusRotaEmTempoReal(rota.id)
+                            val (dataInicio, dataFim) = obterDatasCicloRota(rota.id)
+
+                            RotaResumo(
+                                rota = rota,
+                                clientesAtivos = clientesAtivos,
+                                pendencias = pendencias,
+                                valorAcertado = valorAcertado,
+                                quantidadeMesas = quantidadeMesas,
+                                percentualAcertados = percentualAcertados,
+                                status = statusAtual,
+                                cicloAtual = cicloAtualNumero,
+                                dataInicioCiclo = dataInicio,
+                                dataFimCiclo = dataFim
+                            )
+                        }
+                    }.awaitAll() // Espera a conclusão de todos os cálculos
                 }
-            }
-            
-            rotas.map { rota ->
-                // Calcular dados reais para cada rota
-                val clientesAtivos = calcularClientesAtivosPorRota(rota.id)
-                val (cicloAtualNumero, cicloAtualId, dataCicloInicio) = obterCicloAtualRota(rota.id)
-                val pendencias = calcularPendenciasReaisPorRota(rota.id)
-                val quantidadeMesas = calcularQuantidadeMesasPorRota(rota.id)
-                val percentualAcertados = calcularPercentualClientesAcertados(rota.id, cicloAtualId, clientesAtivos)
-                val valorAcertado = calcularValorAcertadoPorRotaECiclo(rota.id, cicloAtualId)
-                val statusAtual = determinarStatusRotaEmTempoReal(rota.id)
-                
-                // ✅ NOVO: Obter datas de início e fim do ciclo
-                val (dataInicio, dataFim) = obterDatasCicloRota(rota.id)
-
-                val resumo = RotaResumo(
-                    rota = rota,
-                    clientesAtivos = clientesAtivos,
-                    pendencias = pendencias,
-                    valorAcertado = valorAcertado,
-                    quantidadeMesas = quantidadeMesas,
-                    percentualAcertados = percentualAcertados,
-                    status = statusAtual,
-                    cicloAtual = cicloAtualNumero,
-                    dataInicioCiclo = dataInicio,  // ✅ NOVO: Data de início
-                    dataFimCiclo = dataFim        // ✅ NOVO: Data de fim
-                )
-                
-                android.util.Log.d("AppRepository", "📊 Rota ${rota.nome}: Ciclo ${cicloAtualNumero}, Status ${statusAtual}")
-                resumo
+                emit(resumos) // Emite a lista completa de resumos
             }
         }
     }
     
     // ✅ NOVO: Métodos auxiliares para calcular dados reais das rotas
-    private fun calcularClientesAtivosPorRota(rotaId: Long): Int {
+    private suspend fun calcularClientesAtivosPorRota(rotaId: Long): Int {
         return try {
-            // Usar runBlocking para operações síncronas dentro do Flow
-            kotlinx.coroutines.runBlocking {
-                clienteDao.obterClientesPorRota(rotaId).first().count { it.ativo }
-            }
+            clienteDao.obterClientesPorRota(rotaId).first().count { it.ativo }
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular clientes ativos da rota $rotaId: ${e.message}")
             0
         }
     }
     
-    private fun calcularPendenciasReaisPorRota(rotaId: Long): Int {
+    private suspend fun calcularPendenciasReaisPorRota(rotaId: Long): Int {
         return try {
-            kotlinx.coroutines.runBlocking {
-                val clientes = clienteDao.obterClientesPorRota(rotaId).first()
-                if (clientes.isEmpty()) return@runBlocking 0
-                val clienteIds = clientes.map { it.id }
-                val ultimos = buscarUltimosAcertosPorClientes(clienteIds)
-                val ultimoPorCliente = ultimos.associateBy({ it.clienteId }, { it.dataAcerto })
-                val agora = java.util.Calendar.getInstance()
-                clientes.count { cliente ->
-                    val debitoAlto = cliente.debitoAtual > 400
-                    val dataUltimo = ultimoPorCliente[cliente.id]
-                    val semAcerto4Meses = if (dataUltimo == null) {
-                        true
-                    } else {
-                        val cal = java.util.Calendar.getInstance(); cal.time = dataUltimo
-                        val anos = agora.get(java.util.Calendar.YEAR) - cal.get(java.util.Calendar.YEAR)
-                        val meses = anos * 12 + (agora.get(java.util.Calendar.MONTH) - cal.get(java.util.Calendar.MONTH))
-                        meses >= 4
-                    }
-                    debitoAlto || semAcerto4Meses
+            val clientes = clienteDao.obterClientesPorRota(rotaId).first()
+            if (clientes.isEmpty()) return 0
+            val clienteIds = clientes.map { it.id }
+            val ultimos = buscarUltimosAcertosPorClientes(clienteIds)
+            val ultimoPorCliente = ultimos.associateBy({ it.clienteId }, { it.dataAcerto })
+            val agora = java.util.Calendar.getInstance()
+            clientes.count { cliente ->
+                val debitoAlto = cliente.debitoAtual > 400
+                val dataUltimo = ultimoPorCliente[cliente.id]
+                val semAcerto4Meses = if (dataUltimo == null) {
+                    true
+                } else {
+                    val cal = java.util.Calendar.getInstance(); cal.time = dataUltimo
+                    val anos = agora.get(java.util.Calendar.YEAR) - cal.get(java.util.Calendar.YEAR)
+                    val meses = anos * 12 + (agora.get(java.util.Calendar.MONTH) - cal.get(java.util.Calendar.MONTH))
+                    meses >= 4
                 }
+                debitoAlto || semAcerto4Meses
             }
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular pendências reais da rota $rotaId: ${e.message}")
@@ -343,60 +335,48 @@ class AppRepository constructor(
         }
     }
     
-    private fun calcularValorAcertadoPorRotaECiclo(rotaId: Long, cicloId: Long?): Double {
+    private suspend fun calcularValorAcertadoPorRotaECiclo(rotaId: Long, cicloId: Long?): Double {
         return try {
             if (cicloId == null) return 0.0
-            kotlinx.coroutines.runBlocking {
-                buscarAcertosPorCicloId(cicloId).first().filter { it.rotaId == rotaId }.sumOf { it.valorRecebido }
-            }
+            buscarAcertosPorCicloId(cicloId).first().filter { it.rotaId == rotaId }.sumOf { it.valorRecebido }
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular valor acertado da rota $rotaId: ${e.message}")
             0.0
         }
     }
     
-    private fun calcularQuantidadeMesasPorRota(rotaId: Long): Int {
+    private suspend fun calcularQuantidadeMesasPorRota(rotaId: Long): Int {
         return try {
-            kotlinx.coroutines.runBlocking {
-                mesaDao.buscarMesasPorRota(rotaId).first().size
-            }
+            mesaDao.buscarMesasPorRota(rotaId).first().size
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular quantidade de mesas da rota $rotaId: ${e.message}")
             0
         }
     }
     
-    private fun calcularPercentualClientesAcertados(rotaId: Long, cicloId: Long?, clientesAtivos: Int): Int {
+    private suspend fun calcularPercentualClientesAcertados(rotaId: Long, cicloId: Long?, clientesAtivos: Int): Int {
         return try {
             if (cicloId == null || clientesAtivos == 0) return 0
-            kotlinx.coroutines.runBlocking {
-                val acertos = buscarAcertosPorCicloId(cicloId).first().filter { it.rotaId == rotaId }
-                val distintos = acertos.map { it.clienteId }.distinct().size
-                ((distintos.toDouble() / clientesAtivos.toDouble()) * 100).toInt()
-            }
+            val acertos = buscarAcertosPorCicloId(cicloId).first().filter { it.rotaId == rotaId }
+            val distintos = acertos.map { it.clienteId }.distinct().size
+            ((distintos.toDouble() / clientesAtivos.toDouble()) * 100).toInt()
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular percentual de clientes acertados da rota $rotaId: ${e.message}")
             0
         }
     }
 
-    private fun obterCicloAtualRota(rotaId: Long): Triple<Int, Long?, Long?> {
+    private suspend fun obterCicloAtualRota(rotaId: Long): Triple<Int, Long?, Long?> {
         return try {
-            kotlinx.coroutines.runBlocking {
-                val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
-                if (emAndamento != null) {
-                    // ✅ CORREÇÃO: Ciclo em andamento - mostrar o número atual
-                    Triple(emAndamento.numeroCiclo, emAndamento.id, emAndamento.dataInicio.time)
+            val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
+            if (emAndamento != null) {
+                Triple(emAndamento.numeroCiclo, emAndamento.id, emAndamento.dataInicio.time)
+            } else {
+                val ultimoCiclo = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
+                if (ultimoCiclo != null) {
+                    Triple(ultimoCiclo.numeroCiclo, ultimoCiclo.id, ultimoCiclo.dataFim.time)
                 } else {
-                    // ✅ CORREÇÃO: Nenhum ciclo em andamento - mostrar o ÚLTIMO ciclo finalizado
-                    val ultimoCiclo = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
-                    if (ultimoCiclo != null) {
-                        android.util.Log.d("AppRepository", "🔄 Rota $rotaId: Nenhum ciclo em andamento, último ciclo finalizado: ${ultimoCiclo.numeroCiclo}")
-                        Triple(ultimoCiclo.numeroCiclo, ultimoCiclo.id, ultimoCiclo.dataFim.time)
-                    } else {
-                        android.util.Log.d("AppRepository", "🆕 Rota $rotaId: Sem histórico, exibindo 1º ciclo")
-                        Triple(1, null, null)
-                    }
+                    Triple(1, null, null)
                 }
             }
         } catch (e: Exception) {
@@ -406,19 +386,17 @@ class AppRepository constructor(
     }
 
     // ✅ NOVO: Método para obter datas de início e fim do ciclo
-    private fun obterDatasCicloRota(rotaId: Long): Pair<Long?, Long?> {
+    private suspend fun obterDatasCicloRota(rotaId: Long): Pair<Long?, Long?> {
         return try {
-            kotlinx.coroutines.runBlocking {
-                val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
-                if (emAndamento != null) {
-                    Pair(emAndamento.dataInicio.time, emAndamento.dataFim.time)
+            val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
+            if (emAndamento != null) {
+                Pair(emAndamento.dataInicio.time, emAndamento.dataFim.time)
+            } else {
+                val ultimo = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
+                if (ultimo != null) {
+                    Pair(ultimo.dataInicio.time, ultimo.dataFim.time)
                 } else {
-                    val ultimo = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
-                    if (ultimo != null) {
-                        Pair(ultimo.dataInicio.time, ultimo.dataFim.time)
-                    } else {
-                        Pair(null, null)
-                    }
+                    Pair(null, null)
                 }
             }
         } catch (e: Exception) {
@@ -427,18 +405,13 @@ class AppRepository constructor(
         }
     }
 
-    private fun determinarStatusRotaEmTempoReal(rotaId: Long): StatusRota {
+    private suspend fun determinarStatusRotaEmTempoReal(rotaId: Long): StatusRota {
         return try {
-            kotlinx.coroutines.runBlocking {
-                val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
-                val status = if (emAndamento != null) {
-                    android.util.Log.d("AppRepository", "✅ Rota $rotaId: Ciclo em andamento encontrado (ID: ${emAndamento.id}) -> EM_ANDAMENTO")
-                    StatusRota.EM_ANDAMENTO
-                } else {
-                    android.util.Log.d("AppRepository", "✅ Rota $rotaId: Nenhum ciclo em andamento -> FINALIZADA")
-                    StatusRota.FINALIZADA
-                }
-                status
+            val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
+            if (emAndamento != null) {
+                StatusRota.EM_ANDAMENTO
+            } else {
+                StatusRota.FINALIZADA
             }
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "❌ Erro ao determinar status da rota $rotaId: ${e.message}")
