@@ -9,10 +9,6 @@ import com.example.gestaobilhares.data.entities.StatusRota
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.data.entities.Despesa
-import com.example.gestaobilhares.data.repository.ClienteRepository
-import com.example.gestaobilhares.data.repository.RotaRepository
-import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.AppLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +23,7 @@ import java.util.Calendar
 import java.util.Date
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 // // import dagger.hilt.android.lifecycle.HiltViewModel // REMOVIDO: Hilt nao e mais usado // ✅ REMOVIDO: Hilt não é mais usado
 // import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 
@@ -43,10 +40,6 @@ enum class FiltroCliente {
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ClientListViewModel constructor(
-    private val clienteRepository: ClienteRepository,
-    private val rotaRepository: RotaRepository,
-    private val cicloAcertoRepository: CicloAcertoRepository,
-    private val acertoRepository: AcertoRepository,
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 
@@ -111,11 +104,11 @@ class ClientListViewModel constructor(
         viewModelScope.launch {
             _rotaIdFlow.flatMapLatest { rotaId ->
                 if (rotaId == null) {
-                    return@flatMapLatest kotlinx.coroutines.flow.flowOf(null)
+                    return@flatMapLatest flowOf(null)
                 }
                 
                 // Observar ciclo ativo da rota
-                cicloAcertoRepository.observarCicloAtivo(rotaId)
+                flowOf(appRepository.buscarCicloAtualPorRota(rotaId))
             }.collect { ciclo ->
                 android.util.Log.d("DEBUG_DIAG", "[CARD] cicloAtivo retornado: id=${ciclo?.id}, status=${ciclo?.status}, dataInicio=${ciclo?.dataInicio}, dataFim=${ciclo?.dataFim}")
                 _cicloAtivo.value = ciclo
@@ -126,19 +119,30 @@ class ClientListViewModel constructor(
         viewModelScope.launch {
             _rotaIdFlow.flatMapLatest { rotaId ->
                 if (rotaId == null) {
-                    return@flatMapLatest kotlinx.coroutines.flow.flowOf(null)
+                    return@flatMapLatest flowOf(
+                        CicloProgressoCard(
+                            receita = 0.0,
+                            despesas = 0.0,
+                            saldo = 0.0,
+                            percentual = 0,
+                            clientesAcertados = 0,
+                            totalClientes = 0,
+                            pendencias = 0,
+                            debitoTotal = 0.0
+                        )
+                    )
                 }
                 
-                val cicloAtivoFlow = cicloAcertoRepository.observarCicloAtivo(rotaId)
-                val todosClientesFlow = clienteRepository.obterClientesPorRota(rotaId)
+                val cicloAtivoFlow = flowOf(appRepository.buscarCicloAtualPorRota(rotaId))
+                val todosClientesFlow = appRepository.obterClientesPorRota(rotaId)
 
-                combine(cicloAtivoFlow, todosClientesFlow) { ciclo, todosClientes ->
+                combine(cicloAtivoFlow, todosClientesFlow) { ciclo: CicloAcertoEntity?, todosClientes: List<Cliente> ->
                     val debitoTotal = todosClientes.sumOf { it.debitoAtual }
                     if (ciclo == null) {
                         return@combine CicloProgressoCard(0.0, 0.0, 0.0, 0, 0, todosClientes.size, 0, debitoTotal)
                     }
 
-                    val acertos = acertoRepository.buscarPorRotaECicloId(rotaId, ciclo.id).first()
+                    val acertos = appRepository.buscarAcertosPorRotaECiclo(rotaId, ciclo.id)
                     val despesas = appRepository.buscarDespesasPorCicloId(ciclo.id).first()
                     
                     val clientesAcertados = acertos.map { it.clienteId }.distinct().size
@@ -160,8 +164,8 @@ class ClientListViewModel constructor(
                         debitoTotal = debitoTotal
                     )
                 }
-            }.collect {
-                _cicloProgressoCard.value = it
+            }.collect { card: CicloProgressoCard ->
+                _cicloProgressoCard.value = card
             }
         }
     }
@@ -176,14 +180,13 @@ class ClientListViewModel constructor(
         viewModelScope.launch {
             try {
                 showLoading()
-                rotaRepository.obterRotaPorId(rotaId).collect { rota ->
-                    _rotaInfo.value = rota
-                    rota?.let {
-                        // ✅ CORREÇÃO: Carregar ciclo primeiro, depois status
-                        carregarCicloAcertoReal(it)
-                        // ✅ CORREÇÃO: Carregar status após ciclo estar carregado
-                        carregarStatusRota()
-                    }
+                val rota: Rota? = appRepository.obterRotaPorId(rotaId)
+                _rotaInfo.value = rota
+                rota?.let { rotaInfo ->
+                    // ✅ CORREÇÃO: Carregar ciclo primeiro, depois status
+                    carregarCicloAcertoReal(rotaInfo)
+                    // ✅ CORREÇÃO: Carregar status após ciclo estar carregado
+                    carregarStatusRota()
                 }
             } catch (e: Exception) {
                 logError("ROTA_LOAD", "Erro ao carregar rota: ${e.message}", e)
@@ -212,7 +215,7 @@ class ClientListViewModel constructor(
         viewModelScope.launch {
             try {
                 showLoading()
-                clienteRepository.obterClientesPorRota(rotaId).collect { clientes ->
+                appRepository.obterClientesPorRota(rotaId).collect { clientes ->
                     _clientesTodos.value = clientes
                     aplicarFiltrosCombinados() // Aplicar filtros após carregar
                     
@@ -258,7 +261,7 @@ class ClientListViewModel constructor(
                 val anoAtual = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
                 
                 // Buscar próximo número de ciclo
-                val proximoCiclo = cicloAcertoRepository.buscarProximoNumeroCiclo(rota.id, anoAtual)
+                val proximoCiclo = appRepository.buscarProximoNumeroCiclo(rota.id, anoAtual)
                 
                 // ✅ NOVO: Salvar pendências do ciclo anterior antes de reinicializar
                 val pendenciasCicloAnterior = _pendencias.value
@@ -274,7 +277,7 @@ class ClientListViewModel constructor(
                     criadoPor = "Sistema" // TODO: Implementar UserSessionManager para pegar usuário atual
                 )
                 
-                val cicloId = cicloAcertoRepository.inserirOuAtualizarCiclo(novoCiclo)
+                val cicloId = appRepository.inserirCicloAcerto(novoCiclo)
                 
                 // Atualizar estado
                 _cicloAcerto.value = proximoCiclo
@@ -320,10 +323,10 @@ class ClientListViewModel constructor(
                 logState("CICLO_FINALIZAR", "Iniciando finalização da rota ${rota.nome} - Ciclo ${cicloAtual.numeroCiclo}")
                 
                 // Centralizar a lógica de finalização no repositório
-                cicloAcertoRepository.finalizarCiclo(cicloAtual.id, Date())
+                appRepository.finalizarCicloRota(rota.id, System.currentTimeMillis())
                 
                 // Recarregar o ciclo para obter os dados atualizados (status e débito total)
-                val cicloFinalizado = cicloAcertoRepository.buscarCicloPorId(cicloAtual.id)
+                val cicloFinalizado = appRepository.buscarCicloAtualPorRota(rota.id)
                 
                 // Atualizar estado da UI
                 _cicloAcertoEntity.value = cicloFinalizado
@@ -372,7 +375,7 @@ class ClientListViewModel constructor(
             android.util.Log.d("ClientListViewModel", "🔄 Carregando ciclo para rota ${rota.nome} (ID: ${rota.id})")
             
             // ✅ CORREÇÃO: Usar a mesma lógica do AppRepository.obterCicloAtualRota()
-            val emAndamento = cicloAcertoRepository.buscarCicloAtivo(rota.id)
+            val emAndamento = appRepository.buscarCicloAtualPorRota(rota.id)
             
             if (emAndamento != null) {
                 // Ciclo em andamento - mostrar o número atual
@@ -385,7 +388,7 @@ class ClientListViewModel constructor(
                 android.util.Log.d("ClientListViewModel", "✅ Ciclo em andamento carregado: ${emAndamento.numeroCiclo}º Acerto (ID: ${emAndamento.id}, Status: ${emAndamento.status})")
             } else {
                 // ✅ CORREÇÃO: Nenhum ciclo em andamento - espelhar o AppRepository exibindo o ÚLTIMO ciclo finalizado
-                val ultimoCiclo = cicloAcertoRepository.buscarUltimoCicloPorRota(rota.id)
+                val ultimoCiclo = appRepository.buscarUltimoCicloFinalizadoPorRota(rota.id)
                 if (ultimoCiclo != null) {
                     _cicloAcerto.value = ultimoCiclo.numeroCiclo
                     _cicloAcertoEntity.value = ultimoCiclo
@@ -478,7 +481,7 @@ class ClientListViewModel constructor(
     suspend fun buscarUltimoCicloFinalizado(): com.example.gestaobilhares.data.entities.CicloAcertoEntity? {
         return try {
             val rotaId = _rotaIdFlow.value ?: return null
-            cicloAcertoRepository.buscarUltimoCicloPorRota(rotaId)
+            appRepository.buscarUltimoCicloFinalizadoPorRota(rotaId)
         } catch (e: Exception) {
             android.util.Log.e("ClientListViewModel", "Erro ao buscar último ciclo finalizado: ${e.message}")
             null
@@ -793,7 +796,7 @@ class ClientListViewModel constructor(
         return try {
             val rotaId = _rotaIdFlow.value ?: return 0
             // Buscar acertos reais do banco de dados para esta rota e ciclo
-            val acertos = acertoRepository.buscarPorRotaECicloId(rotaId, cicloId).first()
+            val acertos = appRepository.buscarAcertosPorRotaECiclo(rotaId, cicloId)
             
             // Contar clientes únicos que foram acertados
             val clientesAcertados = acertos.map { it.clienteId }.distinct()
@@ -820,7 +823,7 @@ class ClientListViewModel constructor(
             
             for (cliente in clientes) {
                 // Buscar último acerto do cliente
-                val ultimoAcerto = acertoRepository.buscarUltimoAcertoPorCliente(cliente.id)
+                val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(cliente.id)
                 
                 val temPendencia = when {
                     // Cliente com débito > R$300
@@ -873,7 +876,7 @@ class ClientListViewModel constructor(
         viewModelScope.launch {
             try {
                 // Primeiro carregar clientes ativos
-                val clientes = clienteRepository.obterClientesPorRota(rotaId).first()
+                val clientes = appRepository.obterClientesPorRota(rotaId).first()
                 val clientesAtivos = clientes.count { it.ativo }
 
                 android.util.Log.d("ClientListViewModel", "=== DADOS CLIENTES CARREGADOS ===")

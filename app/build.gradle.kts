@@ -53,12 +53,8 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
-        compose = true
     }
     
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
-    }
 }
 
 // ✅ CORREÇÃO: KSP para Room (compatível com Java 11+)
@@ -111,19 +107,7 @@ dependencies {
     
     // ✅ REMOVIDO: SignaturePad problemático - implementação nativa será usada
     
-    // ✅ FASE 4: Jetpack Compose Dependencies (Versões Estáveis e Comprovadas)
-    implementation("androidx.compose.ui:ui:1.5.4")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
-    implementation("androidx.compose.material3:material3:1.1.2")
-    implementation("androidx.compose.material:material:1.5.4")
-    implementation("androidx.activity:activity-compose:1.8.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    
-    // Compose Debug
-    debugImplementation("androidx.compose.ui:ui-tooling:1.5.4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.4")
+    // ✅ REMOVIDO: Dependências Compose não utilizadas
 
     // DataStore (Preferences)
     implementation("androidx.datastore:datastore-preferences:1.1.1")

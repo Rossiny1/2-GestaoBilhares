@@ -15,11 +15,6 @@ import com.example.gestaobilhares.data.entities.StatusRota
 import com.example.gestaobilhares.databinding.FragmentClientListBinding
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.ClienteRepository
-import com.example.gestaobilhares.data.repository.RotaRepository
-import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.DespesaRepository
-import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.AppRepository
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -83,18 +78,7 @@ class ClientListFragment : Fragment() {
             database.assinaturaRepresentanteLegalDao(),
             database.logAuditoriaAssinaturaDao()
         )
-        viewModel = ClientListViewModel(
-            ClienteRepository(database.clienteDao(), appRepository),
-            RotaRepository(database.rotaDao()),
-            CicloAcertoRepository(
-                database.cicloAcertoDao(),
-                DespesaRepository(database.despesaDao()),
-                AcertoRepository(database.acertoDao(), database.clienteDao()),
-                ClienteRepository(database.clienteDao(), appRepository) // NOVO
-            ),
-            AcertoRepository(database.acertoDao(), database.clienteDao()),
-            appRepository
-        )
+        viewModel = ClientListViewModel(appRepository)
         
         try {
             // Verificar se binding está disponível
