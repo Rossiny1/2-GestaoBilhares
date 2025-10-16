@@ -28,10 +28,21 @@ class AdicionarObservacaoDialogFragment : DialogFragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        try {
-            listener = parentFragment as AdicionarObservacaoDialogListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$parentFragment must implement AdicionarObservacaoDialogListener")
+        // Buscar o fragment que implementa o listener na hierarquia
+        var fragment = parentFragment
+        while (fragment != null) {
+            if (fragment is AdicionarObservacaoDialogListener) {
+                listener = fragment
+                return
+            }
+            fragment = fragment.parentFragment
+        }
+        
+        // Se não encontrou, tentar na activity
+        if (context is AdicionarObservacaoDialogListener) {
+            listener = context
+        } else {
+            throw ClassCastException("No fragment or activity implements AdicionarObservacaoDialogListener")
         }
     }
 

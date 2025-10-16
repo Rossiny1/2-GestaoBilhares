@@ -24,10 +24,21 @@ class AdicionarMesaDialogFragment : DialogFragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        try {
-            listener = parentFragment as AdicionarMesaDialogListener
-        } catch (e: ClassCastException) {
-            throw ClassCastException("$parentFragment must implement AdicionarMesaDialogListener")
+        // Buscar o fragment que implementa o listener na hierarquia
+        var fragment = parentFragment
+        while (fragment != null) {
+            if (fragment is AdicionarMesaDialogListener) {
+                listener = fragment
+                return
+            }
+            fragment = fragment.parentFragment
+        }
+        
+        // Se não encontrou, tentar na activity
+        if (context is AdicionarMesaDialogListener) {
+            listener = context
+        } else {
+            throw ClassCastException("No fragment or activity implements AdicionarMesaDialogListener")
         }
     }
 

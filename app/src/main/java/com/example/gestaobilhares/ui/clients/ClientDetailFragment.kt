@@ -87,7 +87,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         mesasAdapter = MesasAdapter(
             onRetirarMesa = { mesa ->
                 mesaParaRemover = mesa
-                ConfirmarRetiradaMesaDialogFragment.newInstance().show(parentFragmentManager, ConfirmarRetiradaMesaDialogFragment.TAG)
+                ConfirmarRetiradaMesaDialogFragment.newInstance().show(childFragmentManager, ConfirmarRetiradaMesaDialogFragment.TAG)
             }
         )
         binding.rvMesasCliente.apply {
@@ -138,7 +138,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         }
 
         binding.fabAddTableContainer.setOnClickListener {
-            AdicionarMesaDialogFragment.newInstance(clientId).show(parentFragmentManager, AdicionarMesaDialogFragment.TAG)
+            AdicionarMesaDialogFragment.newInstance(clientId).show(childFragmentManager, AdicionarMesaDialogFragment.TAG)
             recolherFabMenu()
         }
 
@@ -154,7 +154,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
 
                     val cicloEmAndamento = viewModel.buscarCicloAtualPorRota(rotaId)
                     if (cicloEmAndamento == null || !cicloEmAndamento.estaEmAndamento) {
-                        RotaNaoIniciadaDialogFragment().show(parentFragmentManager, RotaNaoIniciadaDialogFragment.TAG)
+                        RotaNaoIniciadaDialogFragment().show(childFragmentManager, RotaNaoIniciadaDialogFragment.TAG)
                         recolherFabMenu()
                         return@launch
                     }
