@@ -92,6 +92,21 @@ class AppRepository constructor(
     suspend fun obterClienteComDebitoAtual(clienteId: Long) = 
         clienteDao.obterClienteComDebitoAtual(clienteId)
     
+    /**
+     * ✅ NOVO: Busca o ID da rota associada a um cliente
+     */
+    suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? {
+        return try {
+            android.util.Log.d("AppRepository", "Buscando cliente ID: $clienteId")
+            val cliente = obterClientePorId(clienteId)
+            android.util.Log.d("AppRepository", "Cliente encontrado: ${cliente?.nome}, rotaId: ${cliente?.rotaId}")
+            cliente?.rotaId
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "Erro ao buscar rota ID por cliente: ${e.message}", e)
+            null
+        }
+    }
+    
     // ==================== ACERTO ====================
     
     fun obterAcertosPorCliente(clienteId: Long) = acertoDao.buscarPorCliente(clienteId)
