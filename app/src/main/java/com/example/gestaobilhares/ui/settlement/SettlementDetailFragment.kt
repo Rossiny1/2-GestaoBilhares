@@ -74,20 +74,7 @@ class SettlementDetailFragment : Fragment() {
     private fun initializeViewModel() {
         // Inicializar ViewModel onde o contexto está disponível
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
-        )
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = SettlementDetailViewModel(
             AcertoRepository(database.acertoDao(), database.clienteDao()),
             AcertoMesaRepository(database.acertoMesaDao()),
@@ -494,20 +481,7 @@ class SettlementDetailFragment : Fragment() {
                     AppDatabase.getDatabase(requireContext()).clienteDao()
                 )
                 val database = AppDatabase.getDatabase(requireContext())
-                val appRepository = AppRepository(
-                    database.clienteDao(),
-                    database.acertoDao(),
-                    database.mesaDao(),
-                    database.rotaDao(),
-                    database.despesaDao(),
-                    database.colaboradorDao(),
-                    database.cicloAcertoDao(),
-                    database.acertoMesaDao(),
-                    database.contratoLocacaoDao(),
-                    database.aditivoContratoDao(),
-                    database.assinaturaRepresentanteLegalDao(),
-                    database.logAuditoriaAssinaturaDao()
-                )
+                val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
                 val clienteRepo = com.example.gestaobilhares.data.repository.ClienteRepository(
                     database.clienteDao(),
                     appRepository

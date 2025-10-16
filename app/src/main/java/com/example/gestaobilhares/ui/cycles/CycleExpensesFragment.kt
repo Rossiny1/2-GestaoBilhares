@@ -70,20 +70,7 @@ class CycleExpensesFragment : Fragment() {
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
-        )
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         val cicloAcertoRepository = CicloAcertoRepository(
             database.cicloAcertoDao(),
             DespesaRepository(database.despesaDao()),

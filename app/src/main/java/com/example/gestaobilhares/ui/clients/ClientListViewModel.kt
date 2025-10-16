@@ -11,6 +11,8 @@ import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.data.entities.Despesa
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.AppLogger
+import android.util.Log
+import com.example.gestaobilhares.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -203,7 +205,9 @@ class ClientListViewModel constructor(
      * ✅ FASE 9B: Carrega clientes da rota com filtros combinados
      */
     fun carregarClientes(rotaId: Long) {
-        AppLogger.log("ClientListVM", "carregarClientes chamado para rotaId: $rotaId")
+        if (BuildConfig.DEBUG) {
+            AppLogger.log("ClientListVM", "carregarClientes chamado para rotaId: $rotaId")
+        }
         
         // Atualizar o rotaId no fluxo se necessário
         if (_rotaIdFlow.value != rotaId) {

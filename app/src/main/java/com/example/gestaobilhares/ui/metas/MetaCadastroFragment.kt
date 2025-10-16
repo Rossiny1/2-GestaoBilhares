@@ -48,22 +48,9 @@ class MetaCadastroFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
-        )
+        // Inicializar ViewModel
+        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = MetaCadastroViewModel(appRepository)
         
         // Obter rota selecionada dos argumentos

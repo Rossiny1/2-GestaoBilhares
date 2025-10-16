@@ -62,20 +62,7 @@ class ContractGenerationFragment : Fragment() {
             // ✅ LOG CRASH: Inicializando ViewModel
             android.util.Log.d("LOG_CRASH", "ContractGenerationFragment.onViewCreated - Inicializando ViewModel")
             val database = AppDatabase.getDatabase(requireContext())
-            val appRepository = AppRepository(
-                database.clienteDao(),
-                database.acertoDao(),
-                database.mesaDao(),
-                database.rotaDao(),
-                database.despesaDao(),
-                database.colaboradorDao(),
-                database.cicloAcertoDao(),
-                database.acertoMesaDao(),
-                database.contratoLocacaoDao(),
-                database.aditivoContratoDao(),
-                database.assinaturaRepresentanteLegalDao(),
-                database.logAuditoriaAssinaturaDao()
-            )
+            val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
             viewModel = ContractGenerationViewModel(appRepository)
             
             val clienteId = arguments?.getLong("cliente_id") ?: 0L

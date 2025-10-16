@@ -56,7 +56,13 @@ class MesasDepositoFragment : Fragment() {
             database.contratoLocacaoDao(),
             database.aditivoContratoDao(),
             database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
+            database.logAuditoriaAssinaturaDao(),
+            database.panoEstoqueDao(),
+            database.categoriaDespesaDao(),
+            database.tipoDespesaDao(),
+            database.historicoManutencaoVeiculoDao(),
+            database.historicoCombustivelVeiculoDao(),
+            database.historicoManutencaoMesaDao()
         )
         viewModel = MesasDepositoViewModel(MesaRepository(database.mesaDao()), appRepository)
         setupRecyclerView()

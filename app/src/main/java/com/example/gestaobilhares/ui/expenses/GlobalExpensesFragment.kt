@@ -54,20 +54,7 @@ class GlobalExpensesFragment : Fragment() {
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
         val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
-        )
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         val despesaRepository = com.example.gestaobilhares.data.repository.DespesaRepository(database.despesaDao())
         val cicloAcertoRepository = com.example.gestaobilhares.data.repository.CicloAcertoRepository(
             database.cicloAcertoDao(),

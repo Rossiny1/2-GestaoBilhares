@@ -71,20 +71,7 @@ class ColaboradorMetasFragment : Fragment() {
 
     private fun setupRepository() {
         val database = AppDatabase.getDatabase(requireContext())
-        appRepository = AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
-        )
+        appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
     }
 
     private fun setupToolbar() {

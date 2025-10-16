@@ -59,20 +59,7 @@ class SignatureCaptureFragment : Fragment() {
             // ✅ LOG CRASH: Inicializando ViewModel
             android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.onViewCreated - Inicializando ViewModel")
             val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-            val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
-                database.clienteDao(),
-                database.acertoDao(),
-                database.mesaDao(),
-                database.rotaDao(),
-                database.despesaDao(),
-                database.colaboradorDao(),
-                database.cicloAcertoDao(),
-                database.acertoMesaDao(),
-                database.contratoLocacaoDao(),
-                database.aditivoContratoDao(),
-                database.assinaturaRepresentanteLegalDao(),
-                database.logAuditoriaAssinaturaDao()
-            )
+            val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
             viewModel = SignatureCaptureViewModel()
             viewModel.initializeRepository(appRepository)
             
@@ -226,21 +213,7 @@ class SignatureCaptureFragment : Fragment() {
                     val contratoAtual = viewModel.contrato.value ?: return@launch
                     val fechamento = viewModel.getFechamentoResumoDistrato()
                     
-                    val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-                    val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                        db.clienteDao(),
-                        db.acertoDao(),
-                        db.mesaDao(),
-                        db.rotaDao(),
-                        db.despesaDao(),
-                        db.colaboradorDao(),
-                        db.cicloAcertoDao(),
-                        db.acertoMesaDao(),
-                        db.contratoLocacaoDao(),
-                        db.aditivoContratoDao(),
-                        db.assinaturaRepresentanteLegalDao(),
-                        db.logAuditoriaAssinaturaDao()
-                    )
+                    val repo = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
                     val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
                     val agora = java.util.Date()
                     android.util.Log.d("DistratoFlow", "✅ ATUALIZAR STATUS ao salvar assinatura: contrato ${contratoAtual.id} para $novoStatus em $agora")
@@ -401,21 +374,7 @@ class SignatureCaptureFragment : Fragment() {
 
                 // ✅ NOVO: Persistir status de encerramento do contrato
                 try {
-                    val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-                    val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                        db.clienteDao(),
-                        db.acertoDao(),
-                        db.mesaDao(),
-                        db.rotaDao(),
-                        db.despesaDao(),
-                        db.colaboradorDao(),
-                        db.cicloAcertoDao(),
-                        db.acertoMesaDao(),
-                        db.contratoLocacaoDao(),
-                        db.aditivoContratoDao(),
-                        db.assinaturaRepresentanteLegalDao(),
-                        db.logAuditoriaAssinaturaDao()
-                    )
+                    val repo = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
                     val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
                     val agora = java.util.Date()
                     android.util.Log.d("DistratoFlow", "Encerrar direto contrato ${contrato.id} para $novoStatus em $agora")

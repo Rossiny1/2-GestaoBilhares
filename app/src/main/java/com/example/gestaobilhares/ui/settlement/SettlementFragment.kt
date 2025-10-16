@@ -32,12 +32,8 @@ import com.example.gestaobilhares.databinding.FragmentSettlementBinding
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.MesaRepository
-import com.example.gestaobilhares.data.repository.ClienteRepository
-import com.example.gestaobilhares.data.repository.AcertoRepository
-import com.example.gestaobilhares.data.repository.AcertoMesaRepository
-import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.DespesaRepository
+import com.example.gestaobilhares.data.factory.RepositoryFactory
+import com.example.gestaobilhares.BuildConfig
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.entities.Acerto
 import com.example.gestaobilhares.data.entities.PanoEstoque
@@ -52,7 +48,6 @@ import com.example.gestaobilhares.ui.clients.AcertoResumo
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.first
-// ✅ REMOVIDO: Hilt não é mais usado
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.example.gestaobilhares.utils.ImageCompressionUtils
@@ -240,34 +235,8 @@ class SettlementFragment : Fragment() {
         
         // Inicializar ViewModel aqui onde o contexto está disponível
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
-        )
-        viewModel = SettlementViewModel(
-            MesaRepository(database.mesaDao()),
-            ClienteRepository(database.clienteDao(), appRepository),
-            AcertoRepository(database.acertoDao(), database.clienteDao()),
-            AcertoMesaRepository(database.acertoMesaDao()),
-            CicloAcertoRepository(
-                database.cicloAcertoDao(),
-                DespesaRepository(database.despesaDao()),
-                AcertoRepository(database.acertoDao(), database.clienteDao()),
-                ClienteRepository(database.clienteDao(), appRepository)
-            ),
-            com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao()),
-            com.example.gestaobilhares.data.repository.PanoEstoqueRepository(database.panoEstoqueDao())
-        )
+        val appRepository = RepositoryFactory.getAppRepository(requireContext())
+        viewModel = SettlementViewModel(appRepository)
         
         Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
         Log.d("SettlementFragment", "Cliente ID: ${args.clienteId}")

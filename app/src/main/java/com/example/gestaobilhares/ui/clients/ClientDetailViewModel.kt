@@ -3,7 +3,6 @@
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
-// ✅ REMOVIDO: Comentários desnecessários
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,9 +13,9 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.parcelize.Parcelize
 import android.os.Parcelable
 import com.example.gestaobilhares.data.entities.Acerto
-// ✅ REMOVIDO: TipoMesa não utilizado neste ViewModel
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import android.util.Log
+import com.example.gestaobilhares.BuildConfig
 
 /**
  * ViewModel para ClientDetailFragment
@@ -47,17 +46,25 @@ class ClientDetailViewModel(
     val cliente: StateFlow<com.example.gestaobilhares.data.entities.Cliente?> = _cliente.asStateFlow()
 
     init {
-        // Removido dados mock - agora carrega do banco de dados real
+        if (BuildConfig.DEBUG) {
+            Log.d("ClientDetailViewModel", "ClientDetailViewModel inicializado.")
+        }
     }
 
     fun loadClientDetails(clienteId: Long) {
         viewModelScope.launch {
             showLoading()
-            Log.d("ClientDetailViewModel", "=== CARREGANDO DETALHES DO CLIENTE $clienteId ===")
-            try {
-                Log.d("ClientDetailViewModel", "Buscando cliente no banco com ID: $clienteId")
-                val cliente = appRepository.obterClientePorId(clienteId)
-                Log.d("ClientDetailViewModel", "Cliente encontrado no banco: ${cliente?.nome}, rotaId: ${cliente?.rotaId}")
+                        if (BuildConfig.DEBUG) {
+                            Log.d("ClientDetailViewModel", "=== CARREGANDO DETALHES DO CLIENTE $clienteId ===")
+                        }
+                        try {
+                            if (BuildConfig.DEBUG) {
+                                Log.d("ClientDetailViewModel", "Buscando cliente no banco com ID: $clienteId")
+                            }
+                            val cliente = appRepository.obterClientePorId(clienteId)
+                            if (BuildConfig.DEBUG) {
+                                Log.d("ClientDetailViewModel", "Cliente encontrado no banco: ${cliente?.nome}, rotaId: ${cliente?.rotaId}")
+                            }
                 cliente?.let {
                     Log.d("ClientDetailViewModel", "Cliente encontrado: ${it.nome}")
                     Log.d("ClientDetailViewModel", "Endereço: ${it.endereco}")

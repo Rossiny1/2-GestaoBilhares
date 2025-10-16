@@ -18,10 +18,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.factory.RepositoryFactory
+import com.example.gestaobilhares.BuildConfig
 import com.example.gestaobilhares.utils.DataValidator
 import com.example.gestaobilhares.data.entities.CategoriaDespesa
 import com.example.gestaobilhares.data.entities.TipoDespesa
-import com.example.gestaobilhares.data.repository.*
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.databinding.FragmentExpenseRegisterBinding
 import com.example.gestaobilhares.utils.ImageCompressionUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -30,7 +32,6 @@ import java.io.File
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-// ✅ REMOVIDO: Hilt não é mais usado
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -123,34 +124,8 @@ class ExpenseRegisterFragment : Fragment() {
         
         // Inicializar ViewModel
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao()
-        )
-        viewModel = ExpenseRegisterViewModel(
-            DespesaRepository(database.despesaDao()),
-            CategoriaDespesaRepository(database.categoriaDespesaDao()),
-            TipoDespesaRepository(database.tipoDespesaDao()),
-            CicloAcertoRepository(
-                database.cicloAcertoDao(),
-                DespesaRepository(database.despesaDao()),
-                AcertoRepository(database.acertoDao(), database.clienteDao()),
-                ClienteRepository(database.clienteDao(), appRepository),
-                database.rotaDao()
-            ),
-            HistoricoManutencaoVeiculoRepository(database.historicoManutencaoVeiculoDao()),
-            HistoricoCombustivelVeiculoRepository(database.historicoCombustivelVeiculoDao())
-        )
+        val appRepository = RepositoryFactory.getAppRepository(requireContext())
+        viewModel = ExpenseRegisterViewModel(appRepository)
         
         setupUI()
         setupClickListeners()

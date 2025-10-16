@@ -65,20 +65,7 @@ class ContractManagementFragment : Fragment() {
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
         try {
             database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-            val appRepository = com.example.gestaobilhares.data.repository.AppRepository(
-                database!!.clienteDao(),
-                database!!.acertoDao(),
-                database!!.mesaDao(),
-                database!!.rotaDao(),
-                database!!.despesaDao(),
-                database!!.colaboradorDao(),
-                database!!.cicloAcertoDao(),
-                database!!.acertoMesaDao(),
-                database!!.contratoLocacaoDao(),
-                database!!.aditivoContratoDao(),
-                database!!.assinaturaRepresentanteLegalDao(),
-                database!!.logAuditoriaAssinaturaDao()
-            )
+            val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
             viewModel = ContractManagementViewModel(appRepository)
         } catch (e: Exception) {
             android.util.Log.w("ContractManagementFragment", "Erro ao inicializar ViewModel: ${e.message}")
@@ -140,21 +127,7 @@ class ContractManagementFragment : Fragment() {
      */
     private fun showDocumentsDialog(item: ContractManagementViewModel.ContractItem) {
         val cliente = item.cliente ?: return
-        val db = database ?: com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-        val repo = AppRepository(
-            db.clienteDao(),
-            db.acertoDao(),
-            db.mesaDao(),
-            db.rotaDao(),
-            db.despesaDao(),
-            db.colaboradorDao(),
-            db.cicloAcertoDao(),
-            db.acertoMesaDao(),
-            db.contratoLocacaoDao(),
-            db.aditivoContratoDao(),
-            db.assinaturaRepresentanteLegalDao(),
-            db.logAuditoriaAssinaturaDao()
-        )
+        val repo = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         lifecycleScope.launch {
             val contratosFlow = repo.buscarContratosPorCliente(cliente.id)
             val contratos = contratosFlow.first()
@@ -711,21 +684,7 @@ class ContractManagementFragment : Fragment() {
         lifecycleScope.launch {
             val contrato = item.contrato ?: return@launch
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
-            val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-            val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                db.clienteDao(),
-                db.acertoDao(),
-                db.mesaDao(),
-                db.rotaDao(),
-                db.despesaDao(),
-                db.colaboradorDao(),
-                db.cicloAcertoDao(),
-                db.acertoMesaDao(),
-                db.contratoLocacaoDao(),
-                db.aditivoContratoDao(),
-                db.assinaturaRepresentanteLegalDao(),
-                db.logAuditoriaAssinaturaDao()
-            )
+            val repo = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
             val ultimo = repo.buscarUltimoAcertoPorCliente(contrato.clienteId)
             val totalRecebido = ultimo?.valorRecebido ?: 0.0
             val despesasViagem = 0.0
@@ -761,21 +720,7 @@ class ContractManagementFragment : Fragment() {
         lifecycleScope.launch {
             val contrato = item.contrato ?: return@launch
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
-            val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-            val repo = com.example.gestaobilhares.data.repository.AppRepository(
-                db.clienteDao(),
-                db.acertoDao(),
-                db.mesaDao(),
-                db.rotaDao(),
-                db.despesaDao(),
-                db.colaboradorDao(),
-                db.cicloAcertoDao(),
-                db.acertoMesaDao(),
-                db.contratoLocacaoDao(),
-                db.aditivoContratoDao(),
-                db.assinaturaRepresentanteLegalDao(),
-                db.logAuditoriaAssinaturaDao()
-            )
+            val repo = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
             val ultimo = repo.buscarUltimoAcertoPorCliente(contrato.clienteId)
             val totalRecebido = ultimo?.valorRecebido ?: 0.0
             val despesasViagem = 0.0
