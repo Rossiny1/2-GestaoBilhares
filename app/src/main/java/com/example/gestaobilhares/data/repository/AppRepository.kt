@@ -13,8 +13,7 @@ import kotlinx.coroutines.flow.combine
 import android.util.Log
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
-// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
-// import javax.inject.Singleton // REMOVIDO: Hilt nao e mais usado
+// ✅ REMOVIDO: Hilt não é mais usado
 
 /**
  * ✅ REPOSITORY CONSOLIDADO E MODERNIZADO - AppRepository

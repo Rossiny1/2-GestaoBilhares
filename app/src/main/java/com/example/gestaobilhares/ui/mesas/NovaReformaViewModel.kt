@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
+// ✅ REMOVIDO: Hilt não é mais usado
 
 /**
  * ViewModel para a tela de nova reforma.
