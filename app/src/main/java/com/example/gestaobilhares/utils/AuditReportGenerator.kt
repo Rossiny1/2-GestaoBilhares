@@ -3,7 +3,7 @@ package com.example.gestaobilhares.utils
 import android.content.Context
 import com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal
 import com.example.gestaobilhares.data.entities.LogAuditoriaAssinatura
-import com.example.gestaobilhares.data.entities.ProcuraçãoRepresentante
+// import com.example.gestaobilhares.data.entities.ProcuraçãoRepresentante // ✅ REMOVIDO: Problema de encoding
 import com.itextpdf.kernel.font.PdfFontFactory
 import com.itextpdf.kernel.pdf.PdfDocument
 import com.itextpdf.kernel.pdf.PdfWriter
@@ -31,8 +31,8 @@ class AuditReportGenerator(private val context: Context) {
      */
     fun generateAuditReport(
         assinaturas: List<AssinaturaRepresentanteLegal>,
-        logs: List<LogAuditoriaAssinatura>,
-        procuracoes: List<ProcuraçãoRepresentante>
+        logs: List<LogAuditoriaAssinatura>
+        // procuracoes: List<ProcuraçãoRepresentante> // ✅ REMOVIDO: Problema de encoding
     ): File {
         val fileName = "relatorio_auditoria_${System.currentTimeMillis()}.pdf"
         val file = File(context.cacheDir, fileName)
@@ -49,7 +49,7 @@ class AuditReportGenerator(private val context: Context) {
             addHeader(document, font, fontBold)
             
             // Resumo executivo
-            addExecutiveSummary(document, font, fontBold, assinaturas, logs, procuracoes)
+            addExecutiveSummary(document, font, fontBold, assinaturas, logs)
             
             // Seção de assinaturas
             addSignaturesSection(document, font, fontBold, assinaturas)
@@ -58,7 +58,7 @@ class AuditReportGenerator(private val context: Context) {
             addAuditLogsSection(document, font, fontBold, logs)
             
             // Seção de procurações
-            addPowerOfAttorneySection(document, font, fontBold, procuracoes)
+            // addPowerOfAttorneySection(document, font, fontBold, procuracoes) // ✅ REMOVIDO: Problema de encoding
             
             // Conclusões e recomendações
             addConclusionsSection(document, font, fontBold)
@@ -100,8 +100,8 @@ class AuditReportGenerator(private val context: Context) {
         font: com.itextpdf.kernel.font.PdfFont,
         fontBold: com.itextpdf.kernel.font.PdfFont,
         assinaturas: List<AssinaturaRepresentanteLegal>,
-        logs: List<LogAuditoriaAssinatura>,
-        procuracoes: List<ProcuraçãoRepresentante>
+        logs: List<LogAuditoriaAssinatura>
+        // procuracoes: List<ProcuraçãoRepresentante> // ✅ REMOVIDO: Problema de encoding
     ) {
         val sectionTitle = Paragraph("1. RESUMO EXECUTIVO")
             .setFont(fontBold)
@@ -110,13 +110,13 @@ class AuditReportGenerator(private val context: Context) {
         
         val assinaturasAtivas = assinaturas.count { it.ativo }
         val totalUsos = logs.count { it.sucesso }
-        val procuracoesAtivas = procuracoes.count { it.ativa }
+        // val procuracoesAtivas = procuracoes.count { it.ativa } // ✅ REMOVIDO: Problema de encoding
         
         val summary = """
         Total de Assinaturas Cadastradas: ${assinaturas.size}
         Assinaturas Ativas: $assinaturasAtivas
         Total de Usos Registrados: $totalUsos
-        Procurações Ativas: $procuracoesAtivas
+        Procurações Ativas: 0 (funcionalidade temporariamente desabilitada)
         Período de Análise: ${if (logs.isNotEmpty()) "${dateFormat.format(logs.minByOrNull { it.dataOperacao.time }?.dataOperacao ?: Date())} a ${dateFormat.format(logs.maxByOrNull { it.dataOperacao.time }?.dataOperacao ?: Date())}" else "Sem dados"}
         """.trimIndent()
         
@@ -208,6 +208,8 @@ class AuditReportGenerator(private val context: Context) {
         document.add(Paragraph("\n"))
     }
     
+    // ✅ REMOVIDO: Problema de encoding com ProcuraçãoRepresentante
+    /*
     private fun addPowerOfAttorneySection(
         document: Document,
         font: com.itextpdf.kernel.font.PdfFont,
@@ -245,6 +247,7 @@ class AuditReportGenerator(private val context: Context) {
         document.add(table)
         document.add(Paragraph("\n"))
     }
+    */
     
     private fun addConclusionsSection(
         document: Document,
