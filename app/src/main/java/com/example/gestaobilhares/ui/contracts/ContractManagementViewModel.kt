@@ -321,7 +321,7 @@ class ContractManagementViewModel constructor(
         return when (contrato.status.uppercase()) {
             "ATIVO" -> if (contrato.assinaturaLocatario != null) "Ativo (Assinado)" else "Ativo (Gerado)"
             "ENCERRADO_QUITADO" -> "Inativo (Distrato)"
-            "RESCINDIDO_COM_DIVIDA" -> "Inativo (Distrato com dívida)"
+            "RESCINDIDO_COM_DIVIDA" -> "Inativo (Distrato c/ dívida)"
             "RESCINDIDO" -> "Inativo (Rescindido)"
             else -> contrato.status
         }
