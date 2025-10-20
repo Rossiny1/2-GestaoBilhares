@@ -174,7 +174,15 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         binding.fabMain.setOnClickListener { toggleFabMenu() }
 
         binding.fabEdit.setOnClickListener {
-            val action = ClientDetailFragmentDirections.actionClientDetailFragmentToClientRegisterFragment(clientId)
+            Log.d("ClientDetailFragment", "=== NAVEGAÇÃO PARA EDIÇÃO ===")
+            Log.d("ClientDetailFragment", "clientId sendo passado: $clientId")
+            
+            // ✅ CORREÇÃO: Passar ambos os argumentos (rotaId e clienteId)
+            val action = ClientDetailFragmentDirections.actionClientDetailFragmentToClientRegisterFragment(
+                rotaId = viewModel.cliente.value?.rotaId ?: 1L,
+                clienteId = clientId
+            )
+            Log.d("ClientDetailFragment", "Action criada com rotaId: ${viewModel.cliente.value?.rotaId ?: 1L}, clienteId: $clientId")
             findNavController().navigate(action)
             recolherFabMenu()
         }

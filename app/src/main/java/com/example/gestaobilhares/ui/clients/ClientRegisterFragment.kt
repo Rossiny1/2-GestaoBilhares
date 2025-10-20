@@ -86,6 +86,10 @@ class ClientRegisterFragment : Fragment() {
         observeViewModel()
         
         // Carregar dados do cliente se estiver editando
+        Log.d("ClientRegisterFragment", "=== DEBUG NAVEGAÇÃO ===")
+        Log.d("ClientRegisterFragment", "args.clienteId: ${args.clienteId}")
+        Log.d("ClientRegisterFragment", "args.rotaId: ${args.rotaId}")
+        
         if (args.clienteId != 0L) {
             Log.d("ClientRegisterFragment", "Modo EDIÇÃO - Carregando cliente ID: ${args.clienteId}")
             carregarDadosClienteParaEdicao()
@@ -401,6 +405,12 @@ class ClientRegisterFragment : Fragment() {
      * ✅ IMPLEMENTADO: Preenche campos com dados do cliente
      */
     private fun preencherCamposComDadosCliente(cliente: com.example.gestaobilhares.data.entities.Cliente) {
+        Log.d("ClientRegisterFragment", "=== PREENCHENDO CAMPOS ===")
+        Log.d("ClientRegisterFragment", "Cliente recebido: ${cliente.nome}")
+        Log.d("ClientRegisterFragment", "ID: ${cliente.id}")
+        Log.d("ClientRegisterFragment", "CPF/CNPJ: ${cliente.cpfCnpj}")
+        Log.d("ClientRegisterFragment", "Endereço: ${cliente.endereco}")
+        
         binding.apply {
             etClientName.setText(cliente.nome)
             etCpfCnpj.setText(cliente.cpfCnpj ?: "")
@@ -415,6 +425,8 @@ class ClientRegisterFragment : Fragment() {
             etComissaoFicha.setText(cliente.comissaoFicha.toString())
             etNumeroContrato.setText(cliente.numeroContrato ?: "")
             etObservations.setText(cliente.observacoes ?: "")
+            
+            Log.d("ClientRegisterFragment", "Campos preenchidos com sucesso!")
             
             // ✅ NOVO: Preencher data de cadastro
             val _dataCadastro = if (cliente.dataCadastro != null) {

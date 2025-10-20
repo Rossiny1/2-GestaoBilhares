@@ -117,6 +117,7 @@ class SettlementViewModel constructor(
     suspend fun prepararMesasParaAcerto(mesasCliente: List<Mesa>, acertoIdParaEdicao: Long? = null): List<Mesa> {
         Log.d("SettlementViewModel", "=== PREPARANDO MESAS PARA ACERTO ===")
         Log.d("SettlementViewModel", "Mesas recebidas: ${mesasCliente.size}, Modo edição: ${acertoIdParaEdicao != null}")
+        Log.d("SettlementViewModel", "Acerto ID para edição: $acertoIdParaEdicao")
         
         return mesasCliente.map { mesa ->
             try {
@@ -124,12 +125,15 @@ class SettlementViewModel constructor(
                 
                 if (acertoIdParaEdicao != null) {
                     // ✅ MODO EDIÇÃO: Carregar dados do acerto sendo editado
-                    val acertoMesa = appRepository.buscarAcertoMesaPorMesa(mesa.id)
+                    logOperation("SETTLEMENT", "Mesa ${mesa.numero}: Buscando dados do acerto ID: $acertoIdParaEdicao")
+                    val acertoMesas = appRepository.buscarAcertoMesasPorAcerto(acertoIdParaEdicao).first()
+                    val acertoMesa = acertoMesas.find { it.mesaId == mesa.id }
                     if (acertoMesa != null) {
-                        // Usar o relógio inicial do acerto sendo editado
+                        // Usar o relógio inicial e final do acerto sendo editado
                         val relogioInicial = acertoMesa.relogioInicial
                         val relogioFinal = acertoMesa.relogioFinal
                         logOperation("SETTLEMENT", "Mesa ${mesa.numero}: MODO EDIÇÃO - relógio inicial: $relogioInicial, relógio final: $relogioFinal")
+                        logOperation("SETTLEMENT", "Mesa ${mesa.numero}: AcertoMesa encontrado - ID: ${acertoMesa.id}, AcertoID: ${acertoMesa.acertoId}")
                         mesa.copy(
                             fichasInicial = relogioInicial,
                             fichasFinal = relogioFinal
@@ -440,7 +444,7 @@ class SettlementViewModel constructor(
                         valorComDesconto = valorComDesconto,
                         valorRecebido = valorRecebido,
                         debitoAtual = debitoAtual,
-                        status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
+                        status = com.example.gestaobilhares.data.entities.StatusAcerto.PENDENTE,
                         observacoes = observacaoParaSalvar,
                         dataFinalizacao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
                         metodosPagamentoJson = metodosPagamentoJson,

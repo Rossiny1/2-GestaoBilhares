@@ -37,6 +37,7 @@ import com.example.gestaobilhares.BuildConfig
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.entities.Acerto
 import com.example.gestaobilhares.data.entities.PanoEstoque
+import com.example.gestaobilhares.data.entities.StatusAcerto
 import com.example.gestaobilhares.ui.settlement.PanoSelectionDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.Toast
@@ -240,6 +241,8 @@ class SettlementFragment : Fragment() {
         
         Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
         Log.d("SettlementFragment", "Cliente ID: ${args.clienteId}")
+        Log.d("SettlementFragment", "Acerto ID para edição: ${args.acertoIdParaEdicao}")
+        Log.d("SettlementFragment", "Modo edição: ${args.acertoIdParaEdicao != 0L}")
         
         // Primeiro: verificar permissões
         verificarPermissaoAcerto()
@@ -263,6 +266,110 @@ class SettlementFragment : Fragment() {
         
         // Sexto: carregar dados básicos do cliente para header
         viewModel.loadClientForSettlement(args.clienteId)
+        
+        // ✅ NOVO: Sétimo: carregar dados do acerto se estiver editando
+        if (args.acertoIdParaEdicao != 0L) {
+            Log.d("SettlementFragment", "🔧 CHAMANDO carregarDadosAcertoParaEdicao() - Acerto ID: ${args.acertoIdParaEdicao}")
+            carregarDadosAcertoParaEdicao()
+        } else {
+            Log.d("SettlementFragment", "🔧 NÃO chamando carregarDadosAcertoParaEdicao() - Acerto ID é 0")
+        }
+    }
+
+    /**
+     * ✅ NOVO: Carrega dados do acerto existente para preencher campos na edição
+     */
+    private fun carregarDadosAcertoParaEdicao() {
+        lifecycleScope.launch {
+            try {
+                Log.d("SettlementFragment", "=== CARREGANDO DADOS DO ACERTO PARA EDIÇÃO ===")
+                Log.d("SettlementFragment", "Acerto ID: ${args.acertoIdParaEdicao}")
+                
+                    // Buscar dados do acerto
+                    val acerto = viewModel.buscarAcertoPorId(args.acertoIdParaEdicao)
+                    if (acerto != null) {
+                        Log.d("SettlementFragment", "Acerto encontrado: ID=${acerto.id}, Valor=${acerto.valorRecebido}")
+                        Log.d("SettlementFragment", "🔍 DEBUG ACERTO COMPLETO:")
+                        Log.d("SettlementFragment", "  - ID: ${acerto.id}")
+                        Log.d("SettlementFragment", "  - Valor Recebido: ${acerto.valorRecebido}")
+                        Log.d("SettlementFragment", "  - Desconto: ${acerto.desconto}")
+                        Log.d("SettlementFragment", "  - Observações: '${acerto.observacoes}'")
+                        Log.d("SettlementFragment", "  - Data: ${acerto.dataAcerto}")
+                        Log.d("SettlementFragment", "  - Status: ${acerto.status}")
+
+                        // ✅ VALIDAÇÃO: Verificar se o acerto pode ser editado
+                        Log.d("SettlementFragment", "🔍 VALIDAÇÃO: Verificando status do acerto...")
+                        Log.d("SettlementFragment", "🔍 Status atual: ${acerto.status}")
+                        Log.d("SettlementFragment", "🔍 Status FINALIZADO: ${StatusAcerto.FINALIZADO}")
+                        Log.d("SettlementFragment", "🔍 São iguais? ${acerto.status == StatusAcerto.FINALIZADO}")
+                        
+                        if (acerto.status == StatusAcerto.FINALIZADO || acerto.status == StatusAcerto.CANCELADO) {
+                            Log.e("SettlementFragment", "❌ BLOQUEIO: Acerto ${acerto.status} não pode ser editado!")
+                            
+                            // Verificar se o fragment ainda está ativo
+                            if (!isAdded || context == null) {
+                                Log.w("SettlementFragment", "Fragment não está mais ativo, cancelando operação")
+                                return@launch
+                            }
+                            
+                            // Mostrar mensagem de erro e voltar
+                            Toast.makeText(
+                                requireContext(),
+                                "Não é possível editar acertos ${acerto.status.name.lowercase()}. Apenas acertos pendentes podem ser editados.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            
+                            // Voltar para a tela anterior
+                            findNavController().popBackStack()
+                            return@launch
+                        }
+
+                        Log.d("SettlementFragment", "✅ Acerto pode ser editado (Status: ${acerto.status})")
+
+                        // Preencher campos da UI com dados do acerto
+                        preencherCamposComDadosAcerto(acerto)
+                    } else {
+                        Log.e("SettlementFragment", "Acerto não encontrado: ${args.acertoIdParaEdicao}")
+                    }
+            } catch (e: Exception) {
+                Log.e("SettlementFragment", "Erro ao carregar dados do acerto: ${e.message}", e)
+            }
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Preenche campos da UI com dados do acerto existente
+     */
+    private fun preencherCamposComDadosAcerto(acerto: com.example.gestaobilhares.data.entities.Acerto) {
+        try {
+            Log.d("SettlementFragment", "=== PREENCHENDO CAMPOS COM DADOS DO ACERTO ===")
+            Log.d("SettlementFragment", "Valor recebido: ${acerto.valorRecebido}")
+            Log.d("SettlementFragment", "Desconto: ${acerto.desconto}")
+            Log.d("SettlementFragment", "Observações: ${acerto.observacoes}")
+
+            // Preencher valor recebido (sempre, mesmo se for 0)
+            Log.d("SettlementFragment", "🔍 Preenchendo valor recebido: ${acerto.valorRecebido}")
+            binding.etAmountReceived.setText(acerto.valorRecebido.toString())
+            Log.d("SettlementFragment", "✅ Valor recebido preenchido: ${acerto.valorRecebido}")
+
+            // Preencher desconto (sempre, mesmo se for 0)
+            Log.d("SettlementFragment", "🔍 Preenchendo desconto: ${acerto.desconto}")
+            binding.etDesconto.setText(acerto.desconto.toString())
+            Log.d("SettlementFragment", "✅ Desconto preenchido: ${acerto.desconto}")
+
+            // Preencher observações (sempre, mesmo se for vazio)
+            Log.d("SettlementFragment", "🔍 Preenchendo observações: '${acerto.observacoes}'")
+            binding.etObservacao.setText(acerto.observacoes ?: "")
+            Log.d("SettlementFragment", "✅ Observações preenchidas: '${acerto.observacoes ?: ""}'")
+
+            // Preencher métodos de pagamento (se houver)
+            // TODO: Implementar preenchimento dos métodos de pagamento
+
+            Log.d("SettlementFragment", "✅ Campos preenchidos com sucesso!")
+
+        } catch (e: Exception) {
+            Log.e("SettlementFragment", "Erro ao preencher campos: ${e.message}", e)
+        }
     }
 
     private fun verificarPermissaoAcerto() {
@@ -373,6 +480,12 @@ class SettlementFragment : Fragment() {
         try {
             Log.d("SettlementFragment", "🔄 Executando fallback para carregar mesas...")
             
+            // Verificar se o fragment ainda está ativo
+            if (!isAdded || context == null) {
+                Log.w("SettlementFragment", "Fragment não está mais ativo, cancelando fallback")
+                return
+            }
+            
             // Usar repositório diretamente através do ViewModel
             val mesasCliente = viewModel.carregarMesasClienteDireto(args.clienteId)
             
@@ -462,6 +575,13 @@ class SettlementFragment : Fragment() {
     private fun setupRecyclerViewComDados(mesasDTO: List<MesaDTO>) {
         // ✅ LOG CRASH: Início da configuração do RecyclerView
         Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - INÍCIO")
+        
+        // Verificar se o fragment ainda está ativo
+        if (!isAdded || _binding == null) {
+            Log.w("SettlementFragment", "Fragment não está mais ativo ou binding é null, cancelando setupRecyclerViewComDados")
+            return
+        }
+        
         Log.d("SettlementFragment", "=== CONFIGURANDO RECYCLERVIEW COM DADOS COMPLETOS ===")
         Log.d("SettlementFragment", "Total de mesas recebidas: ${mesasDTO.size}")
         
@@ -529,6 +649,12 @@ class SettlementFragment : Fragment() {
         Log.d("SettlementFragment", "Carregando ${mesasDTO.size} mesas preparadas para o acerto")
         mesasDTO.forEach { mesa ->
             Log.d("SettlementFragment", "Mesa ${mesa.numero}: relógio inicial=${mesa.fichasInicial}, relógio final=${mesa.fichasFinal}")
+            Log.d("SettlementFragment", "🔍 DEBUG MESA ${mesa.numero}:")
+            Log.d("SettlementFragment", "  - ID: ${mesa.id}")
+            Log.d("SettlementFragment", "  - Número: ${mesa.numero}")
+            Log.d("SettlementFragment", "  - Fichas Inicial: ${mesa.fichasInicial}")
+            Log.d("SettlementFragment", "  - Fichas Final: ${mesa.fichasFinal}")
+            Log.d("SettlementFragment", "  - Valor Fixo: ${mesa.valorFixo}")
         }
         
         // ✅ DIAGNÓSTICO: Verificar se o adapter está sendo configurado corretamente
