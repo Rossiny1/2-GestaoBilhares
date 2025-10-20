@@ -385,6 +385,24 @@ class AppRepository constructor(
         }
     }
 
+    /**
+     * Exposição pública do ciclo atual da rota no formato usado antes da refatoração.
+     * Retorna apenas o ID do ciclo para vínculo de acertos.
+     */
+    suspend fun obterCicloAtualIdPorRota(rotaId: Long): Long? {
+        // Pré-ref: prioriza ciclo em andamento; se não houver, usa Rota.ciclo_acerto_atual (número) e ano
+        val emAndamento = try { cicloAcertoDao.buscarCicloEmAndamento(rotaId) } catch (_: Exception) { null }
+        if (emAndamento != null) return emAndamento.id
+        val rota = try { obterRotaPorId(rotaId) } catch (_: Exception) { null }
+        return if (rota != null) {
+            val ciclo = try { cicloAcertoDao.buscarPorRotaNumeroEAno(rotaId, rota.cicloAcertoAtual, rota.anoCiclo) } catch (_: Exception) { null }
+            ciclo?.id
+        } else {
+            val (_, cicloId, _) = obterCicloAtualRota(rotaId)
+            cicloId
+        }
+    }
+
     // ✅ NOVO: Método para obter datas de início e fim do ciclo
     private suspend fun obterDatasCicloRota(rotaId: Long): Pair<Long?, Long?> {
         return try {
@@ -738,6 +756,11 @@ class AppRepository constructor(
             throw e
         }
     }
+
+    /**
+     * Busca acertos de um cliente filtrando pelo cicloId (consulta direta no DAO)
+     */
+    fun buscarAcertosPorClienteECicloId(clienteId: Long, cicloId: Long) = acertoDao.buscarPorClienteECicloId(clienteId, cicloId)
     suspend fun deletarColaboradorRota(colaboradorRota: ColaboradorRota) = colaboradorDao.deletarColaboradorRota(colaboradorRota)
     suspend fun deletarTodasRotasColaborador(colaboradorId: Long) = colaboradorDao.deletarTodasRotasColaborador(colaboradorId)
     suspend fun removerResponsavelPrincipal(colaboradorId: Long) = colaboradorDao.removerResponsavelPrincipal(colaboradorId)

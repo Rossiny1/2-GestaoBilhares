@@ -196,6 +196,12 @@ interface CicloAcertoDao {
         ORDER BY ano DESC, numero_ciclo DESC
     """)
     suspend fun buscarCiclosPorRota(rotaId: Long): List<CicloAcertoEntity>
+
+    /**
+     * Busca ciclo por rota, número e ano (compatível com lógica pré-refatoração baseada em Rota.ciclo_acerto_atual)
+     */
+    @Query("SELECT * FROM ciclos_acerto WHERE rota_id = :rotaId AND numero_ciclo = :numero AND ano = :ano LIMIT 1")
+    suspend fun buscarPorRotaNumeroEAno(rotaId: Long, numero: Int, ano: Int): CicloAcertoEntity?
 }
 
 /**

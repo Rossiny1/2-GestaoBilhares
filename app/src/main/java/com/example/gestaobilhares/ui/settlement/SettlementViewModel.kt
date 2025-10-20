@@ -262,36 +262,53 @@ class SettlementViewModel constructor(
                 
                 // Buscar cliente uma única vez
                 val cliente = appRepository.obterClientePorId(clienteId) ?: throw IllegalStateException("Cliente não encontrado para o ID: $clienteId")
-                val rotaId = cliente.rotaId
+                val rotaId = cliente.rotaId ?: throw IllegalStateException("Cliente $clienteId não está vinculado a uma rota. Não é possível criar acerto.")
                 
-                // Buscar ciclo atual da rota
-                val cicloAtivo = appRepository.buscarCicloAtivo(rotaId)
-                val cicloId = cicloAtivo?.id ?: run {
-                    logError("SETTLEMENT", "Nenhum ciclo ativo encontrado para a rota $rotaId. Tentando buscar o último ciclo existente.")
-                    val ultimoCiclo = appRepository.buscarCicloAtivo(rotaId)
-                    ultimoCiclo?.id ?: throw IllegalStateException("Nenhum ciclo encontrado para a rota $rotaId.")
+                // Buscar ciclo como no pré-refatoração: fonte única (obterCicloAtualRota)
+                val cicloId = appRepository.obterCicloAtualIdPorRota(rotaId)
+                    ?: throw IllegalStateException("Nenhum ciclo encontrado para a rota $rotaId.")
+                
+                logOperation("SETTLEMENT", "[SALVAR_ACERTO] cicloId usado (pré-ref): $cicloId | rotaId: $rotaId | modoEdicao: ${acertoIdParaEdicao != null}")
+                
+                // ✅ DEBUG: Verificar se o ciclo está realmente ativo
+                val cicloAtual = appRepository.buscarCicloAtualPorRota(rotaId)
+                logOperation("SETTLEMENT", "🔍 DEBUG CICLO: Ciclo encontrado - ID: ${cicloAtual?.id}, Status: ${cicloAtual?.status}, Número: ${cicloAtual?.numeroCiclo}")
+                
+                if (cicloAtual?.status != com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO) {
+                    logError("SETTLEMENT", "❌ PROBLEMA: Ciclo não está EM_ANDAMENTO! Status atual: ${cicloAtual?.status}")
+                    _resultadoSalvamento.value = ResultadoSalvamento.Erro("Ciclo não está ativo. Finalize o ciclo anterior e inicie um novo.")
+                    hideLoading()
+                    return@launch
                 }
-                
-                logOperation("SETTLEMENT", "[SALVAR_ACERTO] cicloId usado: $cicloId | rotaId: $rotaId | status ciclo ativo: ${cicloAtivo?.status} | modoEdicao: ${acertoIdParaEdicao != null}")
+
+                // ✅ Usar SEMPRE o ID do ciclo ativo obtido acima para validação e salvamento
+                val cicloIdEfetivo = cicloAtual.id
 
                 // ✅ CORREÇÃO: Validação apenas para novos acertos (não para edição)
                 if (acertoIdParaEdicao == null) {
-                    // Verificar se já existe acerto para este cliente no ciclo ATUAL
-                    val acertosDoCliente = appRepository.obterAcertosPorCliente(clienteId).first()
-                    val acertoExistenteId = acertosDoCliente.firstOrNull { acerto -> 
-                        acerto.cicloId == cicloId && acerto.status == com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO
-                    }?.id
+                    // ✅ DEBUG DETALHADO: Verificar todos os acertos do cliente no ciclo
+                    val acertosDoClienteNoCiclo = appRepository.buscarAcertosPorClienteECicloId(clienteId, cicloIdEfetivo).first()
+                    logOperation("SETTLEMENT", "🔍 DEBUG VALIDAÇÃO: Cliente $clienteId no ciclo $cicloIdEfetivo")
+                    logOperation("SETTLEMENT", "🔍 Total de acertos encontrados: ${acertosDoClienteNoCiclo.size}")
                     
-                    if (acertoExistenteId != null) {
-                        logError("SETTLEMENT", "ACERTO JÁ EXISTE: Cliente $clienteId já possui acerto finalizado (ID: $acertoExistenteId) no ciclo $cicloId")
-                        _resultadoSalvamento.value = ResultadoSalvamento.AcertoJaExiste(
-                            appRepository.obterAcertoPorId(acertoExistenteId) ?: return@launch
-                        )
+                    acertosDoClienteNoCiclo.forEachIndexed { index, acerto ->
+                        logOperation("SETTLEMENT", "🔍 Acerto $index: ID=${acerto.id}, Status=${acerto.status}, Data=${acerto.dataAcerto}")
+                    }
+                    
+                    // Verificar se já existe acerto FINALIZADO para este cliente no ciclo ATUAL
+                    // ✅ CORREÇÃO CRÍTICA: Verificar apenas acertos FINALIZADOS (não PENDENTES ou CANCELADOS)
+                    val acertoFinalizado = acertosDoClienteNoCiclo.firstOrNull { acerto -> 
+                        acerto.status == com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO 
+                    }
+                    
+                    if (acertoFinalizado != null) {
+                        logError("SETTLEMENT", "ACERTO JÁ EXISTE: Cliente $clienteId já possui acerto FINALIZADO (ID: ${acertoFinalizado.id}) no ciclo $cicloIdEfetivo")
+                        _resultadoSalvamento.value = ResultadoSalvamento.AcertoJaExiste(acertoFinalizado)
                         hideLoading()
                         return@launch
                     }
                     
-                    logOperation("SETTLEMENT", "✅ Validação passou: Cliente $clienteId pode criar novo acerto no ciclo $cicloId")
+                    logOperation("SETTLEMENT", "✅ Validação passou: Cliente $clienteId pode criar novo acerto no ciclo $cicloIdEfetivo (nenhum acerto FINALIZADO encontrado)")
                 } else {
                     logOperation("SETTLEMENT", "✅ Modo edição ativo (acertoId: $acertoIdParaEdicao). Pulando validação de acerto único.")
                 }
@@ -367,7 +384,7 @@ class SettlementViewModel constructor(
                 android.util.Log.d("SettlementViewModel", "=== VINCULANDO ACERTO À ROTA E CICLO ===")
                 android.util.Log.d("SettlementViewModel", "Cliente ID: $clienteId")
                 android.util.Log.d("SettlementViewModel", "Rota ID do cliente: $rotaId")
-                android.util.Log.d("SettlementViewModel", "Ciclo atual: $cicloId")
+                android.util.Log.d("SettlementViewModel", "Ciclo atual: $cicloIdEfetivo")
                 
                 // ✅ CORREÇÃO: Lógica diferente para edição vs. novo acerto
                 val acertoId: Long
@@ -433,7 +450,7 @@ class SettlementViewModel constructor(
                         numeroPano = dadosAcerto.numeroPano,
                         dadosExtrasJson = dadosExtrasJson,
                         rotaId = rotaId,
-                        cicloId = cicloId
+                        cicloId = cicloIdEfetivo
                     )
                     
                     acertoId = appRepository.salvarAcerto(acerto)
@@ -442,8 +459,8 @@ class SettlementViewModel constructor(
                 
                 // NOVO: Atualizar valores do ciclo após salvar acerto
                 // Buscar todos os acertos e despesas ANTERIORES do ciclo para calcular os totais
-                val acertosAnteriores = appRepository.buscarPorRotaECicloId(rotaId, cicloId).first().filter { acerto: Acerto -> acerto.id != acertoId }
-                val despesasDoCiclo = appRepository.buscarDespesasPorCicloId(cicloId)
+                val acertosAnteriores = appRepository.buscarPorRotaECicloId(rotaId, cicloIdEfetivo).first().filter { acerto: Acerto -> acerto.id != acertoId }
+                val despesasDoCiclo = appRepository.buscarDespesasPorCicloId(cicloIdEfetivo)
 
                 // ✅ CORREÇÃO: Verificar se realmente foi salvo
                 val acertoSalvo = appRepository.buscarPorId(acertoId)
@@ -454,13 +471,13 @@ class SettlementViewModel constructor(
                 val valorTotalDespesas = despesasDoCiclo.first().sumOf { despesa -> despesa.valor }
                 val clientesAcertados = (acertosAnteriores.map { acerto: Acerto -> acerto.clienteId } + (acertoSalvo?.clienteId ?: 0L)).distinct().size
                 
-                logOperation("SETTLEMENT", "=== ATUALIZANDO VALORES DO CICLO $cicloId ===")
+                logOperation("SETTLEMENT", "=== ATUALIZANDO VALORES DO CICLO $cicloIdEfetivo ===")
                 logOperation("SETTLEMENT", "Total Acertado: $valorTotalAcertado (Anteriores: ${acertosAnteriores.sumOf { acerto: Acerto -> acerto.valorRecebido }} + Atual: ${acertoSalvo?.valorRecebido})")
                 logOperation("SETTLEMENT", "Total Despesas: $valorTotalDespesas")
                 logOperation("SETTLEMENT", "Clientes Acertados: $clientesAcertados")
 
                 appRepository.atualizarValoresCiclo(
-                    cicloId = cicloId,
+                    cicloId = cicloIdEfetivo,
                     valorTotalAcertado = valorTotalAcertado,
                     valorTotalDespesas = valorTotalDespesas,
                     clientesAcertados = clientesAcertados
