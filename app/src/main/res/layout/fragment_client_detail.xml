@@ -361,14 +361,13 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvSettlementHistory"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false"
-                    android:minHeight="200dp"
-                    android:visibility="visible"
-                    android:clipToPadding="false"
-                    android:paddingBottom="8dp"
-                    tools:listitem="@layout/item_settlement_history"
-                    tools:itemCount="6" />
+                android:layout_height="300dp"
+                android:nestedScrollingEnabled="true"
+                android:visibility="visible"
+                android:clipToPadding="false"
+                android:paddingBottom="8dp"
+                tools:listitem="@layout/item_settlement_history"
+                tools:itemCount="6" />
 
         </LinearLayout>
 
