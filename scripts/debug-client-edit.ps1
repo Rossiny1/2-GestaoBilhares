@@ -31,8 +31,8 @@ Write-Host ""
 Write-Host "Pressione Ctrl+C para parar o monitoramento" -ForegroundColor Yellow
 Write-Host ""
 
-# Padrão de busca para logs de edição de cliente
-$pattern = "ClientDetailFragment|ClientRegisterFragment|ClientRegisterViewModel|DEBUG NAVEGAÇÃO|PREENCHENDO CAMPOS|Modo EDIÇÃO|args\.clienteId|clientId sendo passado|Cliente recebido|Campos preenchidos"
+# Padrão de busca para logs de edição de cliente e acerto
+$pattern = "ClientDetailFragment|ClientRegisterFragment|ClientRegisterViewModel|SettlementFragment|SettlementViewModel|DEBUG NAVEGAÇÃO|PREENCHENDO CAMPOS|Modo EDIÇÃO|args\.clienteId|clientId sendo passado|Cliente recebido|Campos preenchidos|Acerto ID para edição|Modo edição|PREPARANDO MESAS PARA ACERTO|CARREGANDO DADOS DO ACERTO|PREENCHENDO CAMPOS COM DADOS|relógio inicial|relógio final|AcertoMesa encontrado"
 
 try {
     & $adbPath logcat -c
