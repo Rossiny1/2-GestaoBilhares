@@ -276,15 +276,22 @@ class SettlementViewModel constructor(
 
                 // ✅ CORREÇÃO: Validação apenas para novos acertos (não para edição)
                 if (acertoIdParaEdicao == null) {
-                    val acertoExistenteId = appRepository.obterAcertosPorCliente(clienteId).first().firstOrNull { it.cicloId == cicloId }?.id
+                    // Verificar se já existe acerto para este cliente no ciclo ATUAL
+                    val acertosDoCliente = appRepository.obterAcertosPorCliente(clienteId).first()
+                    val acertoExistenteId = acertosDoCliente.firstOrNull { acerto -> 
+                        acerto.cicloId == cicloId && acerto.status == com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO
+                    }?.id
+                    
                     if (acertoExistenteId != null) {
-                        logError("SETTLEMENT", "ACERTO JÁ EXISTE: Cliente $clienteId já possui acerto (ID: $acertoExistenteId) no ciclo $cicloId")
+                        logError("SETTLEMENT", "ACERTO JÁ EXISTE: Cliente $clienteId já possui acerto finalizado (ID: $acertoExistenteId) no ciclo $cicloId")
                         _resultadoSalvamento.value = ResultadoSalvamento.AcertoJaExiste(
                             appRepository.obterAcertoPorId(acertoExistenteId) ?: return@launch
                         )
                         hideLoading()
                         return@launch
                     }
+                    
+                    logOperation("SETTLEMENT", "✅ Validação passou: Cliente $clienteId pode criar novo acerto no ciclo $cicloId")
                 } else {
                     logOperation("SETTLEMENT", "✅ Modo edição ativo (acertoId: $acertoIdParaEdicao). Pulando validação de acerto único.")
                 }

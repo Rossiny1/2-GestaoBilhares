@@ -48,6 +48,7 @@ import com.example.gestaobilhares.ui.dialogs.GerarRelatorioDialogFragment
 import com.example.gestaobilhares.ui.dialogs.RotaNaoIniciadaDialogFragment
 import kotlinx.coroutines.flow.first
 import com.example.gestaobilhares.ui.clients.RetiradaStatus
+import com.example.gestaobilhares.data.entities.ContratoLocacao
 
 class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.ConfirmarRetiradaDialogListener, AdicionarObservacaoDialogFragment.AdicionarObservacaoDialogListener, GerarRelatorioDialogFragment.GerarRelatorioDialogListener {
 
@@ -82,6 +83,12 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         viewModel.loadClientDetails(clientId)
 
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Recarregar apenas o histórico de acertos quando retornar de outras telas
+        viewModel.loadSettlementHistory(args.clienteId)
     }
 
     private fun setupRecyclerView() {
@@ -121,6 +128,8 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
             layoutManager = LinearLayoutManager(context)
             adapter = historicoAdapter
         }
+        
+        Log.d("ClientDetailFragment", "RecyclerViews configurados - Mesas e Histórico")
     }
 
     private fun observeViewModel() {
@@ -139,7 +148,22 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                 }
                 launch {
                     viewModel.settlementHistory.collect { historico ->
-                        historicoAdapter.submitList(historico)
+                        Log.d("ClientDetailFragment", "=== HISTÓRICO RECEBIDO ===")
+                        Log.d("ClientDetailFragment", "Quantidade de acertos: ${historico.size}")
+                        Log.d("ClientDetailFragment", "Adapter inicializado? ${::historicoAdapter.isInitialized}")
+                        historico.forEachIndexed { index, acerto ->
+                            Log.d("ClientDetailFragment", "Acerto $index: ID=${acerto.id}, Data=${acerto.data}, Valor=${acerto.valorTotal}")
+                        }
+                        if (::historicoAdapter.isInitialized) {
+                            historicoAdapter.submitList(historico)
+                            Log.d("ClientDetailFragment", "Lista enviada para o adapter")
+                            // Garantir que o card e a lista fiquem visíveis quando houver dados
+                            if (historico.isNotEmpty()) {
+                                binding.rvSettlementHistory.visibility = View.VISIBLE
+                            }
+                        } else {
+                            Log.e("ClientDetailFragment", "Adapter não inicializado!")
+                        }
                     }
                 }
             }
@@ -228,11 +252,17 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                         Toast.LENGTH_LONG
                     ).show()
                 } else {
-                    val action = ClientDetailFragmentDirections.actionClientDetailFragmentToContractGenerationFragment(
-                        clienteId = clientId,
-                        mesasVinculadas = longArrayOf() // Array vazio para novo contrato
+                    // Navegar para ContractGenerationFragment com parâmetros corretos
+                    val bundle = android.os.Bundle().apply {
+                        putLong("cliente_id", clientId)
+                        putLongArray("mesas_vinculadas", longArrayOf()) // Array vazio para novo contrato
+                        putBoolean("tipo_fixo", false) // Padrão: fichas jogadas
+                        putDouble("valor_fixo", 0.0) // Padrão: 0.0
+                    }
+                    findNavController().navigate(
+                        com.example.gestaobilhares.R.id.contractGenerationFragment,
+                        bundle
                     )
-                    findNavController().navigate(action)
                 }
                 recolherFabMenu()
             }
@@ -304,9 +334,36 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
 
 
     override fun onDialogPositiveClick(dialog: DialogFragment) {
-        mesaParaRemover?.let {
-            viewModel.retirarMesaDoCliente(it.id, args.clienteId, relogioFinal = it.relogioFinal, valorRecebido = 0.0)
-            mesaParaRemover = null
+        mesaParaRemover?.let { mesa ->
+            lifecycleScope.launch {
+                try {
+                    // Verificar quantas mesas o cliente tem antes de retirar
+                    val mesasAtuais = viewModel.mesasCliente.first()
+                    val totalMesas = mesasAtuais.size
+                    
+                    // Retirar mesa do cliente
+                    viewModel.retirarMesaDoCliente(mesa.id, args.clienteId, relogioFinal = mesa.relogioFinal, valorRecebido = 0.0)
+                    
+                    // Verificar se cliente tem contrato ativo
+                    val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+                    val contratoAtivo = appRepository.buscarContratoAtivoPorCliente(args.clienteId)
+                    
+                    if (contratoAtivo != null) {
+                        if (totalMesas > 1) {
+                            // Cliente tem 2+ mesas: gerar ADITIVO de retirada
+                            gerarAditivoAposRetiradaMesa(contratoAtivo, mesa)
+                        } else {
+                            // Cliente tem apenas 1 mesa: gerar DISTRATO
+                            gerarDistratoAposRetiradaMesa(contratoAtivo, mesa)
+                        }
+                    }
+                    
+                    mesaParaRemover = null
+                } catch (e: Exception) {
+                    Log.e("ClientDetailFragment", "Erro ao retirar mesa e gerar documento", e)
+                    Toast.makeText(requireContext(), "Erro ao processar retirada da mesa: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 
@@ -326,6 +383,123 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
 
     override fun onObservacaoAdicionada(textoObservacao: String) {
         Log.d("ClientDetailFragment", "Observação adicionada: $textoObservacao")
+    }
+
+    private suspend fun gerarDistratoAposRetiradaMesa(contrato: ContratoLocacao, mesaRemovida: Mesa) {
+        try {
+            // Buscar mesas restantes do cliente
+            val mesasRestantes = viewModel.mesasCliente.first()
+            
+            // Buscar último acerto do cliente usando AppRepository
+            val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+            val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(args.clienteId)
+            val totalRecebido = ultimoAcerto?.valorRecebido ?: 0.0
+            val despesasViagem = 0.0
+            val subtotal = totalRecebido - despesasViagem
+            val comissaoMotorista = subtotal * 0.03
+            val comissaoIltair = totalRecebido * 0.02
+            val totalGeral = subtotal - comissaoMotorista - comissaoIltair
+            val saldo = ultimoAcerto?.debitoAtual ?: 0.0
+            
+            // Atualizar status do contrato para aguardando assinatura
+            val agora = java.util.Date()
+            val contratoAtualizado = contrato.copy(
+                status = "AGUARDANDO_ASSINATURA_DISTRATO",
+                dataAtualizacao = agora
+            )
+            appRepository.atualizarContrato(contratoAtualizado)
+            
+            // Navegar para tela de assinatura do distrato
+            // Como não há ação direta, vamos usar navegação programática
+            val bundle = android.os.Bundle().apply {
+                putLong("contrato_id", contrato.id)
+                putString("assinatura_contexto", "DISTRATO")
+            }
+            findNavController().navigate(
+                com.example.gestaobilhares.R.id.signatureCaptureFragment,
+                bundle
+            )
+            
+            Toast.makeText(
+                requireContext(),
+                "Mesa retirada. Assine o distrato para finalizar.",
+                Toast.LENGTH_LONG
+            ).show()
+            
+        } catch (e: Exception) {
+            Log.e("ClientDetailFragment", "Erro ao processar distrato", e)
+            Toast.makeText(
+                requireContext(),
+                "Erro ao processar distrato: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private suspend fun gerarAditivoAposRetiradaMesa(contrato: ContratoLocacao, mesaRemovida: Mesa) {
+        try {
+            // Criar aditivo de retirada diretamente
+            val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+            
+            // Gerar número do aditivo
+            val numeroAditivo = gerarNumeroAditivo()
+            
+            // Criar aditivo de retirada
+            val aditivo = com.example.gestaobilhares.data.entities.AditivoContrato(
+                numeroAditivo = numeroAditivo,
+                contratoId = contrato.id,
+                dataAditivo = java.util.Date(),
+                observacoes = "Retirada da mesa ${mesaRemovida.numero}",
+                tipo = "RETIRADA"
+            )
+            
+            // Salvar aditivo
+            val aditivoId = appRepository.inserirAditivo(aditivo)
+            
+            // Vincular mesa ao aditivo
+            val aditivoMesa = com.example.gestaobilhares.data.entities.AditivoMesa(
+                aditivoId = aditivoId,
+                mesaId = mesaRemovida.id,
+                tipoEquipamento = mesaRemovida.tipoMesa.name,
+                numeroSerie = mesaRemovida.numero,
+                valorFicha = 0.0,
+                valorFixo = mesaRemovida.valorFixo
+            )
+            
+            appRepository.inserirAditivoMesas(listOf(aditivoMesa))
+            
+            // Navegar para tela de assinatura do aditivo
+            val bundle = android.os.Bundle().apply {
+                putLong("contratoId", contrato.id)
+                putString("aditivoTipo", "RETIRADA")
+                putLongArray("mesasVinculadas", longArrayOf(mesaRemovida.id))
+            }
+            findNavController().navigate(
+                com.example.gestaobilhares.R.id.aditivoSignatureFragment,
+                bundle
+            )
+            
+            Toast.makeText(
+                requireContext(),
+                "Mesa retirada. Assine o aditivo para finalizar.",
+                Toast.LENGTH_LONG
+            ).show()
+            
+        } catch (e: Exception) {
+            Log.e("ClientDetailFragment", "Erro ao processar aditivo", e)
+            Toast.makeText(
+                requireContext(),
+                "Erro ao processar aditivo: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+    
+    private suspend fun gerarNumeroAditivo(): String {
+        val ano = java.text.SimpleDateFormat("yyyy", java.util.Locale.getDefault()).format(java.util.Date())
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        val numeroSequencial = appRepository.contarAditivosPorAno(ano) + 1
+        return "ADT-$ano-${String.format("%04d", numeroSequencial)}"
     }
 
     private fun abrirWhatsApp() {
