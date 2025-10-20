@@ -75,8 +75,9 @@
             <!-- Status do Contrato -->
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatus"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Gerado"
                 android:textColor="@color/green_600"
                 app:chipBackgroundColor="@color/green_100"
@@ -84,6 +85,8 @@
                 app:chipStrokeWidth="1dp"
                 app:chipMinHeight="32dp"
                 app:chipCornerRadius="16dp"
+                android:maxLines="1"
+                android:ellipsize="end"
                 tools:text="Assinado" />
 
         </LinearLayout>

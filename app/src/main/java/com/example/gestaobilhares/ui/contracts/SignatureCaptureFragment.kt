@@ -101,8 +101,18 @@ class SignatureCaptureFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.contrato.collect { contrato ->
                 contrato?.let {
-                    val titulo = if (assinaturaContexto == "DISTRATO") "Assinatura do Distrato" else "Assinatura do Contrato"
-                    binding.tvContratoInfo.text = "$titulo\nContrato: ${it.numeroContrato}\nLocatário: ${it.locatarioNome}"
+                    // ✅ CORREÇÃO: Atualizar todos os textos baseado no contexto
+                    val isDistrato = assinaturaContexto == "DISTRATO"
+                    val tipoDocumento = if (isDistrato) "Distrato" else "Contrato"
+                    
+                    // Atualizar título principal
+                    binding.tvTituloAssinatura.text = "Assinatura do $tipoDocumento"
+                    
+                    // Atualizar informações do documento
+                    binding.tvContratoInfo.text = "$tipoDocumento: ${it.numeroContrato}\nLocatário: ${it.locatarioNome}"
+                    
+                    // Atualizar botão de envio
+                    binding.btnEnviarWhatsApp.text = "Enviar $tipoDocumento via WhatsApp"
                 }
             }
         }
