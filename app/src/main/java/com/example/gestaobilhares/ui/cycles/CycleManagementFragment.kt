@@ -44,7 +44,7 @@ class CycleManagementFragment : Fragment() {
     var cicloId: Long = 0L
     var rotaId: Long = 0L
     
-    private lateinit var viewModel: CycleManagementViewModel
+    lateinit var viewModel: CycleManagementViewModel
 
     // Formatação centralizada via utilitários
     // private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
