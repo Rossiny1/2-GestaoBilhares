@@ -8,12 +8,17 @@
 - **Numeração Anual**: 1º ao 12º acerto por ano
 - **Geração Automática**: Novo ciclo criado ao clicar "Iniciar Rota"
 - **Estado Padrão**: Primeiro acerto do ano selecionado automaticamente
+- **Status do Ciclo**: EM_ANDAMENTO, FINALIZADO, CANCELADO, PLANEJADO
+- **Finalização**: Dados consolidados e imutáveis após finalização
+- **Histórico**: Visualização de todos os ciclos finalizados
 
 ### **Tipos de Pagamento**
 
 - **Fichas Jogadas**: Percentual da receita (padrão 40%)
 - **Valor Fixo**: Valor mensal definido
 - **Múltiplos Pagamentos**: Dialog para discriminar valores por método
+- **Métodos Suportados**: PIX, Cartão, Cheque, Dinheiro
+- **Processamento JSON**: Armazenamento estruturado dos métodos de pagamento
 
 ### **Cálculos e Validações**
 

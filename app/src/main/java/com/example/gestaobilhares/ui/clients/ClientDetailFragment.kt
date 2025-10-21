@@ -23,6 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.activity.OnBackPressedCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.Cliente
@@ -78,6 +79,9 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         setupRecyclerView()
         observeViewModel()
         setupListeners(clientId)
+        
+        // ✅ NOVO: Configurar botão de retorno para sempre voltar para ClientListFragment
+        setupBackButtonHandler()
         
         // Carregar dados do cliente
         viewModel.loadClientDetails(clientId)
@@ -279,6 +283,11 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         binding.fabWhatsApp.setOnClickListener {
             abrirWhatsApp()
             recolherFabMenu()
+        }
+
+        // ✅ NOVO: Listener para ícone de localização
+        binding.ivLocationIcon.setOnClickListener {
+            abrirNavegacaoParaLocalizacao()
         }
     }
 
@@ -526,6 +535,108 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
             }
         } else {
             Toast.makeText(requireContext(), "Cliente não possui número de telefone cadastrado.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * ✅ NOVO: Configura o botão de retorno para sempre voltar para ClientListFragment
+     */
+    private fun setupBackButtonHandler() {
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Sempre navegar para ClientListFragment, ignorando o stack atual
+                try {
+                    findNavController().navigate(
+                        com.example.gestaobilhares.R.id.action_clientDetailFragment_to_clientListFragment
+                    )
+                } catch (e: Exception) {
+                    // Se a ação não existir, usar popUpTo para limpar o stack
+                    findNavController().popBackStack(
+                        com.example.gestaobilhares.R.id.clientListFragment, 
+                        false
+                    )
+                }
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    /**
+     * ✅ NOVO: Abre aplicativos de navegação com as coordenadas do cliente
+     * Baseado no padrão de implementação robusta usado no projeto
+     */
+    private fun abrirNavegacaoParaLocalizacao() {
+        val cliente = viewModel.cliente.value
+        val latitude = cliente?.latitude
+        val longitude = cliente?.longitude
+        
+        if (latitude != null && longitude != null) {
+            try {
+                // ✅ ESTRATÉGIA 1: Google Maps (esquema nativo)
+                try {
+                    val uri = Uri.parse("google.navigation:q=$latitude,$longitude")
+                    val intentMaps = Intent(Intent.ACTION_VIEW, uri).apply {
+                        setPackage("com.google.android.apps.maps")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intentMaps)
+                    android.util.Log.d("ClientDetailFragment", "✅ Google Maps aberto via esquema nativo")
+                    return
+                } catch (e: Exception) {
+                    android.util.Log.d("ClientDetailFragment", "Google Maps nativo não funcionou: ${e.message}")
+                }
+                
+                // ✅ ESTRATÉGIA 2: Geo URI (funciona com qualquer app de mapas)
+                try {
+                    val uri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude")
+                    val intentGeo = Intent(Intent.ACTION_VIEW, uri).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intentGeo)
+                    android.util.Log.d("ClientDetailFragment", "✅ App de mapas aberto via geo URI")
+                    return
+                } catch (e: Exception) {
+                    android.util.Log.d("ClientDetailFragment", "Geo URI não funcionou: ${e.message}")
+                }
+                
+                // ✅ ESTRATÉGIA 3: Google Maps via URL web
+                try {
+                    val url = "https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude"
+                    val intentWeb = Intent(Intent.ACTION_VIEW).apply {
+                        data = Uri.parse(url)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intentWeb)
+                    android.util.Log.d("ClientDetailFragment", "✅ Google Maps aberto via URL web")
+                    return
+                } catch (e: Exception) {
+                    android.util.Log.d("ClientDetailFragment", "URL web não funcionou: ${e.message}")
+                }
+                
+                // ✅ ESTRATÉGIA 4: Waze (se disponível)
+                try {
+                    val uri = Uri.parse("waze://?ll=$latitude,$longitude&navigate=yes")
+                    val intentWaze = Intent(Intent.ACTION_VIEW, uri).apply {
+                        setPackage("com.waze")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intentWaze)
+                    android.util.Log.d("ClientDetailFragment", "✅ Waze aberto via esquema nativo")
+                    return
+                } catch (e: Exception) {
+                    android.util.Log.d("ClientDetailFragment", "Waze não disponível: ${e.message}")
+                }
+                
+                // ✅ ÚLTIMA OPÇÃO: Mostrar mensagem de erro
+                Toast.makeText(requireContext(), "Não foi possível abrir aplicativo de navegação. Verifique se há algum app de mapas instalado.", Toast.LENGTH_LONG).show()
+                android.util.Log.e("ClientDetailFragment", "❌ Todas as estratégias de navegação falharam")
+                
+            } catch (e: Exception) {
+                android.util.Log.e("ClientDetailFragment", "Erro geral ao abrir navegação: ${e.message}")
+                Toast.makeText(requireContext(), "Erro ao abrir navegação: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(requireContext(), "Cliente não possui localização cadastrada.", Toast.LENGTH_SHORT).show()
         }
     }
 

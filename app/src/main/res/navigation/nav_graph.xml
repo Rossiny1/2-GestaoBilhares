@@ -204,7 +204,15 @@
         <!-- ✅ NOVA NAVEGAÇÃO: Para geração de contrato -->
         <action
             android:id="@+id/action_clientDetailFragment_to_contractGenerationFragment"
-            app:destination="@id/contractGenerationFragment" />
+            app:destination="@id/contractGenerationFragment"
+            app:popUpTo="@id/clientDetailFragment"
+            app:popUpToInclusive="false" />
+        <!-- ✅ NOVA AÇÃO: Retorno direto para lista de clientes -->
+        <action
+            android:id="@+id/action_clientDetailFragment_to_clientListFragment"
+            app:destination="@id/clientListFragment"
+            app:popUpTo="@id/clientListFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- FASE 4A: Tela de registro de acerto -->
@@ -225,6 +233,12 @@
         <argument
             android:name="mesasDTO"
             app:argType="com.example.gestaobilhares.ui.settlement.MesaDTO[]" />
+        <!-- ✅ NOVA AÇÃO: Retorno direto para lista de clientes após acerto -->
+        <action
+            android:id="@+id/action_settlementFragment_to_clientListFragment"
+            app:destination="@id/clientListFragment"
+            app:popUpTo="@id/clientListFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- FASE 4B: Tela de cadastro de cliente -->
@@ -263,6 +277,12 @@
         <action
             android:id="@+id/action_settlementDetailFragment_to_settlementFragment"
             app:destination="@id/settlementFragment" />
+        <!-- ✅ NOVA AÇÃO: Retorno direto para lista de clientes após visualizar acerto -->
+        <action
+            android:id="@+id/action_settlementDetailFragment_to_clientListFragment"
+            app:destination="@id/clientListFragment"
+            app:popUpTo="@id/clientListFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -307,6 +327,12 @@
         <action
             android:id="@+id/action_mesasDepositoFragment_to_historicoMesasVendidasFragment"
             app:destination="@id/historicoMesasVendidasFragment" />
+        <!-- ✅ NOVA AÇÃO: Retorno direto para lista de clientes após vincular mesa -->
+        <action
+            android:id="@+id/action_mesasDepositoFragment_to_clientListFragment"
+            app:destination="@id/clientListFragment"
+            app:popUpTo="@id/clientListFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- Tela de Cadastro de Mesa -->
@@ -554,6 +580,12 @@
         <action
             android:id="@+id/action_contractGenerationFragment_to_signatureCaptureFragment"
             app:destination="@id/signatureCaptureFragment" />
+        <!-- ✅ NOVA AÇÃO: Retorno direto para lista de clientes após geração de contrato -->
+        <action
+            android:id="@+id/action_contractGenerationFragment_to_clientListFragment"
+            app:destination="@id/clientListFragment"
+            app:popUpTo="@id/clientListFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -563,6 +595,12 @@
         <argument
             android:name="contrato_id"
             app:argType="long" />
+        <!-- ✅ NOVA AÇÃO: Retorno direto para lista de clientes após assinatura -->
+        <action
+            android:id="@+id/action_signatureCaptureFragment_to_clientListFragment"
+            app:destination="@id/clientListFragment"
+            app:popUpTo="@id/clientListFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -575,6 +613,12 @@
         <argument
             android:name="mesasVinculadas"
             app:argType="long[]" />
+        <!-- ✅ NOVA AÇÃO: Retorno direto para lista de clientes após assinatura de aditivo -->
+        <action
+            android:id="@+id/action_aditivoSignatureFragment_to_clientListFragment"
+            app:destination="@id/clientListFragment"
+            app:popUpTo="@id/clientListFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
