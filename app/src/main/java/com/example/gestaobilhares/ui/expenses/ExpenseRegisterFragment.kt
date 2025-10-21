@@ -338,14 +338,15 @@ class ExpenseRegisterFragment : Fragment() {
                 // ✅ Mostrar campos de viagem conforme categoria/tipo
                 val categoria = viewModel.selectedCategory.value?.nome ?: ""
                 val tipoNome = type?.nome ?: ""
-                val isViagem = categoria.equals("Viagem", ignoreCase = true)
                 val isCombustivel = tipoNome.equals("Combustível", ignoreCase = true) || tipoNome.equals("Gasolina", ignoreCase = true)
                 val isManutencao = tipoNome.equals("Manutenção", ignoreCase = true)
+                val isVeiculoRequired = isCombustivel || isManutencao
 
-                binding.tvViagemHeader.visibility = if (isViagem) View.VISIBLE else View.GONE
-                binding.tilVeiculo.visibility = if (isViagem) View.VISIBLE else View.GONE
-                binding.tilKm.visibility = if (isViagem && (isCombustivel || isManutencao)) View.VISIBLE else View.GONE
-                binding.tilLitros.visibility = if (isViagem && isCombustivel) View.VISIBLE else View.GONE
+                // ✅ CORREÇÃO: Mostrar campos baseado no TIPO, não na categoria
+                binding.tvViagemHeader.visibility = if (isVeiculoRequired) View.VISIBLE else View.GONE
+                binding.tilVeiculo.visibility = if (isVeiculoRequired) View.VISIBLE else View.GONE
+                binding.tilKm.visibility = if (isVeiculoRequired) View.VISIBLE else View.GONE
+                binding.tilLitros.visibility = if (isCombustivel) View.VISIBLE else View.GONE
             }
         }
 
@@ -757,27 +758,30 @@ class ExpenseRegisterFragment : Fragment() {
         // Regras de validação para Viagem
         val categoria = viewModel.selectedCategory.value?.nome ?: ""
         val tipoNome = viewModel.selectedType.value?.nome ?: ""
-        val isViagem = categoria.equals("Viagem", ignoreCase = true)
         val isCombustivel = tipoNome.equals("Combustível", ignoreCase = true) || tipoNome.equals("Gasolina", ignoreCase = true)
         val isManutencao = tipoNome.equals("Manutenção", ignoreCase = true)
+        val isVeiculoRequired = isCombustivel || isManutencao
 
         var kmValue: Long? = null
         var litrosValue: Double? = null
 
-        if (isViagem) {
+        // ✅ CORREÇÃO: Validar campos baseado no TIPO, não na categoria
+        if (isVeiculoRequired) {
             if (selectedVehicleId == null) {
                 binding.tilVeiculo.error = "Selecione um veículo"
                 return
             } else {
                 binding.tilVeiculo.error = null
             }
-            if (isCombustivel || isManutencao) {
-                kmValue = kmText?.toLongOrNull()
-                if (kmValue == null || kmValue <= 0) {
-                    binding.tilKm.error = "Informe o KM"
-                    return
-                } else binding.tilKm.error = null
-            }
+            
+            // KM é obrigatório para combustível e manutenção
+            kmValue = kmText?.toLongOrNull()
+            if (kmValue == null || kmValue <= 0) {
+                binding.tilKm.error = "Informe o KM"
+                return
+            } else binding.tilKm.error = null
+            
+            // Litros é obrigatório apenas para combustível
             if (isCombustivel) {
                 litrosValue = litrosText?.toDoubleOrNull()
                 if (litrosValue == null || litrosValue <= 0.0) {
@@ -803,9 +807,9 @@ class ExpenseRegisterFragment : Fragment() {
             modoEdicao = args.modoEdicao,
             fotoComprovante = fotoComprovantePath,
             dataFotoComprovante = dataFotoComprovante,
-            veiculoId = if (isViagem) selectedVehicleId else null,
-            kmRodado = if (isViagem) kmValue else null,
-            litrosAbastecidos = if (isViagem) litrosValue else null
+            veiculoId = if (isVeiculoRequired) selectedVehicleId else null,
+            kmRodado = if (isVeiculoRequired) kmValue else null,
+            litrosAbastecidos = if (isCombustivel) litrosValue else null
         )
     }
     
