@@ -33,6 +33,15 @@
 - `Despesa`: Despesas por rota/ciclo
 - `ContratoLocacao`: Contratos de locação
 - `SignaturePoint`: Pontos de assinatura
+- `CicloAcertoEntity`: Ciclos de acerto por rota
+- `AditivoMesa`: Aditivos de mesa
+- `Veiculo`: Dados dos veículos
+- `Abastecimento`: Histórico de abastecimento
+- `Manutencao`: Histórico de manutenção
+- `Colaborador`: Dados dos colaboradores
+- `Meta`: Metas de desempenho
+- `EstoqueItem`: Itens do estoque
+- `Pano`: Panos de mesa
 
 ### **Relacionamentos**
 
@@ -40,6 +49,14 @@
 - Rota → Cliente (1:N)
 - Cliente → Acerto (1:N)
 - Contrato → Mesa (1:N)
+- Rota → CicloAcerto (1:N)
+- CicloAcerto → Acerto (1:N)
+- CicloAcerto → Despesa (1:N)
+- Cliente → ContratoLocacao (1:N)
+- Mesa → AditivoMesa (1:N)
+- Veiculo → Abastecimento (1:N)
+- Veiculo → Manutencao (1:N)
+- Colaborador → Meta (1:N)
 
 ## 🔐 SEGURANÇA E VALIDAÇÃO
 
@@ -67,17 +84,31 @@
 - `ClientListFragment`: Clientes por rota
 - `ClientDetailFragment`: Detalhes do cliente
 - `SettlementFragment`: Tela de acerto
+- `SettlementDetailFragment`: Detalhes do acerto
 - `ContractGenerationFragment`: Geração de contrato
 - `SignatureCaptureFragment`: Captura de assinatura
+- `AditivoSignatureFragment`: Assinatura de aditivo
+- `MesasDepositoFragment`: Gerenciamento de mesas
+- `CadastroMesaFragment`: Cadastro de mesa
+- `EditMesaFragment`: Edição de mesa
 - `VehicleDetailFragment`: Histórico de veículos
 - `MetaCadastroFragment`: Cadastro de metas
 - `RepresentanteLegalSignatureFragment`: Assinatura do representante legal
+- `CycleManagementFragment`: Gerenciamento de ciclos
+- `CycleReceiptsFragment`: Recebimentos do ciclo
+- `CycleExpensesFragment`: Despesas do ciclo
+- `CycleSummaryFragment`: Resumo do ciclo
+- `CycleHistoryFragment`: Histórico de ciclos
 
 ### **Adapters**
 
 - `ClientListAdapter`: Lista de clientes
 - `MesasAcertoAdapter`: Mesas no acerto
 - `RoutesAdapter`: Lista de rotas
+- `SettlementHistoryAdapter`: Histórico de acertos
+- `MesasAdapter`: Lista de mesas do cliente
+- `CycleReceiptsAdapter`: Recebimentos do ciclo
+- `CycleExpensesAdapter`: Despesas do ciclo
 
 ### **Dialogs**
 
@@ -88,6 +119,11 @@
 - `PanoSelectionDialog`: Seleção de pano para troca
 - `AddEditStockItemDialog`: Adicionar/editar item do estoque
 - `AddPanosLoteDialog`: Adicionar panos em lote
+- `AdicionarMesaDialogFragment`: Adicionar mesa ao cliente
+- `ConfirmarRetiradaMesaDialogFragment`: Confirmação de retirada de mesa
+- `AdicionarObservacaoDialogFragment`: Adicionar observação
+- `GerarRelatorioDialogFragment`: Geração de relatórios
+- `RotaNaoIniciadaDialogFragment`: Dialog para rota não iniciada
 
 ## 🔄 FLUXO DE DADOS
 
