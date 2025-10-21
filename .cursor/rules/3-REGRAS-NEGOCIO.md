@@ -137,6 +137,28 @@
 - **Métricas**: % clientes cobrados, faturamento, novas mesas, média por mesa
 - **Acompanhamento**: Comparação com metas definidas
 
+## 🧭 NAVEGAÇÃO E FLUXOS
+
+### **Fluxo Principal de Navegação**
+
+- **Login** → **Rotas** → **Clientes da Rota** → **Detalhes do Cliente** → **Acerto** → **Impressão**
+- **Botão de Retorno**: Sempre volta para tela anterior no stack
+- **ClientDetailFragment**: Botão de retorno sempre vai para ClientListFragment
+- **Controle de Stack**: popUpTo e popUpToInclusive para limpeza do stack
+
+### **Navegação por Localização**
+
+- **Ícone de Localização**: Clique abre apps de navegação
+- **Coordenadas**: Latitude e longitude do cliente
+- **Apps Suportados**: Google Maps, Waze, qualquer app de mapas
+- **Fallback**: Múltiplas estratégias de abertura
+
+### **Fluxos de Contrato**
+
+- **Geração** → **Assinatura** → **Envio WhatsApp** → **Retorno para Cliente**
+- **Aditivo**: Mesa adicional → Assinatura → Envio → Retorno
+- **Distrato**: Retirada de mesa → Assinatura → Envio → Retorno
+
 ## 🔐 SEGURANÇA E AUDITORIA
 
 ### **Logs Jurídicos**

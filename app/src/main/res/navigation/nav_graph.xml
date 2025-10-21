@@ -211,8 +211,12 @@
         <action
             android:id="@+id/action_clientDetailFragment_to_clientListFragment"
             app:destination="@id/clientListFragment"
-            app:popUpTo="@id/clientListFragment"
-            app:popUpToInclusive="true" />
+            app:popUpTo="@id/clientDetailFragment"
+            app:popUpToInclusive="true">
+            <argument
+                android:name="rotaId"
+                app:argType="long" />
+        </action>
     </fragment>
 
     <!-- FASE 4A: Tela de registro de acerto -->
@@ -237,8 +241,12 @@
         <action
             android:id="@+id/action_settlementFragment_to_clientListFragment"
             app:destination="@id/clientListFragment"
-            app:popUpTo="@id/clientListFragment"
-            app:popUpToInclusive="true" />
+            app:popUpTo="@id/settlementFragment"
+            app:popUpToInclusive="true">
+            <argument
+                android:name="rotaId"
+                app:argType="long" />
+        </action>
     </fragment>
 
     <!-- FASE 4B: Tela de cadastro de cliente -->
@@ -281,8 +289,12 @@
         <action
             android:id="@+id/action_settlementDetailFragment_to_clientListFragment"
             app:destination="@id/clientListFragment"
-            app:popUpTo="@id/clientListFragment"
-            app:popUpToInclusive="true" />
+            app:popUpTo="@id/settlementDetailFragment"
+            app:popUpToInclusive="true">
+            <argument
+                android:name="rotaId"
+                app:argType="long" />
+        </action>
     </fragment>
 
     <fragment
@@ -331,7 +343,7 @@
         <action
             android:id="@+id/action_mesasDepositoFragment_to_clientListFragment"
             app:destination="@id/clientListFragment"
-            app:popUpTo="@id/clientListFragment"
+            app:popUpTo="@id/mesasDepositoFragment"
             app:popUpToInclusive="true" />
     </fragment>
 
@@ -584,8 +596,12 @@
         <action
             android:id="@+id/action_contractGenerationFragment_to_clientListFragment"
             app:destination="@id/clientListFragment"
-            app:popUpTo="@id/clientListFragment"
-            app:popUpToInclusive="true" />
+            app:popUpTo="@id/contractGenerationFragment"
+            app:popUpToInclusive="true">
+            <argument
+                android:name="rotaId"
+                app:argType="long" />
+        </action>
     </fragment>
 
     <fragment
@@ -599,8 +615,12 @@
         <action
             android:id="@+id/action_signatureCaptureFragment_to_clientListFragment"
             app:destination="@id/clientListFragment"
-            app:popUpTo="@id/clientListFragment"
-            app:popUpToInclusive="true" />
+            app:popUpTo="@id/signatureCaptureFragment"
+            app:popUpToInclusive="true">
+            <argument
+                android:name="rotaId"
+                app:argType="long" />
+        </action>
     </fragment>
 
     <fragment
@@ -617,8 +637,12 @@
         <action
             android:id="@+id/action_aditivoSignatureFragment_to_clientListFragment"
             app:destination="@id/clientListFragment"
-            app:popUpTo="@id/clientListFragment"
-            app:popUpToInclusive="true" />
+            app:popUpTo="@id/aditivoSignatureFragment"
+            app:popUpToInclusive="true">
+            <argument
+                android:name="rotaId"
+                app:argType="long" />
+        </action>
     </fragment>
 
     <fragment

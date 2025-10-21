@@ -546,9 +546,11 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
             override fun handleOnBackPressed() {
                 // Sempre navegar para ClientListFragment, ignorando o stack atual
                 try {
-                    findNavController().navigate(
-                        com.example.gestaobilhares.R.id.action_clientDetailFragment_to_clientListFragment
-                    )
+                    // ✅ CORREÇÃO: Obter rotaId do cliente e passar como argumento
+                    val rotaId = viewModel.cliente.value?.rotaId ?: 1L
+                    val action = ClientDetailFragmentDirections
+                        .actionClientDetailFragmentToClientListFragment(rotaId = rotaId)
+                    findNavController().navigate(action)
                 } catch (e: Exception) {
                     // Se a ação não existir, usar popUpTo para limpar o stack
                     findNavController().popBackStack(
