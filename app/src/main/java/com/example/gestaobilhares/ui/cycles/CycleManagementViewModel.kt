@@ -123,15 +123,21 @@ class CycleManagementViewModel(
      */
     private suspend fun calcularEstatisticasFinanceiras(cicloId: Long, @Suppress("UNUSED_PARAMETER") rotaId: Long) {
         try {
+            android.util.Log.d("CycleManagementViewModel", "🔍 Calculando estatísticas financeiras para ciclo: $cicloId")
+            
             // Buscar dados
             val acertos = buscarAcertosPorCiclo(cicloId)
             val despesas = buscarDespesasPorCiclo(cicloId)
+            
+            android.util.Log.d("CycleManagementViewModel", "📊 Dados encontrados: ${acertos.size} acertos, ${despesas.size} despesas")
 
             // ✅ FASE 1: Usar FinancialCalculator centralizado
             val estatisticas = com.example.gestaobilhares.utils.FinancialCalculator.calcularEstatisticasCiclo(
                 acertos = acertos,
                 despesas = despesas
             )
+            
+            android.util.Log.d("CycleManagementViewModel", "💰 Estatísticas calculadas: totalRecebido=${estatisticas.totalRecebido}, despesasViagem=${estatisticas.despesasViagem}, subtotal=${estatisticas.subtotal}")
 
             // Atualizar estatísticas financeiras
             _estatisticas.value = CycleFinancialStats(

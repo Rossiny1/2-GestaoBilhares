@@ -4,6 +4,7 @@ import com.example.gestaobilhares.data.entities.Acerto
 import com.example.gestaobilhares.data.entities.Despesa
 import com.example.gestaobilhares.data.entities.MetaColaborador
 import com.example.gestaobilhares.data.entities.TipoMeta
+import com.example.gestaobilhares.utils.AppLogger
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.util.*

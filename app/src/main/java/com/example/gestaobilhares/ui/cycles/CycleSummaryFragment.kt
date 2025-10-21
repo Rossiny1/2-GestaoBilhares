@@ -64,21 +64,19 @@ class CycleSummaryFragment : Fragment() {
 
     private fun setupObservers() {
         lifecycleScope.launch {
-            // TODO: Implementar observação de estatísticas do parent fragment
-            // Observar estatísticas por modalidade do parent fragment
-            // val parentFragment = parentFragment as? CycleManagementFragment
-            // parentFragment?.viewModel?.estatisticasModalidade?.collect { stats ->
-            //     updatePaymentMethodStats(stats)
-            // }
+            // ✅ CORREÇÃO: Observar estatísticas por modalidade do parent fragment
+            val parentFragment = parentFragment as? CycleManagementFragment
+            parentFragment?.viewModel?.estatisticasModalidade?.collect { stats ->
+                updatePaymentMethodStats(stats)
+            }
         }
         
         lifecycleScope.launch {
-            // TODO: Implementar observação de estatísticas do parent fragment
-            // Observar estatísticas financeiras do parent fragment
-            // val parentFragment = parentFragment as? CycleManagementFragment
-            // parentFragment?.viewModel?.estatisticas?.collect { stats ->
-            //     updateFinancialStats(stats)
-            // }
+            // ✅ CORREÇÃO: Observar estatísticas financeiras do parent fragment
+            val parentFragment = parentFragment as? CycleManagementFragment
+            parentFragment?.viewModel?.estatisticas?.collect { stats ->
+                updateFinancialStats(stats)
+            }
         }
     }
 
@@ -88,6 +86,7 @@ class CycleSummaryFragment : Fragment() {
     }
 
     private fun updatePaymentMethodStats(stats: PaymentMethodStats) {
+        android.util.Log.d("CycleSummaryFragment", "🔄 Atualizando estatísticas por modalidade: PIX=${stats.pix}, Cartão=${stats.cartao}, Cheque=${stats.cheque}, Total=${stats.totalRecebido}")
         binding.apply {
             tvPix.text = currencyFormatter.format(stats.pix)
             tvCartao.text = currencyFormatter.format(stats.cartao)
@@ -98,6 +97,7 @@ class CycleSummaryFragment : Fragment() {
     }
 
     private fun updateFinancialStats(stats: CycleFinancialStats) {
+        android.util.Log.d("CycleSummaryFragment", "🔄 Atualizando estatísticas financeiras: Total=${stats.totalRecebido}, Despesas=${stats.despesasViagem}, Subtotal=${stats.subtotal}, TotalGeral=${stats.totalGeral}")
         binding.apply {
             tvTotalRecebido.text = currencyFormatter.format(stats.totalRecebido)
             tvDespesasViagem.text = currencyFormatter.format(stats.despesasViagem)
