@@ -25,6 +25,8 @@
 - **Performance**: Otimizar com coroutines e StateFlow
 - **ViewModel Initialization**: SEMPRE usar inicialização manual
 - **Zero Crashes**: Garantir estabilidade em todas as telas
+- **Navegação Robusta**: OnBackPressedCallback e controle de stack
+- **Centralização**: AppRepository como único ponto de acesso
 
 ### **Responsabilidades do Usuário**
 

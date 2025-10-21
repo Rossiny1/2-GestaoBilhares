@@ -107,9 +107,23 @@ class ClientListFragment : Fragment() {
         
         // ✅ CORREÇÃO: Usar a MESMA lógica que funciona quando vem do RoutesFragment
         viewModel.carregarRota(rotaId)
-        viewModel.carregarClientes(rotaId)
+        // ✅ CORREÇÃO: Usar recarregamento forçado para garantir que os dados apareçam
+        viewModel.forcarRecarregamentoClientes(rotaId)
         
-        android.util.Log.d("ClientListFragment", "✅ onResume - Dados recarregados para rotaId=$rotaId (mesma lógica do onViewCreated)")
+        android.util.Log.d("ClientListFragment", "✅ onResume - Dados forçados recarregados para rotaId=$rotaId (mesma lógica do onViewCreated)")
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // ✅ NOVO: Garantir que os dados sejam carregados quando o fragment fica visível
+        android.util.Log.d("ClientListFragment", "🔄 onStart - Garantindo carregamento de dados")
+        
+        val rotaId = args.rotaId
+        if (::viewModel.isInitialized) {
+            // ✅ CORREÇÃO: Usar recarregamento forçado para garantir que os dados apareçam
+            viewModel.forcarRecarregamentoClientes(rotaId)
+            android.util.Log.d("ClientListFragment", "✅ onStart - Dados forçados recarregados para rotaId=$rotaId")
+        }
     }
 
     private fun configurarRecyclerView() {

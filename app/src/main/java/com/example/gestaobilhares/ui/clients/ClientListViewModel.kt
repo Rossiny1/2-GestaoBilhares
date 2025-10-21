@@ -217,12 +217,22 @@ class ClientListViewModel constructor(
         viewModelScope.launch {
             try {
                 showLoading()
-                appRepository.obterClientesPorRota(rotaId).collect { clientes ->
-                    _clientesTodos.value = clientes
-                    aplicarFiltrosCombinados() // Aplicar filtros após carregar
-                    
-                    // ✅ NOVO: Calcular dados do card de progresso
-                    calcularDadosProgressoCiclo(clientes)
+                
+                // ✅ CORREÇÃO: Carregar dados uma vez e depois observar mudanças
+                val clientes = appRepository.obterClientesPorRota(rotaId).first()
+                _clientesTodos.value = clientes
+                aplicarFiltrosCombinados() // Aplicar filtros após carregar
+                
+                // ✅ NOVO: Calcular dados do card de progresso
+                calcularDadosProgressoCiclo(clientes)
+                
+                // ✅ NOVO: Continuar observando mudanças
+                appRepository.obterClientesPorRota(rotaId).collect { clientesAtualizados ->
+                    if (clientesAtualizados != _clientesTodos.value) {
+                        _clientesTodos.value = clientesAtualizados
+                        aplicarFiltrosCombinados()
+                        calcularDadosProgressoCiclo(clientesAtualizados)
+                    }
                 }
             } catch (e: Exception) {
                 logError("CLIENTES_LOAD", "Erro ao carregar clientes: ${e.message}", e)
@@ -232,6 +242,30 @@ class ClientListViewModel constructor(
                 _clientes.value = emptyList()
             } finally {
                 hideLoading()
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVO: Força o recarregamento dos clientes (útil para navegação de volta)
+     */
+    fun forcarRecarregamentoClientes(rotaId: Long) {
+        if (BuildConfig.DEBUG) {
+            AppLogger.log("ClientListVM", "forcarRecarregamentoClientes chamado para rotaId: $rotaId")
+        }
+        
+        viewModelScope.launch {
+            try {
+                // Forçar carregamento imediato
+                val clientes = appRepository.obterClientesPorRota(rotaId).first()
+                _clientesTodos.value = clientes
+                aplicarFiltrosCombinados()
+                calcularDadosProgressoCiclo(clientes)
+                
+                android.util.Log.d("ClientListViewModel", "✅ Dados forçados recarregados: ${clientes.size} clientes")
+            } catch (e: Exception) {
+                logError("FORCE_RELOAD", "Erro ao forçar recarregamento: ${e.message}", e)
+                showError("Erro ao recarregar clientes: ${e.message}", e)
             }
         }
     }
