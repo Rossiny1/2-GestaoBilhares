@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.NivelAcesso
-import com.example.gestaobilhares.data.repository.RotaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
  * Implementa CRUD de rotas com controle de acesso administrativo.
  */
 class RouteManagementViewModel(
-    private val rotaRepository: RotaRepository
+    private val appRepository: AppRepository
 ) : BaseViewModel() {
 
     // Lista de rotas observável
@@ -46,7 +46,7 @@ class RouteManagementViewModel(
             try {
                 showLoading()
                 // ✅ CORREÇÃO: Usar first() para obter a primeira emissão do Flow
-                val rotasList = rotaRepository.getAllRotasAtivas().first()
+                val rotasList = appRepository.obterRotasAtivas().first()
                 _rotas.value = rotasList
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar rotas: ${e.message}"
@@ -88,7 +88,7 @@ class RouteManagementViewModel(
                 showLoading()
                 
                 // Verificar se já existe uma rota com o mesmo nome
-                val existingRoute = rotaRepository.getRotaByNome(nome)
+                val existingRoute = appRepository.obterRotaPorNome(nome)
                 if (existingRoute != null) {
                     _errorMessage.value = "Já existe uma rota com este nome"
                     return@launch
@@ -102,7 +102,7 @@ class RouteManagementViewModel(
                     dataAtualizacao = System.currentTimeMillis()
                 )
 
-                val rotaId = rotaRepository.insertRota(novaRota)
+                val rotaId = appRepository.inserirRota(novaRota)
                 
                 if (rotaId != null) {
                     _successMessage.value = "Rota \"$nome\" criada com sucesso"
@@ -128,16 +128,11 @@ class RouteManagementViewModel(
             try {
                 showLoading()
                 
-                val success = rotaRepository.updateRota(rota)
+                appRepository.atualizarRota(rota)
                 
-                if (success) {
-                    _successMessage.value = "Rota \"${rota.nome}\" atualizada com sucesso"
-                    // ✅ NOVO: Recarregar lista de rotas após atualização
-                    loadRotas()
-                } else {
-                    _errorMessage.value = "Erro ao atualizar rota. Verifique se já existe uma rota com este nome."
-                }
-                
+                _successMessage.value = "Rota \"${rota.nome}\" atualizada com sucesso"
+                // ✅ NOVO: Recarregar lista de rotas após atualização
+                loadRotas()
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao atualizar rota: ${e.message}"
             } finally {
@@ -147,39 +142,27 @@ class RouteManagementViewModel(
     }
 
     /**
-     * Exclui uma rota.
+     * Desativa uma rota (soft delete).
      */
     fun deleteRoute(rota: Rota) {
         viewModelScope.launch {
             try {
                 showLoading()
                 
-                // TODO: Verificar se a rota tem clientes associados
-                // Em uma implementação completa, deveria:
-                // val clientesAssociados = clienteRepository.getClientesByRotaId(rota.id)
-                // if (clientesAssociados.isNotEmpty()) {
-                //     _errorMessage.value = "Não é possível excluir uma rota que possui clientes associados"
-                //     return@launch
-                // }
-
-                // Por enquanto, fazemos desativação ao invés de delete
-                val success = rotaRepository.desativarRota(rota.id)
+                appRepository.desativarRota(rota.id)
                 
-                if (success) {
-                    _successMessage.value = "Rota \"${rota.nome}\" excluída com sucesso"
-                    // ✅ NOVO: Recarregar lista de rotas após exclusão
-                    loadRotas()
-                } else {
-                    _errorMessage.value = "Erro ao excluir rota"
-                }
+                _successMessage.value = "Rota \"${rota.nome}\" desativada com sucesso"
+                // ✅ NOVO: Recarregar lista de rotas após desativação
+                loadRotas()
                 
             } catch (e: Exception) {
-                _errorMessage.value = "Erro ao excluir rota: ${e.message}"
+                _errorMessage.value = "Erro ao atualizar rota: ${e.message}"
             } finally {
                 hideLoading()
             }
         }
     }
+
 
     /**
      * Limpa mensagens de erro e sucesso.

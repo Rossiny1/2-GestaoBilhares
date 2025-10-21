@@ -11,8 +11,15 @@ import com.example.gestaobilhares.databinding.FragmentCycleReceiptsBinding
 import com.example.gestaobilhares.data.entities.Acerto
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.data.repository.DespesaRepository
+import com.example.gestaobilhares.data.repository.AcertoRepository
+import com.example.gestaobilhares.data.repository.ClienteRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -32,6 +39,7 @@ class CycleReceiptsFragment : Fragment() {
     private var isCicloFinalizado: Boolean = false
     
     private lateinit var receiptsAdapter: CycleReceiptsAdapter
+    private lateinit var viewModel: CycleReceiptsViewModel
     
     private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
     private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
@@ -69,8 +77,23 @@ class CycleReceiptsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val database = AppDatabase.getDatabase(requireContext())
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        val cicloAcertoRepository = CicloAcertoRepository(
+            database.cicloAcertoDao(),
+            DespesaRepository(database.despesaDao()),
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
+            ClienteRepository(database.clienteDao(), appRepository),
+            database.rotaDao()
+        )
+        viewModel = CycleReceiptsViewModel(cicloAcertoRepository, appRepository)
+        
         setupRecyclerView()
-        loadReceipts()
+        setupObservers()
+        
+        // Carregar recebimentos
+        viewModel.carregarRecebimentos(cicloId)
     }
 
     private fun setupRecyclerView() {
@@ -90,81 +113,59 @@ class CycleReceiptsFragment : Fragment() {
         }
     }
 
-    private fun loadReceipts() {
+    private fun setupObservers() {
         lifecycleScope.launch {
-            try {
-                // Buscar acertos do ciclo
-                // TODO: Implementar busca de acertos e clientes
-                val acertos = emptyList<com.example.gestaobilhares.data.entities.Acerto>()
-                val clientes = emptyList<com.example.gestaobilhares.data.entities.Cliente>()
-                
-                // Mapear para DTOs
-                val receiptsItems = acertos.map { acerto ->
-                    val cliente = clientes.find { it.id == acerto.clienteId }
-                    val metodosPagamento = processarMetodosPagamento(acerto.metodosPagamentoJson)
-                    val tipoPagamentoTexto = formatarTiposPagamento(metodosPagamento)
-                    
-                    CycleReceiptItem(
-                        id = acerto.id,
-                        clienteNome = cliente?.nome ?: "Cliente #${acerto.clienteId}",
-                        dataAcerto = dateFormatter.format(acerto.dataAcerto),
-                        tipoPagamento = tipoPagamentoTexto,
-                        valorRecebido = acerto.valorRecebido,
-                        debitoAtual = acerto.debitoAtual,
-                        metodosPagamento = metodosPagamento
-                    )
+            viewModel.receipts.collect { receipts ->
+                receiptsAdapter.submitList(receipts)
+                atualizarEmptyState(receipts.isEmpty())
+                updateStatistics(receipts)
+            }
+        }
+        
+        lifecycleScope.launch {
+            viewModel.isLoading.collect { carregando ->
+                // TODO: Adicionar progress bar se necessário
+            }
+        }
+        
+        lifecycleScope.launch {
+            viewModel.errorMessage.collect { mensagem ->
+                mensagem?.let {
+                    mostrarFeedback("Erro: $it", Snackbar.LENGTH_LONG)
+                    viewModel.limparErro()
                 }
-                
-                receiptsAdapter.submitList(receiptsItems)
-                
-                // Atualizar estatísticas
-                updateStatistics(acertos)
-                
-            } catch (e: Exception) {
-                android.util.Log.e("CycleReceiptsFragment", "Erro ao carregar recebimentos: ${e.message}")
             }
         }
     }
 
-    private fun updateStatistics(acertos: List<Acerto>) {
-        val totalRecebido = acertos.sumOf { it.valorRecebido }
-        val totalDebito = acertos.sumOf { it.debitoAtual }
+    private fun updateStatistics(receipts: List<CycleReceiptItem>) {
+        val totalRecebido = receipts.sumOf { it.valorRecebido }
+        val totalDebito = receipts.sumOf { it.debitoAtual }
         
         binding.tvTotalRecebido.text = currencyFormatter.format(totalRecebido)
         binding.tvTotalDebito.text = currencyFormatter.format(totalDebito)
-        binding.tvQuantidadeAcertos.text = "${acertos.size} acertos"
+        binding.tvQuantidadeAcertos.text = "${receipts.size} acertos"
     }
 
-    /**
-     * Processa JSON dos métodos de pagamento
-     */
-    private fun processarMetodosPagamento(metodosPagamentoJson: String?): Map<String, Double> {
-        return try {
-            if (metodosPagamentoJson.isNullOrBlank()) {
-                mapOf("Dinheiro" to 0.0)
+    private fun atualizarEmptyState(mostrar: Boolean) {
+        binding.apply {
+            if (mostrar) {
+                llEmptyState.visibility = View.VISIBLE
+                rvReceipts.visibility = View.GONE
             } else {
-                val tipo = object : TypeToken<Map<String, Double>>() {}.type
-                Gson().fromJson(metodosPagamentoJson, tipo) ?: mapOf("Dinheiro" to 0.0)
+                llEmptyState.visibility = View.GONE
+                rvReceipts.visibility = View.VISIBLE
             }
-        } catch (e: Exception) {
-            android.util.Log.e("CycleReceiptsFragment", "Erro ao processar métodos de pagamento: ${e.message}")
-            mapOf("Dinheiro" to 0.0)
         }
     }
 
-    /**
-     * Formata tipos de pagamento para exibição
-     */
-    private fun formatarTiposPagamento(metodosPagamento: Map<String, Double>): String {
-        return if (metodosPagamento.size == 1) {
-            metodosPagamento.keys.first()
-        } else {
-            metodosPagamento.entries
-                .filter { it.value > 0 }
-                .joinToString(", ") { "${it.key}: ${currencyFormatter.format(it.value)}" }
-                .ifEmpty { "Não informado" }
-        }
+    private fun mostrarFeedback(mensagem: String, duracao: Int) {
+        Snackbar.make(binding.root, mensagem, duracao)
+            .setBackgroundTint(requireContext().getColor(com.example.gestaobilhares.R.color.purple_600))
+            .setTextColor(requireContext().getColor(com.example.gestaobilhares.R.color.white))
+            .show()
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

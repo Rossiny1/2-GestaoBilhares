@@ -136,6 +136,50 @@ class RoutesViewModel constructor(
     }
     
     /**
+     * ✅ NOVO: Aplica filtro de acesso de forma síncrona para o refresh
+     */
+    private suspend fun aplicarFiltroAcessoCompleto(rotas: List<RotaResumo>) {
+        val isAdmin = userSessionManager.isAdmin()
+        val userId = userSessionManager.getCurrentUserId()
+        
+        android.util.Log.d("RoutesViewModel", "🔍 Aplicando filtro completo de rotas:")
+        android.util.Log.d("RoutesViewModel", "   É Admin: $isAdmin")
+        android.util.Log.d("RoutesViewModel", "   Total de rotas: ${rotas.size}")
+        
+        if (isAdmin) {
+            // Admin vê todas as rotas
+            _rotasResumoFiltradas.value = rotas
+            android.util.Log.d("RoutesViewModel", "✅ ADMIN - Mostrando todas as ${rotas.size} rotas")
+        } else {
+            try {
+                // Buscar rotas onde o usuário é responsável
+                val rotasResponsavel = appRepository.obterRotasPorColaborador(userId).first()
+                
+                android.util.Log.d("RoutesViewModel", "🔍 Buscando rotas responsável para usuário $userId")
+                
+                // Filtrar apenas as rotas onde o usuário é responsável
+                val rotasFiltradas = rotas.filter { rotaResumo ->
+                    rotasResponsavel.any { colaboradorRota ->
+                        colaboradorRota.rotaId == rotaResumo.rota.id
+                    }
+                }
+                
+                android.util.Log.d("RoutesViewModel", "✅ USER - Mostrando ${rotasFiltradas.size} rotas responsável:")
+                rotasFiltradas.forEach { rotaResumo ->
+                    android.util.Log.d("RoutesViewModel", "   - ${rotaResumo.rota.nome} (Ciclo: ${rotaResumo.cicloAtual}, Status: ${rotaResumo.status})")
+                }
+                
+                _rotasResumoFiltradas.value = rotasFiltradas
+                
+            } catch (e: Exception) {
+                android.util.Log.e("RoutesViewModel", "Erro ao filtrar rotas por responsabilidade: ${e.message}", e)
+                // Em caso de erro, mostrar todas as rotas
+                _rotasResumoFiltradas.value = rotas
+            }
+        }
+    }
+    
+    /**
      * FASE 3: Calcula estatísticas gerais das rotas incluindo valores acertados não finalizados.
      */
     private fun calcularEstatisticas(rotas: List<RotaResumo>): EstatisticasGerais {
@@ -200,7 +244,9 @@ class RoutesViewModel constructor(
                 // Forçar recálculo das estatísticas
                 val rotasAtuais = appRepository.getRotasResumoComAtualizacaoTempoReal().first()
                 android.util.Log.d("RoutesViewModel", "📊 Dados atualizados: ${rotasAtuais.size} rotas")
-                aplicarFiltroAcesso(rotasAtuais)
+                
+                // ✅ CORREÇÃO: Aguardar a aplicação do filtro para garantir que os dados sejam atualizados
+                aplicarFiltroAcessoCompleto(rotasAtuais)
             } catch (e: Exception) {
                 android.util.Log.e("RoutesViewModel", "Erro ao fazer refresh: ${e.message}", e)
             }
