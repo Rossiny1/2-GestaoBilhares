@@ -7,18 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
-import com.example.gestaobilhares.data.repository.ClienteRepository
-import com.example.gestaobilhares.data.repository.RotaRepository
-import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 /**
  * ViewModel para gerenciar a seleção de clientes para transferência.
  */
 class ClientSelectionViewModel constructor(
-    private val clienteRepository: ClienteRepository,
-    private val rotaRepository: RotaRepository,
-    private val mesaRepository: MesaRepository
+    private val appRepository: AppRepository
 ) : ViewModel() {
 
     private val _clientes = MutableLiveData<List<ClientSelectionAdapter.ClientSelectionItem>>()
@@ -34,13 +30,13 @@ class ClientSelectionViewModel constructor(
         viewModelScope.launch {
             try {
                 // Usar first() para obter a lista de clientes do Flow de forma assíncrona
-                val clientes = clienteRepository.obterTodos().first()
+                val clientes = appRepository.obterTodosClientes().first()
                 
                 val clientesComDetalhes = mutableListOf<ClientSelectionAdapter.ClientSelectionItem>()
 
                 for (cliente in clientes) {
-                    val rota = rotaRepository.getRotaById(cliente.rotaId)
-                    val mesas = mesaRepository.obterMesasPorClienteDireto(cliente.id)
+                    val rota = appRepository.obterRotaPorId(cliente.rotaId)
+                    val mesas = appRepository.obterMesasPorClienteDireto(cliente.id)
 
                     if (rota != null) {
                         clientesComDetalhes.add(
@@ -67,7 +63,7 @@ class ClientSelectionViewModel constructor(
         viewModelScope.launch {
             try {
                 // Usar first() para obter a lista de clientes do Flow de forma assíncrona
-                val clientes = clienteRepository.obterTodos().first()
+                val clientes = appRepository.obterTodosClientes().first()
                 
                 val clientesFiltrados = clientes.filter { 
                     it.nome.contains(query, ignoreCase = true) 
@@ -76,8 +72,8 @@ class ClientSelectionViewModel constructor(
                 val clientesComDetalhes = mutableListOf<ClientSelectionAdapter.ClientSelectionItem>()
 
                 for (cliente in clientesFiltrados) {
-                    val rota = rotaRepository.getRotaById(cliente.rotaId)
-                    val mesas = mesaRepository.obterMesasPorClienteDireto(cliente.id)
+                    val rota = appRepository.obterRotaPorId(cliente.rotaId)
+                    val mesas = appRepository.obterMesasPorClienteDireto(cliente.id)
 
                     if (rota != null) {
                         clientesComDetalhes.add(

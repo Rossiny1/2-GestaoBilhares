@@ -16,9 +16,7 @@ import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.ClienteRepository
-import com.example.gestaobilhares.data.repository.RotaRepository
-import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 /**
  * DialogFragment para transferir um cliente de uma rota para outra.
  * Exibe informações do cliente e permite selecionar a rota de destino.
@@ -70,14 +68,8 @@ class TransferClientDialog : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Inicializar repositórios e ViewModel
-        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-        val clienteRepository = com.example.gestaobilhares.data.repository.ClienteRepository(
-            database.clienteDao(),
-            com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        )
-        val rotaRepository = RotaRepository(database.rotaDao())
-        val mesaRepository = MesaRepository(database.mesaDao())
-        viewModel = TransferClientViewModel(clienteRepository, rotaRepository, mesaRepository)
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        viewModel = TransferClientViewModel(appRepository)
 
         setupArguments()
         setupClickListeners()

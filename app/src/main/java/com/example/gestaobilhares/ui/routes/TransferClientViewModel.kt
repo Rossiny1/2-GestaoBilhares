@@ -7,18 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
-import com.example.gestaobilhares.data.repository.ClienteRepository
-import com.example.gestaobilhares.data.repository.RotaRepository
-import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 /**
  * ViewModel para gerenciar a transferência de clientes entre rotas.
  */
 class TransferClientViewModel constructor(
-    private val clienteRepository: ClienteRepository,
-    private val rotaRepository: RotaRepository,
-    private val mesaRepository: MesaRepository
+    private val appRepository: AppRepository
 ) : ViewModel() {
 
     private val _rotasDisponiveis = MutableLiveData<List<Rota>>()
@@ -37,7 +33,7 @@ class TransferClientViewModel constructor(
         viewModelScope.launch {
             try {
                 // Usar first() para obter a lista de rotas do Flow de forma assíncrona
-                val todasRotas = rotaRepository.getAllRotas().first()
+                val todasRotas = appRepository.obterTodasRotas().first()
                 val rotasDisponiveis = todasRotas.filter { it.id != rotaOrigemId }
                 _rotasDisponiveis.value = rotasDisponiveis
             } catch (e: Exception) {
@@ -58,12 +54,12 @@ class TransferClientViewModel constructor(
         viewModelScope.launch {
             try {
                 // Buscar a rota de destino pelo nome
-                val rotaDestino = rotaRepository.getRotaByNome(rotaDestinoNome)
+                val rotaDestino = appRepository.obterRotaPorNome(rotaDestinoNome)
                     ?: throw Exception("Rota de destino não encontrada")
 
                 // Atualizar o cliente com a nova rota
                 val clienteAtualizado = cliente.copy(rotaId = rotaDestino.id)
-                clienteRepository.atualizar(clienteAtualizado)
+                appRepository.atualizarCliente(clienteAtualizado)
 
                 // ✅ NOVO: Log para debug da transferência
                 android.util.Log.d("TransferClientViewModel", "✅ Cliente '${cliente.nome}' transferido de '${rotaOrigem.nome}' para '${rotaDestino.nome}'")

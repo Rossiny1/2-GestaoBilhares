@@ -20,7 +20,7 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRouteManagementBinding
 import com.example.gestaobilhares.databinding.DialogAddEditRouteBinding
 import com.example.gestaobilhares.data.entities.Rota
-import com.example.gestaobilhares.data.repository.RotaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.database.AppDatabase
 /**
  * Fragment para gerenciamento de rotas (CRUD).
@@ -47,7 +47,8 @@ class RouteManagementFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel = RouteManagementViewModel(RotaRepository(AppDatabase.getDatabase(requireContext()).rotaDao()))
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        viewModel = RouteManagementViewModel(appRepository)
         
         setupRecyclerView()
         setupClickListeners()

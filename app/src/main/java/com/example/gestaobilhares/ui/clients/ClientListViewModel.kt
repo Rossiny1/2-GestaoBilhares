@@ -324,10 +324,10 @@ class ClientListViewModel constructor(
                 
                 logState("CICLO_FINALIZAR", "Iniciando finalização da rota ${rota.nome} - Ciclo ${cicloAtual.numeroCiclo}")
                 
-                // Centralizar a lógica de finalização no repositório
-                appRepository.finalizarCicloRota(rota.id, System.currentTimeMillis())
-                
-                // Recarregar o ciclo para obter os dados atualizados (status e débito total)
+                // ✅ Centralizar a lógica de finalização completa (consolidação + status FINALIZADO)
+                appRepository.finalizarCicloAtualComDados(rota.id)
+
+                // Recarregar o ciclo para obter os dados atualizados (status e débito total "congelado")
                 val cicloFinalizado = appRepository.buscarCicloAtualPorRota(rota.id)
                 
                 // Atualizar estado da UI
