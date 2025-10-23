@@ -41,6 +41,16 @@ class GestaoBilharesApplication : Application() {
             // Continuar mesmo se workers falharem
         }
         
+        // ✅ FASE 4D: Inicializar monitoramento de memória
+        try {
+            val appRepository = RepositoryFactory.getAppRepository(this)
+            appRepository.iniciarMonitoramentoMemoria()
+            Timber.d("Monitoramento de memória inicializado com sucesso")
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao inicializar monitoramento de memória: ${e.message}")
+            // Continuar mesmo se monitoramento falhar
+        }
+        
         Timber.d("Aplicacao iniciada com sucesso")
     }
 } 
