@@ -42,6 +42,8 @@ object RepositoryFactory {
             syncLogDao = database.syncLogDao(),
             syncQueueDao = database.syncQueueDao(),
             syncConfigDao = database.syncConfigDao(),
+            // ✅ FASE 4C: Context para WorkManager
+            context = context,
             rotaDao = database.rotaDao(),
             despesaDao = database.despesaDao(),
             colaboradorDao = database.colaboradorDao(),
