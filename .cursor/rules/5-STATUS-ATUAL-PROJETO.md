@@ -126,12 +126,16 @@
 - 🔄 **Cache Inteligente**: Otimização de consultas ao banco
 - 🔄 **Testes Incrementais**: Validação após cada mudança
 
-### **Fase 7: Implementação Online/Sync (FUTURO)**
+### **Fase 7: Implementação Online/Sync (PLANEJADA)**
 
-- 🔄 **API Endpoints**: Backend para sincronização
-- 🔄 **Sincronização Offline-First**: Arquitetura robusta
-- 🔄 **Resolução de Conflitos**: Dados duplicados e versionamento
-- 🔄 **Testes de Sync**: Cenários complexos online/offline
+- ⏳ **Configuração Firestore**: Regras de segurança e estrutura de dados
+- ⏳ **Sincronização Offline-First**: Cache local com sync em background
+- ⏳ **Resolução de Conflitos**: Timestamp mais recente vence
+- ⏳ **Estratégia de Sync**: Batch operations e real-time listeners
+- ⏳ **Configurações de Cache**: Cache ilimitado para funcionamento offline
+- ⏳ **Estrutura de Dados**: Hierarquia /empresas/{empresaId}/dados/
+- ⏳ **Autenticação**: Integração com Firebase Auth existente
+- ⏳ **Performance**: Paginação e lazy loading para grandes volumes
 - 🔄 **Performance Online**: Otimizada para rede
 
 ### **Fase 8: Performance e Otimizações Avançadas (FUTURO)**
