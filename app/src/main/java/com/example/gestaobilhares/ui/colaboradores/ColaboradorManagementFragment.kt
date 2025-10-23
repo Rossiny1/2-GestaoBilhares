@@ -48,7 +48,7 @@ class ColaboradorManagementFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar ViewModel
-        val database = AppDatabase.getDatabase(requireContext())
+        val _database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = ColaboradorManagementViewModel(appRepository)
         

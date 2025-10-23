@@ -166,7 +166,7 @@ class SyncManager(
 
     private fun savePendingOperations() {
         // Salvar operações pendentes no SharedPreferences ou banco local
-        val operations = pendingOperations.toList()
+        val _operations = pendingOperations.toList()
         // TODO: Implementar persistência local
     }
 
@@ -177,17 +177,17 @@ class SyncManager(
     }
 
     // Métodos de comunicação com servidor (mockados por enquanto)
-    private suspend fun sendToServer(operation: SyncOperation.CreateCliente): Boolean {
+    private suspend fun sendToServer(_operation: SyncOperation.CreateCliente): Boolean {
         delay(1000) // Simular delay de rede
         return true // Simular sucesso
     }
 
-    private suspend fun updateOnServer(operation: SyncOperation.UpdateCliente): Boolean {
+    private suspend fun updateOnServer(_operation: SyncOperation.UpdateCliente): Boolean {
         delay(1000)
         return true
     }
 
-    private suspend fun sendAcertoToServer(operation: SyncOperation.CreateAcerto): Boolean {
+    private suspend fun sendAcertoToServer(_operation: SyncOperation.CreateAcerto): Boolean {
         delay(1000)
         return true
     }

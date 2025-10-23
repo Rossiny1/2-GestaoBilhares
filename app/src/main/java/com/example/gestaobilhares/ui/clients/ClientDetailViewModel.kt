@@ -188,10 +188,10 @@ class ClientDetailViewModel(
     /**
      * ✅ NOVO FLUXO: Verifica se mesa pode ser retirada ou precisa de acerto
      */
-    suspend fun verificarSeRetiradaEPermitida(mesaId: Long, _clienteId: Long): RetiradaStatus {
+    suspend fun verificarSeRetiradaEPermitida(_mesaId: Long, _clienteId: Long): RetiradaStatus {
         return try {
             // Buscar último acerto da mesa
-            val ultimoAcertoMesa = appRepository.buscarUltimoAcertoPorMesa(mesaId)
+            val ultimoAcertoMesa = appRepository.buscarUltimoAcertoPorMesa(_mesaId)
             val hoje = java.util.Calendar.getInstance()
             hoje.set(java.util.Calendar.HOUR_OF_DAY, 0)
             hoje.set(java.util.Calendar.MINUTE, 0)
@@ -254,7 +254,7 @@ class ClientDetailViewModel(
         return true // Trocar para lógica real
     }
 
-    fun salvarObservacaoCliente(clienteId: Long, observacao: String) {
+    fun salvarObservacaoCliente(clienteId: Long, _observacao: String) {
         viewModelScope.launch {
             try {
                 // TODO: Implementar atualização de observação do cliente
@@ -375,7 +375,7 @@ class ClientDetailViewModel(
     /**
      * ✅ NOVO: Busca o relógio final do último acerto de uma mesa
      */
-    suspend fun buscarRelogioFinalUltimoAcerto(mesaId: Long): Int? {
+    suspend fun buscarRelogioFinalUltimoAcerto(_mesaId: Long): Int? {
         return try {
             // TODO: Implementar busca de relógio final do último acerto
             // appRepository.buscarRelogioFinalUltimoAcerto(mesaId)
@@ -389,7 +389,7 @@ class ClientDetailViewModel(
     /**
      * ✅ NOVO: Busca o ID do ciclo associado a um acerto
      */
-    suspend fun buscarCicloIdPorAcerto(acertoId: Long): Long? {
+    suspend fun buscarCicloIdPorAcerto(_acertoId: Long): Long? {
         return try {
             // TODO: Implementar busca de ciclo ID por acerto
             // appRepository.buscarCicloIdPorAcerto(acertoId)

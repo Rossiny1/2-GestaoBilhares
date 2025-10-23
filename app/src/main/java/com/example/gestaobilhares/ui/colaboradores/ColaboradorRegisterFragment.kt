@@ -71,7 +71,7 @@ class ColaboradorRegisterFragment : Fragment() {
     }
 
     private fun setupRepository() {
-        val database = AppDatabase.getDatabase(requireContext())
+        val _database = AppDatabase.getDatabase(requireContext())
         appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
     }
 

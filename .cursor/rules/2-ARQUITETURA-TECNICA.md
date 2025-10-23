@@ -24,6 +24,13 @@
 
 ## 🗄️ BANCO DE DADOS
 
+### **Arquitetura Offline-First**
+
+- **Estratégia**: App funciona 100% offline
+- **Sincronização**: Planejada para implementação futura
+- **Performance**: Otimizações incrementais em andamento
+- **Versionamento**: Preparação para resolução de conflitos
+
 ### **Entidades Principais**
 
 - `Cliente`: Dados dos clientes
@@ -42,6 +49,22 @@
 - `Meta`: Metas de desempenho
 - `EstoqueItem`: Itens do estoque
 - `Pano`: Panos de mesa
+
+### **Planejamento de Otimizações**
+
+**Fase 6: Otimização de Banco (EM ANDAMENTO)**
+
+- 🔄 Índices essenciais para queries frequentes
+- 🔄 Queries otimizadas para melhor performance
+- 🔄 Estrutura preparada para sincronização
+- 🔄 Campos de versionamento para conflitos
+
+**Fase 7: Implementação Online/Sync (FUTURO)**
+
+- 🔄 API endpoints para sincronização
+- 🔄 Resolução de conflitos de dados
+- 🔄 Sincronização offline-first
+- 🔄 Testes de cenários complexos
 
 ### **Relacionamentos**
 
