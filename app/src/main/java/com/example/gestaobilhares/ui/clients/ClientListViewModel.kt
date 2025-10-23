@@ -202,7 +202,53 @@ class ClientListViewModel constructor(
     }
 
     /**
-     * ✅ FASE 9B: Carrega clientes da rota com filtros combinados
+     * ✅ FASE 2D: Carrega clientes com query otimizada (performance melhorada)
+     */
+    fun carregarClientesOtimizado(rotaId: Long) {
+        if (BuildConfig.DEBUG) {
+            AppLogger.log("ClientListVM", "carregarClientesOtimizado chamado para rotaId: $rotaId")
+        }
+        
+        // Atualizar o rotaId no fluxo se necessário
+        if (_rotaIdFlow.value != rotaId) {
+            _rotaIdFlow.value = rotaId
+        }
+        
+        viewModelScope.launch {
+            try {
+                showLoading()
+                
+                // ✅ FASE 2D: Usar query otimizada com débito atual calculado
+                val clientes = appRepository.obterClientesPorRotaComDebitoAtual(rotaId).first()
+                _clientesTodos.value = clientes
+                aplicarFiltrosCombinados() // Aplicar filtros após carregar
+                
+                // ✅ NOVO: Calcular dados do card de progresso
+                calcularDadosProgressoCiclo(clientes)
+                
+                // ✅ NOVO: Continuar observando mudanças
+                appRepository.obterClientesPorRotaComDebitoAtual(rotaId).collect { clientesAtualizados ->
+                    if (clientesAtualizados != _clientesTodos.value) {
+                        _clientesTodos.value = clientesAtualizados
+                        aplicarFiltrosCombinados()
+                        calcularDadosProgressoCiclo(clientesAtualizados)
+                    }
+                }
+                
+            } catch (e: Exception) {
+                logError("CLIENTES_LOAD_OTIMIZADO", "Erro ao carregar clientes otimizado: ${e.message}", e)
+                showError("Erro ao carregar clientes: ${e.message}", e)
+                // Definir lista vazia para evitar crash
+                _clientesTodos.value = emptyList()
+                _clientes.value = emptyList()
+            } finally {
+                hideLoading()
+            }
+        }
+    }
+
+    /**
+     * ✅ FASE 9B: Carrega clientes da rota com filtros combinados (método original)
      */
     fun carregarClientes(rotaId: Long) {
         if (BuildConfig.DEBUG) {
@@ -247,8 +293,64 @@ class ClientListViewModel constructor(
     }
 
     /**
+     * ✅ FASE 2D: Teste de performance - compara query original vs otimizada
+     */
+    fun testarPerformanceQueries(rotaId: Long) {
+        if (BuildConfig.DEBUG) {
+            AppLogger.log("ClientListVM", "testarPerformanceQueries iniciado para rotaId: $rotaId")
+        }
+        
+        viewModelScope.launch {
+            try {
+                // Teste 1: Query original
+                val inicioOriginal = System.currentTimeMillis()
+                val clientesOriginal = appRepository.obterClientesPorRota(rotaId).first()
+                val tempoOriginal = System.currentTimeMillis() - inicioOriginal
+                
+                // Teste 2: Query otimizada
+                val inicioOtimizada = System.currentTimeMillis()
+                val clientesOtimizada = appRepository.obterClientesPorRotaComDebitoAtual(rotaId).first()
+                val tempoOtimizada = System.currentTimeMillis() - inicioOtimizada
+                
+                // Log dos resultados
+                AppLogger.log("ClientListVM", "=== TESTE DE PERFORMANCE ===")
+                AppLogger.log("ClientListVM", "Query Original: ${tempoOriginal}ms - ${clientesOriginal.size} clientes")
+                AppLogger.log("ClientListVM", "Query Otimizada: ${tempoOtimizada}ms - ${clientesOtimizada.size} clientes")
+                AppLogger.log("ClientListVM", "Melhoria: ${((tempoOriginal - tempoOtimizada).toDouble() / tempoOriginal * 100).toInt()}%")
+                AppLogger.log("ClientListVM", "==========================")
+                
+            } catch (e: Exception) {
+                AppLogger.log("ClientListVM", "Erro no teste de performance: ${e.message}")
+            }
+        }
+    }
+
+    /**
      * ✅ NOVO: Força o recarregamento dos clientes (útil para navegação de volta)
      */
+    /**
+     * ✅ FASE 2D: Força recarregamento com query otimizada
+     */
+    fun forcarRecarregamentoClientesOtimizado(rotaId: Long) {
+        if (BuildConfig.DEBUG) {
+            AppLogger.log("ClientListVM", "forcarRecarregamentoClientesOtimizado chamado para rotaId: $rotaId")
+        }
+        
+        viewModelScope.launch {
+            try {
+                // ✅ FASE 2D: Forçar carregamento imediato com query otimizada
+                val clientes = appRepository.obterClientesPorRotaComDebitoAtual(rotaId).first()
+                _clientesTodos.value = clientes
+                aplicarFiltrosCombinados()
+                calcularDadosProgressoCiclo(clientes)
+                
+                android.util.Log.d("ClientListViewModel", "✅ Dados otimizados recarregados: ${clientes.size} clientes")
+            } catch (e: Exception) {
+                AppLogger.log("ClientListVM", "Erro ao forçar recarregamento otimizado: ${e.message}")
+            }
+        }
+    }
+
     fun forcarRecarregamentoClientes(rotaId: Long) {
         if (BuildConfig.DEBUG) {
             AppLogger.log("ClientListVM", "forcarRecarregamentoClientes chamado para rotaId: $rotaId")
