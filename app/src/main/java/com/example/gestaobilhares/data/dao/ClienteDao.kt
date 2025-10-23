@@ -13,6 +13,29 @@ interface ClienteDao {
     @Query("SELECT * FROM clientes WHERE rota_id = :rotaId ORDER BY nome ASC")
     fun obterClientesPorRota(rotaId: Long): Flow<List<Cliente>>
 
+    /**
+     * ✅ FASE 2A: Query otimizada com débito atual calculado
+     * Usa subquery com MAX(data_acerto) em vez de ROW_NUMBER() para compatibilidade com Room
+     */
+    @Query("""
+        SELECT c.*, 
+               COALESCE(
+                   (SELECT a.debito_atual 
+                    FROM acertos a 
+                    WHERE a.cliente_id = c.id 
+                    AND a.data_acerto = (
+                        SELECT MAX(a2.data_acerto) 
+                        FROM acertos a2 
+                        WHERE a2.cliente_id = c.id
+                    )
+                   ), 0.0
+               ) as debito_atual_calculado
+        FROM clientes c 
+        WHERE c.rota_id = :rotaId 
+        ORDER BY c.nome ASC
+    """)
+    fun obterClientesPorRotaComDebitoAtual(rotaId: Long): Flow<List<Cliente>>
+
     @Insert
     suspend fun inserir(cliente: Cliente): Long
 

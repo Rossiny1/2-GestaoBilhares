@@ -104,6 +104,14 @@ class AppRepository constructor(
      * ✅ MODERNIZADO: Obtém clientes por rota com cache
      */
     fun obterClientesPorRota(rotaId: Long): Flow<List<Cliente>> = clienteDao.obterClientesPorRota(rotaId)
+    
+    /**
+     * ✅ FASE 2A: Método otimizado com débito atual calculado
+     * Usa query otimizada que calcula débito atual diretamente no banco
+     */
+    fun obterClientesPorRotaComDebitoAtual(rotaId: Long): Flow<List<Cliente>> = 
+        clienteDao.obterClientesPorRotaComDebitoAtual(rotaId)
+    
     suspend fun obterClientePorId(id: Long) = clienteDao.obterPorId(id)
     suspend fun inserirCliente(cliente: Cliente): Long {
         logDbInsertStart("CLIENTE", "Nome=${cliente.nome}, RotaID=${cliente.rotaId}")
