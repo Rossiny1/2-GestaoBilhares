@@ -41,7 +41,9 @@ import java.util.Date
         androidx.room.Index(value = ["ciclo_id"]),
         androidx.room.Index(value = ["rota_id", "ciclo_id"]), // Índice composto para queries eficientes
         // ✅ FASE 1: Índice essencial para ORDER BY data_acerto (baixo risco)
-        androidx.room.Index(value = ["data_acerto"])
+        androidx.room.Index(value = ["data_acerto"]),
+        // ✅ FASE 2A: Índice composto para query otimizada (cliente_id + data_acerto)
+        androidx.room.Index(value = ["cliente_id", "data_acerto"])
     ]
 )
 data class Acerto(

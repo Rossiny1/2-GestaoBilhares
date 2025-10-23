@@ -48,7 +48,7 @@ import java.util.Date
         PanoMesa::class, // ✅ NOVO: VINCULAÇÃO PANO-MESA
         com.example.gestaobilhares.data.entities.StockItem::class // ✅ NOVO: ITENS GENÉRICOS DO ESTOQUE
     ],
-    version = 40, // ✅ FASE 1: Índices essenciais para performance (baixo risco)
+    version = 41, // ✅ FASE 2A: Query otimizada com índice composto
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -820,13 +820,31 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
+                /**
+                 * ✅ FASE 2A: Migração para índice composto otimizado
+                 */
+                val MIGRATION_40_41 = object : androidx.room.migration.Migration(40, 41) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            android.util.Log.d("AppDatabase", "Migration 40→41: Criando índice composto para query otimizada")
+                            
+                            // Criar índice composto para query otimizada (cliente_id + data_acerto)
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_acertos_cliente_id_data_acerto ON acertos (cliente_id, data_acerto)")
+                            
+                            android.util.Log.d("AppDatabase", "Migration 40→41: Índice composto criado com sucesso")
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 40_41: ${e.message}")
+                        }
+                    }
+                }
+
                 try {
                     val builder = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,
                         DATABASE_NAME
                     )
-                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_39_40)
+                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_39_40, MIGRATION_40_41)
                         .addCallback(object : RoomDatabase.Callback() {
                             override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                                 super.onOpen(db)
