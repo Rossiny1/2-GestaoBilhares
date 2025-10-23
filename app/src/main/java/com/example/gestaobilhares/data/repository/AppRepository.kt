@@ -21,6 +21,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.example.gestaobilhares.workers.SyncWorker
 import com.example.gestaobilhares.workers.CleanupWorker
+// ✅ FASE 4D: Otimizações de memória
+import com.example.gestaobilhares.memory.MemoryOptimizer
+import com.example.gestaobilhares.memory.WeakReferenceManager
+import com.example.gestaobilhares.memory.ObjectPool
+// ✅ FASE 4D: Otimizações de UI
+import com.example.gestaobilhares.ui.optimization.ViewStubManager
+import com.example.gestaobilhares.ui.optimization.OptimizedViewHolder
+import com.example.gestaobilhares.ui.optimization.LayoutOptimizer
+import com.example.gestaobilhares.ui.optimization.RecyclerViewOptimizer
+// ✅ FASE 4D: Otimizações de Rede
+import com.example.gestaobilhares.network.NetworkCompressionManager
+import com.example.gestaobilhares.network.BatchOperationsManager
+import com.example.gestaobilhares.network.RetryLogicManager
+import com.example.gestaobilhares.network.NetworkCacheManager
+import kotlinx.coroutines.Deferred
 // ✅ REMOVIDO: Hilt não é mais usado
 
 /**
@@ -61,6 +76,23 @@ class AppRepository constructor(
     
     // ✅ FASE 4A: Cache Manager para otimização de performance
     private val cacheManager = AppCacheManager.getInstance()
+    
+    // ✅ FASE 4D: Otimizações de memória
+    private val memoryOptimizer = MemoryOptimizer.getInstance()
+    private val weakReferenceManager = WeakReferenceManager.getInstance()
+    
+    // ✅ FASE 4D: Otimizações de UI
+    private val viewStubManager = ViewStubManager.getInstance()
+    private val optimizedViewHolder = OptimizedViewHolder.getInstance()
+    private val layoutOptimizer = LayoutOptimizer.getInstance()
+    private val recyclerViewOptimizer = RecyclerViewOptimizer.getInstance()
+    
+    // ✅ FASE 4D: Otimizações de Rede
+    private val networkCompressionManager = NetworkCompressionManager.getInstance()
+    private val batchOperationsManager = BatchOperationsManager.getInstance()
+    private val retryLogicManager = RetryLogicManager.getInstance()
+    private val networkCacheManager = NetworkCacheManager.getInstance()
+    
     // ==================== CATEGORIAS E TIPOS DE DESPESA ====================
     fun buscarCategoriasAtivas() = categoriaDespesaDao.buscarAtivas()
     suspend fun buscarCategoriaPorNome(nome: String) = categoriaDespesaDao.buscarPorNome(nome)
@@ -330,7 +362,7 @@ class AppRepository constructor(
                 
                 // ✅ NOVO: Obter datas de início e fim do ciclo
                 val (dataInicio, dataFim) = obterDatasCicloRota(rota.id)
-                
+
                 RotaResumo(
                     rota = rota,
                     clientesAtivos = clientesAtivos,
@@ -422,24 +454,24 @@ class AppRepository constructor(
     
     private suspend fun calcularPendenciasReaisPorRota(rotaId: Long): Int {
         return try {
-            val clientes = clienteDao.obterClientesPorRota(rotaId).first()
+                val clientes = clienteDao.obterClientesPorRota(rotaId).first()
             if (clientes.isEmpty()) return 0
-            val clienteIds = clientes.map { it.id }
-            val ultimos = buscarUltimosAcertosPorClientes(clienteIds)
-            val ultimoPorCliente = ultimos.associateBy({ it.clienteId }, { it.dataAcerto })
-            val agora = java.util.Calendar.getInstance()
-            clientes.count { cliente ->
-                val debitoAlto = cliente.debitoAtual > 400
-                val dataUltimo = ultimoPorCliente[cliente.id]
-                val semAcerto4Meses = if (dataUltimo == null) {
-                    true
-                } else {
-                    val cal = java.util.Calendar.getInstance(); cal.time = dataUltimo
-                    val anos = agora.get(java.util.Calendar.YEAR) - cal.get(java.util.Calendar.YEAR)
-                    val meses = anos * 12 + (agora.get(java.util.Calendar.MONTH) - cal.get(java.util.Calendar.MONTH))
-                    meses >= 4
-                }
-                debitoAlto || semAcerto4Meses
+                val clienteIds = clientes.map { it.id }
+                val ultimos = buscarUltimosAcertosPorClientes(clienteIds)
+                val ultimoPorCliente = ultimos.associateBy({ it.clienteId }, { it.dataAcerto })
+                val agora = java.util.Calendar.getInstance()
+                clientes.count { cliente ->
+                    val debitoAlto = cliente.debitoAtual > 400
+                    val dataUltimo = ultimoPorCliente[cliente.id]
+                    val semAcerto4Meses = if (dataUltimo == null) {
+                        true
+                    } else {
+                        val cal = java.util.Calendar.getInstance(); cal.time = dataUltimo
+                        val anos = agora.get(java.util.Calendar.YEAR) - cal.get(java.util.Calendar.YEAR)
+                        val meses = anos * 12 + (agora.get(java.util.Calendar.MONTH) - cal.get(java.util.Calendar.MONTH))
+                        meses >= 4
+                    }
+                    debitoAlto || semAcerto4Meses
             }
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular pendências reais da rota $rotaId: ${e.message}")
@@ -450,7 +482,7 @@ class AppRepository constructor(
     private suspend fun calcularValorAcertadoPorRotaECiclo(rotaId: Long, cicloId: Long?): Double {
         return try {
             if (cicloId == null) return 0.0
-            buscarAcertosPorCicloId(cicloId).first().filter { it.rotaId == rotaId }.sumOf { it.valorRecebido }
+                buscarAcertosPorCicloId(cicloId).first().filter { it.rotaId == rotaId }.sumOf { it.valorRecebido }
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular valor acertado da rota $rotaId: ${e.message}")
             0.0
@@ -459,7 +491,7 @@ class AppRepository constructor(
     
     private suspend fun calcularQuantidadeMesasPorRota(rotaId: Long): Int {
         return try {
-            mesaDao.buscarMesasPorRota(rotaId).first().size
+                mesaDao.buscarMesasPorRota(rotaId).first().size
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular quantidade de mesas da rota $rotaId: ${e.message}")
             0
@@ -469,9 +501,9 @@ class AppRepository constructor(
     private suspend fun calcularPercentualClientesAcertados(rotaId: Long, cicloId: Long?, clientesAtivos: Int): Int {
         return try {
             if (cicloId == null || clientesAtivos == 0) return 0
-            val acertos = buscarAcertosPorCicloId(cicloId).first().filter { it.rotaId == rotaId }
-            val distintos = acertos.map { it.clienteId }.distinct().size
-            ((distintos.toDouble() / clientesAtivos.toDouble()) * 100).toInt()
+                val acertos = buscarAcertosPorCicloId(cicloId).first().filter { it.rotaId == rotaId }
+                val distintos = acertos.map { it.clienteId }.distinct().size
+                ((distintos.toDouble() / clientesAtivos.toDouble()) * 100).toInt()
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular percentual de clientes acertados da rota $rotaId: ${e.message}")
             0
@@ -495,9 +527,9 @@ class AppRepository constructor(
                     android.util.Log.d("AppRepository", "✅ Usando ciclo FINALIZADO: ${cicloAtual.numeroCiclo}")
                     Triple(cicloAtual.numeroCiclo, cicloAtual.id, cicloAtual.dataFim?.time)
                 }
-            } else {
+                    } else {
                 android.util.Log.d("AppRepository", "✅ Primeiro ciclo: 1")
-                Triple(1, null, null)
+                        Triple(1, null, null)
             }
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao obter ciclo atual da rota $rotaId: ${e.message}")
@@ -514,12 +546,12 @@ class AppRepository constructor(
             val cicloAtual = cicloAcertoDao.buscarCicloAtualPorRota(rotaId)
             if (cicloAtual != null) {
                 cicloAtual.id
-            } else {
+                } else {
                 val rota = rotaDao.getRotaById(rotaId)
                 if (rota != null && rota.cicloAcertoAtual != 0 && rota.anoCiclo != 0) {
                     val cicloDaRota = cicloAcertoDao.buscarPorRotaNumeroEAno(rotaId, rota.cicloAcertoAtual, rota.anoCiclo)
                     cicloDaRota?.id
-                } else {
+                    } else {
                     val (_, cicloId, _) = obterCicloAtualRota(rotaId)
                     cicloId
                 }
@@ -547,11 +579,11 @@ class AppRepository constructor(
 
     private suspend fun determinarStatusRotaEmTempoReal(rotaId: Long): StatusRota {
         return try {
-            val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
+                val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
             if (emAndamento != null) {
-                StatusRota.EM_ANDAMENTO
-            } else {
-                StatusRota.FINALIZADA
+                    StatusRota.EM_ANDAMENTO
+                } else {
+                    StatusRota.FINALIZADA
             }
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "❌ Erro ao determinar status da rota $rotaId: ${e.message}")
@@ -1710,7 +1742,7 @@ class AppRepository constructor(
     /**
      * ✅ FASE 4A: Obter estatísticas do cache
      */
-    fun obterEstatisticasCache(): String {
+    fun obterEstatisticasCacheApp(): String {
         return cacheManager.getHealthStatus()
     }
     
@@ -1848,6 +1880,315 @@ class AppRepository constructor(
         calendar.set(java.util.Calendar.MILLISECOND, 0)
         
         return calendar.timeInMillis - now
+    }
+    
+    // ==================== FASE 4D: OTIMIZAÇÕES DE MEMÓRIA ====================
+    
+    /**
+     * ✅ FASE 4D: Obtém estatísticas de memória
+     */
+    fun obterEstatisticasMemoria(): MemoryOptimizer.MemoryStats {
+        return memoryOptimizer.getMemoryStats()
+    }
+    
+    /**
+     * ✅ FASE 4D: Limpa caches de memória
+     */
+    fun limparCachesMemoria() {
+        memoryOptimizer.clearAllCaches()
+        weakReferenceManager.cleanupNullReferences()
+        Log.d("AppRepository", "🧹 Caches de memória limpos")
+    }
+    
+    /**
+     * ✅ FASE 4D: Força garbage collection
+     */
+    fun forcarGarbageCollection() {
+        memoryOptimizer.forceGarbageCollection()
+        Log.d("AppRepository", "🗑️ Garbage collection forçado")
+    }
+    
+    /**
+     * ✅ FASE 4D: Obtém estatísticas de referências fracas
+     */
+    fun obterEstatisticasReferencias(): WeakReferenceManager.ReferenceStats {
+        return weakReferenceManager.getReferenceStats()
+    }
+    
+    /**
+     * ✅ FASE 4D: Cache de bitmap otimizado
+     */
+    fun cachearBitmap(key: String, bitmap: android.graphics.Bitmap) {
+        memoryOptimizer.cacheBitmap(key, bitmap)
+    }
+    
+    /**
+     * ✅ FASE 4D: Obtém bitmap do cache
+     */
+    fun obterBitmapCache(key: String): android.graphics.Bitmap? {
+        return memoryOptimizer.getCachedBitmap(key)
+    }
+    
+    /**
+     * ✅ FASE 4D: Gerencia referência fraca
+     */
+    fun <T : Any> definirReferenciaFraca(key: String, obj: T) {
+        weakReferenceManager.addWeakReference(key, obj)
+    }
+    
+    /**
+     * ✅ FASE 4D: Obtém referência fraca
+     */
+    fun <T : Any> obterReferenciaFraca(key: String): T? {
+        return weakReferenceManager.getWeakReference(key)
+    }
+    
+    /**
+     * ✅ FASE 4D: Monitoramento de memória em background
+     */
+    fun iniciarMonitoramentoMemoria() {
+        // Agendar limpeza periódica de memória
+        val memoryCleanupRequest = OneTimeWorkRequestBuilder<CleanupWorker>()
+            .setInitialDelay(30, TimeUnit.MINUTES)
+            .addTag("memory_cleanup")
+            .build()
+        
+        WorkManager.getInstance(context).enqueue(memoryCleanupRequest)
+        Log.d("AppRepository", "📊 Monitoramento de memória iniciado")
+    }
+    
+    // ==================== OTIMIZAÇÕES DE UI ====================
+    
+    /**
+     * ✅ FASE 4D: Otimizações de ViewStub
+     */
+    fun inflarViewStub(viewStub: android.view.ViewStub, tag: String): android.view.View? {
+        return viewStubManager.inflateViewStub(viewStub, tag)
+    }
+    
+    fun obterViewInflada(tag: String): android.view.View? {
+        return viewStubManager.getInflatedView(tag)
+    }
+    
+    fun verificarViewInflada(tag: String): Boolean {
+        return viewStubManager.isViewInflated(tag)
+    }
+    
+    fun removerViewInflada(tag: String) {
+        viewStubManager.removeInflatedView(tag)
+    }
+    
+    fun obterEstatisticasViewStub(): ViewStubManager.ViewStubStats {
+        return viewStubManager.getCacheStats()
+    }
+    
+    /**
+     * ✅ FASE 4D: Otimizações de ViewHolder
+     */
+    fun <T : Any> adicionarViewHolderAoPool(viewHolder: T) {
+        optimizedViewHolder.addToPool(viewHolder)
+    }
+    
+    fun <T : Any> obterViewHolderDoPool(clazz: Class<T>, factory: () -> T): T {
+        return optimizedViewHolder.getFromPool(clazz, factory)
+    }
+    
+    fun cachearView(viewHolderTag: String, viewId: Int, view: android.view.View) {
+        optimizedViewHolder.cacheView(viewHolderTag, viewId, view)
+    }
+    
+    fun obterViewCacheada(viewHolderTag: String, viewId: Int): android.view.View? {
+        return optimizedViewHolder.getCachedView(viewHolderTag, viewId)
+    }
+    
+    fun limparCacheViewHolder(viewHolderTag: String) {
+        optimizedViewHolder.clearViewHolderCache(viewHolderTag)
+    }
+    
+    fun obterEstatisticasViewHolder(): OptimizedViewHolder.ViewHolderStats {
+        return optimizedViewHolder.getPoolStats()
+    }
+    
+    /**
+     * ✅ FASE 4D: Otimizações de Layout
+     */
+    fun otimizarHierarquiaViews(rootView: android.view.View): android.view.View {
+        return layoutOptimizer.optimizeViewHierarchy(rootView)
+    }
+    
+    fun cachearLayout(key: String, view: android.view.View) {
+        layoutOptimizer.cacheLayout(key, view)
+    }
+    
+    fun obterLayoutCacheado(key: String): android.view.View? {
+        return layoutOptimizer.getCachedLayout(key)
+    }
+    
+    fun obterEstatisticasLayout(): List<LayoutOptimizer.LayoutStats> {
+        return layoutOptimizer.getPerformanceStats()
+    }
+    
+    /**
+     * ✅ FASE 4D: Otimizações de RecyclerView
+     */
+    fun otimizarRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView, config: RecyclerViewOptimizer.RecyclerViewConfig = RecyclerViewOptimizer.RecyclerViewConfig()) {
+        recyclerViewOptimizer.optimizeRecyclerView(recyclerView, config)
+    }
+    
+    fun otimizarRecyclerViewParaListasGrandes(recyclerView: androidx.recyclerview.widget.RecyclerView) {
+        recyclerViewOptimizer.optimizeForLargeLists(recyclerView)
+    }
+    
+    fun otimizarRecyclerViewParaListasPequenas(recyclerView: androidx.recyclerview.widget.RecyclerView) {
+        recyclerViewOptimizer.optimizeForSmallLists(recyclerView)
+    }
+    
+    fun obterConfiguracaoRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView): RecyclerViewOptimizer.RecyclerViewConfig? {
+        return recyclerViewOptimizer.getRecyclerViewConfig(recyclerView)
+    }
+    
+    /**
+     * ✅ FASE 4D: Limpeza geral de otimizações de UI
+     */
+    fun limparTodasOtimizacoesUI() {
+        viewStubManager.clearAllViews()
+        optimizedViewHolder.clearAll()
+        layoutOptimizer.clearAllCaches()
+        recyclerViewOptimizer.clearAllConfigs()
+        Log.d("AppRepository", "🧹 Todas as otimizações de UI limpas")
+    }
+    
+    // ==================== OTIMIZAÇÕES DE REDE ====================
+    
+    /**
+     * ✅ FASE 4D: Otimizações de Compressão de Rede
+     */
+    fun comprimirDados(dados: ByteArray, chave: String? = null): NetworkCompressionManager.CompressedData {
+        return networkCompressionManager.compressData(dados, chave)
+    }
+    
+    fun descomprimirDados(dadosComprimidos: NetworkCompressionManager.CompressedData): ByteArray {
+        return networkCompressionManager.decompressData(dadosComprimidos)
+    }
+    
+    fun comprimirString(texto: String, chave: String? = null): NetworkCompressionManager.CompressedData {
+        return networkCompressionManager.compressString(texto, chave)
+    }
+    
+    fun descomprimirParaString(dadosComprimidos: NetworkCompressionManager.CompressedData): String {
+        return networkCompressionManager.decompressToString(dadosComprimidos)
+    }
+    
+    fun obterEstatisticasCompressao(): NetworkCompressionManager.CompressionStats {
+        return networkCompressionManager.getCompressionStats()
+    }
+    
+    /**
+     * ✅ FASE 4D: Otimizações de Operações em Lote
+     */
+    suspend fun adicionarOperacaoEmLote(
+        operacao: suspend () -> Result<Any>,
+        prioridade: BatchOperationsManager.OperationPriority = BatchOperationsManager.OperationPriority.NORMAL,
+        retryOnFailure: Boolean = true
+    ): Deferred<Result<Any>> {
+        return batchOperationsManager.addOperation(operacao, prioridade, retryOnFailure)
+    }
+    
+    fun configurarLote(
+        tamanhoLote: Int = 10,
+        timeoutLote: Long = 5000L,
+        maxTentativas: Int = 3
+    ) {
+        batchOperationsManager.configureBatch(tamanhoLote, timeoutLote, maxTentativas)
+    }
+    
+    suspend fun processarOperacoesPendentes() {
+        batchOperationsManager.flushPendingOperations()
+    }
+    
+    fun obterEstatisticasLote(): BatchOperationsManager.BatchPerformanceStats {
+        return batchOperationsManager.getPerformanceStats()
+    }
+    
+    /**
+     * ✅ FASE 4D: Otimizações de Retry Logic
+     */
+    suspend fun <T> executarComRetry(
+        operacao: suspend () -> T,
+        endpoint: String = "default",
+        maxTentativas: Int = 3,
+        delayBase: Long = 1000L,
+        delayMaximo: Long = 30000L
+    ): Result<T> {
+        return retryLogicManager.executeWithRetry(
+            operacao, endpoint, maxTentativas, delayBase, delayMaximo
+        )
+    }
+    
+    fun configurarCircuitBreaker(
+        endpoint: String,
+        limiteFalhas: Int = 5,
+        timeout: Long = 60000L
+    ) {
+        retryLogicManager.configureCircuitBreaker(endpoint, limiteFalhas, timeout)
+    }
+    
+    fun configurarRateLimiter(
+        endpoint: String,
+        maxRequisicoes: Int,
+        janelaTempo: Long
+    ) {
+        retryLogicManager.configureRateLimiter(endpoint, maxRequisicoes, janelaTempo)
+    }
+    
+    fun obterEstatisticasRetry(): RetryLogicManager.RetryStats {
+        return retryLogicManager.getRetryStats()
+    }
+    
+    /**
+     * ✅ FASE 4D: Otimizações de Cache de Rede
+     */
+    fun armazenarNoCache(chave: String, dados: ByteArray, ttl: Long = 300000L, comprimir: Boolean = true) {
+        networkCacheManager.put(chave, dados, ttl, comprimir)
+    }
+    
+    fun armazenarStringNoCache(chave: String, valor: String, ttl: Long = 300000L, comprimir: Boolean = true) {
+        networkCacheManager.putString(chave, valor, ttl, comprimir)
+    }
+    
+    fun obterDoCache(chave: String): ByteArray? {
+        return networkCacheManager.get(chave)
+    }
+    
+    fun obterStringDoCache(chave: String): String? {
+        return networkCacheManager.getString(chave)
+    }
+    
+    fun verificarCache(chave: String): Boolean {
+        return networkCacheManager.contains(chave)
+    }
+    
+    fun removerDoCache(chave: String) {
+        networkCacheManager.remove(chave)
+    }
+    
+    fun obterEstatisticasCacheRede(): NetworkCacheManager.CacheStats {
+        return networkCacheManager.getCacheStats()
+    }
+    
+    fun obterInformacoesCache(): List<NetworkCacheManager.CacheMetadata> {
+        return networkCacheManager.getCacheInfo()
+    }
+    
+    /**
+     * ✅ FASE 4D: Limpeza geral de otimizações de rede
+     */
+    fun limparTodasOtimizacoesRede() {
+        networkCompressionManager.clearCache()
+        batchOperationsManager.cancelAllOperations()
+        retryLogicManager.clearStats()
+        networkCacheManager.clear()
+        Log.d("AppRepository", "🌐 Todas as otimizações de rede limpas")
     }
     
 } 
