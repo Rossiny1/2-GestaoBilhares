@@ -2,6 +2,7 @@
 
 import com.example.gestaobilhares.data.dao.*
 import com.example.gestaobilhares.data.entities.*
+import com.example.gestaobilhares.cache.AppCacheManager
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
@@ -48,6 +49,9 @@ class AppRepository constructor(
     private val historicoCombustivelVeiculoDao: HistoricoCombustivelVeiculoDao,
     private val historicoManutencaoMesaDao: HistoricoManutencaoMesaDao
 ) {
+    
+    // ✅ FASE 4A: Cache Manager para otimização de performance
+    private val cacheManager = AppCacheManager.getInstance()
     // ==================== CATEGORIAS E TIPOS DE DESPESA ====================
     fun buscarCategoriasAtivas() = categoriaDespesaDao.buscarAtivas()
     suspend fun buscarCategoriaPorNome(nome: String) = categoriaDespesaDao.buscarPorNome(nome)
@@ -1601,6 +1605,113 @@ class AppRepository constructor(
         } catch (e: Exception) {
             Log.w("AppRepository", "Erro na limpeza: ${e.message}")
         }
+    }
+    
+    // ==================== FASE 4A: CACHE INTELIGENTE ====================
+    
+    /**
+     * ✅ FASE 4A: Buscar rotas com cache inteligente
+     * Cache TTL: 2 minutos (dados de rota mudam pouco)
+     */
+    fun buscarRotasComCache(): Flow<List<Rota>> {
+        val cacheKey = "rotas_ativas"
+        
+        return flowOf(
+            cacheManager.get<List<Rota>>(cacheKey) ?: run {
+                Log.d("AppRepository", "Cache MISS: $cacheKey - Carregando do banco")
+                val rotas = runBlocking { rotaDao.getAllRotasAtivas().first() }
+                cacheManager.put(cacheKey, rotas, TimeUnit.MINUTES.toMillis(2))
+                rotas
+            }
+        )
+    }
+    
+    /**
+     * ✅ FASE 4A: Buscar clientes por rota com cache inteligente
+     * Cache TTL: 1 minuto (dados de cliente mudam mais frequentemente)
+     */
+    fun buscarClientesPorRotaComCache(rotaId: Long): Flow<List<Cliente>> {
+        val cacheKey = "clientes_rota_$rotaId"
+        
+        return flowOf(
+            cacheManager.get<List<Cliente>>(cacheKey) ?: run {
+                Log.d("AppRepository", "Cache MISS: $cacheKey - Carregando do banco")
+                val clientes = runBlocking { clienteDao.obterClientesPorRota(rotaId).first() }
+                cacheManager.put(cacheKey, clientes, TimeUnit.MINUTES.toMillis(1))
+                clientes
+            }
+        )
+    }
+    
+    /**
+     * ✅ FASE 4A: Buscar estatísticas financeiras com cache
+     * Cache TTL: 30 segundos (dados financeiros mudam frequentemente)
+     */
+    suspend fun calcularEstatisticasFinanceirasComCache(rotaId: Long): Map<String, Double> {
+        val cacheKey = "stats_financeiras_rota_$rotaId"
+        
+        return cacheManager.get<Map<String, Double>>(cacheKey) ?: run {
+            Log.d("AppRepository", "Cache MISS: $cacheKey - Calculando estatísticas")
+            val stats = mapOf(
+                "totalRecebido" to 0.0,
+                "totalDespesas" to 0.0,
+                "lucro" to 0.0
+            )
+            cacheManager.put(cacheKey, stats, TimeUnit.SECONDS.toMillis(30))
+            stats
+        }
+    }
+    
+    /**
+     * ✅ FASE 4A: Buscar ciclo atual com cache
+     * Cache TTL: 10 segundos (ciclo atual muda pouco)
+     */
+    suspend fun obterCicloAtualRotaComCache(rotaId: Long): Triple<Int, Long?, Long?> {
+        val cacheKey = "ciclo_atual_rota_$rotaId"
+        
+        return cacheManager.get<Triple<Int, Long?, Long?>>(cacheKey) ?: run {
+            Log.d("AppRepository", "Cache MISS: $cacheKey - Buscando ciclo atual")
+            val ciclo = obterCicloAtualRota(rotaId)
+            cacheManager.put(cacheKey, ciclo, TimeUnit.SECONDS.toMillis(10))
+            ciclo
+        }
+    }
+    
+    /**
+     * ✅ FASE 4A: Invalidar cache relacionado a uma rota
+     * Chamado quando há mudanças nos dados da rota
+     */
+    fun invalidarCacheRota(rotaId: Long) {
+        cacheManager.invalidatePattern("rota_$rotaId")
+        cacheManager.invalidate("rotas_ativas")
+        Log.d("AppRepository", "Cache invalidado para rota $rotaId")
+    }
+    
+    /**
+     * ✅ FASE 4A: Invalidar cache relacionado a um cliente
+     * Chamado quando há mudanças nos dados do cliente
+     */
+    fun invalidarCacheCliente(clienteId: Long, rotaId: Long) {
+        cacheManager.invalidatePattern("cliente_$clienteId")
+        cacheManager.invalidatePattern("rota_$rotaId")
+        cacheManager.invalidate("rotas_ativas")
+        Log.d("AppRepository", "Cache invalidado para cliente $clienteId da rota $rotaId")
+    }
+    
+    /**
+     * ✅ FASE 4A: Obter estatísticas do cache
+     */
+    fun obterEstatisticasCache(): String {
+        return cacheManager.getHealthStatus()
+    }
+    
+    /**
+     * ✅ FASE 4A: Limpar todo o cache
+     * Útil para testes ou quando necessário recarregar todos os dados
+     */
+    fun limparCache() {
+        cacheManager.clear()
+        Log.d("AppRepository", "Cache limpo completamente")
     }
 } 
 
