@@ -48,7 +48,7 @@ import java.util.Date
         PanoMesa::class, // ✅ NOVO: VINCULAÇÃO PANO-MESA
         com.example.gestaobilhares.data.entities.StockItem::class // ✅ NOVO: ITENS GENÉRICOS DO ESTOQUE
     ],
-    version = 39, // ✅ MIGRATION: inclusão de itens genéricos do estoque
+    version = 40, // ✅ FASE 1: Índices essenciais para performance (baixo risco)
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -193,22 +193,22 @@ abstract class AppDatabase : RoomDatabase() {
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val MIGRATION_11_12 = object : androidx.room.migration.Migration(11, 12) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
-                        database.execSQL("ALTER TABLE ciclos_acerto ADD COLUMN debito_total REAL NOT NULL DEFAULT 0.0")
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        db.execSQL("ALTER TABLE ciclos_acerto ADD COLUMN debito_total REAL NOT NULL DEFAULT 0.0")
                     }
                 }
                 
                 val MIGRATION_12_13 = object : androidx.room.migration.Migration(12, 13) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Limpar dados das mesas para evitar problemas com enums antigos
-                        database.execSQL("DELETE FROM mesas")
+                        db.execSQL("DELETE FROM mesas")
                     }
                 }
                 
                 val MIGRATION_13_14 = object : androidx.room.migration.Migration(13, 14) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Recriar tabela clientes com schema correto
-                        database.execSQL("""
+                        db.execSQL("""
                             CREATE TABLE clientes_new (
                                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                 nome TEXT NOT NULL,
@@ -237,7 +237,7 @@ abstract class AppDatabase : RoomDatabase() {
                         """)
                         
                         // Copiar dados existentes
-                        database.execSQL("""
+                        db.execSQL("""
                             INSERT INTO clientes_new (
                                 id, nome, nome_fantasia, cpf_cnpj, telefone, email, 
                                 endereco, cidade, estado, cep, rota_id, valor_ficha, 
@@ -255,47 +255,47 @@ abstract class AppDatabase : RoomDatabase() {
                         """)
                         
                         // Remover tabela antiga e renomear nova
-                        database.execSQL("DROP TABLE clientes")
-                        database.execSQL("ALTER TABLE clientes_new RENAME TO clientes")
+                        db.execSQL("DROP TABLE clientes")
+                        db.execSQL("ALTER TABLE clientes_new RENAME TO clientes")
                         
                         // Recriar índice
-                        database.execSQL("CREATE INDEX index_clientes_rota_id ON clientes (rota_id)")
+                        db.execSQL("CREATE INDEX index_clientes_rota_id ON clientes (rota_id)")
                     }
                 }
                 
                 val MIGRATION_14_15 = object : androidx.room.migration.Migration(14, 15) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Adicionar campos de geolocalização na tabela clientes
-                        database.execSQL("ALTER TABLE clientes ADD COLUMN latitude REAL")
-                        database.execSQL("ALTER TABLE clientes ADD COLUMN longitude REAL")
-                        database.execSQL("ALTER TABLE clientes ADD COLUMN precisao_gps REAL")
-                        database.execSQL("ALTER TABLE clientes ADD COLUMN data_captura_gps INTEGER")
+                        db.execSQL("ALTER TABLE clientes ADD COLUMN latitude REAL")
+                        db.execSQL("ALTER TABLE clientes ADD COLUMN longitude REAL")
+                        db.execSQL("ALTER TABLE clientes ADD COLUMN precisao_gps REAL")
+                        db.execSQL("ALTER TABLE clientes ADD COLUMN data_captura_gps INTEGER")
                     }
                 }
                 
                 val MIGRATION_15_16 = object : androidx.room.migration.Migration(15, 16) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Adicionar campos de foto do relógio na tabela acerto_mesas
-                        database.execSQL("ALTER TABLE acerto_mesas ADD COLUMN foto_relogio_final TEXT")
-                        database.execSQL("ALTER TABLE acerto_mesas ADD COLUMN data_foto INTEGER")
+                        db.execSQL("ALTER TABLE acerto_mesas ADD COLUMN foto_relogio_final TEXT")
+                        db.execSQL("ALTER TABLE acerto_mesas ADD COLUMN data_foto INTEGER")
                     }
                 }
                 
                 val MIGRATION_16_17 = object : androidx.room.migration.Migration(16, 17) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Adicionar campos de foto do comprovante na tabela despesas
-                        database.execSQL("ALTER TABLE despesas ADD COLUMN fotoComprovante TEXT")
-                        database.execSQL("ALTER TABLE despesas ADD COLUMN dataFotoComprovante INTEGER")
+                        db.execSQL("ALTER TABLE despesas ADD COLUMN fotoComprovante TEXT")
+                        db.execSQL("ALTER TABLE despesas ADD COLUMN dataFotoComprovante INTEGER")
                     }
                 }
                 
                 val MIGRATION_17_18 = object : androidx.room.migration.Migration(17, 18) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Migration para corrigir problemas de integridade do schema
                         // Recriar tabelas se necessário para garantir consistência
                         try {
                             // Verificar se a tabela clientes tem todos os campos necessários
-                            database.execSQL("""
+                            db.execSQL("""
                                 CREATE TABLE IF NOT EXISTS clientes_temp (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                     nome TEXT NOT NULL,
@@ -328,17 +328,17 @@ abstract class AppDatabase : RoomDatabase() {
                             """)
                             
                             // Copiar dados existentes se a tabela original existir
-                            database.execSQL("""
+                            db.execSQL("""
                                 INSERT OR IGNORE INTO clientes_temp 
                                 SELECT * FROM clientes
                             """)
                             
                             // Substituir tabela original
-                            database.execSQL("DROP TABLE IF EXISTS clientes")
-                            database.execSQL("ALTER TABLE clientes_temp RENAME TO clientes")
+                            db.execSQL("DROP TABLE IF EXISTS clientes")
+                            db.execSQL("ALTER TABLE clientes_temp RENAME TO clientes")
                             
                             // Recriar índices
-                            database.execSQL("CREATE INDEX IF NOT EXISTS index_clientes_rota_id ON clientes (rota_id)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_clientes_rota_id ON clientes (rota_id)")
                             
                         } catch (e: Exception) {
                             // Se houver erro, apenas logar e continuar
@@ -348,11 +348,11 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 val MIGRATION_18_19 = object : androidx.room.migration.Migration(18, 19) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Migration para corrigir os nomes das colunas de foto na tabela despesas
                         try {
                             // Verificar se as colunas com nomes incorretos existem
-                            val cursor = database.query("PRAGMA table_info(despesas)")
+                            val cursor = db.query("PRAGMA table_info(despesas)")
                             val columnNames = mutableListOf<String>()
                             while (cursor.moveToNext()) {
                                 columnNames.add(cursor.getString(1)) // nome da coluna
@@ -362,8 +362,8 @@ abstract class AppDatabase : RoomDatabase() {
                             // Se existem colunas com nomes incorretos, corrigir
                             if (columnNames.contains("foto_comprovante") && !columnNames.contains("fotoComprovante")) {
                                 // Renomear colunas incorretas para corretas
-                                database.execSQL("ALTER TABLE despesas RENAME COLUMN foto_comprovante TO fotoComprovante")
-                                database.execSQL("ALTER TABLE despesas RENAME COLUMN data_foto_comprovante TO dataFotoComprovante")
+                                db.execSQL("ALTER TABLE despesas RENAME COLUMN foto_comprovante TO fotoComprovante")
+                                db.execSQL("ALTER TABLE despesas RENAME COLUMN data_foto_comprovante TO dataFotoComprovante")
                                 android.util.Log.d("Migration", "Colunas de foto renomeadas com sucesso")
                             }
                             
@@ -375,31 +375,31 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 val MIGRATION_19_20 = object : androidx.room.migration.Migration(19, 20) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Migration para adicionar novas colunas na tabela colaboradores
                         try {
                             // Adicionar novas colunas na tabela colaboradores
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN data_nascimento INTEGER")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN endereco TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN bairro TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN cidade TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN estado TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN cep TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN rg TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN orgao_emissor TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN estado_civil TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN nome_mae TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN nome_pai TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN foto_perfil TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN aprovado INTEGER DEFAULT 0")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN data_aprovacao INTEGER")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN aprovado_por TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN google_id TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN senha_temporaria TEXT")
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN data_ultima_atualizacao INTEGER")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN data_nascimento INTEGER")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN endereco TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN bairro TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN cidade TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN estado TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN cep TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN rg TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN orgao_emissor TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN estado_civil TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN nome_mae TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN nome_pai TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN foto_perfil TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN aprovado INTEGER DEFAULT 0")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN data_aprovacao INTEGER")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN aprovado_por TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN google_id TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN senha_temporaria TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN data_ultima_atualizacao INTEGER")
                             
                             // Criar tabela de metas dos colaboradores
-                            database.execSQL("""
+                            db.execSQL("""
                                 CREATE TABLE IF NOT EXISTS metas_colaborador (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                     colaborador_id INTEGER NOT NULL,
@@ -414,7 +414,7 @@ abstract class AppDatabase : RoomDatabase() {
                             """)
                             
                             // Criar tabela de vinculação colaborador-rota
-                            database.execSQL("""
+                            db.execSQL("""
                                 CREATE TABLE IF NOT EXISTS colaborador_rotas (
                                     colaborador_id INTEGER NOT NULL,
                                     rota_id INTEGER NOT NULL,
@@ -434,11 +434,11 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 val MIGRATION_20_21 = object : androidx.room.migration.Migration(20, 21) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Migration para corrigir valores padrão da tabela colaboradores
                         try {
                             // Recriar tabela colaboradores com valores padrão corretos
-                            database.execSQL("""
+                            db.execSQL("""
                                 CREATE TABLE IF NOT EXISTS colaboradores_temp (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                     nome TEXT NOT NULL,
@@ -472,14 +472,14 @@ abstract class AppDatabase : RoomDatabase() {
                             """)
                             
                             // Copiar dados existentes
-                            database.execSQL("""
+                            db.execSQL("""
                                 INSERT OR IGNORE INTO colaboradores_temp 
                                 SELECT * FROM colaboradores
                             """)
                             
                             // Substituir tabela original
-                            database.execSQL("DROP TABLE IF EXISTS colaboradores")
-                            database.execSQL("ALTER TABLE colaboradores_temp RENAME TO colaboradores")
+                            db.execSQL("DROP TABLE IF EXISTS colaboradores")
+                            db.execSQL("ALTER TABLE colaboradores_temp RENAME TO colaboradores")
                             
                             android.util.Log.d("Migration", "Migration 20_21 executada com sucesso")
                             
@@ -491,11 +491,11 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 val MIGRATION_21_22 = object : androidx.room.migration.Migration(21, 22) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Migration para adicionar coluna email_acesso na tabela colaboradores
                         try {
                             // Adicionar coluna email_acesso
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN email_acesso TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN email_acesso TEXT")
                             
                             android.util.Log.d("Migration", "Migration 21_22 executada com sucesso")
                             
@@ -507,11 +507,11 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 val MIGRATION_22_23 = object : androidx.room.migration.Migration(22, 23) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Migration para adicionar coluna observacoes na tabela colaboradores
                         try {
                             // Adicionar coluna observacoes
-                            database.execSQL("ALTER TABLE colaboradores ADD COLUMN observacoes TEXT")
+                            db.execSQL("ALTER TABLE colaboradores ADD COLUMN observacoes TEXT")
                             
                             android.util.Log.d("Migration", "Migration 22_23 executada com sucesso")
                             
@@ -523,11 +523,11 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 val MIGRATION_23_24 = object : androidx.room.migration.Migration(23, 24) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Migration para atualizar tabela metas_colaborador
                         try {
                             // Criar tabela temporária com nova estrutura
-                            database.execSQL("""
+                            db.execSQL("""
                                 CREATE TABLE metas_colaborador_temp (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                     colaborador_id INTEGER NOT NULL,
@@ -542,7 +542,7 @@ abstract class AppDatabase : RoomDatabase() {
                             """)
                             
                             // Copiar dados existentes (se houver)
-                            database.execSQL("""
+                            db.execSQL("""
                                 INSERT INTO metas_colaborador_temp (id, colaborador_id, tipo_meta, valor_meta, ciclo_id, rota_id, valor_atual, ativo, data_criacao)
                                 SELECT id, colaborador_id, tipo_meta, valor_meta, 
                                        (SELECT id FROM ciclos_acerto WHERE ativo = 1 LIMIT 1) as ciclo_id,
@@ -552,10 +552,10 @@ abstract class AppDatabase : RoomDatabase() {
                             """)
                             
                             // Remover tabela antiga
-                            database.execSQL("DROP TABLE metas_colaborador")
+                            db.execSQL("DROP TABLE metas_colaborador")
                             
                             // Renomear tabela temporária
-                            database.execSQL("ALTER TABLE metas_colaborador_temp RENAME TO metas_colaborador")
+                            db.execSQL("ALTER TABLE metas_colaborador_temp RENAME TO metas_colaborador")
                             
                             android.util.Log.d("Migration", "Migration 23_24 executada com sucesso")
                             
@@ -567,11 +567,11 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 val MIGRATION_24_25 = object : androidx.room.migration.Migration(24, 25) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Migration para corrigir tabela metas_colaborador se a anterior falhou
                         try {
                             // Verificar se a tabela tem a estrutura correta
-                            val cursor = database.query("PRAGMA table_info(metas_colaborador)")
+                            val cursor = db.query("PRAGMA table_info(metas_colaborador)")
                             val columns = mutableListOf<String>()
                             while (cursor.moveToNext()) {
                                 columns.add(cursor.getString(1)) // nome da coluna
@@ -583,7 +583,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 android.util.Log.d("Migration", "Corrigindo estrutura da tabela metas_colaborador")
                                 
                                 // Criar tabela temporária com estrutura correta
-                                database.execSQL("""
+                                db.execSQL("""
                                     CREATE TABLE metas_colaborador_temp (
                                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                         colaborador_id INTEGER NOT NULL,
@@ -599,7 +599,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 
                                 // Tentar copiar dados existentes
                                 try {
-                                    database.execSQL("""
+                                    db.execSQL("""
                                         INSERT INTO metas_colaborador_temp (id, colaborador_id, tipo_meta, valor_meta, ciclo_id, rota_id, valor_atual, ativo, data_criacao)
                                         SELECT id, colaborador_id, tipo_meta, valor_meta, 
                                                (SELECT id FROM ciclos_acerto WHERE ativo = 1 LIMIT 1) as ciclo_id,
@@ -612,10 +612,10 @@ abstract class AppDatabase : RoomDatabase() {
                                 }
                                 
                                 // Remover tabela antiga
-                                database.execSQL("DROP TABLE metas_colaborador")
+                                db.execSQL("DROP TABLE metas_colaborador")
                                 
                                 // Renomear tabela temporária
-                                database.execSQL("ALTER TABLE metas_colaborador_temp RENAME TO metas_colaborador")
+                                db.execSQL("ALTER TABLE metas_colaborador_temp RENAME TO metas_colaborador")
                             }
                             
                             android.util.Log.d("Migration", "Migration 24_25 executada com sucesso")
@@ -627,18 +627,18 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 val MIGRATION_25_26 = object : androidx.room.migration.Migration(25, 26) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         try {
                             // Adicionar novas colunas
-                            database.execSQL("ALTER TABLE despesas ADD COLUMN origemLancamento TEXT NOT NULL DEFAULT 'ROTA'")
-                            database.execSQL("ALTER TABLE despesas ADD COLUMN cicloAno INTEGER")
-                            database.execSQL("ALTER TABLE despesas ADD COLUMN cicloNumero INTEGER")
+                            db.execSQL("ALTER TABLE despesas ADD COLUMN origemLancamento TEXT NOT NULL DEFAULT 'ROTA'")
+                            db.execSQL("ALTER TABLE despesas ADD COLUMN cicloAno INTEGER")
+                            db.execSQL("ALTER TABLE despesas ADD COLUMN cicloNumero INTEGER")
                             
                             // Criar índices para as novas colunas
-                            database.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_origemLancamento ON despesas (origemLancamento)")
-                            database.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_cicloAno ON despesas (cicloAno)")
-                            database.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_cicloNumero ON despesas (cicloNumero)")
-                            database.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_cicloAno_cicloNumero ON despesas (cicloAno, cicloNumero)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_origemLancamento ON despesas (origemLancamento)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_cicloAno ON despesas (cicloAno)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_cicloNumero ON despesas (cicloNumero)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_cicloAno_cicloNumero ON despesas (cicloAno, cicloNumero)")
                             
                             android.util.Log.d("Migration", "Migration 25_26 executada com sucesso")
                         } catch (e: Exception) {
@@ -648,10 +648,10 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 val MIGRATION_26_27 = object : androidx.room.migration.Migration(26, 27) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         try {
                             // Criar tabelas de contratos
-                            database.execSQL("""
+                            db.execSQL("""
                                 CREATE TABLE IF NOT EXISTS contratos_locacao (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                     numeroContrato TEXT NOT NULL,
@@ -680,7 +680,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 )
                             """)
                             
-                            database.execSQL("""
+                            db.execSQL("""
                                 CREATE TABLE IF NOT EXISTS contrato_mesas (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                     contratoId INTEGER NOT NULL,
@@ -695,10 +695,10 @@ abstract class AppDatabase : RoomDatabase() {
                             """)
                             
                             // Criar índices
-                            database.execSQL("CREATE INDEX IF NOT EXISTS index_contratos_locacao_clienteId ON contratos_locacao (clienteId)")
-                            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_contratos_locacao_numeroContrato ON contratos_locacao (numeroContrato)")
-                            database.execSQL("CREATE INDEX IF NOT EXISTS index_contrato_mesas_contratoId ON contrato_mesas (contratoId)")
-                            database.execSQL("CREATE INDEX IF NOT EXISTS index_contrato_mesas_mesaId ON contrato_mesas (mesaId)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_contratos_locacao_clienteId ON contratos_locacao (clienteId)")
+                            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_contratos_locacao_numeroContrato ON contratos_locacao (numeroContrato)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_contrato_mesas_contratoId ON contrato_mesas (contratoId)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_contrato_mesas_mesaId ON contrato_mesas (mesaId)")
                             
                             android.util.Log.d("Migration", "Migration 26_27 executada com sucesso")
                         } catch (e: Exception) {
@@ -708,10 +708,10 @@ abstract class AppDatabase : RoomDatabase() {
                 }
                 
                 val MIGRATION_27_28 = object : androidx.room.migration.Migration(27, 28) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         try {
                             // Criar tabelas de aditivos
-                            database.execSQL("""
+                            db.execSQL("""
                                 CREATE TABLE IF NOT EXISTS aditivos_contrato (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                     numeroAditivo TEXT NOT NULL,
@@ -726,7 +726,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 )
                             """)
                             
-                            database.execSQL("""
+                            db.execSQL("""
                                 CREATE TABLE IF NOT EXISTS aditivo_mesas (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                     aditivoId INTEGER NOT NULL,
@@ -741,10 +741,10 @@ abstract class AppDatabase : RoomDatabase() {
                             """)
                             
                             // Criar índices
-                            database.execSQL("CREATE INDEX IF NOT EXISTS index_aditivos_contrato_contratoId ON aditivos_contrato (contratoId)")
-                            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_aditivos_contrato_numeroAditivo ON aditivos_contrato (numeroAditivo)")
-                            database.execSQL("CREATE INDEX IF NOT EXISTS index_aditivo_mesas_aditivoId ON aditivo_mesas (aditivoId)")
-                            database.execSQL("CREATE INDEX IF NOT EXISTS index_aditivo_mesas_mesaId ON aditivo_mesas (mesaId)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_aditivos_contrato_contratoId ON aditivos_contrato (contratoId)")
+                            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_aditivos_contrato_numeroAditivo ON aditivos_contrato (numeroAditivo)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_aditivo_mesas_aditivoId ON aditivo_mesas (aditivoId)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_aditivo_mesas_mesaId ON aditivo_mesas (mesaId)")
                             
                             android.util.Log.d("Migration", "Migration 27_28 executada com sucesso")
                         } catch (e: Exception) {
@@ -754,24 +754,24 @@ abstract class AppDatabase : RoomDatabase() {
                 }
 
                 val MIGRATION_28_29 = object : androidx.room.migration.Migration(28, 29) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         try {
                             // Adicionar dataEncerramento na tabela contratos_locacao
-                            val cursor1 = database.query("PRAGMA table_info(contratos_locacao)")
+                            val cursor1 = db.query("PRAGMA table_info(contratos_locacao)")
                             val cols1 = mutableListOf<String>()
                             while (cursor1.moveToNext()) cols1.add(cursor1.getString(1))
                             cursor1.close()
                             if (!cols1.contains("dataEncerramento")) {
-                                database.execSQL("ALTER TABLE contratos_locacao ADD COLUMN dataEncerramento INTEGER")
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN dataEncerramento INTEGER")
                             }
 
                             // Adicionar tipo no aditivos_contrato
-                            val cursor2 = database.query("PRAGMA table_info(aditivos_contrato)")
+                            val cursor2 = db.query("PRAGMA table_info(aditivos_contrato)")
                             val cols2 = mutableListOf<String>()
                             while (cursor2.moveToNext()) cols2.add(cursor2.getString(1))
                             cursor2.close()
                             if (!cols2.contains("tipo")) {
-                                database.execSQL("ALTER TABLE aditivos_contrato ADD COLUMN tipo TEXT NOT NULL DEFAULT 'INCLUSAO'")
+                                db.execSQL("ALTER TABLE aditivos_contrato ADD COLUMN tipo TEXT NOT NULL DEFAULT 'INCLUSAO'")
                             }
                         } catch (e: Exception) {
                             android.util.Log.w("Migration", "Erro na migration 28_29: ${e.message}")
@@ -780,35 +780,53 @@ abstract class AppDatabase : RoomDatabase() {
                 }
 
                 val MIGRATION_29_30 = object : androidx.room.migration.Migration(29, 30) {
-                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                         try {
-                            val cursor = database.query("PRAGMA table_info(contratos_locacao)")
+                            val cursor = db.query("PRAGMA table_info(contratos_locacao)")
                             val cols = mutableListOf<String>()
                             while (cursor.moveToNext()) cols.add(cursor.getString(1))
                             cursor.close()
                             if (!cols.contains("distratoAssinaturaLocador")) {
-                                database.execSQL("ALTER TABLE contratos_locacao ADD COLUMN distratoAssinaturaLocador TEXT")
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN distratoAssinaturaLocador TEXT")
                             }
                             if (!cols.contains("distratoAssinaturaLocatario")) {
-                                database.execSQL("ALTER TABLE contratos_locacao ADD COLUMN distratoAssinaturaLocatario TEXT")
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN distratoAssinaturaLocatario TEXT")
                             }
                             if (!cols.contains("distratoDataAssinatura")) {
-                                database.execSQL("ALTER TABLE contratos_locacao ADD COLUMN distratoDataAssinatura INTEGER")
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN distratoDataAssinatura INTEGER")
                             }
                         } catch (e: Exception) {
                             android.util.Log.w("Migration", "Erro na migration 29_30: ${e.message}")
                         }
                     }
                 }
-                
-                
+
+                // ✅ FASE 1: Migração para índices essenciais (baixo risco)
+                val MIGRATION_39_40 = object : androidx.room.migration.Migration(39, 40) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            android.util.Log.d("AppDatabase", "Migration 39→40: Criando índices essenciais para performance")
+                            
+                            // Criar índice para nome na tabela clientes (para ORDER BY nome)
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_clientes_nome ON clientes (nome)")
+                            
+                            // Criar índice para data_acerto na tabela acertos (para ORDER BY data_acerto)
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_acertos_data_acerto ON acertos (data_acerto)")
+                            
+                            android.util.Log.d("AppDatabase", "Migration 39→40: Índices essenciais criados com sucesso")
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 39_40: ${e.message}")
+                        }
+                    }
+                }
+
                 try {
                     val builder = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,
                         DATABASE_NAME
                     )
-                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
+                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_39_40)
                         .addCallback(object : RoomDatabase.Callback() {
                             override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                                 super.onOpen(db)

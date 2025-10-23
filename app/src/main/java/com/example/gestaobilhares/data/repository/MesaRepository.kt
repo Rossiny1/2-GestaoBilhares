@@ -82,7 +82,7 @@ class MesaRepository constructor(
     /**
      * ✅ NOVA FUNÇÃO: Busca contratos por cliente
      */
-    fun buscarContratosPorCliente(clienteId: Long): Flow<List<com.example.gestaobilhares.data.entities.ContratoLocacao>> {
+    fun buscarContratosPorCliente(_clienteId: Long): Flow<List<com.example.gestaobilhares.data.entities.ContratoLocacao>> {
         // Este método será implementado no AppRepository
         // Por enquanto, retorna um Flow vazio
         return kotlinx.coroutines.flow.flowOf(emptyList())

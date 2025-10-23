@@ -41,7 +41,7 @@ class CicloAcertoRepository constructor(
      * Busca ciclos por período
      */
     suspend fun buscarCiclosPorPeriodo(
-        rotaId: Long,
+        _rotaId: Long,
         dataInicio: Date,
         dataFim: Date
     ): List<CicloAcertoEntity> {

@@ -39,7 +39,9 @@ import java.util.Date
         // Novo: índices para rota e cicloId
         androidx.room.Index(value = ["rota_id"]),
         androidx.room.Index(value = ["ciclo_id"]),
-        androidx.room.Index(value = ["rota_id", "ciclo_id"]) // Índice composto para queries eficientes
+        androidx.room.Index(value = ["rota_id", "ciclo_id"]), // Índice composto para queries eficientes
+        // ✅ FASE 1: Índice essencial para ORDER BY data_acerto (baixo risco)
+        androidx.room.Index(value = ["data_acerto"])
     ]
 )
 data class Acerto(

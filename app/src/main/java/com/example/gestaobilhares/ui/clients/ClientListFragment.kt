@@ -63,7 +63,7 @@ class ClientListFragment : Fragment() {
         })
         
         // ✅ FASE 8C: Inicializar ViewModel com todos os repositórios necessários
-        val database = AppDatabase.getDatabase(requireContext())
+        val _database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = ClientListViewModel(appRepository)
         

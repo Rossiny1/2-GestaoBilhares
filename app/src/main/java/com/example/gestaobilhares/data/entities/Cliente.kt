@@ -22,7 +22,9 @@ import java.util.Date
         )
     ],
     indices = [
-        androidx.room.Index(value = ["rota_id"])
+        androidx.room.Index(value = ["rota_id"]),
+        // ✅ FASE 1: Índice essencial para queries por nome (baixo risco)
+        androidx.room.Index(value = ["nome"])
     ]
 )
 data class Cliente(

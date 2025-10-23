@@ -28,6 +28,43 @@
 - **Navegação Robusta**: OnBackPressedCallback e controle de stack
 - **Centralização**: AppRepository como único ponto de acesso
 
+### **Estratégia de Otimização de Banco (2025)**
+
+- **Incremental**: Uma melhoria por vez, testada individualmente
+- **Baixo Risco Primeiro**: Índices essenciais antes de queries complexas
+- **Validação Contínua**: Build e teste após cada mudança
+- **Preparação para Sync**: Estrutura pronta para sincronização online
+- **Performance First**: Otimizações antes da implementação online
+
+### **Planejamento de Implementação Online/Sync**
+
+**CRÍTICO**: Melhorias de banco devem ser feitas ANTES da implementação online:
+
+1. **Fase 6: Otimização de Banco (EM ANDAMENTO)**
+   - Índices essenciais (baixo risco)
+   - Queries otimizadas (médio risco)
+   - Estrutura para sync (alto risco)
+   - Testes incrementais
+
+2. **Fase 7: Implementação Online/Sync (FUTURO)**
+   - API endpoints
+   - Sincronização offline-first
+   - Resolução de conflitos
+   - Testes de cenários complexos
+
+3. **Fase 8: Otimizações Avançadas (FUTURO)**
+   - Performance avançada
+   - Material Design 3
+   - Testes automatizados
+
+**Benefícios desta abordagem:**
+
+- ✅ Menos complexidade na implementação do sync
+- ✅ Melhor performance durante sincronização
+- ✅ Estrutura preparada para dados online
+- ✅ Menos bugs e problemas futuros
+- ✅ Manutenção mais fácil
+
 ### **Responsabilidades do Usuário**
 
 - **Builds**: Usuário executa todos os builds e geração de APK

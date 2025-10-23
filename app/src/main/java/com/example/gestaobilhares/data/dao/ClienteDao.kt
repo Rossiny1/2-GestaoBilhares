@@ -66,4 +66,5 @@ interface ClienteDao {
         WHERE c.id = :clienteId
     """)
     suspend fun obterClienteComDebitoAtual(clienteId: Long): Cliente?
+
 } 

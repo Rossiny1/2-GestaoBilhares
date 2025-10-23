@@ -66,7 +66,7 @@ class CycleProgressDialog(
 
         // Período do ciclo
         val periodo = if (cicloAtivo != null) {
-            if (cicloAtivo.dataFim != null) {
+            if (true) { // cicloAtivo.dataFim is always non-null
                 "${dateFormatter.format(cicloAtivo.dataInicio)} - ${dateFormatter.format(cicloAtivo.dataFim)}"
             } else {
                 "Iniciado em ${dateFormatter.format(cicloAtivo.dataInicio)}"
