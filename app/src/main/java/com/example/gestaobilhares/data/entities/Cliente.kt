@@ -123,7 +123,12 @@ data class ClienteResumo(
     val ultimoAcerto: java.util.Date?,
     val diasSemAcerto: Int,
     val statusDebito: StatusDebito,
-    val statusAcerto: StatusAcertoCliente
+    val statusAcerto: StatusAcertoCliente,
+    
+    // ✅ FASE 3A: Campos de sincronização (opcionais para compatibilidade)
+    val syncTimestamp: Long = System.currentTimeMillis(),
+    val syncVersion: Int = 1,
+    val syncStatus: SyncStatus = SyncStatus.PENDING
 )
 
 /**
@@ -134,6 +139,17 @@ enum class StatusDebito {
     DEBITO_BAIXO,  // Débito entre R$ 50 e R$ 200
     DEBITO_ALTO,   // Débito > R$ 200
     CLIENTE_DEVEDOR // Débito muito alto > R$ 500
+}
+
+/**
+ * ✅ FASE 3A: Enum para status de sincronização
+ */
+enum class SyncStatus {
+    PENDING,    // Aguardando sincronização
+    SYNCING,    // Sendo sincronizado
+    SYNCED,     // Sincronizado com sucesso
+    ERROR,      // Erro na sincronização
+    CONFLICT    // Conflito de dados
 }
 
 /**
