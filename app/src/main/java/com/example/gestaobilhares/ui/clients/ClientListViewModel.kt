@@ -11,6 +11,7 @@ import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.data.entities.Despesa
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.AppLogger
+import com.example.gestaobilhares.utils.PaginationManager
 import android.util.Log
 import com.example.gestaobilhares.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.Calendar
 import java.util.Date
 import kotlinx.coroutines.flow.flatMapLatest
@@ -42,6 +44,9 @@ enum class FiltroCliente {
 class ClientListViewModel constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
+    
+    // ✅ FASE 4B: Pagination Manager para lazy loading
+    private val paginationManager = PaginationManager<Cliente>(pageSize = 20, preloadThreshold = 5)
 
     private val _rotaInfo = MutableStateFlow<Rota?>(null)
     val rotaInfo: StateFlow<Rota?> = _rotaInfo.asStateFlow()
@@ -1050,6 +1055,82 @@ class ClientListViewModel constructor(
     }
 
     // Funções obsoletas removidas - card de progresso agora é totalmente reativo
+    
+    // ==================== FASE 4B: LAZY LOADING ====================
+    
+    /**
+     * ✅ FASE 4B: Carregar clientes com lazy loading
+     */
+    fun carregarClientesComLazyLoading(rotaId: Long) {
+        viewModelScope.launch {
+            try {
+                showLoading()
+                
+                // Configurar callback de carregamento
+                paginationManager.setLoadDataCallback { offset, limit ->
+                    runBlocking {
+                        appRepository.buscarClientesPorRotaComCache(rotaId).first()
+                            .drop(offset)
+                            .take(limit)
+                    }
+                }
+                
+                // Carregar página inicial
+                val initialData = paginationManager.loadInitialPage()
+                _clientesTodos.value = initialData
+                
+                Log.d("ClientListViewModel", "✅ Lazy loading: ${initialData.size} clientes carregados")
+                
+            } catch (e: Exception) {
+                Log.e("ClientListViewModel", "❌ Erro no lazy loading: ${e.message}")
+                showError("Erro ao carregar clientes: ${e.message}", e)
+            } finally {
+                hideLoading()
+            }
+        }
+    }
+    
+    /**
+     * ✅ FASE 4B: Carregar próxima página
+     */
+    fun carregarProximaPagina() {
+        viewModelScope.launch {
+            try {
+                if (paginationManager.hasMoreData.value && !paginationManager.isLoading.value) {
+                    val nextPageData = paginationManager.loadNextPage()
+                    val currentData = _clientesTodos.value.toMutableList()
+                    currentData.addAll(nextPageData)
+                    _clientesTodos.value = currentData
+                    
+                    Log.d("ClientListViewModel", "✅ Próxima página carregada: ${nextPageData.size} clientes")
+                }
+            } catch (e: Exception) {
+                Log.e("ClientListViewModel", "❌ Erro ao carregar próxima página: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * ✅ FASE 4B: Obter estatísticas de paginação
+     */
+    fun obterEstatisticasPaginacao(): String {
+        return paginationManager.getStats()
+    }
+    
+    /**
+     * ✅ FASE 4B: Verificar se deve pré-carregar
+     */
+    fun devePrecarregarProximaPagina(posicaoAtual: Int): Boolean {
+        return paginationManager.shouldPreloadNextPage(posicaoAtual)
+    }
+    
+    /**
+     * ✅ FASE 4B: Limpar cache de paginação
+     */
+    fun limparCachePaginacao() {
+        paginationManager.clearCache()
+        Log.d("ClientListViewModel", "🧹 Cache de paginação limpo")
+    }
 } 
 
 // Data class para o card de progresso do ciclo
@@ -1068,5 +1149,5 @@ data class CicloProgressoCard(
 data class DadosRotaReais(
     val totalClientes: Int,
     val totalMesas: Int
-) 
+)
 
