@@ -34,6 +34,7 @@ interface ClienteDao {
         WHERE c.rota_id = :rotaId 
         ORDER BY c.nome ASC
     """)
+    @RewriteQueriesToDropUnusedColumns
     fun obterClientesPorRotaComDebitoAtual(rotaId: Long): Flow<List<Cliente>>
 
     @Insert

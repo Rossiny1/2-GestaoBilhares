@@ -59,12 +59,15 @@
 - 🔄 Estrutura preparada para sincronização
 - 🔄 Campos de versionamento para conflitos
 
-**Fase 7: Implementação Online/Sync (FUTURO)**
+**Fase 7: Implementação Online/Sync (PLANEJADA)**
 
-- 🔄 API endpoints para sincronização
-- 🔄 Resolução de conflitos de dados
-- 🔄 Sincronização offline-first
-- 🔄 Testes de cenários complexos
+- ⏳ Configuração Firestore com regras de segurança
+- ⏳ Sincronização offline-first com cache local
+- ⏳ Resolução de conflitos por timestamp
+- ⏳ Estrutura hierárquica /empresas/{empresaId}/dados/
+- ⏳ Integração com Firebase Auth existente
+- ⏳ Batch operations e real-time listeners
+- ⏳ Cache ilimitado para funcionamento offline
 
 ### **Relacionamentos**
 
