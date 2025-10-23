@@ -122,7 +122,17 @@ data class Acerto(
     val rotaId: Long? = null,
     
     @ColumnInfo(name = "ciclo_id")
-    val cicloId: Long? = null
+    val cicloId: Long? = null,
+    
+    // ✅ FASE 3A: Campos de sincronização (opcionais para compatibilidade)
+    @ColumnInfo(name = "sync_timestamp")
+    val syncTimestamp: Long = System.currentTimeMillis(),
+    
+    @ColumnInfo(name = "sync_version")
+    val syncVersion: Int = 1,
+    
+    @ColumnInfo(name = "sync_status")
+    val syncStatus: com.example.gestaobilhares.data.entities.SyncStatus = com.example.gestaobilhares.data.entities.SyncStatus.PENDING
 )
 
 /**

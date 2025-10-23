@@ -28,6 +28,10 @@ class AppRepository constructor(
     private val clienteDao: ClienteDao,
     private val acertoDao: AcertoDao,
     private val mesaDao: MesaDao,
+    // ✅ FASE 3C: DAOs de sincronização
+    private val syncLogDao: SyncLogDao,
+    private val syncQueueDao: SyncQueueDao,
+    private val syncConfigDao: SyncConfigDao,
     private val rotaDao: RotaDao,
     private val despesaDao: DespesaDao,
     private val colaboradorDao: ColaboradorDao,
@@ -118,6 +122,29 @@ class AppRepository constructor(
         return try {
             val id = clienteDao.inserir(cliente)
             logDbInsertSuccess("CLIENTE", "Nome=${cliente.nome}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "nome": "${cliente.nome}",
+                        "telefone": "${cliente.telefone}",
+                        "endereco": "${cliente.endereco}",
+                        "rotaId": ${cliente.rotaId},
+                        "ativo": ${cliente.ativo},
+                        "dataCadastro": "${cliente.dataCadastro}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Cliente", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("Cliente", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar cliente à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
             id
         } catch (e: Exception) {
             logDbInsertError("CLIENTE", "Nome=${cliente.nome}", e)
@@ -167,6 +194,30 @@ class AppRepository constructor(
         return try {
             val id = acertoDao.inserir(acerto)
             logDbInsertSuccess("ACERTO", "ClienteID=${acerto.clienteId}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "clienteId": ${acerto.clienteId},
+                        "rotaId": ${acerto.rotaId},
+                        "valorRecebido": ${acerto.valorRecebido},
+                        "debitoAtual": ${acerto.debitoAtual},
+                        "dataAcerto": "${acerto.dataAcerto}",
+                        "observacoes": "${acerto.observacoes}",
+                        "metodosPagamentoJson": "${acerto.metodosPagamentoJson}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Acerto", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("Acerto", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar acerto à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
             id
         } catch (e: Exception) {
             logDbInsertError("ACERTO", "ClienteID=${acerto.clienteId}", e)
@@ -1426,6 +1477,131 @@ class AppRepository constructor(
     suspend fun buscarAcertoMesasPorAcerto(acertoId: Long) = acertoMesaDao.buscarPorAcerto(acertoId)
     suspend fun buscarContratoAtivoPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratoAtivoPorCliente(clienteId)
     suspend fun inserirHistoricoManutencaoMesa(historico: HistoricoManutencaoMesa): Long = historicoManutencaoMesaDao.inserir(historico)
+
+    // ========================================
+    // ✅ FASE 3C: MÉTODOS DE SINCRONIZAÇÃO
+    // ========================================
+
+    /**
+     * Adicionar operação à fila de sincronização
+     */
+    suspend fun adicionarOperacaoSync(
+        entityType: String,
+        entityId: Long,
+        operation: String,
+        payload: String,
+        priority: Int = 0
+    ) {
+        try {
+            val syncQueue = SyncQueue(
+                entityType = entityType,
+                entityId = entityId,
+                operation = operation,
+                payload = payload,
+                createdAt = java.util.Date(),
+                scheduledFor = java.util.Date(),
+                retryCount = 0,
+                status = "PENDING",
+                priority = priority
+            )
+            
+            syncQueueDao.inserirSyncQueue(syncQueue)
+            Log.d("AppRepository", "Operação adicionada à fila: $entityType:$entityId")
+            
+        } catch (e: Exception) {
+            Log.e("AppRepository", "Erro ao adicionar à fila: ${e.message}")
+        }
+    }
+
+    /**
+     * Log de operação de sincronização
+     */
+    suspend fun logarOperacaoSync(
+        entityType: String,
+        entityId: Long,
+        operation: String,
+        status: String,
+        errorMessage: String? = null,
+        payload: String? = null
+    ) {
+        try {
+            val syncLog = SyncLog(
+                entityType = entityType,
+                entityId = entityId,
+                operation = operation,
+                syncStatus = status,
+                timestamp = java.util.Date(),
+                errorMessage = errorMessage,
+                payload = payload
+            )
+            
+            syncLogDao.inserirSyncLog(syncLog)
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao logar operação: ${e.message}")
+        }
+    }
+
+    /**
+     * Obter operações pendentes de sincronização
+     */
+    fun obterOperacoesPendentes(): Flow<List<SyncQueue>> {
+        return syncQueueDao.buscarOperacoesPorStatus("PENDING")
+    }
+
+    /**
+     * Contar operações pendentes
+     */
+    suspend fun contarOperacoesPendentes(): Int {
+        return syncQueueDao.contarOperacoesPendentes()
+    }
+
+    /**
+     * Obter logs de sincronização
+     */
+    fun obterLogsSync(limite: Int = 100): Flow<List<SyncLog>> {
+        return syncLogDao.buscarTodosSyncLogs(limite)
+    }
+
+    /**
+     * Inicializar configurações de sincronização
+     */
+    suspend fun inicializarConfiguracoesSync() {
+        try {
+            syncConfigDao.inicializarConfiguracoesPadrao(System.currentTimeMillis())
+            Log.d("AppRepository", "Configurações de sincronização inicializadas")
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao inicializar configurações: ${e.message}")
+        }
+    }
+
+    /**
+     * Marcar entidade como sincronizada
+     */
+    suspend fun marcarEntidadeSincronizada(entityType: String, entityId: Long) {
+        try {
+            val currentTime = System.currentTimeMillis()
+            val configKey = "last_sync_timestamp_${entityType.lowercase()}"
+            syncConfigDao.atualizarUltimoTimestampSync(configKey, currentTime.toString(), currentTime)
+            Log.d("AppRepository", "Entidade $entityType:$entityId marcada como sincronizada")
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao marcar entidade como sincronizada: ${e.message}")
+        }
+    }
+
+    /**
+     * Limpar logs antigos
+     */
+    suspend fun limparLogsAntigos() {
+        try {
+            val cutoffTime = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000) // 7 dias
+            val deletedLogs = syncLogDao.deletarSyncLogsAntigos(cutoffTime)
+            val deletedQueue = syncQueueDao.limparOperacoesConcluidas(cutoffTime)
+            
+            Log.d("AppRepository", "Limpeza: $deletedLogs logs, $deletedQueue operações removidas")
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro na limpeza: ${e.message}")
+        }
+    }
 } 
 
 

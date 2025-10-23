@@ -46,9 +46,12 @@ import java.util.Date
         HistoricoManutencaoVeiculo::class, // ✅ NOVO: HISTÓRICO DE MANUTENÇÃO DE VEÍCULOS
         HistoricoCombustivelVeiculo::class, // ✅ NOVO: HISTÓRICO DE COMBUSTÍVEL DE VEÍCULOS
         PanoMesa::class, // ✅ NOVO: VINCULAÇÃO PANO-MESA
-        com.example.gestaobilhares.data.entities.StockItem::class // ✅ NOVO: ITENS GENÉRICOS DO ESTOQUE
+        com.example.gestaobilhares.data.entities.StockItem::class, // ✅ NOVO: ITENS GENÉRICOS DO ESTOQUE
+        SyncLog::class, // ✅ FASE 3B: LOG DE SINCRONIZAÇÃO
+        SyncQueue::class, // ✅ FASE 3B: FILA DE SINCRONIZAÇÃO
+        SyncConfig::class // ✅ FASE 3B: CONFIGURAÇÕES DE SINCRONIZAÇÃO
     ],
-    version = 41, // ✅ FASE 2A: Query otimizada com índice composto
+    version = 43, // ✅ FASE 3B: Entidades de sincronização adicionadas
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -176,6 +179,11 @@ abstract class AppDatabase : RoomDatabase() {
     
     // ✅ NOVO: DAO de itens genéricos do estoque
     abstract fun stockItemDao(): com.example.gestaobilhares.data.dao.StockItemDao
+    
+    // ✅ FASE 3B: DAOs de sincronização
+    abstract fun syncLogDao(): com.example.gestaobilhares.data.dao.SyncLogDao
+    abstract fun syncQueueDao(): com.example.gestaobilhares.data.dao.SyncQueueDao
+    abstract fun syncConfigDao(): com.example.gestaobilhares.data.dao.SyncConfigDao
 
     companion object {
         
@@ -838,13 +846,114 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
+                /**
+                 * ✅ FASE 3A: Migração para campos de sincronização
+                 */
+                val MIGRATION_41_42 = object : androidx.room.migration.Migration(41, 42) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            android.util.Log.d("AppDatabase", "Migration 41→42: Adicionando campos de sincronização")
+                            
+                            // Adicionar campos de sincronização na tabela clientes
+                            db.execSQL("ALTER TABLE clientes ADD COLUMN sync_timestamp INTEGER NOT NULL DEFAULT 0")
+                            db.execSQL("ALTER TABLE clientes ADD COLUMN sync_version INTEGER NOT NULL DEFAULT 1")
+                            db.execSQL("ALTER TABLE clientes ADD COLUMN sync_status TEXT NOT NULL DEFAULT 'PENDING'")
+                            
+                            // Adicionar campos de sincronização na tabela acertos
+                            db.execSQL("ALTER TABLE acertos ADD COLUMN sync_timestamp INTEGER NOT NULL DEFAULT 0")
+                            db.execSQL("ALTER TABLE acertos ADD COLUMN sync_version INTEGER NOT NULL DEFAULT 1")
+                            db.execSQL("ALTER TABLE acertos ADD COLUMN sync_status TEXT NOT NULL DEFAULT 'PENDING'")
+                            
+                            // Atualizar timestamps existentes
+                            val currentTime = System.currentTimeMillis()
+                            db.execSQL("UPDATE clientes SET sync_timestamp = $currentTime WHERE sync_timestamp = 0")
+                            db.execSQL("UPDATE acertos SET sync_timestamp = $currentTime WHERE sync_timestamp = 0")
+                            
+                            android.util.Log.d("AppDatabase", "Migration 41→42: Campos de sincronização adicionados com sucesso")
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 41_42: ${e.message}")
+                        }
+                    }
+                }
+
+                /**
+                 * ✅ FASE 3B: Migração para entidades de sincronização
+                 */
+                val MIGRATION_42_43 = object : androidx.room.migration.Migration(42, 43) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            android.util.Log.d("AppDatabase", "Migration 42→43: Criando entidades de sincronização")
+                            
+                            // Criar tabela sync_logs
+                            db.execSQL("""
+                                CREATE TABLE IF NOT EXISTS sync_logs (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    entity_type TEXT NOT NULL,
+                                    entity_id INTEGER NOT NULL,
+                                    operation TEXT NOT NULL,
+                                    timestamp INTEGER NOT NULL,
+                                    sync_status TEXT NOT NULL,
+                                    error_message TEXT,
+                                    payload TEXT
+                                )
+                            """)
+                            
+                            // Criar índices para sync_logs
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_logs_entity_type_entity_id ON sync_logs (entity_type, entity_id)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_logs_sync_status ON sync_logs (sync_status)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_logs_timestamp ON sync_logs (timestamp)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_logs_operation ON sync_logs (operation)")
+                            
+                            // Criar tabela sync_queue
+                            db.execSQL("""
+                                CREATE TABLE IF NOT EXISTS sync_queue (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    entity_type TEXT NOT NULL,
+                                    entity_id INTEGER NOT NULL,
+                                    operation TEXT NOT NULL,
+                                    payload TEXT NOT NULL,
+                                    created_at INTEGER NOT NULL,
+                                    scheduled_for INTEGER NOT NULL,
+                                    retry_count INTEGER NOT NULL DEFAULT 0,
+                                    status TEXT NOT NULL DEFAULT 'PENDING',
+                                    priority INTEGER NOT NULL DEFAULT 0
+                                )
+                            """)
+                            
+                            // Criar índices para sync_queue
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_queue_status_priority ON sync_queue (status, priority)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_queue_entity_type_entity_id ON sync_queue (entity_type, entity_id)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_queue_scheduled_for ON sync_queue (scheduled_for)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_queue_created_at ON sync_queue (created_at)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_queue_retry_count ON sync_queue (retry_count)")
+                            
+                            // Criar tabela sync_config
+                            db.execSQL("""
+                                CREATE TABLE IF NOT EXISTS sync_config (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    key TEXT NOT NULL,
+                                    value TEXT NOT NULL,
+                                    last_updated INTEGER NOT NULL
+                                )
+                            """)
+                            
+                            // Criar índice único para sync_config
+                            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_sync_config_key ON sync_config (key)")
+                            
+                            android.util.Log.d("AppDatabase", "Migration 42→43: Entidades de sincronização criadas com sucesso")
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 42_43: ${e.message}")
+                        }
+                    }
+                }
+
                 try {
                     val builder = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,
                         DATABASE_NAME
                     )
-                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_39_40, MIGRATION_40_41)
+                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_39_40, MIGRATION_40_41, MIGRATION_41_42, MIGRATION_42_43)
                         .addCallback(object : RoomDatabase.Callback() {
                             override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                                 super.onOpen(db)

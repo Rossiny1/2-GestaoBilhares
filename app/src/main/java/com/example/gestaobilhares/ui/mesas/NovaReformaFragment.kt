@@ -122,26 +122,7 @@ class NovaReformaFragment : Fragment() {
         
         // ✅ CORREÇÃO: Inicializar ViewModels manualmente
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = AppRepository(
-            database.clienteDao(),
-            database.acertoDao(),
-            database.mesaDao(),
-            database.rotaDao(),
-            database.despesaDao(),
-            database.colaboradorDao(),
-            database.cicloAcertoDao(),
-            database.acertoMesaDao(),
-            database.contratoLocacaoDao(),
-            database.aditivoContratoDao(),
-            database.assinaturaRepresentanteLegalDao(),
-            database.logAuditoriaAssinaturaDao(),
-            database.panoEstoqueDao(),
-            database.categoriaDespesaDao(),
-            database.tipoDespesaDao(),
-            database.historicoManutencaoVeiculoDao(),
-            database.historicoCombustivelVeiculoDao(),
-            database.historicoManutencaoMesaDao()
-        )
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         val mesaReformadaRepository = MesaReformadaRepository(database.mesaReformadaDao())
         val panoEstoqueRepository = PanoEstoqueRepository(database.panoEstoqueDao())
         val historicoManutencaoRepository = HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao())

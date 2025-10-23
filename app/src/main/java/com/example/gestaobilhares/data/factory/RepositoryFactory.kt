@@ -38,6 +38,10 @@ object RepositoryFactory {
             clienteDao = database.clienteDao(),
             acertoDao = database.acertoDao(),
             mesaDao = database.mesaDao(),
+            // ✅ FASE 3C: DAOs de sincronização
+            syncLogDao = database.syncLogDao(),
+            syncQueueDao = database.syncQueueDao(),
+            syncConfigDao = database.syncConfigDao(),
             rotaDao = database.rotaDao(),
             despesaDao = database.despesaDao(),
             colaboradorDao = database.colaboradorDao(),
