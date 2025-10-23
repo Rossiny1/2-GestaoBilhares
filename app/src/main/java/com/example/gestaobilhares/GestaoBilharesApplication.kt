@@ -1,6 +1,7 @@
 package com.example.gestaobilhares
 
 import android.app.Application
+import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.google.firebase.FirebaseApp
 import timber.log.Timber
 
@@ -29,6 +30,17 @@ class GestaoBilharesApplication : Application() {
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
+        
+        // ✅ FASE 4C: Inicializar workers em background (centralizado)
+        try {
+            val appRepository = RepositoryFactory.getAppRepository(this)
+            appRepository.inicializarWorkersPeriodicos()
+            Timber.d("Workers de background inicializados com sucesso")
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao inicializar workers: ${e.message}")
+            // Continuar mesmo se workers falharem
+        }
+        
         Timber.d("Aplicacao iniciada com sucesso")
     }
 } 

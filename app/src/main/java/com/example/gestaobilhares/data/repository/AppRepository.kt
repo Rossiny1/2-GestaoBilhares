@@ -14,6 +14,13 @@ import android.util.Log
 import com.example.gestaobilhares.BuildConfig
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
+// ✅ FASE 4C: WorkManager para processamento em background
+import androidx.work.*
+import android.content.Context
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.example.gestaobilhares.workers.SyncWorker
+import com.example.gestaobilhares.workers.CleanupWorker
 // ✅ REMOVIDO: Hilt não é mais usado
 
 /**
@@ -33,6 +40,8 @@ class AppRepository constructor(
     private val syncLogDao: SyncLogDao,
     private val syncQueueDao: SyncQueueDao,
     private val syncConfigDao: SyncConfigDao,
+    // ✅ FASE 4C: WorkManager para processamento em background
+    private val context: Context,
     private val rotaDao: RotaDao,
     private val despesaDao: DespesaDao,
     private val colaboradorDao: ColaboradorDao,
@@ -1713,6 +1722,134 @@ class AppRepository constructor(
         cacheManager.clear()
         Log.d("AppRepository", "Cache limpo completamente")
     }
+    
+    // ==================== FASE 4C: WORKMANAGER CENTRALIZADO ====================
+    
+    /**
+     * ✅ FASE 4C: Inicializar workers periódicos
+     * Centralizado no AppRepository seguindo padrão de simplificação
+     */
+    fun inicializarWorkersPeriodicos() {
+        val workManager = WorkManager.getInstance(context)
+        
+        // Worker de sincronização - a cada 15 minutos (Android 2025 best practice)
+        agendarSyncWorker(workManager)
+        
+        // Worker de limpeza - diariamente às 2:00
+        agendarCleanupWorker(workManager)
+        
+        Log.d("AppRepository", "Workers periódicos inicializados")
+    }
+    
+    /**
+     * ✅ FASE 4C: Agendar worker de sincronização
+     */
+    private fun agendarSyncWorker(workManager: WorkManager) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiresBatteryNotLow(true)
+            .build()
+        
+        val syncWork = PeriodicWorkRequestBuilder<SyncWorker>(
+            15, TimeUnit.MINUTES,
+            5, TimeUnit.MINUTES
+        )
+            .setConstraints(constraints)
+            .setBackoffCriteria(
+                BackoffPolicy.EXPONENTIAL,
+                WorkRequest.MIN_BACKOFF_MILLIS,
+                TimeUnit.MILLISECONDS
+            )
+            .addTag("sync")
+            .build()
+        
+        workManager.enqueueUniquePeriodicWork(
+            "sync_work",
+            ExistingPeriodicWorkPolicy.KEEP,
+            syncWork
+        )
+        
+        Log.d("AppRepository", "Worker de sincronização agendado")
+    }
+    
+    /**
+     * ✅ FASE 4C: Agendar worker de limpeza
+     */
+    private fun agendarCleanupWorker(workManager: WorkManager) {
+        val constraints = Constraints.Builder()
+            .setRequiresBatteryNotLow(true)
+            .setRequiresDeviceIdle(true)
+            .build()
+        
+        val cleanupWork = PeriodicWorkRequestBuilder<CleanupWorker>(
+            1, TimeUnit.DAYS
+        )
+            .setConstraints(constraints)
+            .setInitialDelay(calcularDelayAte2AM(), TimeUnit.MILLISECONDS)
+            .addTag("cleanup")
+            .build()
+        
+        workManager.enqueueUniquePeriodicWork(
+            "cleanup_work",
+            ExistingPeriodicWorkPolicy.KEEP,
+            cleanupWork
+        )
+        
+        Log.d("AppRepository", "Worker de limpeza agendado")
+    }
+    
+    /**
+     * ✅ FASE 4C: Executar sincronização imediata
+     */
+    fun executarSyncImediata() {
+        val workManager = WorkManager.getInstance(context)
+        
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        
+        val immediateSyncWork = OneTimeWorkRequestBuilder<SyncWorker>()
+            .setConstraints(constraints)
+            .addTag("immediate_sync")
+            .build()
+        
+        workManager.enqueue(immediateSyncWork)
+        
+        Log.d("AppRepository", "Sincronização imediata agendada")
+    }
+    
+    /**
+     * ✅ FASE 4C: Executar limpeza imediata
+     */
+    fun executarLimpezaImediata() {
+        val workManager = WorkManager.getInstance(context)
+        
+        val immediateCleanupWork = OneTimeWorkRequestBuilder<CleanupWorker>()
+            .addTag("immediate_cleanup")
+            .build()
+        
+        workManager.enqueue(immediateCleanupWork)
+        
+        Log.d("AppRepository", "Limpeza imediata agendada")
+    }
+    
+    /**
+     * ✅ FASE 4C: Calcular delay até 2:00 AM
+     */
+    private fun calcularDelayAte2AM(): Long {
+        val now = System.currentTimeMillis()
+        val calendar = java.util.Calendar.getInstance()
+        
+        // Próxima 2:00 AM
+        calendar.add(java.util.Calendar.DAY_OF_MONTH, 1)
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 2)
+        calendar.set(java.util.Calendar.MINUTE, 0)
+        calendar.set(java.util.Calendar.SECOND, 0)
+        calendar.set(java.util.Calendar.MILLISECOND, 0)
+        
+        return calendar.timeInMillis - now
+    }
+    
 } 
 
 

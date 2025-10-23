@@ -77,6 +77,9 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     // ✅ CORREÇÃO: KSP para Room (compatível com Java 11+)
     ksp("androidx.room:room-compiler:2.6.1")
+    
+    // ✅ FASE 4C: WorkManager para processamento em background (Android 2025)
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
     implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
