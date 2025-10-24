@@ -36,6 +36,11 @@ import com.example.gestaobilhares.network.BatchOperationsManager
 import com.example.gestaobilhares.network.RetryLogicManager
 import com.example.gestaobilhares.network.NetworkCacheManager
 import kotlinx.coroutines.Deferred
+// ✅ FASE 4D: Otimizações Avançadas de Banco
+import com.example.gestaobilhares.database.DatabaseConnectionPool
+import com.example.gestaobilhares.database.QueryOptimizationManager
+import com.example.gestaobilhares.database.DatabasePerformanceTuner
+import com.example.gestaobilhares.database.TransactionOptimizationManager
 // ✅ REMOVIDO: Hilt não é mais usado
 
 /**
@@ -92,6 +97,12 @@ class AppRepository constructor(
     private val batchOperationsManager = BatchOperationsManager.getInstance()
     private val retryLogicManager = RetryLogicManager.getInstance()
     private val networkCacheManager = NetworkCacheManager.getInstance()
+    
+    // ✅ FASE 4D: Otimizações Avançadas de Banco
+    private val connectionPool = DatabaseConnectionPool.getInstance()
+    private val queryOptimizer = QueryOptimizationManager.getInstance()
+    private val performanceTuner = DatabasePerformanceTuner.getInstance()
+    private val transactionOptimizer = TransactionOptimizationManager.getInstance()
     
     // ==================== CATEGORIAS E TIPOS DE DESPESA ====================
     fun buscarCategoriasAtivas() = categoriaDespesaDao.buscarAtivas()
@@ -2189,6 +2200,135 @@ class AppRepository constructor(
         retryLogicManager.clearStats()
         networkCacheManager.clear()
         Log.d("AppRepository", "🌐 Todas as otimizações de rede limpas")
+    }
+    
+    /**
+     * ✅ FASE 4D: Otimizações Avançadas de Banco de Dados
+     */
+    
+    /**
+     * Inicializa pool de conexões do banco
+     */
+    fun inicializarPoolConexoes(database: androidx.room.RoomDatabase, tamanhoPool: Int = 10) {
+        connectionPool.initialize(database, tamanhoPool)
+        Log.d("AppRepository", "Pool de conexões inicializado com $tamanhoPool conexões")
+    }
+    
+    /**
+     * Executa operação com conexão otimizada
+     */
+    suspend fun <T> executarComConexaoOtimizada(operacao: suspend (DatabaseConnectionPool.PooledConnection) -> T): T? {
+        return connectionPool.executeWithConnection(operacao)
+    }
+    
+    /**
+     * Obtém estatísticas do pool de conexões
+     */
+    fun obterEstatisticasPoolConexoes(): DatabaseConnectionPool.ConnectionPoolStats {
+        return connectionPool.getPoolStats()
+    }
+    
+    /**
+     * Otimiza query SQL
+     */
+    fun otimizarQuery(query: String, parametros: Map<String, Any> = emptyMap()): QueryOptimizationManager.OptimizedQuery {
+        return queryOptimizer.optimizeQuery(query, parametros)
+    }
+    
+    /**
+     * Registra execução de query
+     */
+    fun registrarExecucaoQuery(query: String, tempoExecucao: Long) {
+        queryOptimizer.recordQueryExecution(query, tempoExecucao)
+    }
+    
+    /**
+     * Obtém estatísticas de otimização de queries
+     */
+    fun obterEstatisticasOtimizacaoQueries(): QueryOptimizationManager.QueryOptimizationStats {
+        return queryOptimizer.getOptimizationStats()
+    }
+    
+    /**
+     * Aplica otimizações de performance ao banco
+     */
+    fun otimizarPerformanceBanco(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+        performanceTuner.optimizeDatabase(database)
+        Log.d("AppRepository", "Otimizações de performance aplicadas ao banco")
+    }
+    
+    /**
+     * Configura nível de performance do banco
+     */
+    fun configurarNivelPerformance(level: DatabasePerformanceTuner.PerformanceLevel) {
+        performanceTuner.setPerformanceLevel(level)
+    }
+    
+    /**
+     * Executa análise e otimização automática
+     */
+    fun executarOtimizacaoAutomatica(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+        performanceTuner.performAutoOptimization(database)
+    }
+    
+    /**
+     * Obtém análise de performance do banco
+     */
+    fun obterAnalisePerformance(): DatabasePerformanceTuner.PerformanceAnalysis {
+        return performanceTuner.analyzePerformance()
+    }
+    
+    /**
+     * Executa transação otimizada
+     */
+    suspend fun executarTransacaoOtimizada(
+        operacao: suspend (androidx.sqlite.db.SupportSQLiteDatabase) -> Unit,
+        descricao: String = "Transação"
+    ): TransactionOptimizationManager.TransactionResult {
+        return transactionOptimizer.executeTransaction(operacao, descricao)
+    }
+    
+    /**
+     * Força execução de transações pendentes
+     */
+    suspend fun executarTransacoesPendentes(database: androidx.sqlite.db.SupportSQLiteDatabase): TransactionOptimizationManager.BatchResult {
+        return transactionOptimizer.flushPendingTransactions(database)
+    }
+    
+    /**
+     * Configura parâmetros de batch de transações
+     */
+    fun configurarBatchTransacoes(
+        tamanhoBatch: Int = 100,
+        timeoutBatch: Long = 5000L,
+        habilitarBatch: Boolean = true
+    ) {
+        transactionOptimizer.configureBatch(tamanhoBatch, timeoutBatch, habilitarBatch)
+    }
+    
+    /**
+     * Obtém estatísticas de transações
+     */
+    fun obterEstatisticasTransacoes(): TransactionOptimizationManager.TransactionStats {
+        return transactionOptimizer.getTransactionStats()
+    }
+    
+    /**
+     * Cancela transações pendentes
+     */
+    fun cancelarTransacoesPendentes() {
+        transactionOptimizer.cancelPendingTransactions()
+    }
+    
+    /**
+     * Limpa todas as otimizações de banco
+     */
+    fun limparTodasOtimizacoesBanco() {
+        connectionPool.clearPool()
+        queryOptimizer.clearQueryCache()
+        transactionOptimizer.cancelPendingTransactions()
+        performanceTuner.resetStats()
+        Log.d("AppRepository", "Todas as otimizações de banco foram limpas")
     }
     
 } 
