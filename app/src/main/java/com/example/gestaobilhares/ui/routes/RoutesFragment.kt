@@ -444,6 +444,11 @@ class RoutesFragment : Fragment() {
             binding.transferButton.setOnClickListener {
                 showTransferClientDialog()
             }
+
+            // Botão de sincronização
+            binding.syncButton.setOnClickListener {
+                performManualSync()
+            }
         } catch (e: Exception) {
             Log.e("LOG_CRASH", "RoutesFragment.setupClickListeners - ERRO: ${e.message}", e)
         }
@@ -565,6 +570,79 @@ class RoutesFragment : Fragment() {
             viewModel.refresh()
         }
         dialog.show(parentFragmentManager, "TransferClientDialog")
+    }
+
+    /**
+     * Executa sincronização manual dos dados com o Firestore.
+     * Mostra feedback visual e status da operação.
+     */
+    private fun performManualSync() {
+        try {
+            Log.d("RoutesFragment", "🔄 Iniciando sincronização manual")
+            
+            // Verificar se há usuário autenticado
+            val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+            if (currentUser == null) {
+                Toast.makeText(requireContext(), "⚠️ Faça login para sincronizar dados", Toast.LENGTH_LONG).show()
+                return
+            }
+
+            // Mostrar feedback visual
+            binding.syncButton.alpha = 0.5f
+            binding.syncButton.isEnabled = false
+            
+            Toast.makeText(requireContext(), "🔄 Sincronizando dados...", Toast.LENGTH_SHORT).show()
+
+            // Executar sincronização em background
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    // Forçar sincronização através do SyncManagerV2
+                    val syncManager = com.example.gestaobilhares.sync.SyncManagerV2(
+                        requireContext(),
+                        viewModel.getAppRepository(),
+                        AppDatabase.getDatabase(requireContext())
+                    )
+                    
+                    syncManager.forceSync()
+                    
+                    // Aguardar um pouco para processar
+                    kotlinx.coroutines.delay(2000)
+                    
+                    // Verificar status
+                    val stats = syncManager.getSyncStats()
+                    
+                    if (stats.isOnline) {
+                        Toast.makeText(requireContext(), 
+                            "✅ Sincronização concluída!\n" +
+                            "Pendentes: ${stats.pendingOperations}\n" +
+                            "Falhas: ${stats.failedOperations}", 
+                            Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(requireContext(), 
+                            "⚠️ Sem conexão com internet", 
+                            Toast.LENGTH_SHORT).show()
+                    }
+                    
+                } catch (e: Exception) {
+                    Log.e("RoutesFragment", "Erro na sincronização: ${e.message}", e)
+                    Toast.makeText(requireContext(), 
+                        "❌ Erro na sincronização: ${e.message}", 
+                        Toast.LENGTH_LONG).show()
+                } finally {
+                    // Restaurar botão
+                    binding.syncButton.alpha = 1.0f
+                    binding.syncButton.isEnabled = true
+                }
+            }
+            
+        } catch (e: Exception) {
+            Log.e("RoutesFragment", "Erro ao iniciar sincronização: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao sincronizar: ${e.message}", Toast.LENGTH_SHORT).show()
+            
+            // Restaurar botão em caso de erro
+            binding.syncButton.alpha = 1.0f
+            binding.syncButton.isEnabled = true
+        }
     }
 
     override fun onDestroyView() {

@@ -72,6 +72,15 @@
                         android:contentDescription="Transferir Cliente"
                         app:tint="@color/primary_blue" />
 
+                    <ImageView
+                        android:id="@+id/syncButton"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="16dp"
+                        android:src="@android:drawable/ic_popup_sync"
+                        android:contentDescription="Sincronizar Dados"
+                        app:tint="@color/primary_blue" />
+
                 </LinearLayout>
 
                 <!-- Cards de resumo com dados reais -->
