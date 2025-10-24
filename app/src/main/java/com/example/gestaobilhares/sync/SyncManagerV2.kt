@@ -12,6 +12,14 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+// Firestore/Auth/Coroutines
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.tasks.await
+// JSON
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 /**
  * ✅ FASE 3C: Gerenciador de Sincronização V2
@@ -42,6 +50,10 @@ class SyncManagerV2(
     private val _lastSyncTime = MutableLiveData<Long>()
     val lastSyncTime: LiveData<Long> = _lastSyncTime
 
+    // Firebase Firestore e utilitários
+    private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+    private val gson: Gson by lazy { Gson() }
+
     init {
         syncScope.launch {
             initializeSyncConfig()
@@ -56,6 +68,13 @@ class SyncManagerV2(
     private suspend fun initializeSyncConfig() {
         try {
             syncConfigDao.inicializarConfiguracoesPadrao(System.currentTimeMillis())
+            // Garantir que exista um empresa_id padrão
+            val empresaConfig = syncConfigDao.buscarSyncConfigPorChave("empresa_id")
+            if (empresaConfig == null) {
+                val now = System.currentTimeMillis()
+                // empresa_001 é o padrão visto no console do Firestore
+                syncConfigDao.atualizarValorConfig("empresa_id", "empresa_001", now)
+            }
             android.util.Log.d("SyncManagerV2", "Configurações de sincronização inicializadas")
         } catch (e: Exception) {
             android.util.Log.w("SyncManagerV2", "Erro ao inicializar configurações: ${e.message}")
@@ -121,6 +140,10 @@ class SyncManagerV2(
      */
     suspend fun processSyncQueue() {
         if (isSyncing.get() || !isOnline()) return
+        if (!isAuthenticated()) {
+            android.util.Log.w("SyncManagerV2", "Ignorando sync: usuário não autenticado no Firebase")
+            return
+        }
         
         isSyncing.set(true)
         _syncStatus.postValue(SyncStatus.SYNCING)
@@ -136,8 +159,8 @@ class SyncManagerV2(
                     // Marcar como processando
                     syncQueueDao.marcarComoProcessando(operation.id)
                     
-                    // Simular sincronização (aqui seria a lógica real com Firestore)
-                    val success = simulateSyncOperation(operation)
+                    // Aplicar operação real no Firestore
+                    val success = applyOperationToFirestore(operation)
                     
                     if (success) {
                         // Marcar como concluída
@@ -159,7 +182,7 @@ class SyncManagerV2(
                             operation.entityId,
                             operation.operation,
                             "FAILED",
-                            "Simulação de falha",
+                            "Falha ao aplicar operação no Firestore",
                             operation.payload
                         )
                     }
@@ -184,14 +207,48 @@ class SyncManagerV2(
     }
 
     /**
-     * Simular operação de sincronização (placeholder para Firestore)
+     * Aplicar operação no Firestore usando payload JSON armazenado na fila.
+     * Mantém o app offline-first: Room continua fonte da verdade, Firestore é o espelho.
      */
-    private suspend fun simulateSyncOperation(operation: SyncQueue): Boolean {
-        // Simular delay de rede
-        delay(1000)
-        
-        // Simular 90% de sucesso
-        return (0..100).random() < 90
+    private suspend fun applyOperationToFirestore(operation: SyncQueue): Boolean {
+        return try {
+            val empresaId = getEmpresaId()
+            val collection = getCollectionName(operation.entityType)
+            val docId = operation.entityId.toString()
+
+            // Converter o payload JSON em Map<String, Any?> para enviar ao Firestore
+            val mapType = object : TypeToken<Map<String, Any?>>() {}.type
+            val payloadMap: Map<String, Any?> = try {
+                gson.fromJson(operation.payload, mapType) ?: emptyMap()
+            } catch (e: Exception) {
+                android.util.Log.w("SyncManagerV2", "Payload inválido para ${operation.entityType}:${operation.entityId} -> ${e.message}")
+                emptyMap()
+            }
+
+            val docRef = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection(collection)
+                .document(docId)
+
+            when (operation.operation.uppercase(Locale.getDefault())) {
+                "CREATE", "UPDATE" -> {
+                    // Merge para não sobrescrever campos inexistentes
+                    docRef.set(payloadMap, SetOptions.merge()).await()
+                }
+                "DELETE" -> {
+                    docRef.delete().await()
+                }
+                else -> {
+                    android.util.Log.w("SyncManagerV2", "Operação desconhecida: ${operation.operation}")
+                    return false
+                }
+            }
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "Falha no Firestore: ${e.message}", e)
+            false
+        }
     }
 
     /**
@@ -232,6 +289,31 @@ class SyncManagerV2(
         
         return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+    }
+
+    /** Verifica se há usuário autenticado no Firebase (regras exigem auth) */
+    private fun isAuthenticated(): Boolean {
+        return try {
+            FirebaseAuth.getInstance().currentUser != null
+        } catch (_: Exception) { false }
+    }
+
+    /** Obtém o ID da empresa para particionar os dados no Firestore */
+    private suspend fun getEmpresaId(): String {
+        return try {
+            val cfg = syncConfigDao.buscarSyncConfigPorChave("empresa_id")
+            cfg?.value ?: "empresa_001"
+        } catch (_: Exception) { "empresa_001" }
+    }
+
+    /** Mapeia tipos de entidades para coleções do Firestore */
+    private fun getCollectionName(entityType: String): String = when (entityType.lowercase(Locale.getDefault())) {
+        "cliente" -> "clientes"
+        "acerto" -> "acertos"
+        "mesa" -> "mesas"
+        "rota" -> "rotas"
+        "colaborador" -> "colaboradores"
+        else -> entityType.lowercase(Locale.getDefault()) + "s"
     }
 
     /**
