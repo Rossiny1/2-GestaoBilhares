@@ -219,6 +219,13 @@ class RoutesViewModel constructor(
         _navigateToClients.value = null
     }
 
+    /**
+     * Obter o AppRepository para operações de sincronização.
+     */
+    fun getAppRepository(): AppRepository {
+        return appRepository
+    }
+
 
 
 
