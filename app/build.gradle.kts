@@ -83,6 +83,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    // Coroutines para Tasks do Firebase (await)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     
     // ✅ NOVO: Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
