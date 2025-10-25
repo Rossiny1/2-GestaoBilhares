@@ -415,11 +415,11 @@ class SettlementDetailFragment : Fragment() {
             if (mesaCompleta != null) {
                 AppLogger.log("SettlementDetailFragment", "Mesa encontrada: ${mesaCompleta.numero} (${mesaCompleta.tipoMesa})")
                 val mesaComAcerto = mesaCompleta.copy(
-                    fichasInicial = acertoMesa.relogioInicial,
-                    fichasFinal = acertoMesa.relogioFinal
+                    relogioInicial = acertoMesa.relogioInicial,
+                    relogioFinal = acertoMesa.relogioFinal
                 )
                 mesasCompletas.add(mesaComAcerto)
-                AppLogger.log("SettlementDetailFragment", "Mesa adicionada: ${mesaComAcerto.numero} - ${mesaComAcerto.fichasInicial} → ${mesaComAcerto.fichasFinal}")
+                AppLogger.log("SettlementDetailFragment", "Mesa adicionada: ${mesaComAcerto.numero} - ${mesaComAcerto.relogioInicial} → ${mesaComAcerto.relogioFinal}")
             } else {
                 AppLogger.log("SettlementDetailFragment", "❌ Mesa não encontrada: ${acertoMesa.mesaId}")
             }

@@ -183,7 +183,7 @@ class MesasAcertoAdapter(
             val state = mesaStates.getOrPut(mesa.id) {
                 MesaAcertoState(
                     mesaId = mesa.id,
-                    relogioInicial = mesa.fichasInicial,
+                    relogioInicial = mesa.relogioInicial,
                     valorFixo = mesa.valorFixo,
                     valorFicha = mesa.valorFicha,
                     comissaoFicha = mesa.comissaoFicha

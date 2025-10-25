@@ -38,10 +38,8 @@ class MesaRepository constructor(
     suspend fun atualizarRelogioMesa(
         mesaId: Long, 
         relogioInicial: Int, 
-        relogioFinal: Int,
-        fichasInicial: Int,
-        fichasFinal: Int
-    ) = mesaDao.atualizarRelogioMesa(mesaId, relogioInicial, relogioFinal, fichasInicial, fichasFinal)
+        relogioFinal: Int
+    ) = mesaDao.atualizarRelogioMesa(mesaId, relogioInicial, relogioFinal)
 
     /**
      * ✅ NOVO: Busca uma mesa específica por ID

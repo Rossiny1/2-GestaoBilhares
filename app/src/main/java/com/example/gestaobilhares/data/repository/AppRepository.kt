@@ -335,8 +335,7 @@ class AppRepository constructor(
                         "tamanho": "${mesa.tamanho}",
                         "estadoConservacao": "${mesa.estadoConservacao}",
                         "valorFixo": ${mesa.valorFixo},
-                        "fichasInicial": ${mesa.fichasInicial},
-                        "fichasFinal": ${mesa.fichasFinal},
+                        // ✅ REMOVIDO: fichasInicial e fichasFinal - usando apenas relogioInicial e relogioFinal
                         "relogioInicial": ${mesa.relogioInicial},
                         "relogioFinal": ${mesa.relogioFinal},
                         "dataInstalacao": "${mesa.dataInstalacao}",
@@ -366,8 +365,8 @@ class AppRepository constructor(
         mesaDao.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
     suspend fun desvincularMesaDeCliente(mesaId: Long) = mesaDao.desvincularMesa(mesaId)
     suspend fun retirarMesa(mesaId: Long) = mesaDao.retirarMesa(mesaId)
-    suspend fun atualizarRelogioMesa(mesaId: Long, relogioInicial: Int, relogioFinal: Int, fichasInicial: Int, fichasFinal: Int) = 
-        mesaDao.atualizarRelogioMesa(mesaId, relogioInicial, relogioFinal, fichasInicial, fichasFinal)
+    suspend fun atualizarRelogioMesa(mesaId: Long, relogioInicial: Int, relogioFinal: Int) = 
+        mesaDao.atualizarRelogioMesa(mesaId, relogioInicial, relogioFinal)
     suspend fun atualizarRelogioFinal(mesaId: Long, relogioFinal: Int) = 
         mesaDao.atualizarRelogioFinal(mesaId, relogioFinal)
     suspend fun obterMesasPorClienteDireto(clienteId: Long) = 

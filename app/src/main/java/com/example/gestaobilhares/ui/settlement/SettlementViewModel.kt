@@ -74,8 +74,8 @@ class SettlementViewModel constructor(
     data class MesaAcerto(
         val id: Long,
         val numero: String,
-        val fichasInicial: Int = 0,
-        val fichasFinal: Int = 0,
+        val relogioInicial: Int,
+        val relogioFinal: Int,
         val valorFixo: Double = 0.0,
         val tipoMesa: com.example.gestaobilhares.data.entities.TipoMesa,
         val comDefeito: Boolean = false,
@@ -135,14 +135,14 @@ class SettlementViewModel constructor(
                         logOperation("SETTLEMENT", "Mesa ${mesa.numero}: MODO EDIÇÃO - relógio inicial: $relogioInicial, relógio final: $relogioFinal")
                         logOperation("SETTLEMENT", "Mesa ${mesa.numero}: AcertoMesa encontrado - ID: ${acertoMesa.id}, AcertoID: ${acertoMesa.acertoId}")
                         mesa.copy(
-                            fichasInicial = relogioInicial,
-                            fichasFinal = relogioFinal
+                            relogioInicial = relogioInicial,
+                            relogioFinal = relogioFinal
                         )
                     } else {
                         // Fallback: usar dados da mesa
-                        val relogioInicial = mesa.fichasInicial
+                        val relogioInicial = mesa.relogioInicial
                         logOperation("SETTLEMENT", "Mesa ${mesa.numero}: MODO EDIÇÃO - acerto não encontrado, usando dados da mesa: $relogioInicial")
-                        mesa.copy(fichasInicial = relogioInicial)
+                        mesa.copy(relogioInicial = relogioInicial)
                     }
                 } else {
                     // ✅ MODO NOVO ACERTO: Usar lógica original
@@ -152,23 +152,23 @@ class SettlementViewModel constructor(
                         // Usar o relógio final do último acerto como inicial do próximo
                         val relogioInicial = ultimoAcertoMesa.relogioFinal
                         logOperation("SETTLEMENT", "Mesa ${mesa.numero}: MODO NOVO ACERTO - relógio final: ${ultimoAcertoMesa.relogioFinal} -> novo relógio inicial: $relogioInicial")
-                        mesa.copy(fichasInicial = relogioInicial)
+                        mesa.copy(relogioInicial = relogioInicial)
                     } else {
                         // Primeiro acerto - usar relógio inicial cadastrado ou 0
-                        val relogioInicial = mesa.fichasInicial
+                        val relogioInicial = mesa.relogioInicial
                         logOperation("SETTLEMENT", "Mesa ${mesa.numero}: MODO NOVO ACERTO - primeiro acerto, usando relógio inicial cadastrado: $relogioInicial")
-                        mesa.copy(fichasInicial = relogioInicial)
+                        mesa.copy(relogioInicial = relogioInicial)
                     }
                 }
             } catch (e: Exception) {
                 logError("SETTLEMENT", "Erro ao preparar mesa ${mesa.numero}: ${e.message}")
-                val relogioInicial = mesa.fichasInicial
-                mesa.copy(fichasInicial = relogioInicial)
+                val relogioInicial = mesa.relogioInicial
+                mesa.copy(relogioInicial = relogioInicial)
             }
         }.also { mesasPreparadas ->
             Log.d("SettlementViewModel", "=== MESAS PREPARADAS ===")
             mesasPreparadas.forEach { mesa ->
-                logOperation("SETTLEMENT", "Mesa ${mesa.numero}: relógio inicial=${mesa.fichasInicial}, relógio final=${mesa.fichasFinal}")
+                logOperation("SETTLEMENT", "Mesa ${mesa.numero}: relógio inicial=${mesa.relogioInicial}, relógio final=${mesa.relogioFinal}")
             }
         }
     }
@@ -324,8 +324,8 @@ class SettlementViewModel constructor(
                 // Converter mesas para formato do FinancialCalculator
                 val mesasCalculo = dadosAcerto.mesas.map { mesa ->
                     com.example.gestaobilhares.utils.FinancialCalculator.MesaAcertoCalculo(
-                        fichasInicial = mesa.fichasInicial,
-                        fichasFinal = mesa.fichasFinal,
+                        relogioInicial = mesa.relogioInicial,
+                        relogioFinal = mesa.relogioFinal,
                         valorFixo = mesa.valorFixo
                     )
                 }
@@ -508,7 +508,7 @@ class SettlementViewModel constructor(
                     val fichasJogadas = if (mesa.valorFixo > 0) {
                         0 // Mesa de valor fixo não tem fichas jogadas
                     } else {
-                        (mesa.fichasFinal - mesa.fichasInicial).coerceAtLeast(0)
+                        (mesa.relogioFinal - mesa.relogioInicial).coerceAtLeast(0)
                     }
                     
                     val subtotal = if (mesa.valorFixo > 0) {
@@ -520,8 +520,8 @@ class SettlementViewModel constructor(
                     logOperation("SETTLEMENT", "=== MESA ${index + 1} ===")
                     logOperation("SETTLEMENT", "ID da mesa: ${mesa.id}")
                     logOperation("SETTLEMENT", "Número da mesa: ${mesa.numero}")
-                    logOperation("SETTLEMENT", "Relógio inicial: ${mesa.fichasInicial}")
-                    logOperation("SETTLEMENT", "Relógio final: ${mesa.fichasFinal}")
+                    logOperation("SETTLEMENT", "Relógio inicial: ${mesa.relogioInicial}")
+                    logOperation("SETTLEMENT", "Relógio final: ${mesa.relogioFinal}")
                     logOperation("SETTLEMENT", "Fichas jogadas: $fichasJogadas")
                     logOperation("SETTLEMENT", "Valor fixo: R$ ${mesa.valorFixo}")
                     logOperation("SETTLEMENT", "Subtotal calculado: R$ $subtotal")
@@ -531,8 +531,8 @@ class SettlementViewModel constructor(
                     com.example.gestaobilhares.data.entities.AcertoMesa(
                         acertoId = acertoId,
                         mesaId = mesa.id,
-                        relogioInicial = mesa.fichasInicial,
-                        relogioFinal = mesa.fichasFinal,
+                        relogioInicial = mesa.relogioInicial,
+                        relogioFinal = mesa.relogioFinal,
                         fichasJogadas = fichasJogadas,
                         valorFixo = mesa.valorFixo,
                         valorFicha = cliente.valorFicha,
@@ -562,11 +562,11 @@ class SettlementViewModel constructor(
                         com.example.gestaobilhares.ui.settlement.MesaDTO(
                             id = mesa.id,
                             numero = mesa.numero,
+                            relogioInicial = mesa.relogioInicial,
+                            relogioFinal = mesa.relogioFinal,
                             tipoMesa = mesa.tipoMesa,
                             tamanho = com.example.gestaobilhares.data.entities.TamanhoMesa.MEDIA,
                             estadoConservacao = com.example.gestaobilhares.data.entities.EstadoConservacao.BOM,
-                            fichasInicial = mesa.fichasInicial,
-                            fichasFinal = mesa.fichasFinal,
                             valorFixo = mesa.valorFixo,
                             valorFicha = 0.0,
                             comissaoFicha = 0.0,

@@ -38,11 +38,7 @@ data class Mesa(
     @ColumnInfo(name = "cliente_id")
     val clienteId: Long? = null,
     
-    @ColumnInfo(name = "fichas_inicial")
-    val fichasInicial: Int = 0,
-    
-    @ColumnInfo(name = "fichas_final") 
-    val fichasFinal: Int = 0,
+    // ✅ REMOVIDO: Campos fichasInicial e fichasFinal - usando apenas relogioInicial e relogioFinal
     
     @ColumnInfo(name = "relogio_inicial")
     val relogioInicial: Int = 0,
