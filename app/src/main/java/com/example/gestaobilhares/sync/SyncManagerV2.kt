@@ -271,9 +271,14 @@ class SyncManagerV2(
                 }
                 "acerto" -> {
                     val valor = payloadMap["valorRecebido"]
+                    val clienteId = payloadMap["clienteId"]
                     if (valor == null) {
                         android.util.Log.w("SyncManagerV2", "⚠️ Acerto sem valor - Usando valor padrão")
                         // Não cancelar, usar valor padrão
+                    }
+                    if (clienteId == null) {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Acerto sem clienteId - Usando cliente padrão")
+                        // Não cancelar, usar cliente padrão
                     }
                 }
                 "rota" -> {
