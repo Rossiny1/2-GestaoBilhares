@@ -253,22 +253,36 @@ class AppRepository constructor(
             
             // ✅ FASE 3C: Adicionar à fila de sincronização
             try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "clienteId": ${acerto.clienteId},
-                        "rotaId": ${acerto.rotaId},
-                        "valorRecebido": ${acerto.valorRecebido},
-                        "debitoAtual": ${acerto.debitoAtual},
-                        "dataAcerto": "${acerto.dataAcerto}",
-                        "observacoes": "${acerto.observacoes}",
-                        "metodosPagamentoJson": "${acerto.metodosPagamentoJson}"
-                    }
-                """.trimIndent()
-                
+                // ✅ Construir payload de forma segura usando Map -> JSON
+                val payloadMap = mutableMapOf<String, Any?>(
+                    "id" to id,
+                    "clienteId" to acerto.clienteId,
+                    "rotaId" to acerto.rotaId,
+                    "valorRecebido" to acerto.valorRecebido,
+                    "debitoAtual" to acerto.debitoAtual,
+                    "dataAcerto" to acerto.dataAcerto,
+                    "observacoes" to acerto.observacoes,
+                    // manter JSON de métodos de pagamento como String bruta
+                    "metodosPagamentoJson" to acerto.metodosPagamentoJson,
+                    "status" to acerto.status.name,
+                    "periodoInicio" to acerto.periodoInicio,
+                    "periodoFim" to acerto.periodoFim,
+                    "valorTotal" to acerto.valorTotal,
+                    "desconto" to acerto.desconto,
+                    "valorComDesconto" to acerto.valorComDesconto,
+                    "representante" to acerto.representante,
+                    "tipoAcerto" to acerto.tipoAcerto,
+                    "panoTrocado" to acerto.panoTrocado,
+                    "numeroPano" to acerto.numeroPano,
+                    "dadosExtrasJson" to acerto.dadosExtrasJson,
+                    "cicloId" to acerto.cicloId
+                )
+
+                val payload = com.google.gson.Gson().toJson(payloadMap)
+
                 adicionarOperacaoSync("Acerto", id, "CREATE", payload, priority = 1)
                 logarOperacaoSync("Acerto", id, "CREATE", "PENDING", null, payload)
-                
+
             } catch (syncError: Exception) {
                 Log.w("AppRepository", "Erro ao adicionar acerto à fila de sync: ${syncError.message}")
                 // Não falha a operação principal por erro de sync
