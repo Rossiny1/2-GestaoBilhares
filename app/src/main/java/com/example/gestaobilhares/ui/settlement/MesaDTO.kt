@@ -11,8 +11,8 @@ import com.example.gestaobilhares.data.entities.EstadoConservacao
 data class MesaDTO(
     val id: Long,
     val numero: String,
-    val fichasInicial: Int,
-    val fichasFinal: Int,
+    val relogioInicial: Int,
+    val relogioFinal: Int,
     val tipoMesa: TipoMesa,
     val tamanho: TamanhoMesa = TamanhoMesa.GRANDE,
     val estadoConservacao: EstadoConservacao = EstadoConservacao.BOM,
@@ -29,8 +29,8 @@ data class MesaDTO(
         return Mesa(
             id = id,
             numero = numero,
-            fichasInicial = fichasInicial,
-            fichasFinal = fichasFinal,
+            relogioInicial = relogioInicial,
+            relogioFinal = relogioFinal,
             valorFixo = valorFixo,
             tipoMesa = tipoMesa,
             tamanho = tamanho,

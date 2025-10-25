@@ -223,8 +223,8 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                         com.example.gestaobilhares.ui.settlement.MesaDTO(
                             id = mesa.id,
                             numero = mesa.numero,
-                            fichasInicial = mesa.fichasInicial,
-                            fichasFinal = mesa.fichasFinal,
+                            relogioInicial = mesa.relogioInicial,
+                            relogioFinal = mesa.relogioFinal,
                             tipoMesa = mesa.tipoMesa,
                             tamanho = mesa.tamanho,
                             estadoConservacao = mesa.estadoConservacao,

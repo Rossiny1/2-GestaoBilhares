@@ -46,7 +46,7 @@ object FinancialCalculator {
             if (mesa.valorFixo > 0) {
                 mesa.valorFixo
             } else {
-                val fichasJogadas = (mesa.fichasFinal - mesa.fichasInicial).coerceAtLeast(0)
+                val fichasJogadas = (mesa.relogioFinal - mesa.relogioInicial).coerceAtLeast(0)
                 fichasJogadas * comissaoFicha
             }
         }
@@ -245,8 +245,8 @@ object FinancialCalculator {
      * Dados para cálculo de mesa
      */
     data class MesaAcertoCalculo(
-        val fichasInicial: Int,
-        val fichasFinal: Int,
+        val relogioInicial: Int,
+        val relogioFinal: Int,
         val valorFixo: Double
     )
     

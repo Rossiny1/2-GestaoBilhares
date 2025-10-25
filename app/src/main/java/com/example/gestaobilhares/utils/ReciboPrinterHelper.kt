@@ -114,16 +114,16 @@ object ReciboPrinterHelper {
         // Mesas (formatação com tipo do equipamento e número real da mesa)
         val mesasFormatadas = StringBuilder()
         mesasCompletas.forEachIndexed { index, mesa ->
-            val fichasJogadas = mesa.fichasFinal - mesa.fichasInicial
+            val fichasJogadas = mesa.relogioFinal - mesa.relogioInicial
             val tipoEquipamento = getTipoEquipamentoNome(mesa.tipoMesa)
             // ✅ CORREÇÃO: Usar número real da mesa, não índice
-            mesasFormatadas.append("$tipoEquipamento ${mesa.numero}\n${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)")
+            mesasFormatadas.append("$tipoEquipamento ${mesa.numero}\n${mesa.relogioInicial} → ${mesa.relogioFinal} (${fichasJogadas} fichas)")
             if (index < mesasCompletas.size - 1) mesasFormatadas.append("\n")
         }
         txtMesas.text = mesasFormatadas.toString()
 
         // Fichas jogadas
-        val totalFichasJogadas = mesasCompletas.sumOf { it.fichasFinal - it.fichasInicial }
+        val totalFichasJogadas = mesasCompletas.sumOf { it.relogioFinal - it.relogioInicial }
         txtFichasJogadas.text = totalFichasJogadas.toString()
 
         // Resumo Financeiro (sem duplicação e com rótulos únicos)
@@ -215,12 +215,12 @@ object ReciboPrinterHelper {
         texto.append("🎯 *MESAS ACERTADAS:*\n")
         var totalFichasJogadas = 0
         mesasCompletas.forEach { mesa ->
-            val fichasJogadas = mesa.fichasFinal - mesa.fichasInicial
+            val fichasJogadas = mesa.relogioFinal - mesa.relogioInicial
             totalFichasJogadas += fichasJogadas
             val tipoEquipamento = getTipoEquipamentoNome(mesa.tipoMesa)
             // ✅ CORREÇÃO: Formatação igual ao impresso - nome da mesa em uma linha, relógios na linha de baixo
             texto.append("• *$tipoEquipamento ${mesa.numero}*\n")
-            texto.append("  ${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)\n")
+            texto.append("  ${mesa.relogioInicial} → ${mesa.relogioFinal} (${fichasJogadas} fichas)\n")
         }
         if (totalFichasJogadas > 0) {
             texto.append("\n*Total de fichas jogadas: $totalFichasJogadas*\n\n")

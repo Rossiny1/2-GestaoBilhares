@@ -121,8 +121,7 @@ class CadastroMesaFragment : Fragment() {
                         val mesa = Mesa(
                             numero = numero,
                             clienteId = null,
-                            fichasInicial = relogio,
-                            fichasFinal = relogio,
+                            // ✅ REMOVIDO: fichasInicial e fichasFinal - usando apenas relogioInicial e relogioFinal
                             relogioInicial = relogio,
                             relogioFinal = relogio,
                             tipoMesa = tipoSelecionado,

@@ -426,11 +426,11 @@ class SettlementFragment : Fragment() {
                                 MesaDTO(
                                     id = mesa.id,
                                     numero = mesa.numero,
+                                    relogioInicial = mesa.relogioInicial,
+                                    relogioFinal = mesa.relogioFinal,
                                     tipoMesa = mesa.tipoMesa,
                                     tamanho = mesa.tamanho,
                                     estadoConservacao = mesa.estadoConservacao,
-                                    fichasInicial = mesa.fichasInicial,
-                                    fichasFinal = mesa.fichasFinal,
                                     valorFixo = mesa.valorFixo,
                                     valorFicha = cliente.valorFicha,  // ✅ Dados do cliente
                                     comissaoFicha = cliente.comissaoFicha,  // ✅ Dados do cliente
@@ -502,11 +502,11 @@ class SettlementFragment : Fragment() {
                     MesaDTO(
                         id = mesa.id,
                         numero = mesa.numero,
+                        relogioInicial = mesa.relogioInicial,
+                        relogioFinal = mesa.relogioFinal,
                         tipoMesa = mesa.tipoMesa,
                         tamanho = mesa.tamanho,
                         estadoConservacao = mesa.estadoConservacao,
-                        fichasInicial = mesa.fichasInicial ?: 0,
-                        fichasFinal = mesa.fichasFinal ?: 0,
                         valorFixo = mesa.valorFixo,
                         valorFicha = cliente.valorFicha,
                         comissaoFicha = cliente.comissaoFicha,
@@ -648,12 +648,12 @@ class SettlementFragment : Fragment() {
         // ✅ CORREÇÃO: Usar as mesas preparadas com relógio inicial correto
         Log.d("SettlementFragment", "Carregando ${mesasDTO.size} mesas preparadas para o acerto")
         mesasDTO.forEach { mesa ->
-            Log.d("SettlementFragment", "Mesa ${mesa.numero}: relógio inicial=${mesa.fichasInicial}, relógio final=${mesa.fichasFinal}")
+            Log.d("SettlementFragment", "Mesa ${mesa.numero}: relógio inicial=${mesa.relogioInicial}, relógio final=${mesa.relogioFinal}")
             Log.d("SettlementFragment", "🔍 DEBUG MESA ${mesa.numero}:")
             Log.d("SettlementFragment", "  - ID: ${mesa.id}")
             Log.d("SettlementFragment", "  - Número: ${mesa.numero}")
-            Log.d("SettlementFragment", "  - Fichas Inicial: ${mesa.fichasInicial}")
-            Log.d("SettlementFragment", "  - Fichas Final: ${mesa.fichasFinal}")
+            Log.d("SettlementFragment", "  - Relógio Inicial: ${mesa.relogioInicial}")
+            Log.d("SettlementFragment", "  - Relógio Final: ${mesa.relogioFinal}")
             Log.d("SettlementFragment", "  - Valor Fixo: ${mesa.valorFixo}")
         }
         
@@ -1075,8 +1075,8 @@ class SettlementFragment : Fragment() {
                 SettlementViewModel.MesaAcerto(
                     id = mesaState.mesaId,
                     numero = mesaOriginal?.numero ?: (idx + 1).toString(),
-                    fichasInicial = mesaState.relogioInicial,
-                    fichasFinal = mesaState.relogioFinal,
+                    relogioInicial = mesaState.relogioInicial,
+                    relogioFinal = mesaState.relogioFinal,
                     valorFixo = mesaOriginal?.valorFixo ?: 0.0,
                     tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA,
                     comDefeito = mesaState.comDefeito,
@@ -1231,8 +1231,8 @@ class SettlementFragment : Fragment() {
                     Mesa(
                         id = mesaAcerto.mesaId,
                         numero = mesaReal?.numero ?: mesaAcerto.mesaId.toString(),
-                        fichasInicial = mesaAcerto.relogioInicial,
-                        fichasFinal = mesaAcerto.relogioFinal,
+                        relogioInicial = mesaAcerto.relogioInicial,
+                        relogioFinal = mesaAcerto.relogioFinal,
                         valorFixo = mesaAcerto.valorFixo,
                         tipoMesa = mesaReal?.tipoMesa ?: com.example.gestaobilhares.data.entities.TipoMesa.SINUCA // ✅ CORREÇÃO: Usar tipoMesa real
                     )

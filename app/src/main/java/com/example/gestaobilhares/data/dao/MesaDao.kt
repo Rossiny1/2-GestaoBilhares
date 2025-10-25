@@ -43,8 +43,7 @@ interface MesaDao {
         UPDATE mesas 
         SET cliente_id = NULL, 
             ativa = 1,
-            relogio_inicial = relogio_final,
-            fichas_inicial = fichas_final
+            relogio_inicial = relogio_final
         WHERE id = :mesaId
     """)
     suspend fun retirarMesa(mesaId: Long)
@@ -52,17 +51,13 @@ interface MesaDao {
     @Query("""
         UPDATE mesas 
         SET relogio_inicial = :relogioInicial,
-            relogio_final = :relogioFinal,
-            fichas_inicial = :fichasInicial,
-            fichas_final = :fichasFinal
+            relogio_final = :relogioFinal
         WHERE id = :mesaId
     """)
     suspend fun atualizarRelogioMesa(
         mesaId: Long, 
         relogioInicial: Int, 
-        relogioFinal: Int,
-        fichasInicial: Int,
-        fichasFinal: Int
+        relogioFinal: Int
     )
     
     @Query("UPDATE mesas SET relogio_final = :relogioFinal WHERE id = :mesaId")

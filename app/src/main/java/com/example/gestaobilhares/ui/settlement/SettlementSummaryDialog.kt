@@ -116,9 +116,9 @@ class SettlementSummaryDialog : DialogFragment() {
         val mesasDetalhes = StringBuilder()
         var totalFichasJogadas = 0
         mesas.forEachIndexed { index, mesa ->
-            val fichasJogadas = (mesa.fichasFinal ?: 0) - (mesa.fichasInicial ?: 0)
+            val fichasJogadas = (mesa.relogioFinal ?: 0) - (mesa.relogioInicial ?: 0)
             totalFichasJogadas += fichasJogadas
-            mesasDetalhes.append("Mesa ${mesa.numero}\n${mesa.fichasInicial} → ${mesa.fichasFinal} (${fichasJogadas} fichas)")
+            mesasDetalhes.append("Mesa ${mesa.numero}\n${mesa.relogioInicial} → ${mesa.relogioFinal} (${fichasJogadas} fichas)")
             if (index < mesas.size - 1) mesasDetalhes.append("\n")
         }
         view.findViewById<TextView>(R.id.tvResumoMesas).text = mesasDetalhes.toString()
