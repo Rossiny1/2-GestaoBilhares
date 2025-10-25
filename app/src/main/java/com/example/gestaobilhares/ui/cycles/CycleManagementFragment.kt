@@ -74,7 +74,7 @@ class CycleManagementFragment : Fragment() {
         val cicloAcertoRepository = CicloAcertoRepository(
             database.cicloAcertoDao(),
             DespesaRepository(database.despesaDao()),
-            AcertoRepository(database.acertoDao(), database.clienteDao()),
+            AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
             ClienteRepository(database.clienteDao(), appRepository),
             database.rotaDao()
         )

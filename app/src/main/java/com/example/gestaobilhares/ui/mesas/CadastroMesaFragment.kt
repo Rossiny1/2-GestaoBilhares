@@ -35,7 +35,8 @@ class CadastroMesaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel = CadastroMesaViewModel(MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao()))
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        viewModel = CadastroMesaViewModel(MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao(), appRepository))
         setupUI()
     }
 

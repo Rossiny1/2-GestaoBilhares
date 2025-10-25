@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 class AcertoRepository constructor(
     private val acertoDao: AcertoDao, 
-    private val clienteDao: ClienteDao
+    private val clienteDao: ClienteDao,
+    private val appRepository: AppRepository
 ) {
 
     /**
@@ -61,9 +62,10 @@ class AcertoRepository constructor(
                  android.util.Log.w("DEBUG_DIAG", "[ACERTO] AVISO: cicloId é nulo ou 0. O acerto será salvo sem vínculo de ciclo.")
             }
 
-            val id = acertoDao.inserir(acerto)
-            AppLogger.log("AcertoRepo", "Acerto salvo com sucesso! ID: $id")
-            android.util.Log.d("DEBUG_DIAG", "[ACERTO] Acerto salvo com sucesso! ID: $id, cicloId=${acerto.cicloId}")
+            // ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
+            val id = appRepository.inserirAcerto(acerto)
+            AppLogger.log("AcertoRepo", "Acerto salvo com sucesso via AppRepository! ID: $id")
+            android.util.Log.d("DEBUG_DIAG", "[ACERTO] Acerto salvo com sucesso via AppRepository! ID: $id, cicloId=${acerto.cicloId}")
 
             // Atualizar o débito atual do cliente
             withContext(Dispatchers.IO) {
