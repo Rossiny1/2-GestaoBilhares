@@ -293,7 +293,8 @@ class AppRepository constructor(
     suspend fun buscarCicloAtivo(rotaId: Long) = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
     fun buscarPorRotaECicloId(rotaId: Long, cicloId: Long) = acertoDao.buscarPorRotaECicloId(rotaId, cicloId)
     suspend fun buscarAcertoMesaPorMesa(mesaId: Long) = acertoMesaDao.buscarUltimoAcertoMesa(mesaId)
-    suspend fun salvarAcerto(acerto: Acerto): Long = acertoDao.inserir(acerto)
+    // ✅ REMOVIDO: Método duplicado que não adiciona à fila de sync
+    // Use inserirAcerto() que adiciona à fila de sincronização
     suspend fun buscarPorId(id: Long) = acertoDao.buscarPorId(id)
     suspend fun atualizarValoresCiclo(
         cicloId: Long,
