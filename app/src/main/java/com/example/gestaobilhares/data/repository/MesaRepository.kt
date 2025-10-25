@@ -26,12 +26,107 @@ class MesaRepository constructor(
 
     suspend fun deletar(mesa: Mesa) = mesaDao.deletar(mesa)
 
-    suspend fun vincularMesa(mesaId: Long, clienteId: Long) = mesaDao.vincularMesa(mesaId, clienteId)
+    suspend fun vincularMesa(mesaId: Long, clienteId: Long) {
+        // ✅ Atualizar no banco local
+        mesaDao.vincularMesa(mesaId, clienteId)
+        
+        // ✅ Adicionar à fila de sincronização para atualizar o Firestore
+        try {
+            val mesa = mesaDao.obterMesaPorId(mesaId)
+            if (mesa != null) {
+                val payload = """
+                    {
+                        "id": ${mesa.id},
+                        "numero": "${mesa.numero}",
+                        "clienteId": $clienteId,
+                        "ativa": ${mesa.ativa},
+                        "tipoMesa": "${mesa.tipoMesa}",
+                        "tamanho": "${mesa.tamanho}",
+                        "estadoConservacao": "${mesa.estadoConservacao}",
+                        "valorFixo": ${mesa.valorFixo},
+                        "relogioInicial": ${mesa.relogioInicial},
+                        "relogioFinal": ${mesa.relogioFinal},
+                        "dataInstalacao": "${mesa.dataInstalacao}",
+                        "observacoes": "${mesa.observacoes ?: ""}"
+                    }
+                """.trimIndent()
+                
+                appRepository.adicionarOperacaoSync("Mesa", mesaId, "UPDATE", payload, priority = 1)
+                android.util.Log.d("MesaRepository", "✅ Mesa $mesaId vinculada ao cliente $clienteId - adicionada à fila de sync")
+                android.util.Log.d("MesaRepository", "📋 Payload enviado: $payload")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MesaRepository", "Erro ao adicionar vinculação à fila de sync: ${e.message}")
+        }
+    }
 
-    suspend fun desvincularMesa(mesaId: Long) = mesaDao.desvincularMesa(mesaId)
+    suspend fun desvincularMesa(mesaId: Long) {
+        // ✅ Atualizar no banco local
+        mesaDao.desvincularMesa(mesaId)
+        
+        // ✅ Adicionar à fila de sincronização para atualizar o Firestore
+        try {
+            val mesa = mesaDao.obterMesaPorId(mesaId)
+            if (mesa != null) {
+                val payload = """
+                    {
+                        "id": ${mesa.id},
+                        "numero": "${mesa.numero}",
+                        "clienteId": null,
+                        "ativa": ${mesa.ativa},
+                        "tipoMesa": "${mesa.tipoMesa}",
+                        "tamanho": "${mesa.tamanho}",
+                        "estadoConservacao": "${mesa.estadoConservacao}",
+                        "valorFixo": ${mesa.valorFixo},
+                        "relogioInicial": ${mesa.relogioInicial},
+                        "relogioFinal": ${mesa.relogioFinal},
+                        "dataInstalacao": "${mesa.dataInstalacao}",
+                        "observacoes": "${mesa.observacoes ?: ""}"
+                    }
+                """.trimIndent()
+                
+                appRepository.adicionarOperacaoSync("Mesa", mesaId, "UPDATE", payload, priority = 1)
+                android.util.Log.d("MesaRepository", "✅ Mesa $mesaId desvinculada - adicionada à fila de sync")
+                android.util.Log.d("MesaRepository", "📋 Payload enviado: $payload")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MesaRepository", "Erro ao adicionar desvinculação à fila de sync: ${e.message}")
+        }
+    }
 
-    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double) =
+    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double) {
+        // ✅ Atualizar no banco local
         mesaDao.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
+        
+        // ✅ Adicionar à fila de sincronização para atualizar o Firestore
+        try {
+            val mesa = mesaDao.obterMesaPorId(mesaId)
+            if (mesa != null) {
+                val payload = """
+                    {
+                        "id": ${mesa.id},
+                        "numero": "${mesa.numero}",
+                        "clienteId": $clienteId,
+                        "ativa": ${mesa.ativa},
+                        "tipoMesa": "${mesa.tipoMesa}",
+                        "tamanho": "${mesa.tamanho}",
+                        "estadoConservacao": "${mesa.estadoConservacao}",
+                        "valorFixo": $valorFixo,
+                        "relogioInicial": ${mesa.relogioInicial},
+                        "relogioFinal": ${mesa.relogioFinal},
+                        "dataInstalacao": "${mesa.dataInstalacao}",
+                        "observacoes": "${mesa.observacoes ?: ""}"
+                    }
+                """.trimIndent()
+                
+                appRepository.adicionarOperacaoSync("Mesa", mesaId, "UPDATE", payload, priority = 1)
+                android.util.Log.d("MesaRepository", "✅ Mesa $mesaId vinculada ao cliente $clienteId com valor fixo $valorFixo - adicionada à fila de sync")
+                android.util.Log.d("MesaRepository", "📋 Payload enviado: $payload")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MesaRepository", "Erro ao adicionar vinculação com valor fixo à fila de sync: ${e.message}")
+        }
+    }
 
     suspend fun retirarMesa(mesaId: Long) = mesaDao.retirarMesa(mesaId)
 
