@@ -290,14 +290,14 @@ class SyncManagerV2(
                 }
             }
 
-            // ✅ CORREÇÃO: Usar ID do Room como campo, não como documento ID
+            // ✅ CORREÇÃO: Usar roomId como documento ID para evitar duplicatas
             val docRef = firestore
                 .collection("empresas")
                 .document(empresaId)
                 .collection(collection)
-                .document() // Deixar Firestore gerar ID automático
+                .document(operation.entityId.toString()) // Usar roomId como documento ID
 
-            android.util.Log.d("SyncManagerV2", "   Firestore Path: empresas/$empresaId/$collection/[AUTO_ID]")
+            android.util.Log.d("SyncManagerV2", "   Firestore Path: empresas/$empresaId/$collection/${operation.entityId}")
 
             when (operation.operation.uppercase(Locale.getDefault())) {
                 "CREATE", "UPDATE" -> {
@@ -307,10 +307,16 @@ class SyncManagerV2(
                         put("syncTimestamp", System.currentTimeMillis())
                     }
                     
-                    // Merge para não sobrescrever campos inexistentes
-                    android.util.Log.d("SyncManagerV2", "   Executando SET com merge...")
+                    // ✅ NOVO: Para operações UPDATE, usar merge para não sobrescrever
+                    // Para operações CREATE, usar set para criar novo documento
+                    if (operation.operation.uppercase(Locale.getDefault()) == "UPDATE") {
+                        android.util.Log.d("SyncManagerV2", "   Executando UPDATE com merge...")
+                        docRef.set(payloadWithRoomId, SetOptions.merge()).await()
+                    } else {
+                        android.util.Log.d("SyncManagerV2", "   Executando CREATE com set...")
+                        docRef.set(payloadWithRoomId).await()
+                    }
                     android.util.Log.d("SyncManagerV2", "   Payload final: $payloadWithRoomId")
-                    docRef.set(payloadWithRoomId, SetOptions.merge()).await()
                     android.util.Log.d("SyncManagerV2", "   ✅ SET executado com sucesso")
                 }
                 "DELETE" -> {
