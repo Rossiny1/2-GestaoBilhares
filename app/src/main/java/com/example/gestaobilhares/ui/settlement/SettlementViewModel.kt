@@ -457,7 +457,7 @@ class SettlementViewModel constructor(
                         cicloId = cicloIdEfetivo
                     )
                     
-                    acertoId = appRepository.salvarAcerto(acerto)
+                    acertoId = appRepository.inserirAcerto(acerto)
                     logOperation("SETTLEMENT", "✅ Novo acerto salvo com ID: $acertoId")
                 }
                 
