@@ -246,6 +246,44 @@ class SyncManagerV2(
             }
 
             android.util.Log.d("SyncManagerV2", "   Payload Map: $payloadMap")
+            
+            // ✅ VALIDAÇÃO CRÍTICA: Verificar se o payload não está vazio
+            if (payloadMap.isEmpty()) {
+                android.util.Log.e("SyncManagerV2", "❌ Payload vazio para ${operation.entityType}:${operation.entityId} - Operação cancelada")
+                return false
+            }
+            
+            // ✅ VALIDAÇÃO ESPECÍFICA POR TIPO DE ENTIDADE (MAIS FLEXÍVEL)
+            when (operation.entityType.lowercase()) {
+                "cliente" -> {
+                    val nome = payloadMap["nome"]?.toString()
+                    if (nome.isNullOrBlank()) {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Cliente sem nome - Usando nome padrão")
+                        // Não cancelar, usar nome padrão
+                    }
+                }
+                "mesa" -> {
+                    val numero = payloadMap["numero"]?.toString()
+                    if (numero.isNullOrBlank()) {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Mesa sem número - Usando número padrão")
+                        // Não cancelar, usar número padrão
+                    }
+                }
+                "acerto" -> {
+                    val valor = payloadMap["valorRecebido"]
+                    if (valor == null) {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Acerto sem valor - Usando valor padrão")
+                        // Não cancelar, usar valor padrão
+                    }
+                }
+                "rota" -> {
+                    val nome = payloadMap["nome"]?.toString()
+                    if (nome.isNullOrBlank()) {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Rota sem nome - Usando nome padrão")
+                        // Não cancelar, usar nome padrão
+                    }
+                }
+            }
 
             // ✅ CORREÇÃO: Usar ID do Room como campo, não como documento ID
             val docRef = firestore
@@ -438,13 +476,35 @@ class SyncManagerV2(
             val empresaId = getEmpresaId()
             android.util.Log.d("SyncManagerV2", "🏢 Empresa ID para PULL: $empresaId")
             
-            // 1. PRIMEIRO: Baixar rotas do Firestore (dependência dos clientes)
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 1: Sincronizando ROTAS...")
-            pullRotasFromFirestore(empresaId)
-            delay(500) // Aguardar rotas serem inseridas
+        // 1. PRIMEIRO: Baixar rotas do Firestore (dependência dos clientes)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 1: Sincronizando ROTAS...")
+        pullRotasFromFirestore(empresaId)
+        delay(500) // Aguardar rotas serem inseridas
+
+        // 2. SEGUNDO: Baixar clientes do Firestore (dependem das rotas)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 2: Sincronizando CLIENTES...")
+
+        // Verificar se existe pelo menos uma rota antes de sincronizar clientes
+        val rotasExistentes = appRepository.obterTodasRotas().first()
+        if (rotasExistentes.isEmpty()) {
+            android.util.Log.w("SyncManagerV2", "⚠️ Nenhuma rota encontrada no Room. Criando rota padrão...")
+            try {
+                val rotaPadrao = com.example.gestaobilhares.data.entities.Rota(
+                    nome = "Rota Padrão",
+                    descricao = "Rota criada automaticamente",
+                    ativa = true,
+                    dataCriacao = System.currentTimeMillis()
+                )
+                val rotaDao = database.rotaDao()
+                val rotaId = rotaDao.insertRota(rotaPadrao)
+                android.util.Log.d("SyncManagerV2", "✅ Rota padrão criada: ID $rotaId")
+            } catch (e: Exception) {
+                android.util.Log.e("SyncManagerV2", "❌ Erro ao criar rota padrão: ${e.message}")
+            }
+        } else {
+            android.util.Log.d("SyncManagerV2", "✅ Encontradas ${rotasExistentes.size} rotas no Room")
+        }
             
-            // 2. SEGUNDO: Baixar clientes do Firestore (dependem das rotas)
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 2: Sincronizando CLIENTES...")
             pullClientesFromFirestore(empresaId)
             delay(500) // Aguardar clientes serem inseridos
             
@@ -502,13 +562,43 @@ class SyncManagerV2(
                         val clienteExistente = appRepository.obterClientePorId(roomId)
                         
                         if (clienteExistente == null) {
+                            // Obter rotaId válido
+                            val rotaIdCliente = (data["rotaId"] as? Double)?.toLong()
+                            val rotaIdFinal = if (rotaIdCliente != null) {
+                                // Verificar se a rota existe
+                                val rotaExiste = appRepository.buscarRotaPorId(rotaIdCliente)
+                                if (rotaExiste != null) {
+                                    rotaIdCliente
+                                } else {
+                                    // Usar primeira rota disponível
+                                    val rotas = appRepository.obterTodasRotas().first()
+                                    if (rotas.isNotEmpty()) {
+                                        android.util.Log.w("SyncManagerV2", "⚠️ Rota $rotaIdCliente não existe. Usando primeira rota disponível: ${rotas.first().id}")
+                                        rotas.first().id
+                                    } else {
+                                        android.util.Log.w("SyncManagerV2", "⚠️ Nenhuma rota disponível. Usando ID 1")
+                                        1L
+                                    }
+                                }
+                            } else {
+                                // Usar primeira rota disponível
+                                val rotas = appRepository.obterTodasRotas().first()
+                                if (rotas.isNotEmpty()) {
+                                    android.util.Log.w("SyncManagerV2", "⚠️ Cliente sem rotaId. Usando primeira rota disponível: ${rotas.first().id}")
+                                    rotas.first().id
+                                } else {
+                                    android.util.Log.w("SyncManagerV2", "⚠️ Nenhuma rota disponível. Usando ID 1")
+                                    1L
+                                }
+                            }
+                            
                             // Criar cliente no Room baseado nos dados do Firestore
                             val cliente = com.example.gestaobilhares.data.entities.Cliente(
                                 id = roomId,
                                 nome = nome,
                                 telefone = data["telefone"] as? String,
                                 endereco = data["endereco"] as? String ?: "",
-                                rotaId = (data["rotaId"] as? Double)?.toLong() ?: 1L,
+                                rotaId = rotaIdFinal,
                                 ativo = data["ativo"] as? Boolean ?: true,
                                 dataCadastro = java.util.Date() // Usar data atual como fallback
                             )
@@ -546,6 +636,7 @@ class SyncManagerV2(
     private suspend fun pullAcertosFromFirestore(empresaId: String) {
         try {
             android.util.Log.d("SyncManagerV2", "📥 Baixando acertos do Firestore...")
+            android.util.Log.d("SyncManagerV2", "   Caminho: empresas/$empresaId/acertos")
             
             val snapshot = firestore
                 .collection("empresas")
@@ -556,10 +647,22 @@ class SyncManagerV2(
             
             android.util.Log.d("SyncManagerV2", "📊 Encontrados ${snapshot.size()} acertos no Firestore")
             
+            if (snapshot.isEmpty) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Nenhum acerto encontrado no Firestore")
+                return
+            }
+            
+            var acertosSincronizados = 0
+            var acertosExistentes = 0
+            
             for (document in snapshot.documents) {
                 try {
                     val data = document.data ?: continue
                     val roomId = data["roomId"] as? Long
+                    val valorRecebido = data["valorRecebido"] as? Double
+                    
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando acerto: Valor $valorRecebido (Room ID: $roomId)")
+                    android.util.Log.d("SyncManagerV2", "   Dados do acerto: $data")
                     
                     if (roomId != null) {
                         // Verificar se já existe no Room
@@ -572,7 +675,7 @@ class SyncManagerV2(
                                 clienteId = (data["clienteId"] as? Double)?.toLong() ?: 0L,
                                 periodoInicio = java.util.Date(),
                                 periodoFim = java.util.Date(),
-                                valorRecebido = (data["valorRecebido"] as? Double) ?: 0.0,
+                                valorRecebido = valorRecebido ?: 0.0,
                                 debitoAtual = (data["debitoAtual"] as? Double) ?: 0.0,
                                 dataAcerto = java.util.Date(),
                                 observacoes = data["observacoes"] as? String,
@@ -583,18 +686,26 @@ class SyncManagerV2(
                             val acertoDao = database.acertoDao()
                             acertoDao.inserir(acerto)
                             
-                            android.util.Log.d("SyncManagerV2", "✅ Acerto sincronizado: ID $roomId")
+                            acertosSincronizados++
+                            android.util.Log.d("SyncManagerV2", "✅ Acerto sincronizado: Valor ${acerto.valorRecebido} (ID: $roomId)")
                         } else {
-                            android.util.Log.d("SyncManagerV2", "⏭️ Acerto já existe: ID $roomId")
+                            acertosExistentes++
+                            android.util.Log.d("SyncManagerV2", "⏭️ Acerto já existe: Valor ${acertoExistente.valorRecebido} (ID: $roomId)")
                         }
+                    } else {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Acerto sem roomId: ${document.id}")
                     }
                 } catch (e: Exception) {
-                    android.util.Log.w("SyncManagerV2", "Erro ao processar acerto ${document.id}: ${e.message}")
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao processar acerto ${document.id}: ${e.message}")
                 }
             }
             
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Acertos:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $acertosSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $acertosExistentes")
+            
         } catch (e: Exception) {
-            android.util.Log.e("SyncManagerV2", "Erro ao baixar acertos: ${e.message}", e)
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar acertos: ${e.message}", e)
         }
     }
     
@@ -604,6 +715,7 @@ class SyncManagerV2(
     private suspend fun pullMesasFromFirestore(empresaId: String) {
         try {
             android.util.Log.d("SyncManagerV2", "📥 Baixando mesas do Firestore...")
+            android.util.Log.d("SyncManagerV2", "   Caminho: empresas/$empresaId/mesas")
             
             val snapshot = firestore
                 .collection("empresas")
@@ -614,12 +726,24 @@ class SyncManagerV2(
             
             android.util.Log.d("SyncManagerV2", "📊 Encontradas ${snapshot.size()} mesas no Firestore")
             
+            if (snapshot.isEmpty) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Nenhuma mesa encontrada no Firestore")
+                return
+            }
+            
+            var mesasSincronizadas = 0
+            var mesasExistentes = 0
+            
             for (document in snapshot.documents) {
                 try {
                     val data = document.data ?: continue
                     val roomId = data["roomId"] as? Long
+                    val numero = data["numero"] as? String
                     
-                    if (roomId != null) {
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando mesa: $numero (Room ID: $roomId)")
+                    android.util.Log.d("SyncManagerV2", "   Dados da mesa: $data")
+                    
+                    if (roomId != null && numero != null) {
                         // Verificar se já existe no Room
                         val mesaExistente = appRepository.obterMesaPorId(roomId)
                         
@@ -627,7 +751,7 @@ class SyncManagerV2(
                             // Criar mesa no Room baseado nos dados do Firestore
                             val mesa = com.example.gestaobilhares.data.entities.Mesa(
                                 id = roomId,
-                                numero = (data["numero"] as? String) ?: "0",
+                                numero = numero,
                                 clienteId = (data["clienteId"] as? Double)?.toLong(),
                                 ativa = data["ativa"] as? Boolean ?: true
                             )
@@ -636,18 +760,26 @@ class SyncManagerV2(
                             val mesaDao = database.mesaDao()
                             mesaDao.inserir(mesa)
                             
+                            mesasSincronizadas++
                             android.util.Log.d("SyncManagerV2", "✅ Mesa sincronizada: ${mesa.numero} (ID: $roomId)")
                         } else {
+                            mesasExistentes++
                             android.util.Log.d("SyncManagerV2", "⏭️ Mesa já existe: ${mesaExistente.numero} (ID: $roomId)")
                         }
+                    } else {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Mesa sem roomId ou numero: ${document.id}")
                     }
                 } catch (e: Exception) {
-                    android.util.Log.w("SyncManagerV2", "Erro ao processar mesa ${document.id}: ${e.message}")
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao processar mesa ${document.id}: ${e.message}")
                 }
             }
             
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Mesas:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizadas: $mesasSincronizadas")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $mesasExistentes")
+            
         } catch (e: Exception) {
-            android.util.Log.e("SyncManagerV2", "Erro ao baixar mesas: ${e.message}", e)
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar mesas: ${e.message}", e)
         }
     }
     
@@ -710,6 +842,57 @@ class SyncManagerV2(
                         }
                     } else {
                         android.util.Log.w("SyncManagerV2", "⚠️ Rota sem roomId ou nome: ${document.id}")
+                        android.util.Log.w("SyncManagerV2", "   Dados disponíveis: ${data.keys}")
+                        
+                        // Tentar criar rota com dados mínimos se não tiver roomId
+                        if (roomId == null && nome != null) {
+                            android.util.Log.d("SyncManagerV2", "🔄 Tentando criar rota sem roomId: $nome")
+                            try {
+                                val rota = com.example.gestaobilhares.data.entities.Rota(
+                                    nome = nome,
+                                    descricao = data["descricao"] as? String ?: "",
+                                    ativa = data["ativa"] as? Boolean ?: true,
+                                    dataCriacao = System.currentTimeMillis()
+                                )
+                                
+                                val rotaDao = database.rotaDao()
+                                val novoId = rotaDao.insertRota(rota)
+                                
+                                rotasSincronizadas++
+                                android.util.Log.d("SyncManagerV2", "✅ Rota criada sem roomId: ${rota.nome} (Novo ID: $novoId)")
+                            } catch (e: Exception) {
+                                android.util.Log.e("SyncManagerV2", "❌ Erro ao criar rota sem roomId: ${e.message}")
+                            }
+                        } else if (roomId == null && nome == null) {
+                            // Rota completamente vazia - verificar se já existe uma rota com nome similar
+                            android.util.Log.d("SyncManagerV2", "🔄 Rota completamente vazia. Verificando se já existe rota similar...")
+                            
+                            // Verificar se já existe uma rota com nome baseado no ID do documento
+                            val nomeExtraido = document.id.takeIf { it.isNotBlank() } ?: "Rota Importada"
+                            val rotasExistentes = appRepository.obterTodasRotas().first()
+                            val rotaSimilar = rotasExistentes.find { it.nome.contains(nomeExtraido) || nomeExtraido.contains(it.nome) }
+                            
+                            if (rotaSimilar == null) {
+                                try {
+                                    val rota = com.example.gestaobilhares.data.entities.Rota(
+                                        nome = nomeExtraido,
+                                        descricao = "Rota importada do Firestore",
+                                        ativa = true,
+                                        dataCriacao = System.currentTimeMillis()
+                                    )
+                                    
+                                    val rotaDao = database.rotaDao()
+                                    val novoId = rotaDao.insertRota(rota)
+                                    
+                                    rotasSincronizadas++
+                                    android.util.Log.d("SyncManagerV2", "✅ Rota criada com nome extraído: ${rota.nome} (Novo ID: $novoId)")
+                                } catch (e: Exception) {
+                                    android.util.Log.e("SyncManagerV2", "❌ Erro ao criar rota com nome extraído: ${e.message}")
+                                }
+                            } else {
+                                android.util.Log.d("SyncManagerV2", "⏭️ Rota similar já existe: ${rotaSimilar.nome} (ID: ${rotaSimilar.id})")
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     android.util.Log.w("SyncManagerV2", "❌ Erro ao processar rota ${document.id}: ${e.message}")

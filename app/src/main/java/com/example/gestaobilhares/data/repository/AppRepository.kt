@@ -321,6 +321,36 @@ class AppRepository constructor(
         return try {
             val id = mesaDao.inserir(mesa)
             logDbInsertSuccess("MESA", "Numero=${mesa.numero}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "numero": "${mesa.numero}",
+                        "clienteId": ${mesa.clienteId},
+                        "ativa": ${mesa.ativa},
+                        "tipoMesa": "${mesa.tipoMesa}",
+                        "tamanho": "${mesa.tamanho}",
+                        "estadoConservacao": "${mesa.estadoConservacao}",
+                        "valorFixo": ${mesa.valorFixo},
+                        "fichasInicial": ${mesa.fichasInicial},
+                        "fichasFinal": ${mesa.fichasFinal},
+                        "relogioInicial": ${mesa.relogioInicial},
+                        "relogioFinal": ${mesa.relogioFinal},
+                        "dataInstalacao": "${mesa.dataInstalacao}",
+                        "observacoes": "${mesa.observacoes ?: ""}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Mesa", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("Mesa", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar mesa à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
             id
         } catch (e: Exception) {
             logDbInsertError("MESA", "Numero=${mesa.numero}", e)
@@ -610,6 +640,27 @@ class AppRepository constructor(
         return try {
             val id = rotaDao.insertRota(rota)
             logDbInsertSuccess("ROTA", "Nome=${rota.nome}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "nome": "${rota.nome}",
+                        "descricao": "${rota.descricao}",
+                        "ativa": ${rota.ativa},
+                        "dataCriacao": ${rota.dataCriacao}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Rota", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("Rota", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar rota à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
             id
         } catch (e: Exception) {
             logDbInsertError("ROTA", "Nome=${rota.nome}", e)
@@ -828,6 +879,29 @@ class AppRepository constructor(
         return try {
             val id = colaboradorDao.inserir(colaborador)
             logDbInsertSuccess("COLABORADOR", "Email=${colaborador.email}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "nome": "${colaborador.nome}",
+                        "email": "${colaborador.email}",
+                        "nivelAcesso": "${colaborador.nivelAcesso}",
+                        "ativo": ${colaborador.ativo},
+                        "aprovado": ${colaborador.aprovado},
+                        "dataCadastro": "${colaborador.dataCadastro}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Colaborador", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("Colaborador", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar colaborador à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
             id
         } catch (e: Exception) {
             logDbInsertError("COLABORADOR", "Email=${colaborador.email}", e)
