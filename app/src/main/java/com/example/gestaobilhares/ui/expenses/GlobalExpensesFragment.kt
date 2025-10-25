@@ -59,7 +59,7 @@ class GlobalExpensesFragment : Fragment() {
         val cicloAcertoRepository = com.example.gestaobilhares.data.repository.CicloAcertoRepository(
             database.cicloAcertoDao(),
             despesaRepository,
-            com.example.gestaobilhares.data.repository.AcertoRepository(database.acertoDao(), database.clienteDao()),
+            com.example.gestaobilhares.data.repository.AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
             com.example.gestaobilhares.data.repository.ClienteRepository(database.clienteDao(), appRepository),
             database.rotaDao()
         )

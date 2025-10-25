@@ -76,7 +76,7 @@ class SettlementDetailFragment : Fragment() {
         val database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = SettlementDetailViewModel(
-            AcertoRepository(database.acertoDao(), database.clienteDao()),
+            AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
             AcertoMesaRepository(database.acertoMesaDao()),
             com.example.gestaobilhares.data.repository.ClienteRepository(
                 database.clienteDao(),
@@ -208,7 +208,8 @@ class SettlementDetailFragment : Fragment() {
         // ✅ MELHORIA: Buscar dados completos das mesas para exibir numeração correta
         lifecycleScope.launch {
             try {
-                val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
+                val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+                val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao(), appRepository)
                 val mesasCompletas = mutableMapOf<Long, AcertoMesaDetailAdapter.MesaCompleta>()
                 
                 AppLogger.log("SettlementDetailFragment", "=== BUSCANDO DADOS COMPLETOS DAS MESAS ===")
@@ -401,7 +402,8 @@ class SettlementDetailFragment : Fragment() {
      * ✅ MÉTODO CENTRALIZADO: Obtém mesas completas (FONTE ÚNICA DE VERDADE)
      */
     private suspend fun obterMesasCompletas(settlement: SettlementDetailViewModel.SettlementDetail): List<Mesa> {
-        val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao(), appRepository)
         val mesasCompletas = mutableListOf<Mesa>()
         
         AppLogger.log("SettlementDetailFragment", "=== BUSCANDO MESAS COMPLETAS ===")
@@ -452,7 +454,8 @@ class SettlementDetailFragment : Fragment() {
         return try {
             // Usar runBlocking para chamar função suspensa de forma síncrona
             kotlinx.coroutines.runBlocking {
-                val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao())
+                val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+                val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao(), appRepository)
                 mesaRepository.buscarPorId(mesaId)
             }
         } catch (e: Exception) {
@@ -476,12 +479,13 @@ class SettlementDetailFragment : Fragment() {
                 binding.btnEdit.isEnabled = false
                 
                 // Usar o repositório já inicializado no ViewModel
-                val acertoRepo = AcertoRepository(
-                    AppDatabase.getDatabase(requireContext()).acertoDao(),
-                    AppDatabase.getDatabase(requireContext()).clienteDao()
-                )
                 val database = AppDatabase.getDatabase(requireContext())
                 val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+                val acertoRepo = AcertoRepository(
+                    database.acertoDao(),
+                    database.clienteDao(),
+                    appRepository
+                )
                 val clienteRepo = com.example.gestaobilhares.data.repository.ClienteRepository(
                     database.clienteDao(),
                     appRepository

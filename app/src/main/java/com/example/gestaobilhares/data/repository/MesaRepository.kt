@@ -9,14 +9,18 @@ import kotlinx.coroutines.flow.Flow
  * e fornecer uma interface limpa para os ViewModels.
  */
 class MesaRepository constructor(
-    private val mesaDao: MesaDao
+    private val mesaDao: MesaDao,
+    private val appRepository: AppRepository
 ) {
     fun obterMesasPorCliente(clienteId: Long): Flow<List<Mesa>> =
         mesaDao.obterMesasPorCliente(clienteId)
 
     fun obterMesasDisponiveis(): Flow<List<Mesa>> = mesaDao.obterMesasDisponiveis()
 
-    suspend fun inserir(mesa: Mesa): Long = mesaDao.inserir(mesa)
+    suspend fun inserir(mesa: Mesa): Long {
+        // ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
+        return appRepository.inserirMesa(mesa)
+    }
 
     suspend fun atualizar(mesa: Mesa) = mesaDao.atualizar(mesa)
 

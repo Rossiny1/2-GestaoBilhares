@@ -45,7 +45,7 @@ class MesasDepositoFragment : Fragment() {
         
         val database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = MesasDepositoViewModel(MesaRepository(database.mesaDao()), appRepository)
+        viewModel = MesasDepositoViewModel(MesaRepository(database.mesaDao(), appRepository), appRepository)
         setupRecyclerView()
         setupListeners()
         setupAccessControl()
