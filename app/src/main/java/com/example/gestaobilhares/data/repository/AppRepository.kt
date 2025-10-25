@@ -320,6 +320,13 @@ class AppRepository constructor(
     suspend fun inserirMesa(mesa: Mesa): Long {
         logDbInsertStart("MESA", "Numero=${mesa.numero}, ClienteID=${mesa.clienteId}")
         return try {
+            // ✅ VALIDAÇÃO: Verificar se já existe mesa com mesmo número
+            val mesaExistente = mesaDao.buscarPorNumero(mesa.numero)
+            if (mesaExistente != null) {
+                android.util.Log.w("AppRepository", "⚠️ Mesa com número '${mesa.numero}' já existe (ID: ${mesaExistente.id})")
+                throw IllegalArgumentException("Mesa com número '${mesa.numero}' já existe")
+            }
+            
             val id = mesaDao.inserir(mesa)
             logDbInsertSuccess("MESA", "Numero=${mesa.numero}, ID=$id")
             

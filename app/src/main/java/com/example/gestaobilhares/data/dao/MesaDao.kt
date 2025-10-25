@@ -75,6 +75,12 @@ interface MesaDao {
     @Query("SELECT * FROM mesas WHERE cliente_id IS NULL AND numero = :numero LIMIT 1")
     suspend fun obterPorNumeroENullCliente(numero: String): Mesa?
     
+    /**
+     * ✅ NOVO: Busca mesa por número (independente do cliente)
+     */
+    @Query("SELECT * FROM mesas WHERE numero = :numero LIMIT 1")
+    suspend fun buscarPorNumero(numero: String): Mesa?
+    
     @Query("""
         SELECT m.* FROM mesas m
         INNER JOIN clientes c ON m.cliente_id = c.id
