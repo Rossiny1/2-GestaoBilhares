@@ -388,11 +388,270 @@ class SyncManagerV2(
     }
 
     /**
-     * Forçar sincronização manual
+     * Forçar sincronização manual (PUSH + PULL)
      */
     fun forceSync() {
         syncScope.launch {
-            processSyncQueue()
+            try {
+                // 1. PUSH: Enviar dados pendentes para Firestore
+                processSyncQueue()
+                
+                // 2. PULL: Baixar dados do Firestore para o app
+                pullFromFirestore()
+            } catch (e: Exception) {
+                android.util.Log.e("SyncManagerV2", "Erro na sincronização completa: ${e.message}", e)
+            }
+        }
+    }
+
+    /**
+     * PULL SYNC: Baixar dados do Firestore para o app
+     */
+    private suspend fun pullFromFirestore() {
+        if (!isOnline() || !isAuthenticated()) return
+        
+        try {
+            android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL SYNC do Firestore")
+            
+            val empresaId = getEmpresaId()
+            
+            // 1. Baixar clientes do Firestore
+            pullClientesFromFirestore(empresaId)
+            
+            // 2. Baixar acertos do Firestore
+            pullAcertosFromFirestore(empresaId)
+            
+            // 3. Baixar mesas do Firestore
+            pullMesasFromFirestore(empresaId)
+            
+            // 4. Baixar rotas do Firestore
+            pullRotasFromFirestore(empresaId)
+            
+            android.util.Log.d("SyncManagerV2", "✅ PULL SYNC concluído com sucesso")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "Erro no PULL SYNC: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Baixar clientes do Firestore
+     */
+    private suspend fun pullClientesFromFirestore(empresaId: String) {
+        try {
+            android.util.Log.d("SyncManagerV2", "📥 Baixando clientes do Firestore...")
+            
+            val snapshot = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection("clientes")
+                .get()
+                .await()
+            
+            android.util.Log.d("SyncManagerV2", "📊 Encontrados ${snapshot.size()} clientes no Firestore")
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = data["roomId"] as? Long
+                    
+                    if (roomId != null) {
+                        // Verificar se já existe no Room
+                        val clienteExistente = appRepository.obterClientePorId(roomId)
+                        
+                        if (clienteExistente == null) {
+                            // Criar cliente no Room baseado nos dados do Firestore
+                            val cliente = com.example.gestaobilhares.data.entities.Cliente(
+                                id = roomId,
+                                nome = data["nome"] as? String ?: "",
+                                telefone = data["telefone"] as? String,
+                                endereco = data["endereco"] as? String ?: "",
+                                rotaId = (data["rotaId"] as? Double)?.toLong() ?: 1L,
+                                ativo = data["ativo"] as? Boolean ?: true,
+                                dataCadastro = java.util.Date() // Usar data atual como fallback
+                            )
+                            
+                            // Inserir no Room (sem adicionar à fila de sync)
+                            val clienteDao = database.clienteDao()
+                            clienteDao.inserir(cliente)
+                            
+                            android.util.Log.d("SyncManagerV2", "✅ Cliente sincronizado: ${cliente.nome} (ID: $roomId)")
+                        } else {
+                            android.util.Log.d("SyncManagerV2", "⏭️ Cliente já existe: ${clienteExistente.nome} (ID: $roomId)")
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "Erro ao processar cliente ${document.id}: ${e.message}")
+                }
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "Erro ao baixar clientes: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Baixar acertos do Firestore
+     */
+    private suspend fun pullAcertosFromFirestore(empresaId: String) {
+        try {
+            android.util.Log.d("SyncManagerV2", "📥 Baixando acertos do Firestore...")
+            
+            val snapshot = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection("acertos")
+                .get()
+                .await()
+            
+            android.util.Log.d("SyncManagerV2", "📊 Encontrados ${snapshot.size()} acertos no Firestore")
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = data["roomId"] as? Long
+                    
+                    if (roomId != null) {
+                        // Verificar se já existe no Room
+                        val acertoExistente = appRepository.obterAcertoPorId(roomId)
+                        
+                        if (acertoExistente == null) {
+                            // Criar acerto no Room baseado nos dados do Firestore
+                            val acerto = com.example.gestaobilhares.data.entities.Acerto(
+                                id = roomId,
+                                clienteId = (data["clienteId"] as? Double)?.toLong() ?: 0L,
+                                periodoInicio = java.util.Date(),
+                                periodoFim = java.util.Date(),
+                                valorRecebido = (data["valorRecebido"] as? Double) ?: 0.0,
+                                debitoAtual = (data["debitoAtual"] as? Double) ?: 0.0,
+                                dataAcerto = java.util.Date(),
+                                observacoes = data["observacoes"] as? String,
+                                metodosPagamentoJson = data["metodosPagamentoJson"] as? String
+                            )
+                            
+                            // Inserir no Room (sem adicionar à fila de sync)
+                            val acertoDao = database.acertoDao()
+                            acertoDao.inserir(acerto)
+                            
+                            android.util.Log.d("SyncManagerV2", "✅ Acerto sincronizado: ID $roomId")
+                        } else {
+                            android.util.Log.d("SyncManagerV2", "⏭️ Acerto já existe: ID $roomId")
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "Erro ao processar acerto ${document.id}: ${e.message}")
+                }
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "Erro ao baixar acertos: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Baixar mesas do Firestore
+     */
+    private suspend fun pullMesasFromFirestore(empresaId: String) {
+        try {
+            android.util.Log.d("SyncManagerV2", "📥 Baixando mesas do Firestore...")
+            
+            val snapshot = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection("mesas")
+                .get()
+                .await()
+            
+            android.util.Log.d("SyncManagerV2", "📊 Encontradas ${snapshot.size()} mesas no Firestore")
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = data["roomId"] as? Long
+                    
+                    if (roomId != null) {
+                        // Verificar se já existe no Room
+                        val mesaExistente = appRepository.obterMesaPorId(roomId)
+                        
+                        if (mesaExistente == null) {
+                            // Criar mesa no Room baseado nos dados do Firestore
+                            val mesa = com.example.gestaobilhares.data.entities.Mesa(
+                                id = roomId,
+                                numero = (data["numero"] as? String) ?: "0",
+                                clienteId = (data["clienteId"] as? Double)?.toLong(),
+                                ativa = data["ativa"] as? Boolean ?: true
+                            )
+                            
+                            // Inserir no Room (sem adicionar à fila de sync)
+                            val mesaDao = database.mesaDao()
+                            mesaDao.inserir(mesa)
+                            
+                            android.util.Log.d("SyncManagerV2", "✅ Mesa sincronizada: ${mesa.numero} (ID: $roomId)")
+                        } else {
+                            android.util.Log.d("SyncManagerV2", "⏭️ Mesa já existe: ${mesaExistente.numero} (ID: $roomId)")
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "Erro ao processar mesa ${document.id}: ${e.message}")
+                }
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "Erro ao baixar mesas: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Baixar rotas do Firestore
+     */
+    private suspend fun pullRotasFromFirestore(empresaId: String) {
+        try {
+            android.util.Log.d("SyncManagerV2", "📥 Baixando rotas do Firestore...")
+            
+            val snapshot = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection("rotas")
+                .get()
+                .await()
+            
+            android.util.Log.d("SyncManagerV2", "📊 Encontradas ${snapshot.size()} rotas no Firestore")
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = data["roomId"] as? Long
+                    
+                    if (roomId != null) {
+                        // Verificar se já existe no Room
+                        val rotaExistente = appRepository.buscarRotaPorId(roomId)
+                        
+                        if (rotaExistente == null) {
+                            // Criar rota no Room baseado nos dados do Firestore
+                            val rota = com.example.gestaobilhares.data.entities.Rota(
+                                id = roomId,
+                                nome = data["nome"] as? String ?: "",
+                                descricao = data["descricao"] as? String ?: "",
+                                ativa = data["ativa"] as? Boolean ?: true,
+                                dataCriacao = System.currentTimeMillis()
+                            )
+                            
+                            // Inserir no Room (sem adicionar à fila de sync)
+                            val rotaDao = database.rotaDao()
+                            rotaDao.insertRota(rota)
+                            
+                            android.util.Log.d("SyncManagerV2", "✅ Rota sincronizada: ${rota.nome} (ID: $roomId)")
+                        } else {
+                            android.util.Log.d("SyncManagerV2", "⏭️ Rota já existe: ${rotaExistente.nome} (ID: $roomId)")
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "Erro ao processar rota ${document.id}: ${e.message}")
+                }
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "Erro ao baixar rotas: ${e.message}", e)
         }
     }
 
