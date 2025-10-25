@@ -68,13 +68,18 @@ class SyncManagerV2(
     private suspend fun initializeSyncConfig() {
         try {
             syncConfigDao.inicializarConfiguracoesPadrao(System.currentTimeMillis())
+            
             // Garantir que exista um empresa_id padrão
             val empresaConfig = syncConfigDao.buscarSyncConfigPorChave("empresa_id")
             if (empresaConfig == null) {
                 val now = System.currentTimeMillis()
                 // empresa_001 é o padrão visto no console do Firestore
                 syncConfigDao.atualizarValorConfig("empresa_id", "empresa_001", now)
+                android.util.Log.d("SyncManagerV2", "✅ empresa_id configurado como 'empresa_001'")
+            } else {
+                android.util.Log.d("SyncManagerV2", "✅ empresa_id já configurado: ${empresaConfig.value}")
             }
+            
             android.util.Log.d("SyncManagerV2", "Configurações de sincronização inicializadas")
         } catch (e: Exception) {
             android.util.Log.w("SyncManagerV2", "Erro ao inicializar configurações: ${e.message}")
@@ -152,7 +157,15 @@ class SyncManagerV2(
             val currentTime = System.currentTimeMillis()
             val operations = syncQueueDao.buscarOperacoesAgendadas(currentTime).first()
             
-            android.util.Log.d("SyncManagerV2", "Processando ${operations.size} operações")
+            android.util.Log.d("SyncManagerV2", "📋 Processando ${operations.size} operações")
+            if (operations.isEmpty()) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Nenhuma operação pendente na fila de sincronização")
+                return
+            }
+            
+            operations.forEachIndexed { index, op ->
+                android.util.Log.d("SyncManagerV2", "   [$index] ${op.entityType}:${op.entityId} - ${op.operation} (${op.status})")
+            }
             
             for (operation in operations) {
                 try {
@@ -216,6 +229,13 @@ class SyncManagerV2(
             val collection = getCollectionName(operation.entityType)
             val docId = operation.entityId.toString()
 
+            android.util.Log.d("SyncManagerV2", "🔄 Aplicando operação no Firestore:")
+            android.util.Log.d("SyncManagerV2", "   Empresa ID: $empresaId")
+            android.util.Log.d("SyncManagerV2", "   Collection: $collection")
+            android.util.Log.d("SyncManagerV2", "   Document ID: $docId")
+            android.util.Log.d("SyncManagerV2", "   Operation: ${operation.operation}")
+            android.util.Log.d("SyncManagerV2", "   Payload: ${operation.payload}")
+
             // Converter o payload JSON em Map<String, Any?> para enviar ao Firestore
             val mapType = object : TypeToken<Map<String, Any?>>() {}.type
             val payloadMap: Map<String, Any?> = try {
@@ -225,28 +245,46 @@ class SyncManagerV2(
                 emptyMap()
             }
 
+            android.util.Log.d("SyncManagerV2", "   Payload Map: $payloadMap")
+
+            // ✅ CORREÇÃO: Usar ID do Room como campo, não como documento ID
             val docRef = firestore
                 .collection("empresas")
                 .document(empresaId)
                 .collection(collection)
-                .document(docId)
+                .document() // Deixar Firestore gerar ID automático
+
+            android.util.Log.d("SyncManagerV2", "   Firestore Path: empresas/$empresaId/$collection/[AUTO_ID]")
 
             when (operation.operation.uppercase(Locale.getDefault())) {
                 "CREATE", "UPDATE" -> {
+                    // ✅ CORREÇÃO: Adicionar roomId ao payload para referência
+                    val payloadWithRoomId = payloadMap.toMutableMap().apply {
+                        put("roomId", operation.entityId)
+                        put("syncTimestamp", System.currentTimeMillis())
+                    }
+                    
                     // Merge para não sobrescrever campos inexistentes
-                    docRef.set(payloadMap, SetOptions.merge()).await()
+                    android.util.Log.d("SyncManagerV2", "   Executando SET com merge...")
+                    android.util.Log.d("SyncManagerV2", "   Payload final: $payloadWithRoomId")
+                    docRef.set(payloadWithRoomId, SetOptions.merge()).await()
+                    android.util.Log.d("SyncManagerV2", "   ✅ SET executado com sucesso")
                 }
                 "DELETE" -> {
+                    android.util.Log.d("SyncManagerV2", "   Executando DELETE...")
                     docRef.delete().await()
+                    android.util.Log.d("SyncManagerV2", "   ✅ DELETE executado com sucesso")
                 }
                 else -> {
                     android.util.Log.w("SyncManagerV2", "Operação desconhecida: ${operation.operation}")
                     return false
                 }
             }
+            android.util.Log.d("SyncManagerV2", "✅ Operação ${operation.operation} concluída com sucesso")
             true
         } catch (e: Exception) {
-            android.util.Log.e("SyncManagerV2", "Falha no Firestore: ${e.message}", e)
+            android.util.Log.e("SyncManagerV2", "❌ Falha no Firestore: ${e.message}", e)
+            android.util.Log.e("SyncManagerV2", "   Stack trace: ${e.stackTraceToString()}")
             false
         }
     }
@@ -302,8 +340,13 @@ class SyncManagerV2(
     private suspend fun getEmpresaId(): String {
         return try {
             val cfg = syncConfigDao.buscarSyncConfigPorChave("empresa_id")
-            cfg?.value ?: "empresa_001"
-        } catch (_: Exception) { "empresa_001" }
+            val empresaId = cfg?.value ?: "empresa_001"
+            android.util.Log.d("SyncManagerV2", "🏢 Empresa ID obtido: $empresaId (config: ${cfg?.key})")
+            empresaId
+        } catch (e: Exception) { 
+            android.util.Log.w("SyncManagerV2", "Erro ao obter empresa_id: ${e.message}, usando padrão")
+            "empresa_001" 
+        }
     }
 
     /** Mapeia tipos de entidades para coleções do Firestore */
@@ -377,6 +420,13 @@ class SyncManagerV2(
             val failedCount = syncQueueDao.contarOperacoesPorStatus("FAILED")
             val completedCount = syncQueueDao.contarOperacoesPorStatus("COMPLETED")
             
+            android.util.Log.d("SyncManagerV2", "📊 Estatísticas de sincronização:")
+            android.util.Log.d("SyncManagerV2", "   Pendentes: $pendingCount")
+            android.util.Log.d("SyncManagerV2", "   Falhas: $failedCount")
+            android.util.Log.d("SyncManagerV2", "   Concluídas: $completedCount")
+            android.util.Log.d("SyncManagerV2", "   Online: ${isOnline()}")
+            android.util.Log.d("SyncManagerV2", "   Sincronizando: ${isSyncing.get()}")
+            
             SyncStats(
                 pendingOperations = pendingCount,
                 failedOperations = failedCount,
@@ -387,6 +437,35 @@ class SyncManagerV2(
         } catch (e: Exception) {
             android.util.Log.w("SyncManagerV2", "Erro ao obter estatísticas: ${e.message}")
             SyncStats(0, 0, 0, false, false)
+        }
+    }
+
+    /**
+     * Debug: Listar todas as operações na fila de sincronização
+     */
+    suspend fun debugSyncQueue() {
+        try {
+            val allOperations = syncQueueDao.buscarOperacoesPorStatus("PENDING").first()
+            val totalPending = syncQueueDao.contarOperacoesPendentes()
+            val todasOperacoes = syncQueueDao.buscarTodasOperacoes(50).first()
+            
+            android.util.Log.d("SyncManagerV2", "🔍 DEBUG - Fila de sincronização:")
+            android.util.Log.d("SyncManagerV2", "   Total de operações PENDING (Flow): ${allOperations.size}")
+            android.util.Log.d("SyncManagerV2", "   Total de operações PENDING (Count): $totalPending")
+            android.util.Log.d("SyncManagerV2", "   Total de operações na fila: ${todasOperacoes.size}")
+            
+            todasOperacoes.forEachIndexed { index, op ->
+                android.util.Log.d("SyncManagerV2", "   [$index] ID: ${op.id}")
+                android.util.Log.d("SyncManagerV2", "        Tipo: ${op.entityType}")
+                android.util.Log.d("SyncManagerV2", "        Entity ID: ${op.entityId}")
+                android.util.Log.d("SyncManagerV2", "        Operação: ${op.operation}")
+                android.util.Log.d("SyncManagerV2", "        Status: ${op.status}")
+                android.util.Log.d("SyncManagerV2", "        Payload: ${op.payload}")
+                android.util.Log.d("SyncManagerV2", "        Criado: ${op.createdAt}")
+                android.util.Log.d("SyncManagerV2", "        Agendado: ${op.scheduledFor}")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "Erro ao debugar fila: ${e.message}", e)
         }
     }
 

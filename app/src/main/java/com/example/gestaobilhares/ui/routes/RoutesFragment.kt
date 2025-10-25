@@ -603,6 +603,9 @@ class RoutesFragment : Fragment() {
                         AppDatabase.getDatabase(requireContext())
                     )
                     
+                    // Debug: Mostrar fila antes da sincronização
+                    syncManager.debugSyncQueue()
+                    
                     syncManager.forceSync()
                     
                     // Aguardar um pouco para processar

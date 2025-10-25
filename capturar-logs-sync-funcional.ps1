@@ -10,6 +10,17 @@ $ADB = "C:\Users\$env:USERNAME\AppData\Local\Android\Sdk\platform-tools\adb.exe"
 # Nome do pacote do app
 $PACKAGE_NAME = "com.example.gestaobilhares"
 
+# Verificar se ADB existe
+if (-not (Test-Path $ADB)) {
+    Write-Host "ADB não encontrado em: $ADB" -ForegroundColor Red
+    Write-Host "Tentando adb global..." -ForegroundColor Yellow
+    $ADB = "adb"
+}
+
+# Limpar logs antigos
+Write-Host "Limpando logs antigos..." -ForegroundColor Yellow
+& $ADB logcat -c
+
 # Verificar dispositivos
 Write-Host "Verificando dispositivos..." -ForegroundColor Yellow
 $devices = & $ADB devices
@@ -31,10 +42,6 @@ if ($installedApps -match $PACKAGE_NAME) {
     Write-Host "App $PACKAGE_NAME não encontrado" -ForegroundColor Red
     exit 1
 }
-
-# Limpar logs antigos
-Write-Host "Limpando logs antigos..." -ForegroundColor Yellow
-& $ADB logcat -c
 
 Write-Host ""
 Write-Host "INSTRUÇÕES:" -ForegroundColor Cyan
@@ -116,4 +123,4 @@ if (Test-Path $OutputFile) {
 
 Write-Host ""
 Write-Host "Arquivo de logs: $OutputFile" -ForegroundColor White
-Write-Host "Abra o arquivo para análise detalhada" -ForegroundColor White 
+Write-Host "Abra o arquivo para análise detalhada" -ForegroundColor White

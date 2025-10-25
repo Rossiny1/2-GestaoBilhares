@@ -38,9 +38,10 @@ class ClienteRepository constructor(
         
         return try {
             android.util.Log.d("ClienteRepository", "Iniciando inserção do cliente: ${cliente.nome}")
-            val id = clienteDao.inserir(cliente)
+            // ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
+            val id = appRepository.inserirCliente(cliente)
             android.util.Log.w("🔍 DB_POPULATION", "✅ CLIENTE INSERIDO COM SUCESSO: ${cliente.nome} (ID: $id, Rota: ${cliente.rotaId})")
-            android.util.Log.d("ClienteRepository", "Cliente inserido com sucesso, ID: $id")
+            android.util.Log.d("ClienteRepository", "Cliente inserido com sucesso via AppRepository, ID: $id")
             id
         } catch (e: Exception) {
             android.util.Log.e("🔍 DB_POPULATION", "❌ ERRO AO INSERIR CLIENTE: ${cliente.nome}", e)

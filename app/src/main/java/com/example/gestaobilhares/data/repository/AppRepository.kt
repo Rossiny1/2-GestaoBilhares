@@ -1561,8 +1561,12 @@ class AppRepository constructor(
                 priority = priority
             )
             
-            syncQueueDao.inserirSyncQueue(syncQueue)
-            Log.d("AppRepository", "Operação adicionada à fila: $entityType:$entityId")
+            val insertedId = syncQueueDao.inserirSyncQueue(syncQueue)
+            Log.d("AppRepository", "✅ Operação adicionada à fila: $entityType:$entityId (ID: $insertedId)")
+            
+            // ✅ DEBUG: Verificar se foi realmente inserida
+            val count = syncQueueDao.contarOperacoesPendentes()
+            Log.d("AppRepository", "📊 Total de operações pendentes: $count")
             
         } catch (e: Exception) {
             Log.e("AppRepository", "Erro ao adicionar à fila: ${e.message}")
