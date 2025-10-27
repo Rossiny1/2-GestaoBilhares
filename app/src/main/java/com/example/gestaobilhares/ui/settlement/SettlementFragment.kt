@@ -258,15 +258,7 @@ class SettlementFragment : Fragment() {
         // Quarto: configurar UI básica
         configurarUIBasica()
         
-                // ✅ CORREÇÃO: Quinto: buscar débito anterior com modo de edição
-        viewModel.buscarDebitoAnterior(
-            args.clienteId,
-            args.acertoIdParaEdicao.takeIf { it != 0L }
-        )
-
-        
-        
-        // Sexto: carregar dados básicos do cliente para header
+                // Sexto: carregar dados básicos do cliente para header
         viewModel.loadClientForSettlement(args.clienteId)
         
         // ✅ NOVO: Sétimo: carregar dados do acerto se estiver editando
@@ -275,6 +267,8 @@ class SettlementFragment : Fragment() {
             carregarDadosAcertoParaEdicao()
         } else {
             Log.d("SettlementFragment", "🔧 NÃO chamando carregarDadosAcertoParaEdicao() - Acerto ID é 0")
+            // ✅ CORREÇÃO: Buscar débito anterior apenas para novos acertos
+            viewModel.buscarDebitoAnterior(args.clienteId, null)
         }
     }
 
@@ -287,31 +281,36 @@ class SettlementFragment : Fragment() {
                 Log.d("SettlementFragment", "=== CARREGANDO DADOS DO ACERTO PARA EDIÇÃO ===")
                 Log.d("SettlementFragment", "Acerto ID: ${args.acertoIdParaEdicao}")
                 
-                    // Buscar dados do acerto
-                    val acerto = viewModel.buscarAcertoPorId(args.acertoIdParaEdicao)
-                    if (acerto != null) {
-                        Log.d("SettlementFragment", "Acerto encontrado: ID=${acerto.id}, Valor=${acerto.valorRecebido}")
-                        Log.d("SettlementFragment", "🔍 DEBUG ACERTO COMPLETO:")
-                        Log.d("SettlementFragment", "  - ID: ${acerto.id}")
-                        Log.d("SettlementFragment", "  - Valor Recebido: ${acerto.valorRecebido}")
-                        Log.d("SettlementFragment", "  - Desconto: ${acerto.desconto}")
-                        Log.d("SettlementFragment", "  - Observações: '${acerto.observacoes}'")
-                        Log.d("SettlementFragment", "  - Data: ${acerto.dataAcerto}")
-                        Log.d("SettlementFragment", "  - Status: ${acerto.status}")
+                // ✅ CORREÇÃO: Primeiro buscar o débito anterior para edição
+                Log.d("SettlementFragment", "🔍 Buscando débito anterior para edição...")
+                viewModel.buscarDebitoAnterior(args.clienteId, args.acertoIdParaEdicao)
+                
+                // Buscar dados do acerto
+                val acerto = viewModel.buscarAcertoPorId(args.acertoIdParaEdicao)
+                if (acerto != null) {
+                    Log.d("SettlementFragment", "Acerto encontrado: ID=${acerto.id}, Valor=${acerto.valorRecebido}")
+                    Log.d("SettlementFragment", "🔍 DEBUG ACERTO COMPLETO:")
+                    Log.d("SettlementFragment", "  - ID: ${acerto.id}")
+                    Log.d("SettlementFragment", "  - Valor Recebido: ${acerto.valorRecebido}")
+                    Log.d("SettlementFragment", "  - Desconto: ${acerto.desconto}")
+                    Log.d("SettlementFragment", "  - Observações: '${acerto.observacoes}'")
+                    Log.d("SettlementFragment", "  - Data: ${acerto.dataAcerto}")
+                    Log.d("SettlementFragment", "  - Status: ${acerto.status}")
+                    Log.d("SettlementFragment", "  - Débito Anterior: ${acerto.debitoAnterior}")
 
-                        // ✅ VALIDAÇÃO: Verificar se o acerto pode ser editado
-                        Log.d("SettlementFragment", "🔍 VALIDAÇÃO: Verificando status do acerto...")
-                        Log.d("SettlementFragment", "🔍 Status atual: ${acerto.status}")
-                        
-                        // ✅ CORREÇÃO: Remover bloqueio de acertos FINALIZADOS
-                        // A validação de edição agora é feita pelo AcertoRepository baseada no status do ciclo
-                        Log.d("SettlementFragment", "✅ Acerto pode ser editado (Status: ${acerto.status})")
+                    // ✅ VALIDAÇÃO: Verificar se o acerto pode ser editado
+                    Log.d("SettlementFragment", "🔍 VALIDAÇÃO: Verificando status do acerto...")
+                    Log.d("SettlementFragment", "🔍 Status atual: ${acerto.status}")
+                    
+                    // ✅ CORREÇÃO: Remover bloqueio de acertos FINALIZADOS
+                    // A validação de edição agora é feita pelo AcertoRepository baseada no status do ciclo
+                    Log.d("SettlementFragment", "✅ Acerto pode ser editado (Status: ${acerto.status})")
 
-                        // Preencher campos da UI com dados do acerto
-                        preencherCamposComDadosAcerto(acerto)
-                    } else {
-                        Log.e("SettlementFragment", "Acerto não encontrado: ${args.acertoIdParaEdicao}")
-                    }
+                    // Preencher campos da UI com dados do acerto
+                    preencherCamposComDadosAcerto(acerto)
+                } else {
+                    Log.e("SettlementFragment", "Acerto não encontrado: ${args.acertoIdParaEdicao}")
+                }
             } catch (e: Exception) {
                 Log.e("SettlementFragment", "Erro ao carregar dados do acerto: ${e.message}", e)
             }
@@ -329,10 +328,8 @@ class SettlementFragment : Fragment() {
             Log.d("SettlementFragment", "Observações: ${acerto.observacoes}")
             Log.d("SettlementFragment", "Débito anterior: ${acerto.debitoAnterior}")
 
-            // ✅ CORREÇÃO: Preencher débito anterior automaticamente
-            Log.d("SettlementFragment", "🔍 Preenchendo débito anterior: ${acerto.debitoAnterior}")
-            viewModel.definirDebitoAnteriorParaEdicao(acerto.debitoAnterior)
-            Log.d("SettlementFragment", "✅ Débito anterior preenchido: ${acerto.debitoAnterior}")
+            // ✅ CORREÇÃO: Débito anterior já foi carregado pelo buscarDebitoAnterior()
+            Log.d("SettlementFragment", "🔍 Débito anterior já carregado pelo ViewModel: ${acerto.debitoAnterior}")
 
             // Preencher valor recebido (sempre, mesmo se for 0)
             Log.d("SettlementFragment", "🔍 Preenchendo valor recebido: ${acerto.valorRecebido}")
@@ -354,10 +351,6 @@ class SettlementFragment : Fragment() {
             Handler(Looper.getMainLooper()).postDelayed({
                 Log.d("SettlementFragment", "🔧 Executando preenchimento tardio do relógio final...")
                 preencherRelogioFinalMesas(acerto.id)
-                
-                // ✅ CORREÇÃO: Forçar atualização do débito anterior após carregar tudo
-                Log.d("SettlementFragment", "🔧 Forçando atualização do débito anterior...")
-                viewModel.definirDebitoAnteriorParaEdicao(acerto.debitoAnterior)
             }, 1000)
 
             // Preencher métodos de pagamento (se houver)
