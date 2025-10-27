@@ -556,6 +556,10 @@ class SettlementViewModel constructor(
                 acertoMesas.forEach { appRepository.inserirAcertoMesa(it) }
                 logOperation("SETTLEMENT", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
                 
+                // ✅ CORREÇÃO CRÍTICA: Adicionar acerto à fila de sync APÓS inserir as mesas
+                appRepository.adicionarAcertoComMesasParaSync(acertoId)
+                logOperation("SETTLEMENT", "✅ Acerto $acertoId adicionado à fila de sync com ${acertoMesas.size} mesas")
+                
                 // ✅ NOVO: Registrar troca de pano no histórico de manutenção
                 if (dadosAcerto.panoTrocado && com.example.gestaobilhares.utils.StringUtils.isNaoVazia(dadosAcerto.numeroPano)) {
                     registrarTrocaPanoNoHistorico(dadosAcerto.mesas.map { mesa ->
