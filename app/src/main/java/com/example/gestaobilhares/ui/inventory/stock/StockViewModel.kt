@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.data.entities.StockItem as StockItemEntity
-import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.repository.StockItemRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 class StockViewModel constructor(
-    private val panoEstoqueRepository: PanoEstoqueRepository,
+    private val appRepository: AppRepository,
     private val stockItemRepository: StockItemRepository
 ) : ViewModel() {
     
@@ -60,7 +60,7 @@ class StockViewModel constructor(
     private fun loadPanosEstoque() {
         viewModelScope.launch {
             try {
-                panoEstoqueRepository.listarTodos().collect { panos ->
+                appRepository.obterTodosPanosEstoque().collect { panos ->
                     _panosEstoque.value = panos
                     // Agrupar panos por características
                     _panoGroups.value = agruparPanos(panos)
@@ -114,7 +114,10 @@ class StockViewModel constructor(
     fun adicionarPanosLote(panos: List<PanoEstoque>) {
         viewModelScope.launch {
             try {
-                panoEstoqueRepository.inserirLote(panos)
+                // Usar AppRepository para inserir com sincronização
+                panos.forEach { pano ->
+                    appRepository.inserirPanoEstoque(pano)
+                }
                 // Recarregar panos do estoque
                 loadPanosEstoque()
             } catch (e: Exception) {

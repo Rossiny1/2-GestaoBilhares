@@ -24,9 +24,9 @@ class AddEditStockItemDialog : DialogFragment() {
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
         val database = AppDatabase.getDatabase(requireContext())
-        val panoEstoqueRepository = PanoEstoqueRepository(database.panoEstoqueDao())
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         val stockItemRepository = StockItemRepository(database.stockItemDao())
-        viewModel = StockViewModel(panoEstoqueRepository, stockItemRepository)
+        viewModel = StockViewModel(appRepository, stockItemRepository)
         
         setupSpinners()
         setupClickListeners()

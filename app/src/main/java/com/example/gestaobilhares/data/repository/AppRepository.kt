@@ -73,6 +73,8 @@ class AppRepository constructor(
     private val logAuditoriaAssinaturaDao: LogAuditoriaAssinaturaDao,
     private val panoEstoqueDao: com.example.gestaobilhares.data.dao.PanoEstoqueDao,
     private val mesaVendidaDao: com.example.gestaobilhares.data.dao.MesaVendidaDao,
+    private val stockItemDao: com.example.gestaobilhares.data.dao.StockItemDao,
+    private val veiculoDao: com.example.gestaobilhares.data.dao.VeiculoDao,
     private val categoriaDespesaDao: CategoriaDespesaDao,
     private val tipoDespesaDao: TipoDespesaDao,
     private val historicoManutencaoVeiculoDao: HistoricoManutencaoVeiculoDao,
@@ -1197,6 +1199,407 @@ class AppRepository constructor(
         }
     }
     suspend fun deletarMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida) = mesaVendidaDao.deletar(mesaVendida)
+
+    // ==================== STOCK ITEM ====================
+    
+    fun obterTodosStockItems() = stockItemDao.listarTodos()
+    suspend fun obterStockItemPorId(id: Long) = stockItemDao.buscarPorId(id)
+    suspend fun inserirStockItem(stockItem: com.example.gestaobilhares.data.entities.StockItem): Long {
+        logDbInsertStart("STOCKITEM", "Nome=${stockItem.name}, Categoria=${stockItem.category}")
+        return try {
+            val id = stockItemDao.inserir(stockItem)
+            logDbInsertSuccess("STOCKITEM", "Nome=${stockItem.name}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "name": "${stockItem.name}",
+                        "category": "${stockItem.category}",
+                        "quantity": ${stockItem.quantity},
+                        "unitPrice": ${stockItem.unitPrice},
+                        "supplier": "${stockItem.supplier}",
+                        "description": "${stockItem.description ?: ""}",
+                        "createdAt": "${stockItem.createdAt.time}",
+                        "updatedAt": "${stockItem.updatedAt.time}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("StockItem", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("StockItem", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar criação de stock item à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+            id
+        } catch (e: Exception) {
+            logDbInsertError("STOCKITEM", "Nome=${stockItem.name}", e)
+            throw e
+        }
+    }
+    
+    suspend fun atualizarStockItem(stockItem: com.example.gestaobilhares.data.entities.StockItem) {
+        logDbUpdateStart("STOCKITEM", "ID=${stockItem.id}, Nome=${stockItem.name}")
+        try {
+            stockItemDao.atualizar(stockItem)
+            logDbUpdateSuccess("STOCKITEM", "ID=${stockItem.id}")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${stockItem.id},
+                        "name": "${stockItem.name}",
+                        "category": "${stockItem.category}",
+                        "quantity": ${stockItem.quantity},
+                        "unitPrice": ${stockItem.unitPrice},
+                        "supplier": "${stockItem.supplier}",
+                        "description": "${stockItem.description ?: ""}",
+                        "createdAt": "${stockItem.createdAt.time}",
+                        "updatedAt": "${stockItem.updatedAt.time}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("StockItem", stockItem.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("StockItem", stockItem.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de stock item à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("STOCKITEM", "ID=${stockItem.id}", e)
+            throw e
+        }
+    }
+    suspend fun deletarStockItem(stockItem: com.example.gestaobilhares.data.entities.StockItem) = stockItemDao.deletar(stockItem)
+    suspend fun atualizarQuantidadeStockItem(id: Long, newQuantity: Int, updatedAt: java.util.Date) = stockItemDao.atualizarQuantidade(id, newQuantity, updatedAt)
+
+    // ==================== VEICULO ====================
+    
+    fun obterTodosVeiculos() = veiculoDao.listar()
+    suspend fun obterVeiculoPorId(id: Long) = veiculoDao.listar().first().find { it.id == id }
+    suspend fun inserirVeiculo(veiculo: com.example.gestaobilhares.data.entities.Veiculo): Long {
+        logDbInsertStart("VEICULO", "Nome=${veiculo.nome}, Placa=${veiculo.placa}")
+        return try {
+            val id = veiculoDao.inserir(veiculo)
+            logDbInsertSuccess("VEICULO", "Nome=${veiculo.nome}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "nome": "${veiculo.nome}",
+                        "placa": "${veiculo.placa}",
+                        "marca": "${veiculo.marca}",
+                        "modelo": "${veiculo.modelo}",
+                        "anoModelo": ${veiculo.anoModelo},
+                        "kmAtual": ${veiculo.kmAtual},
+                        "dataCompra": ${veiculo.dataCompra?.time ?: "null"},
+                        "observacoes": "${veiculo.observacoes ?: ""}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Veiculo", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("Veiculo", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar criação de veículo à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+            id
+        } catch (e: Exception) {
+            logDbInsertError("VEICULO", "Nome=${veiculo.nome}", e)
+            throw e
+        }
+    }
+    
+    suspend fun atualizarVeiculo(veiculo: com.example.gestaobilhares.data.entities.Veiculo) {
+        logDbUpdateStart("VEICULO", "ID=${veiculo.id}, Nome=${veiculo.nome}")
+        try {
+            veiculoDao.atualizar(veiculo)
+            logDbUpdateSuccess("VEICULO", "ID=${veiculo.id}")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${veiculo.id},
+                        "nome": "${veiculo.nome}",
+                        "placa": "${veiculo.placa}",
+                        "marca": "${veiculo.marca}",
+                        "modelo": "${veiculo.modelo}",
+                        "anoModelo": ${veiculo.anoModelo},
+                        "kmAtual": ${veiculo.kmAtual},
+                        "dataCompra": ${veiculo.dataCompra?.time ?: "null"},
+                        "observacoes": "${veiculo.observacoes ?: ""}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Veiculo", veiculo.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("Veiculo", veiculo.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de veículo à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("VEICULO", "ID=${veiculo.id}", e)
+            throw e
+        }
+    }
+    suspend fun deletarVeiculo(veiculo: com.example.gestaobilhares.data.entities.Veiculo) = veiculoDao.deletar(veiculo)
+
+    // ==================== HISTORICO MANUTENCAO MESA ====================
+    
+    fun obterTodosHistoricoManutencaoMesa() = historicoManutencaoMesaDao.listarTodos()
+    suspend fun obterHistoricoManutencaoMesaPorId(id: Long) = historicoManutencaoMesaDao.buscarPorId(id)
+    suspend fun inserirHistoricoManutencaoMesaSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa): Long {
+        logDbInsertStart("HISTORICO_MANUTENCAO_MESA", "Mesa=${historico.numeroMesa}, Tipo=${historico.tipoManutencao}")
+        return try {
+            val id = historicoManutencaoMesaDao.inserir(historico)
+            logDbInsertSuccess("HISTORICO_MANUTENCAO_MESA", "Mesa=${historico.numeroMesa}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "mesaId": ${historico.mesaId},
+                        "numeroMesa": "${historico.numeroMesa}",
+                        "tipoManutencao": "${historico.tipoManutencao}",
+                        "descricao": "${historico.descricao ?: ""}",
+                        "dataManutencao": ${historico.dataManutencao.time},
+                        "responsavel": "${historico.responsavel ?: ""}",
+                        "observacoes": "${historico.observacoes ?: ""}",
+                        "custo": ${historico.custo ?: "null"},
+                        "fotoAntes": "${historico.fotoAntes ?: ""}",
+                        "fotoDepois": "${historico.fotoDepois ?: ""}",
+                        "dataCriacao": ${historico.dataCriacao.time}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("HistoricoManutencaoMesa", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("HistoricoManutencaoMesa", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar criação de histórico manutenção mesa à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+            id
+        } catch (e: Exception) {
+            logDbInsertError("HISTORICO_MANUTENCAO_MESA", "Mesa=${historico.numeroMesa}", e)
+            throw e
+        }
+    }
+    
+    suspend fun atualizarHistoricoManutencaoMesaSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa) {
+        logDbUpdateStart("HISTORICO_MANUTENCAO_MESA", "ID=${historico.id}, Mesa=${historico.numeroMesa}")
+        try {
+            historicoManutencaoMesaDao.atualizar(historico)
+            logDbUpdateSuccess("HISTORICO_MANUTENCAO_MESA", "ID=${historico.id}")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${historico.id},
+                        "mesaId": ${historico.mesaId},
+                        "numeroMesa": "${historico.numeroMesa}",
+                        "tipoManutencao": "${historico.tipoManutencao}",
+                        "descricao": "${historico.descricao ?: ""}",
+                        "dataManutencao": ${historico.dataManutencao.time},
+                        "responsavel": "${historico.responsavel ?: ""}",
+                        "observacoes": "${historico.observacoes ?: ""}",
+                        "custo": ${historico.custo ?: "null"},
+                        "fotoAntes": "${historico.fotoAntes ?: ""}",
+                        "fotoDepois": "${historico.fotoDepois ?: ""}",
+                        "dataCriacao": ${historico.dataCriacao.time}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("HistoricoManutencaoMesa", historico.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("HistoricoManutencaoMesa", historico.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de histórico manutenção mesa à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("HISTORICO_MANUTENCAO_MESA", "ID=${historico.id}", e)
+            throw e
+        }
+    }
+    suspend fun deletarHistoricoManutencaoMesa(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa) = historicoManutencaoMesaDao.deletar(historico)
+
+    // ==================== HISTORICO MANUTENCAO VEICULO ====================
+    
+    fun obterTodosHistoricoManutencaoVeiculo() = historicoManutencaoVeiculoDao.listarPorVeiculo(0L) // Lista todos
+    suspend fun obterHistoricoManutencaoVeiculoPorId(id: Long) = historicoManutencaoVeiculoDao.listarPorVeiculo(0L).first().find { it.id == id }
+    suspend fun inserirHistoricoManutencaoVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo): Long {
+        logDbInsertStart("HISTORICO_MANUTENCAO_VEICULO", "Veiculo=${historico.veiculoId}, Tipo=${historico.tipoManutencao}")
+        return try {
+            val id = historicoManutencaoVeiculoDao.inserir(historico)
+            logDbInsertSuccess("HISTORICO_MANUTENCAO_VEICULO", "Veiculo=${historico.veiculoId}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "veiculoId": ${historico.veiculoId},
+                        "tipoManutencao": "${historico.tipoManutencao}",
+                        "descricao": "${historico.descricao}",
+                        "dataManutencao": ${historico.dataManutencao.time},
+                        "valor": ${historico.valor},
+                        "kmVeiculo": ${historico.kmVeiculo},
+                        "responsavel": "${historico.responsavel ?: ""}",
+                        "observacoes": "${historico.observacoes ?: ""}",
+                        "dataCriacao": ${historico.dataCriacao.time}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("HistoricoManutencaoVeiculo", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("HistoricoManutencaoVeiculo", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar criação de histórico manutenção veículo à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+            id
+        } catch (e: Exception) {
+            logDbInsertError("HISTORICO_MANUTENCAO_VEICULO", "Veiculo=${historico.veiculoId}", e)
+            throw e
+        }
+    }
+    
+    suspend fun atualizarHistoricoManutencaoVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo) {
+        logDbUpdateStart("HISTORICO_MANUTENCAO_VEICULO", "ID=${historico.id}, Veiculo=${historico.veiculoId}")
+        try {
+            historicoManutencaoVeiculoDao.atualizar(historico)
+            logDbUpdateSuccess("HISTORICO_MANUTENCAO_VEICULO", "ID=${historico.id}")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${historico.id},
+                        "veiculoId": ${historico.veiculoId},
+                        "tipoManutencao": "${historico.tipoManutencao}",
+                        "descricao": "${historico.descricao}",
+                        "dataManutencao": ${historico.dataManutencao.time},
+                        "valor": ${historico.valor},
+                        "kmVeiculo": ${historico.kmVeiculo},
+                        "responsavel": "${historico.responsavel ?: ""}",
+                        "observacoes": "${historico.observacoes ?: ""}",
+                        "dataCriacao": ${historico.dataCriacao.time}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("HistoricoManutencaoVeiculo", historico.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("HistoricoManutencaoVeiculo", historico.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de histórico manutenção veículo à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("HISTORICO_MANUTENCAO_VEICULO", "ID=${historico.id}", e)
+            throw e
+        }
+    }
+    suspend fun deletarHistoricoManutencaoVeiculo(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo) = historicoManutencaoVeiculoDao.deletar(historico)
+
+    // ==================== HISTORICO COMBUSTIVEL VEICULO ====================
+    
+    fun obterTodosHistoricoCombustivelVeiculo() = historicoCombustivelVeiculoDao.listarPorVeiculo(0L) // Lista todos
+    suspend fun obterHistoricoCombustivelVeiculoPorId(id: Long) = historicoCombustivelVeiculoDao.listarPorVeiculo(0L).first().find { it.id == id }
+    suspend fun inserirHistoricoCombustivelVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo): Long {
+        logDbInsertStart("HISTORICO_COMBUSTIVEL_VEICULO", "Veiculo=${historico.veiculoId}, Litros=${historico.litros}")
+        return try {
+            val id = historicoCombustivelVeiculoDao.inserir(historico)
+            logDbInsertSuccess("HISTORICO_COMBUSTIVEL_VEICULO", "Veiculo=${historico.veiculoId}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "veiculoId": ${historico.veiculoId},
+                        "dataAbastecimento": ${historico.dataAbastecimento.time},
+                        "litros": ${historico.litros},
+                        "valor": ${historico.valor},
+                        "kmVeiculo": ${historico.kmVeiculo},
+                        "kmRodado": ${historico.kmRodado},
+                        "posto": "${historico.posto ?: ""}",
+                        "observacoes": "${historico.observacoes ?: ""}",
+                        "dataCriacao": ${historico.dataCriacao.time}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("HistoricoCombustivelVeiculo", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("HistoricoCombustivelVeiculo", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar criação de histórico combustível veículo à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+            id
+        } catch (e: Exception) {
+            logDbInsertError("HISTORICO_COMBUSTIVEL_VEICULO", "Veiculo=${historico.veiculoId}", e)
+            throw e
+        }
+    }
+    
+    suspend fun atualizarHistoricoCombustivelVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo) {
+        logDbUpdateStart("HISTORICO_COMBUSTIVEL_VEICULO", "ID=${historico.id}, Veiculo=${historico.veiculoId}")
+        try {
+            historicoCombustivelVeiculoDao.atualizar(historico)
+            logDbUpdateSuccess("HISTORICO_COMBUSTIVEL_VEICULO", "ID=${historico.id}")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${historico.id},
+                        "veiculoId": ${historico.veiculoId},
+                        "dataAbastecimento": ${historico.dataAbastecimento.time},
+                        "litros": ${historico.litros},
+                        "valor": ${historico.valor},
+                        "kmVeiculo": ${historico.kmVeiculo},
+                        "kmRodado": ${historico.kmRodado},
+                        "posto": "${historico.posto ?: ""}",
+                        "observacoes": "${historico.observacoes ?: ""}",
+                        "dataCriacao": ${historico.dataCriacao.time}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("HistoricoCombustivelVeiculo", historico.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("HistoricoCombustivelVeiculo", historico.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de histórico combustível veículo à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("HISTORICO_COMBUSTIVEL_VEICULO", "ID=${historico.id}", e)
+            throw e
+        }
+    }
+    suspend fun deletarHistoricoCombustivelVeiculo(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo) = historicoCombustivelVeiculoDao.deletar(historico)
 
     // ✅ NOVO: obter mesas por ciclo (a partir dos acertos do ciclo)
     suspend fun contarMesasPorCiclo(cicloId: Long): Int {

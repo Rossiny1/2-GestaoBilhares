@@ -408,6 +408,11 @@ class SyncManagerV2(
         "despesa" -> "despesas"
         "panoestoque" -> "panosEstoque"
         "mesavendida" -> "mesasVendidas"
+        "stockitem" -> "stockItems"
+        "veiculo" -> "veiculos"
+        "historicomanutencaomesa" -> "historicoManutencaoMesa"
+        "historicomanutencaoveiculo" -> "historicoManutencaoVeiculo"
+        "historicocombustivelveiculo" -> "historicoCombustivelVeiculo"
         else -> entityType.lowercase(Locale.getDefault()) + "s"
     }
 
@@ -557,7 +562,32 @@ class SyncManagerV2(
             pullMesaVendidaFromFirestore(empresaId)
             delay(500) // Aguardar mesas vendidas serem inseridas
             
-            // 10. DÉCIMO: Criar ciclos automaticamente baseados nos acertos sincronizados
+            // 10. DÉCIMO: Sincronizar StockItems
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 10: Sincronizando STOCK ITEMS...")
+            pullStockItemsFromFirestore(empresaId)
+            delay(500) // Aguardar stock items serem inseridos
+            
+            // 11. DÉCIMO PRIMEIRO: Sincronizar Veículos
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 11: Sincronizando VEÍCULOS...")
+            pullVeiculosFromFirestore(empresaId)
+            delay(500) // Aguardar veículos serem inseridos
+            
+            // 12. DÉCIMO SEGUNDO: Sincronizar Histórico Manutenção Mesa
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 12: Sincronizando HISTÓRICO MANUTENÇÃO MESA...")
+            pullHistoricoManutencaoMesaFromFirestore(empresaId)
+            delay(500) // Aguardar histórico mesa serem inseridos
+            
+            // 13. DÉCIMO TERCEIRO: Sincronizar Histórico Manutenção Veículo
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 13: Sincronizando HISTÓRICO MANUTENÇÃO VEÍCULO...")
+            pullHistoricoManutencaoVeiculoFromFirestore(empresaId)
+            delay(500) // Aguardar histórico veículo serem inseridos
+            
+            // 14. DÉCIMO QUARTO: Sincronizar Histórico Combustível Veículo
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 14: Sincronizando HISTÓRICO COMBUSTÍVEL VEÍCULO...")
+            pullHistoricoCombustivelVeiculoFromFirestore(empresaId)
+            delay(500) // Aguardar histórico combustível serem inseridos
+            
+            // 15. DÉCIMO QUINTO: Criar ciclos automaticamente baseados nos acertos sincronizados
             android.util.Log.d("SyncManagerV2", "🔄 Fase 10: Criando ciclos automaticamente...")
             criarCiclosAutomaticamente()
 
@@ -1770,6 +1800,343 @@ class SyncManagerV2(
             
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar mesas vendidas: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar StockItems do Firestore
+     */
+    private suspend fun pullStockItemsFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Stock Items do Firestore...")
+        
+        try {
+            val stockItemsCollection = firestore.collection("empresas/$empresaId/stockItems")
+            val snapshot = stockItemsCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} stock items no Firestore")
+            
+            val stockItemDao = database.stockItemDao()
+            val itemsExistentesList = stockItemDao.listarTodos().first()
+            
+            var itemsSincronizados = 0
+            var itemsExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    
+                    android.util.Log.d("SyncManagerV2", "🔄 Processando stock item: ${data["name"]} (Room ID: $roomId)")
+                    
+                    // Verificar se já existe
+                    val jaExiste = itemsExistentesList.any { item -> item.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "✅ Stock item já existe: ${data["name"]} (ID: $roomId)")
+                        itemsExistentes++
+                        continue
+                    }
+                    
+                    // Criar entidade StockItem
+                    val stockItem = com.example.gestaobilhares.data.entities.StockItem(
+                        id = roomId,
+                        name = data["name"] as? String ?: "",
+                        category = data["category"] as? String ?: "",
+                        quantity = (data["quantity"] as? Number)?.toInt() ?: 0,
+                        unitPrice = (data["unitPrice"] as? Number)?.toDouble() ?: 0.0,
+                        supplier = data["supplier"] as? String ?: "",
+                        description = data["description"] as? String,
+                        createdAt = java.util.Date((data["createdAt"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        updatedAt = java.util.Date((data["updatedAt"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                    )
+                    
+                    // Inserir no banco local
+                    stockItemDao.inserir(stockItem)
+                    itemsSincronizados++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Stock item sincronizado: ${stockItem.name} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar stock item ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Stock Items:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $itemsSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $itemsExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar stock items: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar Veículos do Firestore
+     */
+    private suspend fun pullVeiculosFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Veículos do Firestore...")
+        
+        try {
+            val veiculosCollection = firestore.collection("empresas/$empresaId/veiculos")
+            val snapshot = veiculosCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} veículos no Firestore")
+            
+            val veiculoDao = database.veiculoDao()
+            val veiculosExistentesList = veiculoDao.listar().first()
+            
+            var veiculosSincronizados = 0
+            var veiculosExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    
+                    android.util.Log.d("SyncManagerV2", "🔄 Processando veículo: ${data["nome"]} (Room ID: $roomId)")
+                    
+                    // Verificar se já existe
+                    val jaExiste = veiculosExistentesList.any { veiculo -> veiculo.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "✅ Veículo já existe: ${data["nome"]} (ID: $roomId)")
+                        veiculosExistentes++
+                        continue
+                    }
+                    
+                    // Criar entidade Veiculo
+                    val veiculo = com.example.gestaobilhares.data.entities.Veiculo(
+                        id = roomId,
+                        nome = data["nome"] as? String ?: "",
+                        placa = data["placa"] as? String ?: "",
+                        marca = data["marca"] as? String ?: "",
+                        modelo = data["modelo"] as? String ?: "",
+                        anoModelo = (data["anoModelo"] as? Number)?.toInt() ?: 0,
+                        kmAtual = (data["kmAtual"] as? Number)?.toLong() ?: 0L,
+                        dataCompra = if (data["dataCompra"] != null) {
+                            java.util.Date((data["dataCompra"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                        } else null,
+                        observacoes = data["observacoes"] as? String
+                    )
+                    
+                    // Inserir no banco local
+                    veiculoDao.inserir(veiculo)
+                    veiculosSincronizados++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Veículo sincronizado: ${veiculo.nome} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar veículo ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Veículos:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $veiculosSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $veiculosExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar veículos: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar Histórico Manutenção Mesa do Firestore
+     */
+    private suspend fun pullHistoricoManutencaoMesaFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Histórico Manutenção Mesa do Firestore...")
+        
+        try {
+            val historicoCollection = firestore.collection("empresas/$empresaId/historicoManutencaoMesa")
+            val snapshot = historicoCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} históricos de manutenção mesa no Firestore")
+            
+            val historicoDao = database.historicoManutencaoMesaDao()
+            val historicosExistentesList = historicoDao.listarTodos().first()
+            
+            var historicosSincronizados = 0
+            var historicosExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    
+                    android.util.Log.d("SyncManagerV2", "🔄 Processando histórico mesa: ${data["numeroMesa"]} - ${data["tipoManutencao"]} (Room ID: $roomId)")
+                    
+                    // Verificar se já existe
+                    val jaExiste = historicosExistentesList.any { historico -> historico.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "✅ Histórico mesa já existe: ${data["numeroMesa"]} (ID: $roomId)")
+                        historicosExistentes++
+                        continue
+                    }
+                    
+                    // Criar entidade HistoricoManutencaoMesa
+                    val historico = com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa(
+                        id = roomId,
+                        mesaId = (data["mesaId"] as? Number)?.toLong() ?: 0L,
+                        numeroMesa = data["numeroMesa"] as? String ?: "",
+                        tipoManutencao = com.example.gestaobilhares.data.entities.TipoManutencao.valueOf(data["tipoManutencao"] as? String ?: "OUTROS"),
+                        descricao = data["descricao"] as? String,
+                        dataManutencao = java.util.Date((data["dataManutencao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        responsavel = data["responsavel"] as? String,
+                        observacoes = data["observacoes"] as? String,
+                        custo = (data["custo"] as? Number)?.toDouble(),
+                        fotoAntes = data["fotoAntes"] as? String,
+                        fotoDepois = data["fotoDepois"] as? String,
+                        dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                    )
+                    
+                    // Inserir no banco local
+                    historicoDao.inserir(historico)
+                    historicosSincronizados++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Histórico mesa sincronizado: ${historico.numeroMesa} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar histórico mesa ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Histórico Manutenção Mesa:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $historicosSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $historicosExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar histórico manutenção mesa: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar Histórico Manutenção Veículo do Firestore
+     */
+    private suspend fun pullHistoricoManutencaoVeiculoFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Histórico Manutenção Veículo do Firestore...")
+        
+        try {
+            val historicoCollection = firestore.collection("empresas/$empresaId/historicoManutencaoVeiculo")
+            val snapshot = historicoCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} históricos de manutenção veículo no Firestore")
+            
+            val historicoDao = database.historicoManutencaoVeiculoDao()
+            val historicosExistentesList = historicoDao.listarPorVeiculo(0L).first() // Lista todos
+            
+            var historicosSincronizados = 0
+            var historicosExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    
+                    android.util.Log.d("SyncManagerV2", "🔄 Processando histórico veículo: ${data["veiculoId"]} - ${data["tipoManutencao"]} (Room ID: $roomId)")
+                    
+                    // Verificar se já existe
+                    val jaExiste = historicosExistentesList.any { historico -> historico.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "✅ Histórico veículo já existe: ${data["veiculoId"]} (ID: $roomId)")
+                        historicosExistentes++
+                        continue
+                    }
+                    
+                    // Criar entidade HistoricoManutencaoVeiculo
+                    val historico = com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo(
+                        id = roomId,
+                        veiculoId = (data["veiculoId"] as? Number)?.toLong() ?: 0L,
+                        tipoManutencao = data["tipoManutencao"] as? String ?: "",
+                        descricao = data["descricao"] as? String ?: "",
+                        dataManutencao = java.util.Date((data["dataManutencao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        valor = (data["valor"] as? Number)?.toDouble() ?: 0.0,
+                        kmVeiculo = (data["kmVeiculo"] as? Number)?.toLong() ?: 0L,
+                        responsavel = data["responsavel"] as? String,
+                        observacoes = data["observacoes"] as? String,
+                        dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                    )
+                    
+                    // Inserir no banco local
+                    historicoDao.inserir(historico)
+                    historicosSincronizados++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Histórico veículo sincronizado: ${historico.veiculoId} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar histórico veículo ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Histórico Manutenção Veículo:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $historicosSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $historicosExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar histórico manutenção veículo: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar Histórico Combustível Veículo do Firestore
+     */
+    private suspend fun pullHistoricoCombustivelVeiculoFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Histórico Combustível Veículo do Firestore...")
+        
+        try {
+            val historicoCollection = firestore.collection("empresas/$empresaId/historicoCombustivelVeiculo")
+            val snapshot = historicoCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} históricos de combustível veículo no Firestore")
+            
+            val historicoDao = database.historicoCombustivelVeiculoDao()
+            val historicosExistentesList = historicoDao.listarPorVeiculo(0L).first() // Lista todos
+            
+            var historicosSincronizados = 0
+            var historicosExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    
+                    android.util.Log.d("SyncManagerV2", "🔄 Processando histórico combustível: ${data["veiculoId"]} - ${data["litros"]}L (Room ID: $roomId)")
+                    
+                    // Verificar se já existe
+                    val jaExiste = historicosExistentesList.any { historico -> historico.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "✅ Histórico combustível já existe: ${data["veiculoId"]} (ID: $roomId)")
+                        historicosExistentes++
+                        continue
+                    }
+                    
+                    // Criar entidade HistoricoCombustivelVeiculo
+                    val historico = com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo(
+                        id = roomId,
+                        veiculoId = (data["veiculoId"] as? Number)?.toLong() ?: 0L,
+                        dataAbastecimento = java.util.Date((data["dataAbastecimento"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        litros = (data["litros"] as? Number)?.toDouble() ?: 0.0,
+                        valor = (data["valor"] as? Number)?.toDouble() ?: 0.0,
+                        kmVeiculo = (data["kmVeiculo"] as? Number)?.toLong() ?: 0L,
+                        kmRodado = (data["kmRodado"] as? Number)?.toDouble() ?: 0.0,
+                        posto = data["posto"] as? String,
+                        observacoes = data["observacoes"] as? String,
+                        dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                    )
+                    
+                    // Inserir no banco local
+                    historicoDao.inserir(historico)
+                    historicosSincronizados++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Histórico combustível sincronizado: ${historico.veiculoId} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar histórico combustível ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Histórico Combustível Veículo:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $historicosSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $historicosExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar histórico combustível veículo: ${e.message}", e)
         }
     }
 
