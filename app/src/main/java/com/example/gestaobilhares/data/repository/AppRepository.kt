@@ -321,6 +321,10 @@ class AppRepository constructor(
             
             // ✅ FASE 3C: Adicionar à fila de sincronização
             try {
+                // ✅ CORREÇÃO CRÍTICA: Incluir dados das mesas no payload do acerto
+                val acertoMesas = acertoMesaDao.buscarPorAcertoId(id)
+                android.util.Log.d("AppRepository", "Incluindo ${acertoMesas.size} mesas no payload do acerto $id")
+                
                 // ✅ Construir payload de forma segura usando Map -> JSON
                 val payloadMap = mutableMapOf<String, Any?>(
                     "id" to id,
@@ -343,7 +347,28 @@ class AppRepository constructor(
                     "panoTrocado" to acerto.panoTrocado,
                     "numeroPano" to acerto.numeroPano,
                     "dadosExtrasJson" to acerto.dadosExtrasJson,
-                    "cicloId" to acerto.cicloId
+                    "cicloId" to acerto.cicloId,
+                    // ✅ NOVO: Incluir dados das mesas
+                    "acertoMesas" to acertoMesas.map { acertoMesa ->
+                        mapOf(
+                            "id" to acertoMesa.id,
+                            "acertoId" to acertoMesa.acertoId,
+                            "mesaId" to acertoMesa.mesaId,
+                            "relogioInicial" to acertoMesa.relogioInicial,
+                            "relogioFinal" to acertoMesa.relogioFinal,
+                            "fichasJogadas" to acertoMesa.fichasJogadas,
+                            "valorFixo" to acertoMesa.valorFixo,
+                            "valorFicha" to acertoMesa.valorFicha,
+                            "comissaoFicha" to acertoMesa.comissaoFicha,
+                            "subtotal" to acertoMesa.subtotal,
+                            "comDefeito" to acertoMesa.comDefeito,
+                            "relogioReiniciou" to acertoMesa.relogioReiniciou,
+                            "observacoes" to acertoMesa.observacoes,
+                            "fotoRelogioFinal" to acertoMesa.fotoRelogioFinal,
+                            "dataFoto" to acertoMesa.dataFoto,
+                            "dataCriacao" to acertoMesa.dataCriacao
+                        )
+                    }
                 )
 
                 val payload = com.google.gson.Gson().toJson(payloadMap)
@@ -901,7 +926,46 @@ class AppRepository constructor(
             throw e
         }
     }
-    suspend fun atualizarRota(rota: Rota) = rotaDao.updateRota(rota)
+    suspend fun atualizarRota(rota: Rota) {
+        logDbUpdateStart("ROTA", "ID=${rota.id}, Nome=${rota.nome}")
+        try {
+            rotaDao.updateRota(rota)
+            logDbUpdateSuccess("ROTA", "ID=${rota.id}, Nome=${rota.nome}")
+            
+            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${rota.id},
+                        "nome": "${rota.nome}",
+                        "descricao": "${rota.descricao ?: ""}",
+                        "colaboradorResponsavel": "${rota.colaboradorResponsavel}",
+                        "cidades": "${rota.cidades}",
+                        "ativa": ${rota.ativa},
+                        "cor": "${rota.cor}",
+                        "dataCriacao": ${rota.dataCriacao},
+                        "dataAtualizacao": ${rota.dataAtualizacao},
+                        "statusAtual": "${rota.statusAtual.name}",
+                        "cicloAcertoAtual": ${rota.cicloAcertoAtual},
+                        "anoCiclo": ${rota.anoCiclo},
+                        "dataInicioCiclo": ${rota.dataInicioCiclo ?: "null"},
+                        "dataFimCiclo": ${rota.dataFimCiclo ?: "null"}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Rota", rota.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("Rota", rota.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de rota à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("ROTA", "ID=${rota.id}", e)
+            throw e
+        }
+    }
     suspend fun atualizarRotas(rotas: List<Rota>) = rotaDao.updateRotas(rotas)
     suspend fun deletarRota(rota: Rota) = rotaDao.deleteRota(rota)
     suspend fun desativarRota(rotaId: Long, timestamp: Long = System.currentTimeMillis()) = 
@@ -1131,7 +1195,61 @@ class AppRepository constructor(
             throw e
         }
     }
-    suspend fun atualizarColaborador(colaborador: Colaborador) = colaboradorDao.atualizar(colaborador)
+    suspend fun atualizarColaborador(colaborador: Colaborador) {
+        logDbUpdateStart("COLABORADOR", "ID=${colaborador.id}, Nome=${colaborador.nome}")
+        try {
+            colaboradorDao.atualizar(colaborador)
+            logDbUpdateSuccess("COLABORADOR", "ID=${colaborador.id}, Nome=${colaborador.nome}")
+            
+            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${colaborador.id},
+                        "nome": "${colaborador.nome}",
+                        "email": "${colaborador.email}",
+                        "telefone": "${colaborador.telefone ?: ""}",
+                        "cpf": "${colaborador.cpf ?: ""}",
+                        "endereco": "${colaborador.endereco ?: ""}",
+                        "bairro": "${colaborador.bairro ?: ""}",
+                        "cidade": "${colaborador.cidade ?: ""}",
+                        "estado": "${colaborador.estado ?: ""}",
+                        "cep": "${colaborador.cep ?: ""}",
+                        "rg": "${colaborador.rg ?: ""}",
+                        "orgaoEmissor": "${colaborador.orgaoEmissor ?: ""}",
+                        "estadoCivil": "${colaborador.estadoCivil ?: ""}",
+                        "nomeMae": "${colaborador.nomeMae ?: ""}",
+                        "nomePai": "${colaborador.nomePai ?: ""}",
+                        "fotoPerfil": "${colaborador.fotoPerfil ?: ""}",
+                        "nivelAcesso": "${colaborador.nivelAcesso.name}",
+                        "ativo": ${colaborador.ativo},
+                        "aprovado": ${colaborador.aprovado},
+                        "dataAprovacao": "${colaborador.dataAprovacao ?: ""}",
+                        "aprovadoPor": "${colaborador.aprovadoPor ?: ""}",
+                        "firebaseUid": "${colaborador.firebaseUid ?: ""}",
+                        "googleId": "${colaborador.googleId ?: ""}",
+                        "senhaTemporaria": "${colaborador.senhaTemporaria ?: ""}",
+                        "emailAcesso": "${colaborador.emailAcesso ?: ""}",
+                        "observacoes": "${colaborador.observacoes ?: ""}",
+                        "dataCadastro": "${colaborador.dataCadastro}",
+                        "dataUltimoAcesso": "${colaborador.dataUltimoAcesso ?: ""}",
+                        "dataUltimaAtualizacao": "${colaborador.dataUltimaAtualizacao}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Colaborador", colaborador.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("Colaborador", colaborador.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de colaborador à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("COLABORADOR", "ID=${colaborador.id}", e)
+            throw e
+        }
+    }
     suspend fun deletarColaborador(colaborador: Colaborador) = colaboradorDao.deletar(colaborador)
     
     suspend fun aprovarColaborador(colaboradorId: Long, dataAprovacao: java.util.Date, aprovadoPor: String) = 

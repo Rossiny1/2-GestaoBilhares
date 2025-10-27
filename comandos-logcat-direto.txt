@@ -1,0 +1,33 @@
+# Comandos diretos para capturar logs de sincronizacao
+# Execute estes comandos diretamente no PowerShell
+
+Write-Host "COMANDOS DIRETOS PARA CAPTURAR LOGS DE SINCRONIZACAO" -ForegroundColor Cyan
+Write-Host "=====================================================" -ForegroundColor Cyan
+
+Write-Host "`n1. COMANDO SIMPLES - Capturar logs de UPDATE:" -ForegroundColor Yellow
+Write-Host "adb logcat | findstr UPDATE" -ForegroundColor White
+
+Write-Host "`n2. COMANDO COMPLETO - Capturar logs de sincronizacao:" -ForegroundColor Yellow
+Write-Host "adb logcat | findstr 'UPDATE|DB_UPDATE|SyncManagerV2|adicionarOperacaoSync'" -ForegroundColor White
+
+Write-Host "`n3. COMANDO COM ARQUIVO - Salvar logs em arquivo:" -ForegroundColor Yellow
+Write-Host "adb logcat | findstr 'UPDATE|DB_UPDATE|SyncManagerV2' > logcat-sync.txt" -ForegroundColor White
+
+Write-Host "`n4. COMANDO COM TIMESTAMP - Arquivo com data/hora:" -ForegroundColor Yellow
+Write-Host "adb logcat | findstr 'UPDATE|DB_UPDATE|SyncManagerV2' > logcat-sync-$(Get-Date -Format 'yyyyMMdd-HHmmss').txt" -ForegroundColor White
+
+Write-Host "`n5. COMANDO LIMPAR LOGS ANTES:" -ForegroundColor Yellow
+Write-Host "adb logcat -c && adb logcat | findstr 'UPDATE|DB_UPDATE|SyncManagerV2'" -ForegroundColor White
+
+Write-Host "`n6. COMANDO COMPLETO COM LIMPEZA E ARQUIVO:" -ForegroundColor Yellow
+Write-Host "adb logcat -c && adb logcat | findstr 'UPDATE|DB_UPDATE|SyncManagerV2|CLIENTE|ROTA' > logcat-update-$(Get-Date -Format 'yyyyMMdd-HHmmss').txt" -ForegroundColor White
+
+Write-Host "`nINSTRUCOES:" -ForegroundColor Cyan
+Write-Host "1. Execute um dos comandos acima" -ForegroundColor White
+Write-Host "2. No app, edite um cliente (Joao -> Joao Alves Dias)" -ForegroundColor White
+Write-Host "3. Edite uma rota (Noite -> Norte)" -ForegroundColor White
+Write-Host "4. Aguarde alguns segundos" -ForegroundColor White
+Write-Host "5. Pressione Ctrl+C para parar" -ForegroundColor White
+
+Write-Host "`nCOMANDO RECOMENDADO (mais completo):" -ForegroundColor Green
+Write-Host "adb logcat -c && adb logcat | findstr 'UPDATE|DB_UPDATE|SyncManagerV2|CLIENTE|ROTA'" -ForegroundColor White
