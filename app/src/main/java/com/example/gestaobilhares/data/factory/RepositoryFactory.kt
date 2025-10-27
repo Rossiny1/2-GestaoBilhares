@@ -55,6 +55,8 @@ object RepositoryFactory {
             logAuditoriaAssinaturaDao = database.logAuditoriaAssinaturaDao(),
             panoEstoqueDao = database.panoEstoqueDao(),
             mesaVendidaDao = database.mesaVendidaDao(),
+            stockItemDao = database.stockItemDao(),
+            veiculoDao = database.veiculoDao(),
             categoriaDespesaDao = database.categoriaDespesaDao(),
             tipoDespesaDao = database.tipoDespesaDao(),
             historicoManutencaoVeiculoDao = database.historicoManutencaoVeiculoDao(),
