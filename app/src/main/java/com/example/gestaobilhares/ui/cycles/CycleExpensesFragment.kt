@@ -76,7 +76,8 @@ class CycleExpensesFragment : Fragment() {
             DespesaRepository(database.despesaDao()),
             AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
             ClienteRepository(database.clienteDao(), appRepository),
-            database.rotaDao()
+            database.rotaDao(),
+            appRepository
         )
         val despesaRepository = DespesaRepository(database.despesaDao())
         viewModel = CycleExpensesViewModel(cicloAcertoRepository, despesaRepository)

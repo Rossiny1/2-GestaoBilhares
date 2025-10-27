@@ -21,7 +21,8 @@ class CicloAcertoRepository constructor(
     private val despesaRepository: DespesaRepository,
     private val acertoRepository: com.example.gestaobilhares.data.repository.AcertoRepository,
     private val clienteRepository: ClienteRepository, // NOVO
-    private val rotaDao: com.example.gestaobilhares.data.dao.RotaDao? = null // NOVO: Para relatórios
+    private val rotaDao: com.example.gestaobilhares.data.dao.RotaDao? = null, // NOVO: Para relatórios
+    private val appRepository: AppRepository // NOVO: Para sincronização
 ) {
 
     /**
@@ -73,7 +74,7 @@ class CicloAcertoRepository constructor(
      * Insere ou atualiza um ciclo
      */
     suspend fun inserirOuAtualizarCiclo(ciclo: CicloAcertoEntity): Long {
-        return cicloAcertoDao.inserir(ciclo)
+        return appRepository.inserirCicloAcerto(ciclo)
     }
 
     /**
@@ -258,7 +259,7 @@ class CicloAcertoRepository constructor(
                 dataFim = Date(), // Será atualizado ao finalizar
                 status = StatusCicloAcerto.EM_ANDAMENTO
             )
-            val id = cicloAcertoDao.inserir(novoCiclo)
+            val id = appRepository.inserirCicloAcerto(novoCiclo)
             AppLogger.log("CicloAcertoRepo", "Novo ciclo inserido com sucesso! ID: $id")
             id
         }

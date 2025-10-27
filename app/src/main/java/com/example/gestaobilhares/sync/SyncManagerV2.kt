@@ -527,6 +527,20 @@ class SyncManagerV2(
             // 4. QUARTO: Baixar acertos do Firestore (dependem dos clientes)
             android.util.Log.d("SyncManagerV2", "🔄 Fase 4: Sincronizando ACERTOS...")
             pullAcertosFromFirestore(empresaId)
+            delay(500) // Aguardar acertos serem inseridos
+            
+            // 5. QUINTO: Baixar ciclos do Firestore (dependem dos acertos)
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 5: Sincronizando CICLOS...")
+            pullCiclosFromFirestore(empresaId)
+            delay(500) // Aguardar ciclos serem inseridos
+            
+            // 6. SEXTO: Criar ciclos automaticamente baseados nos acertos sincronizados
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 6: Criando ciclos automaticamente...")
+            criarCiclosAutomaticamente()
+            
+            // 7. SÉTIMO: Invalidar cache das rotas para forçar recálculo dos dados
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 7: Invalidando cache das rotas...")
+            invalidarCacheRotas()
             
             android.util.Log.d("SyncManagerV2", "✅ PULL SYNC concluído com sucesso")
             
@@ -766,6 +780,254 @@ class SyncManagerV2(
             
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar acertos: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Baixar ciclos do Firestore
+     */
+    private suspend fun pullCiclosFromFirestore(empresaId: String) {
+        try {
+            android.util.Log.d("SyncManagerV2", "📥 Baixando ciclos do Firestore...")
+            android.util.Log.d("SyncManagerV2", "   Caminho: empresas/$empresaId/ciclos")
+            
+            val snapshot = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection("ciclos")
+                .get()
+                .await()
+            
+            android.util.Log.d("SyncManagerV2", "📊 Encontrados ${snapshot.size()} ciclos no Firestore")
+            
+            if (snapshot.isEmpty) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Nenhum ciclo encontrado no Firestore")
+                return
+            }
+            
+            var ciclosSincronizados = 0
+            var ciclosExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = data["roomId"] as? Long
+                    val numeroCiclo = data["numeroCiclo"] as? Double
+                    val rotaId = data["rotaId"] as? Double
+                    
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando ciclo: ${numeroCiclo}º (Room ID: $roomId)")
+                    
+                    if (roomId != null && numeroCiclo != null && rotaId != null) {
+                        // Verificar se já existe no Room
+                        val cicloExistente = try {
+                            runBlocking { 
+                                val cicloDao = database.cicloAcertoDao()
+                                cicloDao.buscarPorId(roomId)
+                            }
+                        } catch (e: Exception) {
+                            null
+                        }
+                        
+                        if (cicloExistente == null) {
+                            // Criar ciclo no Room baseado nos dados do Firestore
+                            val ciclo = com.example.gestaobilhares.data.entities.CicloAcertoEntity(
+                                id = roomId,
+                                rotaId = rotaId.toLong(),
+                                numeroCiclo = numeroCiclo.toInt(),
+                                ano = (data["ano"] as? Double)?.toInt() ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR),
+                                dataInicio = try {
+                                    val dataInicioStr = data["dataInicio"] as? String
+                                    if (dataInicioStr != null) {
+                                        java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse(dataInicioStr)
+                                    } else {
+                                        java.util.Date()
+                                    }
+                                } catch (e: Exception) {
+                                    java.util.Date()
+                                },
+                                dataFim = try {
+                                    val dataFimStr = data["dataFim"] as? String
+                                    if (dataFimStr != null && dataFimStr.isNotEmpty()) {
+                                        java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse(dataFimStr)
+                                    } else {
+                                        java.util.Date()
+                                    }
+                                } catch (e: Exception) {
+                                    java.util.Date()
+                                },
+                                status = com.example.gestaobilhares.data.entities.StatusCicloAcerto.valueOf(
+                                    (data["status"] as? String) ?: "FINALIZADO"
+                                ),
+                                totalClientes = (data["totalClientes"] as? Double)?.toInt() ?: 0,
+                                clientesAcertados = (data["clientesAcertados"] as? Double)?.toInt() ?: 0,
+                                valorTotalAcertado = (data["valorTotalAcertado"] as? Double) ?: 0.0,
+                                valorTotalDespesas = (data["valorTotalDespesas"] as? Double) ?: 0.0,
+                                lucroLiquido = (data["lucroLiquido"] as? Double) ?: 0.0,
+                                debitoTotal = (data["debitoTotal"] as? Double) ?: 0.0,
+                                observacoes = data["observacoes"] as? String,
+                                criadoPor = data["criadoPor"] as? String ?: "Sistema",
+                                dataCriacao = try {
+                                    val dataCriacaoStr = data["dataCriacao"] as? String
+                                    if (dataCriacaoStr != null) {
+                                        java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse(dataCriacaoStr)
+                                    } else {
+                                        java.util.Date()
+                                    }
+                                } catch (e: Exception) {
+                                    java.util.Date()
+                                },
+                                dataAtualizacao = java.util.Date()
+                            )
+                            
+                            // Inserir no Room (sem adicionar à fila de sync)
+                            val cicloDao = database.cicloAcertoDao()
+                            cicloDao.inserir(ciclo)
+                            
+                            ciclosSincronizados++
+                            android.util.Log.d("SyncManagerV2", "✅ Ciclo sincronizado: ${ciclo.numeroCiclo}º (ID: $roomId)")
+                        } else {
+                            ciclosExistentes++
+                            android.util.Log.d("SyncManagerV2", "⏭️ Ciclo já existe: ${cicloExistente.numeroCiclo}º (ID: $roomId)")
+                        }
+                    } else {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Ciclo sem roomId, numeroCiclo ou rotaId: ${document.id}")
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao processar ciclo ${document.id}: ${e.message}")
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Ciclos:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $ciclosSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $ciclosExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar ciclos: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Criar ciclos automaticamente baseados nos acertos sincronizados
+     */
+    private suspend fun criarCiclosAutomaticamente() {
+        try {
+            android.util.Log.d("SyncManagerV2", "🔄 Criando ciclos automaticamente baseados nos acertos...")
+            
+            // Buscar todas as rotas
+            val rotas = appRepository.obterTodasRotas().first()
+            
+            for (rota in rotas) {
+                try {
+                    // Verificar se já existe ciclo para esta rota
+                    val cicloExistente = appRepository.buscarCicloAtualPorRota(rota.id)
+                    
+                    if (cicloExistente == null) {
+                        // Buscar acertos desta rota para determinar o ciclo
+                        val acertos = try {
+                            runBlocking { 
+                                // Buscar clientes da rota primeiro
+                                val clienteDao = database.clienteDao()
+                                val clientes = clienteDao.obterClientesPorRota(rota.id).first()
+                                val clienteIds = clientes.map { cliente -> cliente.id }
+                                
+                                if (clienteIds.isNotEmpty()) {
+                                    // Buscar acertos dos clientes desta rota
+                                    val acertoDao = database.acertoDao()
+                                    acertoDao.buscarUltimosAcertosPorClientes(clienteIds)
+                                } else {
+                                    emptyList()
+                                }
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.w("SyncManagerV2", "Erro ao buscar acertos da rota ${rota.nome}: ${e.message}")
+                            emptyList()
+                        }
+                        
+                        if (acertos.isNotEmpty()) {
+                            // Determinar o número do ciclo baseado nos acertos
+                            val numeroCiclo = acertos.maxOfOrNull { acerto: com.example.gestaobilhares.data.entities.Acerto -> acerto.cicloId ?: 1L }?.toInt() ?: 1
+                            
+                            android.util.Log.d("SyncManagerV2", "🔄 Criando ciclo $numeroCiclo para rota ${rota.nome}")
+                            
+                            // Determinar status do ciclo baseado na data dos acertos
+                            val dataAtual = java.util.Date()
+                            val dataUltimoAcerto = acertos.maxByOrNull { acerto: com.example.gestaobilhares.data.entities.Acerto -> acerto.dataAcerto }?.dataAcerto ?: dataAtual
+                            
+                            // Se o último acerto foi há mais de 7 dias, considerar ciclo finalizado
+                            val diasDiferenca = (dataAtual.time - dataUltimoAcerto.time) / (1000 * 60 * 60 * 24)
+                            val statusCiclo = if (diasDiferenca > 7) {
+                                com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO
+                            } else {
+                                com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO
+                            }
+                            
+                            android.util.Log.d("SyncManagerV2", "📊 Status do ciclo determinado: $statusCiclo (último acerto há $diasDiferenca dias)")
+                            
+                            // Criar ciclo baseado nos acertos
+                            val novoCiclo = com.example.gestaobilhares.data.entities.CicloAcertoEntity(
+                                rotaId = rota.id,
+                                numeroCiclo = numeroCiclo,
+                                ano = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR),
+                                dataInicio = acertos.minByOrNull { acerto: com.example.gestaobilhares.data.entities.Acerto -> acerto.dataAcerto }?.dataAcerto ?: java.util.Date(),
+                                dataFim = if (statusCiclo == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
+                                    dataUltimoAcerto
+                                } else {
+                                    java.util.Date() // Ciclo em andamento, dataFim será atualizada quando finalizar
+                                },
+                                status = statusCiclo,
+                                totalClientes = acertos.map { acerto: com.example.gestaobilhares.data.entities.Acerto -> acerto.clienteId }.distinct().size,
+                                clientesAcertados = acertos.map { acerto: com.example.gestaobilhares.data.entities.Acerto -> acerto.clienteId }.distinct().size,
+                                valorTotalAcertado = acertos.sumOf { acerto: com.example.gestaobilhares.data.entities.Acerto -> acerto.valorRecebido },
+                                valorTotalDespesas = 0.0, // Será calculado depois
+                                lucroLiquido = acertos.sumOf { acerto: com.example.gestaobilhares.data.entities.Acerto -> acerto.valorRecebido },
+                                debitoTotal = acertos.sumOf { acerto: com.example.gestaobilhares.data.entities.Acerto -> acerto.debitoAtual },
+                                observacoes = "Ciclo criado automaticamente após sincronização",
+                                criadoPor = "Sistema",
+                                dataCriacao = java.util.Date(),
+                                dataAtualizacao = java.util.Date()
+                            )
+                            
+                            val cicloId = appRepository.inserirCicloAcerto(novoCiclo)
+                            android.util.Log.d("SyncManagerV2", "✅ Ciclo $numeroCiclo criado para rota ${rota.nome} (ID: $cicloId)")
+                        }
+                    } else {
+                        android.util.Log.d("SyncManagerV2", "⏭️ Ciclo já existe para rota ${rota.nome}: ${cicloExistente.numeroCiclo}º")
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao criar ciclo para rota ${rota.nome}: ${e.message}")
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "✅ Criação automática de ciclos concluída")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao criar ciclos automaticamente: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Invalidar cache das rotas para forçar recálculo dos dados
+     */
+    private suspend fun invalidarCacheRotas() {
+        try {
+            android.util.Log.d("SyncManagerV2", "🔄 Invalidando cache das rotas...")
+            
+            // Buscar todas as rotas e invalidar cache de cada uma
+            val rotas = appRepository.obterTodasRotas().first()
+            
+            for (rota in rotas) {
+                try {
+                    appRepository.invalidarCacheRota(rota.id)
+                    android.util.Log.d("SyncManagerV2", "✅ Cache invalidado para rota ${rota.nome}")
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao invalidar cache da rota ${rota.nome}: ${e.message}")
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "✅ Cache das rotas invalidado com sucesso")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao invalidar cache das rotas: ${e.message}", e)
         }
     }
     

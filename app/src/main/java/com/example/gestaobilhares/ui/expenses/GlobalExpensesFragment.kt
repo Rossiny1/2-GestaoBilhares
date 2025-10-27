@@ -61,7 +61,8 @@ class GlobalExpensesFragment : Fragment() {
             despesaRepository,
             com.example.gestaobilhares.data.repository.AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
             com.example.gestaobilhares.data.repository.ClienteRepository(database.clienteDao(), appRepository),
-            database.rotaDao()
+            database.rotaDao(),
+            appRepository
         )
         viewModel = GlobalExpensesViewModel(despesaRepository, cicloAcertoRepository)
         

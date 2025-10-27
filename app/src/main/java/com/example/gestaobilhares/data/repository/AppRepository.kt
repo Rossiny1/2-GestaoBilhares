@@ -1357,6 +1357,39 @@ class AppRepository constructor(
         return try {
             val id = cicloAcertoDao.inserir(ciclo)
             logDbInsertSuccess("CICLO", "ID=$id, RotaID=${ciclo.rotaId}")
+            
+            // ✅ CORREÇÃO: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "numeroCiclo": ${ciclo.numeroCiclo},
+                        "rotaId": ${ciclo.rotaId},
+                        "ano": ${ciclo.ano},
+                        "dataInicio": "${ciclo.dataInicio}",
+                        "dataFim": "${ciclo.dataFim}",
+                        "status": "${ciclo.status.name}",
+                        "totalClientes": ${ciclo.totalClientes},
+                        "clientesAcertados": ${ciclo.clientesAcertados},
+                        "valorTotalAcertado": ${ciclo.valorTotalAcertado},
+                        "valorTotalDespesas": ${ciclo.valorTotalDespesas},
+                        "lucroLiquido": ${ciclo.lucroLiquido},
+                        "debitoTotal": ${ciclo.debitoTotal},
+                        "observacoes": "${ciclo.observacoes ?: ""}",
+                        "criadoPor": "${ciclo.criadoPor}",
+                        "dataCriacao": "${ciclo.dataCriacao}",
+                        "dataAtualizacao": "${ciclo.dataAtualizacao}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("CicloAcerto", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("CicloAcerto", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar ciclo à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
             id
         } catch (e: Exception) {
             logDbInsertError("CICLO", "RotaID=${ciclo.rotaId}", e)
