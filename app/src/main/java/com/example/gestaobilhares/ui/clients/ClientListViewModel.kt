@@ -756,13 +756,17 @@ class ClientListViewModel constructor(
 
     /**
      * ✅ NOVO: Verifica se o cliente foi acertado no ciclo especificado
+     * ✅ CORREÇÃO: Verificar apenas acertos FINALIZADOS
      */
     private suspend fun clienteFoiAcertadoNoCiclo(clienteId: Long, cicloId: Long): Boolean {
         return try {
             if (cicloId == -1L) return false
             
             val acertos = appRepository.buscarAcertosPorCicloId(cicloId).first()
-            acertos.any { it.clienteId == clienteId }
+            // ✅ CORREÇÃO CRÍTICA: Verificar apenas acertos FINALIZADOS
+            acertos.any { acerto -> 
+                acerto.clienteId == clienteId && acerto.status == com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO 
+            }
         } catch (e: Exception) {
             android.util.Log.e("ClientListViewModel", "Erro ao verificar acerto do cliente: ${e.message}")
             false
@@ -934,6 +938,7 @@ class ClientListViewModel constructor(
 
     /**
      * ✅ CORRIGIDO: Calcula quantos clientes foram acertados no ciclo atual usando dados reais
+     * ✅ CORREÇÃO: Verificar apenas acertos FINALIZADOS
      */
     private suspend fun calcularClientesAcertadosNoCiclo(clientes: List<Cliente>, cicloId: Long): Int {
         return try {
@@ -941,8 +946,11 @@ class ClientListViewModel constructor(
             // Buscar acertos reais do banco de dados para esta rota e ciclo
             val acertos = appRepository.buscarAcertosPorRotaECiclo(rotaId, cicloId)
             
-            // Contar clientes únicos que foram acertados
-            val clientesAcertados = acertos.map { it.clienteId }.distinct()
+            // ✅ CORREÇÃO CRÍTICA: Contar apenas clientes únicos com acertos FINALIZADOS
+            val clientesAcertados = acertos
+                .filter { acerto -> acerto.status == com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO }
+                .map { it.clienteId }
+                .distinct()
             
             android.util.Log.d("ClientListViewModel", "✅ Clientes acertados no ciclo $cicloId: ${clientesAcertados.size} de ${clientes.size}")
             

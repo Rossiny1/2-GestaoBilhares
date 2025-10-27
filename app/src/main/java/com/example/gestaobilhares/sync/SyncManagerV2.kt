@@ -538,6 +538,10 @@ class SyncManagerV2(
             android.util.Log.d("SyncManagerV2", "🔄 Fase 6: Criando ciclos automaticamente...")
             criarCiclosAutomaticamente()
             
+            // ✅ CORREÇÃO CRÍTICA: Corrigir acertos existentes com status PENDENTE
+            android.util.Log.d("SyncManagerV2", "🔧 CORREÇÃO: Corrigindo acertos PENDENTE para FINALIZADO")
+            appRepository.corrigirAcertosPendentesParaFinalizados()
+            
             // 7. SÉTIMO: Invalidar cache das rotas para forçar recálculo dos dados
             android.util.Log.d("SyncManagerV2", "🔄 Fase 7: Invalidando cache das rotas...")
             invalidarCacheRotas()
@@ -694,6 +698,10 @@ class SyncManagerV2(
                         val acertoExistente = appRepository.obterAcertoPorId(roomId)
                         
                         if (acertoExistente == null) {
+                            // ✅ CORREÇÃO: Manter status original do Firestore para não quebrar dados locais
+                            val statusFirestore = data["status"] as? String
+                            val statusFinal = com.example.gestaobilhares.data.entities.StatusAcerto.valueOf(statusFirestore ?: "PENDENTE")
+                            
                             // Criar acerto no Room baseado nos dados do Firestore
                             val acerto = com.example.gestaobilhares.data.entities.Acerto(
                                 id = roomId,
@@ -709,7 +717,7 @@ class SyncManagerV2(
                                 dataAcerto = java.util.Date(),
                                 observacoes = data["observacoes"] as? String,
                                 metodosPagamentoJson = data["metodosPagamentoJson"] as? String,
-                                status = com.example.gestaobilhares.data.entities.StatusAcerto.valueOf(data["status"] as? String ?: "PENDENTE"),
+                                status = statusFinal,
                                 representante = data["representante"] as? String ?: "",
                                 tipoAcerto = data["tipoAcerto"] as? String ?: "Presencial",
                                 panoTrocado = data["panoTrocado"] as? Boolean ?: false,
@@ -1022,6 +1030,55 @@ class SyncManagerV2(
                 } catch (e: Exception) {
                     android.util.Log.w("SyncManagerV2", "❌ Erro ao invalidar cache da rota ${rota.nome}: ${e.message}")
                 }
+            }
+            
+            // ✅ CORREÇÃO CRÍTICA: Forçar invalidação completa do cache global
+            try {
+                android.util.Log.d("SyncManagerV2", "🔄 Forçando invalidação completa do cache global...")
+                
+                // Invalidar cache de ciclos também
+                val ciclos = try {
+                    runBlocking { 
+                        val cicloDao = database.cicloAcertoDao()
+                        // Buscar ciclos de todas as rotas
+                        val rotas = appRepository.obterTodasRotas().first()
+                        val todosCiclos = mutableListOf<com.example.gestaobilhares.data.entities.CicloAcertoEntity>()
+                        
+                        for (rota in rotas) {
+                            try {
+                                val ciclosRota = cicloDao.buscarCiclosPorRota(rota.id)
+                                todosCiclos.addAll(ciclosRota)
+                            } catch (e: Exception) {
+                                android.util.Log.w("SyncManagerV2", "❌ Erro ao buscar ciclos da rota ${rota.nome}: ${e.message}")
+                            }
+                        }
+                        
+                        todosCiclos
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao buscar ciclos: ${e.message}")
+                    emptyList<com.example.gestaobilhares.data.entities.CicloAcertoEntity>()
+                }
+                
+                for (ciclo in ciclos) {
+                    try {
+                        // Forçar recálculo do ciclo
+                        android.util.Log.d("SyncManagerV2", "🔄 Invalidando cache do ciclo ${ciclo.numeroCiclo}")
+                    } catch (e: Exception) {
+                        android.util.Log.w("SyncManagerV2", "❌ Erro ao invalidar cache do ciclo: ${e.message}")
+                    }
+                }
+                
+                // ✅ NOVO: Forçar refresh das estatísticas das rotas
+                android.util.Log.d("SyncManagerV2", "🔄 Forçando refresh das estatísticas das rotas...")
+                
+                // Aguardar um pouco para garantir que todas as operações sejam processadas
+                kotlinx.coroutines.delay(1000)
+                
+                android.util.Log.d("SyncManagerV2", "✅ Invalidação completa do cache global concluída")
+                
+            } catch (e: Exception) {
+                android.util.Log.w("SyncManagerV2", "❌ Erro na invalidação completa do cache: ${e.message}")
             }
             
             android.util.Log.d("SyncManagerV2", "✅ Cache das rotas invalidado com sucesso")

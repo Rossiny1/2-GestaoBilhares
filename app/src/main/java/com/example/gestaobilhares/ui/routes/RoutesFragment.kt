@@ -608,8 +608,8 @@ class RoutesFragment : Fragment() {
                     
                     syncManager.forceSync()
                     
-                    // Aguardar um pouco para processar
-                    kotlinx.coroutines.delay(2000)
+                    // ✅ CORREÇÃO: Aguardar mais tempo para garantir que a sincronização seja processada
+                    kotlinx.coroutines.delay(3000)
                     
                     // Verificar status
                     val stats = syncManager.getSyncStats()
@@ -620,6 +620,21 @@ class RoutesFragment : Fragment() {
                             "Pendentes: ${stats.pendingOperations}\n" +
                             "Falhas: ${stats.failedOperations}", 
                             Toast.LENGTH_LONG).show()
+                        
+                        // ✅ CORREÇÃO CRÍTICA: Forçar atualização completa dos dados das rotas após sincronização
+                        android.util.Log.d("RoutesFragment", "🔄 Sincronização concluída - Forçando atualização completa dos dados das rotas")
+                        
+                        // Aguardar um pouco mais para garantir que todos os dados sejam processados
+                        kotlinx.coroutines.delay(2000)
+                        
+                        // Forçar refresh múltiplas vezes para garantir atualização completa
+                        viewModel.refresh()
+                        
+                        // Aguardar e forçar refresh novamente
+                        kotlinx.coroutines.delay(1000)
+                        viewModel.refresh()
+                        
+                        android.util.Log.d("RoutesFragment", "✅ Refresh completo das rotas executado")
                     } else {
                         Toast.makeText(requireContext(), 
                             "⚠️ Sem conexão com internet", 

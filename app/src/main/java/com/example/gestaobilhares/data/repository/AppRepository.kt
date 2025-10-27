@@ -2005,6 +2005,43 @@ class AppRepository constructor(
         } else 0.0
     }
     suspend fun buscarAcertoMesasPorAcerto(acertoId: Long) = acertoMesaDao.buscarPorAcerto(acertoId)
+    
+    /**
+     * ✅ CORREÇÃO CRÍTICA: Corrigir acertos existentes com status PENDENTE para FINALIZADO
+     * Isso resolve o problema de clientes aparecendo na aba "Em aberto" em vez de "Pago"
+     */
+    suspend fun corrigirAcertosPendentesParaFinalizados() {
+        try {
+            android.util.Log.d("AppRepository", "🔧 CORREÇÃO: Iniciando correção de acertos PENDENTE para FINALIZADO")
+            
+            // Buscar todos os acertos com status PENDENTE
+            val acertosPendentes = acertoDao.listarTodos().first().filter { acerto -> 
+                acerto.status == com.example.gestaobilhares.data.entities.StatusAcerto.PENDENTE 
+            }
+            
+            android.util.Log.d("AppRepository", "🔍 Encontrados ${acertosPendentes.size} acertos com status PENDENTE")
+            
+            for (acerto in acertosPendentes) {
+                try {
+                    // Atualizar status para FINALIZADO
+                    val acertoCorrigido = acerto.copy(
+                        status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO
+                    )
+                    
+                    acertoDao.atualizar(acertoCorrigido)
+                    android.util.Log.d("AppRepository", "✅ Acerto ID ${acerto.id} corrigido: PENDENTE → FINALIZADO")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("AppRepository", "❌ Erro ao corrigir acerto ID ${acerto.id}: ${e.message}")
+                }
+            }
+            
+            android.util.Log.d("AppRepository", "✅ CORREÇÃO CONCLUÍDA: ${acertosPendentes.size} acertos corrigidos")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ Erro na correção de acertos PENDENTE: ${e.message}")
+        }
+    }
     suspend fun buscarContratoAtivoPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratoAtivoPorCliente(clienteId)
     suspend fun inserirHistoricoManutencaoMesa(historico: HistoricoManutencaoMesa): Long = historicoManutencaoMesaDao.inserir(historico)
 
