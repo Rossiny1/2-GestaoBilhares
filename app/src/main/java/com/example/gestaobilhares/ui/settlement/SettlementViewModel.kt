@@ -685,6 +685,26 @@ class SettlementViewModel constructor(
     }
     
     /**
+     * ✅ NOVO: Busca mesas do acerto por ID para preenchimento na edição
+     */
+    suspend fun buscarAcertoMesasPorAcertoId(acertoId: Long): List<com.example.gestaobilhares.data.entities.AcertoMesa> {
+        return try {
+            appRepository.buscarAcertoMesasPorAcerto(acertoId).first()
+        } catch (e: Exception) {
+            Log.e("SettlementViewModel", "Erro ao buscar mesas do acerto: ${e.message}", e)
+            emptyList()
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Define o débito anterior para edição de acerto
+     */
+    fun definirDebitoAnteriorParaEdicao(debitoAnterior: Double) {
+        _debitoAnterior.value = debitoAnterior
+        logOperation("SETTLEMENT", "Débito anterior definido para edição: R$ $debitoAnterior")
+    }
+    
+    /**
      * ✅ NOVO: Calcula a média de fichas jogadas dos últimos acertos de uma mesa
      * @param mesaId ID da mesa
      * @param limite Máximo de acertos a considerar (padrão 5)

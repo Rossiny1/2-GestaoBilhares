@@ -659,6 +659,37 @@ class MesasAcertoAdapter(
             Log.e("MesasAcertoAdapter", "Erro ao atualizar média: ${e.message}", e)
         }
     }
+    
+    /**
+     * ✅ NOVO: Atualiza o relógio final das mesas com dados do acerto (apenas na edição)
+     */
+    fun atualizarRelogioFinalMesas(acertoMesas: List<com.example.gestaobilhares.data.entities.AcertoMesa>) {
+        try {
+            Log.d("MesasAcertoAdapter", "🔧 Atualizando relógio final das mesas para edição")
+            
+            acertoMesas.forEach { acertoMesa ->
+                mesaStates[acertoMesa.mesaId]?.let { state ->
+                    // Atualizar relógio inicial e final com dados do acerto
+                    state.relogioInicial = acertoMesa.relogioInicial
+                    state.relogioFinal = acertoMesa.relogioFinal
+                    state.relogioReiniciou = acertoMesa.relogioReiniciou
+                    
+                    Log.d("MesasAcertoAdapter", "✅ Mesa ${acertoMesa.mesaId}: relógio inicial=${acertoMesa.relogioInicial}, final=${acertoMesa.relogioFinal}")
+                    
+                    // Encontrar a posição da mesa na lista e notificar mudança
+                    val position = currentList.indexOfFirst { mesa -> mesa.id == acertoMesa.mesaId }
+                    if (position != -1) {
+                        safeNotifyItemChanged(position)
+                    }
+                }
+            }
+            
+            Log.d("MesasAcertoAdapter", "✅ Relógio final das mesas atualizado com sucesso")
+            
+        } catch (e: Exception) {
+            Log.e("MesasAcertoAdapter", "Erro ao atualizar relógio final das mesas: ${e.message}", e)
+        }
+    }
 }
 
 class MesaDTODiffCallback : DiffUtil.ItemCallback<MesaDTO>() {

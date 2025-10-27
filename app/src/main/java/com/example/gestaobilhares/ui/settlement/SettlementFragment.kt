@@ -325,6 +325,12 @@ class SettlementFragment : Fragment() {
             Log.d("SettlementFragment", "Valor recebido: ${acerto.valorRecebido}")
             Log.d("SettlementFragment", "Desconto: ${acerto.desconto}")
             Log.d("SettlementFragment", "Observações: ${acerto.observacoes}")
+            Log.d("SettlementFragment", "Débito anterior: ${acerto.debitoAnterior}")
+
+            // ✅ CORREÇÃO: Preencher débito anterior automaticamente
+            Log.d("SettlementFragment", "🔍 Preenchendo débito anterior: ${acerto.debitoAnterior}")
+            viewModel.definirDebitoAnteriorParaEdicao(acerto.debitoAnterior)
+            Log.d("SettlementFragment", "✅ Débito anterior preenchido: ${acerto.debitoAnterior}")
 
             // Preencher valor recebido (sempre, mesmo se for 0)
             Log.d("SettlementFragment", "🔍 Preenchendo valor recebido: ${acerto.valorRecebido}")
@@ -341,6 +347,9 @@ class SettlementFragment : Fragment() {
             binding.etObservacao.setText(acerto.observacoes ?: "")
             Log.d("SettlementFragment", "✅ Observações preenchidas: '${acerto.observacoes ?: ""}'")
 
+            // ✅ NOVO: Preencher relógio final das mesas se houver dados de mesas
+            preencherRelogioFinalMesas(acerto.id)
+
             // Preencher métodos de pagamento (se houver)
             // TODO: Implementar preenchimento dos métodos de pagamento
 
@@ -348,6 +357,34 @@ class SettlementFragment : Fragment() {
 
         } catch (e: Exception) {
             Log.e("SettlementFragment", "Erro ao preencher campos: ${e.message}", e)
+        }
+    }
+
+    /**
+     * ✅ NOVO: Preenche relógio final das mesas com dados do acerto
+     */
+    private fun preencherRelogioFinalMesas(acertoId: Long) {
+        lifecycleScope.launch {
+            try {
+                Log.d("SettlementFragment", "🔍 Preenchendo relógio final das mesas para acerto: $acertoId")
+                
+                // Buscar dados das mesas do acerto
+                val acertoMesas = viewModel.buscarAcertoMesasPorAcertoId(acertoId)
+                
+                if (acertoMesas.isNotEmpty()) {
+                    Log.d("SettlementFragment", "✅ Encontradas ${acertoMesas.size} mesas para preenchimento")
+                    
+                    // Atualizar o adapter com os dados das mesas
+                    mesasAcertoAdapter.atualizarRelogioFinalMesas(acertoMesas)
+                    
+                    Log.d("SettlementFragment", "✅ Relógio final das mesas preenchido com sucesso")
+                } else {
+                    Log.w("SettlementFragment", "⚠️ Nenhuma mesa encontrada para o acerto $acertoId")
+                }
+                
+            } catch (e: Exception) {
+                Log.e("SettlementFragment", "Erro ao preencher relógio final das mesas: ${e.message}", e)
+            }
         }
     }
 
