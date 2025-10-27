@@ -444,7 +444,7 @@ class SettlementViewModel constructor(
                         valorComDesconto = valorComDesconto,
                         valorRecebido = valorRecebido,
                         debitoAtual = debitoAtual,
-                        status = com.example.gestaobilhares.data.entities.StatusAcerto.PENDENTE,
+                        status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
                         observacoes = observacaoParaSalvar,
                         dataFinalizacao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
                         metodosPagamentoJson = metodosPagamentoJson,

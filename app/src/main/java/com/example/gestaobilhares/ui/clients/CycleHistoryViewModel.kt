@@ -327,14 +327,18 @@ class CycleHistoryViewModel(
 
     /**
      * ✅ NOVA FUNÇÃO: Calcula clientes acertados em tempo real para ciclos em andamento
+     * ✅ CORREÇÃO: Verificar apenas acertos FINALIZADOS
      */
     private suspend fun calcularClientesAcertadosEmTempoReal(cicloId: Long, _rotaId: Long): Int {
         return try {
             // Buscar acertos reais do banco de dados para este ciclo
             val acertos = appRepository.buscarAcertosPorCicloId(cicloId).first()
             
-            // Contar clientes únicos que foram acertados
-            val clientesAcertados = acertos.map { it.clienteId }.distinct()
+            // ✅ CORREÇÃO CRÍTICA: Contar apenas clientes únicos com acertos FINALIZADOS
+            val clientesAcertados = acertos
+                .filter { acerto -> acerto.status == com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO }
+                .map { it.clienteId }
+                .distinct()
             
             android.util.Log.d("CycleHistoryViewModel", "✅ Clientes acertados em tempo real no ciclo $cicloId: ${clientesAcertados.size}")
             

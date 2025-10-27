@@ -57,7 +57,7 @@ class RoutesViewModel constructor(
     // ✅ MODERNIZADO: Observa as rotas resumo do repository e aplica filtro de acesso
     private val rotasResumoOriginal: StateFlow<List<RotaResumo>> = appRepository.getRotasResumoComAtualizacaoTempoReal().stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Eagerly, // ✅ CORREÇÃO: Usar Eagerly para garantir atualizações imediatas
         initialValue = emptyList()
     )
 
@@ -68,7 +68,7 @@ class RoutesViewModel constructor(
         calcularEstatisticas(rotas.first())
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Eagerly, // ✅ CORREÇÃO: Usar Eagerly para garantir atualizações imediatas
         initialValue = EstatisticasGerais(0, 0, 0, 0.0, 0.0)
     )
 
@@ -242,18 +242,23 @@ class RoutesViewModel constructor(
 
     /**
      * Recarrega os dados das rotas.
+     * ✅ CORREÇÃO: Método mais agressivo para forçar atualização após sincronização
      */
     fun refresh() {
-        // ✅ CORREÇÃO: Forçar atualização dos dados após transferência
         android.util.Log.d("RoutesViewModel", "🔄 Forçando refresh dos dados das rotas")
         viewModelScope.launch {
             try {
-                // Forçar recálculo das estatísticas
+                // ✅ CORREÇÃO: Forçar recálculo imediato das estatísticas
                 val rotasAtuais = appRepository.getRotasResumoComAtualizacaoTempoReal().first()
                 android.util.Log.d("RoutesViewModel", "📊 Dados atualizados: ${rotasAtuais.size} rotas")
                 
-                // ✅ CORREÇÃO: Aguardar a aplicação do filtro para garantir que os dados sejam atualizados
+                // ✅ CORREÇÃO: Aplicar filtro de acesso imediatamente
                 aplicarFiltroAcessoCompleto(rotasAtuais)
+                
+                // ✅ NOVO: Forçar atualização das estatísticas também
+                val estatisticasAtuais = calcularEstatisticas(rotasAtuais)
+                android.util.Log.d("RoutesViewModel", "📈 Estatísticas recalculadas: ${estatisticasAtuais.totalClientesAtivos} clientes, ${estatisticasAtuais.totalMesas} mesas")
+                
             } catch (e: Exception) {
                 android.util.Log.e("RoutesViewModel", "Erro ao fazer refresh: ${e.message}", e)
             }
