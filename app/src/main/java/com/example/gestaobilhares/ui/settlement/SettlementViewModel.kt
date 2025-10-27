@@ -238,18 +238,25 @@ class SettlementViewModel constructor(
                     val acertoParaEdicao = acertosOrdenados.find { acerto -> acerto.id == acertoIdParaEdicao }
                     
                     if (acertoParaEdicao != null) {
-                        // Encontrar o acerto ANTERIOR ao que está sendo editado
-                        val acertoAnterior = acertosOrdenados.find { acerto -> 
-                            acerto.dataAcerto < acertoParaEdicao.dataAcerto 
-                        }
-                        
-                        if (acertoAnterior != null) {
-                            logOperation("SETTLEMENT", "✅ MODO EDIÇÃO: Acerto anterior encontrado - ID: ${acertoAnterior.id}, Débito Atual: ${acertoAnterior.debitoAtual}")
-                            _debitoAnterior.value = acertoAnterior.debitoAtual
-                            logOperation("SETTLEMENT", "✅ MODO EDIÇÃO: Débito anterior calculado: R$ ${acertoAnterior.debitoAtual}")
+                        // ✅ CORREÇÃO CRÍTICA: Para o primeiro acerto, usar o debitoAnterior salvo no próprio acerto
+                        if (acertosOrdenados.size == 1) {
+                            logOperation("SETTLEMENT", "ℹ️ MODO EDIÇÃO: Este é o PRIMEIRO acerto do cliente - usando debitoAnterior salvo: ${acertoParaEdicao.debitoAnterior}")
+                            _debitoAnterior.value = acertoParaEdicao.debitoAnterior
+                            logOperation("SETTLEMENT", "✅ MODO EDIÇÃO: Débito anterior do primeiro acerto: R$ ${acertoParaEdicao.debitoAnterior}")
                         } else {
-                            logOperation("SETTLEMENT", "ℹ️ MODO EDIÇÃO: Este é o primeiro acerto do cliente, débito anterior: R$ 0,00")
-                            _debitoAnterior.value = 0.0
+                            // Para acertos subsequentes, encontrar o acerto ANTERIOR ao que está sendo editado
+                            val acertoAnterior = acertosOrdenados.find { acerto -> 
+                                acerto.dataAcerto < acertoParaEdicao.dataAcerto 
+                            }
+                            
+                            if (acertoAnterior != null) {
+                                logOperation("SETTLEMENT", "✅ MODO EDIÇÃO: Acerto anterior encontrado - ID: ${acertoAnterior.id}, Débito Atual: ${acertoAnterior.debitoAtual}")
+                                _debitoAnterior.value = acertoAnterior.debitoAtual
+                                logOperation("SETTLEMENT", "✅ MODO EDIÇÃO: Débito anterior calculado: R$ ${acertoAnterior.debitoAtual}")
+                            } else {
+                                logOperation("SETTLEMENT", "ℹ️ MODO EDIÇÃO: Nenhum acerto anterior encontrado, usando debitoAnterior salvo: ${acertoParaEdicao.debitoAnterior}")
+                                _debitoAnterior.value = acertoParaEdicao.debitoAnterior
+                            }
                         }
                     } else {
                         logError("SETTLEMENT", "❌ MODO EDIÇÃO: Acerto para edição não encontrado, débito anterior: R$ 0,00")

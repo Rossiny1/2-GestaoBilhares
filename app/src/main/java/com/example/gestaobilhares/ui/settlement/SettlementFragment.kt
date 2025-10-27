@@ -764,7 +764,6 @@ class SettlementFragment : Fragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                Log.d("SettlementFragment", "🔄 Desconto alterado: '${s.toString()}' - recalculando débito atual...")
                 updateCalculations()
             }
         }
@@ -776,7 +775,6 @@ class SettlementFragment : Fragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                Log.d("SettlementFragment", "🔄 Valor recebido alterado: '${s.toString()}' - recalculando débito atual...")
                 updateCalculations()
             }
         }
@@ -789,60 +787,19 @@ class SettlementFragment : Fragment() {
     
     private fun updateCalculations() {
         try {
-            Log.d("SettlementFragment", "=== INICIANDO CÁLCULOS ===")
-            
-            // Capturar valores dos campos
-            val descontoText = binding.etDesconto.text.toString()
-            val valorRecebidoText = binding.etAmountReceived.text.toString()
-            
-            val desconto = descontoText.toDoubleOrNull() ?: 0.0
-            val valorRecebido = valorRecebidoText.toDoubleOrNull() ?: 0.0
-
-            Log.d("SettlementFragment", "Texto desconto: '$descontoText' -> R$ $desconto")
-            Log.d("SettlementFragment", "Texto valor recebido: '$valorRecebidoText' -> R$ $valorRecebido")
-            Log.d("SettlementFragment", "PaymentValues: $paymentValues")
-            Log.d("SettlementFragment", "Soma paymentValues: R$ ${paymentValues.values.sum()}")
-
-            // O subtotal agora vem diretamente do adapter, que soma os subtotais de todas as mesas
+            val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
             val subtotalMesas = if (::mesasAcertoAdapter.isInitialized) mesasAcertoAdapter.getSubtotal() else 0.0
-            
-            // Usar o débito anterior carregado do ViewModel
             val debitoAnterior = viewModel.debitoAnterior.value
             val totalComDebito = subtotalMesas + debitoAnterior
             val totalComDesconto = maxOf(0.0, totalComDebito - desconto)
-            
-            Log.d("SettlementFragment", "=== CÁLCULOS DETALHADOS ===")
-            Log.d("SettlementFragment", "Subtotal mesas: R$ $subtotalMesas")
-            Log.d("SettlementFragment", "Débito anterior: R$ $debitoAnterior")
-            Log.d("SettlementFragment", "Total com débito: R$ $totalComDebito")
-            Log.d("SettlementFragment", "Desconto: R$ $desconto")
-            Log.d("SettlementFragment", "Total com desconto: R$ $totalComDesconto")
-            Log.d("SettlementFragment", "Valor recebido: R$ $valorRecebido")
-            
-            // ✅ CORREÇÃO CRÍTICA: Calcular débito atual em tempo real
-            // Usar diretamente a soma dos paymentValues em vez do campo valor recebido
             val valorRecebidoDosMetodos = paymentValues.values.sum()
             val debitoAtualCalculado = debitoAnterior + subtotalMesas - desconto - valorRecebidoDosMetodos
-            
-            Log.d("SettlementFragment", "✅ VALOR RECEBIDO DOS MÉTODOS: R$ $valorRecebidoDosMetodos")
-            Log.d("SettlementFragment", "✅ PaymentValues detalhado: $paymentValues")
-            
-            // Atualizar displays dos totais
-            binding.tvTableTotal.text = formatter.format(subtotalMesas)
-            binding.tvTotalWithDebt.text = formatter.format(totalComDesconto) // Mostrar valor total final
-            binding.tvCurrentDebt.text = formatter.format(debitoAtualCalculado) // ✅ DÉBITO ATUAL EM TEMPO REAL
-            
-            Log.d("SettlementFragment", "✅ DÉBITO ATUAL CALCULADO EM TEMPO REAL: R$ $debitoAtualCalculado")
-            Log.d("SettlementFragment", "✅ FÓRMULA: $debitoAnterior + $subtotalMesas - $desconto - $valorRecebidoDosMetodos = $debitoAtualCalculado")
-            
 
-            
-            Log.d("SettlementFragment", "✅ DISPLAYS ATUALIZADOS")
-            Log.d("SettlementFragment", "tvTableTotal: ${binding.tvTableTotal.text}")
-            Log.d("SettlementFragment", "tvTotalWithDebt: ${binding.tvTotalWithDebt.text}")
-            
+            binding.tvTableTotal.text = formatter.format(subtotalMesas)
+            binding.tvTotalWithDebt.text = formatter.format(totalComDesconto)
+            binding.tvCurrentDebt.text = formatter.format(debitoAtualCalculado)
         } catch (e: Exception) {
-            Log.e("UpdateCalculations", "❌ Erro ao calcular totais", e)
+            Log.e("UpdateCalculations", "Erro ao calcular totais", e)
             binding.tvTableTotal.text = formatter.format(0.0)
             binding.tvTotalWithDebt.text = formatter.format(0.0)
         }
@@ -1196,8 +1153,6 @@ class SettlementFragment : Fragment() {
             viewModel.debitoAnterior.collect { debito ->
                 val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
                 binding.tvPreviousDebt.text = formatter.format(debito)
-                
-                Log.d("SettlementFragment", "🔄 Débito anterior atualizado: R$ $debito")
             }
         }
 

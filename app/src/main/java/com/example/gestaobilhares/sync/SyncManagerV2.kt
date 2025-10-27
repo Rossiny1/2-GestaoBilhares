@@ -405,6 +405,9 @@ class SyncManagerV2(
         "mesa" -> "mesas"
         "rota" -> "rotas"
         "colaborador" -> "colaboradores"
+        "despesa" -> "despesas"
+        "panoestoque" -> "panosEstoque"
+        "mesavendida" -> "mesasVendidas"
         else -> entityType.lowercase(Locale.getDefault()) + "s"
     }
 
@@ -534,8 +537,28 @@ class SyncManagerV2(
             pullCiclosFromFirestore(empresaId)
             delay(500) // Aguardar ciclos serem inseridos
             
-            // 6. SEXTO: Criar ciclos automaticamente baseados nos acertos sincronizados
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 6: Criando ciclos automaticamente...")
+            // 6. SEXTO: Baixar colaboradores do Firestore
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 6: Sincronizando COLABORADORES...")
+            pullColaboradoresFromFirestore(empresaId)
+            delay(500) // Aguardar colaboradores serem inseridos
+            
+            // 7. SÉTIMO: Baixar despesas do Firestore
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 7: Sincronizando DESPESAS...")
+            pullDespesasFromFirestore(empresaId)
+            delay(500) // Aguardar despesas serem inseridas
+            
+            // 8. OITAVO: Baixar panos estoque do Firestore
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 8: Sincronizando PANOS ESTOQUE...")
+            pullPanoEstoqueFromFirestore(empresaId)
+            delay(500) // Aguardar panos serem inseridos
+            
+            // 9. NONO: Baixar mesas vendidas do Firestore
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 9: Sincronizando MESAS VENDIDAS...")
+            pullMesaVendidaFromFirestore(empresaId)
+            delay(500) // Aguardar mesas vendidas serem inseridas
+            
+            // 10. DÉCIMO: Criar ciclos automaticamente baseados nos acertos sincronizados
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 10: Criando ciclos automaticamente...")
             criarCiclosAutomaticamente()
 
             // ✅ NOVO PASSO: Remapear acertos importados para o ciclo local correto (numero/ano -> id)
@@ -1422,6 +1445,331 @@ class SyncManagerV2(
             android.util.Log.d("SyncManagerV2", "Limpeza: $deletedLogs logs, $deletedQueue operações removidas")
         } catch (e: Exception) {
             android.util.Log.w("SyncManagerV2", "Erro na limpeza: ${e.message}")
+        }
+    }
+
+    /**
+     * PULL SYNC: Baixar colaboradores do Firestore para o app
+     */
+    private suspend fun pullColaboradoresFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Colaboradores do Firestore...")
+        
+        try {
+            val colaboradoresCollection = firestore.collection("empresas/$empresaId/colaboradores")
+            val snapshot = colaboradoresCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} colaboradores no Firestore")
+            
+            var colaboradoresSincronizados = 0
+            var colaboradoresExistentes = 0
+            
+            val colaboradorDao = database.colaboradorDao()
+            val colaboradoresExistentesList = colaboradorDao.obterTodos().first()
+            
+            for (document in snapshot) {
+                try {
+                    val data = document.data
+                    val roomId = document.id.toLongOrNull() ?: continue
+                    
+                    // Verificar se já existe
+                    val jaExiste = colaboradoresExistentesList.any { colaborador -> colaborador.id == roomId }
+                    if (jaExiste) {
+                        colaboradoresExistentes++
+                        android.util.Log.d("SyncManagerV2", "⏭️ Colaborador já existe: ${data["nome"]} (ID: $roomId)")
+                        continue
+                    }
+                    
+                    // Converter dados do Firestore para entidade Room
+                    val colaborador = com.example.gestaobilhares.data.entities.Colaborador(
+                        id = roomId,
+                        nome = data["nome"] as? String ?: "",
+                        email = data["email"] as? String ?: "",
+                        telefone = data["telefone"] as? String,
+                        cpf = data["cpf"] as? String,
+                        dataNascimento = null, // TODO: Implementar conversão de data se necessário
+                        endereco = data["endereco"] as? String,
+                        bairro = data["bairro"] as? String,
+                        cidade = data["cidade"] as? String,
+                        estado = data["estado"] as? String,
+                        cep = data["cep"] as? String,
+                        rg = data["rg"] as? String,
+                        orgaoEmissor = data["orgaoEmissor"] as? String,
+                        estadoCivil = data["estadoCivil"] as? String,
+                        nomeMae = data["nomeMae"] as? String,
+                        nomePai = data["nomePai"] as? String,
+                        fotoPerfil = data["fotoPerfil"] as? String,
+                        nivelAcesso = try {
+                            com.example.gestaobilhares.data.entities.NivelAcesso.valueOf(
+                                data["nivelAcesso"] as? String ?: "USER"
+                            )
+                        } catch (e: Exception) {
+                            com.example.gestaobilhares.data.entities.NivelAcesso.USER
+                        },
+                        ativo = data["ativo"] as? Boolean ?: true,
+                        aprovado = data["aprovado"] as? Boolean ?: false,
+                        dataAprovacao = null, // TODO: Implementar conversão de data se necessário
+                        aprovadoPor = data["aprovadoPor"] as? String,
+                        firebaseUid = data["firebaseUid"] as? String,
+                        googleId = data["googleId"] as? String,
+                        senhaTemporaria = data["senhaTemporaria"] as? String,
+                        emailAcesso = data["emailAcesso"] as? String,
+                        observacoes = data["observacoes"] as? String,
+                        dataCadastro = java.util.Date(),
+                        dataUltimoAcesso = null, // TODO: Implementar conversão de data se necessário
+                        dataUltimaAtualizacao = java.util.Date()
+                    )
+                    
+                    // Inserir no Room
+                    colaboradorDao.inserir(colaborador)
+                    colaboradoresSincronizados++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Colaborador sincronizado: ${colaborador.nome} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao processar colaborador ${document.id}: ${e.message}")
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Colaboradores:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $colaboradoresSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $colaboradoresExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar colaboradores: ${e.message}", e)
+        }
+    }
+
+    /**
+     * PULL SYNC: Baixar despesas do Firestore para o app
+     */
+    private suspend fun pullDespesasFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Despesas do Firestore...")
+        
+        try {
+            val despesasCollection = firestore.collection("empresas/$empresaId/despesas")
+            val snapshot = despesasCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontradas ${snapshot.size()} despesas no Firestore")
+            
+            var despesasSincronizadas = 0
+            var despesasExistentes = 0
+            
+            val despesaDao = database.despesaDao()
+            val despesasExistentesList = despesaDao.buscarTodasComRota().first()
+            
+            for (document in snapshot) {
+                try {
+                    val data = document.data
+                    val roomId = document.id.toLongOrNull() ?: continue
+                    
+                    // Verificar se já existe
+                    val jaExiste = despesasExistentesList.any { it.id == roomId }
+                    if (jaExiste) {
+                        despesasExistentes++
+                        android.util.Log.d("SyncManagerV2", "⏭️ Despesa já existe: ${data["descricao"]} (ID: $roomId)")
+                        continue
+                    }
+                    
+                    // Converter dados do Firestore para entidade Room
+                    val despesa = com.example.gestaobilhares.data.entities.Despesa(
+                        id = roomId,
+                        rotaId = (data["rotaId"] as? Double)?.toLong() ?: 0L,
+                        descricao = data["descricao"] as? String ?: "",
+                        valor = (data["valor"] as? Double) ?: 0.0,
+                        categoria = data["categoria"] as? String ?: "",
+                        tipoDespesa = data["tipoDespesa"] as? String ?: "",
+                        dataHora = try {
+                            // Converter string para LocalDateTime se necessário
+                            java.time.LocalDateTime.parse(data["dataHora"] as? String ?: java.time.LocalDateTime.now().toString())
+                        } catch (e: Exception) {
+                            java.time.LocalDateTime.now()
+                        },
+                        observacoes = data["observacoes"] as? String ?: "",
+                        criadoPor = data["criadoPor"] as? String ?: "",
+                        cicloId = (data["cicloId"] as? Double)?.toLong(),
+                        origemLancamento = data["origemLancamento"] as? String ?: "ROTA",
+                        cicloAno = (data["cicloAno"] as? Double)?.toInt(),
+                        cicloNumero = (data["cicloNumero"] as? Double)?.toInt(),
+                        fotoComprovante = data["fotoComprovante"] as? String,
+                        veiculoId = (data["veiculoId"] as? Double)?.toLong(),
+                        kmRodado = (data["kmRodado"] as? Double)?.toLong(),
+                        litrosAbastecidos = data["litrosAbastecidos"] as? Double
+                    )
+                    
+                    // Inserir no Room
+                    despesaDao.inserir(despesa)
+                    despesasSincronizadas++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Despesa sincronizada: ${despesa.descricao} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao processar despesa ${document.id}: ${e.message}")
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Despesas:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizadas: $despesasSincronizadas")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $despesasExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar despesas: ${e.message}", e)
+        }
+    }
+
+    /**
+     * PULL SYNC: Baixar panos estoque do Firestore para o app
+     */
+    private suspend fun pullPanoEstoqueFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Panos Estoque do Firestore...")
+        
+        try {
+            val panosCollection = firestore.collection("empresas/$empresaId/panosEstoque")
+            val snapshot = panosCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} panos no Firestore")
+            
+            var panosSincronizados = 0
+            var panosExistentes = 0
+            
+            val panoEstoqueDao = database.panoEstoqueDao()
+            val panosExistentesList = panoEstoqueDao.listarTodos().first()
+            
+            for (document in snapshot) {
+                try {
+                    val data = document.data
+                    val roomId = document.id.toLongOrNull() ?: continue
+                    
+                    // Verificar se já existe
+                    val jaExiste = panosExistentesList.any { pano -> pano.id == roomId }
+                    if (jaExiste) {
+                        panosExistentes++
+                        android.util.Log.d("SyncManagerV2", "⏭️ Pano já existe: ${data["numero"]} (ID: $roomId)")
+                        continue
+                    }
+                    
+                    // Converter dados do Firestore para entidade Room
+                    val pano = com.example.gestaobilhares.data.entities.PanoEstoque(
+                        id = roomId,
+                        numero = data["numero"] as? String ?: "",
+                        cor = data["cor"] as? String ?: "",
+                        tamanho = data["tamanho"] as? String ?: "",
+                        material = data["material"] as? String ?: "",
+                        disponivel = data["disponivel"] as? Boolean ?: true,
+                        observacoes = data["observacoes"] as? String
+                    )
+                    
+                    // Inserir no Room
+                    panoEstoqueDao.inserir(pano)
+                    panosSincronizados++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Pano sincronizado: ${pano.numero} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao processar pano ${document.id}: ${e.message}")
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Panos Estoque:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $panosSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $panosExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar panos estoque: ${e.message}", e)
+        }
+    }
+
+    /**
+     * PULL SYNC: Baixar mesas vendidas do Firestore para o app
+     */
+    private suspend fun pullMesaVendidaFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Mesas Vendidas do Firestore...")
+        
+        try {
+            val mesasCollection = firestore.collection("empresas/$empresaId/mesasVendidas")
+            val snapshot = mesasCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontradas ${snapshot.size()} mesas vendidas no Firestore")
+            
+            var mesasSincronizadas = 0
+            var mesasExistentes = 0
+            
+            val mesaVendidaDao = database.mesaVendidaDao()
+            val mesasExistentesList = mesaVendidaDao.listarTodas().first()
+            
+            for (document in snapshot) {
+                try {
+                    val data = document.data
+                    val roomId = document.id.toLongOrNull() ?: continue
+                    
+                    // Verificar se já existe
+                    val jaExiste = mesasExistentesList.any { mesa -> mesa.id == roomId }
+                    if (jaExiste) {
+                        mesasExistentes++
+                        android.util.Log.d("SyncManagerV2", "⏭️ Mesa vendida já existe: ${data["numeroMesa"]} (ID: $roomId)")
+                        continue
+                    }
+                    
+                    // Converter dados do Firestore para entidade Room
+                    val mesaVendida = com.example.gestaobilhares.data.entities.MesaVendida(
+                        id = roomId,
+                        mesaIdOriginal = (data["mesaIdOriginal"] as? Double)?.toLong() ?: 0L,
+                        numeroMesa = data["numeroMesa"] as? String ?: "",
+                        tipoMesa = try {
+                            com.example.gestaobilhares.data.entities.TipoMesa.valueOf(
+                                data["tipoMesa"] as? String ?: "SINUCA"
+                            )
+                        } catch (e: Exception) {
+                            com.example.gestaobilhares.data.entities.TipoMesa.SINUCA
+                        },
+                        tamanhoMesa = try {
+                            com.example.gestaobilhares.data.entities.TamanhoMesa.valueOf(
+                                data["tamanhoMesa"] as? String ?: "MEDIA"
+                            )
+                        } catch (e: Exception) {
+                            com.example.gestaobilhares.data.entities.TamanhoMesa.MEDIA
+                        },
+                        estadoConservacao = try {
+                            com.example.gestaobilhares.data.entities.EstadoConservacao.valueOf(
+                                data["estadoConservacao"] as? String ?: "BOM"
+                            )
+                        } catch (e: Exception) {
+                            com.example.gestaobilhares.data.entities.EstadoConservacao.BOM
+                        },
+                        nomeComprador = data["nomeComprador"] as? String ?: "",
+                        telefoneComprador = data["telefoneComprador"] as? String,
+                        cpfCnpjComprador = data["cpfCnpjComprador"] as? String,
+                        enderecoComprador = data["enderecoComprador"] as? String,
+                        valorVenda = (data["valorVenda"] as? Double) ?: 0.0,
+                        dataVenda = try {
+                            java.util.Date(data["dataVenda"] as? String ?: java.util.Date().toString())
+                        } catch (e: Exception) {
+                            java.util.Date()
+                        },
+                        observacoes = data["observacoes"] as? String,
+                        dataCriacao = try {
+                            java.util.Date(data["dataCriacao"] as? String ?: java.util.Date().toString())
+                        } catch (e: Exception) {
+                            java.util.Date()
+                        }
+                    )
+                    
+                    // Inserir no Room
+                    mesaVendidaDao.inserir(mesaVendida)
+                    mesasSincronizadas++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Mesa vendida sincronizada: ${mesaVendida.numeroMesa} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao processar mesa vendida ${document.id}: ${e.message}")
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Mesas Vendidas:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizadas: $mesasSincronizadas")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $mesasExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar mesas vendidas: ${e.message}", e)
         }
     }
 
