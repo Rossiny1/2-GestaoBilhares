@@ -85,7 +85,8 @@ class CycleReceiptsFragment : Fragment() {
             DespesaRepository(database.despesaDao()),
             AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
             ClienteRepository(database.clienteDao(), appRepository),
-            database.rotaDao()
+            database.rotaDao(),
+            appRepository
         )
         viewModel = CycleReceiptsViewModel(cicloAcertoRepository, appRepository)
         

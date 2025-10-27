@@ -498,7 +498,8 @@ class SettlementDetailFragment : Fragment() {
                     despesaRepo,
                     acertoRepo,
                     clienteRepo,
-                    AppDatabase.getDatabase(requireContext()).rotaDao()
+                    AppDatabase.getDatabase(requireContext()).rotaDao(),
+                    appRepository
                 )
                 
                 // Verificar permissão
