@@ -691,7 +691,9 @@ class SyncManagerV2(
                                 endereco = data["endereco"] as? String ?: "",
                                 rotaId = rotaIdFinal,
                                 ativo = data["ativo"] as? Boolean ?: true,
-                                dataCadastro = java.util.Date() // Usar data atual como fallback
+                                dataCadastro = java.util.Date(), // Usar data atual como fallback
+                                valorFicha = (data["valorFicha"] as? Double) ?: 0.0,
+                                comissaoFicha = (data["comissaoFicha"] as? Double) ?: 0.0
                             )
                             
                             // Inserir no Room (sem adicionar à fila de sync)

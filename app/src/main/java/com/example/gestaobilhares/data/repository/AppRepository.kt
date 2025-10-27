@@ -189,7 +189,9 @@ class AppRepository constructor(
                         "endereco": "${cliente.endereco}",
                         "rotaId": ${cliente.rotaId},
                         "ativo": ${cliente.ativo},
-                        "dataCadastro": "${cliente.dataCadastro}"
+                        "dataCadastro": "${cliente.dataCadastro}",
+                        "valorFicha": ${cliente.valorFicha},
+                        "comissaoFicha": ${cliente.comissaoFicha}
                     }
                 """.trimIndent()
                 
@@ -224,7 +226,9 @@ class AppRepository constructor(
                         "rotaId": ${cliente.rotaId},
                         "ativo": ${cliente.ativo},
                         "dataCadastro": "${cliente.dataCadastro}",
-                        "debitoAtual": ${cliente.debitoAtual}
+                        "debitoAtual": ${cliente.debitoAtual},
+                        "valorFicha": ${cliente.valorFicha},
+                        "comissaoFicha": ${cliente.comissaoFicha}
                     }
                 """.trimIndent()
                 
@@ -261,7 +265,9 @@ class AppRepository constructor(
                             "rotaId": ${cliente.rotaId},
                             "ativo": ${cliente.ativo},
                             "dataCadastro": "${cliente.dataCadastro}",
-                            "debitoAtual": $novoDebito
+                            "debitoAtual": $novoDebito,
+                            "valorFicha": ${cliente.valorFicha},
+                            "comissaoFicha": ${cliente.comissaoFicha}
                         }
                     """.trimIndent()
                     
