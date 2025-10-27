@@ -207,10 +207,78 @@ class AppRepository constructor(
             throw e
         }
     }
-    suspend fun atualizarCliente(cliente: Cliente) = clienteDao.atualizar(cliente)
+    suspend fun atualizarCliente(cliente: Cliente) {
+        logDbUpdateStart("CLIENTE", "ID=${cliente.id}, Nome=${cliente.nome}")
+        try {
+            clienteDao.atualizar(cliente)
+            logDbUpdateSuccess("CLIENTE", "ID=${cliente.id}, Nome=${cliente.nome}")
+            
+            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${cliente.id},
+                        "nome": "${cliente.nome}",
+                        "telefone": "${cliente.telefone}",
+                        "endereco": "${cliente.endereco}",
+                        "rotaId": ${cliente.rotaId},
+                        "ativo": ${cliente.ativo},
+                        "dataCadastro": "${cliente.dataCadastro}",
+                        "debitoAtual": ${cliente.debitoAtual}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Cliente", cliente.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("Cliente", cliente.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de cliente à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("CLIENTE", "ID=${cliente.id}", e)
+            throw e
+        }
+    }
     suspend fun deletarCliente(cliente: Cliente) = clienteDao.deletar(cliente)
-    suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) = 
-        clienteDao.atualizarDebitoAtual(clienteId, novoDebito)
+    suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) {
+        logDbUpdateStart("CLIENTE_DEBITO", "ClienteID=$clienteId, NovoDebito=$novoDebito")
+        try {
+            clienteDao.atualizarDebitoAtual(clienteId, novoDebito)
+            logDbUpdateSuccess("CLIENTE_DEBITO", "ClienteID=$clienteId, NovoDebito=$novoDebito")
+            
+            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
+            try {
+                val cliente = obterClientePorId(clienteId)
+                if (cliente != null) {
+                    val payload = """
+                        {
+                            "id": ${cliente.id},
+                            "nome": "${cliente.nome}",
+                            "telefone": "${cliente.telefone}",
+                            "endereco": "${cliente.endereco}",
+                            "rotaId": ${cliente.rotaId},
+                            "ativo": ${cliente.ativo},
+                            "dataCadastro": "${cliente.dataCadastro}",
+                            "debitoAtual": $novoDebito
+                        }
+                    """.trimIndent()
+                    
+                    adicionarOperacaoSync("Cliente", clienteId, "UPDATE", payload, priority = 1)
+                    logarOperacaoSync("Cliente", clienteId, "UPDATE", "PENDING", null, payload)
+                }
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de débito à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("CLIENTE_DEBITO", "ClienteID=$clienteId", e)
+            throw e
+        }
+    }
     suspend fun calcularDebitoAtualEmTempoReal(clienteId: Long) = 
         clienteDao.calcularDebitoAtualEmTempoReal(clienteId)
     suspend fun obterClienteComDebitoAtual(clienteId: Long) = 
@@ -294,7 +362,61 @@ class AppRepository constructor(
             throw e
         }
     }
-    suspend fun atualizarAcerto(acerto: Acerto) = acertoDao.atualizar(acerto)
+    suspend fun atualizarAcerto(acerto: Acerto) {
+        logDbUpdateStart("ACERTO", "ID=${acerto.id}, ClienteID=${acerto.clienteId}")
+        try {
+            acertoDao.atualizar(acerto)
+            logDbUpdateSuccess("ACERTO", "ID=${acerto.id}, ClienteID=${acerto.clienteId}")
+            
+            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
+            try {
+                val payloadMap = mutableMapOf<String, Any?>(
+                    "id" to acerto.id,
+                    "clienteId" to acerto.clienteId,
+                    "colaboradorId" to acerto.colaboradorId,
+                    "dataAcerto" to acerto.dataAcerto,
+                    "periodoInicio" to acerto.periodoInicio,
+                    "periodoFim" to acerto.periodoFim,
+                    "totalMesas" to acerto.totalMesas,
+                    "debitoAnterior" to acerto.debitoAnterior,
+                    "valorTotal" to acerto.valorTotal,
+                    "desconto" to acerto.desconto,
+                    "valorComDesconto" to acerto.valorComDesconto,
+                    "valorRecebido" to acerto.valorRecebido,
+                    "debitoAtual" to acerto.debitoAtual,
+                    "status" to acerto.status.name,
+                    "observacoes" to acerto.observacoes,
+                    "dataCriacao" to acerto.dataCriacao,
+                    "dataFinalizacao" to acerto.dataFinalizacao,
+                    "representante" to acerto.representante,
+                    "tipoAcerto" to acerto.tipoAcerto,
+                    "panoTrocado" to acerto.panoTrocado,
+                    "numeroPano" to acerto.numeroPano,
+                    "rotaId" to acerto.rotaId,
+                    "cicloId" to acerto.cicloId,
+                    "syncTimestamp" to acerto.syncTimestamp,
+                    "syncVersion" to acerto.syncVersion,
+                    "syncStatus" to acerto.syncStatus.name
+                )
+                // Adicionar JSONs que já podem estar formatados
+                acerto.metodosPagamentoJson?.let { payloadMap["metodosPagamentoJson"] = it }
+                acerto.dadosExtrasJson?.let { payloadMap["dadosExtrasJson"] = it }
+
+                val payload = com.google.gson.Gson().toJson(payloadMap)
+
+                adicionarOperacaoSync("Acerto", acerto.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("Acerto", acerto.id, "UPDATE", "PENDING", null, payload)
+
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de acerto à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("ACERTO", "ID=${acerto.id}", e)
+            throw e
+        }
+    }
     suspend fun deletarAcerto(acerto: Acerto) = acertoDao.deletar(acerto)
     suspend fun buscarUltimoAcertoPorMesa(mesaId: Long) = 
         acertoDao.buscarUltimoAcertoPorMesa(mesaId)
@@ -378,7 +500,46 @@ class AppRepository constructor(
             throw e
         }
     }
-    suspend fun atualizarMesa(mesa: Mesa) = mesaDao.atualizar(mesa)
+    suspend fun atualizarMesa(mesa: Mesa) {
+        logDbUpdateStart("MESA", "ID=${mesa.id}, Numero=${mesa.numero}")
+        try {
+            mesaDao.atualizar(mesa)
+            logDbUpdateSuccess("MESA", "ID=${mesa.id}, Numero=${mesa.numero}")
+            
+            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${mesa.id},
+                        "numero": "${mesa.numero}",
+                        "clienteId": ${mesa.clienteId},
+                        "ativa": ${mesa.ativa},
+                        "tipoMesa": "${mesa.tipoMesa}",
+                        "tamanho": "${mesa.tamanho}",
+                        "estadoConservacao": "${mesa.estadoConservacao}",
+                        "valorFixo": ${mesa.valorFixo},
+                        "relogioInicial": ${mesa.relogioInicial},
+                        "relogioFinal": ${mesa.relogioFinal},
+                        "dataInstalacao": "${mesa.dataInstalacao}",
+                        "observacoes": "${mesa.observacoes ?: ""}",
+                        "panoAtualId": ${mesa.panoAtualId ?: "null"},
+                        "dataUltimaTrocaPano": "${mesa.dataUltimaTrocaPano ?: ""}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Mesa", mesa.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("Mesa", mesa.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de mesa à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("MESA", "ID=${mesa.id}", e)
+            throw e
+        }
+    }
     suspend fun deletarMesa(mesa: Mesa) = mesaDao.deletar(mesa)
     suspend fun vincularMesaACliente(mesaId: Long, clienteId: Long) = 
         mesaDao.vincularMesa(mesaId, clienteId)
@@ -386,8 +547,49 @@ class AppRepository constructor(
         mesaDao.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
     suspend fun desvincularMesaDeCliente(mesaId: Long) = mesaDao.desvincularMesa(mesaId)
     suspend fun retirarMesa(mesaId: Long) = mesaDao.retirarMesa(mesaId)
-    suspend fun atualizarRelogioMesa(mesaId: Long, relogioInicial: Int, relogioFinal: Int) = 
-        mesaDao.atualizarRelogioMesa(mesaId, relogioInicial, relogioFinal)
+    suspend fun atualizarRelogioMesa(mesaId: Long, relogioInicial: Int, relogioFinal: Int) {
+        logDbUpdateStart("MESA_RELOGIO", "MesaID=$mesaId, RelogioInicial=$relogioInicial, RelogioFinal=$relogioFinal")
+        try {
+            mesaDao.atualizarRelogioMesa(mesaId, relogioInicial, relogioFinal)
+            logDbUpdateSuccess("MESA_RELOGIO", "MesaID=$mesaId, RelogioInicial=$relogioInicial, RelogioFinal=$relogioFinal")
+            
+            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
+            try {
+                val mesa = mesaDao.obterMesaPorId(mesaId)
+                if (mesa != null) {
+                    val payload = """
+                        {
+                            "id": ${mesa.id},
+                            "numero": "${mesa.numero}",
+                            "clienteId": ${mesa.clienteId},
+                            "ativa": ${mesa.ativa},
+                            "tipoMesa": "${mesa.tipoMesa}",
+                            "tamanho": "${mesa.tamanho}",
+                            "estadoConservacao": "${mesa.estadoConservacao}",
+                            "valorFixo": ${mesa.valorFixo},
+                            "relogioInicial": $relogioInicial,
+                            "relogioFinal": $relogioFinal,
+                            "dataInstalacao": "${mesa.dataInstalacao}",
+                            "observacoes": "${mesa.observacoes ?: ""}",
+                            "panoAtualId": ${mesa.panoAtualId ?: "null"},
+                            "dataUltimaTrocaPano": "${mesa.dataUltimaTrocaPano ?: ""}"
+                        }
+                    """.trimIndent()
+                    
+                    adicionarOperacaoSync("Mesa", mesaId, "UPDATE", payload, priority = 1)
+                    logarOperacaoSync("Mesa", mesaId, "UPDATE", "PENDING", null, payload)
+                }
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de relógio à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("MESA_RELOGIO", "MesaID=$mesaId", e)
+            throw e
+        }
+    }
     suspend fun atualizarRelogioFinal(mesaId: Long, relogioFinal: Int) = 
         mesaDao.atualizarRelogioFinal(mesaId, relogioFinal)
     suspend fun obterMesasPorClienteDireto(clienteId: Long) = 
@@ -1560,6 +1762,25 @@ class AppRepository constructor(
 
     private fun logDbInsertError(entity: String, details: String, throwable: Throwable) {
         Log.e("🔍 DB_POPULATION", "❌ ERRO AO INSERIR $entity: $details", throwable)
+    }
+    
+    private fun logDbUpdateStart(entity: String, details: String) {
+        val stackTrace = Thread.currentThread().stackTrace
+        Log.w("🔍 DB_UPDATE", "════════════════════════════════════════")
+        Log.w("🔍 DB_UPDATE", "🔄 ATUALIZANDO $entity: $details")
+        Log.w("🔍 DB_UPDATE", "📍 Chamado por:")
+        stackTrace.drop(3).take(8).forEachIndexed { index, element ->
+            Log.w("🔍 DB_UPDATE", "   [${index}] $element")
+        }
+        Log.w("🔍 DB_UPDATE", "════════════════════════════════════════")
+    }
+
+    private fun logDbUpdateSuccess(entity: String, details: String) {
+        Log.w("🔍 DB_UPDATE", "✅ $entity ATUALIZADO COM SUCESSO: $details")
+    }
+
+    private fun logDbUpdateError(entity: String, details: String, throwable: Throwable) {
+        Log.e("🔍 DB_UPDATE", "❌ ERRO AO ATUALIZAR $entity: $details", throwable)
     }
     
     // ==================== CACHE MANAGEMENT (MODERNIZAÇÃO 2025) ====================
