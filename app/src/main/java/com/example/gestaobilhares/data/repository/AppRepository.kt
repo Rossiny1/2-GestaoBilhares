@@ -319,67 +319,8 @@ class AppRepository constructor(
             val id = acertoDao.inserir(acerto)
             logDbInsertSuccess("ACERTO", "ClienteID=${acerto.clienteId}, ID=$id")
             
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                // ✅ CORREÇÃO CRÍTICA: Incluir dados das mesas no payload do acerto
-                val acertoMesas = acertoMesaDao.buscarPorAcertoId(id)
-                android.util.Log.d("AppRepository", "Incluindo ${acertoMesas.size} mesas no payload do acerto $id")
-                
-                // ✅ Construir payload de forma segura usando Map -> JSON
-                val payloadMap = mutableMapOf<String, Any?>(
-                    "id" to id,
-                    "clienteId" to acerto.clienteId,
-                    "rotaId" to acerto.rotaId,
-                    "valorRecebido" to acerto.valorRecebido,
-                    "debitoAtual" to acerto.debitoAtual,
-                    "dataAcerto" to acerto.dataAcerto,
-                    "observacoes" to acerto.observacoes,
-                    // manter JSON de métodos de pagamento como String bruta
-                    "metodosPagamentoJson" to acerto.metodosPagamentoJson,
-                    "status" to acerto.status.name,
-                    "periodoInicio" to acerto.periodoInicio,
-                    "periodoFim" to acerto.periodoFim,
-                    "valorTotal" to acerto.valorTotal,
-                    "desconto" to acerto.desconto,
-                    "valorComDesconto" to acerto.valorComDesconto,
-                    "representante" to acerto.representante,
-                    "tipoAcerto" to acerto.tipoAcerto,
-                    "panoTrocado" to acerto.panoTrocado,
-                    "numeroPano" to acerto.numeroPano,
-                    "dadosExtrasJson" to acerto.dadosExtrasJson,
-                    "cicloId" to acerto.cicloId,
-                    // ✅ NOVO: Incluir dados das mesas
-                    "acertoMesas" to acertoMesas.map { acertoMesa ->
-                        mapOf(
-                            "id" to acertoMesa.id,
-                            "acertoId" to acertoMesa.acertoId,
-                            "mesaId" to acertoMesa.mesaId,
-                            "relogioInicial" to acertoMesa.relogioInicial,
-                            "relogioFinal" to acertoMesa.relogioFinal,
-                            "fichasJogadas" to acertoMesa.fichasJogadas,
-                            "valorFixo" to acertoMesa.valorFixo,
-                            "valorFicha" to acertoMesa.valorFicha,
-                            "comissaoFicha" to acertoMesa.comissaoFicha,
-                            "subtotal" to acertoMesa.subtotal,
-                            "comDefeito" to acertoMesa.comDefeito,
-                            "relogioReiniciou" to acertoMesa.relogioReiniciou,
-                            "observacoes" to acertoMesa.observacoes,
-                            "fotoRelogioFinal" to acertoMesa.fotoRelogioFinal,
-                            "dataFoto" to acertoMesa.dataFoto,
-                            "dataCriacao" to acertoMesa.dataCriacao
-                        )
-                    }
-                )
-
-                val payload = com.google.gson.Gson().toJson(payloadMap)
-
-                adicionarOperacaoSync("Acerto", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("Acerto", id, "CREATE", "PENDING", null, payload)
-
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar acerto à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
+            // ✅ CORREÇÃO: Não adicionar à fila de sync aqui - será feito pelo SettlementViewModel
+            // após inserir as mesas do acerto
             
             id
         } catch (e: Exception) {
@@ -1958,6 +1899,72 @@ class AppRepository constructor(
     suspend fun inserirHistoricoManutencao(historico: HistoricoManutencaoVeiculo): Long = historicoManutencaoVeiculoDao.inserir(historico)
     suspend fun inserirHistoricoCombustivel(historico: HistoricoCombustivelVeiculo): Long = historicoCombustivelVeiculoDao.inserir(historico)
     suspend fun inserirAcertoMesa(acertoMesa: AcertoMesa): Long = acertoMesaDao.inserir(acertoMesa)
+    
+    /**
+     * ✅ NOVO: Adicionar acerto à fila de sincronização com dados das mesas
+     */
+    suspend fun adicionarAcertoComMesasParaSync(acertoId: Long) {
+        try {
+            val acerto = acertoDao.buscarPorId(acertoId)
+            if (acerto == null) {
+                Log.w("AppRepository", "Acerto $acertoId não encontrado para sincronização")
+                return
+            }
+            
+            val acertoMesas = acertoMesaDao.buscarPorAcertoId(acertoId)
+            android.util.Log.d("AppRepository", "Incluindo ${acertoMesas.size} mesas no payload do acerto $acertoId")
+            
+            val payloadMap = mutableMapOf<String, Any?>(
+                "id" to acertoId,
+                "clienteId" to acerto.clienteId,
+                "rotaId" to acerto.rotaId,
+                "valorRecebido" to acerto.valorRecebido,
+                "debitoAtual" to acerto.debitoAtual,
+                "dataAcerto" to acerto.dataAcerto,
+                "observacoes" to acerto.observacoes,
+                "metodosPagamentoJson" to acerto.metodosPagamentoJson,
+                "status" to acerto.status.name,
+                "periodoInicio" to acerto.periodoInicio,
+                "periodoFim" to acerto.periodoFim,
+                "valorTotal" to acerto.valorTotal,
+                "desconto" to acerto.desconto,
+                "valorComDesconto" to acerto.valorComDesconto,
+                "representante" to acerto.representante,
+                "tipoAcerto" to acerto.tipoAcerto,
+                "panoTrocado" to acerto.panoTrocado,
+                "numeroPano" to acerto.numeroPano,
+                "dadosExtrasJson" to acerto.dadosExtrasJson,
+                "cicloId" to acerto.cicloId,
+                "acertoMesas" to acertoMesas.map { acertoMesa ->
+                    mapOf(
+                        "id" to acertoMesa.id,
+                        "acertoId" to acertoMesa.acertoId,
+                        "mesaId" to acertoMesa.mesaId,
+                        "relogioInicial" to acertoMesa.relogioInicial,
+                        "relogioFinal" to acertoMesa.relogioFinal,
+                        "fichasJogadas" to acertoMesa.fichasJogadas,
+                        "valorFixo" to acertoMesa.valorFixo,
+                        "valorFicha" to acertoMesa.valorFicha,
+                        "comissaoFicha" to acertoMesa.comissaoFicha,
+                        "subtotal" to acertoMesa.subtotal,
+                        "comDefeito" to acertoMesa.comDefeito,
+                        "relogioReiniciou" to acertoMesa.relogioReiniciou,
+                        "observacoes" to acertoMesa.observacoes,
+                        "fotoRelogioFinal" to acertoMesa.fotoRelogioFinal,
+                        "dataFoto" to acertoMesa.dataFoto,
+                        "dataCriacao" to acertoMesa.dataCriacao
+                    )
+                }
+            )
+
+            val payload = com.google.gson.Gson().toJson(payloadMap)
+            adicionarOperacaoSync("Acerto", acertoId, "CREATE", payload, priority = 1)
+            logarOperacaoSync("Acerto", acertoId, "CREATE", "PENDING", null, payload)
+            
+        } catch (syncError: Exception) {
+            Log.w("AppRepository", "Erro ao adicionar acerto com mesas à fila de sync: ${syncError.message}")
+        }
+    }
     suspend fun calcularMediaFichasJogadas(mesaId: Long, limite: Int): Double {
         val acertos = acertoMesaDao.buscarPorMesa(mesaId).first().take(limite)
         return if (acertos.isNotEmpty()) {

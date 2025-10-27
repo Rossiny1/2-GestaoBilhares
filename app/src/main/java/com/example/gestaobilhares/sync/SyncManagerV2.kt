@@ -813,7 +813,41 @@ class SyncManagerV2(
                                 id = roomId,
                                 numero = numero,
                                 clienteId = (data["clienteId"] as? Double)?.toLong(),
-                                ativa = data["ativa"] as? Boolean ?: true
+                                ativa = data["ativa"] as? Boolean ?: true,
+                                tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.valueOf(
+                                    (data["tipoMesa"] as? String) ?: "SINUCA"
+                                ),
+                                tamanho = com.example.gestaobilhares.data.entities.TamanhoMesa.valueOf(
+                                    (data["tamanho"] as? String) ?: "PEQUENA"
+                                ),
+                                estadoConservacao = com.example.gestaobilhares.data.entities.EstadoConservacao.valueOf(
+                                    (data["estadoConservacao"] as? String) ?: "OTIMO"
+                                ),
+                                valorFixo = (data["valorFixo"] as? Double) ?: 0.0,
+                                relogioInicial = (data["relogioInicial"] as? Double)?.toInt() ?: 0,
+                                relogioFinal = (data["relogioFinal"] as? Double)?.toInt() ?: 0,
+                                dataInstalacao = try {
+                                    val dataInstalacaoStr = data["dataInstalacao"] as? String
+                                    if (dataInstalacaoStr != null) {
+                                        java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse(dataInstalacaoStr)
+                                    } else {
+                                        java.util.Date()
+                                    }
+                                } catch (e: Exception) {
+                                    java.util.Date()
+                                },
+                                observacoes = data["observacoes"] as? String,
+                                panoAtualId = (data["panoAtualId"] as? Double)?.toLong(),
+                                dataUltimaTrocaPano = try {
+                                    val dataTrocaStr = data["dataUltimaTrocaPano"] as? String
+                                    if (dataTrocaStr != null && dataTrocaStr.isNotEmpty()) {
+                                        java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse(dataTrocaStr)
+                                    } else {
+                                        null
+                                    }
+                                } catch (e: Exception) {
+                                    null
+                                }
                             )
                             
                             // Inserir no Room (sem adicionar à fila de sync)
