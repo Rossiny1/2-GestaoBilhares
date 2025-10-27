@@ -550,6 +550,14 @@ class SyncManagerV2(
             android.util.Log.d("SyncManagerV2", "🔧 CORREÇÃO: Corrigindo acertos PENDENTE para FINALIZADO")
             appRepository.corrigirAcertosPendentesParaFinalizados()
             
+            // ✅ NOVO: Reconciliar débitos dos clientes com base no último acerto importado
+            try {
+                android.util.Log.d("SyncManagerV2", "🔄 Reconciliando débitos dos clientes pós-sync...")
+                appRepository.reconciliarDebitosClientes()
+            } catch (e: Exception) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Erro ao reconciliar débitos: ${e.message}")
+            }
+            
             // 7. SÉTIMO: Invalidar cache das rotas para forçar recálculo dos dados
             android.util.Log.d("SyncManagerV2", "🔄 Fase 7: Invalidando cache das rotas...")
             invalidarCacheRotas()

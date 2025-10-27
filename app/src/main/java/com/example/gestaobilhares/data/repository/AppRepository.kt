@@ -2007,6 +2007,35 @@ class AppRepository constructor(
     suspend fun buscarAcertoMesasPorAcerto(acertoId: Long) = acertoMesaDao.buscarPorAcerto(acertoId)
     
     /**
+     * ✅ NOVO: Reconciliar débitos dos clientes com base no último acerto
+     * Útil após sincronização de acertos vindos do Firestore, garantindo que o card de clientes
+     * reflita o débito real (campo clientes.debito_atual alinhado ao último acerto.debito_atual).
+     */
+    suspend fun reconciliarDebitosClientes() {
+        try {
+            Log.d("AppRepository", "🔄 Reconciliando débitos dos clientes com base no último acerto...")
+            val clientes = clienteDao.obterTodos().first()
+            var atualizados = 0
+            for (cliente in clientes) {
+                try {
+                    val ultimoAcerto = acertoDao.buscarUltimoAcertoPorCliente(cliente.id)
+                    val debitoUltimo = ultimoAcerto?.debitoAtual ?: 0.0
+                    if (debitoUltimo != cliente.debitoAtual) {
+                        clienteDao.atualizarDebitoAtual(cliente.id, debitoUltimo)
+                        atualizados++
+                        Log.d("AppRepository", "✅ Cliente ${cliente.id} (${cliente.nome}): debito_atual ${cliente.debitoAtual} -> $debitoUltimo")
+                    }
+                } catch (e: Exception) {
+                    Log.w("AppRepository", "⚠️ Falha ao reconciliar cliente ${cliente.id}: ${e.message}")
+                }
+            }
+            Log.d("AppRepository", "✅ Reconciliação concluída. Clientes atualizados: $atualizados")
+        } catch (e: Exception) {
+            Log.e("AppRepository", "❌ Erro na reconciliação de débitos: ${e.message}", e)
+        }
+    }
+
+    /**
      * ✅ CORREÇÃO CRÍTICA: Corrigir acertos existentes com status PENDENTE para FINALIZADO
      * Isso resolve o problema de clientes aparecendo na aba "Em aberto" em vez de "Pago"
      */
