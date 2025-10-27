@@ -54,6 +54,7 @@ object RepositoryFactory {
             assinaturaRepresentanteLegalDao = database.assinaturaRepresentanteLegalDao(),
             logAuditoriaAssinaturaDao = database.logAuditoriaAssinaturaDao(),
             panoEstoqueDao = database.panoEstoqueDao(),
+            mesaVendidaDao = database.mesaVendidaDao(),
             categoriaDespesaDao = database.categoriaDespesaDao(),
             tipoDespesaDao = database.tipoDespesaDao(),
             historicoManutencaoVeiculoDao = database.historicoManutencaoVeiculoDao(),

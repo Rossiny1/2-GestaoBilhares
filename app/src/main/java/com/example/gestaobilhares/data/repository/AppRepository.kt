@@ -72,6 +72,7 @@ class AppRepository constructor(
     private val assinaturaRepresentanteLegalDao: AssinaturaRepresentanteLegalDao,
     private val logAuditoriaAssinaturaDao: LogAuditoriaAssinaturaDao,
     private val panoEstoqueDao: com.example.gestaobilhares.data.dao.PanoEstoqueDao,
+    private val mesaVendidaDao: com.example.gestaobilhares.data.dao.MesaVendidaDao,
     private val categoriaDespesaDao: CategoriaDespesaDao,
     private val tipoDespesaDao: TipoDespesaDao,
     private val historicoManutencaoVeiculoDao: HistoricoManutencaoVeiculoDao,
@@ -941,13 +942,88 @@ class AppRepository constructor(
         return try {
             val id = despesaDao.inserir(despesa)
             logDbInsertSuccess("DESPESA", "Descricao=${despesa.descricao}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "rotaId": ${despesa.rotaId},
+                        "descricao": "${despesa.descricao}",
+                        "valor": ${despesa.valor},
+                        "categoria": "${despesa.categoria}",
+                        "tipoDespesa": "${despesa.tipoDespesa}",
+                        "dataHora": "${despesa.dataHora}",
+                        "observacoes": "${despesa.observacoes}",
+                        "criadoPor": "${despesa.criadoPor}",
+                        "cicloId": ${despesa.cicloId ?: "null"},
+                        "origemLancamento": "${despesa.origemLancamento}",
+                        "cicloAno": ${despesa.cicloAno ?: "null"},
+                        "cicloNumero": ${despesa.cicloNumero ?: "null"},
+                        "fotoComprovante": "${despesa.fotoComprovante ?: ""}",
+                        "veiculoId": ${despesa.veiculoId ?: "null"},
+                        "kmRodado": ${despesa.kmRodado ?: "null"},
+                        "litrosAbastecidos": ${despesa.litrosAbastecidos ?: "null"}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Despesa", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("Despesa", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar despesa à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
             id
         } catch (e: Exception) {
             logDbInsertError("DESPESA", "Descricao=${despesa.descricao}", e)
             throw e
         }
     }
-    suspend fun atualizarDespesa(despesa: Despesa) = despesaDao.atualizar(despesa)
+    suspend fun atualizarDespesa(despesa: Despesa) {
+        logDbUpdateStart("DESPESA", "ID=${despesa.id}, Descricao=${despesa.descricao}")
+        try {
+            despesaDao.atualizar(despesa)
+            logDbUpdateSuccess("DESPESA", "ID=${despesa.id}")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${despesa.id},
+                        "rotaId": ${despesa.rotaId},
+                        "descricao": "${despesa.descricao}",
+                        "valor": ${despesa.valor},
+                        "categoria": "${despesa.categoria}",
+                        "tipoDespesa": "${despesa.tipoDespesa}",
+                        "dataHora": "${despesa.dataHora}",
+                        "observacoes": "${despesa.observacoes}",
+                        "criadoPor": "${despesa.criadoPor}",
+                        "cicloId": ${despesa.cicloId ?: "null"},
+                        "origemLancamento": "${despesa.origemLancamento}",
+                        "cicloAno": ${despesa.cicloAno ?: "null"},
+                        "cicloNumero": ${despesa.cicloNumero ?: "null"},
+                        "fotoComprovante": "${despesa.fotoComprovante ?: ""}",
+                        "veiculoId": ${despesa.veiculoId ?: "null"},
+                        "kmRodado": ${despesa.kmRodado ?: "null"},
+                        "litrosAbastecidos": ${despesa.litrosAbastecidos ?: "null"}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Despesa", despesa.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("Despesa", despesa.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de despesa à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("DESPESA", "ID=${despesa.id}", e)
+            throw e
+        }
+    }
     suspend fun deletarDespesa(despesa: Despesa) = despesaDao.deletar(despesa)
     suspend fun calcularTotalPorRota(rotaId: Long) = despesaDao.calcularTotalPorRota(rotaId)
     suspend fun calcularTotalGeral() = despesaDao.calcularTotalGeral()
@@ -959,6 +1035,168 @@ class AppRepository constructor(
     // ✅ NOVO: despesas globais
     suspend fun buscarDespesasGlobaisPorCiclo(ano: Int, numero: Int): List<Despesa> = despesaDao.buscarGlobaisPorCiclo(ano, numero)
     suspend fun somarDespesasGlobaisPorCiclo(ano: Int, numero: Int): Double = despesaDao.somarGlobaisPorCiclo(ano, numero)
+
+    // ==================== PANO ESTOQUE ====================
+    
+    fun obterTodosPanosEstoque() = panoEstoqueDao.listarTodos()
+    fun obterPanosDisponiveis() = panoEstoqueDao.listarDisponiveis()
+    suspend fun obterPanoEstoquePorId(id: Long) = panoEstoqueDao.buscarPorId(id)
+    suspend fun inserirPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque): Long {
+        logDbInsertStart("PANOESTOQUE", "Numero=${pano.numero}, Cor=${pano.cor}")
+        return try {
+            val id = panoEstoqueDao.inserir(pano)
+            logDbInsertSuccess("PANOESTOQUE", "Numero=${pano.numero}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "numero": "${pano.numero}",
+                        "cor": "${pano.cor}",
+                        "tamanho": "${pano.tamanho}",
+                        "material": "${pano.material}",
+                        "disponivel": ${pano.disponivel},
+                        "observacoes": "${pano.observacoes ?: ""}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("PanoEstoque", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("PanoEstoque", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar pano estoque à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+            id
+        } catch (e: Exception) {
+            logDbInsertError("PANOESTOQUE", "Numero=${pano.numero}", e)
+            throw e
+        }
+    }
+    suspend fun atualizarPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque) {
+        logDbUpdateStart("PANOESTOQUE", "ID=${pano.id}, Numero=${pano.numero}")
+        try {
+            panoEstoqueDao.atualizar(pano)
+            logDbUpdateSuccess("PANOESTOQUE", "ID=${pano.id}")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${pano.id},
+                        "numero": "${pano.numero}",
+                        "cor": "${pano.cor}",
+                        "tamanho": "${pano.tamanho}",
+                        "material": "${pano.material}",
+                        "disponivel": ${pano.disponivel},
+                        "observacoes": "${pano.observacoes ?: ""}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("PanoEstoque", pano.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("PanoEstoque", pano.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de pano estoque à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("PANOESTOQUE", "ID=${pano.id}", e)
+            throw e
+        }
+    }
+    suspend fun deletarPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque) = panoEstoqueDao.deletar(pano)
+    suspend fun atualizarDisponibilidadePano(id: Long, disponivel: Boolean) = panoEstoqueDao.atualizarDisponibilidade(id, disponivel)
+
+    // ==================== MESA VENDIDA ====================
+    
+    fun obterTodasMesasVendidas() = mesaVendidaDao.listarTodas()
+    suspend fun obterMesaVendidaPorId(id: Long) = mesaVendidaDao.buscarPorId(id)
+    suspend fun inserirMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida): Long {
+        logDbInsertStart("MESAVENDIDA", "Numero=${mesaVendida.numeroMesa}, Comprador=${mesaVendida.nomeComprador}")
+        return try {
+            val id = mesaVendidaDao.inserir(mesaVendida)
+            logDbInsertSuccess("MESAVENDIDA", "Numero=${mesaVendida.numeroMesa}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "mesaIdOriginal": ${mesaVendida.mesaIdOriginal},
+                        "numeroMesa": "${mesaVendida.numeroMesa}",
+                        "tipoMesa": "${mesaVendida.tipoMesa}",
+                        "tamanhoMesa": "${mesaVendida.tamanhoMesa}",
+                        "estadoConservacao": "${mesaVendida.estadoConservacao}",
+                        "nomeComprador": "${mesaVendida.nomeComprador}",
+                        "telefoneComprador": "${mesaVendida.telefoneComprador ?: ""}",
+                        "cpfCnpjComprador": "${mesaVendida.cpfCnpjComprador ?: ""}",
+                        "enderecoComprador": "${mesaVendida.enderecoComprador ?: ""}",
+                        "valorVenda": ${mesaVendida.valorVenda},
+                        "dataVenda": "${mesaVendida.dataVenda}",
+                        "observacoes": "${mesaVendida.observacoes ?: ""}",
+                        "dataCriacao": "${mesaVendida.dataCriacao}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("MesaVendida", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("MesaVendida", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar mesa vendida à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+            id
+        } catch (e: Exception) {
+            logDbInsertError("MESAVENDIDA", "Numero=${mesaVendida.numeroMesa}", e)
+            throw e
+        }
+    }
+    suspend fun atualizarMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida) {
+        logDbUpdateStart("MESAVENDIDA", "ID=${mesaVendida.id}, Numero=${mesaVendida.numeroMesa}")
+        try {
+            mesaVendidaDao.atualizar(mesaVendida)
+            logDbUpdateSuccess("MESAVENDIDA", "ID=${mesaVendida.id}")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${mesaVendida.id},
+                        "mesaIdOriginal": ${mesaVendida.mesaIdOriginal},
+                        "numeroMesa": "${mesaVendida.numeroMesa}",
+                        "tipoMesa": "${mesaVendida.tipoMesa}",
+                        "tamanhoMesa": "${mesaVendida.tamanhoMesa}",
+                        "estadoConservacao": "${mesaVendida.estadoConservacao}",
+                        "nomeComprador": "${mesaVendida.nomeComprador}",
+                        "telefoneComprador": "${mesaVendida.telefoneComprador ?: ""}",
+                        "cpfCnpjComprador": "${mesaVendida.cpfCnpjComprador ?: ""}",
+                        "enderecoComprador": "${mesaVendida.enderecoComprador ?: ""}",
+                        "valorVenda": ${mesaVendida.valorVenda},
+                        "dataVenda": "${mesaVendida.dataVenda}",
+                        "observacoes": "${mesaVendida.observacoes ?: ""}",
+                        "dataCriacao": "${mesaVendida.dataCriacao}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("MesaVendida", mesaVendida.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("MesaVendida", mesaVendida.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de mesa vendida à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("MESAVENDIDA", "ID=${mesaVendida.id}", e)
+            throw e
+        }
+    }
+    suspend fun deletarMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida) = mesaVendidaDao.deletar(mesaVendida)
 
     // ✅ NOVO: obter mesas por ciclo (a partir dos acertos do ciclo)
     suspend fun contarMesasPorCiclo(cicloId: Long): Int {
