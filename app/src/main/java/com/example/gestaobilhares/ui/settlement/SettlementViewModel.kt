@@ -222,29 +222,58 @@ class SettlementViewModel constructor(
     fun buscarDebitoAnterior(clienteId: Long, acertoIdParaEdicao: Long? = null) {
         viewModelScope.launch {
             try {
+                logOperation("SETTLEMENT", "🔍 INICIANDO buscarDebitoAnterior - clienteId: $clienteId, acertoIdParaEdicao: $acertoIdParaEdicao")
+                
                 if (acertoIdParaEdicao != null) {
-                    // ✅ MODO EDIÇÃO: Usar débito ANTERIOR do acerto sendo editado (não o atual!)
-                    val acertoParaEdicao = appRepository.buscarPorId(acertoIdParaEdicao)
+                    // ✅ MODO EDIÇÃO: Buscar o débito que existia ANTES deste acerto ser criado
+                    logOperation("SETTLEMENT", "🔍 MODO EDIÇÃO: Buscando débito anterior ao acerto ID: $acertoIdParaEdicao")
+                    
+                    // Buscar todos os acertos do cliente ordenados por data
+                    val acertosCliente = appRepository.obterAcertosPorCliente(clienteId).first()
+                    val acertosOrdenados = acertosCliente.sortedByDescending { acerto -> acerto.dataAcerto }
+                    
+                    logOperation("SETTLEMENT", "🔍 MODO EDIÇÃO: Encontrados ${acertosOrdenados.size} acertos do cliente")
+                    
+                    // Encontrar o acerto sendo editado
+                    val acertoParaEdicao = acertosOrdenados.find { acerto -> acerto.id == acertoIdParaEdicao }
+                    
                     if (acertoParaEdicao != null) {
-                        _debitoAnterior.value = acertoParaEdicao.debitoAnterior
-                        logOperation("SETTLEMENT", "MODO EDIÇÃO: Débito ANTERIOR do acerto sendo editado: R$ ${acertoParaEdicao.debitoAnterior}")
+                        // Encontrar o acerto ANTERIOR ao que está sendo editado
+                        val acertoAnterior = acertosOrdenados.find { acerto -> 
+                            acerto.dataAcerto < acertoParaEdicao.dataAcerto 
+                        }
+                        
+                        if (acertoAnterior != null) {
+                            logOperation("SETTLEMENT", "✅ MODO EDIÇÃO: Acerto anterior encontrado - ID: ${acertoAnterior.id}, Débito Atual: ${acertoAnterior.debitoAtual}")
+                            _debitoAnterior.value = acertoAnterior.debitoAtual
+                            logOperation("SETTLEMENT", "✅ MODO EDIÇÃO: Débito anterior calculado: R$ ${acertoAnterior.debitoAtual}")
+                        } else {
+                            logOperation("SETTLEMENT", "ℹ️ MODO EDIÇÃO: Este é o primeiro acerto do cliente, débito anterior: R$ 0,00")
+                            _debitoAnterior.value = 0.0
+                        }
                     } else {
+                        logError("SETTLEMENT", "❌ MODO EDIÇÃO: Acerto para edição não encontrado, débito anterior: R$ 0,00")
                         _debitoAnterior.value = 0.0
-                        logError("SETTLEMENT", "MODO EDIÇÃO: Acerto para edição não encontrado, débito anterior: R$ 0,00")
                     }
                 } else {
                     // ✅ MODO NOVO ACERTO: Usar débito do último acerto como anterior
+                    logOperation("SETTLEMENT", "🔍 MODO NOVO ACERTO: Buscando último acerto do cliente: $clienteId")
                     val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(clienteId)
+                    
                     if (ultimoAcerto != null) {
+                        logOperation("SETTLEMENT", "✅ MODO NOVO ACERTO: Último acerto encontrado - ID: ${ultimoAcerto.id}, Débito Atual: ${ultimoAcerto.debitoAtual}")
                         _debitoAnterior.value = ultimoAcerto.debitoAtual
-                        logOperation("SETTLEMENT", "MODO NOVO ACERTO: Débito anterior carregado: R$ ${ultimoAcerto.debitoAtual}")
+                        logOperation("SETTLEMENT", "✅ MODO NOVO ACERTO: Débito anterior carregado: R$ ${ultimoAcerto.debitoAtual}")
                     } else {
+                        logOperation("SETTLEMENT", "ℹ️ MODO NOVO ACERTO: Nenhum acerto anterior encontrado, débito anterior: R$ 0,00")
                         _debitoAnterior.value = 0.0
-                        logOperation("SETTLEMENT", "MODO NOVO ACERTO: Nenhum acerto anterior encontrado, débito anterior: R$ 0,00")
                     }
                 }
+                
+                logOperation("SETTLEMENT", "🔍 FINALIZANDO buscarDebitoAnterior - Valor final: R$ ${_debitoAnterior.value}")
+                
             } catch (e: Exception) {
-                logError("SETTLEMENT", "Erro ao buscar débito anterior: ${e.message}")
+                logError("SETTLEMENT", "❌ Erro ao buscar débito anterior: ${e.message}")
                 _debitoAnterior.value = 0.0
             }
         }

@@ -70,6 +70,7 @@ class SettlementFragment : Fragment() {
     private var _binding: FragmentSettlementBinding? = null
     private val binding get() = _binding!!
     private lateinit var viewModel: SettlementViewModel
+    private lateinit var appRepository: com.example.gestaobilhares.data.repository.AppRepository
     private val args: SettlementFragmentArgs by navArgs()
     
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
@@ -238,7 +239,7 @@ class SettlementFragment : Fragment() {
         
         // Inicializar ViewModel aqui onde o contexto está disponível
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = RepositoryFactory.getAppRepository(requireContext())
+        appRepository = RepositoryFactory.getAppRepository(requireContext())
         viewModel = SettlementViewModel(appRepository)
         
         Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
@@ -280,6 +281,22 @@ class SettlementFragment : Fragment() {
             try {
                 Log.d("SettlementFragment", "=== CARREGANDO DADOS DO ACERTO PARA EDIÇÃO ===")
                 Log.d("SettlementFragment", "Acerto ID: ${args.acertoIdParaEdicao}")
+                
+                // ✅ TESTE DIRETO: Buscar acerto diretamente do AppRepository
+                Log.d("SettlementFragment", "🔍 TESTE DIRETO: Buscando acerto diretamente do AppRepository...")
+                val acertoDireto = appRepository.buscarPorId(args.acertoIdParaEdicao)
+                if (acertoDireto != null) {
+                    Log.d("SettlementFragment", "✅ TESTE DIRETO: Acerto encontrado diretamente:")
+                    Log.d("SettlementFragment", "  - ID: ${acertoDireto.id}")
+                    Log.d("SettlementFragment", "  - Débito Anterior: ${acertoDireto.debitoAnterior}")
+                    Log.d("SettlementFragment", "  - Débito Atual: ${acertoDireto.debitoAtual}")
+                    
+                    // ✅ TESTE DIRETO: Definir débito anterior diretamente
+                    Log.d("SettlementFragment", "🔍 TESTE DIRETO: Definindo débito anterior diretamente...")
+                    viewModel.definirDebitoAnteriorParaEdicao(acertoDireto.debitoAnterior)
+                } else {
+                    Log.e("SettlementFragment", "❌ TESTE DIRETO: Acerto não encontrado diretamente")
+                }
                 
                 // ✅ CORREÇÃO: Primeiro buscar o débito anterior para edição
                 Log.d("SettlementFragment", "🔍 Buscando débito anterior para edição...")
