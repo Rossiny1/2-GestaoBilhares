@@ -8,6 +8,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
@@ -348,7 +350,15 @@ class SettlementFragment : Fragment() {
             Log.d("SettlementFragment", "✅ Observações preenchidas: '${acerto.observacoes ?: ""}'")
 
             // ✅ NOVO: Preencher relógio final das mesas se houver dados de mesas
-            preencherRelogioFinalMesas(acerto.id)
+            // Aguardar um pouco para garantir que as mesas já foram carregadas no adapter
+            Handler(Looper.getMainLooper()).postDelayed({
+                Log.d("SettlementFragment", "🔧 Executando preenchimento tardio do relógio final...")
+                preencherRelogioFinalMesas(acerto.id)
+                
+                // ✅ CORREÇÃO: Forçar atualização do débito anterior após carregar tudo
+                Log.d("SettlementFragment", "🔧 Forçando atualização do débito anterior...")
+                viewModel.definirDebitoAnteriorParaEdicao(acerto.debitoAnterior)
+            }, 1000)
 
             // Preencher métodos de pagamento (se houver)
             // TODO: Implementar preenchimento dos métodos de pagamento
@@ -371,13 +381,23 @@ class SettlementFragment : Fragment() {
                 // Buscar dados das mesas do acerto
                 val acertoMesas = viewModel.buscarAcertoMesasPorAcertoId(acertoId)
                 
+                Log.d("SettlementFragment", "🔍 AcertoMesas encontradas: ${acertoMesas.size}")
+                acertoMesas.forEach { acertoMesa ->
+                    Log.d("SettlementFragment", "🔍 AcertoMesa: mesaId=${acertoMesa.mesaId}, relogioInicial=${acertoMesa.relogioInicial}, relogioFinal=${acertoMesa.relogioFinal}")
+                }
+                
                 if (acertoMesas.isNotEmpty()) {
                     Log.d("SettlementFragment", "✅ Encontradas ${acertoMesas.size} mesas para preenchimento")
                     
-                    // Atualizar o adapter com os dados das mesas
-                    mesasAcertoAdapter.atualizarRelogioFinalMesas(acertoMesas)
-                    
-                    Log.d("SettlementFragment", "✅ Relógio final das mesas preenchido com sucesso")
+                    // Verificar se o adapter já foi inicializado
+                    if (::mesasAcertoAdapter.isInitialized) {
+                        Log.d("SettlementFragment", "✅ Adapter inicializado, atualizando relógio final...")
+                        // Atualizar o adapter com os dados das mesas
+                        mesasAcertoAdapter.atualizarRelogioFinalMesas(acertoMesas)
+                        Log.d("SettlementFragment", "✅ Relógio final das mesas preenchido com sucesso")
+                    } else {
+                        Log.w("SettlementFragment", "⚠️ Adapter não inicializado ainda")
+                    }
                 } else {
                     Log.w("SettlementFragment", "⚠️ Nenhuma mesa encontrada para o acerto $acertoId")
                 }
