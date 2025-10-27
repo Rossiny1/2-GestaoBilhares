@@ -2023,6 +2023,24 @@ class AppRepository constructor(
             
             for (acerto in acertosPendentes) {
                 try {
+                    // ✅ VALIDAÇÃO ADICIONAL: Verificar se já existe acerto FINALIZADO para este cliente e ciclo
+                    val cicloId = acerto.cicloId ?: 0L
+                    if (cicloId > 0) {
+                        val acertosCiclo = acertoDao.buscarPorCicloId(cicloId).first()
+                        val acertoDuplicado = acertosCiclo.any { acertoExistente -> 
+                            acertoExistente.clienteId == acerto.clienteId && 
+                            acertoExistente.status == com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO &&
+                            acertoExistente.id != acerto.id // Excluir o próprio acerto sendo processado
+                        }
+                        
+                        if (acertoDuplicado) {
+                            android.util.Log.w("AppRepository", "⚠️ DUPLICATA DETECTADA: Cliente ${acerto.clienteId} já tem acerto FINALIZADO no ciclo $cicloId - REMOVENDO acerto PENDENTE ID ${acerto.id}")
+                            // Remover o acerto PENDENTE duplicado
+                            acertoDao.deletar(acerto)
+                            continue
+                        }
+                    }
+                    
                     // Atualizar status para FINALIZADO
                     val acertoCorrigido = acerto.copy(
                         status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO
