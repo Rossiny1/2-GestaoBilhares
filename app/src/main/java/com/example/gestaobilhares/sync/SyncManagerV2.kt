@@ -537,6 +537,14 @@ class SyncManagerV2(
             // 6. SEXTO: Criar ciclos automaticamente baseados nos acertos sincronizados
             android.util.Log.d("SyncManagerV2", "🔄 Fase 6: Criando ciclos automaticamente...")
             criarCiclosAutomaticamente()
+
+            // ✅ NOVO PASSO: Remapear acertos importados para o ciclo local correto (numero/ano -> id)
+            try {
+                android.util.Log.d("SyncManagerV2", "🔄 Remapeando acertos importados para cicloId local...")
+                remapearCicloIdDosAcertosParaIdsLocais()
+            } catch (e: Exception) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Erro ao remapear cicloId dos acertos: ${e.message}")
+            }
             
             // ✅ CORREÇÃO CRÍTICA: Corrigir acertos existentes com status PENDENTE
             android.util.Log.d("SyncManagerV2", "🔧 CORREÇÃO: Corrigindo acertos PENDENTE para FINALIZADO")
@@ -550,6 +558,52 @@ class SyncManagerV2(
             
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro no PULL SYNC: ${e.message}", e)
+        }
+    }
+
+    /**
+     * ✅ NOVO: Após baixar/criar ciclos, alinhar acertos importados cujo campo cicloId pode conter o número do ciclo (ou 0)
+     * com o ID real do ciclo local (Room PK). Isso garante que:
+     * - Classificação Pago/Em aberto funcione (consulta por cicloId real)
+     * - Validação de 2º acerto por ciclo funcione para dados importados
+     */
+    private suspend fun remapearCicloIdDosAcertosParaIdsLocais() {
+        val cicloDao = database.cicloAcertoDao()
+        val acertoDao = database.acertoDao()
+
+        // Buscar todas as rotas e seus ciclos
+        val rotas = appRepository.obterTodasRotas().first()
+        for (rota in rotas) {
+            try {
+                val ciclosRota = cicloDao.buscarCiclosPorRota(rota.id)
+                if (ciclosRota.isEmpty()) continue
+
+                // Mapa auxiliar: numeroCiclo -> cicloId (pegando o mais recente por numero se houver)
+                val numeroParaId = ciclosRota
+                    .groupBy { it.numeroCiclo }
+                    .mapValues { entry -> entry.value.maxByOrNull { it.dataAtualizacao.time }!!.id }
+
+                // Para cada ciclo local, alinhar acertos que possam ter vindo com cicloId = numero
+                for ((numero, cicloIdReal) in numeroParaId) {
+                    // Buscar acertos deste ciclo por duas vias:
+                    // 1) já com cicloId = cicloIdReal (ok)
+                    // 2) com cicloId igual ao número do ciclo (importação antiga)
+                    val acertosComNumero = try {
+                        acertoDao.buscarPorCicloId(numero.toLong()).first()
+                    } catch (_: Exception) { emptyList<com.example.gestaobilhares.data.entities.Acerto>() }
+
+                    for (ac in acertosComNumero) {
+                        // Atualizar somente se rota bater e for claramente um mapeamento de número
+                        if (ac.rotaId == rota.id && ac.cicloId != cicloIdReal) {
+                            val atualizado = ac.copy(cicloId = cicloIdReal)
+                            acertoDao.atualizar(atualizado)
+                            android.util.Log.d("SyncManagerV2", "✅ Remapeado acerto ${ac.id}: cicloId ${ac.cicloId} -> $cicloIdReal (rota ${rota.id}, nº $numero)")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Falha ao remapear acertos para rota ${rota.nome}: ${e.message}")
+            }
         }
     }
     
@@ -698,9 +752,33 @@ class SyncManagerV2(
                         val acertoExistente = appRepository.obterAcertoPorId(roomId)
                         
                         if (acertoExistente == null) {
-                            // ✅ CORREÇÃO: Manter status original do Firestore para não quebrar dados locais
+                            // ✅ CORREÇÃO CRÍTICA: Acertos sincronizados do Firestore devem ser FINALIZADOS
                             val statusFirestore = data["status"] as? String
-                            val statusFinal = com.example.gestaobilhares.data.entities.StatusAcerto.valueOf(statusFirestore ?: "PENDENTE")
+                            val statusFinal = if (statusFirestore == "PENDENTE") {
+                                // Se está no Firestore, significa que foi processado - forçar FINALIZADO
+                                android.util.Log.d("SyncManagerV2", "🔄 Convertendo acerto PENDENTE para FINALIZADO (ID: $roomId)")
+                                com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO
+                            } else {
+                                com.example.gestaobilhares.data.entities.StatusAcerto.valueOf(statusFirestore ?: "FINALIZADO")
+                            }
+                            
+                            // ✅ VALIDAÇÃO CRÍTICA: Verificar se já existe acerto FINALIZADO para este cliente e ciclo
+                            val clienteId = (data["clienteId"] as? Double)?.toLong() ?: 0L
+                            val cicloId = (data["cicloId"] as? Double)?.toLong() ?: 0L
+                            
+                            if (clienteId > 0 && cicloId > 0) {
+                                val acertosExistentes = appRepository.buscarAcertosPorCicloId(cicloId).first()
+                                val acertoDuplicado = acertosExistentes.any { acertoExistente -> 
+                                    acertoExistente.clienteId == clienteId && 
+                                    acertoExistente.status == com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO &&
+                                    acertoExistente.id != roomId // Excluir o próprio acerto sendo processado
+                                }
+                                
+                                if (acertoDuplicado) {
+                                    android.util.Log.w("SyncManagerV2", "⚠️ DUPLICATA DETECTADA: Cliente $clienteId já tem acerto FINALIZADO no ciclo $cicloId - PULANDO")
+                                    continue // Pular este acerto para evitar duplicata
+                                }
+                            }
                             
                             // Criar acerto no Room baseado nos dados do Firestore
                             val acerto = com.example.gestaobilhares.data.entities.Acerto(
