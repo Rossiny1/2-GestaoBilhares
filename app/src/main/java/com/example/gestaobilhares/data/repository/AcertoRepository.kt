@@ -110,9 +110,13 @@ class AcertoRepository constructor(
         return acertoDao.buscarPorId(id)
     }
     suspend fun atualizar(acerto: Acerto) {
-        acertoDao.atualizar(acerto)
+        // ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
+        appRepository.atualizarAcerto(acerto)
     }
-    suspend fun deletar(acerto: Acerto) = acertoDao.deletar(acerto)
+    suspend fun deletar(acerto: Acerto) {
+        // ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
+        appRepository.deletarAcerto(acerto)
+    }
     
     /**
      * Busca o último acerto de uma mesa específica

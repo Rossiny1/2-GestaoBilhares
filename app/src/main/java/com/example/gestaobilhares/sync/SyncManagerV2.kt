@@ -684,18 +684,67 @@ class SyncManagerV2(
                             val acerto = com.example.gestaobilhares.data.entities.Acerto(
                                 id = roomId,
                                 clienteId = (data["clienteId"] as? Double)?.toLong() ?: 0L,
+                                rotaId = (data["rotaId"] as? Double)?.toLong() ?: 0L,
                                 periodoInicio = java.util.Date(),
                                 periodoFim = java.util.Date(),
                                 valorRecebido = valorRecebido ?: 0.0,
                                 debitoAtual = (data["debitoAtual"] as? Double) ?: 0.0,
+                                valorTotal = (data["valorTotal"] as? Double) ?: 0.0,
+                                desconto = (data["desconto"] as? Double) ?: 0.0,
+                                valorComDesconto = (data["valorComDesconto"] as? Double) ?: 0.0,
                                 dataAcerto = java.util.Date(),
                                 observacoes = data["observacoes"] as? String,
-                                metodosPagamentoJson = data["metodosPagamentoJson"] as? String
+                                metodosPagamentoJson = data["metodosPagamentoJson"] as? String,
+                                status = com.example.gestaobilhares.data.entities.StatusAcerto.valueOf(data["status"] as? String ?: "PENDENTE"),
+                                representante = data["representante"] as? String ?: "",
+                                tipoAcerto = data["tipoAcerto"] as? String ?: "Presencial",
+                                panoTrocado = data["panoTrocado"] as? Boolean ?: false,
+                                numeroPano = data["numeroPano"] as? String,
+                                dadosExtrasJson = data["dadosExtrasJson"] as? String,
+                                cicloId = (data["cicloId"] as? Double)?.toLong() ?: 0L,
+                                totalMesas = (data["totalMesas"] as? Double) ?: 0.0
                             )
                             
                             // Inserir no Room (sem adicionar à fila de sync)
                             val acertoDao = database.acertoDao()
                             acertoDao.inserir(acerto)
+                            
+                            // ✅ CORREÇÃO CRÍTICA: Processar dados das mesas incluídos no payload
+                            val acertoMesasData = data["acertoMesas"] as? List<Map<String, Any>>
+                            if (acertoMesasData != null && acertoMesasData.isNotEmpty()) {
+                                android.util.Log.d("SyncManagerV2", "📋 Processando ${acertoMesasData.size} mesas do acerto $roomId")
+                                
+                                val acertoMesaDao = database.acertoMesaDao()
+                                acertoMesasData.forEach { mesaData ->
+                                    try {
+                                        val acertoMesa = com.example.gestaobilhares.data.entities.AcertoMesa(
+                                            id = (mesaData["id"] as? Double)?.toLong() ?: 0L,
+                                            acertoId = roomId,
+                                            mesaId = (mesaData["mesaId"] as? Double)?.toLong() ?: 0L,
+                                            relogioInicial = (mesaData["relogioInicial"] as? Double)?.toInt() ?: 0,
+                                            relogioFinal = (mesaData["relogioFinal"] as? Double)?.toInt() ?: 0,
+                                            fichasJogadas = (mesaData["fichasJogadas"] as? Double)?.toInt() ?: 0,
+                                            valorFixo = (mesaData["valorFixo"] as? Double) ?: 0.0,
+                                            valorFicha = (mesaData["valorFicha"] as? Double) ?: 0.0,
+                                            comissaoFicha = (mesaData["comissaoFicha"] as? Double) ?: 0.0,
+                                            subtotal = (mesaData["subtotal"] as? Double) ?: 0.0,
+                                            comDefeito = mesaData["comDefeito"] as? Boolean ?: false,
+                                            relogioReiniciou = mesaData["relogioReiniciou"] as? Boolean ?: false,
+                                            observacoes = mesaData["observacoes"] as? String,
+                                            fotoRelogioFinal = mesaData["fotoRelogioFinal"] as? String,
+                                            dataFoto = null, // ✅ CORREÇÃO: dataFoto é Date?, não String
+                                            dataCriacao = java.util.Date()
+                                        )
+                                        
+                                        acertoMesaDao.inserir(acertoMesa)
+                                        android.util.Log.d("SyncManagerV2", "✅ Mesa ${acertoMesa.mesaId} sincronizada para acerto $roomId")
+                                    } catch (e: Exception) {
+                                        android.util.Log.w("SyncManagerV2", "❌ Erro ao processar mesa do acerto: ${e.message}")
+                                    }
+                                }
+                            } else {
+                                android.util.Log.w("SyncManagerV2", "⚠️ Acerto $roomId não possui dados de mesas")
+                            }
                             
                             acertosSincronizados++
                             android.util.Log.d("SyncManagerV2", "✅ Acerto sincronizado: Valor ${acerto.valorRecebido} (ID: $roomId)")

@@ -22,9 +22,15 @@ class MesaRepository constructor(
         return appRepository.inserirMesa(mesa)
     }
 
-    suspend fun atualizar(mesa: Mesa) = mesaDao.atualizar(mesa)
+    suspend fun atualizar(mesa: Mesa) {
+        // ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
+        appRepository.atualizarMesa(mesa)
+    }
 
-    suspend fun deletar(mesa: Mesa) = mesaDao.deletar(mesa)
+    suspend fun deletar(mesa: Mesa) {
+        // ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
+        appRepository.deletarMesa(mesa)
+    }
 
     suspend fun vincularMesa(mesaId: Long, clienteId: Long) {
         // ✅ Atualizar no banco local

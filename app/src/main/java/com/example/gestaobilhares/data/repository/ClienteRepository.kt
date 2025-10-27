@@ -54,14 +54,16 @@ class ClienteRepository constructor(
      * Atualiza um cliente
      */
     suspend fun atualizar(cliente: Cliente) {
-        clienteDao.atualizar(cliente)
+        // ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
+        appRepository.atualizarCliente(cliente)
     }
 
     /**
      * Deleta um cliente
      */
     suspend fun deletar(cliente: Cliente) {
-        clienteDao.deletar(cliente)
+        // ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
+        appRepository.deletarCliente(cliente)
     }
 
     /**
@@ -97,7 +99,8 @@ class ClienteRepository constructor(
      * Atualiza o débito atual do cliente
      */
     suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) {
-        clienteDao.atualizarDebitoAtual(clienteId, novoDebito)
+        // ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
+        appRepository.atualizarDebitoAtual(clienteId, novoDebito)
     }
     
     /**
