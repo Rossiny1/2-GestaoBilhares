@@ -154,7 +154,7 @@ class AcertoRepository constructor(
 
     /**
      * ✅ NOVA FUNCIONALIDADE: Verifica se um acerto pode ser editado
-     * Regras: Apenas o último acerto da rota no ciclo ativo pode ser editado
+     * Regras: Apenas acertos de ciclos EM_ANDAMENTO podem ser editados
      */
     suspend fun podeEditarAcerto(acertoId: Long, cicloAcertoRepository: com.example.gestaobilhares.data.repository.CicloAcertoRepository): PermissaoEdicao {
         return withContext(Dispatchers.IO) {
@@ -165,23 +165,26 @@ class AcertoRepository constructor(
                     return@withContext PermissaoEdicao.AcertoNaoEncontrado
                 }
 
-                // Verificar se o ciclo está ativo
-                val cicloAtivo = cicloAcertoRepository.buscarCicloAtivo(acerto.rotaId!!)
-                if (cicloAtivo == null || cicloAtivo.id != acerto.cicloId) {
-                    AppLogger.log("AcertoRepo", "❌ Ciclo não está ativo para edição: cicloId=${acerto.cicloId}, rotaId=${acerto.rotaId}")
-                    return@withContext PermissaoEdicao.CicloInativo("O ciclo deste acerto não está mais ativo.")
+                // Verificar se o ciclo existe e está EM_ANDAMENTO
+                val cicloId = acerto.cicloId
+                if (cicloId == null || cicloId == 0L) {
+                    AppLogger.log("AcertoRepo", "❌ Acerto sem ciclo associado: ID=$acertoId")
+                    return@withContext PermissaoEdicao.CicloInativo("O acerto não possui ciclo associado.")
                 }
 
-                // Buscar o último acerto da rota no ciclo ativo
-                val acertosRota = buscarPorRotaECicloId(acerto.rotaId, cicloAtivo.id).first()
-                val ultimoAcerto = acertosRota.maxByOrNull { it.dataAcerto }
-                
-                if (ultimoAcerto == null || ultimoAcerto.id != acertoId) {
-                    AppLogger.log("AcertoRepo", "❌ Não é o último acerto da rota. Último: ${ultimoAcerto?.id}, Solicitado: $acertoId")
-                    return@withContext PermissaoEdicao.NaoEhUltimoAcerto("Apenas o último acerto da rota pode ser editado.")
+                val ciclo = cicloAcertoRepository.buscarCicloPorId(cicloId)
+                if (ciclo == null) {
+                    AppLogger.log("AcertoRepo", "❌ Ciclo não encontrado: cicloId=$cicloId")
+                    return@withContext PermissaoEdicao.CicloInativo("O ciclo deste acerto não foi encontrado.")
                 }
 
-                AppLogger.log("AcertoRepo", "✅ Acerto pode ser editado: ID=$acertoId")
+                // ✅ CORREÇÃO: Verificar se o ciclo está EM_ANDAMENTO
+                if (ciclo.status != com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO) {
+                    AppLogger.log("AcertoRepo", "❌ Ciclo não está EM_ANDAMENTO: status=${ciclo.status}")
+                    return@withContext PermissaoEdicao.CicloInativo("Apenas acertos de ciclos em andamento podem ser editados. Este ciclo está ${ciclo.status.name.lowercase()}.")
+                }
+
+                AppLogger.log("AcertoRepo", "✅ Acerto pode ser editado: ID=$acertoId (ciclo ${ciclo.status})")
                 PermissaoEdicao.Permitido
                 
             } catch (e: Exception) {

@@ -300,30 +300,9 @@ class SettlementFragment : Fragment() {
                         // ✅ VALIDAÇÃO: Verificar se o acerto pode ser editado
                         Log.d("SettlementFragment", "🔍 VALIDAÇÃO: Verificando status do acerto...")
                         Log.d("SettlementFragment", "🔍 Status atual: ${acerto.status}")
-                        Log.d("SettlementFragment", "🔍 Status FINALIZADO: ${StatusAcerto.FINALIZADO}")
-                        Log.d("SettlementFragment", "🔍 São iguais? ${acerto.status == StatusAcerto.FINALIZADO}")
                         
-                        if (acerto.status == StatusAcerto.FINALIZADO || acerto.status == StatusAcerto.CANCELADO) {
-                            Log.e("SettlementFragment", "❌ BLOQUEIO: Acerto ${acerto.status} não pode ser editado!")
-                            
-                            // Verificar se o fragment ainda está ativo
-                            if (!isAdded || context == null) {
-                                Log.w("SettlementFragment", "Fragment não está mais ativo, cancelando operação")
-                                return@launch
-                            }
-                            
-                            // Mostrar mensagem de erro e voltar
-                            Toast.makeText(
-                                requireContext(),
-                                "Não é possível editar acertos ${acerto.status.name.lowercase()}. Apenas acertos pendentes podem ser editados.",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            
-                            // Voltar para a tela anterior
-                            findNavController().popBackStack()
-                            return@launch
-                        }
-
+                        // ✅ CORREÇÃO: Remover bloqueio de acertos FINALIZADOS
+                        // A validação de edição agora é feita pelo AcertoRepository baseada no status do ciclo
                         Log.d("SettlementFragment", "✅ Acerto pode ser editado (Status: ${acerto.status})")
 
                         // Preencher campos da UI com dados do acerto
