@@ -319,6 +319,7 @@ class MesasAcertoAdapter(
                         binding.tvFichasJogadas.text = "Fichas Jogadas: $fichasJogadas"
                     }
                 }
+                // Regra: sempre usar comissaoFicha para cálculo do subtotal
                 val subtotal = if (state.comDefeito && state.mediaFichasJogadas > 0) {
                     state.mediaFichasJogadas * mesa.comissaoFicha
                 } else {
@@ -406,6 +407,7 @@ class MesasAcertoAdapter(
                 binding.tvSubtotal.text = "Subtotal: R$ %.2f".format(state.subtotal)
             } else {
                 // Mesa de fichas jogadas
+                // Regra: sempre usar comissaoFicha para cálculo do subtotal
                 val subtotal = if (state.comDefeito && state.mediaFichasJogadas > 0) {
                     val subtotalCalculado = state.mediaFichasJogadas * mesa.comissaoFicha
                     Log.d("MesasAcertoAdapter", "✅ SUBTOTAL COM MÉDIA: ${state.mediaFichasJogadas} × R$ ${mesa.comissaoFicha} = R$ $subtotalCalculado")
