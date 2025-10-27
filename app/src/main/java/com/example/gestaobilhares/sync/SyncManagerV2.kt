@@ -798,6 +798,7 @@ class SyncManagerV2(
                                 periodoInicio = java.util.Date(),
                                 periodoFim = java.util.Date(),
                                 valorRecebido = valorRecebido ?: 0.0,
+                                debitoAnterior = (data["debitoAnterior"] as? Double) ?: 0.0, // ✅ CORREÇÃO: Adicionar debitoAnterior
                                 debitoAtual = (data["debitoAtual"] as? Double) ?: 0.0,
                                 valorTotal = (data["valorTotal"] as? Double) ?: 0.0,
                                 desconto = (data["desconto"] as? Double) ?: 0.0,
