@@ -121,13 +121,9 @@ class NovaReformaFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // ✅ CORREÇÃO: Inicializar ViewModels manualmente
-        val database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        val mesaReformadaRepository = MesaReformadaRepository(database.mesaReformadaDao())
-        val panoEstoqueRepository = PanoEstoqueRepository(database.panoEstoqueDao())
-        val historicoManutencaoRepository = HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao())
-        viewModel = NovaReformaViewModel(appRepository, mesaReformadaRepository, panoEstoqueRepository)
-        historicoViewModel = HistoricoManutencaoMesaViewModel(historicoManutencaoRepository)
+        viewModel = NovaReformaViewModel(appRepository)
+        historicoViewModel = HistoricoManutencaoMesaViewModel(appRepository)
         
         setupClickListeners()
         observeViewModel()

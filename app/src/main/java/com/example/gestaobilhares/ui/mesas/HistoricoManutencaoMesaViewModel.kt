@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
-import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
  * ViewModel para o histórico de manutenção de uma mesa.
  */
 class HistoricoManutencaoMesaViewModel constructor(
-    private val historicoManutencaoMesaRepository: HistoricoManutencaoMesaRepository
+    private val appRepository: AppRepository
 ) : BaseViewModel() {
 
     private val _mesa = MutableStateFlow<Mesa?>(null)
@@ -50,17 +50,17 @@ class HistoricoManutencaoMesaViewModel constructor(
                 showLoading()
                 
                 // Carregar histórico completo
-                val historico = historicoManutencaoMesaRepository.buscarPorMesaId(mesaId).first()
+                val historico = appRepository.obterTodosHistoricoManutencaoMesa().first().filter { it.mesaId == mesaId }
                 _historicoManutencao.value = historico
                 
                 // Carregar dados específicos
-                val ultimaPintura = historicoManutencaoMesaRepository.obterUltimaPintura(mesaId)
+                val ultimaPintura = historico.filter { it.tipoManutencao == TipoManutencao.PINTURA }.maxByOrNull { it.dataManutencao }
                 _ultimaPintura.value = ultimaPintura
                 
-                val ultimaTrocaPano = historicoManutencaoMesaRepository.obterUltimaTrocaPano(mesaId)
+                val ultimaTrocaPano = historico.filter { it.tipoManutencao == TipoManutencao.TROCA_PANO }.maxByOrNull { it.dataManutencao }
                 _ultimaTrocaPano.value = ultimaTrocaPano
                 
-                val ultimaTrocaTabela = historicoManutencaoMesaRepository.obterUltimaTrocaTabela(mesaId)
+                val ultimaTrocaTabela = historico.filter { it.tipoManutencao == TipoManutencao.TROCA_TABELA }.maxByOrNull { it.dataManutencao }
                 _ultimaTrocaTabela.value = ultimaTrocaTabela
                 
                 // Outras manutenções (excluindo pintura, pano e tabela)
@@ -84,7 +84,7 @@ class HistoricoManutencaoMesaViewModel constructor(
             try {
                 showLoading()
                 
-                val historico = historicoManutencaoMesaRepository.buscarPorNumeroMesa(numeroMesa).first()
+                val historico = appRepository.obterTodosHistoricoManutencaoMesa().first().filter { it.numeroMesa == numeroMesa }
                 _historicoManutencao.value = historico
                 
             } catch (e: Exception) {
@@ -119,7 +119,7 @@ class HistoricoManutencaoMesaViewModel constructor(
                     dataManutencao = java.util.Date()
                 )
                 
-                historicoManutencaoMesaRepository.inserir(historico)
+                appRepository.inserirHistoricoManutencaoMesaSync(historico)
                 
                 // Recarregar dados
                 carregarHistoricoMesa(mesaId)

@@ -5,15 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.data.entities.StockItem as StockItemEntity
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.data.repository.StockItemRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 class StockViewModel constructor(
-    private val appRepository: AppRepository,
-    private val stockItemRepository: StockItemRepository
+    private val appRepository: AppRepository
 ) : ViewModel() {
     
     private val _stockItems = MutableStateFlow<List<StockItem>>(emptyList())
@@ -34,7 +32,7 @@ class StockViewModel constructor(
         viewModelScope.launch {
             try {
                 // Tentar carregar itens do banco de dados
-                val itemsFromDb = stockItemRepository.listarTodos().first()
+                val itemsFromDb = appRepository.obterTodosStockItems().first()
                 if (itemsFromDb.isNotEmpty()) {
                     _stockItems.value = itemsFromDb.map { entity ->
                         StockItem(
@@ -140,7 +138,7 @@ class StockViewModel constructor(
                     unitPrice = stockItem.unitPrice,
                     supplier = stockItem.supplier
                 )
-                val id = stockItemRepository.inserir(entity)
+                val id = appRepository.inserirStockItem(entity)
                 android.util.Log.d("StockViewModel", "Item inserido com ID: $id")
                 
                 // Forçar atualização imediata da lista

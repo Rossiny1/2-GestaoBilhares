@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.MesaVendida
-import com.example.gestaobilhares.data.repository.MesaVendidaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
  * ✅ NOVO: SISTEMA DE VENDA DE MESAS
  */
 class HistoricoMesasVendidasViewModel constructor(
-    private val mesaVendidaRepository: MesaVendidaRepository
+    private val appRepository: AppRepository
 ) : BaseViewModel() {
 
     private val _mesasVendidas = MutableStateFlow<List<MesaVendida>>(emptyList())
@@ -39,7 +39,7 @@ class HistoricoMesasVendidasViewModel constructor(
                 
                 // Usar try-catch para capturar cancelamento de job
                 try {
-                    mesaVendidaRepository.listarTodas().collect { mesas ->
+                    appRepository.obterTodasMesasVendidas().collect { mesas ->
                         android.util.Log.d("HistoricoMesasVendidasViewModel", "✅ Mesas vendidas carregadas: ${mesas.size}")
                         _mesasVendidas.value = mesas
                         
@@ -71,8 +71,9 @@ class HistoricoMesasVendidasViewModel constructor(
                 if (numero.isBlank()) {
                     carregarMesasVendidas()
                 } else {
-                    mesaVendidaRepository.buscarPorNumero(numero).collect { mesas ->
-                        _mesasVendidas.value = mesas
+                    appRepository.obterTodasMesasVendidas().collect { mesas ->
+                        val mesasFiltradas = mesas.filter { it.numeroMesa.contains(numero, ignoreCase = true) }
+                        _mesasVendidas.value = mesasFiltradas
                     }
                 }
             } catch (e: Exception) {
@@ -94,8 +95,9 @@ class HistoricoMesasVendidasViewModel constructor(
                 if (nome.isBlank()) {
                     carregarMesasVendidas()
                 } else {
-                    mesaVendidaRepository.buscarPorComprador(nome).collect { mesas ->
-                        _mesasVendidas.value = mesas
+                    appRepository.obterTodasMesasVendidas().collect { mesas ->
+                        val mesasFiltradas = mesas.filter { it.nomeComprador.contains(nome, ignoreCase = true) }
+                        _mesasVendidas.value = mesasFiltradas
                     }
                 }
             } catch (e: Exception) {

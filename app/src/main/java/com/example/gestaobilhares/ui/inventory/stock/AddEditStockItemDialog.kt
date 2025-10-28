@@ -23,10 +23,8 @@ class AddEditStockItemDialog : DialogFragment() {
         _binding = DialogAddEditStockItemBinding.inflate(layoutInflater)
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        val stockItemRepository = StockItemRepository(database.stockItemDao())
-        viewModel = StockViewModel(appRepository, stockItemRepository)
+        viewModel = StockViewModel(appRepository)
         
         setupSpinners()
         setupClickListeners()

@@ -3,21 +3,21 @@
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Veiculo
-import com.example.gestaobilhares.data.repository.VeiculoRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 class VehiclesViewModel constructor(
-    private val repository: VeiculoRepository
+    private val appRepository: AppRepository
 ) : ViewModel() {
 
-    val vehicles: StateFlow<List<Veiculo>> = repository.listar()
+    val vehicles: StateFlow<List<Veiculo>> = appRepository.obterTodosVeiculos()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun addVehicle(nome: String, placa: String, marca: String, modelo: String, anoModelo: Int, kmAtual: Long) {
         viewModelScope.launch {
-            repository.inserir(
+            appRepository.inserirVeiculo(
                 Veiculo(
                     nome = nome.trim(),
                     placa = placa.trim(),

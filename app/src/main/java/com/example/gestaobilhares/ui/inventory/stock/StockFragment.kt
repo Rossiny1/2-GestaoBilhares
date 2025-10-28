@@ -37,10 +37,8 @@ class StockFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        val stockItemRepository = com.example.gestaobilhares.data.repository.StockItemRepository(database.stockItemDao())
-        viewModel = StockViewModel(appRepository, stockItemRepository)
+        viewModel = StockViewModel(appRepository)
         
         setupRecyclerView()
         observeData()

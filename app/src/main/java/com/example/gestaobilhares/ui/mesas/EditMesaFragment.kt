@@ -48,11 +48,9 @@ class EditMesaFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // ✅ CORREÇÃO: Inicializar ViewModels manualmente
-        val database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        val historicoManutencaoRepository = HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao())
         viewModel = EditMesaViewModel(appRepository)
-        historicoViewModel = HistoricoManutencaoMesaViewModel(historicoManutencaoRepository)
+        historicoViewModel = HistoricoManutencaoMesaViewModel(appRepository)
 
         setupSpinners()
         setupClickListeners()

@@ -43,9 +43,8 @@ class HistoricoMesasVendidasFragment : Fragment() {
         android.util.Log.d("HistoricoMesasVendidasFragment", "🚀 Inicializando fragment de histórico de mesas vendidas...")
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = AppDatabase.getDatabase(requireContext())
-        val mesaVendidaRepository = MesaVendidaRepository(database.mesaVendidaDao())
-        viewModel = HistoricoMesasVendidasViewModel(mesaVendidaRepository)
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        viewModel = HistoricoMesasVendidasViewModel(appRepository)
         
         setupRecyclerView()
         setupClickListeners()

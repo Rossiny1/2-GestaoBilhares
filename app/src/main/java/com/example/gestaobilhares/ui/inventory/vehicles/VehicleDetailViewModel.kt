@@ -5,9 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Veiculo
 import com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo
 import com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo
-import com.example.gestaobilhares.data.repository.VeiculoRepository
-import com.example.gestaobilhares.data.repository.HistoricoManutencaoVeiculoRepository
-import com.example.gestaobilhares.data.repository.HistoricoCombustivelVeiculoRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,9 +15,7 @@ import java.util.Calendar
 import java.time.LocalDate
 import java.time.ZoneId
 class VehicleDetailViewModel constructor(
-    private val veiculoRepository: VeiculoRepository,
-    private val historicoManutencaoRepository: HistoricoManutencaoVeiculoRepository,
-    private val historicoCombustivelRepository: HistoricoCombustivelVeiculoRepository
+    private val appRepository: AppRepository
 ) : ViewModel() {
     
     private val _vehicle = MutableStateFlow<Vehicle?>(null)
@@ -42,7 +38,7 @@ class VehicleDetailViewModel constructor(
         this.vehicleId = vehicleId
         viewModelScope.launch {
             // Carregar veículo do banco de dados
-            veiculoRepository.listar().collect { veiculos ->
+            appRepository.obterTodosVeiculos().collect { veiculos ->
                 val veiculo = veiculos.find { it.id == vehicleId }
                 veiculo?.let {
                     _vehicle.value = Vehicle(
@@ -76,9 +72,10 @@ class VehicleDetailViewModel constructor(
         viewModelScope.launch {
             android.util.Log.d("VehicleDetailViewModel", "=== DEBUG: Carregando TODOS os dados sem filtro ===")
             
-            historicoCombustivelRepository.listarPorVeiculo(vehicleId).collect { todosCombustiveis ->
-                android.util.Log.d("VehicleDetailViewModel", "DEBUG: Total de abastecimentos: ${todosCombustiveis.size}")
-                todosCombustiveis.forEach { combustivel ->
+            appRepository.obterTodosHistoricoCombustivelVeiculo().collect { todosCombustiveis ->
+                val combustiveisFiltrados = todosCombustiveis.filter { it.veiculoId == vehicleId }
+                android.util.Log.d("VehicleDetailViewModel", "DEBUG: Total de abastecimentos: ${combustiveisFiltrados.size}")
+                combustiveisFiltrados.forEach { combustivel ->
                     val dataLocal = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
                     android.util.Log.d("VehicleDetailViewModel", "DEBUG: ID=${combustivel.id}, Data=${combustivel.dataAbastecimento}, DataLocal=${dataLocal}, Ano=${dataLocal.year}")
                 }
@@ -95,17 +92,18 @@ class VehicleDetailViewModel constructor(
             
             // Coletar manutenção e combustível em paralelo
             launch {
-                historicoManutencaoRepository.listarPorVeiculo(vehicleId).collect { todasManutencoes ->
-                    val manutencoesFiltradas = if (currentYear == null) {
-                        todasManutencoes
+                appRepository.obterTodosHistoricoManutencaoVeiculo().collect { todasManutencoes ->
+                    val manutencoesFiltradas = todasManutencoes.filter { it.veiculoId == vehicleId }
+                    val manutencoesPorAno = if (currentYear == null) {
+                        manutencoesFiltradas
                     } else {
-                        todasManutencoes.filter { manutencao ->
+                        manutencoesFiltradas.filter { manutencao ->
                             val anoManutencao = manutencao.dataManutencao.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
                             anoManutencao == currentYear
                         }
                     }
-                    android.util.Log.d("VehicleDetailViewModel", "Manutenções encontradas: ${manutencoesFiltradas.size} (filtradas de ${todasManutencoes.size} total)")
-                    val maintenanceList = manutencoesFiltradas.map { manutencao ->
+                    android.util.Log.d("VehicleDetailViewModel", "Manutenções encontradas: ${manutencoesPorAno.size} (filtradas de ${manutencoesFiltradas.size} total)")
+                    val maintenanceList = manutencoesPorAno.map { manutencao ->
                         MaintenanceRecord(
                             id = manutencao.id,
                             date = manutencao.dataManutencao.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
@@ -121,21 +119,22 @@ class VehicleDetailViewModel constructor(
             }
 
             launch {
-                historicoCombustivelRepository.listarPorVeiculo(vehicleId).collect { todosCombustiveis ->
-                    android.util.Log.d("VehicleDetailViewModel", "TOTAL de abastecimentos no banco: ${todosCombustiveis.size}")
-                    todosCombustiveis.forEach { combustivel ->
+                appRepository.obterTodosHistoricoCombustivelVeiculo().collect { todosCombustiveis ->
+                    val combustiveisPorVeiculo = todosCombustiveis.filter { it.veiculoId == vehicleId }
+                    android.util.Log.d("VehicleDetailViewModel", "TOTAL de abastecimentos no banco: ${combustiveisPorVeiculo.size}")
+                    combustiveisPorVeiculo.forEach { combustivel ->
                         val anoAbastecimento = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
                         android.util.Log.d("VehicleDetailViewModel", "Abastecimento ID=${combustivel.id}: Data=${combustivel.dataAbastecimento}, Ano=${anoAbastecimento}, Filtro=${currentYear ?: "TODOS"}, Match=${currentYear == null || anoAbastecimento == currentYear}")
                     }
                     val combustiveisFiltrados = if (currentYear == null) {
-                        todosCombustiveis
+                        combustiveisPorVeiculo
                     } else {
-                        todosCombustiveis.filter { combustivel ->
+                        combustiveisPorVeiculo.filter { combustivel ->
                             val anoAbastecimento = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
                             anoAbastecimento == currentYear
                         }
                     }
-                    android.util.Log.d("VehicleDetailViewModel", "Abastecimentos encontrados: ${combustiveisFiltrados.size} (filtrados de ${todosCombustiveis.size} total)")
+                    android.util.Log.d("VehicleDetailViewModel", "Abastecimentos encontrados: ${combustiveisFiltrados.size} (filtrados de ${combustiveisPorVeiculo.size} total)")
                     combustiveisFiltrados.forEach { combustivel ->
                         android.util.Log.d("VehicleDetailViewModel", "Abastecimento FILTRADO: ID=${combustivel.id}, Data=${combustivel.dataAbastecimento}, Litros=${combustivel.litros}, Valor=${combustivel.valor}")
                     }
@@ -286,8 +285,8 @@ class VehicleDetailViewModel constructor(
     private fun updateSummaryFromRealData() {
         viewModelScope.launch {
             // ✅ CORREÇÃO: Calcular totais manualmente para garantir precisão
-            val todasManutencoes = historicoManutencaoRepository.listarPorVeiculo(vehicleId)
-            val todosCombustiveis = historicoCombustivelRepository.listarPorVeiculo(vehicleId)
+            val todasManutencoes = appRepository.obterTodosHistoricoManutencaoVeiculo()
+            val todosCombustiveis = appRepository.obterTodosHistoricoCombustivelVeiculo()
             
             var totalMaintenance = 0.0
             var totalFuel = 0.0
@@ -295,10 +294,11 @@ class VehicleDetailViewModel constructor(
             var totalLitros = 0.0
             
             todasManutencoes.collect { manutencoes ->
+                val manutencoesPorVeiculo = manutencoes.filter { it.veiculoId == vehicleId }
                 totalMaintenance = if (currentYear == null) {
-                    manutencoes.sumOf { it.valor }
+                    manutencoesPorVeiculo.sumOf { it.valor }
                 } else {
-                    manutencoes.filter { manutencao ->
+                    manutencoesPorVeiculo.filter { manutencao ->
                         val anoManutencao = manutencao.dataManutencao.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
                         anoManutencao == currentYear
                     }.sumOf { it.valor }
@@ -306,10 +306,11 @@ class VehicleDetailViewModel constructor(
             }
             
             todosCombustiveis.collect { combustiveis ->
+                val combustiveisPorVeiculo = combustiveis.filter { it.veiculoId == vehicleId }
                 val combustiveisFiltrados = if (currentYear == null) {
-                    combustiveis
+                    combustiveisPorVeiculo
                 } else {
-                    combustiveis.filter { combustivel ->
+                    combustiveisPorVeiculo.filter { combustivel ->
                         val anoAbastecimento = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
                         anoAbastecimento == currentYear
                     }
