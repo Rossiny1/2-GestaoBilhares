@@ -416,10 +416,15 @@ class SyncManagerV2(
         "categoriadespesa" -> "categoriasDespesa"
         "tipodespesa" -> "tiposDespesa"
         "contratolocacao" -> "contratosLocacao"
+        "contratomesa" -> "contratoMesas"
+        "metacolaborador" -> "metas"
+        "colaboradorrota" -> "colaboradoresRotas"
         "assinaturarepresentantelegal" -> "assinaturasRepresentanteLegal"
         "logauditoriaassinatura" -> "logsAuditoriaAssinatura"
         "acertomesa" -> "acertoMesa"
         "mesareformada" -> "mesasReformadas"
+        "aditivocontrato" -> "aditivosContrato"
+        "aditivomesa" -> "aditivoMesas"
         else -> entityType.lowercase(Locale.getDefault()) + "s"
     }
 
@@ -608,6 +613,31 @@ class SyncManagerV2(
             android.util.Log.d("SyncManagerV2", "🔄 Fase 17: Sincronizando CONTRATOS LOCAÇÃO...")
             pullContratosLocacaoFromFirestore(empresaId)
             delay(500) // Aguardar contratos serem inseridos
+            
+            // 17.0.1: Sincronizar Metas (dependem de colaboradores/rotas e opcionalmente ciclo)
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 17.0.1: Sincronizando METAS...")
+            pullMetasFromFirestore(empresaId)
+            delay(300)
+
+            // 17.0.2: Sincronizar ColaboradorRota
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 17.0.2: Sincronizando COLABORADOR_ROTA...")
+            pullColaboradoresRotasFromFirestore(empresaId)
+            delay(300)
+
+            // 17.1: Sincronizar Aditivos de Contrato
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 17.1: Sincronizando ADITIVOS DE CONTRATO...")
+            pullAditivosContratoFromFirestore(empresaId)
+            delay(300)
+            
+            // 17.2: Sincronizar Aditivo Mesas
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 17.2: Sincronizando ADITIVO MESAS...")
+            pullAditivoMesasFromFirestore(empresaId)
+            delay(300)
+
+            // 17.3: Sincronizar Contrato Mesas
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 17.3: Sincronizando CONTRATO MESAS...")
+            pullContratoMesasFromFirestore(empresaId)
+            delay(300)
             
         // 18. DÉCIMO OITAVO: Sincronizar Assinaturas Representante Legal
         android.util.Log.d("SyncManagerV2", "🔄 Fase 18: Sincronizando ASSINATURAS REPRESENTANTE LEGAL...")
@@ -2392,6 +2422,185 @@ class SyncManagerV2(
             
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar contratos locação: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar Aditivos de Contrato do Firestore
+     */
+    private suspend fun pullAditivosContratoFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Aditivos de Contrato do Firestore...")
+        try {
+            val collectionName = getCollectionName("AditivoContrato")
+            val snapshot = firestore.collection("empresas").document(empresaId).collection(collectionName).get().await()
+            val dao = database.aditivoContratoDao()
+            val existentes = dao.buscarTodosAditivos().first()
+            var countNew = 0
+            for (doc in snapshot.documents) {
+                try {
+                    val data = doc.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    if (existentes.any { it.id == roomId }) continue
+                    val entity = com.example.gestaobilhares.data.entities.AditivoContrato(
+                        id = roomId,
+                        numeroAditivo = data["numeroAditivo"] as? String ?: "",
+                        contratoId = (data["contratoId"] as? Number)?.toLong() ?: 0L,
+                        dataAditivo = java.util.Date((data["dataAditivo"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        observacoes = data["observacoes"] as? String,
+                        tipo = data["tipo"] as? String ?: "INCLUSAO",
+                        assinaturaLocador = data["assinaturaLocador"] as? String,
+                        assinaturaLocatario = data["assinaturaLocatario"] as? String,
+                        dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        dataAtualizacao = java.util.Date((data["dataAtualizacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                    )
+                    dao.inserirAditivo(entity)
+                    countNew++
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "Erro ao processar AditivoContrato ${doc.id}: ${e.message}", e)
+                }
+            }
+            android.util.Log.d("SyncManagerV2", "✅ Aditivos sincronizados: $countNew")
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro no PULL Aditivos de Contrato: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar Aditivo Mesas do Firestore
+     */
+    private suspend fun pullAditivoMesasFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL AditivoMesas do Firestore...")
+        try {
+            val collectionName = getCollectionName("AditivoMesa")
+            val snapshot = firestore.collection("empresas").document(empresaId).collection(collectionName).get().await()
+            val dao = database.aditivoContratoDao()
+            var countNew = 0
+            for (doc in snapshot.documents) {
+                try {
+                    val data = doc.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    // Não buscamos existentes por performance; REPLACE na inserção do Room
+                    val entity = com.example.gestaobilhares.data.entities.AditivoMesa(
+                        id = roomId,
+                        aditivoId = (data["aditivoId"] as? Number)?.toLong() ?: 0L,
+                        mesaId = (data["mesaId"] as? Number)?.toLong() ?: 0L,
+                        tipoEquipamento = data["tipoEquipamento"] as? String ?: "SINUCA",
+                        numeroSerie = data["numeroSerie"] as? String ?: "",
+                        valorFicha = (data["valorFicha"] as? Number)?.toDouble(),
+                        valorFixo = (data["valorFixo"] as? Number)?.toDouble()
+                    )
+                    dao.inserirAditivoMesas(listOf(entity))
+                    countNew++
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "Erro ao processar AditivoMesa ${doc.id}: ${e.message}", e)
+                }
+            }
+            android.util.Log.d("SyncManagerV2", "✅ AditivoMesas sincronizadas: $countNew")
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro no PULL AditivoMesas: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar Contrato Mesas do Firestore
+     */
+    private suspend fun pullContratoMesasFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL ContratoMesas do Firestore...")
+        try {
+            val collectionName = getCollectionName("ContratoMesa")
+            val snapshot = firestore.collection("empresas").document(empresaId).collection(collectionName).get().await()
+            val dao = database.contratoLocacaoDao()
+            var countNew = 0
+            for (doc in snapshot.documents) {
+                try {
+                    val data = doc.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    val entity = com.example.gestaobilhares.data.entities.ContratoMesa(
+                        id = roomId,
+                        contratoId = (data["contratoId"] as? Number)?.toLong() ?: 0L,
+                        mesaId = (data["mesaId"] as? Number)?.toLong() ?: 0L,
+                        tipoEquipamento = data["tipoEquipamento"] as? String ?: "SINUCA",
+                        numeroSerie = data["numeroSerie"] as? String ?: "",
+                        valorFicha = (data["valorFicha"] as? Number)?.toDouble(),
+                        valorFixo = (data["valorFixo"] as? Number)?.toDouble()
+                    )
+                    dao.inserirContratoMesa(entity)
+                    countNew++
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "Erro ao processar ContratoMesa ${doc.id}: ${e.message}", e)
+                }
+            }
+            android.util.Log.d("SyncManagerV2", "✅ ContratoMesas sincronizadas: $countNew")
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro no PULL ContratoMesas: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar Metas de Colaborador do Firestore
+     */
+    private suspend fun pullMetasFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Metas do Firestore...")
+        try {
+            val collectionName = getCollectionName("MetaColaborador")
+            val snapshot = firestore.collection("empresas").document(empresaId).collection(collectionName).get().await()
+            val dao = database.colaboradorDao()
+            var countNew = 0
+            for (doc in snapshot.documents) {
+                try {
+                    val data = doc.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    val entity = com.example.gestaobilhares.data.entities.MetaColaborador(
+                        id = roomId,
+                        colaboradorId = (data["colaboradorId"] as? Number)?.toLong() ?: 0L,
+                        rotaId = (data["rotaId"] as? Number)?.toLong(),
+                        cicloId = (data["cicloId"] as? Number)?.toLong() ?: 0L,
+                        tipoMeta = com.example.gestaobilhares.data.entities.TipoMeta.valueOf((data["tipoMeta"] as? String) ?: "RECEITA"),
+                        valorMeta = (data["valorMeta"] as? Number)?.toDouble() ?: 0.0,
+                        valorAtual = (data["valorAtual"] as? Number)?.toDouble() ?: 0.0,
+                        ativo = data["ativo"] as? Boolean ?: true,
+                        dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                    )
+                    dao.inserirMeta(entity)
+                    countNew++
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "Erro ao processar Meta ${doc.id}: ${e.message}", e)
+                }
+            }
+            android.util.Log.d("SyncManagerV2", "✅ Metas sincronizadas: $countNew")
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro no PULL Metas: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar vinculações Colaborador-Rota do Firestore
+     */
+    private suspend fun pullColaboradoresRotasFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL ColaboradorRota do Firestore...")
+        try {
+            val collectionName = getCollectionName("ColaboradorRota")
+            val snapshot = firestore.collection("empresas").document(empresaId).collection(collectionName).get().await()
+            val dao = database.colaboradorDao()
+            var countNew = 0
+            for (doc in snapshot.documents) {
+                try {
+                    val data = doc.data ?: continue
+                    val entity = com.example.gestaobilhares.data.entities.ColaboradorRota(
+                        colaboradorId = (data["colaboradorId"] as? Number)?.toLong() ?: 0L,
+                        rotaId = (data["rotaId"] as? Number)?.toLong() ?: 0L,
+                        responsavelPrincipal = data["responsavelPrincipal"] as? Boolean ?: false,
+                        dataVinculacao = java.util.Date((data["dataVinculacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                    )
+                    dao.inserirColaboradorRota(entity)
+                    countNew++
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "Erro ao processar ColaboradorRota ${doc.id}: ${e.message}", e)
+                }
+            }
+            android.util.Log.d("SyncManagerV2", "✅ ColaboradorRota sincronizados: $countNew")
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro no PULL ColaboradorRota: ${e.message}", e)
         }
     }
 

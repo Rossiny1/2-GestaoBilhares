@@ -56,17 +56,28 @@ class VendaMesaDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         android.util.Log.d(TAG, "onCreateDialog() - criando dialog")
         _binding = DialogVendaMesaBinding.inflate(layoutInflater)
-        this.isCancelable = false
+        this.isCancelable = true // ✅ CORREÇÃO: Permitir cancelamento
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setView(binding.root)
             .create()
         dialog.setCanceledOnTouchOutside(false)
+        // ✅ CORREÇÃO: Configurar botão voltar do Android
+        dialog.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == android.view.KeyEvent.KEYCODE_BACK && event.action == android.view.KeyEvent.ACTION_UP) {
+                android.util.Log.d(TAG, "Botão voltar pressionado - fechando dialog")
+                dismiss()
+                true
+            } else {
+                false
+            }
+        }
         // Remover título do dialog (layout já tem título próprio)
         // ✅ IMPORTANTE: Em DialogFragment, quando se usa setView em onCreateDialog,
         // onViewCreated normalmente NÃO é chamado. Portanto, inicializamos aqui.
         try {
             android.util.Log.d(TAG, "onCreateDialog() - inicializando dependencias e UI")
             database = AppDatabase.getDatabase(requireContext())
+            appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
             mesaVendidaRepository = MesaVendidaRepository(database.mesaVendidaDao())
 
             setupUI()
@@ -80,7 +91,11 @@ class VendaMesaDialog : DialogFragment() {
         return dialog
     }
 
-    // onStart não é necessário; inicialização é realizada em onCreateDialog
+    override fun onDestroyView() {
+        super.onDestroyView()
+        android.util.Log.d(TAG, "onDestroyView() - limpando binding")
+        _binding = null
+    }
 
     private fun setupUI() {
         android.util.Log.d(TAG, "setupUI() - configurando data e campos")
@@ -141,6 +156,13 @@ class VendaMesaDialog : DialogFragment() {
         android.util.Log.d(TAG, "carregarMesasDisponiveis() - iniciando")
         lifecycleScope.launch {
             try {
+                // ✅ CORREÇÃO: Verificar se appRepository foi inicializado
+                if (!::appRepository.isInitialized) {
+                    android.util.Log.e(TAG, "AppRepository não foi inicializado!")
+                    context?.let { Toast.makeText(it, "Erro de inicialização. Tente novamente.", Toast.LENGTH_SHORT).show() }
+                    return@launch
+                }
+                
                 // Pegar apenas o primeiro snapshot sem cancelar explicitamente (evita CancellationException)
                 appRepository
                     .obterMesasDisponiveis()
@@ -158,6 +180,7 @@ class VendaMesaDialog : DialogFragment() {
                         } else {
                             binding.etNumeroMesa.hint = "Digite o número da mesa"
                             binding.etNumeroMesa.isEnabled = true
+                            android.util.Log.d(TAG, "Mesas disponíveis: ${mesasDisponiveis.map { it.numero }}")
                         }
                     }
 
@@ -354,10 +377,6 @@ class VendaMesaDialog : DialogFragment() {
         return true
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 }
 
 
