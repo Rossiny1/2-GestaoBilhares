@@ -413,6 +413,11 @@ class SyncManagerV2(
         "historicomanutencaomesa" -> "historicoManutencaoMesa"
         "historicomanutencaoveiculo" -> "historicoManutencaoVeiculo"
         "historicocombustivelveiculo" -> "historicoCombustivelVeiculo"
+        "categoriadespesa" -> "categoriasDespesa"
+        "tipodespesa" -> "tiposDespesa"
+        "contratolocacao" -> "contratosLocacao"
+        "assinaturarepresentantelegal" -> "assinaturasRepresentanteLegal"
+        "logauditoriaassinatura" -> "logsAuditoriaAssinatura"
         else -> entityType.lowercase(Locale.getDefault()) + "s"
     }
 
@@ -587,9 +592,34 @@ class SyncManagerV2(
             pullHistoricoCombustivelVeiculoFromFirestore(empresaId)
             delay(500) // Aguardar histórico combustível serem inseridos
             
-            // 15. DÉCIMO QUINTO: Criar ciclos automaticamente baseados nos acertos sincronizados
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 10: Criando ciclos automaticamente...")
-            criarCiclosAutomaticamente()
+            // 15. DÉCIMO QUINTO: Sincronizar Categorias Despesa
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 15: Sincronizando CATEGORIAS DESPESA...")
+            pullCategoriasDespesaFromFirestore(empresaId)
+            delay(500) // Aguardar categorias serem inseridas
+            
+            // 16. DÉCIMO SEXTO: Sincronizar Tipos Despesa
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 16: Sincronizando TIPOS DESPESA...")
+            pullTiposDespesaFromFirestore(empresaId)
+            delay(500) // Aguardar tipos serem inseridos
+            
+            // 17. DÉCIMO SÉTIMO: Sincronizar Contratos Locação
+            android.util.Log.d("SyncManagerV2", "🔄 Fase 17: Sincronizando CONTRATOS LOCAÇÃO...")
+            pullContratosLocacaoFromFirestore(empresaId)
+            delay(500) // Aguardar contratos serem inseridos
+            
+        // 18. DÉCIMO OITAVO: Sincronizar Assinaturas Representante Legal
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 18: Sincronizando ASSINATURAS REPRESENTANTE LEGAL...")
+        pullAssinaturasRepresentanteLegalFromFirestore(empresaId)
+        delay(500) // Aguardar assinaturas serem inseridas
+        
+        // 19. DÉCIMO NONO: Sincronizar Logs Auditoria Assinatura
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 19: Sincronizando LOGS AUDITORIA ASSINATURA...")
+        pullLogsAuditoriaAssinaturaFromFirestore(empresaId)
+        delay(500) // Aguardar logs serem inseridos
+        
+        // 20. VIGÉSIMO: Criar ciclos automaticamente baseados nos acertos sincronizados
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 20: Criando ciclos automaticamente...")
+        criarCiclosAutomaticamente()
 
             // ✅ NOVO PASSO: Remapear acertos importados para o ciclo local correto (numero/ano -> id)
             try {
@@ -2141,6 +2171,219 @@ class SyncManagerV2(
     }
 
     /**
+     * Baixar Categorias Despesa do Firestore
+     */
+    private suspend fun pullCategoriasDespesaFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Categorias Despesa do Firestore...")
+        
+        try {
+            val categoriasCollection = firestore.collection("empresas/$empresaId/categoriasDespesa")
+            val snapshot = categoriasCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontradas ${snapshot.size()} categorias despesa no Firestore")
+            
+            val categoriaDao = database.categoriaDespesaDao()
+            val categoriasExistentesList = categoriaDao.buscarTodas().first()
+            
+            var categoriasSincronizadas = 0
+            var categoriasExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    
+                    android.util.Log.d("SyncManagerV2", "🔄 Processando categoria: ${data["nome"]} (Room ID: $roomId)")
+                    
+                    // Verificar se já existe
+                    val jaExiste = categoriasExistentesList.any { categoria -> categoria.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "✅ Categoria já existe: ${data["nome"]} (ID: $roomId)")
+                        categoriasExistentes++
+                        continue
+                    }
+                    
+                    // Criar entidade CategoriaDespesa
+                    val categoria = com.example.gestaobilhares.data.entities.CategoriaDespesa(
+                        id = roomId,
+                        nome = data["nome"] as? String ?: "",
+                        descricao = data["descricao"] as? String ?: "",
+                        ativa = (data["ativa"] as? Boolean) ?: true,
+                        dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        dataAtualizacao = java.util.Date((data["dataAtualizacao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        criadoPor = data["criadoPor"] as? String ?: ""
+                    )
+                    
+                    // Inserir no banco local
+                    categoriaDao.inserir(categoria)
+                    categoriasSincronizadas++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Categoria sincronizada: ${categoria.nome} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar categoria ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Categorias Despesa:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizadas: $categoriasSincronizadas")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $categoriasExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar categorias despesa: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar Tipos Despesa do Firestore
+     */
+    private suspend fun pullTiposDespesaFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Tipos Despesa do Firestore...")
+        
+        try {
+            val tiposCollection = firestore.collection("empresas/$empresaId/tiposDespesa")
+            val snapshot = tiposCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} tipos despesa no Firestore")
+            
+            val tipoDao = database.tipoDespesaDao()
+            val tiposExistentesList = tipoDao.buscarTodos().first()
+            
+            var tiposSincronizados = 0
+            var tiposExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    
+                    android.util.Log.d("SyncManagerV2", "🔄 Processando tipo: ${data["nome"]} - Categoria ${data["categoriaId"]} (Room ID: $roomId)")
+                    
+                    // Verificar se já existe
+                    val jaExiste = tiposExistentesList.any { tipo -> tipo.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "✅ Tipo já existe: ${data["nome"]} (ID: $roomId)")
+                        tiposExistentes++
+                        continue
+                    }
+                    
+                    // Criar entidade TipoDespesa
+                    val tipo = com.example.gestaobilhares.data.entities.TipoDespesa(
+                        id = roomId,
+                        categoriaId = (data["categoriaId"] as? Number)?.toLong() ?: 0L,
+                        nome = data["nome"] as? String ?: "",
+                        descricao = data["descricao"] as? String ?: "",
+                        ativo = (data["ativo"] as? Boolean) ?: true,
+                        dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        dataAtualizacao = java.util.Date((data["dataAtualizacao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        criadoPor = data["criadoPor"] as? String ?: ""
+                    )
+                    
+                    // Inserir no banco local
+                    tipoDao.inserir(tipo)
+                    tiposSincronizados++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Tipo sincronizado: ${tipo.nome} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar tipo ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Tipos Despesa:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $tiposSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $tiposExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar tipos despesa: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar Contratos Locação do Firestore
+     */
+    private suspend fun pullContratosLocacaoFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Contratos Locação do Firestore...")
+        
+        try {
+            val contratosCollection = firestore.collection("empresas/$empresaId/contratosLocacao")
+            val snapshot = contratosCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} contratos locação no Firestore")
+            
+            val contratoDao = database.contratoLocacaoDao()
+            val contratosExistentesList = contratoDao.buscarTodosContratos().first()
+            
+            var contratosSincronizados = 0
+            var contratosExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    
+                    android.util.Log.d("SyncManagerV2", "🔄 Processando contrato: ${data["numeroContrato"]} - Cliente ${data["clienteId"]} (Room ID: $roomId)")
+                    
+                    // Verificar se já existe
+                    val jaExiste = contratosExistentesList.any { contrato -> contrato.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "✅ Contrato já existe: ${data["numeroContrato"]} (ID: $roomId)")
+                        contratosExistentes++
+                        continue
+                    }
+                    
+                    // Criar entidade ContratoLocacao
+                    val contrato = com.example.gestaobilhares.data.entities.ContratoLocacao(
+                        id = roomId,
+                        numeroContrato = data["numeroContrato"] as? String ?: "",
+                        clienteId = (data["clienteId"] as? Number)?.toLong() ?: 0L,
+                        locadorNome = data["locadorNome"] as? String ?: "BILHAR GLOBO R & A LTDA",
+                        locadorCnpj = data["locadorCnpj"] as? String ?: "34.994.884/0001-69",
+                        locadorEndereco = data["locadorEndereco"] as? String ?: "Rua João Pinheiro, nº 765, Bairro Centro, Montes Claros, MG",
+                        locadorCep = data["locadorCep"] as? String ?: "39.400-093",
+                        locatarioNome = data["locatarioNome"] as? String ?: "",
+                        locatarioCpf = data["locatarioCpf"] as? String ?: "",
+                        locatarioEndereco = data["locatarioEndereco"] as? String ?: "",
+                        locatarioTelefone = data["locatarioTelefone"] as? String ?: "",
+                        locatarioEmail = data["locatarioEmail"] as? String ?: "",
+                        valorMensal = (data["valorMensal"] as? Number)?.toDouble() ?: 0.0,
+                        diaVencimento = (data["diaVencimento"] as? Number)?.toInt() ?: 1,
+                        tipoPagamento = data["tipoPagamento"] as? String ?: "FIXO",
+                        percentualReceita = (data["percentualReceita"] as? Number)?.toDouble(),
+                        dataContrato = java.util.Date((data["dataContrato"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        dataInicio = java.util.Date((data["dataInicio"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        status = data["status"] as? String ?: "ATIVO",
+                        dataEncerramento = (data["dataEncerramento"] as? Number)?.let { java.util.Date(it.toLong()) },
+                        assinaturaLocador = data["assinaturaLocador"] as? String,
+                        assinaturaLocatario = data["assinaturaLocatario"] as? String,
+                        distratoAssinaturaLocador = data["distratoAssinaturaLocador"] as? String,
+                        distratoAssinaturaLocatario = data["distratoAssinaturaLocatario"] as? String,
+                        distratoDataAssinatura = (data["distratoDataAssinatura"] as? Number)?.let { java.util.Date(it.toLong()) },
+                        dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        dataAtualizacao = java.util.Date((data["dataAtualizacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                    )
+                    
+                    // Inserir no banco local
+                    contratoDao.inserirContrato(contrato)
+                    contratosSincronizados++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Contrato sincronizado: ${contrato.numeroContrato} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar contrato ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Contratos Locação:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $contratosSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $contratosExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar contratos locação: ${e.message}", e)
+        }
+    }
+
+    /**
      * Obter estatísticas de sincronização
      */
     suspend fun getSyncStats(): SyncStats {
@@ -2195,6 +2438,170 @@ class SyncManagerV2(
             }
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "Erro ao debugar fila: ${e.message}", e)
+        }
+    }
+
+    /**
+     * PULL: Baixar Assinaturas Representante Legal do Firestore
+     */
+    private suspend fun pullAssinaturasRepresentanteLegalFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Assinaturas Representante Legal do Firestore...")
+        
+        try {
+            val assinaturasCollection = firestore.collection("empresas/$empresaId/assinaturasRepresentanteLegal")
+            val snapshot = assinaturasCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontradas ${snapshot.size()} assinaturas no Firestore")
+            
+            val assinaturaDao = database.assinaturaRepresentanteLegalDao()
+            val assinaturasExistentesList = assinaturaDao.obterTodasAssinaturas()
+            
+            var assinaturasSincronizadas = 0
+            var assinaturasExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    
+                    android.util.Log.d("SyncManagerV2", "🔄 Processando assinatura: ${data["nomeRepresentante"]} (Room ID: $roomId)")
+                    
+                    // Verificar se já existe
+                    val jaExiste = assinaturasExistentesList.any { assinatura -> assinatura.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "✅ Assinatura já existe: ${data["nomeRepresentante"]} (ID: $roomId)")
+                        assinaturasExistentes++
+                        continue
+                    }
+                    
+                    // Criar entidade AssinaturaRepresentanteLegal
+                    val assinatura = com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal(
+                        id = roomId,
+                        nomeRepresentante = data["nomeRepresentante"] as? String ?: "",
+                        cpfRepresentante = data["cpfRepresentante"] as? String ?: "",
+                        cargoRepresentante = data["cargoRepresentante"] as? String ?: "",
+                        assinaturaBase64 = data["assinaturaBase64"] as? String ?: "",
+                        timestampCriacao = (data["timestampCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                        deviceId = data["deviceId"] as? String ?: "",
+                        hashIntegridade = data["hashIntegridade"] as? String ?: "",
+                        versaoSistema = data["versaoSistema"] as? String ?: "",
+                        dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        criadoPor = data["criadoPor"] as? String ?: "",
+                        ativo = (data["ativo"] as? Boolean) ?: true,
+                        numeroProcuração = data["numeroProcuração"] as? String ?: "",
+                        dataProcuração = java.util.Date((data["dataProcuração"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        poderesDelegados = data["poderesDelegados"] as? String ?: "",
+                        validadeProcuração = (data["validadeProcuração"] as? Number)?.let { java.util.Date(it.toLong()) },
+                        totalUsos = (data["totalUsos"] as? Number)?.toInt() ?: 0,
+                        ultimoUso = (data["ultimoUso"] as? Number)?.let { java.util.Date(it.toLong()) },
+                        contratosAssinados = data["contratosAssinados"] as? String ?: "",
+                        validadaJuridicamente = (data["validadaJuridicamente"] as? Boolean) ?: false,
+                        dataValidacao = (data["dataValidacao"] as? Number)?.let { java.util.Date(it.toLong()) },
+                        validadoPor = data["validadoPor"] as? String
+                    )
+                    
+                    // Inserir no banco local
+                    assinaturaDao.inserirAssinatura(assinatura)
+                    assinaturasSincronizadas++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Assinatura sincronizada: ${assinatura.nomeRepresentante} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar assinatura ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Assinaturas Representante Legal:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizadas: $assinaturasSincronizadas")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $assinaturasExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar assinaturas representante legal: ${e.message}", e)
+        }
+    }
+
+    /**
+     * PULL: Baixar Logs Auditoria Assinatura do Firestore
+     */
+    private suspend fun pullLogsAuditoriaAssinaturaFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Logs Auditoria Assinatura do Firestore...")
+        
+        try {
+            val logsCollection = firestore.collection("empresas/$empresaId/logsAuditoriaAssinatura")
+            val snapshot = logsCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} logs no Firestore")
+            
+            val logDao = database.logAuditoriaAssinaturaDao()
+            val logsExistentesList = logDao.obterTodosLogs()
+            
+            var logsSincronizados = 0
+            var logsExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    
+                    android.util.Log.d("SyncManagerV2", "🔄 Processando log: ${data["tipoOperacao"]} - ${data["usuarioExecutou"]} (Room ID: $roomId)")
+                    
+                    // Verificar se já existe
+                    val jaExiste = logsExistentesList.any { log -> log.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "✅ Log já existe: ${data["tipoOperacao"]} (ID: $roomId)")
+                        logsExistentes++
+                        continue
+                    }
+                    
+                    // Criar entidade LogAuditoriaAssinatura
+                    val log = com.example.gestaobilhares.data.entities.LogAuditoriaAssinatura(
+                        id = roomId,
+                        tipoOperacao = data["tipoOperacao"] as? String ?: "",
+                        idAssinatura = (data["idAssinatura"] as? Number)?.toLong() ?: 0L,
+                        idContrato = (data["idContrato"] as? Number)?.toLong(),
+                        idAditivo = (data["idAditivo"] as? Number)?.toLong(),
+                        usuarioExecutou = data["usuarioExecutou"] as? String ?: "",
+                        cpfUsuario = data["cpfUsuario"] as? String ?: "",
+                        cargoUsuario = data["cargoUsuario"] as? String ?: "",
+                        timestamp = (data["timestamp"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                        deviceId = data["deviceId"] as? String ?: "",
+                        versaoApp = data["versaoApp"] as? String ?: "",
+                        hashDocumento = data["hashDocumento"] as? String ?: "",
+                        hashAssinatura = data["hashAssinatura"] as? String ?: "",
+                        latitude = (data["latitude"] as? Number)?.toDouble(),
+                        longitude = (data["longitude"] as? Number)?.toDouble(),
+                        endereco = data["endereco"] as? String,
+                        ipAddress = data["ipAddress"] as? String,
+                        userAgent = data["userAgent"] as? String,
+                        tipoDocumento = data["tipoDocumento"] as? String ?: "",
+                        numeroDocumento = data["numeroDocumento"] as? String ?: "",
+                        valorContrato = (data["valorContrato"] as? Number)?.toDouble(),
+                        sucesso = (data["sucesso"] as? Boolean) ?: true,
+                        mensagemErro = data["mensagemErro"] as? String,
+                        dataOperacao = java.util.Date((data["dataOperacao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        observacoes = data["observacoes"] as? String,
+                        validadoJuridicamente = (data["validadoJuridicamente"] as? Boolean) ?: false,
+                        dataValidacao = (data["dataValidacao"] as? Number)?.let { java.util.Date(it.toLong()) },
+                        validadoPor = data["validadoPor"] as? String
+                    )
+                    
+                    // Inserir no banco local
+                    logDao.inserirLog(log)
+                    logsSincronizados++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Log sincronizado: ${log.tipoOperacao} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar log ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Logs Auditoria Assinatura:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $logsSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $logsExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar logs auditoria assinatura: ${e.message}", e)
         }
     }
 

@@ -42,9 +42,8 @@ class HistoricoManutencaoMesaFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = AppDatabase.getDatabase(requireContext())
-        val historicoManutencaoRepository = HistoricoManutencaoMesaRepository(database.historicoManutencaoMesaDao())
-        viewModel = HistoricoManutencaoMesaViewModel(historicoManutencaoRepository)
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        viewModel = HistoricoManutencaoMesaViewModel(appRepository)
 
         setupRecyclerView()
         setupClickListeners()

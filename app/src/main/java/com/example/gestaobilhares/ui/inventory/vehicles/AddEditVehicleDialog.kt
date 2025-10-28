@@ -18,9 +18,8 @@ class AddEditVehicleDialog : DialogFragment() {
         _binding = DialogAddEditVehicleBinding.inflate(LayoutInflater.from(requireContext()))
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-        val veiculoRepository = com.example.gestaobilhares.data.repository.VeiculoRepository(database.veiculoDao())
-        viewModel = VehiclesViewModel(veiculoRepository)
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        viewModel = VehiclesViewModel(appRepository)
 
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle("Novo Veículo")

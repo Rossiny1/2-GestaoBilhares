@@ -61,7 +61,8 @@ object RepositoryFactory {
             tipoDespesaDao = database.tipoDespesaDao(),
             historicoManutencaoVeiculoDao = database.historicoManutencaoVeiculoDao(),
             historicoCombustivelVeiculoDao = database.historicoCombustivelVeiculoDao(),
-            historicoManutencaoMesaDao = database.historicoManutencaoMesaDao()
+            historicoManutencaoMesaDao = database.historicoManutencaoMesaDao(),
+            mesaReformadaDao = database.mesaReformadaDao()
         )
     }
     

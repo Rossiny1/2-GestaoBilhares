@@ -41,11 +41,8 @@ class VehicleDetailFragment : Fragment() {
         vehicleId = arguments?.getLong("vehicleId", 0L) ?: 0L
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = AppDatabase.getDatabase(requireContext())
-        val veiculoRepository = VeiculoRepository(database.veiculoDao())
-        val historicoManutencaoRepository = HistoricoManutencaoVeiculoRepository(database.historicoManutencaoVeiculoDao())
-        val historicoCombustivelRepository = HistoricoCombustivelVeiculoRepository(database.historicoCombustivelVeiculoDao())
-        viewModel = VehicleDetailViewModel(veiculoRepository, historicoManutencaoRepository, historicoCombustivelRepository)
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        viewModel = VehicleDetailViewModel(appRepository)
         
         setupUI()
         setupRecyclerViews()

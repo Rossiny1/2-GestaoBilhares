@@ -7,8 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.data.repository.MesaReformadaRepository
-import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
 import java.util.Date
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,9 +19,7 @@ import kotlinx.coroutines.launch
  * ViewModel para a tela de nova reforma.
  */
 class NovaReformaViewModel constructor(
-    private val appRepository: AppRepository,
-    private val mesaReformadaRepository: MesaReformadaRepository,
-    private val panoEstoqueRepository: PanoEstoqueRepository
+    private val appRepository: AppRepository
 ) : BaseViewModel() {
 
     private val _mesasDisponiveis = MutableStateFlow<List<Mesa>>(emptyList())
@@ -55,7 +51,7 @@ class NovaReformaViewModel constructor(
         viewModelScope.launch {
             try {
                 showLoading()
-                mesaReformadaRepository.inserir(mesaReformada)
+                appRepository.inserirMesaReformada(mesaReformada)
                 _successMessage.value = "Reforma salva com sucesso!"
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao salvar reforma: ${e.message}"
@@ -78,7 +74,7 @@ class NovaReformaViewModel constructor(
         viewModelScope.launch {
             try {
                 Log.d("NovaReformaViewModel", "Marcando pano $panoId como usado: $motivo")
-                panoEstoqueRepository.marcarPanoComoUsado(panoId, motivo)
+                appRepository.marcarPanoComoUsado(panoId, motivo)
                 Log.d("NovaReformaViewModel", "Pano $panoId marcado como usado com sucesso")
             } catch (e: Exception) {
                 Log.e("NovaReformaViewModel", "Erro ao marcar pano como usado: ${e.message}", e)

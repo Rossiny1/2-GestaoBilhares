@@ -33,10 +33,8 @@ class VehiclesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        val veiculoRepository = com.example.gestaobilhares.data.repository.VeiculoRepository(database.veiculoDao())
-        viewModel = VehiclesViewModel(veiculoRepository)
+        viewModel = VehiclesViewModel(appRepository)
         
         // Configurar toolbar com título "Veículo" e navegação back
         binding.toolbar.setNavigationOnClickListener {
