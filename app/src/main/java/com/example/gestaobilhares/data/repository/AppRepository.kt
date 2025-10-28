@@ -119,7 +119,27 @@ class AppRepository constructor(
             descricao = nova.descricao,
             criadoPor = nova.criadoPor
         )
-        return categoriaDespesaDao.inserir(entity)
+        val id = categoriaDespesaDao.inserir(entity)
+        
+        // ✅ SINCRONIZAÇÃO: CREATE CategoriaDespesa
+        try {
+            val payload = """
+                {
+                    "id": $id,
+                    "nome": "${entity.nome}",
+                    "descricao": "${entity.descricao}",
+                    "criadoPor": "${entity.criadoPor}",
+                    "ativo": ${entity.ativa},
+                    "dataCriacao": ${entity.dataCriacao.time}
+                }
+            """.trimIndent()
+            adicionarOperacaoSync("CategoriaDespesa", id, "CREATE", payload, priority = 1)
+            logarOperacaoSync("CategoriaDespesa", id, "CREATE", "PENDING", null, payload)
+        } catch (syncError: Exception) {
+            Log.w("AppRepository", "Erro ao adicionar categoria à fila de sync: ${syncError.message}")
+        }
+        
+        return id
     }
     fun buscarTiposPorCategoria(categoriaId: Long) = tipoDespesaDao.buscarPorCategoria(categoriaId)
     suspend fun buscarTipoPorNome(nome: String) = tipoDespesaDao.buscarPorNome(nome)
@@ -134,7 +154,28 @@ class AppRepository constructor(
             descricao = novo.descricao,
             criadoPor = novo.criadoPor
         )
-        return tipoDespesaDao.inserir(entity)
+        val id = tipoDespesaDao.inserir(entity)
+        
+        // ✅ SINCRONIZAÇÃO: CREATE TipoDespesa
+        try {
+            val payload = """
+                {
+                    "id": $id,
+                    "categoriaId": ${entity.categoriaId},
+                    "nome": "${entity.nome}",
+                    "descricao": "${entity.descricao}",
+                    "criadoPor": "${entity.criadoPor}",
+                    "ativo": ${entity.ativo},
+                    "dataCriacao": ${entity.dataCriacao.time}
+                }
+            """.trimIndent()
+            adicionarOperacaoSync("TipoDespesa", id, "CREATE", payload, priority = 1)
+            logarOperacaoSync("TipoDespesa", id, "CREATE", "PENDING", null, payload)
+        } catch (syncError: Exception) {
+            Log.w("AppRepository", "Erro ao adicionar tipo à fila de sync: ${syncError.message}")
+        }
+        
+        return id
     }
 
     
@@ -3299,8 +3340,8 @@ class AppRepository constructor(
     
     // ==================== MÉTODOS ADICIONAIS PARA CORREÇÃO DE ERROS ====================
     
-    suspend fun inserirHistoricoManutencao(historico: HistoricoManutencaoVeiculo): Long = historicoManutencaoVeiculoDao.inserir(historico)
-    suspend fun inserirHistoricoCombustivel(historico: HistoricoCombustivelVeiculo): Long = historicoCombustivelVeiculoDao.inserir(historico)
+    suspend fun inserirHistoricoManutencao(historico: HistoricoManutencaoVeiculo): Long = inserirHistoricoManutencaoVeiculoSync(historico)
+    suspend fun inserirHistoricoCombustivel(historico: HistoricoCombustivelVeiculo): Long = inserirHistoricoCombustivelVeiculoSync(historico)
     suspend fun inserirAcertoMesa(acertoMesa: AcertoMesa): Long = acertoMesaDao.inserir(acertoMesa)
     
     /**
@@ -3460,7 +3501,7 @@ class AppRepository constructor(
         }
     }
     suspend fun buscarContratoAtivoPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratoAtivoPorCliente(clienteId)
-    suspend fun inserirHistoricoManutencaoMesa(historico: HistoricoManutencaoMesa): Long = historicoManutencaoMesaDao.inserir(historico)
+    suspend fun inserirHistoricoManutencaoMesa(historico: HistoricoManutencaoMesa): Long = inserirHistoricoManutencaoMesaSync(historico)
 
     // ========================================
     // ✅ FASE 3C: MÉTODOS DE SINCRONIZAÇÃO
