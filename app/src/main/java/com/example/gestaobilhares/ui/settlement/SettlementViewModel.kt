@@ -834,10 +834,18 @@ class SettlementViewModel constructor(
             if (mesa != null) {
                 logOperation("SETTLEMENT", "Mesa encontrada: ${mesa.numero}")
                 
+                // ✅ CORREÇÃO: Usar data atual de forma segura
+                val dataAtual = try {
+                    com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
+                } catch (e: Exception) {
+                    Log.w("SettlementViewModel", "Erro ao obter data atual, usando data padrão: ${e.message}")
+                    java.util.Date() // Fallback para data atual do sistema
+                }
+                
                 // Atualizar mesa com novo pano e data
                 val mesaAtualizada = mesa.copy(
                     panoAtualId = panoId,
-                    dataUltimaTrocaPano = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
+                    dataUltimaTrocaPano = dataAtual
                 )
                 appRepository.atualizarMesa(mesaAtualizada)
                 logOperation("SETTLEMENT", "Mesa $mesaId atualizada com pano $panoId com sucesso")
@@ -846,6 +854,7 @@ class SettlementViewModel constructor(
             }
         } catch (e: Exception) {
             Log.e("SettlementViewModel", "Erro ao atualizar pano da mesa: ${e.message}", e)
+            throw e // Re-throw para que o Fragment possa tratar
         }
     }
     

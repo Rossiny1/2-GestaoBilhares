@@ -18,6 +18,15 @@ class AddEditStockItemDialog : DialogFragment() {
     private val binding get() = _binding!!
     
     private lateinit var viewModel: StockViewModel
+    private var onItemSaved: (() -> Unit)? = null
+
+    companion object {
+        fun newInstance(onItemSaved: (() -> Unit)? = null): AddEditStockItemDialog {
+            val dialog = AddEditStockItemDialog()
+            dialog.onItemSaved = onItemSaved
+            return dialog
+        }
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddEditStockItemBinding.inflate(layoutInflater)
@@ -91,6 +100,10 @@ class AddEditStockItemDialog : DialogFragment() {
             
             // Mostrar sucesso e fechar diálogo
             Toast.makeText(requireContext(), "Item adicionado ao estoque com sucesso!", Toast.LENGTH_SHORT).show()
+            
+            // ✅ CORREÇÃO: Notificar callback para atualizar a lista
+            onItemSaved?.invoke()
+            
             dismiss()
             
         } catch (e: NumberFormatException) {

@@ -2118,6 +2118,34 @@ class AppRepository constructor(
                 debitoTotal = debitoTotal
             )
             cicloAcertoDao.atualizar(cicloFinalizado)
+            // ✅ SINCRONIZAÇÃO: Enfileirar UPDATE do ciclo finalizado
+            try {
+                val payload = """
+                    {
+                        "id": ${cicloFinalizado.id},
+                        "numeroCiclo": ${cicloFinalizado.numeroCiclo},
+                        "rotaId": ${cicloFinalizado.rotaId},
+                        "ano": ${cicloFinalizado.ano},
+                        "dataInicio": ${cicloFinalizado.dataInicio?.time ?: 0},
+                        "dataFim": ${cicloFinalizado.dataFim?.time ?: 0},
+                        "status": "${cicloFinalizado.status.name}",
+                        "totalClientes": ${cicloFinalizado.totalClientes},
+                        "clientesAcertados": ${cicloFinalizado.clientesAcertados},
+                        "valorTotalAcertado": ${cicloFinalizado.valorTotalAcertado},
+                        "valorTotalDespesas": ${cicloFinalizado.valorTotalDespesas},
+                        "lucroLiquido": ${cicloFinalizado.lucroLiquido},
+                        "debitoTotal": ${cicloFinalizado.debitoTotal},
+                        "observacoes": "${cicloFinalizado.observacoes ?: ""}",
+                        "criadoPor": "${cicloFinalizado.criadoPor}",
+                        "dataCriacao": ${cicloFinalizado.dataCriacao.time},
+                        "dataAtualizacao": ${cicloFinalizado.dataAtualizacao.time}
+                    }
+                """.trimIndent()
+                adicionarOperacaoSync("CicloAcerto", cicloFinalizado.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("CicloAcerto", cicloFinalizado.id, "UPDATE", "PENDING", null, payload)
+            } catch (e: Exception) {
+                Log.w("AppRepository", "Erro ao enfileirar UPDATE CicloAcerto: ${e.message}")
+            }
 
             // Atualizar também status/data da rota para consistência
             rotaDao.finalizarCicloRota(rotaId, agora.time)
@@ -2341,14 +2369,67 @@ class AppRepository constructor(
         return try {
             val id = colaboradorDao.inserirMeta(meta)
             logDbInsertSuccess("META", "ColaboradorID=${meta.colaboradorId}, ID=$id")
+            // ✅ SINCRONIZAÇÃO: Enfileirar CREATE de MetaColaborador
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "colaboradorId": ${meta.colaboradorId},
+                        "rotaId": ${meta.rotaId ?: 0L},
+                        "cicloId": ${meta.cicloId ?: 0L},
+                        "tipoMeta": "${meta.tipoMeta}",
+                        "valorMeta": ${meta.valorMeta},
+                        "valorAtual": ${meta.valorAtual},
+                        "ativo": ${meta.ativo},
+                        "dataCriacao": ${meta.dataCriacao.time},
+                        "dataCriacao": ${meta.dataCriacao.time}
+                    }
+                """.trimIndent()
+                adicionarOperacaoSync("MetaColaborador", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("MetaColaborador", id, "CREATE", "PENDING", null, payload)
+            } catch (e: Exception) {
+                Log.w("AppRepository", "Erro ao enfileirar META: ${e.message}")
+            }
             id
         } catch (e: Exception) {
             logDbInsertError("META", "ColaboradorID=${meta.colaboradorId}", e)
             throw e
         }
     }
-    suspend fun atualizarMeta(meta: MetaColaborador) = colaboradorDao.atualizarMeta(meta)
-    suspend fun deletarMeta(meta: MetaColaborador) = colaboradorDao.deletarMeta(meta)
+    suspend fun atualizarMeta(meta: MetaColaborador) {
+        colaboradorDao.atualizarMeta(meta)
+        // ✅ SINCRONIZAÇÃO: UPDATE
+        try {
+            val payload = """
+                {
+                    "id": ${meta.id},
+                    "colaboradorId": ${meta.colaboradorId},
+                    "rotaId": ${meta.rotaId ?: 0L},
+                    "cicloId": ${meta.cicloId ?: 0L},
+                    "tipoMeta": "${meta.tipoMeta}",
+                    "valorMeta": ${meta.valorMeta},
+                    "valorAtual": ${meta.valorAtual},
+                    "ativo": ${meta.ativo},
+                    "dataCriacao": ${meta.dataCriacao.time}
+                }
+            """.trimIndent()
+            adicionarOperacaoSync("MetaColaborador", meta.id, "UPDATE", payload, priority = 1)
+            logarOperacaoSync("MetaColaborador", meta.id, "UPDATE", "PENDING", null, payload)
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao enfileirar UPDATE META: ${e.message}")
+        }
+    }
+    suspend fun deletarMeta(meta: MetaColaborador) {
+        colaboradorDao.deletarMeta(meta)
+        // ✅ SINCRONIZAÇÃO: DELETE
+        try {
+            val payload = """{ "id": ${meta.id} }"""
+            adicionarOperacaoSync("MetaColaborador", meta.id, "DELETE", payload, priority = 1)
+            logarOperacaoSync("MetaColaborador", meta.id, "DELETE", "PENDING", null, payload)
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao enfileirar DELETE META: ${e.message}")
+        }
+    }
     suspend fun atualizarValorAtualMeta(metaId: Long, valorAtual: Double) = colaboradorDao.atualizarValorAtualMeta(metaId, valorAtual)
     
     // ==================== METAS POR ROTA ====================
@@ -2427,6 +2508,22 @@ class AppRepository constructor(
                 "COLABORADOR_ROTA",
                 "ColaboradorID=${colaboradorRota.colaboradorId}, RotaID=${colaboradorRota.rotaId}, ID=$id"
             )
+            // ✅ SINCRONIZAÇÃO: CREATE ColaboradorRota
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "colaboradorId": ${colaboradorRota.colaboradorId},
+                        "rotaId": ${colaboradorRota.rotaId},
+                        "responsavelPrincipal": ${colaboradorRota.responsavelPrincipal},
+                        "dataVinculacao": ${colaboradorRota.dataVinculacao.time}
+                    }
+                """.trimIndent()
+                adicionarOperacaoSync("ColaboradorRota", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("ColaboradorRota", id, "CREATE", "PENDING", null, payload)
+            } catch (e: Exception) {
+                Log.w("AppRepository", "Erro ao enfileirar ColaboradorRota: ${e.message}")
+            }
             id
         } catch (e: Exception) {
             logDbInsertError(
@@ -2442,7 +2539,18 @@ class AppRepository constructor(
      * Busca acertos de um cliente filtrando pelo cicloId (consulta direta no DAO)
      */
     fun buscarAcertosPorClienteECicloId(clienteId: Long, cicloId: Long) = acertoDao.buscarPorClienteECicloId(clienteId, cicloId)
-    suspend fun deletarColaboradorRota(colaboradorRota: ColaboradorRota) = colaboradorDao.deletarColaboradorRota(colaboradorRota)
+    suspend fun deletarColaboradorRota(colaboradorRota: ColaboradorRota) {
+        colaboradorDao.deletarColaboradorRota(colaboradorRota)
+        // ✅ SINCRONIZAÇÃO: DELETE ColaboradorRota
+        try {
+            val payload = """{ "colaboradorId": ${colaboradorRota.colaboradorId}, "rotaId": ${colaboradorRota.rotaId} }"""
+            val entityId = colaboradorRota.colaboradorId * 1000000L + colaboradorRota.rotaId
+            adicionarOperacaoSync("ColaboradorRota", entityId, "DELETE", payload, priority = 1)
+            logarOperacaoSync("ColaboradorRota", entityId, "DELETE", "PENDING", null, payload)
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao enfileirar DELETE ColaboradorRota: ${e.message}")
+        }
+    }
     suspend fun deletarTodasRotasColaborador(colaboradorId: Long) = colaboradorDao.deletarTodasRotasColaborador(colaboradorId)
     suspend fun removerResponsavelPrincipal(colaboradorId: Long) = colaboradorDao.removerResponsavelPrincipal(colaboradorId)
     suspend fun definirResponsavelPrincipal(colaboradorId: Long, rotaId: Long) = colaboradorDao.definirResponsavelPrincipal(colaboradorId, rotaId)
@@ -2724,6 +2832,24 @@ class AppRepository constructor(
         return try {
             val id = contratoLocacaoDao.inserirContratoMesa(contratoMesa)
             logDbInsertSuccess("CONTRATO_MESA", "ContratoID=${contratoMesa.contratoId}, ID=$id")
+            // ✅ SINCRONIZAÇÃO: CREATE ContratoMesa
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "contratoId": ${contratoMesa.contratoId},
+                        "mesaId": ${contratoMesa.mesaId},
+                        "tipoEquipamento": "${contratoMesa.tipoEquipamento}",
+                        "numeroSerie": "${contratoMesa.numeroSerie}",
+                        "valorFicha": ${contratoMesa.valorFicha ?: 0.0},
+                        "valorFixo": ${contratoMesa.valorFixo ?: 0.0}
+                    }
+                """.trimIndent()
+                adicionarOperacaoSync("ContratoMesa", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("ContratoMesa", id, "CREATE", "PENDING", null, payload)
+            } catch (e: Exception) {
+                Log.w("AppRepository", "Erro ao enfileirar ContratoMesa: ${e.message}")
+            }
             id
         } catch (e: Exception) {
             logDbInsertError("CONTRATO_MESA", "ContratoID=${contratoMesa.contratoId}", e)
@@ -2735,13 +2861,43 @@ class AppRepository constructor(
         return try {
             val ids = contratoLocacaoDao.inserirContratoMesas(contratoMesas)
             logDbInsertSuccess("CONTRATO_MESAS", "IDs=${ids.joinToString()}")
+            // ✅ SINCRONIZAÇÃO: CREATE em lote
+            try {
+                contratoMesas.zip(ids).forEach { (cm, id) ->
+                    val payload = """
+                        {
+                            "id": $id,
+                            "contratoId": ${cm.contratoId},
+                            "mesaId": ${cm.mesaId},
+                            "tipoEquipamento": "${cm.tipoEquipamento}",
+                            "numeroSerie": "${cm.numeroSerie}",
+                            "valorFicha": ${cm.valorFicha ?: 0.0},
+                            "valorFixo": ${cm.valorFixo ?: 0.0}
+                        }
+                    """.trimIndent()
+                    adicionarOperacaoSync("ContratoMesa", id, "CREATE", payload, priority = 1)
+                    logarOperacaoSync("ContratoMesa", id, "CREATE", "PENDING", null, payload)
+                }
+            } catch (e: Exception) {
+                Log.w("AppRepository", "Erro ao enfileirar lote ContratoMesas: ${e.message}")
+            }
             ids
         } catch (e: Exception) {
             logDbInsertError("CONTRATO_MESAS", "Quantidade=${contratoMesas.size}", e)
             throw e
         }
     }
-    suspend fun excluirContratoMesa(contratoMesa: ContratoMesa) = contratoLocacaoDao.excluirContratoMesa(contratoMesa)
+    suspend fun excluirContratoMesa(contratoMesa: ContratoMesa) {
+        contratoLocacaoDao.excluirContratoMesa(contratoMesa)
+        // ✅ SINCRONIZAÇÃO: DELETE
+        try {
+            val payload = """{ "id": ${contratoMesa.id} }"""
+            adicionarOperacaoSync("ContratoMesa", contratoMesa.id, "DELETE", payload, priority = 1)
+            logarOperacaoSync("ContratoMesa", contratoMesa.id, "DELETE", "PENDING", null, payload)
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao enfileirar DELETE ContratoMesa: ${e.message}")
+        }
+    }
     suspend fun excluirMesasPorContrato(contratoId: Long) = contratoLocacaoDao.excluirMesasPorContrato(contratoId)
     
     // ==================== ADITIVO CONTRATO ====================
@@ -2758,6 +2914,27 @@ class AppRepository constructor(
         return try {
             val id = aditivoContratoDao.inserirAditivo(aditivo)
             logDbInsertSuccess("ADITIVO", "ContratoID=${aditivo.contratoId}, ID=$id")
+            // ✅ SINCRONIZAÇÃO: Enfileirar CREATE de AditivoContrato
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "numeroAditivo": "${aditivo.numeroAditivo}",
+                        "contratoId": ${aditivo.contratoId},
+                        "dataAditivo": ${aditivo.dataAditivo.time},
+                        "observacoes": "${aditivo.observacoes ?: ""}",
+                        "tipo": "${aditivo.tipo}",
+                        "assinaturaLocador": ${aditivo.assinaturaLocador?.let { "\"$it\"" } ?: "null"},
+                        "assinaturaLocatario": ${aditivo.assinaturaLocatario?.let { "\"$it\"" } ?: "null"},
+                        "dataCriacao": ${aditivo.dataCriacao.time},
+                        "dataAtualizacao": ${aditivo.dataAtualizacao.time}
+                    }
+                """.trimIndent()
+                adicionarOperacaoSync("AditivoContrato", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("AditivoContrato", id, "CREATE", "PENDING", null, payload)
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar AditivoContrato à fila de sync: ${syncError.message}")
+            }
             id
         } catch (e: Exception) {
             logDbInsertError("ADITIVO", "ContratoID=${aditivo.contratoId}", e)
@@ -2770,6 +2947,26 @@ class AppRepository constructor(
         return try {
             val ids = aditivoContratoDao.inserirAditivoMesas(aditivoMesas)
             logDbInsertSuccess("ADITIVO_MESAS", "IDs=${ids.joinToString()}")
+            // ✅ SINCRONIZAÇÃO: Enfileirar CREATE para cada AditivoMesa
+            try {
+                aditivoMesas.zip(ids).forEach { (mesa, id) ->
+                    val payload = """
+                        {
+                            "id": $id,
+                            "aditivoId": ${mesa.aditivoId},
+                            "mesaId": ${mesa.mesaId},
+                            "tipoEquipamento": "${mesa.tipoEquipamento}",
+                            "numeroSerie": "${mesa.numeroSerie}",
+                            "valorFicha": ${mesa.valorFicha ?: 0.0},
+                            "valorFixo": ${mesa.valorFixo ?: 0.0}
+                        }
+                    """.trimIndent()
+                    adicionarOperacaoSync("AditivoMesa", id, "CREATE", payload, priority = 1)
+                    logarOperacaoSync("AditivoMesa", id, "CREATE", "PENDING", null, payload)
+                }
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao enfileirar AditivoMesa: ${syncError.message}")
+            }
             ids
         } catch (e: Exception) {
             logDbInsertError("ADITIVO_MESAS", "Quantidade=${aditivoMesas.size}", e)
@@ -2834,11 +3031,67 @@ class AppRepository constructor(
     //     }
     // }
 
-    suspend fun atualizarAditivo(aditivo: AditivoContrato) = aditivoContratoDao.atualizarAditivo(aditivo)
-    suspend fun excluirAditivo(aditivo: AditivoContrato) = aditivoContratoDao.excluirAditivo(aditivo)
+    suspend fun atualizarAditivo(aditivo: AditivoContrato) {
+        aditivoContratoDao.atualizarAditivo(aditivo)
+        // ✅ SINCRONIZAÇÃO: Enfileirar UPDATE
+        try {
+            val payload = """
+                {
+                    "id": ${aditivo.id},
+                    "numeroAditivo": "${aditivo.numeroAditivo}",
+                    "contratoId": ${aditivo.contratoId},
+                    "dataAditivo": ${aditivo.dataAditivo.time},
+                    "observacoes": "${aditivo.observacoes ?: ""}",
+                    "tipo": "${aditivo.tipo}",
+                    "assinaturaLocador": ${aditivo.assinaturaLocador?.let { "\"$it\"" } ?: "null"},
+                    "assinaturaLocatario": ${aditivo.assinaturaLocatario?.let { "\"$it\"" } ?: "null"},
+                    "dataCriacao": ${aditivo.dataCriacao.time},
+                    "dataAtualizacao": ${aditivo.dataAtualizacao.time}
+                }
+            """.trimIndent()
+            adicionarOperacaoSync("AditivoContrato", aditivo.id, "UPDATE", payload, priority = 1)
+            logarOperacaoSync("AditivoContrato", aditivo.id, "UPDATE", "PENDING", null, payload)
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao enfileirar UPDATE AditivoContrato: ${e.message}")
+        }
+    }
+    suspend fun excluirAditivo(aditivo: AditivoContrato) {
+        aditivoContratoDao.excluirAditivo(aditivo)
+        // ✅ SINCRONIZAÇÃO: Enfileirar DELETE
+        try {
+            val payload = """{ "id": ${aditivo.id} }"""
+            adicionarOperacaoSync("AditivoContrato", aditivo.id, "DELETE", payload, priority = 1)
+            logarOperacaoSync("AditivoContrato", aditivo.id, "DELETE", "PENDING", null, payload)
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao enfileirar DELETE AditivoContrato: ${e.message}")
+        }
+    }
     suspend fun buscarMesasPorAditivo(aditivoId: Long) = aditivoContratoDao.buscarMesasPorAditivo(aditivoId)
-    suspend fun excluirAditivoMesa(aditivoMesa: AditivoMesa) = aditivoContratoDao.excluirAditivoMesa(aditivoMesa)
-    suspend fun excluirTodasMesasDoAditivo(aditivoId: Long) = aditivoContratoDao.excluirTodasMesasDoAditivo(aditivoId)
+    suspend fun excluirAditivoMesa(aditivoMesa: AditivoMesa) {
+        aditivoContratoDao.excluirAditivoMesa(aditivoMesa)
+        // ✅ SINCRONIZAÇÃO: Enfileirar DELETE
+        try {
+            val payload = """{ "id": ${aditivoMesa.id} }"""
+            adicionarOperacaoSync("AditivoMesa", aditivoMesa.id, "DELETE", payload, priority = 1)
+            logarOperacaoSync("AditivoMesa", aditivoMesa.id, "DELETE", "PENDING", null, payload)
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao enfileirar DELETE AditivoMesa: ${e.message}")
+        }
+    }
+    suspend fun excluirTodasMesasDoAditivo(aditivoId: Long) {
+        // Enfileirar DELETE para todas as mesas do aditivo
+        try {
+            val mesas = aditivoContratoDao.buscarMesasPorAditivo(aditivoId)
+            mesas.forEach { mesa ->
+                val payload = """{ "id": ${mesa.id} }"""
+                adicionarOperacaoSync("AditivoMesa", mesa.id, "DELETE", payload, priority = 1)
+                logarOperacaoSync("AditivoMesa", mesa.id, "DELETE", "PENDING", null, payload)
+            }
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao preparar DELETE das AditivoMesas: ${e.message}")
+        }
+        aditivoContratoDao.excluirTodasMesasDoAditivo(aditivoId)
+    }
     
     // ==================== ASSINATURA REPRESENTANTE LEGAL ====================
     

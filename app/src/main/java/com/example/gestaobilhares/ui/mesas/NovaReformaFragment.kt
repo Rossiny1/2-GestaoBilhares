@@ -470,7 +470,7 @@ class NovaReformaFragment : Fragment() {
      * ✅ NOVO: Mostra seleção de panos para reforma
      */
     private fun mostrarSelecaoPanosReforma() {
-        Log.d("NovaReformaFragment", "Mostrando seleção de panos para reforma")
+        Log.d("NovaReformaFragment", "[PANO] Solicitado abrir seleção de panos (manutenção)")
         
         if (mesaSelecionada == null) {
             Toast.makeText(requireContext(), "Selecione uma mesa primeiro", Toast.LENGTH_SHORT).show()
@@ -486,7 +486,7 @@ class NovaReformaFragment : Fragment() {
             }
         }
         
-        Log.d("NovaReformaFragment", "Tamanho da mesa: $tamanhoMesaStr")
+        Log.d("NovaReformaFragment", "[PANO] Contexto mesa para seleção: tamanho=$tamanhoMesaStr, mesa=${mesaSelecionada?.numero}")
         
         try {
             val dialog = PanoSelectionDialog.newInstance(
@@ -498,7 +498,7 @@ class NovaReformaFragment : Fragment() {
                 tamanhoMesa = tamanhoMesaStr
             )
             
-            Log.d("NovaReformaFragment", "Mostrando diálogo de seleção de panos")
+            Log.d("NovaReformaFragment", "[PANO] Abrindo PanoSelectionDialog (manutenção)")
             dialog.show(childFragmentManager, "select_pano_reforma")
             
         } catch (e: Exception) {

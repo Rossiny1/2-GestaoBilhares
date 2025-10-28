@@ -1540,6 +1540,7 @@ class SettlementFragment : Fragment() {
             }
         }
         
+        Log.d("SettlementFragment", "[PANO] Abrindo seleção de pano (mesaId=${mesaTarget?.id}, tamanhoMesa=$tamanhoMesa)")
         PanoSelectionDialog.newInstance(
             onPanoSelected = { panoSelecionado ->
                 Log.d("SettlementFragment", "Pano selecionado no acerto: ${panoSelecionado.numero}")
@@ -1569,7 +1570,16 @@ class SettlementFragment : Fragment() {
                         }
                     } catch (e: Exception) {
                         Log.e("SettlementFragment", "Erro ao marcar pano como usado: ${e.message}", e)
-                        Toast.makeText(requireContext(), "Erro ao selecionar pano: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Erro ao selecionar pano: ${e.message}", Toast.LENGTH_LONG).show()
+                        
+                        // ✅ CORREÇÃO: Tentar pelo menos marcar o pano como usado no estoque
+                        try {
+                            viewModel.marcarPanoComoUsado(panoSelecionado.numero, "Usado no acerto")
+                            Toast.makeText(requireContext(), "Pano ${panoSelecionado.numero} marcado como usado no estoque", Toast.LENGTH_SHORT).show()
+                        } catch (e2: Exception) {
+                            Log.e("SettlementFragment", "Erro crítico ao marcar pano como usado: ${e2.message}", e2)
+                            Toast.makeText(requireContext(), "Erro crítico: ${e2.message}", Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
             },

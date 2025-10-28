@@ -32,8 +32,6 @@ class PanoSelectionDialog : DialogFragment() {
     private lateinit var adapter: PanoSelectionAdapter
     private var selectedPano: PanoEstoque? = null
     private var onPanoSelected: ((PanoEstoque) -> Unit)? = null
-    
-    lateinit var panoEstoqueRepository: PanoEstoqueRepository
 
     companion object {
         fun newInstance(onPanoSelected: (PanoEstoque) -> Unit, tamanhoMesa: String? = null): PanoSelectionDialog {
@@ -60,12 +58,12 @@ class PanoSelectionDialog : DialogFragment() {
             .setView(binding.root)
             .setPositiveButton("Confirmar") { _, _ ->
                 selectedPano?.let { pano ->
-                    Log.d("PanoSelectionDialog", "Pano confirmado: ${pano.numero}")
+                    Log.d("PanoSelectionDialog", "[PANO] Confirmar selecionado: ${pano.numero} (${pano.cor}/${pano.tamanho})")
                     onPanoSelected?.invoke(pano)
                 }
             }
             .setNegativeButton("Cancelar") { _, _ ->
-                Log.d("PanoSelectionDialog", "Diálogo cancelado pelo usuário")
+                Log.d("PanoSelectionDialog", "[PANO] Diálogo cancelado pelo usuário")
                 dismiss()
             }
             .create()
@@ -106,20 +104,25 @@ class PanoSelectionDialog : DialogFragment() {
 
     private fun loadPanos() {
         // Carregar panos disponíveis do banco de dados
-        // Usar lifecycleScope do DialogFragment, pois onCreateDialog é chamado antes da View existir
-        viewLifecycleOwner.lifecycleScope.launch {
+        // Usar lifecycleScope do Fragment (NÃO viewLifecycleOwner): onCreateDialog não cria view do Fragment
+        lifecycleScope.launch {
             try {
                 val tamanhoMesa = arguments?.getString("tamanho_mesa")
                 
                 if (tamanhoMesa != null) {
-                    // Filtrar por tamanho da mesa
-                    panoEstoqueRepository.buscarDisponiveisPorTamanho(tamanhoMesa).collect { panos ->
-                        adapter.submitList(panos)
+                    // Filtrar por tamanho da mesa usando AppRepository
+                    val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+                    appRepository.obterPanosDisponiveis().collect { panos ->
+                        val panosFiltrados = panos.filter { it.tamanho.equals(tamanhoMesa, ignoreCase = true) }
+                        adapter.submitList(panosFiltrados)
+                        Log.d("PanoSelectionDialog", "[PANO] Panos carregados (filtrados por $tamanhoMesa): ${panosFiltrados.size}")
                     }
                 } else {
-                    // Carregar todos os panos disponíveis
-                    panoEstoqueRepository.listarDisponiveis().collect { panos ->
+                    // Carregar todos os panos disponíveis usando AppRepository
+                    val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+                    appRepository.obterPanosDisponiveis().collect { panos ->
                         adapter.submitList(panos)
+                        Log.d("PanoSelectionDialog", "[PANO] Panos carregados (todos): ${panos.size}")
                     }
                 }
             } catch (e: Exception) {
@@ -227,6 +230,7 @@ class PanoSelectionAdapter(
                 selectedPano = pano
                 onPanoClick(pano)
                 notifyDataSetChanged()
+                android.util.Log.d("PanoSelectionDialog", "[PANO] Item clicado: ${pano.numero} (${pano.cor}/${pano.tamanho})")
             }
         }
     }

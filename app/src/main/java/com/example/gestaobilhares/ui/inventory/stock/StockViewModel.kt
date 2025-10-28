@@ -31,9 +31,9 @@ class StockViewModel constructor(
     private fun loadStockItems() {
         viewModelScope.launch {
             try {
-                // Tentar carregar itens do banco de dados
-                val itemsFromDb = appRepository.obterTodosStockItems().first()
-                if (itemsFromDb.isNotEmpty()) {
+                // ✅ CORREÇÃO: Usar collect() em vez de first() para observar mudanças
+                appRepository.obterTodosStockItems().collect { itemsFromDb ->
+                    android.util.Log.d("StockViewModel", "Carregando ${itemsFromDb.size} itens do banco")
                     _stockItems.value = itemsFromDb.map { entity ->
                         StockItem(
                             id = entity.id,
@@ -44,9 +44,7 @@ class StockViewModel constructor(
                             supplier = entity.supplier
                         )
                     }
-                } else {
-                    // Se o banco estiver vazio, não fazer nada
-                    _stockItems.value = emptyList()
+                    android.util.Log.d("StockViewModel", "Lista atualizada com ${_stockItems.value.size} itens")
                 }
             } catch (e: Exception) {
                 android.util.Log.e("StockViewModel", "Erro ao carregar itens do estoque: ${e.message}", e)
@@ -125,6 +123,15 @@ class StockViewModel constructor(
     }
     
     /**
+     * ✅ NOVO: Recarrega todos os dados do estoque
+     */
+    fun refreshData() {
+        android.util.Log.d("StockViewModel", "Recarregando dados do estoque...")
+        loadStockItems()
+        loadPanosEstoque()
+    }
+    
+    /**
      * ✅ NOVO: Adiciona um item genérico ao estoque
      */
     fun adicionarItemEstoque(stockItem: StockItem) {
@@ -141,16 +148,10 @@ class StockViewModel constructor(
                 val id = appRepository.inserirStockItem(entity)
                 android.util.Log.d("StockViewModel", "Item inserido com ID: $id")
                 
-                // Forçar atualização imediata da lista
-                android.util.Log.d("StockViewModel", "Forçando atualização da lista...")
-                val currentItems = _stockItems.value.toMutableList()
-                val newItem = stockItem.copy(id = id)
-                currentItems.add(newItem)
-                _stockItems.value = currentItems
-                android.util.Log.d("StockViewModel", "Lista atualizada com ${currentItems.size} itens")
+                // ✅ CORREÇÃO: O Flow do banco de dados já irá notificar automaticamente
+                // Não precisamos fazer atualização manual nem recarregar
+                android.util.Log.d("StockViewModel", "Item adicionado com sucesso - Flow irá atualizar automaticamente")
                 
-                // Recarregar itens do estoque para sincronizar com o banco
-                loadStockItems()
             } catch (e: Exception) {
                 android.util.Log.e("StockViewModel", "Erro ao adicionar item ao estoque: ${e.message}", e)
             }
