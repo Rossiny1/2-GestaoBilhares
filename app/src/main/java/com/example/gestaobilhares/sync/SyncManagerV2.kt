@@ -418,6 +418,8 @@ class SyncManagerV2(
         "contratolocacao" -> "contratosLocacao"
         "assinaturarepresentantelegal" -> "assinaturasRepresentanteLegal"
         "logauditoriaassinatura" -> "logsAuditoriaAssinatura"
+        "acertomesa" -> "acertoMesa"
+        "mesareformada" -> "mesasReformadas"
         else -> entityType.lowercase(Locale.getDefault()) + "s"
     }
 
@@ -617,8 +619,18 @@ class SyncManagerV2(
         pullLogsAuditoriaAssinaturaFromFirestore(empresaId)
         delay(500) // Aguardar logs serem inseridos
         
-        // 20. VIGÉSIMO: Criar ciclos automaticamente baseados nos acertos sincronizados
-        android.util.Log.d("SyncManagerV2", "🔄 Fase 20: Criando ciclos automaticamente...")
+        // 20. VIGÉSIMO: Sincronizar AcertoMesa
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 20: Sincronizando ACERTO MESA...")
+        pullAcertoMesaFromFirestore(empresaId)
+        delay(500) // Aguardar acerto mesa serem inseridos
+        
+        // 21. VIGÉSIMO PRIMEIRO: Sincronizar MesaReformada
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 21: Sincronizando MESA REFORMADA...")
+        pullMesaReformadaFromFirestore(empresaId)
+        delay(500) // Aguardar mesa reformada serem inseridas
+        
+        // 22. VIGÉSIMO SEGUNDO: Criar ciclos automaticamente baseados nos acertos sincronizados
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 22: Criando ciclos automaticamente...")
         criarCiclosAutomaticamente()
 
             // ✅ NOVO PASSO: Remapear acertos importados para o ciclo local correto (numero/ano -> id)
@@ -2602,6 +2614,126 @@ class SyncManagerV2(
             
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar logs auditoria assinatura: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Sincronizar AcertoMesa do Firestore
+     */
+    private suspend fun pullAcertoMesaFromFirestore(empresaId: String) {
+        try {
+            android.util.Log.d("SyncManagerV2", "🔄 Sincronizando AcertoMesa do Firestore...")
+            
+            val collectionName = getCollectionName("acertoMesa")
+            val snapshot = firestore.collection("empresas")
+                .document(empresaId)
+                .collection(collectionName)
+                .get()
+                .await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} AcertoMesa no Firestore")
+            
+            val acertoMesaDao = database.acertoMesaDao()
+            val acertoMesasExistentes = acertoMesaDao.buscarPorAcertoId(0L) // Busca vazia para obter lista
+            
+            for (document in snapshot) {
+                try {
+                    val data = document.data
+                    val roomId = document.id.toLongOrNull() ?: continue
+                    
+                    // Verificar se já existe
+                    val jaExiste = acertoMesasExistentes.any { acertoMesa -> acertoMesa.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "⏭️ AcertoMesa $roomId já existe, pulando...")
+                        continue
+                    }
+                    
+                    val acertoMesa = AcertoMesa(
+                        id = roomId,
+                        acertoId = (data["acertoId"] as? Number)?.toLong() ?: 0L,
+                        mesaId = (data["mesaId"] as? Number)?.toLong() ?: 0L,
+                        relogioInicial = (data["relogioInicial"] as? Number)?.toInt() ?: 0,
+                        relogioFinal = (data["relogioFinal"] as? Number)?.toInt() ?: 0,
+                        fichasJogadas = (data["fichasJogadas"] as? Number)?.toInt() ?: 0,
+                        valorFicha = (data["valorFicha"] as? Number)?.toDouble() ?: 0.0,
+                        comissaoFicha = (data["comissaoFicha"] as? Number)?.toDouble() ?: 0.0,
+                        subtotal = (data["subtotal"] as? Number)?.toDouble() ?: 0.0
+                    )
+                    
+                    acertoMesaDao.inserir(acertoMesa)
+                    android.util.Log.d("SyncManagerV2", "✅ AcertoMesa $roomId inserido")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar AcertoMesa ${document.id}: ${e.message}")
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "✅ Sincronização de AcertoMesa concluída")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao sincronizar AcertoMesa: ${e.message}")
+        }
+    }
+
+    /**
+     * Sincronizar MesaReformada do Firestore
+     */
+    private suspend fun pullMesaReformadaFromFirestore(empresaId: String) {
+        try {
+            android.util.Log.d("SyncManagerV2", "🔄 Sincronizando MesaReformada do Firestore...")
+            
+            val collectionName = getCollectionName("mesaReformada")
+            val snapshot = firestore.collection("empresas")
+                .document(empresaId)
+                .collection(collectionName)
+                .get()
+                .await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} MesaReformada no Firestore")
+            
+            val mesaReformadaDao = database.mesaReformadaDao()
+            val mesasReformadasExistentes = runBlocking { mesaReformadaDao.listarTodas().first() }
+            
+            for (document in snapshot) {
+                try {
+                    val data = document.data
+                    val roomId = document.id.toLongOrNull() ?: continue
+                    
+                    // Verificar se já existe
+                    val jaExiste = mesasReformadasExistentes.any { mesaReformada -> mesaReformada.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "⏭️ MesaReformada $roomId já existe, pulando...")
+                        continue
+                    }
+                    
+                    val mesaReformada = MesaReformada(
+                        id = roomId,
+                        mesaId = (data["mesaId"] as? Number)?.toLong() ?: 0L,
+                        numeroMesa = data["numeroMesa"] as? String ?: "",
+                        tipoMesa = TipoMesa.valueOf(data["tipoMesa"] as? String ?: "SINUCA"),
+                        tamanhoMesa = TamanhoMesa.valueOf(data["tamanhoMesa"] as? String ?: "MEDIA"),
+                        pintura = (data["pintura"] as? Boolean) ?: false,
+                        tabela = (data["tabela"] as? Boolean) ?: false,
+                        panos = (data["panos"] as? Boolean) ?: false,
+                        numeroPanos = data["numeroPanos"] as? String,
+                        outros = (data["outros"] as? Boolean) ?: false,
+                        observacoes = data["observacoes"] as? String,
+                        fotoReforma = data["fotoReforma"] as? String,
+                        dataReforma = Date((data["dataReforma"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                    )
+                    
+                    mesaReformadaDao.inserir(mesaReformada)
+                    android.util.Log.d("SyncManagerV2", "✅ MesaReformada $roomId inserido")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar MesaReformada ${document.id}: ${e.message}")
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "✅ Sincronização de MesaReformada concluída")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao sincronizar MesaReformada: ${e.message}")
         }
     }
 

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import android.util.Log
 import com.example.gestaobilhares.BuildConfig
+import com.google.gson.Gson
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 // ✅ FASE 4C: WorkManager para processamento em background
@@ -3998,6 +3999,69 @@ class AppRepository constructor(
         transactionOptimizer.cancelPendingTransactions()
     }
     
+    /**
+     * ✅ MÉTODOS PUSH GENÉRICOS - Evitando duplicação de código
+     * Implementação eficiente para sincronização de entidades
+     */
+    
+    /**
+     * Inserir AcertoMesa com sincronização
+     */
+    suspend fun inserirAcertoMesaSync(acertoMesa: AcertoMesa): Long {
+        val id = acertoMesaDao.inserir(acertoMesa)
+        
+        try {
+            val payload = mapOf(
+                "id" to id,
+                "acertoId" to acertoMesa.acertoId,
+                "mesaId" to acertoMesa.mesaId,
+                "relogioInicial" to acertoMesa.relogioInicial,
+                "relogioFinal" to acertoMesa.relogioFinal,
+                "valorFicha" to acertoMesa.valorFicha,
+                "comissaoFicha" to acertoMesa.comissaoFicha,
+                "subtotal" to acertoMesa.subtotal
+            )
+            
+            adicionarOperacaoSync("ACERTOMESA", id, "INSERT", Gson().toJson(payload))
+            logarOperacaoSync("ACERTOMESA", id, "INSERT", "Adicionado à fila de sync")
+            
+        } catch (e: Exception) {
+            Log.e("AppRepository", "Erro ao adicionar AcertoMesa à fila de sync: ${e.message}")
+        }
+        
+        return id
+    }
+    
+    /**
+     * Atualizar AcertoMesa com sincronização
+     */
+    suspend fun atualizarAcertoMesaSync(acertoMesa: AcertoMesa) {
+        acertoMesaDao.atualizar(acertoMesa)
+        
+        try {
+            adicionarOperacaoSync("ACERTOMESA", acertoMesa.id, "UPDATE", Gson().toJson(acertoMesa))
+            logarOperacaoSync("ACERTOMESA", acertoMesa.id, "UPDATE", "Adicionado à fila de sync")
+            
+        } catch (e: Exception) {
+            Log.e("AppRepository", "Erro ao adicionar atualização de AcertoMesa à fila de sync: ${e.message}")
+        }
+    }
+    
+    /**
+     * Atualizar MesaReformada com sincronização (método já existe, apenas adicionando sync)
+     */
+    suspend fun atualizarMesaReformadaSync(mesaReformada: MesaReformada) {
+        mesaReformadaDao.atualizar(mesaReformada)
+        
+        try {
+            adicionarOperacaoSync("MESAREFORMADA", mesaReformada.id, "UPDATE", Gson().toJson(mesaReformada))
+            logarOperacaoSync("MESAREFORMADA", mesaReformada.id, "UPDATE", "Adicionado à fila de sync")
+            
+        } catch (e: Exception) {
+            Log.e("AppRepository", "Erro ao adicionar atualização de MesaReformada à fila de sync: ${e.message}")
+        }
+    }
+
     /**
      * Limpa todas as otimizações de banco
      */
