@@ -7,6 +7,9 @@ import java.util.Date
 
 @Dao
 interface HistoricoCombustivelVeiculoDao {
+    @Query("SELECT * FROM historico_combustivel_veiculo ORDER BY data_abastecimento DESC")
+    fun listarTodos(): Flow<List<HistoricoCombustivelVeiculo>>
+    
     @Query("SELECT * FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId ORDER BY data_abastecimento DESC")
     fun listarPorVeiculo(veiculoId: Long): Flow<List<HistoricoCombustivelVeiculo>>
     

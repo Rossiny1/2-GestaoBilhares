@@ -1493,8 +1493,8 @@ class AppRepository constructor(
 
     // ==================== HISTORICO MANUTENCAO VEICULO ====================
     
-    fun obterTodosHistoricoManutencaoVeiculo() = historicoManutencaoVeiculoDao.listarPorVeiculo(0L) // Lista todos
-    suspend fun obterHistoricoManutencaoVeiculoPorId(id: Long) = historicoManutencaoVeiculoDao.listarPorVeiculo(0L).first().find { it.id == id }
+    fun obterTodosHistoricoManutencaoVeiculo() = historicoManutencaoVeiculoDao.listarTodos()
+    suspend fun obterHistoricoManutencaoVeiculoPorId(id: Long) = historicoManutencaoVeiculoDao.listarTodos().first().find { it.id == id }
     suspend fun inserirHistoricoManutencaoVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo): Long {
         logDbInsertStart("HISTORICO_MANUTENCAO_VEICULO", "Veiculo=${historico.veiculoId}, Tipo=${historico.tipoManutencao}")
         return try {
@@ -1573,8 +1573,8 @@ class AppRepository constructor(
 
     // ==================== HISTORICO COMBUSTIVEL VEICULO ====================
     
-    fun obterTodosHistoricoCombustivelVeiculo() = historicoCombustivelVeiculoDao.listarPorVeiculo(0L) // Lista todos
-    suspend fun obterHistoricoCombustivelVeiculoPorId(id: Long) = historicoCombustivelVeiculoDao.listarPorVeiculo(0L).first().find { it.id == id }
+    fun obterTodosHistoricoCombustivelVeiculo() = historicoCombustivelVeiculoDao.listarTodos()
+    suspend fun obterHistoricoCombustivelVeiculoPorId(id: Long) = historicoCombustivelVeiculoDao.listarTodos().first().find { it.id == id }
     suspend fun inserirHistoricoCombustivelVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo): Long {
         logDbInsertStart("HISTORICO_COMBUSTIVEL_VEICULO", "Veiculo=${historico.veiculoId}, Litros=${historico.litros}")
         return try {
