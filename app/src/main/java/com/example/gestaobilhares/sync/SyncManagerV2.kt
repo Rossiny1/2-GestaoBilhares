@@ -518,127 +518,112 @@ class SyncManagerV2(
         // Verificar se existe pelo menos uma rota antes de sincronizar clientes
         val rotasExistentes = appRepository.obterTodasRotas().first()
         if (rotasExistentes.isEmpty()) {
-            android.util.Log.w("SyncManagerV2", "⚠️ Nenhuma rota encontrada no Room. Criando rota padrão...")
-            try {
-                val rotaPadrao = com.example.gestaobilhares.data.entities.Rota(
-                    nome = "Rota Padrão",
-                    descricao = "Rota criada automaticamente",
-                    ativa = true,
-                    dataCriacao = System.currentTimeMillis()
-                )
-                val rotaDao = database.rotaDao()
-                val rotaId = rotaDao.insertRota(rotaPadrao)
-                android.util.Log.d("SyncManagerV2", "✅ Rota padrão criada: ID $rotaId")
-            } catch (e: Exception) {
-                android.util.Log.e("SyncManagerV2", "❌ Erro ao criar rota padrão: ${e.message}")
-            }
-        } else {
-            android.util.Log.d("SyncManagerV2", "✅ Encontradas ${rotasExistentes.size} rotas no Room")
+            android.util.Log.w("SyncManagerV2", "⚠️ Nenhuma rota encontrada no Room. Os clientes precisam de uma rota para serem sincronizados.")
         }
-            
-            pullClientesFromFirestore(empresaId)
-            delay(500) // Aguardar clientes serem inseridos
-            
-            // 3. TERCEIRO: Baixar mesas do Firestore (dependem dos clientes)
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 3: Sincronizando MESAS...")
-            pullMesasFromFirestore(empresaId)
-            delay(500) // Aguardar mesas serem inseridas
-            
-            // 4. QUARTO: Baixar acertos do Firestore (dependem dos clientes)
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 4: Sincronizando ACERTOS...")
-            pullAcertosFromFirestore(empresaId)
-            delay(500) // Aguardar acertos serem inseridos
-            
-            // 5. QUINTO: Baixar ciclos do Firestore (dependem dos acertos)
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 5: Sincronizando CICLOS...")
-            pullCiclosFromFirestore(empresaId)
-            delay(500) // Aguardar ciclos serem inseridos
-            
-            // 6. SEXTO: Baixar colaboradores do Firestore
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 6: Sincronizando COLABORADORES...")
-            pullColaboradoresFromFirestore(empresaId)
-            delay(500) // Aguardar colaboradores serem inseridos
-            
-            // 7. SÉTIMO: Baixar despesas do Firestore
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 7: Sincronizando DESPESAS...")
-            pullDespesasFromFirestore(empresaId)
-            delay(500) // Aguardar despesas serem inseridas
-            
-            // 8. OITAVO: Baixar panos estoque do Firestore
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 8: Sincronizando PANOS ESTOQUE...")
-            pullPanoEstoqueFromFirestore(empresaId)
-            delay(500) // Aguardar panos serem inseridos
-            
-            // 9. NONO: Baixar mesas vendidas do Firestore
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 9: Sincronizando MESAS VENDIDAS...")
-            pullMesaVendidaFromFirestore(empresaId)
-            delay(500) // Aguardar mesas vendidas serem inseridas
-            
-            // 10. DÉCIMO: Sincronizar StockItems
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 10: Sincronizando STOCK ITEMS...")
-            pullStockItemsFromFirestore(empresaId)
-            delay(500) // Aguardar stock items serem inseridos
-            
-            // 11. DÉCIMO PRIMEIRO: Sincronizar Veículos
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 11: Sincronizando VEÍCULOS...")
-            pullVeiculosFromFirestore(empresaId)
-            delay(500) // Aguardar veículos serem inseridos
-            
-            // 12. DÉCIMO SEGUNDO: Sincronizar Histórico Manutenção Mesa
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 12: Sincronizando HISTÓRICO MANUTENÇÃO MESA...")
-            pullHistoricoManutencaoMesaFromFirestore(empresaId)
-            delay(500) // Aguardar histórico mesa serem inseridos
-            
-            // 13. DÉCIMO TERCEIRO: Sincronizar Histórico Manutenção Veículo
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 13: Sincronizando HISTÓRICO MANUTENÇÃO VEÍCULO...")
-            pullHistoricoManutencaoVeiculoFromFirestore(empresaId)
-            delay(500) // Aguardar histórico veículo serem inseridos
-            
-            // 14. DÉCIMO QUARTO: Sincronizar Histórico Combustível Veículo
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 14: Sincronizando HISTÓRICO COMBUSTÍVEL VEÍCULO...")
-            pullHistoricoCombustivelVeiculoFromFirestore(empresaId)
-            delay(500) // Aguardar histórico combustível serem inseridos
-            
-            // 15. DÉCIMO QUINTO: Sincronizar Categorias Despesa
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 15: Sincronizando CATEGORIAS DESPESA...")
-            pullCategoriasDespesaFromFirestore(empresaId)
-            delay(500) // Aguardar categorias serem inseridas
-            
-            // 16. DÉCIMO SEXTO: Sincronizar Tipos Despesa
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 16: Sincronizando TIPOS DESPESA...")
-            pullTiposDespesaFromFirestore(empresaId)
-            delay(500) // Aguardar tipos serem inseridos
-            
-            // 17. DÉCIMO SÉTIMO: Sincronizar Contratos Locação
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 17: Sincronizando CONTRATOS LOCAÇÃO...")
-            pullContratosLocacaoFromFirestore(empresaId)
-            delay(500) // Aguardar contratos serem inseridos
-            
-            // 17.0.1: Sincronizar Metas (dependem de colaboradores/rotas e opcionalmente ciclo)
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 17.0.1: Sincronizando METAS...")
-            pullMetasFromFirestore(empresaId)
-            delay(300)
+        
+        pullClientesFromFirestore(empresaId)
+        delay(500) // Aguardar clientes serem inseridos
+        
+        // 3. TERCEIRO: Baixar mesas do Firestore (dependem dos clientes)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 3: Sincronizando MESAS...")
+        pullMesasFromFirestore(empresaId)
+        delay(500) // Aguardar mesas serem inseridas
+        
+        // 4. QUARTO: Baixar acertos do Firestore (dependem dos clientes)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 4: Sincronizando ACERTOS...")
+        pullAcertosFromFirestore(empresaId)
+        delay(500) // Aguardar acertos serem inseridos
+        
+        // 5. QUINTO: Baixar ciclos do Firestore (dependem dos acertos)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 5: Sincronizando CICLOS...")
+        pullCiclosFromFirestore(empresaId)
+        delay(500) // Aguardar ciclos serem inseridos
+        
+        // 6. SEXTO: Baixar colaboradores do Firestore
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 6: Sincronizando COLABORADORES...")
+        pullColaboradoresFromFirestore(empresaId)
+        delay(500) // Aguardar colaboradores serem inseridos
+        
+        // 7. SÉTIMO: Baixar despesas do Firestore
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 7: Sincronizando DESPESAS...")
+        pullDespesasFromFirestore(empresaId)
+        delay(500) // Aguardar despesas serem inseridas
+        
+        // 8. OITAVO: Baixar panos estoque do Firestore
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 8: Sincronizando PANOS ESTOQUE...")
+        pullPanoEstoqueFromFirestore(empresaId)
+        delay(500) // Aguardar panos serem inseridos
+        
+        // 9. NONO: Baixar mesas vendidas do Firestore
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 9: Sincronizando MESAS VENDIDAS...")
+        pullMesaVendidaFromFirestore(empresaId)
+        delay(500) // Aguardar mesas vendidas serem inseridas
+        
+        // 10. DÉCIMO: Sincronizar StockItems
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 10: Sincronizando STOCK ITEMS...")
+        pullStockItemsFromFirestore(empresaId)
+        delay(500) // Aguardar stock items serem inseridos
+        
+        // 11. DÉCIMO PRIMEIRO: Sincronizar Veículos
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 11: Sincronizando VEÍCULOS...")
+        pullVeiculosFromFirestore(empresaId)
+        delay(500) // Aguardar veículos serem inseridos
+        
+        // 12. DÉCIMO SEGUNDO: Sincronizar Histórico Manutenção Mesa
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 12: Sincronizando HISTÓRICO MANUTENÇÃO MESA...")
+        pullHistoricoManutencaoMesaFromFirestore(empresaId)
+        delay(500) // Aguardar histórico mesa serem inseridos
+        
+        // 13. DÉCIMO TERCEIRO: Sincronizar Histórico Manutenção Veículo
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 13: Sincronizando HISTÓRICO MANUTENÇÃO VEÍCULO...")
+        pullHistoricoManutencaoVeiculoFromFirestore(empresaId)
+        delay(500) // Aguardar histórico veículo serem inseridos
+        
+        // 14. DÉCIMO QUARTO: Sincronizar Histórico Combustível Veículo
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 14: Sincronizando HISTÓRICO COMBUSTÍVEL VEÍCULO...")
+        pullHistoricoCombustivelVeiculoFromFirestore(empresaId)
+        delay(500) // Aguardar histórico combustível serem inseridos
+        
+        // 15. DÉCIMO QUINTO: Sincronizar Categorias Despesa
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 15: Sincronizando CATEGORIAS DESPESA...")
+        pullCategoriasDespesaFromFirestore(empresaId)
+        delay(500) // Aguardar categorias serem inseridas
+        
+        // 16. DÉCIMO SEXTO: Sincronizar Tipos Despesa
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 16: Sincronizando TIPOS DESPESA...")
+        pullTiposDespesaFromFirestore(empresaId)
+        delay(500) // Aguardar tipos serem inseridos
+        
+        // 17. DÉCIMO SÉTIMO: Sincronizar Contratos Locação
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17: Sincronizando CONTRATOS LOCAÇÃO...")
+        pullContratosLocacaoFromFirestore(empresaId)
+        delay(500) // Aguardar contratos serem inseridos
+        
+        // 17.0.1: Sincronizar Metas (dependem de colaboradores/rotas e opcionalmente ciclo)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17.0.1: Sincronizando METAS...")
+        pullMetasFromFirestore(empresaId)
+        delay(300)
 
-            // 17.0.2: Sincronizar ColaboradorRota
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 17.0.2: Sincronizando COLABORADOR_ROTA...")
-            pullColaboradoresRotasFromFirestore(empresaId)
-            delay(300)
+        // 17.0.2: Sincronizar ColaboradorRota
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17.0.2: Sincronizando COLABORADOR_ROTA...")
+        pullColaboradoresRotasFromFirestore(empresaId)
+        delay(300)
 
-            // 17.1: Sincronizar Aditivos de Contrato
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 17.1: Sincronizando ADITIVOS DE CONTRATO...")
-            pullAditivosContratoFromFirestore(empresaId)
-            delay(300)
-            
-            // 17.2: Sincronizar Aditivo Mesas
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 17.2: Sincronizando ADITIVO MESAS...")
-            pullAditivoMesasFromFirestore(empresaId)
-            delay(300)
+        // 17.1: Sincronizar Aditivos de Contrato
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17.1: Sincronizando ADITIVOS DE CONTRATO...")
+        pullAditivosContratoFromFirestore(empresaId)
+        delay(300)
+        
+        // 17.2: Sincronizar Aditivo Mesas
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17.2: Sincronizando ADITIVO MESAS...")
+        pullAditivoMesasFromFirestore(empresaId)
+        delay(300)
 
-            // 17.3: Sincronizar Contrato Mesas
-            android.util.Log.d("SyncManagerV2", "🔄 Fase 17.3: Sincronizando CONTRATO MESAS...")
-            pullContratoMesasFromFirestore(empresaId)
-            delay(300)
-            
+        // 17.3: Sincronizar Contrato Mesas
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17.3: Sincronizando CONTRATO MESAS...")
+        pullContratoMesasFromFirestore(empresaId)
+        delay(300)
+        
         // 18. DÉCIMO OITAVO: Sincronizar Assinaturas Representante Legal
         android.util.Log.d("SyncManagerV2", "🔄 Fase 18: Sincronizando ASSINATURAS REPRESENTANTE LEGAL...")
         pullAssinaturasRepresentanteLegalFromFirestore(empresaId)
