@@ -8,14 +8,16 @@ import kotlinx.coroutines.flow.Flow
  * ✅ NOVO: SISTEMA DE VENDA DE MESAS
  */
 class MesaVendidaRepository constructor(
-    private val mesaVendidaDao: MesaVendidaDao
+    private val mesaVendidaDao: MesaVendidaDao,
+    private val appRepository: AppRepository
 ) {
 
     /**
      * Insere uma nova mesa vendida
+     * ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
      */
     suspend fun inserir(mesaVendida: MesaVendida): Long {
-        return mesaVendidaDao.inserir(mesaVendida)
+        return appRepository.inserirMesaVendida(mesaVendida)
     }
 
     /**
@@ -83,9 +85,10 @@ class MesaVendidaRepository constructor(
 
     /**
      * Atualiza uma mesa vendida
+     * ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
      */
     suspend fun atualizar(mesaVendida: MesaVendida) {
-        mesaVendidaDao.atualizar(mesaVendida)
+        appRepository.atualizarMesaVendida(mesaVendida)
     }
 
     /**

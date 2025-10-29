@@ -2416,13 +2416,12 @@ class AppRepository constructor(
                     {
                         "id": $id,
                         "colaboradorId": ${meta.colaboradorId},
-                        "rotaId": ${meta.rotaId ?: 0L},
-                        "cicloId": ${meta.cicloId ?: 0L},
+                        "rotaId": ${if (meta.rotaId != null) meta.rotaId else "null"},
+                        "cicloId": ${meta.cicloId},
                         "tipoMeta": "${meta.tipoMeta}",
                         "valorMeta": ${meta.valorMeta},
                         "valorAtual": ${meta.valorAtual},
                         "ativo": ${meta.ativo},
-                        "dataCriacao": ${meta.dataCriacao.time},
                         "dataCriacao": ${meta.dataCriacao.time}
                     }
                 """.trimIndent()
@@ -2445,8 +2444,8 @@ class AppRepository constructor(
                 {
                     "id": ${meta.id},
                     "colaboradorId": ${meta.colaboradorId},
-                    "rotaId": ${meta.rotaId ?: 0L},
-                    "cicloId": ${meta.cicloId ?: 0L},
+                    "rotaId": ${if (meta.rotaId != null) meta.rotaId else "null"},
+                    "cicloId": ${meta.cicloId},
                     "tipoMeta": "${meta.tipoMeta}",
                     "valorMeta": ${meta.valorMeta},
                     "valorAtual": ${meta.valorAtual},

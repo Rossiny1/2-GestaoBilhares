@@ -19,6 +19,7 @@ import com.example.gestaobilhares.data.entities.NovoTipoDespesa
 import com.example.gestaobilhares.data.entities.EdicaoTipoDespesa
 import com.example.gestaobilhares.data.repository.CategoriaDespesaRepository
 import com.example.gestaobilhares.data.repository.TipoDespesaRepository
+import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.expenses.adapter.ExpenseTypeAdapter
 import com.example.gestaobilhares.ui.expenses.dialog.AddEditTypeDialog
 import com.google.android.material.snackbar.Snackbar
@@ -110,8 +111,9 @@ class ExpenseTypesFragment : Fragment() {
                 if (!isAdded || context == null) return@launch
                 
                 val database = AppDatabase.getDatabase(requireContext())
-                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao())
-                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao())
+                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao(), appRepository)
+                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao(), appRepository)
                 
                 // Carregar categorias e tipos em paralelo
                 launch {
@@ -167,7 +169,8 @@ class ExpenseTypesFragment : Fragment() {
                 if (!isAdded || context == null) return@launch
                 
                 val database = AppDatabase.getDatabase(requireContext())
-                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao())
+                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao(), appRepository)
                 
                 val novoTipo = NovoTipoDespesa(
                     categoriaId = categoryId,
@@ -203,7 +206,8 @@ class ExpenseTypesFragment : Fragment() {
                 if (!isAdded || context == null) return@launch
                 
                 val database = AppDatabase.getDatabase(requireContext())
-                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao())
+                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao(), appRepository)
                 
                 val edicaoTipo = EdicaoTipoDespesa(
                     id = type.id,
@@ -240,7 +244,8 @@ class ExpenseTypesFragment : Fragment() {
                 if (!isAdded || context == null) return@launch
                 
                 val database = AppDatabase.getDatabase(requireContext())
-                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao())
+                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao(), appRepository)
                 
                 tipoRepository.deletar(type.tipoDespesa)
                 

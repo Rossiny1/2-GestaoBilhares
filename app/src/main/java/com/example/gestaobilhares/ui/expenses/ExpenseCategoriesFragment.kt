@@ -16,6 +16,7 @@ import com.example.gestaobilhares.data.entities.CategoriaDespesa
 import com.example.gestaobilhares.data.entities.NovaCategoriaDespesa
 import com.example.gestaobilhares.data.entities.EdicaoCategoriaDespesa
 import com.example.gestaobilhares.data.repository.CategoriaDespesaRepository
+import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.expenses.adapter.ExpenseCategoryAdapter
 import com.example.gestaobilhares.ui.expenses.dialog.AddEditCategoryDialog
 import com.google.android.material.snackbar.Snackbar
@@ -106,7 +107,8 @@ class ExpenseCategoriesFragment : Fragment() {
                 if (!isAdded || context == null) return@launch
                 
                 val database = AppDatabase.getDatabase(requireContext())
-                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao())
+                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao(), appRepository)
                 
                 categoriaRepository.buscarAtivas().collect { categorias ->
                     if (!isAdded) return@collect
@@ -149,7 +151,8 @@ class ExpenseCategoriesFragment : Fragment() {
                 if (!isAdded || context == null) return@launch
                 
                 val database = AppDatabase.getDatabase(requireContext())
-                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao())
+                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao(), appRepository)
                 
                 val novaCategoria = NovaCategoriaDespesa(
                     nome = name,
@@ -184,7 +187,8 @@ class ExpenseCategoriesFragment : Fragment() {
                 if (!isAdded || context == null) return@launch
                 
                 val database = AppDatabase.getDatabase(requireContext())
-                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao())
+                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao(), appRepository)
                 
                 val edicaoCategoria = EdicaoCategoriaDespesa(
                     id = category.id,
@@ -220,7 +224,8 @@ class ExpenseCategoriesFragment : Fragment() {
                 if (!isAdded || context == null) return@launch
                 
                 val database = AppDatabase.getDatabase(requireContext())
-                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao())
+                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao(), appRepository)
                 
                 categoriaRepository.deletar(category)
                 

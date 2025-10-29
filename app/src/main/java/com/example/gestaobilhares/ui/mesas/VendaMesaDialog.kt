@@ -78,7 +78,7 @@ class VendaMesaDialog : DialogFragment() {
             android.util.Log.d(TAG, "onCreateDialog() - inicializando dependencias e UI")
             database = AppDatabase.getDatabase(requireContext())
             appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-            mesaVendidaRepository = MesaVendidaRepository(database.mesaVendidaDao())
+            mesaVendidaRepository = MesaVendidaRepository(database.mesaVendidaDao(), appRepository)
 
             setupUI()
             setupClickListeners()
