@@ -644,9 +644,11 @@ class SyncManagerV2(
         pullMesaReformadaFromFirestore(empresaId)
         delay(500) // Aguardar mesa reformada serem inseridas
         
-        // 22. VIGÉSIMO SEGUNDO: Criar ciclos automaticamente baseados nos acertos sincronizados
-        android.util.Log.d("SyncManagerV2", "🔄 Fase 22: Criando ciclos automaticamente...")
-        criarCiclosAutomaticamente()
+        // 22. VIGÉSIMO SEGUNDO: (REMOVIDO) NÃO criar ciclos automaticamente após PULL
+        // Motivo: Garantir espelhamento 1:1 com a nuvem. Se a nuvem já contém os ciclos
+        // corretos (ex.: 3º e 4º em andamento), criar localmente pode introduzir
+        // inconsistências (ex.: 1º finalizado). Mantemos apenas os ciclos vindos do Firestore.
+        android.util.Log.d("SyncManagerV2", "⏭️ Fase 22: Criação automática de ciclos desativada para manter espelho 1:1")
 
             // ✅ NOVO PASSO: Remapear acertos importados para o ciclo local correto (numero/ano -> id)
             try {
@@ -654,6 +656,14 @@ class SyncManagerV2(
                 remapearCicloIdDosAcertosParaIdsLocais()
             } catch (e: Exception) {
                 android.util.Log.w("SyncManagerV2", "⚠️ Erro ao remapear cicloId dos acertos: ${e.message}")
+            }
+
+            // ✅ NOVO: Alinhar campos da tabela de rotas (ciclo atual e datas) com o último ciclo importado
+            try {
+                android.util.Log.d("SyncManagerV2", "🔄 Alinhando rotas com ciclo atual importado...")
+                alinharRotasComCicloAtualImportado()
+            } catch (e: Exception) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Erro ao alinhar rotas com ciclo atual: ${e.message}")
             }
             
             // ✅ CORREÇÃO CRÍTICA: Corrigir acertos existentes com status PENDENTE
@@ -723,6 +733,51 @@ class SyncManagerV2(
                 android.util.Log.w("SyncManagerV2", "⚠️ Falha ao remapear acertos para rota ${rota.nome}: ${e.message}")
             }
         }
+    }
+
+    /**
+     * Após importar ciclos do Firestore, garantimos que os campos da rota reflitam o ciclo atual
+     * para que telas que dependem de `Rota.cicloAcertoAtual/anoCiclo/dataInicioCiclo/dataFimCiclo`
+     * exibam exatamente o que veio da nuvem (espelho 1:1).
+     */
+    private suspend fun alinharRotasComCicloAtualImportado() {
+        val rotaDao = database.rotaDao()
+        val cicloDao = database.cicloAcertoDao()
+
+        // Buscar todas as rotas atuais
+        val rotas = appRepository.obterTodasRotas().first()
+        var rotasAtualizadas = 0
+
+        for (rota in rotas) {
+            try {
+                val cicloAtual = cicloDao.buscarCicloAtualPorRota(rota.id)
+                if (cicloAtual != null) {
+                    val statusRota = if (cicloAtual.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO) {
+                        com.example.gestaobilhares.data.entities.StatusRota.EM_ANDAMENTO
+                    } else {
+                        com.example.gestaobilhares.data.entities.StatusRota.FINALIZADA
+                    }
+
+                    val rotaAtualizada = rota.copy(
+                        statusAtual = statusRota,
+                        cicloAcertoAtual = cicloAtual.numeroCiclo,
+                        anoCiclo = cicloAtual.ano,
+                        dataInicioCiclo = cicloAtual.dataInicio.time,
+                        dataFimCiclo = cicloAtual.dataFim?.time
+                    )
+                    rotaDao.updateRota(rotaAtualizada)
+                    rotasAtualizadas++
+                    android.util.Log.d(
+                        "SyncManagerV2",
+                        "✅ Rota '${rota.nome}' alinhada com ciclo ${cicloAtual.numeroCiclo} (${cicloAtual.status})"
+                    )
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Falha ao alinhar rota ${rota.nome}: ${e.message}")
+            }
+        }
+
+        android.util.Log.d("SyncManagerV2", "📊 Rotas alinhadas: $rotasAtualizadas de ${rotas.size}")
     }
     
     /**
@@ -1019,10 +1074,11 @@ class SyncManagerV2(
                 try {
                     val data = document.data ?: continue
                     val roomId = data["roomId"] as? Long
-                    val numeroCiclo = data["numeroCiclo"] as? Double
-                    val rotaId = data["rotaId"] as? Double
+                    val numeroCiclo = (data["numeroCiclo"] as? Double)?.toInt() ?: (data["numeroCiclo"] as? Long)?.toInt()
+                    val rotaId = (data["rotaId"] as? Double)?.toLong() ?: (data["rotaId"] as? Long)
                     
-                    android.util.Log.d("SyncManagerV2", "🔍 Processando ciclo: ${numeroCiclo}º (Room ID: $roomId)")
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando ciclo: ${numeroCiclo}º (Room ID: $roomId, Rota ID: $rotaId)")
+                    android.util.Log.d("SyncManagerV2", "   Dados originais: numeroCiclo=${data["numeroCiclo"]}, rotaId=${data["rotaId"]}")
                     
                     if (roomId != null && numeroCiclo != null && rotaId != null) {
                         // Verificar se já existe no Room
@@ -1037,10 +1093,11 @@ class SyncManagerV2(
                         
                         if (cicloExistente == null) {
                             // Criar ciclo no Room baseado nos dados do Firestore
+                            // IMPORTANTE: Preservar numeroCiclo exatamente como foi exportado
                             val ciclo = com.example.gestaobilhares.data.entities.CicloAcertoEntity(
                                 id = roomId,
-                                rotaId = rotaId.toLong(),
-                                numeroCiclo = numeroCiclo.toInt(),
+                                rotaId = rotaId,
+                                numeroCiclo = numeroCiclo,
                                 ano = (data["ano"] as? Double)?.toInt() ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR),
                                 dataInicio = try {
                                     val dataInicioStr = data["dataInicio"] as? String
