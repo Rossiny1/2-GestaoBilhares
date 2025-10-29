@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.Flow
  * Repository para gerenciar categorias de despesas.
  */
 class CategoriaDespesaRepository constructor(
-    private val categoriaDespesaDao: CategoriaDespesaDao
+    private val categoriaDespesaDao: CategoriaDespesaDao,
+    private val appRepository: AppRepository
 ) {
     
     
@@ -76,14 +77,10 @@ class CategoriaDespesaRepository constructor(
     
     /**
      * Cria uma nova categoria a partir dos dados fornecidos.
+     * ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
      */
     suspend fun criarCategoria(dados: NovaCategoriaDespesa): Long {
-        val categoria = CategoriaDespesa(
-            nome = dados.nome.trim(),
-            descricao = dados.descricao.trim(),
-            criadoPor = dados.criadoPor
-        )
-        return inserir(categoria)
+        return appRepository.criarCategoria(dados)
     }
     
     /**

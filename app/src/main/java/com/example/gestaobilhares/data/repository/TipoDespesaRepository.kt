@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.Flow
  * Repository para gerenciar tipos de despesas.
  */
 class TipoDespesaRepository constructor(
-    private val tipoDespesaDao: TipoDespesaDao
+    private val tipoDespesaDao: TipoDespesaDao,
+    private val appRepository: AppRepository
 ) {
     
     
@@ -97,15 +98,10 @@ class TipoDespesaRepository constructor(
     
     /**
      * Cria um novo tipo a partir dos dados fornecidos.
+     * ✅ CORREÇÃO CRÍTICA: Usar AppRepository para incluir sincronização
      */
     suspend fun criarTipo(dados: NovoTipoDespesa): Long {
-        val tipo = TipoDespesa(
-            categoriaId = dados.categoriaId,
-            nome = dados.nome.trim(),
-            descricao = dados.descricao.trim(),
-            criadoPor = dados.criadoPor
-        )
-        return inserir(tipo)
+        return appRepository.criarTipo(dados)
     }
     
     /**
