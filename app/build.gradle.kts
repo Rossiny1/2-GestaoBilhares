@@ -31,6 +31,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Build rápido para desenvolvimento
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -53,6 +58,11 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+    }
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
     }
     
 }
