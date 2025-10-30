@@ -1,0 +1,533 @@
+--------- beginning of main
+10-30 14:31:48.181 D/AppRepository( 5979): Ô£à Opera├º├úo adicionada ├á fila: Colaborador:1 (ID: 1)
+10-30 14:31:48.185 D/AppRepository( 5979): ­ƒôè Total de opera├º├Áes pendentes: 1
+10-30 14:31:48.336 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro de rotas:
+10-30 14:31:48.336 D/RoutesViewModel( 5979):    Usu├írio: rossinys
+10-30 14:31:48.336 D/RoutesViewModel( 5979):    Email: rossinys@gmail.com
+10-30 14:31:48.336 D/RoutesViewModel( 5979):    ID: 1
+10-30 14:31:48.336 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:31:48.336 D/RoutesViewModel( 5979):    Total de rotas: 0
+10-30 14:31:48.336 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 14:31:48.357 D/RoutesViewModel( 5979): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 14:31:48.596 D/RoutesViewModel( 5979): ­ƒôè Dados atualizados: 0 rotas
+10-30 14:31:48.597 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro completo de rotas:
+10-30 14:31:48.597 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:31:48.597 D/RoutesViewModel( 5979):    Total de rotas: 0
+10-30 14:31:48.597 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 14:31:48.597 D/RoutesViewModel( 5979): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 14:31:50.861 D/SyncManagerV2( 5979): Ô£à empresa_id configurado como 'empresa_001'
+10-30 14:31:50.861 D/SyncManagerV2( 5979): Configura├º├Áes de sincroniza├º├úo inicializadas
+10-30 14:31:50.880 D/SyncManagerV2( 5979): ­ƒöì DEBUG - Fila de sincroniza├º├úo:
+10-30 14:31:50.880 D/SyncManagerV2( 5979):    Total de opera├º├Áes PENDING (Flow): 1
+10-30 14:31:50.880 D/SyncManagerV2( 5979):    Total de opera├º├Áes PENDING (Count): 1
+10-30 14:31:50.880 D/SyncManagerV2( 5979):    Total de opera├º├Áes na fila: 1
+10-30 14:31:50.880 D/SyncManagerV2( 5979):    [0] ID: 1
+10-30 14:31:50.880 D/SyncManagerV2( 5979):         Tipo: Colaborador
+10-30 14:31:50.880 D/SyncManagerV2( 5979):         Entity ID: 1
+10-30 14:31:50.881 D/SyncManagerV2( 5979):         Opera├º├úo: CREATE
+10-30 14:31:50.881 D/SyncManagerV2( 5979):         Status: PENDING
+10-30 14:31:50.881 D/SyncManagerV2( 5979):         Payload: {
+10-30 14:31:50.881 D/SyncManagerV2( 5979):     "id": 1,
+10-30 14:31:50.881 D/SyncManagerV2( 5979):     "nome": "rossinys",
+10-30 14:31:50.881 D/SyncManagerV2( 5979):     "email": "rossinys@gmail.com",
+10-30 14:31:50.881 D/SyncManagerV2( 5979):     "nivelAcesso": "ADMIN",
+10-30 14:31:50.881 D/SyncManagerV2( 5979):     "ativo": true,
+10-30 14:31:50.881 D/SyncManagerV2( 5979):     "aprovado": true,
+10-30 14:31:50.881 D/SyncManagerV2( 5979):     "dataCadastro": "Thu Oct 30 14:31:48 GMT-03:00 2025"
+10-30 14:31:50.881 D/SyncManagerV2( 5979): }
+10-30 14:31:50.881 D/SyncManagerV2( 5979):         Criado: Thu Oct 30 14:31:48 GMT-03:00 2025
+10-30 14:31:50.881 D/SyncManagerV2( 5979):         Agendado: Thu Oct 30 14:31:48 GMT-03:00 2025
+10-30 14:31:50.882 D/SyncManagerV2( 5979): ­ƒÜÇ INICIANDO SINCRONIZA├ç├âO COMPLETA (PUSH + PULL)
+10-30 14:31:50.882 D/SyncManagerV2( 5979): ­ƒôñ Fase 1: PUSH SYNC (App ÔåÆ Firestore)
+10-30 14:31:50.898 D/SyncManagerV2( 5979): ­ƒôï Processando 1 opera├º├Áes
+10-30 14:31:50.899 D/SyncManagerV2( 5979):    [0] Colaborador:1 - CREATE (PENDING)
+10-30 14:31:50.907 D/SyncManagerV2( 5979): ­ƒÅó Empresa ID obtido: empresa_001 (config: null)
+10-30 14:31:50.907 D/SyncManagerV2( 5979): ­ƒöä Aplicando opera├º├úo no Firestore:
+10-30 14:31:50.907 D/SyncManagerV2( 5979):    Empresa ID: empresa_001
+10-30 14:31:50.907 D/SyncManagerV2( 5979):    Collection: colaboradores
+10-30 14:31:50.907 D/SyncManagerV2( 5979):    Document ID: 1
+10-30 14:31:50.907 D/SyncManagerV2( 5979):    Operation: CREATE
+10-30 14:31:50.907 D/SyncManagerV2( 5979):    Payload: {
+10-30 14:31:50.907 D/SyncManagerV2( 5979):     "id": 1,
+10-30 14:31:50.907 D/SyncManagerV2( 5979):     "nome": "rossinys",
+10-30 14:31:50.907 D/SyncManagerV2( 5979):     "email": "rossinys@gmail.com",
+10-30 14:31:50.907 D/SyncManagerV2( 5979):     "nivelAcesso": "ADMIN",
+10-30 14:31:50.907 D/SyncManagerV2( 5979):     "ativo": true,
+10-30 14:31:50.907 D/SyncManagerV2( 5979):     "aprovado": true,
+10-30 14:31:50.907 D/SyncManagerV2( 5979):     "dataCadastro": "Thu Oct 30 14:31:48 GMT-03:00 2025"
+10-30 14:31:50.907 D/SyncManagerV2( 5979): }
+10-30 14:31:50.914 D/SyncManagerV2( 5979):    Payload Map: {id=1.0, nome=rossinys, email=rossinys@gmail.com, nivelAcesso=ADMIN, ativo=true, aprovado=true, dataCadastro=Thu Oct 30 14:31:48 GMT-03:00 2025}
+10-30 14:31:50.933 D/SyncManagerV2( 5979):    Firestore Path: empresas/empresa_001/colaboradores/1
+10-30 14:31:50.933 D/SyncManagerV2( 5979):    Executando CREATE com set...
+10-30 14:31:51.813 D/SyncManagerV2( 5979):    Payload final: {id=1.0, nome=rossinys, email=rossinys@gmail.com, nivelAcesso=ADMIN, ativo=true, aprovado=true, dataCadastro=Thu Oct 30 14:31:48 GMT-03:00 2025, roomId=1, syncTimestamp=1761845510933}
+10-30 14:31:51.813 D/SyncManagerV2( 5979):    Ô£à SET executado com sucesso
+10-30 14:31:51.813 D/SyncManagerV2( 5979): Ô£à Opera├º├úo CREATE conclu├¡da com sucesso
+10-30 14:31:52.830 D/SyncManagerV2( 5979): ­ƒôÑ Fase 2: PULL SYNC (Firestore ÔåÆ App)
+10-30 14:31:52.830 D/SyncManagerV2( 5979): ­ƒöì Verificando condi├º├Áes para PULL SYNC...
+10-30 14:31:52.835 D/SyncManagerV2( 5979):    Online: true
+10-30 14:31:52.836 D/SyncManagerV2( 5979):    Autenticado: true
+10-30 14:31:52.840 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL SYNC do Firestore
+10-30 14:31:52.846 D/SyncManagerV2( 5979): ­ƒÅó Empresa ID obtido: empresa_001 (config: null)
+10-30 14:31:52.846 D/SyncManagerV2( 5979): ­ƒÅó Empresa ID para PULL: empresa_001
+10-30 14:31:52.846 D/SyncManagerV2( 5979): ­ƒöä Fase 1: Sincronizando ROTAS...
+10-30 14:31:52.847 D/SyncManagerV2( 5979): ­ƒôÑ Baixando rotas do Firestore...
+10-30 14:31:52.847 D/SyncManagerV2( 5979):    Caminho: empresas/empresa_001/rotas
+10-30 14:31:53.036 D/SyncManagerV2( 5979): ­ƒôè Encontradas 1 rotas no Firestore
+10-30 14:31:53.038 D/SyncManagerV2( 5979): ­ƒöì Processando rota: Luz (Room ID: 1)
+10-30 14:31:53.050 D/SyncManagerV2( 5979): Ô£à Rota sincronizada: Luz (ID: 1)
+10-30 14:31:53.050 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Rotas:
+10-30 14:31:53.050 D/SyncManagerV2( 5979):    Sincronizadas: 1
+10-30 14:31:53.051 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:31:53.213 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:31:53.213 D/AppRepository( 5979):    Status: PAUSADA (da entidade Rota)
+10-30 14:31:53.213 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:31:53.213 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:31:53.213 D/AppRepository( 5979):    Data fim: null
+10-30 14:31:53.213 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:31:53.215 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro de rotas:
+10-30 14:31:53.215 D/RoutesViewModel( 5979):    Usu├írio: rossinys
+10-30 14:31:53.215 D/RoutesViewModel( 5979):    Email: rossinys@gmail.com
+10-30 14:31:53.215 D/RoutesViewModel( 5979):    ID: 1
+10-30 14:31:53.215 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:31:53.215 D/RoutesViewModel( 5979):    Total de rotas: 1
+10-30 14:31:53.216 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:31:53.316 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:31:53.317 D/AppRepository( 5979):    Status: PAUSADA (da entidade Rota)
+10-30 14:31:53.317 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:31:53.317 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:31:53.317 D/AppRepository( 5979):    Data fim: null
+10-30 14:31:53.317 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:31:53.376 D/RoutesAdapter( 5979): Rota Luz: Status = PAUSADA -> Texto = 'Pausada'
+10-30 14:31:53.377 D/RoutesAdapter( 5979): ­ƒöì DEBUG CICLO: cicloAtual=1, dataInicio=null, dataFim=null
+10-30 14:31:53.377 D/RoutesAdapter( 5979): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=PAUSADA, cicloAcertoAtual=1
+10-30 14:31:53.378 D/RoutesAdapter( 5979): ­ƒöì TEXTO CICLO GERADO: '1┬║ Acerto - Data n├úo definida a Em andamento'
+10-30 14:31:53.553 D/SyncManagerV2( 5979): ­ƒöä Fase 2: Sincronizando CLIENTES...
+10-30 14:31:53.564 D/SyncManagerV2( 5979): ­ƒôÑ Baixando clientes do Firestore...
+10-30 14:31:53.564 D/SyncManagerV2( 5979):    Caminho: empresas/empresa_001/clientes
+10-30 14:31:53.690 D/SyncManagerV2( 5979): ­ƒôè Encontrados 0 clientes no Firestore
+10-30 14:31:53.690 W/SyncManagerV2( 5979): ÔÜá´©Å Nenhum cliente encontrado no Firestore
+10-30 14:31:53.895 D/SyncManagerV2( 5979): ­ƒôè Estat├¡sticas de sincroniza├º├úo:
+10-30 14:31:53.896 D/SyncManagerV2( 5979):    Pendentes: 0
+10-30 14:31:53.896 D/SyncManagerV2( 5979):    Falhas: 0
+10-30 14:31:53.896 D/SyncManagerV2( 5979):    Conclu├¡das: 1
+10-30 14:31:53.898 D/SyncManagerV2( 5979):    Online: true
+10-30 14:31:53.898 D/SyncManagerV2( 5979):    Sincronizando: false
+10-30 14:31:54.192 D/SyncManagerV2( 5979): ­ƒöä Fase 3: Sincronizando MESAS...
+10-30 14:31:54.192 D/SyncManagerV2( 5979): ­ƒôÑ Baixando mesas do Firestore...
+10-30 14:31:54.192 D/SyncManagerV2( 5979):    Caminho: empresas/empresa_001/mesas
+10-30 14:31:54.299 D/SyncManagerV2( 5979): ­ƒôè Encontradas 0 mesas no Firestore
+10-30 14:31:54.300 W/SyncManagerV2( 5979): ÔÜá´©Å Nenhuma mesa encontrada no Firestore
+10-30 14:31:54.803 D/SyncManagerV2( 5979): ­ƒöä Fase 4: Sincronizando ACERTOS...
+10-30 14:31:54.803 D/SyncManagerV2( 5979): ­ƒôÑ Baixando acertos do Firestore...
+10-30 14:31:54.803 D/SyncManagerV2( 5979):    Caminho: empresas/empresa_001/acertos
+10-30 14:31:54.940 D/SyncManagerV2( 5979): ­ƒôè Encontrados 0 acertos no Firestore
+10-30 14:31:54.941 W/SyncManagerV2( 5979): ÔÜá´©Å Nenhum acerto encontrado no Firestore
+10-30 14:31:55.442 D/SyncManagerV2( 5979): ­ƒöä Fase 5: Sincronizando CICLOS...
+10-30 14:31:55.443 D/SyncManagerV2( 5979): ­ƒôÑ Baixando ciclos do Firestore...
+10-30 14:31:55.443 D/SyncManagerV2( 5979):    Caminho: empresas/empresa_001/ciclos
+10-30 14:31:55.538 D/SyncManagerV2( 5979): ­ƒôè Encontrados 0 ciclos no Firestore
+10-30 14:31:55.538 W/SyncManagerV2( 5979): ÔÜá´©Å Nenhum ciclo encontrado no Firestore
+10-30 14:31:55.917 D/RoutesViewModel( 5979): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 14:31:56.040 D/SyncManagerV2( 5979): ­ƒöä Fase 5.1: Atualizando status das rotas com ciclos importados...
+10-30 14:31:56.040 D/SyncManagerV2( 5979): ­ƒöä Atualizando status das rotas com ciclos importados...
+10-30 14:31:56.066 D/SyncManagerV2( 5979): ­ƒôè Encontradas 1 rotas para atualizar
+10-30 14:31:56.066 D/SyncManagerV2( 5979): ­ƒöì Processando rota: Luz (ID: 1)
+10-30 14:31:56.082 W/SyncManagerV2( 5979): ÔÜá´©Å Nenhum ciclo encontrado para rota Luz
+10-30 14:31:56.088 D/SyncManagerV2( 5979): Ô£à Rota Luz definida como pausada (sem ciclos)
+10-30 14:31:56.088 D/SyncManagerV2( 5979): Ô£à Atualiza├º├úo das rotas com ciclos importados conclu├¡da
+10-30 14:31:56.088 D/SyncManagerV2( 5979): ­ƒöä For├ºando atualiza├º├úo das telas ap├│s PULL...
+10-30 14:31:56.088 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:31:56.088 D/AppRepository( 5979):    Status: PAUSADA (da entidade Rota)
+10-30 14:31:56.088 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:31:56.088 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:31:56.088 D/SyncManagerV2( 5979): ­ƒöä Invalidando cache das rotas...
+10-30 14:31:56.088 D/AppRepository( 5979):    Data fim: null
+10-30 14:31:56.089 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:31:56.092 D/RoutesViewModel( 5979): ­ƒôè Dados atualizados: 1 rotas
+10-30 14:31:56.092 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro completo de rotas:
+10-30 14:31:56.092 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:31:56.092 D/RoutesViewModel( 5979):    Total de rotas: 1
+10-30 14:31:56.093 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:31:56.093 D/RoutesViewModel( 5979): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 14:31:56.103 D/AppRepository( 5979): Cache invalidado para rota 1
+10-30 14:31:56.103 D/SyncManagerV2( 5979): Ô£à Cache invalidado para rota Luz
+10-30 14:31:56.103 D/SyncManagerV2( 5979): ­ƒöä For├ºando invalida├º├úo completa do cache global...
+10-30 14:31:56.133 D/SyncManagerV2( 5979): ­ƒöä For├ºando refresh das estat├¡sticas das rotas...
+10-30 14:31:56.221 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:31:56.221 D/AppRepository( 5979):    Status: FINALIZADA (da entidade Rota)
+10-30 14:31:56.221 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:31:56.221 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:31:56.221 D/AppRepository( 5979):    Data fim: null
+10-30 14:31:56.222 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:31:56.224 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro de rotas:
+10-30 14:31:56.224 D/RoutesViewModel( 5979):    Usu├írio: rossinys
+10-30 14:31:56.224 D/RoutesViewModel( 5979):    Email: rossinys@gmail.com
+10-30 14:31:56.224 D/RoutesViewModel( 5979):    ID: 1
+10-30 14:31:56.224 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:31:56.224 D/RoutesViewModel( 5979):    Total de rotas: 1
+10-30 14:31:56.224 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:31:56.333 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:31:56.333 D/AppRepository( 5979):    Status: FINALIZADA (da entidade Rota)
+10-30 14:31:56.333 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:31:56.333 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:31:56.333 D/AppRepository( 5979):    Data fim: null
+10-30 14:31:56.333 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:31:56.384 D/RoutesAdapter( 5979): Rota Luz: Status = FINALIZADA -> Texto = 'Finalizada'
+10-30 14:31:56.384 D/RoutesAdapter( 5979): ­ƒöì DEBUG CICLO: cicloAtual=1, dataInicio=null, dataFim=null
+10-30 14:31:56.384 D/RoutesAdapter( 5979): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=FINALIZADA, cicloAcertoAtual=1
+10-30 14:31:56.385 D/RoutesAdapter( 5979): ­ƒöì TEXTO CICLO GERADO: '1┬║ Acerto - Data n├úo definida a Em andamento'
+10-30 14:31:56.922 D/RoutesViewModel( 5979): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 14:31:57.062 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:31:57.062 D/AppRepository( 5979):    Status: FINALIZADA (da entidade Rota)
+10-30 14:31:57.062 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:31:57.062 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:31:57.062 D/AppRepository( 5979):    Data fim: null
+10-30 14:31:57.062 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:31:57.068 D/RoutesViewModel( 5979): ­ƒôè Dados atualizados: 1 rotas
+10-30 14:31:57.068 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro completo de rotas:
+10-30 14:31:57.068 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:31:57.068 D/RoutesViewModel( 5979):    Total de rotas: 1
+10-30 14:31:57.069 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:31:57.069 D/RoutesViewModel( 5979): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 14:31:57.136 D/SyncManagerV2( 5979): Ô£à Invalida├º├úo completa do cache global conclu├¡da
+10-30 14:31:57.136 D/SyncManagerV2( 5979): Ô£à Cache das rotas invalidado com sucesso
+10-30 14:31:57.136 D/SyncManagerV2( 5979): ­ƒöä For├ºando atualiza├º├úo do Flow de rotas...
+10-30 14:31:57.146 D/SyncManagerV2( 5979): ­ƒôè For├ºando rec├ílculo de 1 rotas
+10-30 14:31:57.146 D/AppRepository( 5979): Cache invalidado para rota 1
+10-30 14:31:57.146 D/SyncManagerV2( 5979): Ô£à Cache invalidado para rota Luz
+10-30 14:31:58.149 D/SyncManagerV2( 5979): Ô£à Atualiza├º├úo das telas for├ºada com sucesso
+10-30 14:31:58.650 D/SyncManagerV2( 5979): ­ƒöä Fase 6: Sincronizando COLABORADORES...
+10-30 14:31:58.651 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Colaboradores do Firestore...
+10-30 14:31:58.814 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 1 colaboradores no Firestore
+10-30 14:31:58.846 D/SyncManagerV2( 5979): ÔÅ¡´©Å Colaborador j├í existe: rossinys (ID: 1)
+10-30 14:31:58.846 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Colaboradores:
+10-30 14:31:58.846 D/SyncManagerV2( 5979):    Sincronizados: 0
+10-30 14:31:58.846 D/SyncManagerV2( 5979):    J├í existentes: 1
+10-30 14:31:59.349 D/SyncManagerV2( 5979): ­ƒöä Fase 7: Sincronizando DESPESAS...
+10-30 14:31:59.350 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Despesas do Firestore...
+10-30 14:31:59.458 D/SyncManagerV2( 5979): ­ƒôÑ Encontradas 0 despesas no Firestore
+10-30 14:31:59.479 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Despesas:
+10-30 14:31:59.479 D/SyncManagerV2( 5979):    Sincronizadas: 0
+10-30 14:31:59.479 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:31:59.981 D/SyncManagerV2( 5979): ­ƒöä Fase 8: Sincronizando PANOS ESTOQUE...
+10-30 14:31:59.982 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Panos Estoque do Firestore...
+10-30 14:32:00.072 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 0 panos no Firestore
+10-30 14:32:00.092 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Panos Estoque:
+10-30 14:32:00.092 D/SyncManagerV2( 5979):    Sincronizados: 0
+10-30 14:32:00.092 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:00.595 D/SyncManagerV2( 5979): ­ƒöä Fase 9: Sincronizando MESAS VENDIDAS...
+10-30 14:32:00.596 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Mesas Vendidas do Firestore...
+10-30 14:32:00.704 D/SyncManagerV2( 5979): ­ƒôÑ Encontradas 0 mesas vendidas no Firestore
+10-30 14:32:00.734 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Mesas Vendidas:
+10-30 14:32:00.734 D/SyncManagerV2( 5979):    Sincronizadas: 0
+10-30 14:32:00.734 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:01.237 D/SyncManagerV2( 5979): ­ƒöä Fase 10: Sincronizando STOCK ITEMS...
+10-30 14:32:01.238 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Stock Items do Firestore...
+10-30 14:32:01.336 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 0 stock items no Firestore
+10-30 14:32:01.365 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Stock Items:
+10-30 14:32:01.366 D/SyncManagerV2( 5979):    Sincronizados: 0
+10-30 14:32:01.366 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:01.868 D/SyncManagerV2( 5979): ­ƒöä Fase 11: Sincronizando VE├ìCULOS...
+10-30 14:32:01.869 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Ve├¡culos do Firestore...
+10-30 14:32:01.977 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 0 ve├¡culos no Firestore
+10-30 14:32:02.010 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Ve├¡culos:
+10-30 14:32:02.010 D/SyncManagerV2( 5979):    Sincronizados: 0
+10-30 14:32:02.011 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:02.513 D/SyncManagerV2( 5979): ­ƒöä Fase 12: Sincronizando HIST├ôRICO MANUTEN├ç├âO MESA...
+10-30 14:32:02.514 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Hist├│rico Manuten├º├úo Mesa do Firestore...
+10-30 14:32:02.611 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 0 hist├│ricos de manuten├º├úo mesa no Firestore
+10-30 14:32:02.643 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Hist├│rico Manuten├º├úo Mesa:
+10-30 14:32:02.643 D/SyncManagerV2( 5979):    Sincronizados: 0
+10-30 14:32:02.643 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:03.146 D/SyncManagerV2( 5979): ­ƒöä Fase 13: Sincronizando HIST├ôRICO MANUTEN├ç├âO VE├ìCULO...
+10-30 14:32:03.146 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Hist├│rico Manuten├º├úo Ve├¡culo do Firestore...
+10-30 14:32:03.248 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 0 hist├│ricos de manuten├º├úo ve├¡culo no Firestore
+10-30 14:32:03.276 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Hist├│rico Manuten├º├úo Ve├¡culo:
+10-30 14:32:03.276 D/SyncManagerV2( 5979):    Sincronizados: 0
+10-30 14:32:03.276 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:03.779 D/SyncManagerV2( 5979): ­ƒöä Fase 14: Sincronizando HIST├ôRICO COMBUST├ìVEL VE├ìCULO...
+10-30 14:32:03.780 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Hist├│rico Combust├¡vel Ve├¡culo do Firestore...
+10-30 14:32:03.875 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 0 hist├│ricos de combust├¡vel ve├¡culo no Firestore
+10-30 14:32:03.907 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Hist├│rico Combust├¡vel Ve├¡culo:
+10-30 14:32:03.907 D/SyncManagerV2( 5979):    Sincronizados: 0
+10-30 14:32:03.907 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:04.409 D/SyncManagerV2( 5979): ­ƒöä Fase 15: Sincronizando CATEGORIAS DESPESA...
+10-30 14:32:04.410 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Categorias Despesa do Firestore...
+10-30 14:32:04.509 D/SyncManagerV2( 5979): ­ƒôÑ Encontradas 0 categorias despesa no Firestore
+10-30 14:32:04.531 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Categorias Despesa:
+10-30 14:32:04.531 D/SyncManagerV2( 5979):    Sincronizadas: 0
+10-30 14:32:04.532 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:05.035 D/SyncManagerV2( 5979): ­ƒöä Fase 16: Sincronizando TIPOS DESPESA...
+10-30 14:32:05.035 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Tipos Despesa do Firestore...
+10-30 14:32:05.121 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 0 tipos despesa no Firestore
+10-30 14:32:05.146 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Tipos Despesa:
+10-30 14:32:05.146 D/SyncManagerV2( 5979):    Sincronizados: 0
+10-30 14:32:05.146 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:05.648 D/SyncManagerV2( 5979): ­ƒöä Fase 17: Sincronizando CONTRATOS LOCA├ç├âO...
+10-30 14:32:05.649 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Contratos Loca├º├úo do Firestore...
+10-30 14:32:05.766 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 0 contratos loca├º├úo no Firestore
+10-30 14:32:05.796 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Contratos Loca├º├úo:
+10-30 14:32:05.797 D/SyncManagerV2( 5979):    Sincronizados: 0
+10-30 14:32:05.797 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:06.299 D/SyncManagerV2( 5979): ­ƒöä Fase 17.0.1: Sincronizando METAS...
+10-30 14:32:06.299 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Metas do Firestore...
+10-30 14:32:06.390 D/SyncManagerV2( 5979): Ô£à Metas sincronizadas: 0
+10-30 14:32:06.399 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:32:06.399 D/AppRepository( 5979):    Status: FINALIZADA (da entidade Rota)
+10-30 14:32:06.399 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:32:06.399 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:32:06.399 D/AppRepository( 5979):    Data fim: null
+10-30 14:32:06.399 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:32:06.403 D/ClientListViewModel( 5979): === INICIANDO CARREGAMENTO DE DADOS ROTA 1 ===
+10-30 14:32:06.405 D/ClientListViewModel( 5979): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 14:32:06.407 D/ClientListViewModel( 5979): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 14:32:06.418 D/ClientListViewModel( 5979): === DADOS CLIENTES CARREGADOS ===
+10-30 14:32:06.419 D/ClientListViewModel( 5979): Total clientes: 0, Ativos: 0
+10-30 14:32:06.419 D/AppRepository( 5979): Buscando mesas para rota 1
+10-30 14:32:06.450 D/ClientListViewModel( 5979): ­ƒåò Primeira vez nesta rota, exibindo 1┬║ Acerto
+10-30 14:32:06.459 D/ClientListViewModel( 5979): ­ƒåò Primeira vez nesta rota, exibindo 1┬║ Acerto
+10-30 14:32:06.462 D/ClientListViewModel( 5979): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:32:06.462 D/ClientListViewModel( 5979): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:32:06.462 D/ClientListViewModel( 5979): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:32:06.462 D/ClientListViewModel( 5979): Ô£à Dados for├ºados recarregados: 0 clientes
+10-30 14:32:06.463 D/ClientListViewModel( 5979): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:32:06.463 D/ClientListViewModel( 5979): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:32:06.463 D/ClientListViewModel( 5979): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:32:06.470 D/ClientListViewModel( 5979): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:32:06.470 D/ClientListViewModel( 5979): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:32:06.471 D/ClientListViewModel( 5979): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:32:06.471 D/ClientListViewModel( 5979): Ô£à Dados for├ºados recarregados: 0 clientes
+10-30 14:32:06.471 D/ClientListViewModel( 5979): === DADOS MESAS CARREGADOS ===
+10-30 14:32:06.471 D/ClientListViewModel( 5979): Mesas encontradas: 0
+10-30 14:32:06.471 D/ClientListViewModel( 5979): === ATUALIZANDO DADOS FINAIS ===
+10-30 14:32:06.471 D/ClientListViewModel( 5979): Dados finais: 0 clientes, 0 mesas
+10-30 14:32:06.692 D/SyncManagerV2( 5979): ­ƒöä Fase 17.0.2: Sincronizando COLABORADOR_ROTA...
+10-30 14:32:06.693 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL ColaboradorRota do Firestore...
+10-30 14:32:06.816 D/SyncManagerV2( 5979): Ô£à ColaboradorRota sincronizados: 0
+10-30 14:32:07.119 D/SyncManagerV2( 5979): ­ƒöä Fase 17.1: Sincronizando ADITIVOS DE CONTRATO...
+10-30 14:32:07.120 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Aditivos de Contrato do Firestore...
+10-30 14:32:07.238 D/SyncManagerV2( 5979): Ô£à Aditivos sincronizados: 0
+10-30 14:32:07.541 D/SyncManagerV2( 5979): ­ƒöä Fase 17.2: Sincronizando ADITIVO MESAS...
+10-30 14:32:07.542 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL AditivoMesas do Firestore...
+10-30 14:32:07.639 D/SyncManagerV2( 5979): Ô£à AditivoMesas sincronizadas: 0
+10-30 14:32:07.942 D/SyncManagerV2( 5979): ­ƒöä Fase 17.3: Sincronizando CONTRATO MESAS...
+10-30 14:32:07.942 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL ContratoMesas do Firestore...
+10-30 14:32:08.035 D/SyncManagerV2( 5979): Ô£à ContratoMesas sincronizadas: 0
+10-30 14:32:08.338 D/SyncManagerV2( 5979): ­ƒöä Fase 18: Sincronizando ASSINATURAS REPRESENTANTE LEGAL...
+10-30 14:32:08.338 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Assinaturas Representante Legal do Firestore...
+10-30 14:32:08.431 D/SyncManagerV2( 5979): ­ƒôÑ Encontradas 0 assinaturas no Firestore
+10-30 14:32:08.441 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Assinaturas Representante Legal:
+10-30 14:32:08.441 D/SyncManagerV2( 5979):    Sincronizadas: 0
+10-30 14:32:08.441 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:08.944 D/SyncManagerV2( 5979): ­ƒöä Fase 19: Sincronizando LOGS AUDITORIA ASSINATURA...
+10-30 14:32:08.944 D/SyncManagerV2( 5979): ­ƒöä Iniciando PULL Logs Auditoria Assinatura do Firestore...
+10-30 14:32:09.063 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 0 logs no Firestore
+10-30 14:32:09.069 D/SyncManagerV2( 5979): ­ƒôè Resumo PULL Logs Auditoria Assinatura:
+10-30 14:32:09.070 D/SyncManagerV2( 5979):    Sincronizados: 0
+10-30 14:32:09.070 D/SyncManagerV2( 5979):    J├í existentes: 0
+10-30 14:32:09.571 D/SyncManagerV2( 5979): ­ƒöä Fase 20: Sincronizando ACERTO MESA...
+10-30 14:32:09.572 D/SyncManagerV2( 5979): ­ƒöä Sincronizando AcertoMesa do Firestore...
+10-30 14:32:09.677 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 0 AcertoMesa no Firestore
+10-30 14:32:09.681 D/SyncManagerV2( 5979): Ô£à Sincroniza├º├úo de AcertoMesa conclu├¡da
+10-30 14:32:10.184 D/SyncManagerV2( 5979): ­ƒöä Fase 21: Sincronizando MESA REFORMADA...
+10-30 14:32:10.185 D/SyncManagerV2( 5979): ­ƒöä Sincronizando MesaReformada do Firestore...
+10-30 14:32:10.295 D/SyncManagerV2( 5979): ­ƒôÑ Encontrados 0 MesaReformada no Firestore
+10-30 14:32:10.323 D/SyncManagerV2( 5979): Ô£à Sincroniza├º├úo de MesaReformada conclu├¡da
+10-30 14:32:10.467 D/ClientListViewModel( 5979): ­ƒöì Iniciando filtro PEND inclusivo para 0 clientes
+10-30 14:32:10.467 D/ClientListViewModel( 5979): Ô£à Filtro PEND inclusivo: 0 clientes com pend├¬ncias encontrados
+10-30 14:32:10.825 D/SyncManagerV2( 5979): ÔÅ¡´©Å Fase 22: Cria├º├úo autom├ítica de ciclos desativada para manter espelho 1:1
+10-30 14:32:10.825 D/SyncManagerV2( 5979): ­ƒöä Remapeando acertos importados para cicloId local...
+10-30 14:32:10.837 D/SyncManagerV2( 5979): ­ƒöä Alinhando rotas com ciclo atual importado...
+10-30 14:32:10.844 D/SyncManagerV2( 5979): ­ƒôè Rotas alinhadas: 0 de 1
+10-30 14:32:10.845 D/SyncManagerV2( 5979): ­ƒöº CORRE├ç├âO: Corrigindo acertos PENDENTE para FINALIZADO
+10-30 14:32:10.845 D/AppRepository( 5979): ­ƒöº CORRE├ç├âO: Iniciando corre├º├úo de acertos PENDENTE para FINALIZADO
+10-30 14:32:10.859 D/AppRepository( 5979): ­ƒöì Encontrados 0 acertos com status PENDENTE
+10-30 14:32:10.859 D/AppRepository( 5979): Ô£à CORRE├ç├âO CONCLU├ìDA: 0 acertos corrigidos
+10-30 14:32:10.859 D/SyncManagerV2( 5979): ­ƒöä Reconciliando d├®bitos dos clientes p├│s-sync...
+10-30 14:32:10.859 D/AppRepository( 5979): ­ƒöä Reconciliando d├®bitos dos clientes com base no ├║ltimo acerto...
+10-30 14:32:10.866 D/AppRepository( 5979): Ô£à Reconcilia├º├úo conclu├¡da. Clientes atualizados: 0
+10-30 14:32:10.866 D/SyncManagerV2( 5979): ­ƒöä Fase 7: Invalidando cache das rotas...
+10-30 14:32:10.866 D/SyncManagerV2( 5979): ­ƒöä Invalidando cache das rotas...
+10-30 14:32:10.871 D/AppRepository( 5979): Cache invalidado para rota 1
+10-30 14:32:10.871 D/SyncManagerV2( 5979): Ô£à Cache invalidado para rota Luz
+10-30 14:32:10.871 D/SyncManagerV2( 5979): ­ƒöä For├ºando invalida├º├úo completa do cache global...
+10-30 14:32:10.877 D/SyncManagerV2( 5979): ­ƒöä For├ºando refresh das estat├¡sticas das rotas...
+10-30 14:32:11.879 D/SyncManagerV2( 5979): Ô£à Invalida├º├úo completa do cache global conclu├¡da
+10-30 14:32:11.879 D/SyncManagerV2( 5979): Ô£à Cache das rotas invalidado com sucesso
+10-30 14:32:11.879 D/SyncManagerV2( 5979): Ô£à PULL SYNC conclu├¡do com sucesso
+10-30 14:32:11.879 D/SyncManagerV2( 5979): Ô£à SINCRONIZA├ç├âO COMPLETA FINALIZADA
+10-30 14:32:17.605 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro de rotas:
+10-30 14:32:17.605 D/RoutesViewModel( 5979):    Usu├írio: rossinys
+10-30 14:32:17.605 D/RoutesViewModel( 5979):    Email: rossinys@gmail.com
+10-30 14:32:17.605 D/RoutesViewModel( 5979):    ID: 1
+10-30 14:32:17.605 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:32:17.605 D/RoutesViewModel( 5979):    Total de rotas: 0
+10-30 14:32:17.605 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 14:32:17.620 D/RoutesViewModel( 5979): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 14:32:17.771 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:32:17.771 D/AppRepository( 5979):    Status: FINALIZADA (da entidade Rota)
+10-30 14:32:17.771 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:32:17.771 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:32:17.771 D/AppRepository( 5979):    Data fim: null
+10-30 14:32:17.771 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:32:17.772 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro de rotas:
+10-30 14:32:17.772 D/RoutesViewModel( 5979):    Usu├írio: rossinys
+10-30 14:32:17.772 D/RoutesViewModel( 5979):    Email: rossinys@gmail.com
+10-30 14:32:17.772 D/RoutesViewModel( 5979):    ID: 1
+10-30 14:32:17.772 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:32:17.772 D/RoutesViewModel( 5979):    Total de rotas: 1
+10-30 14:32:17.772 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:32:17.810 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:32:17.810 D/AppRepository( 5979):    Status: FINALIZADA (da entidade Rota)
+10-30 14:32:17.810 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:32:17.810 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:32:17.810 D/AppRepository( 5979):    Data fim: null
+10-30 14:32:17.810 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:32:17.844 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:32:17.844 D/AppRepository( 5979):    Status: FINALIZADA (da entidade Rota)
+10-30 14:32:17.845 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:32:17.845 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:32:17.845 D/AppRepository( 5979):    Data fim: null
+10-30 14:32:17.845 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:32:17.847 D/RoutesViewModel( 5979): ­ƒôè Dados atualizados: 1 rotas
+10-30 14:32:17.847 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro completo de rotas:
+10-30 14:32:17.847 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:32:17.847 D/RoutesViewModel( 5979):    Total de rotas: 1
+10-30 14:32:17.848 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:32:17.848 D/RoutesViewModel( 5979): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 14:32:17.870 D/RoutesAdapter( 5979): Rota Luz: Status = FINALIZADA -> Texto = 'Finalizada'
+10-30 14:32:17.870 D/RoutesAdapter( 5979): ­ƒöì DEBUG CICLO: cicloAtual=1, dataInicio=null, dataFim=null
+10-30 14:32:17.870 D/RoutesAdapter( 5979): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=FINALIZADA, cicloAcertoAtual=1
+10-30 14:32:17.870 D/RoutesAdapter( 5979): ­ƒöì TEXTO CICLO GERADO: '1┬║ Acerto - Data n├úo definida a Em andamento'
+10-30 14:32:19.281 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:32:19.281 D/AppRepository( 5979):    Status: FINALIZADA (da entidade Rota)
+10-30 14:32:19.281 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:32:19.281 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:32:19.281 D/AppRepository( 5979):    Data fim: null
+10-30 14:32:19.281 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:32:19.283 D/ClientListViewModel( 5979): === INICIANDO CARREGAMENTO DE DADOS ROTA 1 ===
+10-30 14:32:19.284 D/ClientListViewModel( 5979): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 14:32:19.288 D/ClientListViewModel( 5979): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 14:32:19.303 D/ClientListViewModel( 5979): === DADOS CLIENTES CARREGADOS ===
+10-30 14:32:19.303 D/ClientListViewModel( 5979): Total clientes: 0, Ativos: 0
+10-30 14:32:19.303 D/AppRepository( 5979): Buscando mesas para rota 1
+10-30 14:32:19.304 D/ClientListViewModel( 5979): ­ƒåò Primeira vez nesta rota, exibindo 1┬║ Acerto
+10-30 14:32:19.318 D/ClientListViewModel( 5979): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:32:19.319 D/ClientListViewModel( 5979): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:32:19.319 D/ClientListViewModel( 5979): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:32:19.319 D/ClientListViewModel( 5979): Ô£à Dados for├ºados recarregados: 0 clientes
+10-30 14:32:19.319 D/ClientListViewModel( 5979): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:32:19.319 D/ClientListViewModel( 5979): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:32:19.319 D/ClientListViewModel( 5979): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:32:19.319 D/ClientListViewModel( 5979): Ô£à Dados for├ºados recarregados: 0 clientes
+10-30 14:32:19.320 D/ClientListViewModel( 5979): ­ƒåò Primeira vez nesta rota, exibindo 1┬║ Acerto
+10-30 14:32:19.328 D/ClientListViewModel( 5979): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:32:19.329 D/ClientListViewModel( 5979): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:32:19.329 D/ClientListViewModel( 5979): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:32:19.336 D/ClientListViewModel( 5979): === DADOS MESAS CARREGADOS ===
+10-30 14:32:19.336 D/ClientListViewModel( 5979): Mesas encontradas: 0
+10-30 14:32:19.337 D/ClientListViewModel( 5979): === ATUALIZANDO DADOS FINAIS ===
+10-30 14:32:19.337 D/ClientListViewModel( 5979): Dados finais: 0 clientes, 0 mesas
+10-30 14:32:19.482 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 14:32:19.482 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 14:32:19.482 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 14:32:19.482 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 14:32:19.482 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 14:32:19.483 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 14:32:19.483 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 14:32:19.483 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 14:32:19.483 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 14:32:19.483 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 14:32:19.483 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 14:32:19.483 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 14:32:19.483 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 14:32:19.483 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 14:32:45.513 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro de rotas:
+10-30 14:32:45.513 D/RoutesViewModel( 5979):    Usu├írio: rossinys
+10-30 14:32:45.513 D/RoutesViewModel( 5979):    Email: rossinys@gmail.com
+10-30 14:32:45.513 D/RoutesViewModel( 5979):    ID: 1
+10-30 14:32:45.513 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:32:45.513 D/RoutesViewModel( 5979):    Total de rotas: 0
+10-30 14:32:45.513 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 14:32:45.526 D/RoutesViewModel( 5979): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 14:32:45.670 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:32:45.670 D/AppRepository( 5979):    Status: FINALIZADA (da entidade Rota)
+10-30 14:32:45.670 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:32:45.671 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:32:45.671 D/AppRepository( 5979):    Data fim: null
+10-30 14:32:45.671 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:32:45.672 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro de rotas:
+10-30 14:32:45.672 D/RoutesViewModel( 5979):    Usu├írio: rossinys
+10-30 14:32:45.672 D/RoutesViewModel( 5979):    Email: rossinys@gmail.com
+10-30 14:32:45.672 D/RoutesViewModel( 5979):    ID: 1
+10-30 14:32:45.672 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:32:45.672 D/RoutesViewModel( 5979):    Total de rotas: 1
+10-30 14:32:45.672 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:32:45.707 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:32:45.707 D/AppRepository( 5979):    Status: FINALIZADA (da entidade Rota)
+10-30 14:32:45.707 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:32:45.707 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:32:45.707 D/AppRepository( 5979):    Data fim: null
+10-30 14:32:45.707 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:32:45.740 D/AppRepository( 5979): ­ƒöì RotaResumo criado para Luz:
+10-30 14:32:45.741 D/AppRepository( 5979):    Status: FINALIZADA (da entidade Rota)
+10-30 14:32:45.741 D/AppRepository( 5979):    Ciclo: 1 (da entidade Rota)
+10-30 14:32:45.741 D/AppRepository( 5979):    Data in├¡cio: null
+10-30 14:32:45.741 D/AppRepository( 5979):    Data fim: null
+10-30 14:32:45.741 D/AppRepository( 5979):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:32:45.744 D/RoutesViewModel( 5979): ­ƒôè Dados atualizados: 1 rotas
+10-30 14:32:45.744 D/RoutesViewModel( 5979): ­ƒöì Aplicando filtro completo de rotas:
+10-30 14:32:45.744 D/RoutesViewModel( 5979):    ├ë Admin: true
+10-30 14:32:45.744 D/RoutesViewModel( 5979):    Total de rotas: 1
+10-30 14:32:45.744 D/RoutesViewModel( 5979): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:32:45.744 D/RoutesViewModel( 5979): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 14:32:45.762 D/RoutesAdapter( 5979): Rota Luz: Status = FINALIZADA -> Texto = 'Finalizada'
+10-30 14:32:45.763 D/RoutesAdapter( 5979): ­ƒöì DEBUG CICLO: cicloAtual=1, dataInicio=null, dataFim=null
+10-30 14:32:45.763 D/RoutesAdapter( 5979): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=FINALIZADA, cicloAcertoAtual=1
+10-30 14:32:45.763 D/RoutesAdapter( 5979): ­ƒöì TEXTO CICLO GERADO: '1┬║ Acerto - Data n├úo definida a Em andamento'
+10-30 14:33:19.516 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 14:33:19.516 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 14:33:19.516 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 14:33:19.516 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 14:33:19.516 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 14:33:19.516 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 14:33:19.517 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 14:33:19.517 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 14:33:19.517 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 14:33:19.517 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 14:33:19.517 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 14:33:19.517 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 14:33:19.517 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 14:33:19.517 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 14:34:19.568 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 14:34:19.568 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 14:34:19.568 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 14:34:19.568 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 14:34:19.568 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 14:34:19.568 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 14:34:19.568 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 14:34:19.568 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 14:34:19.568 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 14:34:19.568 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 14:34:19.568 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 14:34:19.568 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 14:34:19.568 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 14:34:19.569 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 14:35:19.610 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 14:35:19.610 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 14:35:19.611 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 14:35:19.611 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 14:35:19.611 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 14:35:19.611 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 14:35:19.611 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 14:35:19.611 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 14:35:19.611 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 14:35:19.611 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 14:35:19.611 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 14:35:19.611 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 14:35:19.611 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 14:35:19.611 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 14:35:37.138 D/AppRepository( 6597): Worker de sincroniza├º├úo agendado
+10-30 14:35:37.140 D/AppRepository( 6597): Worker de limpeza agendado
+10-30 14:35:37.140 D/AppRepository( 6597): Workers peri├│dicos inicializados
+10-30 14:35:37.142 D/AppRepository( 6597): ­ƒôè Monitoramento de mem├│ria iniciado

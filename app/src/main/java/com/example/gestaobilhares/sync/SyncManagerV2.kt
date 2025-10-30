@@ -1056,14 +1056,79 @@ class SyncManagerV2(
     private suspend fun pullCiclosFromFirestore(empresaId: String) {
         try {
             android.util.Log.d("SyncManagerV2", "📥 Baixando ciclos do Firestore...")
+            android.util.Log.d("CYCLE_PULL", "INIT pullCiclosFromFirestore empresa=$empresaId")
             android.util.Log.d("SyncManagerV2", "   Caminho: empresas/$empresaId/ciclos")
             
-            val snapshot = firestore
+            // Tentar coleções compatíveis: primeiro "ciclos"; se vazio, tentar "cicloacertos"
+            var snapshot = firestore
                 .collection("empresas")
                 .document(empresaId)
                 .collection("ciclos")
                 .get()
                 .await()
+
+            if (snapshot.isEmpty) {
+                android.util.Log.w("CYCLE_PULL", "Coleção 'ciclos' vazia. Tentando 'cicloacertos'...")
+                snapshot = firestore
+                    .collection("empresas")
+                    .document(empresaId)
+                    .collection("cicloacertos")
+                    .get()
+                    .await()
+            }
+
+            // Fallback 2: ciclos aninhados por rota: empresas/{empresaId}/rotas/{rotaId}/ciclos
+            if (snapshot.isEmpty) {
+                android.util.Log.w("CYCLE_PULL", "Coleções 'ciclos' e 'cicloacertos' vazias. Tentando ciclos aninhados por rota...")
+                // Buscar rotas importadas e tentar baixar ciclos por rota
+                val rotasImportadas = appRepository.obterTodasRotas().first()
+                var insertedNested = 0
+                for (rota in rotasImportadas) {
+                    try {
+                        val nested = firestore
+                            .collection("empresas")
+                            .document(empresaId)
+                            .collection("rotas")
+                            .document(rota.id.toString())
+                            .collection("ciclos")
+                            .get()
+                            .await()
+
+                        if (!nested.isEmpty) {
+                            android.util.Log.d("CYCLE_PULL", "NESTED rotaId=${rota.id} count=${nested.size()}")
+                            for (doc in nested.documents) {
+                                try {
+                                    val data = doc.data ?: continue
+                                    val numeroCiclo = (data["numeroCiclo"] as? Double)?.toInt() ?: (data["numeroCiclo"] as? Long)?.toInt()
+                                    val statusStr = (data["status"] as? String) ?: "FINALIZADO"
+                                    val ano = ((data["ano"] as? Double)?.toInt()) ?: ((data["ano"] as? Long)?.toInt()) ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                                    val di = when (val v = data["dataInicio"]) { is Number -> java.util.Date(v.toLong()); is String -> if (v.isNotEmpty()) java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse(v) else null; else -> null } ?: java.util.Date()
+                                    val df = when (val v = data["dataFim"]) { is Number -> java.util.Date(v.toLong()); is String -> if (v.isNotEmpty()) java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse(v) else null; else -> null } ?: java.util.Date()
+                                    if (numeroCiclo != null) {
+                                        val ciclo = com.example.gestaobilhares.data.entities.CicloAcertoEntity(
+                                            rotaId = rota.id,
+                                            numeroCiclo = numeroCiclo,
+                                            ano = ano,
+                                            dataInicio = di,
+                                            dataFim = df,
+                                            status = com.example.gestaobilhares.data.entities.StatusCicloAcerto.valueOf(statusStr),
+                                            criadoPor = "Importado"
+                                        )
+                                        database.cicloAcertoDao().inserir(ciclo)
+                                        insertedNested++
+                                        android.util.Log.d("CYCLE_PULL", "NESTED_INSERT rota=${rota.id} numero=${numeroCiclo} status=${statusStr}")
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.w("CYCLE_PULL", "NESTED_ERROR rota=${rota.id} doc=${doc.id} error=${e.message}")
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.w("CYCLE_PULL", "NESTED_FETCH_ERROR rota=${rota.id} error=${e.message}")
+                    }
+                }
+                android.util.Log.d("CYCLE_PULL", "NESTED_SUMMARY inserted=$insertedNested")
+            }
             
             android.util.Log.d("SyncManagerV2", "📊 Encontrados ${snapshot.size()} ciclos no Firestore")
             
@@ -1084,6 +1149,7 @@ class SyncManagerV2(
                     
                     android.util.Log.d("SyncManagerV2", "🔍 Processando ciclo: ${numeroCiclo}º (Room ID: $roomId, Rota ID: $rotaId)")
                     android.util.Log.d("SyncManagerV2", "   Dados originais: numeroCiclo=${data["numeroCiclo"]}, rotaId=${data["rotaId"]}")
+                    android.util.Log.d("CYCLE_PULL", "DOC id=${document.id} roomId=$roomId rotaId=$rotaId numero=$numeroCiclo ano=${data["ano"]} dataInicio=${data["dataInicio"]} dataFim=${data["dataFim"]} status=${data["status"]}")
                     
                     if (roomId != null && numeroCiclo != null && rotaId != null) {
                         // Verificar se já existe no Room
@@ -1103,27 +1169,23 @@ class SyncManagerV2(
                                 id = roomId,
                                 rotaId = rotaId,
                                 numeroCiclo = numeroCiclo,
-                                ano = (data["ano"] as? Double)?.toInt() ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR),
+                                ano = ((data["ano"] as? Double)?.toInt())
+                                    ?: ((data["ano"] as? Long)?.toInt())
+                                    ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR),
                                 dataInicio = try {
-                                    val dataInicioStr = data["dataInicio"] as? String
-                                    if (dataInicioStr != null) {
-                                        java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse(dataInicioStr)
-                                    } else {
-                                        java.util.Date()
-                                    }
-                                } catch (e: Exception) {
-                                    java.util.Date()
-                                },
+                                    when (val di = data["dataInicio"]) {
+                                        is Number -> java.util.Date(di.toLong())
+                                        is String -> if (di.isNotEmpty()) java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse(di) else null
+                                        else -> null
+                                    } ?: java.util.Date()
+                                } catch (e: Exception) { java.util.Date() },
                                 dataFim = try {
-                                    val dataFimStr = data["dataFim"] as? String
-                                    if (dataFimStr != null && dataFimStr.isNotEmpty()) {
-                                        java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse(dataFimStr)
-                                    } else {
-                                        java.util.Date()
-                                    }
-                                } catch (e: Exception) {
-                                    java.util.Date()
-                                },
+                                    when (val df = data["dataFim"]) {
+                                        is Number -> java.util.Date(df.toLong())
+                                        is String -> if (df.isNotEmpty()) java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse(df) else null
+                                        else -> null
+                                    } ?: java.util.Date()
+                                } catch (e: Exception) { java.util.Date() },
                                 status = com.example.gestaobilhares.data.entities.StatusCicloAcerto.valueOf(
                                     (data["status"] as? String) ?: "FINALIZADO"
                                 ),
@@ -1154,21 +1216,26 @@ class SyncManagerV2(
                             
                             ciclosSincronizados++
                             android.util.Log.d("SyncManagerV2", "✅ Ciclo sincronizado: ${ciclo.numeroCiclo}º (ID: $roomId)")
+                            android.util.Log.d("CYCLE_PULL", "INSERT ciclo id=$roomId rotaId=$rotaId numero=${ciclo.numeroCiclo} ano=${ciclo.ano} di=${ciclo.dataInicio?.time} df=${ciclo.dataFim?.time} status=${ciclo.status}")
                         } else {
                             ciclosExistentes++
                             android.util.Log.d("SyncManagerV2", "⏭️ Ciclo já existe: ${cicloExistente.numeroCiclo}º (ID: $roomId)")
+                            android.util.Log.d("CYCLE_PULL", "SKIP_EXISTING ciclo id=$roomId numero=${cicloExistente.numeroCiclo} status=${cicloExistente.status}")
                         }
                     } else {
                         android.util.Log.w("SyncManagerV2", "⚠️ Ciclo sem roomId, numeroCiclo ou rotaId: ${document.id}")
+                        android.util.Log.w("CYCLE_PULL", "INVALID ciclo docId=${document.id} keys=${data.keys}")
                     }
                 } catch (e: Exception) {
                     android.util.Log.w("SyncManagerV2", "❌ Erro ao processar ciclo ${document.id}: ${e.message}")
+                    android.util.Log.w("CYCLE_PULL", "ERROR_PROCESS docId=${document.id} error=${e.message}")
                 }
             }
             
             android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Ciclos:")
             android.util.Log.d("SyncManagerV2", "   Sincronizados: $ciclosSincronizados")
             android.util.Log.d("SyncManagerV2", "   Já existentes: $ciclosExistentes")
+            android.util.Log.d("CYCLE_PULL", "SUMMARY inserted=$ciclosSincronizados existing=$ciclosExistentes")
             
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar ciclos: ${e.message}", e)
@@ -1364,15 +1431,34 @@ class SyncManagerV2(
                 try {
                     android.util.Log.d("SyncManagerV2", "🔍 Processando rota: ${rota.nome} (ID: ${rota.id})")
                     
-                    // Buscar o ciclo mais recente desta rota (em andamento ou finalizado)
-                    val cicloMaisRecente = try {
+                    // Buscar ciclos da rota e aplicar a mesma regra local:
+                    // 1) Se existir EM_ANDAMENTO, usar o mais recente
+                    // 2) Caso contrário, usar o FINALIZADO mais recente
+                    val (cicloMaisRecente, origem) = try {
                         runBlocking {
                             val cicloDao = database.cicloAcertoDao()
-                            cicloDao.buscarUltimoCicloPorRota(rota.id)
+                            val ciclos = cicloDao.buscarCiclosPorRota(rota.id)
+                            val emAndamento = ciclos
+                                .filter { it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO }
+                                .maxWithOrNull(
+                                    compareBy<com.example.gestaobilhares.data.entities.CicloAcertoEntity> { it.numeroCiclo }
+                                        .thenBy { it.dataInicio?.time ?: 0L }
+                                )
+                            if (emAndamento != null) {
+                                Pair(emAndamento, "EM_ANDAMENTO")
+                            } else {
+                                val finalizado = ciclos
+                                    .filter { it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO }
+                                    .maxWithOrNull(
+                                        compareBy<com.example.gestaobilhares.data.entities.CicloAcertoEntity> { it.numeroCiclo }
+                                            .thenBy { it.dataFim?.time ?: it.dataInicio?.time ?: 0L }
+                                    )
+                                Pair(finalizado, "FINALIZADO")
+                            }
                         }
                     } catch (e: Exception) {
-                        android.util.Log.w("SyncManagerV2", "❌ Erro ao buscar ciclo da rota ${rota.nome}: ${e.message}")
-                        null
+                        android.util.Log.w("SyncManagerV2", "❌ Erro ao buscar ciclos da rota ${rota.nome}: ${e.message}")
+                        Pair(null, "NONE")
                     }
                     
                     if (cicloMaisRecente != null) {
@@ -1382,8 +1468,7 @@ class SyncManagerV2(
                         val rotaAtualizada = rota.copy(
                             statusAtual = when (cicloMaisRecente.status) {
                                 com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO -> com.example.gestaobilhares.data.entities.StatusRota.EM_ANDAMENTO
-                                com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO -> com.example.gestaobilhares.data.entities.StatusRota.FINALIZADA
-                                else -> com.example.gestaobilhares.data.entities.StatusRota.PAUSADA
+                                else -> com.example.gestaobilhares.data.entities.StatusRota.FINALIZADA
                             },
                             cicloAcertoAtual = cicloMaisRecente.numeroCiclo,
                             anoCiclo = cicloMaisRecente.ano,
@@ -1394,6 +1479,7 @@ class SyncManagerV2(
                                 null
                             }
                         )
+                        android.util.Log.d("SyncManagerV2", "✅ Rota ${rota.nome} alinhada com ciclo ${cicloMaisRecente.numeroCiclo} (${origem})")
                         
                         // Atualizar no banco
                         val rotaDao = database.rotaDao()
@@ -1405,7 +1491,7 @@ class SyncManagerV2(
                         
                         // Se não há ciclo, definir como pausada
                         val rotaAtualizada = rota.copy(
-                            statusAtual = com.example.gestaobilhares.data.entities.StatusRota.PAUSADA,
+                            statusAtual = com.example.gestaobilhares.data.entities.StatusRota.FINALIZADA,
                             cicloAcertoAtual = 1,
                             anoCiclo = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR),
                             dataInicioCiclo = null,

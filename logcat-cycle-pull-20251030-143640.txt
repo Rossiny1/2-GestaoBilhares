@@ -1,0 +1,1023 @@
+--------- beginning of main
+10-30 14:36:42.747 D/AppRepository( 6750): Ô£à Opera├º├úo adicionada ├á fila: Colaborador:1 (ID: 1)
+10-30 14:36:42.751 D/AppRepository( 6750): ­ƒôè Total de opera├º├Áes pendentes: 1
+10-30 14:36:42.950 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro de rotas:
+10-30 14:36:42.950 D/RoutesViewModel( 6750):    Usu├írio: rossinys
+10-30 14:36:42.950 D/RoutesViewModel( 6750):    Email: rossinys@gmail.com
+10-30 14:36:42.950 D/RoutesViewModel( 6750):    ID: 1
+10-30 14:36:42.950 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:36:42.951 D/RoutesViewModel( 6750):    Total de rotas: 0
+10-30 14:36:42.951 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 14:36:42.972 D/RoutesViewModel( 6750): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 14:36:43.210 D/RoutesViewModel( 6750): ­ƒôè Dados atualizados: 0 rotas
+10-30 14:36:43.211 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro completo de rotas:
+10-30 14:36:43.211 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:36:43.211 D/RoutesViewModel( 6750):    Total de rotas: 0
+10-30 14:36:43.211 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 14:36:43.211 D/RoutesViewModel( 6750): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 14:36:45.855 D/SyncManagerV2( 6750): Ô£à empresa_id configurado como 'empresa_001'
+10-30 14:36:45.855 D/SyncManagerV2( 6750): Configura├º├Áes de sincroniza├º├úo inicializadas
+10-30 14:36:45.874 D/SyncManagerV2( 6750): ­ƒöì DEBUG - Fila de sincroniza├º├úo:
+10-30 14:36:45.874 D/SyncManagerV2( 6750):    Total de opera├º├Áes PENDING (Flow): 1
+10-30 14:36:45.874 D/SyncManagerV2( 6750):    Total de opera├º├Áes PENDING (Count): 1
+10-30 14:36:45.874 D/SyncManagerV2( 6750):    Total de opera├º├Áes na fila: 1
+10-30 14:36:45.875 D/SyncManagerV2( 6750):    [0] ID: 1
+10-30 14:36:45.875 D/SyncManagerV2( 6750):         Tipo: Colaborador
+10-30 14:36:45.875 D/SyncManagerV2( 6750):         Entity ID: 1
+10-30 14:36:45.875 D/SyncManagerV2( 6750):         Opera├º├úo: CREATE
+10-30 14:36:45.875 D/SyncManagerV2( 6750):         Status: PENDING
+10-30 14:36:45.875 D/SyncManagerV2( 6750):         Payload: {
+10-30 14:36:45.875 D/SyncManagerV2( 6750):     "id": 1,
+10-30 14:36:45.875 D/SyncManagerV2( 6750):     "nome": "rossinys",
+10-30 14:36:45.875 D/SyncManagerV2( 6750):     "email": "rossinys@gmail.com",
+10-30 14:36:45.875 D/SyncManagerV2( 6750):     "nivelAcesso": "ADMIN",
+10-30 14:36:45.875 D/SyncManagerV2( 6750):     "ativo": true,
+10-30 14:36:45.875 D/SyncManagerV2( 6750):     "aprovado": true,
+10-30 14:36:45.875 D/SyncManagerV2( 6750):     "dataCadastro": "Thu Oct 30 14:36:42 GMT-03:00 2025"
+10-30 14:36:45.875 D/SyncManagerV2( 6750): }
+10-30 14:36:45.875 D/SyncManagerV2( 6750):         Criado: Thu Oct 30 14:36:42 GMT-03:00 2025
+10-30 14:36:45.875 D/SyncManagerV2( 6750):         Agendado: Thu Oct 30 14:36:42 GMT-03:00 2025
+10-30 14:36:45.877 D/SyncManagerV2( 6750): ­ƒÜÇ INICIANDO SINCRONIZA├ç├âO COMPLETA (PUSH + PULL)
+10-30 14:36:45.877 D/SyncManagerV2( 6750): ­ƒôñ Fase 1: PUSH SYNC (App ÔåÆ Firestore)
+10-30 14:36:45.895 D/SyncManagerV2( 6750): ­ƒôï Processando 1 opera├º├Áes
+10-30 14:36:45.895 D/SyncManagerV2( 6750):    [0] Colaborador:1 - CREATE (PENDING)
+10-30 14:36:45.908 D/SyncManagerV2( 6750): ­ƒÅó Empresa ID obtido: empresa_001 (config: null)
+10-30 14:36:45.908 D/SyncManagerV2( 6750): ­ƒöä Aplicando opera├º├úo no Firestore:
+10-30 14:36:45.908 D/SyncManagerV2( 6750):    Empresa ID: empresa_001
+10-30 14:36:45.908 D/SyncManagerV2( 6750):    Collection: colaboradores
+10-30 14:36:45.908 D/SyncManagerV2( 6750):    Document ID: 1
+10-30 14:36:45.908 D/SyncManagerV2( 6750):    Operation: CREATE
+10-30 14:36:45.909 D/SyncManagerV2( 6750):    Payload: {
+10-30 14:36:45.909 D/SyncManagerV2( 6750):     "id": 1,
+10-30 14:36:45.909 D/SyncManagerV2( 6750):     "nome": "rossinys",
+10-30 14:36:45.909 D/SyncManagerV2( 6750):     "email": "rossinys@gmail.com",
+10-30 14:36:45.909 D/SyncManagerV2( 6750):     "nivelAcesso": "ADMIN",
+10-30 14:36:45.909 D/SyncManagerV2( 6750):     "ativo": true,
+10-30 14:36:45.909 D/SyncManagerV2( 6750):     "aprovado": true,
+10-30 14:36:45.909 D/SyncManagerV2( 6750):     "dataCadastro": "Thu Oct 30 14:36:42 GMT-03:00 2025"
+10-30 14:36:45.909 D/SyncManagerV2( 6750): }
+10-30 14:36:45.915 D/SyncManagerV2( 6750):    Payload Map: {id=1.0, nome=rossinys, email=rossinys@gmail.com, nivelAcesso=ADMIN, ativo=true, aprovado=true, dataCadastro=Thu Oct 30 14:36:42 GMT-03:00 2025}
+10-30 14:36:45.937 D/SyncManagerV2( 6750):    Firestore Path: empresas/empresa_001/colaboradores/1
+10-30 14:36:45.937 D/SyncManagerV2( 6750):    Executando CREATE com set...
+10-30 14:36:46.673 D/SyncManagerV2( 6750):    Payload final: {id=1.0, nome=rossinys, email=rossinys@gmail.com, nivelAcesso=ADMIN, ativo=true, aprovado=true, dataCadastro=Thu Oct 30 14:36:42 GMT-03:00 2025, roomId=1, syncTimestamp=1761845805937}
+10-30 14:36:46.674 D/SyncManagerV2( 6750):    Ô£à SET executado com sucesso
+10-30 14:36:46.674 D/SyncManagerV2( 6750): Ô£à Opera├º├úo CREATE conclu├¡da com sucesso
+10-30 14:36:47.690 D/SyncManagerV2( 6750): ­ƒôÑ Fase 2: PULL SYNC (Firestore ÔåÆ App)
+10-30 14:36:47.691 D/SyncManagerV2( 6750): ­ƒöì Verificando condi├º├Áes para PULL SYNC...
+10-30 14:36:47.695 D/SyncManagerV2( 6750):    Online: true
+10-30 14:36:47.697 D/SyncManagerV2( 6750):    Autenticado: true
+10-30 14:36:47.700 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL SYNC do Firestore
+10-30 14:36:47.705 D/SyncManagerV2( 6750): ­ƒÅó Empresa ID obtido: empresa_001 (config: null)
+10-30 14:36:47.706 D/SyncManagerV2( 6750): ­ƒÅó Empresa ID para PULL: empresa_001
+10-30 14:36:47.706 D/SyncManagerV2( 6750): ­ƒöä Fase 1: Sincronizando ROTAS...
+10-30 14:36:47.706 D/SyncManagerV2( 6750): ­ƒôÑ Baixando rotas do Firestore...
+10-30 14:36:47.707 D/SyncManagerV2( 6750):    Caminho: empresas/empresa_001/rotas
+10-30 14:36:47.899 D/SyncManagerV2( 6750): ­ƒôè Encontradas 1 rotas no Firestore
+10-30 14:36:47.901 D/SyncManagerV2( 6750): ­ƒöì Processando rota: Luz (Room ID: 1)
+10-30 14:36:47.913 D/SyncManagerV2( 6750): Ô£à Rota sincronizada: Luz (ID: 1)
+10-30 14:36:47.913 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Rotas:
+10-30 14:36:47.914 D/SyncManagerV2( 6750):    Sincronizadas: 1
+10-30 14:36:47.914 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:36:48.063 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:36:48.063 D/AppRepository( 6750):    Status: PAUSADA (da entidade Rota)
+10-30 14:36:48.063 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:36:48.063 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:36:48.063 D/AppRepository( 6750):    Data fim: null
+10-30 14:36:48.064 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:36:48.066 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro de rotas:
+10-30 14:36:48.066 D/RoutesViewModel( 6750):    Usu├írio: rossinys
+10-30 14:36:48.067 D/RoutesViewModel( 6750):    Email: rossinys@gmail.com
+10-30 14:36:48.067 D/RoutesViewModel( 6750):    ID: 1
+10-30 14:36:48.067 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:36:48.067 D/RoutesViewModel( 6750):    Total de rotas: 1
+10-30 14:36:48.067 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:36:48.204 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:36:48.204 D/AppRepository( 6750):    Status: PAUSADA (da entidade Rota)
+10-30 14:36:48.204 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:36:48.204 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:36:48.204 D/AppRepository( 6750):    Data fim: null
+10-30 14:36:48.204 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:36:48.251 D/RoutesAdapter( 6750): Rota Luz: Status = PAUSADA -> Texto = 'Pausada'
+10-30 14:36:48.252 D/RoutesAdapter( 6750): ­ƒöì DEBUG CICLO: cicloAtual=1, dataInicio=null, dataFim=null
+10-30 14:36:48.252 D/RoutesAdapter( 6750): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=PAUSADA, cicloAcertoAtual=1
+10-30 14:36:48.252 D/RoutesAdapter( 6750): ­ƒöì TEXTO CICLO GERADO: '1┬║ Acerto - Data n├úo definida a Em andamento'
+10-30 14:36:48.416 D/SyncManagerV2( 6750): ­ƒöä Fase 2: Sincronizando CLIENTES...
+10-30 14:36:48.426 D/SyncManagerV2( 6750): ­ƒôÑ Baixando clientes do Firestore...
+10-30 14:36:48.426 D/SyncManagerV2( 6750):    Caminho: empresas/empresa_001/clientes
+10-30 14:36:48.514 D/SyncManagerV2( 6750): ­ƒôè Encontrados 0 clientes no Firestore
+10-30 14:36:48.514 W/SyncManagerV2( 6750): ÔÜá´©Å Nenhum cliente encontrado no Firestore
+10-30 14:36:48.892 D/SyncManagerV2( 6750): ­ƒôè Estat├¡sticas de sincroniza├º├úo:
+10-30 14:36:48.892 D/SyncManagerV2( 6750):    Pendentes: 0
+10-30 14:36:48.892 D/SyncManagerV2( 6750):    Falhas: 0
+10-30 14:36:48.892 D/SyncManagerV2( 6750):    Conclu├¡das: 1
+10-30 14:36:48.897 D/SyncManagerV2( 6750):    Online: true
+10-30 14:36:48.897 D/SyncManagerV2( 6750):    Sincronizando: false
+10-30 14:36:49.017 D/SyncManagerV2( 6750): ­ƒöä Fase 3: Sincronizando MESAS...
+10-30 14:36:49.018 D/SyncManagerV2( 6750): ­ƒôÑ Baixando mesas do Firestore...
+10-30 14:36:49.018 D/SyncManagerV2( 6750):    Caminho: empresas/empresa_001/mesas
+10-30 14:36:49.124 D/SyncManagerV2( 6750): ­ƒôè Encontradas 0 mesas no Firestore
+10-30 14:36:49.124 W/SyncManagerV2( 6750): ÔÜá´©Å Nenhuma mesa encontrada no Firestore
+10-30 14:36:49.628 D/SyncManagerV2( 6750): ­ƒöä Fase 4: Sincronizando ACERTOS...
+10-30 14:36:49.628 D/SyncManagerV2( 6750): ­ƒôÑ Baixando acertos do Firestore...
+10-30 14:36:49.628 D/SyncManagerV2( 6750):    Caminho: empresas/empresa_001/acertos
+10-30 14:36:49.747 D/SyncManagerV2( 6750): ­ƒôè Encontrados 0 acertos no Firestore
+10-30 14:36:49.747 W/SyncManagerV2( 6750): ÔÜá´©Å Nenhum acerto encontrado no Firestore
+10-30 14:36:50.250 D/SyncManagerV2( 6750): ­ƒöä Fase 5: Sincronizando CICLOS...
+10-30 14:36:50.251 D/SyncManagerV2( 6750): ­ƒôÑ Baixando ciclos do Firestore...
+10-30 14:36:50.251 D/SyncManagerV2( 6750):    Caminho: empresas/empresa_001/ciclos
+10-30 14:36:50.373 D/SyncManagerV2( 6750): ­ƒôè Encontrados 0 ciclos no Firestore
+10-30 14:36:50.373 W/SyncManagerV2( 6750): ÔÜá´©Å Nenhum ciclo encontrado no Firestore
+10-30 14:36:50.876 D/SyncManagerV2( 6750): ­ƒöä Fase 5.1: Atualizando status das rotas com ciclos importados...
+10-30 14:36:50.877 D/SyncManagerV2( 6750): ­ƒöä Atualizando status das rotas com ciclos importados...
+10-30 14:36:50.891 D/SyncManagerV2( 6750): ­ƒôè Encontradas 1 rotas para atualizar
+10-30 14:36:50.892 D/SyncManagerV2( 6750): ­ƒöì Processando rota: Luz (ID: 1)
+10-30 14:36:50.901 W/SyncManagerV2( 6750): ÔÜá´©Å Nenhum ciclo encontrado para rota Luz
+10-30 14:36:50.910 D/SyncManagerV2( 6750): Ô£à Rota Luz definida como pausada (sem ciclos)
+10-30 14:36:50.910 D/SyncManagerV2( 6750): Ô£à Atualiza├º├úo das rotas com ciclos importados conclu├¡da
+10-30 14:36:50.911 D/SyncManagerV2( 6750): ­ƒöä For├ºando atualiza├º├úo das telas ap├│s PULL...
+10-30 14:36:50.911 D/SyncManagerV2( 6750): ­ƒöä Invalidando cache das rotas...
+10-30 14:36:50.921 D/RoutesViewModel( 6750): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 14:36:50.943 D/AppRepository( 6750): Cache invalidado para rota 1
+10-30 14:36:50.943 D/SyncManagerV2( 6750): Ô£à Cache invalidado para rota Luz
+10-30 14:36:50.943 D/SyncManagerV2( 6750): ­ƒöä For├ºando invalida├º├úo completa do cache global...
+10-30 14:36:50.985 D/SyncManagerV2( 6750): ­ƒöä For├ºando refresh das estat├¡sticas das rotas...
+10-30 14:36:51.068 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:36:51.068 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:36:51.068 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:36:51.068 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:36:51.068 D/AppRepository( 6750):    Data fim: null
+10-30 14:36:51.068 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:36:51.194 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:36:51.194 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:36:51.194 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:36:51.194 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:36:51.194 D/AppRepository( 6750):    Data fim: null
+10-30 14:36:51.194 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:36:51.197 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro de rotas:
+10-30 14:36:51.197 D/RoutesViewModel( 6750):    Usu├írio: rossinys
+10-30 14:36:51.197 D/RoutesViewModel( 6750):    Email: rossinys@gmail.com
+10-30 14:36:51.197 D/RoutesViewModel( 6750):    ID: 1
+10-30 14:36:51.197 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:36:51.197 D/RoutesViewModel( 6750):    Total de rotas: 1
+10-30 14:36:51.198 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:36:51.358 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:36:51.358 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:36:51.358 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:36:51.358 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:36:51.358 D/AppRepository( 6750):    Data fim: null
+10-30 14:36:51.358 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:36:51.363 D/RoutesViewModel( 6750): ­ƒôè Dados atualizados: 1 rotas
+10-30 14:36:51.363 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro completo de rotas:
+10-30 14:36:51.363 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:36:51.364 D/RoutesViewModel( 6750):    Total de rotas: 1
+10-30 14:36:51.364 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:36:51.364 D/RoutesViewModel( 6750): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 14:36:51.410 D/RoutesAdapter( 6750): Rota Luz: Status = FINALIZADA -> Texto = 'Finalizada'
+10-30 14:36:51.411 D/RoutesAdapter( 6750): ­ƒöì DEBUG CICLO: cicloAtual=1, dataInicio=null, dataFim=null
+10-30 14:36:51.411 D/RoutesAdapter( 6750): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=FINALIZADA, cicloAcertoAtual=1
+10-30 14:36:51.411 D/RoutesAdapter( 6750): ­ƒöì TEXTO CICLO GERADO: '1┬║ Acerto - Data n├úo definida a Em andamento'
+10-30 14:36:51.926 D/RoutesViewModel( 6750): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 14:36:51.987 D/SyncManagerV2( 6750): Ô£à Invalida├º├úo completa do cache global conclu├¡da
+10-30 14:36:51.988 D/SyncManagerV2( 6750): Ô£à Cache das rotas invalidado com sucesso
+10-30 14:36:51.988 D/SyncManagerV2( 6750): ­ƒöä For├ºando atualiza├º├úo do Flow de rotas...
+10-30 14:36:52.000 D/SyncManagerV2( 6750): ­ƒôè For├ºando rec├ílculo de 1 rotas
+10-30 14:36:52.001 D/AppRepository( 6750): Cache invalidado para rota 1
+10-30 14:36:52.001 D/SyncManagerV2( 6750): Ô£à Cache invalidado para rota Luz
+10-30 14:36:52.076 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:36:52.076 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:36:52.076 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:36:52.076 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:36:52.076 D/AppRepository( 6750):    Data fim: null
+10-30 14:36:52.076 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:36:52.082 D/RoutesViewModel( 6750): ­ƒôè Dados atualizados: 1 rotas
+10-30 14:36:52.082 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro completo de rotas:
+10-30 14:36:52.083 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:36:52.083 D/RoutesViewModel( 6750):    Total de rotas: 1
+10-30 14:36:52.083 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:36:52.083 D/RoutesViewModel( 6750): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 14:36:53.004 D/SyncManagerV2( 6750): Ô£à Atualiza├º├úo das telas for├ºada com sucesso
+10-30 14:36:53.506 D/SyncManagerV2( 6750): ­ƒöä Fase 6: Sincronizando COLABORADORES...
+10-30 14:36:53.507 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Colaboradores do Firestore...
+10-30 14:36:53.644 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 1 colaboradores no Firestore
+10-30 14:36:53.678 D/SyncManagerV2( 6750): ÔÅ¡´©Å Colaborador j├í existe: rossinys (ID: 1)
+10-30 14:36:53.678 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Colaboradores:
+10-30 14:36:53.678 D/SyncManagerV2( 6750):    Sincronizados: 0
+10-30 14:36:53.678 D/SyncManagerV2( 6750):    J├í existentes: 1
+10-30 14:36:54.181 D/SyncManagerV2( 6750): ­ƒöä Fase 7: Sincronizando DESPESAS...
+10-30 14:36:54.181 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Despesas do Firestore...
+10-30 14:36:54.273 D/SyncManagerV2( 6750): ­ƒôÑ Encontradas 0 despesas no Firestore
+10-30 14:36:54.301 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Despesas:
+10-30 14:36:54.302 D/SyncManagerV2( 6750):    Sincronizadas: 0
+10-30 14:36:54.302 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:36:54.805 D/SyncManagerV2( 6750): ­ƒöä Fase 8: Sincronizando PANOS ESTOQUE...
+10-30 14:36:54.805 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Panos Estoque do Firestore...
+10-30 14:36:54.943 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 0 panos no Firestore
+10-30 14:36:54.971 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Panos Estoque:
+10-30 14:36:54.971 D/SyncManagerV2( 6750):    Sincronizados: 0
+10-30 14:36:54.971 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:36:55.474 D/SyncManagerV2( 6750): ­ƒöä Fase 9: Sincronizando MESAS VENDIDAS...
+10-30 14:36:55.475 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Mesas Vendidas do Firestore...
+10-30 14:36:55.576 D/SyncManagerV2( 6750): ­ƒôÑ Encontradas 0 mesas vendidas no Firestore
+10-30 14:36:55.605 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Mesas Vendidas:
+10-30 14:36:55.605 D/SyncManagerV2( 6750):    Sincronizadas: 0
+10-30 14:36:55.605 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:36:56.108 D/SyncManagerV2( 6750): ­ƒöä Fase 10: Sincronizando STOCK ITEMS...
+10-30 14:36:56.108 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Stock Items do Firestore...
+10-30 14:36:56.204 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 0 stock items no Firestore
+10-30 14:36:56.233 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Stock Items:
+10-30 14:36:56.234 D/SyncManagerV2( 6750):    Sincronizados: 0
+10-30 14:36:56.234 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:36:56.736 D/SyncManagerV2( 6750): ­ƒöä Fase 11: Sincronizando VE├ìCULOS...
+10-30 14:36:56.737 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Ve├¡culos do Firestore...
+10-30 14:36:56.835 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 0 ve├¡culos no Firestore
+10-30 14:36:56.862 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Ve├¡culos:
+10-30 14:36:56.862 D/SyncManagerV2( 6750):    Sincronizados: 0
+10-30 14:36:56.862 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:36:57.364 D/SyncManagerV2( 6750): ­ƒöä Fase 12: Sincronizando HIST├ôRICO MANUTEN├ç├âO MESA...
+10-30 14:36:57.364 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Hist├│rico Manuten├º├úo Mesa do Firestore...
+10-30 14:36:57.441 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 0 hist├│ricos de manuten├º├úo mesa no Firestore
+10-30 14:36:57.512 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Hist├│rico Manuten├º├úo Mesa:
+10-30 14:36:57.513 D/SyncManagerV2( 6750):    Sincronizados: 0
+10-30 14:36:57.513 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:36:57.615 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:36:57.616 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:36:57.616 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:36:57.616 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:36:57.616 D/AppRepository( 6750):    Data fim: null
+10-30 14:36:57.616 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:36:57.619 D/ClientListViewModel( 6750): === INICIANDO CARREGAMENTO DE DADOS ROTA 1 ===
+10-30 14:36:57.621 D/ClientListViewModel( 6750): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 14:36:57.625 D/ClientListViewModel( 6750): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 14:36:57.694 D/ClientListViewModel( 6750): === DADOS CLIENTES CARREGADOS ===
+10-30 14:36:57.694 D/ClientListViewModel( 6750): Total clientes: 0, Ativos: 0
+10-30 14:36:57.694 D/AppRepository( 6750): Buscando mesas para rota 1
+10-30 14:36:57.695 D/ClientListViewModel( 6750): ­ƒåò Primeira vez nesta rota, exibindo 1┬║ Acerto
+10-30 14:36:57.698 D/ClientListViewModel( 6750): ­ƒåò Primeira vez nesta rota, exibindo 1┬║ Acerto
+10-30 14:36:57.703 D/ClientListViewModel( 6750): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:36:57.703 D/ClientListViewModel( 6750): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:36:57.703 D/ClientListViewModel( 6750): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:36:57.703 D/ClientListViewModel( 6750): Ô£à Dados for├ºados recarregados: 0 clientes
+10-30 14:36:57.732 D/ClientListViewModel( 6750): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:36:57.734 D/ClientListViewModel( 6750): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:36:57.734 D/ClientListViewModel( 6750): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:36:57.734 D/ClientListViewModel( 6750): Ô£à Dados for├ºados recarregados: 0 clientes
+10-30 14:36:57.752 D/ClientListViewModel( 6750): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:36:57.753 D/ClientListViewModel( 6750): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:36:57.753 D/ClientListViewModel( 6750): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:36:57.768 D/ClientListViewModel( 6750): === DADOS MESAS CARREGADOS ===
+10-30 14:36:57.768 D/ClientListViewModel( 6750): Mesas encontradas: 0
+10-30 14:36:57.769 D/ClientListViewModel( 6750): === ATUALIZANDO DADOS FINAIS ===
+10-30 14:36:57.769 D/ClientListViewModel( 6750): Dados finais: 0 clientes, 0 mesas
+10-30 14:36:58.018 D/SyncManagerV2( 6750): ­ƒöä Fase 13: Sincronizando HIST├ôRICO MANUTEN├ç├âO VE├ìCULO...
+10-30 14:36:58.019 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Hist├│rico Manuten├º├úo Ve├¡culo do Firestore...
+10-30 14:36:58.214 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 0 hist├│ricos de manuten├º├úo ve├¡culo no Firestore
+10-30 14:36:58.239 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Hist├│rico Manuten├º├úo Ve├¡culo:
+10-30 14:36:58.239 D/SyncManagerV2( 6750):    Sincronizados: 0
+10-30 14:36:58.239 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:36:58.741 D/SyncManagerV2( 6750): ­ƒöä Fase 14: Sincronizando HIST├ôRICO COMBUST├ìVEL VE├ìCULO...
+10-30 14:36:58.741 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Hist├│rico Combust├¡vel Ve├¡culo do Firestore...
+10-30 14:36:58.814 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 0 hist├│ricos de combust├¡vel ve├¡culo no Firestore
+10-30 14:36:58.831 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Hist├│rico Combust├¡vel Ve├¡culo:
+10-30 14:36:58.831 D/SyncManagerV2( 6750):    Sincronizados: 0
+10-30 14:36:58.831 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:36:59.333 D/SyncManagerV2( 6750): ­ƒöä Fase 15: Sincronizando CATEGORIAS DESPESA...
+10-30 14:36:59.334 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Categorias Despesa do Firestore...
+10-30 14:36:59.436 D/SyncManagerV2( 6750): ­ƒôÑ Encontradas 0 categorias despesa no Firestore
+10-30 14:36:59.452 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Categorias Despesa:
+10-30 14:36:59.452 D/SyncManagerV2( 6750):    Sincronizadas: 0
+10-30 14:36:59.452 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:36:59.954 D/SyncManagerV2( 6750): ­ƒöä Fase 16: Sincronizando TIPOS DESPESA...
+10-30 14:36:59.954 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Tipos Despesa do Firestore...
+10-30 14:37:00.036 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 0 tipos despesa no Firestore
+10-30 14:37:00.060 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Tipos Despesa:
+10-30 14:37:00.060 D/SyncManagerV2( 6750):    Sincronizados: 0
+10-30 14:37:00.060 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:37:00.562 D/SyncManagerV2( 6750): ­ƒöä Fase 17: Sincronizando CONTRATOS LOCA├ç├âO...
+10-30 14:37:00.563 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Contratos Loca├º├úo do Firestore...
+10-30 14:37:00.646 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 0 contratos loca├º├úo no Firestore
+10-30 14:37:00.677 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Contratos Loca├º├úo:
+10-30 14:37:00.678 D/SyncManagerV2( 6750):    Sincronizados: 0
+10-30 14:37:00.678 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:37:01.180 D/SyncManagerV2( 6750): ­ƒöä Fase 17.0.1: Sincronizando METAS...
+10-30 14:37:01.180 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Metas do Firestore...
+10-30 14:37:01.291 D/SyncManagerV2( 6750): Ô£à Metas sincronizadas: 0
+10-30 14:37:01.594 D/SyncManagerV2( 6750): ­ƒöä Fase 17.0.2: Sincronizando COLABORADOR_ROTA...
+10-30 14:37:01.594 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL ColaboradorRota do Firestore...
+10-30 14:37:01.691 D/SyncManagerV2( 6750): Ô£à ColaboradorRota sincronizados: 0
+10-30 14:37:01.993 D/SyncManagerV2( 6750): ­ƒöä Fase 17.1: Sincronizando ADITIVOS DE CONTRATO...
+10-30 14:37:01.994 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Aditivos de Contrato do Firestore...
+10-30 14:37:02.122 D/SyncManagerV2( 6750): Ô£à Aditivos sincronizados: 0
+10-30 14:37:02.424 D/SyncManagerV2( 6750): ­ƒöä Fase 17.2: Sincronizando ADITIVO MESAS...
+10-30 14:37:02.424 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL AditivoMesas do Firestore...
+10-30 14:37:02.499 D/SyncManagerV2( 6750): Ô£à AditivoMesas sincronizadas: 0
+10-30 14:37:02.808 D/SyncManagerV2( 6750): ­ƒöä Fase 17.3: Sincronizando CONTRATO MESAS...
+10-30 14:37:02.810 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL ContratoMesas do Firestore...
+10-30 14:37:02.953 D/SyncManagerV2( 6750): Ô£à ContratoMesas sincronizadas: 0
+10-30 14:37:03.263 D/SyncManagerV2( 6750): ­ƒöä Fase 18: Sincronizando ASSINATURAS REPRESENTANTE LEGAL...
+10-30 14:37:03.265 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Assinaturas Representante Legal do Firestore...
+10-30 14:37:03.466 D/SyncManagerV2( 6750): ­ƒôÑ Encontradas 0 assinaturas no Firestore
+10-30 14:37:03.473 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Assinaturas Representante Legal:
+10-30 14:37:03.473 D/SyncManagerV2( 6750):    Sincronizadas: 0
+10-30 14:37:03.473 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:37:03.975 D/SyncManagerV2( 6750): ­ƒöä Fase 19: Sincronizando LOGS AUDITORIA ASSINATURA...
+10-30 14:37:03.976 D/SyncManagerV2( 6750): ­ƒöä Iniciando PULL Logs Auditoria Assinatura do Firestore...
+10-30 14:37:04.062 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 0 logs no Firestore
+10-30 14:37:04.069 D/SyncManagerV2( 6750): ­ƒôè Resumo PULL Logs Auditoria Assinatura:
+10-30 14:37:04.069 D/SyncManagerV2( 6750):    Sincronizados: 0
+10-30 14:37:04.069 D/SyncManagerV2( 6750):    J├í existentes: 0
+10-30 14:37:04.576 D/SyncManagerV2( 6750): ­ƒöä Fase 20: Sincronizando ACERTO MESA...
+10-30 14:37:04.577 D/SyncManagerV2( 6750): ­ƒöä Sincronizando AcertoMesa do Firestore...
+10-30 14:37:04.703 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 0 AcertoMesa no Firestore
+10-30 14:37:04.707 D/SyncManagerV2( 6750): Ô£à Sincroniza├º├úo de AcertoMesa conclu├¡da
+10-30 14:37:05.209 D/SyncManagerV2( 6750): ­ƒöä Fase 21: Sincronizando MESA REFORMADA...
+10-30 14:37:05.210 D/SyncManagerV2( 6750): ­ƒöä Sincronizando MesaReformada do Firestore...
+10-30 14:37:05.325 D/SyncManagerV2( 6750): ­ƒôÑ Encontrados 0 MesaReformada no Firestore
+10-30 14:37:05.347 D/SyncManagerV2( 6750): Ô£à Sincroniza├º├úo de MesaReformada conclu├¡da
+10-30 14:37:05.850 D/SyncManagerV2( 6750): ÔÅ¡´©Å Fase 22: Cria├º├úo autom├ítica de ciclos desativada para manter espelho 1:1
+10-30 14:37:05.851 D/SyncManagerV2( 6750): ­ƒöä Remapeando acertos importados para cicloId local...
+10-30 14:37:05.881 D/SyncManagerV2( 6750): ­ƒöä Alinhando rotas com ciclo atual importado...
+10-30 14:37:05.899 D/SyncManagerV2( 6750): ­ƒôè Rotas alinhadas: 0 de 1
+10-30 14:37:05.899 D/SyncManagerV2( 6750): ­ƒöº CORRE├ç├âO: Corrigindo acertos PENDENTE para FINALIZADO
+10-30 14:37:05.899 D/AppRepository( 6750): ­ƒöº CORRE├ç├âO: Iniciando corre├º├úo de acertos PENDENTE para FINALIZADO
+10-30 14:37:05.928 D/AppRepository( 6750): ­ƒöì Encontrados 0 acertos com status PENDENTE
+10-30 14:37:05.928 D/AppRepository( 6750): Ô£à CORRE├ç├âO CONCLU├ìDA: 0 acertos corrigidos
+10-30 14:37:05.928 D/SyncManagerV2( 6750): ­ƒöä Reconciliando d├®bitos dos clientes p├│s-sync...
+10-30 14:37:05.929 D/AppRepository( 6750): ­ƒöä Reconciliando d├®bitos dos clientes com base no ├║ltimo acerto...
+10-30 14:37:05.950 D/AppRepository( 6750): Ô£à Reconcilia├º├úo conclu├¡da. Clientes atualizados: 0
+10-30 14:37:05.950 D/SyncManagerV2( 6750): ­ƒöä Fase 7: Invalidando cache das rotas...
+10-30 14:37:05.950 D/SyncManagerV2( 6750): ­ƒöä Invalidando cache das rotas...
+10-30 14:37:05.962 D/AppRepository( 6750): Cache invalidado para rota 1
+10-30 14:37:05.962 D/SyncManagerV2( 6750): Ô£à Cache invalidado para rota Luz
+10-30 14:37:05.962 D/SyncManagerV2( 6750): ­ƒöä For├ºando invalida├º├úo completa do cache global...
+10-30 14:37:05.976 D/SyncManagerV2( 6750): ­ƒöä For├ºando refresh das estat├¡sticas das rotas...
+10-30 14:37:06.982 D/SyncManagerV2( 6750): Ô£à Invalida├º├úo completa do cache global conclu├¡da
+10-30 14:37:06.982 D/SyncManagerV2( 6750): Ô£à Cache das rotas invalidado com sucesso
+10-30 14:37:06.982 D/SyncManagerV2( 6750): Ô£à PULL SYNC conclu├¡do com sucesso
+10-30 14:37:06.983 D/SyncManagerV2( 6750): Ô£à SINCRONIZA├ç├âO COMPLETA FINALIZADA
+10-30 14:37:10.795 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro de rotas:
+10-30 14:37:10.795 D/RoutesViewModel( 6750):    Usu├írio: rossinys
+10-30 14:37:10.795 D/RoutesViewModel( 6750):    Email: rossinys@gmail.com
+10-30 14:37:10.795 D/RoutesViewModel( 6750):    ID: 1
+10-30 14:37:10.795 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:37:10.795 D/RoutesViewModel( 6750):    Total de rotas: 0
+10-30 14:37:10.796 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 14:37:10.810 D/RoutesViewModel( 6750): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 14:37:10.956 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:37:10.956 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:37:10.956 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:37:10.956 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:37:10.956 D/AppRepository( 6750):    Data fim: null
+10-30 14:37:10.956 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:37:10.957 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro de rotas:
+10-30 14:37:10.957 D/RoutesViewModel( 6750):    Usu├írio: rossinys
+10-30 14:37:10.957 D/RoutesViewModel( 6750):    Email: rossinys@gmail.com
+10-30 14:37:10.957 D/RoutesViewModel( 6750):    ID: 1
+10-30 14:37:10.957 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:37:10.957 D/RoutesViewModel( 6750):    Total de rotas: 1
+10-30 14:37:10.958 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:37:10.994 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:37:10.994 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:37:10.994 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:37:10.994 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:37:10.994 D/AppRepository( 6750):    Data fim: null
+10-30 14:37:10.994 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:37:11.028 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:37:11.028 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:37:11.028 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:37:11.029 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:37:11.029 D/AppRepository( 6750):    Data fim: null
+10-30 14:37:11.029 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:37:11.032 D/RoutesViewModel( 6750): ­ƒôè Dados atualizados: 1 rotas
+10-30 14:37:11.032 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro completo de rotas:
+10-30 14:37:11.032 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:37:11.032 D/RoutesViewModel( 6750):    Total de rotas: 1
+10-30 14:37:11.032 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:37:11.032 D/RoutesViewModel( 6750): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 14:37:11.064 D/RoutesAdapter( 6750): Rota Luz: Status = FINALIZADA -> Texto = 'Finalizada'
+10-30 14:37:11.064 D/RoutesAdapter( 6750): ­ƒöì DEBUG CICLO: cicloAtual=1, dataInicio=null, dataFim=null
+10-30 14:37:11.064 D/RoutesAdapter( 6750): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=FINALIZADA, cicloAcertoAtual=1
+10-30 14:37:11.064 D/RoutesAdapter( 6750): ­ƒöì TEXTO CICLO GERADO: '1┬║ Acerto - Data n├úo definida a Em andamento'
+10-30 14:37:19.678 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 14:37:19.678 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 14:37:19.678 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 14:37:19.678 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 14:37:19.678 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 14:37:19.678 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 14:37:19.678 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 14:37:19.678 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 14:37:19.678 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 14:37:19.678 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 14:37:19.678 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 14:37:19.678 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 14:37:19.678 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 14:37:19.678 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 14:38:03.575 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:38:03.575 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:38:03.575 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:38:03.575 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:38:03.575 D/AppRepository( 6750):    Data fim: null
+10-30 14:38:03.575 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:38:03.577 D/ClientListViewModel( 6750): === INICIANDO CARREGAMENTO DE DADOS ROTA 1 ===
+10-30 14:38:03.578 D/ClientListViewModel( 6750): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 14:38:03.582 D/ClientListViewModel( 6750): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 14:38:03.604 D/ClientListViewModel( 6750): === DADOS CLIENTES CARREGADOS ===
+10-30 14:38:03.604 D/ClientListViewModel( 6750): Total clientes: 0, Ativos: 0
+10-30 14:38:03.604 D/AppRepository( 6750): Buscando mesas para rota 1
+10-30 14:38:03.609 D/ClientListViewModel( 6750): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:38:03.609 D/ClientListViewModel( 6750): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:38:03.609 D/ClientListViewModel( 6750): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:38:03.609 D/ClientListViewModel( 6750): Ô£à Dados for├ºados recarregados: 0 clientes
+10-30 14:38:03.610 D/ClientListViewModel( 6750): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:38:03.610 D/ClientListViewModel( 6750): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:38:03.610 D/ClientListViewModel( 6750): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:38:03.611 D/ClientListViewModel( 6750): ­ƒåò Primeira vez nesta rota, exibindo 1┬║ Acerto
+10-30 14:38:03.614 D/ClientListViewModel( 6750): ­ƒåò Primeira vez nesta rota, exibindo 1┬║ Acerto
+10-30 14:38:03.626 D/ClientListViewModel( 6750): Ô£à Clientes acertados no ciclo -1: 0 de 0
+10-30 14:38:03.626 D/ClientListViewModel( 6750): Ô£à Pend├¬ncias calculadas: 0 de 0 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 14:38:03.626 D/ClientListViewModel( 6750): Ô£à Dados do progresso calculados: 0% de 0 clientes, 0 pend├¬ncias
+10-30 14:38:03.627 D/ClientListViewModel( 6750): Ô£à Dados for├ºados recarregados: 0 clientes
+10-30 14:38:03.631 D/ClientListViewModel( 6750): === DADOS MESAS CARREGADOS ===
+10-30 14:38:03.631 D/ClientListViewModel( 6750): Mesas encontradas: 0
+10-30 14:38:03.631 D/ClientListViewModel( 6750): === ATUALIZANDO DADOS FINAIS ===
+10-30 14:38:03.631 D/ClientListViewModel( 6750): Dados finais: 0 clientes, 0 mesas
+10-30 14:38:05.818 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro de rotas:
+10-30 14:38:05.818 D/RoutesViewModel( 6750):    Usu├írio: rossinys
+10-30 14:38:05.818 D/RoutesViewModel( 6750):    Email: rossinys@gmail.com
+10-30 14:38:05.818 D/RoutesViewModel( 6750):    ID: 1
+10-30 14:38:05.818 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:38:05.818 D/RoutesViewModel( 6750):    Total de rotas: 0
+10-30 14:38:05.818 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 14:38:05.831 D/RoutesViewModel( 6750): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 14:38:05.978 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:38:05.978 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:38:05.978 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:38:05.978 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:38:05.978 D/AppRepository( 6750):    Data fim: null
+10-30 14:38:05.978 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:38:05.979 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro de rotas:
+10-30 14:38:05.979 D/RoutesViewModel( 6750):    Usu├írio: rossinys
+10-30 14:38:05.979 D/RoutesViewModel( 6750):    Email: rossinys@gmail.com
+10-30 14:38:05.979 D/RoutesViewModel( 6750):    ID: 1
+10-30 14:38:05.979 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:38:05.979 D/RoutesViewModel( 6750):    Total de rotas: 1
+10-30 14:38:05.980 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:38:06.010 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:38:06.010 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:38:06.010 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:38:06.010 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:38:06.010 D/AppRepository( 6750):    Data fim: null
+10-30 14:38:06.010 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:38:06.043 D/AppRepository( 6750): ­ƒöì RotaResumo criado para Luz:
+10-30 14:38:06.043 D/AppRepository( 6750):    Status: FINALIZADA (da entidade Rota)
+10-30 14:38:06.043 D/AppRepository( 6750):    Ciclo: 1 (da entidade Rota)
+10-30 14:38:06.043 D/AppRepository( 6750):    Data in├¡cio: null
+10-30 14:38:06.043 D/AppRepository( 6750):    Data fim: null
+10-30 14:38:06.043 D/AppRepository( 6750):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 14:38:06.046 D/RoutesViewModel( 6750): ­ƒôè Dados atualizados: 1 rotas
+10-30 14:38:06.046 D/RoutesViewModel( 6750): ­ƒöì Aplicando filtro completo de rotas:
+10-30 14:38:06.046 D/RoutesViewModel( 6750):    ├ë Admin: true
+10-30 14:38:06.046 D/RoutesViewModel( 6750):    Total de rotas: 1
+10-30 14:38:06.046 D/RoutesViewModel( 6750): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:38:06.046 D/RoutesViewModel( 6750): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 14:38:06.062 D/RoutesAdapter( 6750): Rota Luz: Status = FINALIZADA -> Texto = 'Finalizada'
+10-30 14:38:06.062 D/RoutesAdapter( 6750): ­ƒöì DEBUG CICLO: cicloAtual=1, dataInicio=null, dataFim=null
+10-30 14:38:06.062 D/RoutesAdapter( 6750): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=FINALIZADA, cicloAcertoAtual=1
+10-30 14:38:06.062 D/RoutesAdapter( 6750): ­ƒöì TEXTO CICLO GERADO: '1┬║ Acerto - Data n├úo definida a Em andamento'
+10-30 14:38:19.731 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 14:38:19.732 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 14:38:19.732 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 14:38:19.732 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 14:38:19.732 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 14:38:19.732 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 14:38:19.732 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 14:38:19.732 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 14:38:19.732 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 14:38:19.732 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 14:38:19.732 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 14:38:19.732 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 14:38:19.732 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 14:38:19.732 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 14:38:34.347 W/System.err( 7233): com.samsung.android.scloud.common.exception.SCException: [rcode] 80000000, [rmsg]: SDK is not set up. please check if Scsp.setUp has been called., ResultCode: 100
+10-30 14:38:34.347 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.handle(Unknown Source:27)
+10-30 14:38:34.347 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:204)
+10-30 14:38:34.347 W/System.err( 7233): 	at com.samsung.android.scloud.keystore.c.a(Unknown Source:195)
+10-30 14:38:34.347 W/System.err( 7233): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.lambda$onCreate$2(Unknown Source:96)
+10-30 14:38:34.347 W/System.err( 7233): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.d(Unknown Source:0)
+10-30 14:38:34.347 W/System.err( 7233): 	at A8.a.apply(Unknown Source:180)
+10-30 14:38:34.347 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:38:34.347 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:38:34.347 W/System.err( 7233): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.lambda$onCreate$3(Unknown Source:11)
+10-30 14:38:34.347 W/System.err( 7233): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.e(Unknown Source:0)
+10-30 14:38:34.347 W/System.err( 7233): 	at com.samsung.android.scloud.backup.core.logic.worker.g.run(Unknown Source:293)
+10-30 14:38:34.347 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:38:34.348 W/System.err( 7233): Caused by: [rcode] 80000000, [rmsg]: SDK is not set up. please check if Scsp.setUp has been called.
+10-30 14:38:34.348 W/System.err( 7233): 	at com.samsung.scsp.framework.core.identity.ScspIdentityFactory.checkContext(Unknown Source:14)
+10-30 14:38:34.348 W/System.err( 7233): 	at com.samsung.scsp.framework.core.identity.ScspIdentityFactory.getInstance(Unknown Source:0)
+10-30 14:38:34.348 W/System.err( 7233): 	at com.samsung.scsp.framework.core.decorator.AbstractDecorator.<init>(Unknown Source:130)
+10-30 14:38:34.348 W/System.err( 7233): 	at com.samsung.scsp.internal.certificate.SamsungCloudCertificate.<init>(Unknown Source:5)
+10-30 14:38:34.348 W/System.err( 7233): 	at J.h.get(Unknown Source:20)
+10-30 14:38:34.348 W/System.err( 7233): 	at com.samsung.android.scloud.backup.method.oem.f.get(Unknown Source:130)
+10-30 14:38:34.348 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:4)
+10-30 14:38:34.348 W/System.err( 7233): 	... 10 more
+10-30 14:38:34.629 W/System.err( 7233): java.lang.ExceptionInInitializerError
+10-30 14:38:34.630 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.getInstance(Unknown Source:0)
+10-30 14:38:34.630 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings$Static.<clinit>(Unknown Source:0)
+10-30 14:38:34.630 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.getSettingValue(Unknown Source:0)
+10-30 14:38:34.630 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.isRecoveryInProcessing(Unknown Source:4)
+10-30 14:38:34.630 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.verifyState(Unknown Source:15)
+10-30 14:38:34.630 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.recover(Unknown Source:21)
+10-30 14:38:34.630 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$0(Unknown Source:2)
+10-30 14:38:34.630 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.c(Unknown Source:0)
+10-30 14:38:34.630 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.c.run(Unknown Source:49)
+10-30 14:38:34.631 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+10-30 14:38:34.631 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+10-30 14:38:34.631 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$2(Unknown Source:6)
+10-30 14:38:34.631 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.a(Unknown Source:0)
+10-30 14:38:34.631 W/System.err( 7233): 	at G2.h.run(Unknown Source:193)
+10-30 14:38:34.631 W/System.err( 7233): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+10-30 14:38:34.631 W/System.err( 7233): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+10-30 14:38:34.631 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:38:34.632 W/System.err( 7233): Caused by: java.lang.RuntimeException: Cannot find implementation for com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase. MediaRecoveryDatabase_Impl does not exist
+10-30 14:38:34.632 W/System.err( 7233): 	at androidx.room.Room.getGeneratedImplementation(Unknown Source:208)
+10-30 14:38:34.632 W/System.err( 7233): 	at androidx.room.RoomDatabase$Builder.build(Unknown Source:321)
+10-30 14:38:34.632 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.create(Unknown Source:16)
+10-30 14:38:34.632 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.a(Unknown Source:0)
+10-30 14:38:34.632 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase$Holder.<clinit>(Unknown Source:0)
+10-30 14:38:34.632 W/System.err( 7233): 	... 17 more
+10-30 14:38:34.636 W/System.err( 7233): java.lang.NoClassDefFoundError: com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase$Holder
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.getInstance(Unknown Source:0)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryStatUploader.lambda$upload$0(Unknown Source:0)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryStatUploader.b(Unknown Source:0)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.k.run(Unknown Source:7)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryStatUploader.upload(Unknown Source:6)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.k.run(Unknown Source:13)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.lambda$onStartJob$0(Unknown Source:49)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.d(Unknown Source:0)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.a.run(Unknown Source:9)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.lambda$onStartJob$1(Unknown Source:6)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.b(Unknown Source:0)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.e.run(Unknown Source:37)
+10-30 14:38:34.636 W/System.err( 7233): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+10-30 14:38:34.636 W/System.err( 7233): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+10-30 14:38:34.636 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:38:34.636 W/System.err( 7233): Caused by: java.lang.ExceptionInInitializerError
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.getInstance(Unknown Source:0)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings$Static.<clinit>(Unknown Source:0)
+10-30 14:38:34.636 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.getSettingValue(Unknown Source:0)
+10-30 14:38:34.637 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.isRecoveryInProcessing(Unknown Source:4)
+10-30 14:38:34.637 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.verifyState(Unknown Source:15)
+10-30 14:38:34.637 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.recover(Unknown Source:21)
+10-30 14:38:34.637 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$0(Unknown Source:2)
+10-30 14:38:34.637 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.c(Unknown Source:0)
+10-30 14:38:34.637 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.c.run(Unknown Source:49)
+10-30 14:38:34.637 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+10-30 14:38:34.637 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+10-30 14:38:34.637 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$2(Unknown Source:6)
+10-30 14:38:34.637 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.a(Unknown Source:0)
+10-30 14:38:34.637 W/System.err( 7233): 	at G2.h.run(Unknown Source:193)
+10-30 14:38:34.637 W/System.err( 7233): 	... 3 more
+10-30 14:38:34.638 W/System.err( 7233): Caused by: java.lang.RuntimeException: Cannot find implementation for com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase. MediaRecoveryDatabase_Impl does not exist
+10-30 14:38:34.638 W/System.err( 7233): 	at androidx.room.Room.getGeneratedImplementation(Unknown Source:208)
+10-30 14:38:34.638 W/System.err( 7233): 	at androidx.room.RoomDatabase$Builder.build(Unknown Source:321)
+10-30 14:38:34.639 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.create(Unknown Source:16)
+10-30 14:38:34.640 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.a(Unknown Source:0)
+10-30 14:38:34.640 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase$Holder.<clinit>(Unknown Source:0)
+10-30 14:38:34.640 W/System.err( 7233): 	... 17 more
+10-30 14:38:34.641 W/System.err( 7233): java.lang.NoClassDefFoundError: com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings$Static
+10-30 14:38:34.641 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.getSettingValue(Unknown Source:0)
+10-30 14:38:34.641 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.isRecoveryInProcessing(Unknown Source:4)
+10-30 14:38:34.641 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.verifyState(Unknown Source:15)
+10-30 14:38:34.641 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.getCurrentSession(Unknown Source:12)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.lambda$cancel$1(Unknown Source:0)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.a(Unknown Source:0)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.c.run(Unknown Source:73)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.lambda$cancel$2(Unknown Source:6)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.c(Unknown Source:0)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.e.run(Unknown Source:61)
+10-30 14:38:34.642 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:38:34.642 W/System.err( 7233): Caused by: java.lang.ExceptionInInitializerError
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.getInstance(Unknown Source:0)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings$Static.<clinit>(Unknown Source:0)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.getSettingValue(Unknown Source:0)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.isRecoveryInProcessing(Unknown Source:4)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.verifyState(Unknown Source:15)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.recover(Unknown Source:21)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$0(Unknown Source:2)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.c(Unknown Source:0)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.c.run(Unknown Source:49)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$2(Unknown Source:6)
+10-30 14:38:34.642 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.a(Unknown Source:0)
+10-30 14:38:34.642 W/System.err( 7233): 	at G2.h.run(Unknown Source:193)
+10-30 14:38:34.642 W/System.err( 7233): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+10-30 14:38:34.642 W/System.err( 7233): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+10-30 14:38:34.642 W/System.err( 7233): 	... 1 more
+10-30 14:38:34.642 W/System.err( 7233): Caused by: java.lang.RuntimeException: Cannot find implementation for com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase. MediaRecoveryDatabase_Impl does not exist
+10-30 14:38:34.642 W/System.err( 7233): 	at androidx.room.Room.getGeneratedImplementation(Unknown Source:208)
+10-30 14:38:34.642 W/System.err( 7233): 	at androidx.room.RoomDatabase$Builder.build(Unknown Source:321)
+10-30 14:38:34.643 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.create(Unknown Source:16)
+10-30 14:38:34.643 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.a(Unknown Source:0)
+10-30 14:38:34.643 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase$Holder.<clinit>(Unknown Source:0)
+10-30 14:38:34.643 W/System.err( 7233): 	... 17 more
+10-30 14:39:07.750 D/AppRepository( 7475): Worker de sincroniza├º├úo agendado
+10-30 14:39:07.752 D/AppRepository( 7475): Worker de limpeza agendado
+10-30 14:39:07.752 D/AppRepository( 7475): Workers peri├│dicos inicializados
+10-30 14:39:07.754 D/AppRepository( 7475): ­ƒôè Monitoramento de mem├│ria iniciado
+10-30 14:39:10.975 W/System.err( 7233): java.lang.NoClassDefFoundError: com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings$Static
+10-30 14:39:10.975 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.getSettingValue(Unknown Source:0)
+10-30 14:39:10.975 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.isRecoveryInProcessing(Unknown Source:4)
+10-30 14:39:10.975 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.verifyState(Unknown Source:15)
+10-30 14:39:10.975 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.recover(Unknown Source:21)
+10-30 14:39:10.975 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$0(Unknown Source:2)
+10-30 14:39:10.976 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.c(Unknown Source:0)
+10-30 14:39:10.976 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.c.run(Unknown Source:49)
+10-30 14:39:10.976 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+10-30 14:39:10.976 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+10-30 14:39:10.976 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$2(Unknown Source:6)
+10-30 14:39:10.976 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.a(Unknown Source:0)
+10-30 14:39:10.976 W/System.err( 7233): 	at G2.h.run(Unknown Source:193)
+10-30 14:39:10.976 W/System.err( 7233): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+10-30 14:39:10.976 W/System.err( 7233): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+10-30 14:39:10.976 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:10.976 W/System.err( 7233): Caused by: java.lang.ExceptionInInitializerError
+10-30 14:39:10.976 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.getInstance(Unknown Source:0)
+10-30 14:39:10.976 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings$Static.<clinit>(Unknown Source:0)
+10-30 14:39:10.976 W/System.err( 7233): 	... 15 more
+10-30 14:39:10.976 W/System.err( 7233): Caused by: java.lang.RuntimeException: Cannot find implementation for com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase. MediaRecoveryDatabase_Impl does not exist
+10-30 14:39:10.976 W/System.err( 7233): 	at androidx.room.Room.getGeneratedImplementation(Unknown Source:208)
+10-30 14:39:10.976 W/System.err( 7233): 	at androidx.room.RoomDatabase$Builder.build(Unknown Source:321)
+10-30 14:39:10.976 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.create(Unknown Source:16)
+10-30 14:39:10.976 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.a(Unknown Source:0)
+10-30 14:39:10.976 W/System.err( 7233): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase$Holder.<clinit>(Unknown Source:0)
+10-30 14:39:10.976 W/System.err( 7233): 	... 17 more
+10-30 14:39:14.333 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.inputmethod
+10-30 14:39:14.333 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:14.333 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:14.333 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:14.333 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:14.333 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:14.333 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:14.333 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:14.333 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:14.333 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:14.333 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:14.333 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:14.333 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:14.333 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:14.333 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:14.333 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:14.333 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:14.333 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:14.333 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:14.333 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:14.333 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:14.333 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:14.334 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:14.334 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:14.334 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:14.334 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:14.334 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:14.334 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:14.716 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.app.desktoplauncher
+10-30 14:39:14.717 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:14.717 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:14.717 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:14.717 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:14.717 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:14.717 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:14.717 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:14.717 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:14.717 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:14.717 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:14.717 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:14.717 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:14.717 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:14.717 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:14.717 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:14.717 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:14.740 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.email.provider
+10-30 14:39:14.741 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:14.741 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:14.741 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:14.741 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:14.741 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:14.741 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:14.741 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:14.741 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:14.741 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:14.741 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:14.741 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:14.741 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:14.741 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:14.741 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:14.741 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:14.741 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:15.329 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.app.sbrowser
+10-30 14:39:15.330 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:15.330 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:15.330 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:15.330 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:15.330 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:15.330 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:15.330 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:15.330 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:15.330 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:15.330 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:15.330 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:15.330 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:15.331 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:15.331 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:15.331 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:15.331 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:15.331 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:15.331 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:15.331 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:15.331 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:15.331 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:15.331 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:15.331 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:15.331 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:15.331 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:15.331 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:15.331 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:15.334 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.samsung.voiceserviceplatform
+10-30 14:39:15.334 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:15.334 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:15.334 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:15.334 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:15.335 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:15.335 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:15.335 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:15.335 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:15.335 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:15.335 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:15.335 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:15.335 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:15.335 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:15.335 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:15.335 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:15.335 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:15.335 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:15.335 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:15.335 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:15.336 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:15.336 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:15.336 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:15.336 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:15.336 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:15.336 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:15.336 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:15.336 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:15.768 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.app.firewall
+10-30 14:39:15.768 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:15.768 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:15.768 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:15.768 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:15.768 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:15.768 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:15.768 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:15.768 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:15.768 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:15.768 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:15.768 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:15.768 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:15.768 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:15.768 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:15.768 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:15.768 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:15.768 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:15.768 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:15.769 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:15.769 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:15.769 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:15.769 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:15.769 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:15.769 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:15.769 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:15.769 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:15.769 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:15.770 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.sm_cn
+10-30 14:39:15.771 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:15.771 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:15.771 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:15.771 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:15.771 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:15.771 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:15.771 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:15.771 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:15.771 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:15.771 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:15.771 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:15.771 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:15.771 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:15.771 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:15.771 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:15.771 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:15.892 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.app.routines
+10-30 14:39:15.892 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:15.892 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:15.892 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:15.892 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:15.892 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:15.892 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:15.892 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:15.892 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:15.892 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:15.892 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:15.892 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:15.892 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:15.892 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:15.892 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:15.893 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:15.893 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:15.893 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:15.893 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:15.893 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:15.893 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:15.893 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:15.893 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:15.893 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:15.893 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:15.893 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:15.893 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:15.893 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:15.894 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.scloud.backupsamplecode
+10-30 14:39:15.894 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:15.894 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:15.894 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:15.894 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:15.895 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:15.895 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:15.895 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:15.895 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:15.895 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:15.895 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:15.895 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:15.895 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:15.895 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:15.895 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:15.895 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:15.895 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:15.895 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:15.895 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:15.895 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:15.895 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:15.895 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:15.895 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:15.895 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:15.895 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:15.895 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:15.895 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:15.895 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:15.896 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.example.filebackuptest
+10-30 14:39:15.896 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:15.896 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:15.896 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:15.896 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:15.896 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:15.896 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:15.896 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:15.896 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:15.896 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:15.896 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:15.896 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:15.896 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:15.896 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:15.896 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:15.897 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:15.897 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:15.897 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:15.897 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:15.897 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:15.897 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:15.897 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:15.897 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:15.897 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:15.897 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:15.897 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:15.897 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:15.897 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:15.898 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.example.messengermainapp
+10-30 14:39:15.898 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:15.898 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:15.898 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:15.898 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:15.898 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:15.898 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:15.898 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:15.898 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:15.898 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:15.898 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:15.898 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:15.898 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:15.898 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:15.899 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:15.899 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:15.899 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:15.899 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:15.899 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:15.899 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:15.899 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:15.899 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:15.899 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:15.899 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:15.899 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:15.899 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:15.899 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:15.899 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:15.900 W/System.err( 7233): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.scloud.wearbackupexample
+10-30 14:39:15.900 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:15.900 W/System.err( 7233): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:15.900 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+10-30 14:39:15.900 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+10-30 14:39:15.900 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+10-30 14:39:15.900 W/System.err( 7233): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+10-30 14:39:15.900 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+10-30 14:39:15.900 W/System.err( 7233): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+10-30 14:39:15.900 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+10-30 14:39:15.900 W/System.err( 7233): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+10-30 14:39:15.900 W/System.err( 7233): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+10-30 14:39:15.900 W/System.err( 7233): 	at w6.f.isLoadablePackage(Unknown Source:17)
+10-30 14:39:15.900 W/System.err( 7233): 	at w6.b.load(Unknown Source:8)
+10-30 14:39:15.900 W/System.err( 7233): 	at w6.b.readAppContentInfo(Unknown Source:75)
+10-30 14:39:15.900 W/System.err( 7233): 	at w6.d.<init>(Unknown Source:200)
+10-30 14:39:15.901 W/System.err( 7233): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+10-30 14:39:15.901 W/System.err( 7233): 	at w6.d.c(Unknown Source:0)
+10-30 14:39:15.901 W/System.err( 7233): 	at t2.a.invoke(Unknown Source:100)
+10-30 14:39:15.901 W/System.err( 7233): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+10-30 14:39:15.901 W/System.err( 7233): 	at w6.d$a.getInstance(Unknown Source:4)
+10-30 14:39:15.901 W/System.err( 7233): 	at w6.d.getInstance(Unknown Source:2)
+10-30 14:39:15.901 W/System.err( 7233): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+10-30 14:39:15.901 W/System.err( 7233): 	at C2.f.apply(Unknown Source:382)
+10-30 14:39:15.901 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+10-30 14:39:15.901 W/System.err( 7233): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+10-30 14:39:15.901 W/System.err( 7233): 	at androidx.webkit.a.run(Unknown Source:323)
+10-30 14:39:15.901 W/System.err( 7233): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 14:39:19.760 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 14:39:19.760 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 14:39:19.760 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 14:39:19.761 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 14:39:19.761 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 14:39:19.761 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 14:39:19.761 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 14:39:19.761 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 14:39:19.761 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 14:39:19.761 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 14:39:19.761 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 14:39:19.761 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 14:39:19.761 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 14:39:19.761 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 14:39:21.785 W/System.err(20200): android.content.pm.PackageManager$NameNotFoundException: com.example.gestaobilhares
+10-30 14:39:21.786 W/System.err(20200): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 14:39:21.786 W/System.err(20200): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 14:39:21.786 W/System.err(20200): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.a(:11)
+10-30 14:39:21.786 W/System.err(20200): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.b(:1)
+10-30 14:39:21.786 W/System.err(20200): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.c(Unknown Source:0)
+10-30 14:39:21.786 W/System.err(20200): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.a.run(Unknown Source:6)
+10-30 14:39:21.786 W/System.err(20200): 	at android.os.Handler.handleCallback(Handler.java:938)
+10-30 14:39:21.786 W/System.err(20200): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+10-30 14:39:21.786 W/System.err(20200): 	at android.os.Looper.loopOnce(Looper.java:226)
+10-30 14:39:21.786 W/System.err(20200): 	at android.os.Looper.loop(Looper.java:313)
+10-30 14:39:21.786 W/System.err(20200): 	at android.os.HandlerThread.run(HandlerThread.java:67)

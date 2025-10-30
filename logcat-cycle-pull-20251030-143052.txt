@@ -1,0 +1,46 @@
+--------- beginning of main
+10-30 14:30:55.152 D/AppRepository( 5561): Ô£à Opera├º├úo adicionada ├á fila: Colaborador:1 (ID: 6)
+10-30 14:30:55.154 D/AppRepository( 5561): ­ƒôè Total de opera├º├Áes pendentes: 1
+10-30 14:30:55.308 D/RoutesViewModel( 5561): ­ƒöì Aplicando filtro de rotas:
+10-30 14:30:55.308 D/RoutesViewModel( 5561):    Usu├írio: rossinys
+10-30 14:30:55.308 D/RoutesViewModel( 5561):    Email: rossinys@gmail.com
+10-30 14:30:55.308 D/RoutesViewModel( 5561):    ID: 1
+10-30 14:30:55.308 D/RoutesViewModel( 5561):    ├ë Admin: true
+10-30 14:30:55.308 D/RoutesViewModel( 5561):    Total de rotas: 0
+10-30 14:30:55.308 D/RoutesViewModel( 5561): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 14:30:55.331 D/RoutesViewModel( 5561): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 14:30:55.565 D/AppRepository( 5561): ­ƒöì RotaResumo criado para Luz:
+10-30 14:30:55.565 D/AppRepository( 5561):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 14:30:55.565 D/AppRepository( 5561):    Ciclo: 2 (da entidade Rota)
+10-30 14:30:55.566 D/AppRepository( 5561):    Data in├¡cio: 1761845176158
+10-30 14:30:55.566 D/AppRepository( 5561):    Data fim: null
+10-30 14:30:55.571 D/AppRepository( 5561):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a Em andamento
+10-30 14:30:55.683 D/AppRepository( 5561): ­ƒöì RotaResumo criado para Luz:
+10-30 14:30:55.683 D/AppRepository( 5561):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 14:30:55.683 D/AppRepository( 5561):    Ciclo: 2 (da entidade Rota)
+10-30 14:30:55.683 D/AppRepository( 5561):    Data in├¡cio: 1761845176158
+10-30 14:30:55.683 D/AppRepository( 5561):    Data fim: null
+10-30 14:30:55.684 D/AppRepository( 5561):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a Em andamento
+10-30 14:30:55.686 D/RoutesViewModel( 5561): ­ƒöì Aplicando filtro de rotas:
+10-30 14:30:55.686 D/RoutesViewModel( 5561):    Usu├írio: rossinys
+10-30 14:30:55.687 D/RoutesViewModel( 5561):    Email: rossinys@gmail.com
+10-30 14:30:55.687 D/RoutesViewModel( 5561):    ID: 1
+10-30 14:30:55.687 D/RoutesViewModel( 5561):    ├ë Admin: true
+10-30 14:30:55.687 D/RoutesViewModel( 5561):    Total de rotas: 1
+10-30 14:30:55.687 D/RoutesViewModel( 5561): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:30:55.811 D/AppRepository( 5561): ­ƒöì RotaResumo criado para Luz:
+10-30 14:30:55.811 D/AppRepository( 5561):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 14:30:55.811 D/AppRepository( 5561):    Ciclo: 2 (da entidade Rota)
+10-30 14:30:55.812 D/AppRepository( 5561):    Data in├¡cio: 1761845176158
+10-30 14:30:55.812 D/AppRepository( 5561):    Data fim: null
+10-30 14:30:55.812 D/AppRepository( 5561):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a Em andamento
+10-30 14:30:55.820 D/RoutesViewModel( 5561): ­ƒôè Dados atualizados: 1 rotas
+10-30 14:30:55.820 D/RoutesViewModel( 5561): ­ƒöì Aplicando filtro completo de rotas:
+10-30 14:30:55.821 D/RoutesViewModel( 5561):    ├ë Admin: true
+10-30 14:30:55.821 D/RoutesViewModel( 5561):    Total de rotas: 1
+10-30 14:30:55.821 D/RoutesViewModel( 5561): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 14:30:55.821 D/RoutesViewModel( 5561): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 14:30:55.872 D/RoutesAdapter( 5561): Rota Luz: Status = EM_ANDAMENTO -> Texto = 'Em andamento'
+10-30 14:30:55.872 D/RoutesAdapter( 5561): ­ƒöì DEBUG CICLO: cicloAtual=2, dataInicio=1761845176158, dataFim=null
+10-30 14:30:55.872 D/RoutesAdapter( 5561): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=EM_ANDAMENTO, cicloAcertoAtual=2
+10-30 14:30:55.874 D/RoutesAdapter( 5561): ­ƒöì TEXTO CICLO GERADO: '2┬║ Acerto - 30/10/2025 a Em andamento'
