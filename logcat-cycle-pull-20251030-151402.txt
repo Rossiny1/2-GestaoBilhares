@@ -1,0 +1,926 @@
+--------- beginning of main
+10-30 15:14:02.445 D/AppRepository(19385): Ô£à Opera├º├úo adicionada ├á fila: Colaborador:1 (ID: 1)
+10-30 15:14:02.447 D/AppRepository(19385): ­ƒôè Total de opera├º├Áes pendentes: 1
+10-30 15:14:02.659 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro de rotas:
+10-30 15:14:02.659 D/RoutesViewModel(19385):    Usu├írio: rossinys
+10-30 15:14:02.659 D/RoutesViewModel(19385):    Email: rossinys@gmail.com
+10-30 15:14:02.659 D/RoutesViewModel(19385):    ID: 1
+10-30 15:14:02.659 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:02.659 D/RoutesViewModel(19385):    Total de rotas: 0
+10-30 15:14:02.659 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 15:14:02.684 D/RoutesViewModel(19385): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 15:14:02.920 D/RoutesViewModel(19385): ­ƒôè Dados atualizados: 0 rotas
+10-30 15:14:02.921 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro completo de rotas:
+10-30 15:14:02.921 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:02.921 D/RoutesViewModel(19385):    Total de rotas: 0
+10-30 15:14:02.921 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 15:14:02.921 D/RoutesViewModel(19385): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+10-30 15:14:08.160 D/SyncManagerV2(19385): Ô£à empresa_id configurado como 'empresa_001'
+10-30 15:14:08.160 D/SyncManagerV2(19385): Configura├º├Áes de sincroniza├º├úo inicializadas
+10-30 15:14:08.182 D/SyncManagerV2(19385): ­ƒöì DEBUG - Fila de sincroniza├º├úo:
+10-30 15:14:08.183 D/SyncManagerV2(19385):    Total de opera├º├Áes PENDING (Flow): 1
+10-30 15:14:08.183 D/SyncManagerV2(19385):    Total de opera├º├Áes PENDING (Count): 1
+10-30 15:14:08.183 D/SyncManagerV2(19385):    Total de opera├º├Áes na fila: 1
+10-30 15:14:08.183 D/SyncManagerV2(19385):    [0] ID: 1
+10-30 15:14:08.183 D/SyncManagerV2(19385):         Tipo: Colaborador
+10-30 15:14:08.183 D/SyncManagerV2(19385):         Entity ID: 1
+10-30 15:14:08.183 D/SyncManagerV2(19385):         Opera├º├úo: CREATE
+10-30 15:14:08.183 D/SyncManagerV2(19385):         Status: PENDING
+10-30 15:14:08.183 D/SyncManagerV2(19385):         Payload: {
+10-30 15:14:08.183 D/SyncManagerV2(19385):     "id": 1,
+10-30 15:14:08.183 D/SyncManagerV2(19385):     "nome": "rossinys",
+10-30 15:14:08.183 D/SyncManagerV2(19385):     "email": "rossinys@gmail.com",
+10-30 15:14:08.183 D/SyncManagerV2(19385):     "nivelAcesso": "ADMIN",
+10-30 15:14:08.183 D/SyncManagerV2(19385):     "ativo": true,
+10-30 15:14:08.183 D/SyncManagerV2(19385):     "aprovado": true,
+10-30 15:14:08.183 D/SyncManagerV2(19385):     "dataCadastro": "Thu Oct 30 15:14:02 GMT-03:00 2025"
+10-30 15:14:08.183 D/SyncManagerV2(19385): }
+10-30 15:14:08.183 D/SyncManagerV2(19385):         Criado: Thu Oct 30 15:14:02 GMT-03:00 2025
+10-30 15:14:08.183 D/SyncManagerV2(19385):         Agendado: Thu Oct 30 15:14:02 GMT-03:00 2025
+10-30 15:14:08.184 D/SyncManagerV2(19385): ­ƒÜÇ INICIANDO SINCRONIZA├ç├âO COMPLETA (PUSH + PULL)
+10-30 15:14:08.184 D/SyncManagerV2(19385): ­ƒôñ Fase 1: PUSH SYNC (App ÔåÆ Firestore)
+10-30 15:14:08.205 D/SyncManagerV2(19385): ­ƒôï Processando 1 opera├º├Áes
+10-30 15:14:08.206 D/SyncManagerV2(19385):    [0] Colaborador:1 - CREATE (PENDING)
+10-30 15:14:08.215 D/SyncManagerV2(19385): ­ƒÅó Empresa ID obtido: empresa_001 (config: null)
+10-30 15:14:08.215 D/SyncManagerV2(19385): ­ƒöä Aplicando opera├º├úo no Firestore:
+10-30 15:14:08.215 D/SyncManagerV2(19385):    Empresa ID: empresa_001
+10-30 15:14:08.215 D/SyncManagerV2(19385):    Collection: colaboradores
+10-30 15:14:08.215 D/SyncManagerV2(19385):    Document ID: 1
+10-30 15:14:08.215 D/SyncManagerV2(19385):    Operation: CREATE
+10-30 15:14:08.215 D/SyncManagerV2(19385):    Payload: {
+10-30 15:14:08.215 D/SyncManagerV2(19385):     "id": 1,
+10-30 15:14:08.215 D/SyncManagerV2(19385):     "nome": "rossinys",
+10-30 15:14:08.215 D/SyncManagerV2(19385):     "email": "rossinys@gmail.com",
+10-30 15:14:08.215 D/SyncManagerV2(19385):     "nivelAcesso": "ADMIN",
+10-30 15:14:08.215 D/SyncManagerV2(19385):     "ativo": true,
+10-30 15:14:08.215 D/SyncManagerV2(19385):     "aprovado": true,
+10-30 15:14:08.215 D/SyncManagerV2(19385):     "dataCadastro": "Thu Oct 30 15:14:02 GMT-03:00 2025"
+10-30 15:14:08.215 D/SyncManagerV2(19385): }
+10-30 15:14:08.236 D/SyncManagerV2(19385):    Payload Map: {id=1.0, nome=rossinys, email=rossinys@gmail.com, nivelAcesso=ADMIN, ativo=true, aprovado=true, dataCadastro=Thu Oct 30 15:14:02 GMT-03:00 2025}
+10-30 15:14:08.290 D/SyncManagerV2(19385):    Firestore Path: empresas/empresa_001/colaboradores/1
+10-30 15:14:08.290 D/SyncManagerV2(19385):    Executando CREATE com set...
+10-30 15:14:09.112 D/SyncManagerV2(19385):    Payload final: {id=1.0, nome=rossinys, email=rossinys@gmail.com, nivelAcesso=ADMIN, ativo=true, aprovado=true, dataCadastro=Thu Oct 30 15:14:02 GMT-03:00 2025, roomId=1, syncTimestamp=1761848048290}
+10-30 15:14:09.112 D/SyncManagerV2(19385):    Ô£à SET executado com sucesso
+10-30 15:14:09.112 D/SyncManagerV2(19385): Ô£à Opera├º├úo CREATE conclu├¡da com sucesso
+10-30 15:14:10.129 D/SyncManagerV2(19385): ­ƒôÑ Fase 2: PULL SYNC (Firestore ÔåÆ App)
+10-30 15:14:10.129 D/SyncManagerV2(19385): ­ƒöì Verificando condi├º├Áes para PULL SYNC...
+10-30 15:14:10.133 D/SyncManagerV2(19385):    Online: true
+10-30 15:14:10.135 D/SyncManagerV2(19385):    Autenticado: true
+10-30 15:14:10.139 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL SYNC do Firestore
+10-30 15:14:10.145 D/SyncManagerV2(19385): ­ƒÅó Empresa ID obtido: empresa_001 (config: null)
+10-30 15:14:10.146 D/SyncManagerV2(19385): ­ƒÅó Empresa ID para PULL: empresa_001
+10-30 15:14:10.146 D/SyncManagerV2(19385): ­ƒöä Fase 1: Sincronizando ROTAS...
+10-30 15:14:10.146 D/SyncManagerV2(19385): ­ƒôÑ Baixando rotas do Firestore...
+10-30 15:14:10.146 D/SyncManagerV2(19385):    Caminho: empresas/empresa_001/rotas
+10-30 15:14:10.363 D/SyncManagerV2(19385): ­ƒôè Encontradas 2 rotas no Firestore
+10-30 15:14:10.368 D/SyncManagerV2(19385): ­ƒöì Processando rota: Luz (Room ID: 1)
+10-30 15:14:10.383 D/SyncManagerV2(19385): Ô£à Rota sincronizada: Luz (ID: 1)
+10-30 15:14:10.385 D/SyncManagerV2(19385): ­ƒöì Processando rota: Sol (Room ID: 2)
+10-30 15:14:10.413 D/SyncManagerV2(19385): Ô£à Rota sincronizada: Sol (ID: 2)
+10-30 15:14:10.413 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Rotas:
+10-30 15:14:10.413 D/SyncManagerV2(19385):    Sincronizadas: 2
+10-30 15:14:10.413 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:10.554 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:10.554 D/AppRepository(19385):    Status: FINALIZADA (da entidade Rota)
+10-30 15:14:10.554 D/AppRepository(19385):    Ciclo: 1 (da entidade Rota)
+10-30 15:14:10.554 D/AppRepository(19385):    Data in├¡cio: null
+10-30 15:14:10.554 D/AppRepository(19385):    Data fim: null
+10-30 15:14:10.555 D/AppRepository(19385):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 15:14:10.558 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro de rotas:
+10-30 15:14:10.558 D/RoutesViewModel(19385):    Usu├írio: rossinys
+10-30 15:14:10.558 D/RoutesViewModel(19385):    Email: rossinys@gmail.com
+10-30 15:14:10.558 D/RoutesViewModel(19385):    ID: 1
+10-30 15:14:10.558 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:10.559 D/RoutesViewModel(19385):    Total de rotas: 1
+10-30 15:14:10.559 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 1 rotas
+10-30 15:14:10.669 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:10.670 D/AppRepository(19385):    Status: FINALIZADA (da entidade Rota)
+10-30 15:14:10.670 D/AppRepository(19385):    Ciclo: 1 (da entidade Rota)
+10-30 15:14:10.670 D/AppRepository(19385):    Data in├¡cio: null
+10-30 15:14:10.670 D/AppRepository(19385):    Data fim: null
+10-30 15:14:10.670 D/AppRepository(19385):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 15:14:10.783 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:10.783 D/AppRepository(19385):    Status: FINALIZADA (da entidade Rota)
+10-30 15:14:10.783 D/AppRepository(19385):    Ciclo: 1 (da entidade Rota)
+10-30 15:14:10.783 D/AppRepository(19385):    Data in├¡cio: null
+10-30 15:14:10.783 D/AppRepository(19385):    Data fim: null
+10-30 15:14:10.783 D/AppRepository(19385):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 15:14:10.785 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro de rotas:
+10-30 15:14:10.785 D/RoutesViewModel(19385):    Usu├írio: rossinys
+10-30 15:14:10.785 D/RoutesViewModel(19385):    Email: rossinys@gmail.com
+10-30 15:14:10.785 D/RoutesViewModel(19385):    ID: 1
+10-30 15:14:10.785 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:10.785 D/RoutesViewModel(19385):    Total de rotas: 2
+10-30 15:14:10.786 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 2 rotas
+10-30 15:14:10.896 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:10.896 D/AppRepository(19385):    Status: FINALIZADA (da entidade Rota)
+10-30 15:14:10.896 D/AppRepository(19385):    Ciclo: 1 (da entidade Rota)
+10-30 15:14:10.896 D/AppRepository(19385):    Data in├¡cio: null
+10-30 15:14:10.896 D/AppRepository(19385):    Data fim: null
+10-30 15:14:10.896 D/AppRepository(19385):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 15:14:10.916 D/SyncManagerV2(19385): ­ƒöä Fase 2: Sincronizando CLIENTES...
+10-30 15:14:10.942 D/SyncManagerV2(19385): ­ƒôÑ Baixando clientes do Firestore...
+10-30 15:14:10.942 D/SyncManagerV2(19385):    Caminho: empresas/empresa_001/clientes
+10-30 15:14:11.038 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:11.038 D/AppRepository(19385):    Status: FINALIZADA (da entidade Rota)
+10-30 15:14:11.038 D/AppRepository(19385):    Ciclo: 1 (da entidade Rota)
+10-30 15:14:11.038 D/AppRepository(19385):    Data in├¡cio: null
+10-30 15:14:11.038 D/AppRepository(19385):    Data fim: null
+10-30 15:14:11.038 D/AppRepository(19385):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 15:14:11.125 D/SyncManagerV2(19385): ­ƒôè Encontrados 1 clientes no Firestore
+10-30 15:14:11.126 D/SyncManagerV2(19385): ­ƒöì Processando cliente: Jo├úo (Room ID: 1)
+10-30 15:14:11.174 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:11.174 D/AppRepository(19385):    Status: FINALIZADA (da entidade Rota)
+10-30 15:14:11.174 D/AppRepository(19385):    Ciclo: 1 (da entidade Rota)
+10-30 15:14:11.174 D/AppRepository(19385):    Data in├¡cio: null
+10-30 15:14:11.174 D/SyncManagerV2(19385): Ô£à Cliente sincronizado: Jo├úo (ID: 1)
+10-30 15:14:11.175 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Clientes:
+10-30 15:14:11.175 D/AppRepository(19385):    Data fim: null
+10-30 15:14:11.175 D/SyncManagerV2(19385):    Sincronizados: 1
+10-30 15:14:11.175 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:11.175 D/AppRepository(19385):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 15:14:11.219 D/RoutesAdapter(19385): Rota Luz: Status = FINALIZADA -> Texto = 'Finalizada'
+10-30 15:14:11.219 D/RoutesAdapter(19385): ­ƒöì DEBUG CICLO: cicloAtual=1, dataInicio=null, dataFim=null
+10-30 15:14:11.219 D/RoutesAdapter(19385): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=FINALIZADA, cicloAcertoAtual=1
+10-30 15:14:11.220 D/RoutesAdapter(19385): ­ƒöì TEXTO CICLO GERADO: '1┬║ Acerto - Data n├úo definida a Em andamento'
+10-30 15:14:11.247 D/RoutesAdapter(19385): Rota Sol: Status = FINALIZADA -> Texto = 'Finalizada'
+10-30 15:14:11.247 D/RoutesAdapter(19385): ­ƒöì DEBUG CICLO: cicloAtual=1, dataInicio=null, dataFim=null
+10-30 15:14:11.247 D/RoutesAdapter(19385): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=FINALIZADA, cicloAcertoAtual=1
+10-30 15:14:11.248 D/RoutesAdapter(19385): ­ƒöì TEXTO CICLO GERADO: '1┬║ Acerto - Data n├úo definida a Em andamento'
+10-30 15:14:11.283 D/SyncManagerV2(19385): ­ƒôè Estat├¡sticas de sincroniza├º├úo:
+10-30 15:14:11.283 D/SyncManagerV2(19385):    Pendentes: 0
+10-30 15:14:11.283 D/SyncManagerV2(19385):    Falhas: 0
+10-30 15:14:11.283 D/SyncManagerV2(19385):    Conclu├¡das: 1
+10-30 15:14:11.285 D/SyncManagerV2(19385):    Online: true
+10-30 15:14:11.285 D/SyncManagerV2(19385):    Sincronizando: false
+10-30 15:14:11.678 D/SyncManagerV2(19385): ­ƒöä Fase 3: Sincronizando MESAS...
+10-30 15:14:11.678 D/SyncManagerV2(19385): ­ƒôÑ Baixando mesas do Firestore...
+10-30 15:14:11.679 D/SyncManagerV2(19385):    Caminho: empresas/empresa_001/mesas
+10-30 15:14:11.836 D/SyncManagerV2(19385): ­ƒôè Encontradas 1 mesas no Firestore
+10-30 15:14:11.837 D/SyncManagerV2(19385): ­ƒöì Processando mesa: 2233 (Room ID: 1)
+10-30 15:14:11.837 D/SyncManagerV2(19385):    Dados da mesa: {syncTimestamp=1761847340338, estadoConservacao=OTIMO, relogioFinal=100.0, numero=2233, panoAtualId=null, dataInstalacao=Thu Oct 30 14:58:22 GMT-03:00 2025, ativa=true, tipoMesa=SINUCA, roomId=1, observacoes=, valorFixo=0.0, tamanho=PEQUENA, clienteId=1.0, id=1.0, relogioInicial=100.0, dataUltimaTrocaPano=}
+10-30 15:14:11.857 D/SyncManagerV2(19385): Ô£à Mesa sincronizada: 2233 (ID: 1)
+10-30 15:14:11.857 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Mesas:
+10-30 15:14:11.857 D/SyncManagerV2(19385):    Sincronizadas: 1
+10-30 15:14:11.858 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:12.361 D/SyncManagerV2(19385): ­ƒöä Fase 4: Sincronizando ACERTOS...
+10-30 15:14:12.361 D/SyncManagerV2(19385): ­ƒôÑ Baixando acertos do Firestore...
+10-30 15:14:12.361 D/SyncManagerV2(19385):    Caminho: empresas/empresa_001/acertos
+10-30 15:14:12.519 D/SyncManagerV2(19385): ­ƒôè Encontrados 1 acertos no Firestore
+10-30 15:14:12.521 D/SyncManagerV2(19385): ­ƒöì Processando acerto: Valor 900.0 (Room ID: 1)
+10-30 15:14:12.521 D/SyncManagerV2(19385):    Dados do acerto: {cicloId=2.0, syncTimestamp=1761847340496, panoTrocado=false, tipoAcerto=Presencial, desconto=0.0, dataAcerto=Oct 30, 2025 14:58:52, periodoFim=Oct 30, 2025 14:58:52, dadosExtrasJson={"versaoApp":"1.0.0"}, metodosPagamentoJson={"Dinheiro":900.0}, roomId=1, debitoAtual=390.0, valorRecebido=900.0, observacoes=, valorComDesconto=1290.0, clienteId=1.0, periodoInicio=Oct 30, 2025 14:58:52, representante=rossinys, valorTotal=1290.0, id=1.0, acertoMesas=[{fichasJogadas=2150.0, comDefeito=false, mesaId=1.0, relogioFinal=2250.0, relogioReiniciou=false, comissaoFicha=0.6, valorFixo=0.0, acertoId=1.0, subtotal=1290.0, id=1.0, valorFicha=0.0, relogioInicial=100.0, dataCriacao=Oct 30, 2025 14:58:52}], rotaId=1.0, status=FINALIZADO}
+10-30 15:14:12.570 D/SyncManagerV2(19385): ­ƒôï Processando 1 mesas do acerto 1
+10-30 15:14:12.578 D/SyncManagerV2(19385): Ô£à Mesa 1 sincronizada para acerto 1
+10-30 15:14:12.578 D/SyncManagerV2(19385): Ô£à Acerto sincronizado: Valor 900.0 (ID: 1)
+10-30 15:14:12.579 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Acertos:
+10-30 15:14:12.579 D/SyncManagerV2(19385):    Sincronizados: 1
+10-30 15:14:12.579 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:13.082 D/SyncManagerV2(19385): ­ƒöä Fase 5: Sincronizando CICLOS...
+10-30 15:14:13.083 D/SyncManagerV2(19385): ­ƒôÑ Baixando ciclos do Firestore...
+10-30 15:14:13.083 D/CYCLE_PULL(19385): INIT pullCiclosFromFirestore empresa=empresa_001
+10-30 15:14:13.083 D/SyncManagerV2(19385):    Caminho: empresas/empresa_001/ciclos
+10-30 15:14:13.209 W/CYCLE_PULL(19385): Cole├º├úo 'ciclos' vazia. Tentando 'cicloacertos'...
+10-30 15:14:13.297 D/RoutesViewModel(19385): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 15:14:13.428 D/SyncManagerV2(19385): ­ƒôè Encontrados 5 ciclos no Firestore
+10-30 15:14:13.430 D/SyncManagerV2(19385): ­ƒöì Processando ciclo: 1┬║ (Room ID: 1, Rota ID: 1)
+10-30 15:14:13.430 D/SyncManagerV2(19385):    Dados originais: numeroCiclo=1.0, rotaId=1.0
+10-30 15:14:13.430 D/CYCLE_PULL(19385): DOC id=1 roomId=1 rotaId=1 numero=1 ano=2025.0 dataInicio=1.76184517387E12 dataFim=1.761845175476E12 status=FINALIZADO
+10-30 15:14:13.434 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:13.434 D/AppRepository(19385):    Status: FINALIZADA (da entidade Rota)
+10-30 15:14:13.434 D/AppRepository(19385):    Ciclo: 1 (da entidade Rota)
+10-30 15:14:13.434 D/AppRepository(19385):    Data in├¡cio: null
+10-30 15:14:13.434 D/AppRepository(19385):    Data fim: null
+10-30 15:14:13.434 D/AppRepository(19385):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 15:14:13.449 D/SyncManagerV2(19385): Ô£à Ciclo sincronizado: 1┬║ (ID: 1)
+10-30 15:14:13.450 D/CYCLE_PULL(19385): INSERT ciclo id=1 rotaId=1 numero=1 ano=2025 di=1761845173870 df=1761845175476 status=FINALIZADO
+10-30 15:14:13.451 D/SyncManagerV2(19385): ­ƒöì Processando ciclo: 2┬║ (Room ID: 2, Rota ID: 1)
+10-30 15:14:13.451 D/SyncManagerV2(19385):    Dados originais: numeroCiclo=2.0, rotaId=1.0
+10-30 15:14:13.451 D/CYCLE_PULL(19385): DOC id=2 roomId=2 rotaId=1 numero=2 ano=2025.0 dataInicio=Thu Oct 30 14:26:16 GMT-03:00 2025 dataFim=Thu Oct 30 14:26:16 GMT-03:00 2025 status=EM_ANDAMENTO
+10-30 15:14:13.482 D/SyncManagerV2(19385): Ô£à Ciclo sincronizado: 2┬║ (ID: 2)
+10-30 15:14:13.482 D/CYCLE_PULL(19385): INSERT ciclo id=2 rotaId=1 numero=2 ano=2025 di=1761845176000 df=1761845176000 status=EM_ANDAMENTO
+10-30 15:14:13.483 D/SyncManagerV2(19385): ­ƒöì Processando ciclo: 1┬║ (Room ID: 3, Rota ID: 2)
+10-30 15:14:13.483 D/SyncManagerV2(19385):    Dados originais: numeroCiclo=1.0, rotaId=2.0
+10-30 15:14:13.484 D/CYCLE_PULL(19385): DOC id=3 roomId=3 rotaId=2 numero=1 ano=2025.0 dataInicio=1.761846579423E12 dataFim=1.761846580755E12 status=FINALIZADO
+10-30 15:14:13.498 D/SyncManagerV2(19385): Ô£à Ciclo sincronizado: 1┬║ (ID: 3)
+10-30 15:14:13.498 D/CYCLE_PULL(19385): INSERT ciclo id=3 rotaId=2 numero=1 ano=2025 di=1761846579423 df=1761846580755 status=FINALIZADO
+10-30 15:14:13.499 D/SyncManagerV2(19385): ­ƒöì Processando ciclo: 2┬║ (Room ID: 4, Rota ID: 2)
+10-30 15:14:13.499 D/SyncManagerV2(19385):    Dados originais: numeroCiclo=2.0, rotaId=2.0
+10-30 15:14:13.500 D/CYCLE_PULL(19385): DOC id=4 roomId=4 rotaId=2 numero=2 ano=2025.0 dataInicio=1.761846582378E12 dataFim=1.761846584215E12 status=FINALIZADO
+10-30 15:14:13.515 D/SyncManagerV2(19385): Ô£à Ciclo sincronizado: 2┬║ (ID: 4)
+10-30 15:14:13.515 D/CYCLE_PULL(19385): INSERT ciclo id=4 rotaId=2 numero=2 ano=2025 di=1761846582378 df=1761846584215 status=FINALIZADO
+10-30 15:14:13.517 D/SyncManagerV2(19385): ­ƒöì Processando ciclo: 3┬║ (Room ID: 5, Rota ID: 2)
+10-30 15:14:13.517 D/SyncManagerV2(19385):    Dados originais: numeroCiclo=3.0, rotaId=2.0
+10-30 15:14:13.517 D/CYCLE_PULL(19385): DOC id=5 roomId=5 rotaId=2 numero=3 ano=2025.0 dataInicio=Thu Oct 30 14:49:44 GMT-03:00 2025 dataFim=Thu Oct 30 14:49:44 GMT-03:00 2025 status=EM_ANDAMENTO
+10-30 15:14:13.538 D/SyncManagerV2(19385): Ô£à Ciclo sincronizado: 3┬║ (ID: 5)
+10-30 15:14:13.538 D/CYCLE_PULL(19385): INSERT ciclo id=5 rotaId=2 numero=3 ano=2025 di=1761846584000 df=1761846584000 status=EM_ANDAMENTO
+10-30 15:14:13.538 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Ciclos:
+10-30 15:14:13.538 D/SyncManagerV2(19385):    Sincronizados: 5
+10-30 15:14:13.539 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:13.539 D/CYCLE_PULL(19385): SUMMARY inserted=5 existing=0
+10-30 15:14:13.572 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:13.572 D/AppRepository(19385):    Status: FINALIZADA (da entidade Rota)
+10-30 15:14:13.572 D/AppRepository(19385):    Ciclo: 1 (da entidade Rota)
+10-30 15:14:13.572 D/AppRepository(19385):    Data in├¡cio: null
+10-30 15:14:13.572 D/AppRepository(19385):    Data fim: null
+10-30 15:14:13.572 D/AppRepository(19385):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 15:14:13.576 D/RoutesViewModel(19385): ­ƒôè Dados atualizados: 2 rotas
+10-30 15:14:13.576 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro completo de rotas:
+10-30 15:14:13.576 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:13.576 D/RoutesViewModel(19385):    Total de rotas: 2
+10-30 15:14:13.577 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 2 rotas
+10-30 15:14:13.577 D/RoutesViewModel(19385): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas
+10-30 15:14:13.620 D/RoutesAdapter(19385): Rota Luz: Status = FINALIZADA -> Texto = 'Finalizada'
+10-30 15:14:13.621 D/RoutesAdapter(19385): ­ƒöì DEBUG CICLO: cicloAtual=1, dataInicio=null, dataFim=null
+10-30 15:14:13.621 D/RoutesAdapter(19385): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=FINALIZADA, cicloAcertoAtual=1
+10-30 15:14:13.622 D/RoutesAdapter(19385): ­ƒöì TEXTO CICLO GERADO: '1┬║ Acerto - Data n├úo definida a Em andamento'
+10-30 15:14:14.041 D/SyncManagerV2(19385): ­ƒöä Fase 5.1: Atualizando status das rotas com ciclos importados...
+10-30 15:14:14.041 D/SyncManagerV2(19385): ­ƒöä Atualizando status das rotas com ciclos importados...
+10-30 15:14:14.052 D/SyncManagerV2(19385): ­ƒôè Encontradas 2 rotas para atualizar
+10-30 15:14:14.053 D/SyncManagerV2(19385): ­ƒöì Processando rota: Luz (ID: 1)
+10-30 15:14:14.063 D/SyncManagerV2(19385): Ô£à Ciclo encontrado para rota Luz: 2┬║ (Status: EM_ANDAMENTO)
+10-30 15:14:14.064 D/SyncManagerV2(19385): Ô£à Rota Luz alinhada com ciclo 2 (EM_ANDAMENTO)
+10-30 15:14:14.071 D/SyncManagerV2(19385): Ô£à Rota Luz atualizada: 2┬║ Acerto em andamento
+10-30 15:14:14.071 D/SyncManagerV2(19385): ­ƒöì Processando rota: Sol (ID: 2)
+10-30 15:14:14.076 D/SyncManagerV2(19385): Ô£à Ciclo encontrado para rota Sol: 3┬║ (Status: EM_ANDAMENTO)
+10-30 15:14:14.076 D/SyncManagerV2(19385): Ô£à Rota Sol alinhada com ciclo 3 (EM_ANDAMENTO)
+10-30 15:14:14.089 D/SyncManagerV2(19385): Ô£à Rota Sol atualizada: 3┬║ Acerto em andamento
+10-30 15:14:14.089 D/SyncManagerV2(19385): Ô£à Atualiza├º├úo das rotas com ciclos importados conclu├¡da
+10-30 15:14:14.089 D/SyncManagerV2(19385): ­ƒöä For├ºando atualiza├º├úo das telas ap├│s PULL...
+10-30 15:14:14.089 D/SyncManagerV2(19385): ­ƒöä Invalidando cache das rotas...
+10-30 15:14:14.117 D/AppRepository(19385): Cache invalidado para rota 1
+10-30 15:14:14.117 D/SyncManagerV2(19385): Ô£à Cache invalidado para rota Luz
+10-30 15:14:14.118 D/AppRepository(19385): Cache invalidado para rota 2
+10-30 15:14:14.118 D/SyncManagerV2(19385): Ô£à Cache invalidado para rota Sol
+10-30 15:14:14.118 D/SyncManagerV2(19385): ­ƒöä For├ºando invalida├º├úo completa do cache global...
+10-30 15:14:14.154 D/SyncManagerV2(19385): ­ƒöä Invalidando cache do ciclo 2
+10-30 15:14:14.154 D/SyncManagerV2(19385): ­ƒöä Invalidando cache do ciclo 1
+10-30 15:14:14.154 D/SyncManagerV2(19385): ­ƒöä Invalidando cache do ciclo 3
+10-30 15:14:14.154 D/SyncManagerV2(19385): ­ƒöä Invalidando cache do ciclo 2
+10-30 15:14:14.154 D/SyncManagerV2(19385): ­ƒöä Invalidando cache do ciclo 1
+10-30 15:14:14.154 D/SyncManagerV2(19385): ­ƒöä For├ºando refresh das estat├¡sticas das rotas...
+10-30 15:14:14.269 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:14.270 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:14.270 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:14.270 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:14.270 D/AppRepository(19385):    Data fim: null
+10-30 15:14:14.275 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a Em andamento
+10-30 15:14:14.421 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:14.421 D/AppRepository(19385):    Status: FINALIZADA (da entidade Rota)
+10-30 15:14:14.421 D/AppRepository(19385):    Ciclo: 1 (da entidade Rota)
+10-30 15:14:14.421 D/AppRepository(19385):    Data in├¡cio: null
+10-30 15:14:14.422 D/AppRepository(19385):    Data fim: null
+10-30 15:14:14.422 D/AppRepository(19385):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 15:14:14.620 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:14.621 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:14.621 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:14.621 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:14.621 D/AppRepository(19385):    Data fim: null
+10-30 15:14:14.621 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a Em andamento
+10-30 15:14:14.771 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:14.771 D/AppRepository(19385):    Status: FINALIZADA (da entidade Rota)
+10-30 15:14:14.771 D/AppRepository(19385):    Ciclo: 1 (da entidade Rota)
+10-30 15:14:14.771 D/AppRepository(19385):    Data in├¡cio: null
+10-30 15:14:14.771 D/AppRepository(19385):    Data fim: null
+10-30 15:14:14.771 D/AppRepository(19385):    Texto ciclo: 1┬║ Acerto - Data n├úo definida a Em andamento
+10-30 15:14:14.775 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro de rotas:
+10-30 15:14:14.775 D/RoutesViewModel(19385):    Usu├írio: rossinys
+10-30 15:14:14.775 D/RoutesViewModel(19385):    Email: rossinys@gmail.com
+10-30 15:14:14.775 D/RoutesViewModel(19385):    ID: 1
+10-30 15:14:14.775 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:14.775 D/RoutesViewModel(19385):    Total de rotas: 2
+10-30 15:14:14.776 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 2 rotas
+10-30 15:14:14.958 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:14.958 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:14.958 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:14.958 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:14.958 D/AppRepository(19385):    Data fim: null
+10-30 15:14:14.958 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a Em andamento
+10-30 15:14:15.092 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:15.092 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:15.092 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:15.092 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:15.093 D/AppRepository(19385):    Data fim: null
+10-30 15:14:15.093 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a Em andamento
+10-30 15:14:15.096 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro de rotas:
+10-30 15:14:15.096 D/RoutesViewModel(19385):    Usu├írio: rossinys
+10-30 15:14:15.096 D/RoutesViewModel(19385):    Email: rossinys@gmail.com
+10-30 15:14:15.096 D/RoutesViewModel(19385):    ID: 1
+10-30 15:14:15.096 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:15.096 D/RoutesViewModel(19385):    Total de rotas: 2
+10-30 15:14:15.097 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 2 rotas
+10-30 15:14:15.099 D/RoutesViewModel(19385): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 15:14:15.156 D/SyncManagerV2(19385): Ô£à Invalida├º├úo completa do cache global conclu├¡da
+10-30 15:14:15.156 D/SyncManagerV2(19385): Ô£à Cache das rotas invalidado com sucesso
+10-30 15:14:15.156 D/SyncManagerV2(19385): ­ƒöä For├ºando atualiza├º├úo do Flow de rotas...
+10-30 15:14:15.173 D/SyncManagerV2(19385): ­ƒôè For├ºando rec├ílculo de 2 rotas
+10-30 15:14:15.173 D/AppRepository(19385): Cache invalidado para rota 1
+10-30 15:14:15.173 D/SyncManagerV2(19385): Ô£à Cache invalidado para rota Luz
+10-30 15:14:15.174 D/AppRepository(19385): Cache invalidado para rota 2
+10-30 15:14:15.174 D/SyncManagerV2(19385): Ô£à Cache invalidado para rota Sol
+10-30 15:14:15.260 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:15.260 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:15.260 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:15.260 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:15.260 D/AppRepository(19385):    Data fim: null
+10-30 15:14:15.261 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a Em andamento
+10-30 15:14:15.380 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:15.380 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:15.380 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:15.380 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:15.380 D/AppRepository(19385):    Data fim: null
+10-30 15:14:15.380 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a Em andamento
+10-30 15:14:15.543 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:15.543 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:15.543 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:15.543 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:15.543 D/AppRepository(19385):    Data fim: null
+10-30 15:14:15.543 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a Em andamento
+10-30 15:14:15.681 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:15.681 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:15.681 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:15.681 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:15.681 D/AppRepository(19385):    Data fim: null
+10-30 15:14:15.681 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a Em andamento
+10-30 15:14:15.691 D/RoutesAdapter(19385): Rota Luz: Status = EM_ANDAMENTO -> Texto = 'Em andamento'
+10-30 15:14:15.691 D/RoutesAdapter(19385): ­ƒöì DEBUG CICLO: cicloAtual=2, dataInicio=1761845176000, dataFim=null
+10-30 15:14:15.691 D/RoutesAdapter(19385): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=EM_ANDAMENTO, cicloAcertoAtual=2
+10-30 15:14:15.693 D/RoutesAdapter(19385): ­ƒöì TEXTO CICLO GERADO: '2┬║ Acerto - 30/10/2025 a Em andamento'
+10-30 15:14:15.727 D/RoutesAdapter(19385): Rota Sol: Status = EM_ANDAMENTO -> Texto = 'Em andamento'
+10-30 15:14:15.727 D/RoutesAdapter(19385): ­ƒöì DEBUG CICLO: cicloAtual=3, dataInicio=1761846584000, dataFim=null
+10-30 15:14:15.728 D/RoutesAdapter(19385): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=EM_ANDAMENTO, cicloAcertoAtual=3
+10-30 15:14:15.729 D/RoutesAdapter(19385): ­ƒöì TEXTO CICLO GERADO: '3┬║ Acerto - 30/10/2025 a Em andamento'
+10-30 15:14:15.748 D/RoutesViewModel(19385): ­ƒôè Dados atualizados: 2 rotas
+10-30 15:14:15.748 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro completo de rotas:
+10-30 15:14:15.748 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:15.748 D/RoutesViewModel(19385):    Total de rotas: 2
+10-30 15:14:15.748 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 2 rotas
+10-30 15:14:15.748 D/RoutesViewModel(19385): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas
+10-30 15:14:16.176 D/SyncManagerV2(19385): Ô£à Atualiza├º├úo das telas for├ºada com sucesso
+10-30 15:14:16.679 D/SyncManagerV2(19385): ­ƒöä Fase 6: Sincronizando COLABORADORES...
+10-30 15:14:16.679 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Colaboradores do Firestore...
+10-30 15:14:16.797 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 1 colaboradores no Firestore
+10-30 15:14:16.842 D/SyncManagerV2(19385): ÔÅ¡´©Å Colaborador j├í existe: rossinys (ID: 1)
+10-30 15:14:16.842 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Colaboradores:
+10-30 15:14:16.842 D/SyncManagerV2(19385):    Sincronizados: 0
+10-30 15:14:16.842 D/SyncManagerV2(19385):    J├í existentes: 1
+10-30 15:14:17.345 D/SyncManagerV2(19385): ­ƒöä Fase 7: Sincronizando DESPESAS...
+10-30 15:14:17.345 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Despesas do Firestore...
+10-30 15:14:17.453 D/SyncManagerV2(19385): ­ƒôÑ Encontradas 0 despesas no Firestore
+10-30 15:14:17.485 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Despesas:
+10-30 15:14:17.485 D/SyncManagerV2(19385):    Sincronizadas: 0
+10-30 15:14:17.485 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:17.988 D/SyncManagerV2(19385): ­ƒöä Fase 8: Sincronizando PANOS ESTOQUE...
+10-30 15:14:17.989 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Panos Estoque do Firestore...
+10-30 15:14:18.098 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 0 panos no Firestore
+10-30 15:14:18.132 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Panos Estoque:
+10-30 15:14:18.132 D/SyncManagerV2(19385):    Sincronizados: 0
+10-30 15:14:18.132 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:18.635 D/SyncManagerV2(19385): ­ƒöä Fase 9: Sincronizando MESAS VENDIDAS...
+10-30 15:14:18.635 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Mesas Vendidas do Firestore...
+10-30 15:14:18.718 D/SyncManagerV2(19385): ­ƒôÑ Encontradas 0 mesas vendidas no Firestore
+10-30 15:14:18.742 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Mesas Vendidas:
+10-30 15:14:18.742 D/SyncManagerV2(19385):    Sincronizadas: 0
+10-30 15:14:18.742 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:19.245 D/SyncManagerV2(19385): ­ƒöä Fase 10: Sincronizando STOCK ITEMS...
+10-30 15:14:19.245 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Stock Items do Firestore...
+10-30 15:14:19.405 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 0 stock items no Firestore
+10-30 15:14:19.437 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Stock Items:
+10-30 15:14:19.437 D/SyncManagerV2(19385):    Sincronizados: 0
+10-30 15:14:19.437 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:19.940 D/SyncManagerV2(19385): ­ƒöä Fase 11: Sincronizando VE├ìCULOS...
+10-30 15:14:19.940 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Ve├¡culos do Firestore...
+10-30 15:14:20.035 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 0 ve├¡culos no Firestore
+10-30 15:14:20.065 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Ve├¡culos:
+10-30 15:14:20.065 D/SyncManagerV2(19385):    Sincronizados: 0
+10-30 15:14:20.065 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:20.568 D/SyncManagerV2(19385): ­ƒöä Fase 12: Sincronizando HIST├ôRICO MANUTEN├ç├âO MESA...
+10-30 15:14:20.569 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Hist├│rico Manuten├º├úo Mesa do Firestore...
+10-30 15:14:20.683 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 0 hist├│ricos de manuten├º├úo mesa no Firestore
+10-30 15:14:20.717 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Hist├│rico Manuten├º├úo Mesa:
+10-30 15:14:20.717 D/SyncManagerV2(19385):    Sincronizados: 0
+10-30 15:14:20.717 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:21.220 D/SyncManagerV2(19385): ­ƒöä Fase 13: Sincronizando HIST├ôRICO MANUTEN├ç├âO VE├ìCULO...
+10-30 15:14:21.221 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Hist├│rico Manuten├º├úo Ve├¡culo do Firestore...
+10-30 15:14:21.244 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 15:14:21.244 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 15:14:21.244 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 15:14:21.244 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 15:14:21.244 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 15:14:21.244 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 15:14:21.244 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 15:14:21.244 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 15:14:21.244 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 15:14:21.244 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 15:14:21.244 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 15:14:21.244 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 15:14:21.244 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 15:14:21.244 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 15:14:21.334 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 0 hist├│ricos de manuten├º├úo ve├¡culo no Firestore
+10-30 15:14:21.362 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Hist├│rico Manuten├º├úo Ve├¡culo:
+10-30 15:14:21.362 D/SyncManagerV2(19385):    Sincronizados: 0
+10-30 15:14:21.362 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:21.866 D/SyncManagerV2(19385): ­ƒöä Fase 14: Sincronizando HIST├ôRICO COMBUST├ìVEL VE├ìCULO...
+10-30 15:14:21.866 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Hist├│rico Combust├¡vel Ve├¡culo do Firestore...
+10-30 15:14:21.952 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 0 hist├│ricos de combust├¡vel ve├¡culo no Firestore
+10-30 15:14:21.983 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Hist├│rico Combust├¡vel Ve├¡culo:
+10-30 15:14:21.983 D/SyncManagerV2(19385):    Sincronizados: 0
+10-30 15:14:21.983 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:22.486 D/SyncManagerV2(19385): ­ƒöä Fase 15: Sincronizando CATEGORIAS DESPESA...
+10-30 15:14:22.486 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Categorias Despesa do Firestore...
+10-30 15:14:22.574 D/SyncManagerV2(19385): ­ƒôÑ Encontradas 0 categorias despesa no Firestore
+10-30 15:14:22.606 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Categorias Despesa:
+10-30 15:14:22.606 D/SyncManagerV2(19385):    Sincronizadas: 0
+10-30 15:14:22.606 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:23.109 D/SyncManagerV2(19385): ­ƒöä Fase 16: Sincronizando TIPOS DESPESA...
+10-30 15:14:23.110 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Tipos Despesa do Firestore...
+10-30 15:14:23.209 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 0 tipos despesa no Firestore
+10-30 15:14:23.240 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Tipos Despesa:
+10-30 15:14:23.240 D/SyncManagerV2(19385):    Sincronizados: 0
+10-30 15:14:23.240 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:23.743 D/SyncManagerV2(19385): ­ƒöä Fase 17: Sincronizando CONTRATOS LOCA├ç├âO...
+10-30 15:14:23.743 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Contratos Loca├º├úo do Firestore...
+10-30 15:14:23.836 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 0 contratos loca├º├úo no Firestore
+10-30 15:14:23.863 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Contratos Loca├º├úo:
+10-30 15:14:23.863 D/SyncManagerV2(19385):    Sincronizados: 0
+10-30 15:14:23.863 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:24.366 D/SyncManagerV2(19385): ­ƒöä Fase 17.0.1: Sincronizando METAS...
+10-30 15:14:24.367 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Metas do Firestore...
+10-30 15:14:24.493 D/SyncManagerV2(19385): Ô£à Metas sincronizadas: 0
+10-30 15:14:24.796 D/SyncManagerV2(19385): ­ƒöä Fase 17.0.2: Sincronizando COLABORADOR_ROTA...
+10-30 15:14:24.797 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL ColaboradorRota do Firestore...
+10-30 15:14:24.920 D/SyncManagerV2(19385): Ô£à ColaboradorRota sincronizados: 0
+10-30 15:14:25.223 D/SyncManagerV2(19385): ­ƒöä Fase 17.1: Sincronizando ADITIVOS DE CONTRATO...
+10-30 15:14:25.224 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Aditivos de Contrato do Firestore...
+10-30 15:14:25.346 D/SyncManagerV2(19385): Ô£à Aditivos sincronizados: 0
+10-30 15:14:25.648 D/SyncManagerV2(19385): ­ƒöä Fase 17.2: Sincronizando ADITIVO MESAS...
+10-30 15:14:25.649 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL AditivoMesas do Firestore...
+10-30 15:14:25.739 D/SyncManagerV2(19385): Ô£à AditivoMesas sincronizadas: 0
+10-30 15:14:26.043 D/SyncManagerV2(19385): ­ƒöä Fase 17.3: Sincronizando CONTRATO MESAS...
+10-30 15:14:26.043 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL ContratoMesas do Firestore...
+10-30 15:14:26.172 E/SyncManagerV2(19385): Erro ao processar ContratoMesa 1: FOREIGN KEY constraint failed (code 787 SQLITE_CONSTRAINT_FOREIGNKEY[787])
+10-30 15:14:26.172 E/SyncManagerV2(19385): android.database.sqlite.SQLiteConstraintException: FOREIGN KEY constraint failed (code 787 SQLITE_CONSTRAINT_FOREIGNKEY[787])
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at android.database.sqlite.SQLiteConnection.nativeExecuteForLastInsertedRowId(Native Method)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at android.database.sqlite.SQLiteConnection.executeForLastInsertedRowId(SQLiteConnection.java:1232)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at android.database.sqlite.SQLiteSession.executeForLastInsertedRowId(SQLiteSession.java:790)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at android.database.sqlite.SQLiteStatement.executeInsert(SQLiteStatement.java:89)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at androidx.sqlite.db.framework.FrameworkSQLiteStatement.executeInsert(FrameworkSQLiteStatement.kt:42)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at androidx.room.EntityInsertionAdapter.insertAndReturnId(EntityInsertionAdapter.kt:101)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at com.example.gestaobilhares.data.dao.ContratoLocacaoDao_Impl$9.call(ContratoLocacaoDao_Impl.java:340)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at com.example.gestaobilhares.data.dao.ContratoLocacaoDao_Impl$9.call(ContratoLocacaoDao_Impl.java:334)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at androidx.room.CoroutinesRoom$Companion$execute$2.invokeSuspend(CoroutinesRoom.kt:64)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:108)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at androidx.room.TransactionExecutor.execute$lambda$1$lambda$0(TransactionExecutor.kt:36)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at androidx.room.TransactionExecutor.$r8$lambda$FZWr2PGmP3sgXLCiri-DCcePXSs(Unknown Source:0)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at androidx.room.TransactionExecutor$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+10-30 15:14:26.172 E/SyncManagerV2(19385): 	at java.lang.Thread.run(Thread.java:1119)
+10-30 15:14:26.172 D/SyncManagerV2(19385): Ô£à ContratoMesas sincronizadas: 0
+10-30 15:14:26.475 D/SyncManagerV2(19385): ­ƒöä Fase 18: Sincronizando ASSINATURAS REPRESENTANTE LEGAL...
+10-30 15:14:26.476 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Assinaturas Representante Legal do Firestore...
+10-30 15:14:26.661 D/SyncManagerV2(19385): ­ƒôÑ Encontradas 0 assinaturas no Firestore
+10-30 15:14:26.676 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Assinaturas Representante Legal:
+10-30 15:14:26.677 D/SyncManagerV2(19385):    Sincronizadas: 0
+10-30 15:14:26.677 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:27.180 D/SyncManagerV2(19385): ­ƒöä Fase 19: Sincronizando LOGS AUDITORIA ASSINATURA...
+10-30 15:14:27.181 D/SyncManagerV2(19385): ­ƒöä Iniciando PULL Logs Auditoria Assinatura do Firestore...
+10-30 15:14:27.273 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 0 logs no Firestore
+10-30 15:14:27.282 D/SyncManagerV2(19385): ­ƒôè Resumo PULL Logs Auditoria Assinatura:
+10-30 15:14:27.282 D/SyncManagerV2(19385):    Sincronizados: 0
+10-30 15:14:27.282 D/SyncManagerV2(19385):    J├í existentes: 0
+10-30 15:14:27.785 D/SyncManagerV2(19385): ­ƒöä Fase 20: Sincronizando ACERTO MESA...
+10-30 15:14:27.786 D/SyncManagerV2(19385): ­ƒöä Sincronizando AcertoMesa do Firestore...
+10-30 15:14:27.901 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 0 AcertoMesa no Firestore
+10-30 15:14:27.909 D/SyncManagerV2(19385): Ô£à Sincroniza├º├úo de AcertoMesa conclu├¡da
+10-30 15:14:28.412 D/SyncManagerV2(19385): ­ƒöä Fase 21: Sincronizando MESA REFORMADA...
+10-30 15:14:28.412 D/SyncManagerV2(19385): ­ƒöä Sincronizando MesaReformada do Firestore...
+10-30 15:14:28.504 D/SyncManagerV2(19385): ­ƒôÑ Encontrados 0 MesaReformada no Firestore
+10-30 15:14:28.536 D/SyncManagerV2(19385): Ô£à Sincroniza├º├úo de MesaReformada conclu├¡da
+10-30 15:14:29.039 D/SyncManagerV2(19385): ÔÅ¡´©Å Fase 22: Cria├º├úo autom├ítica de ciclos desativada para manter espelho 1:1
+10-30 15:14:29.039 D/SyncManagerV2(19385): ­ƒöä Remapeando acertos importados para cicloId local...
+10-30 15:14:29.216 D/SyncManagerV2(19385): ­ƒöä Alinhando rotas com ciclo atual importado...
+10-30 15:14:29.247 D/SyncManagerV2(19385): Ô£à Rota 'Luz' alinhada com ciclo 2 (EM_ANDAMENTO)
+10-30 15:14:29.269 D/SyncManagerV2(19385): Ô£à Rota 'Sol' alinhada com ciclo 3 (EM_ANDAMENTO)
+10-30 15:14:29.270 D/SyncManagerV2(19385): ­ƒôè Rotas alinhadas: 2 de 2
+10-30 15:14:29.270 D/SyncManagerV2(19385): ­ƒöº CORRE├ç├âO: Corrigindo acertos PENDENTE para FINALIZADO
+10-30 15:14:29.270 D/AppRepository(19385): ­ƒöº CORRE├ç├âO: Iniciando corre├º├úo de acertos PENDENTE para FINALIZADO
+10-30 15:14:29.327 D/AppRepository(19385): ­ƒöì Encontrados 0 acertos com status PENDENTE
+10-30 15:14:29.327 D/AppRepository(19385): Ô£à CORRE├ç├âO CONCLU├ìDA: 0 acertos corrigidos
+10-30 15:14:29.327 D/SyncManagerV2(19385): ­ƒöä Reconciliando d├®bitos dos clientes p├│s-sync...
+10-30 15:14:29.327 D/AppRepository(19385): ­ƒöä Reconciliando d├®bitos dos clientes com base no ├║ltimo acerto...
+10-30 15:14:29.395 D/AppRepository(19385): Ô£à Cliente 1 (Jo├úo): debito_atual 0.0 -> 390.0
+10-30 15:14:29.395 D/AppRepository(19385): Ô£à Reconcilia├º├úo conclu├¡da. Clientes atualizados: 1
+10-30 15:14:29.396 D/SyncManagerV2(19385): ­ƒöä Fase 7: Invalidando cache das rotas...
+10-30 15:14:29.396 D/SyncManagerV2(19385): ­ƒöä Invalidando cache das rotas...
+10-30 15:14:29.406 D/AppRepository(19385): Cache invalidado para rota 1
+10-30 15:14:29.406 D/SyncManagerV2(19385): Ô£à Cache invalidado para rota Luz
+10-30 15:14:29.407 D/AppRepository(19385): Cache invalidado para rota 2
+10-30 15:14:29.407 D/SyncManagerV2(19385): Ô£à Cache invalidado para rota Sol
+10-30 15:14:29.407 D/SyncManagerV2(19385): ­ƒöä For├ºando invalida├º├úo completa do cache global...
+10-30 15:14:29.440 D/SyncManagerV2(19385): ­ƒöä Invalidando cache do ciclo 2
+10-30 15:14:29.440 D/SyncManagerV2(19385): ­ƒöä Invalidando cache do ciclo 1
+10-30 15:14:29.440 D/SyncManagerV2(19385): ­ƒöä Invalidando cache do ciclo 3
+10-30 15:14:29.440 D/SyncManagerV2(19385): ­ƒöä Invalidando cache do ciclo 2
+10-30 15:14:29.440 D/SyncManagerV2(19385): ­ƒöä Invalidando cache do ciclo 1
+10-30 15:14:29.440 D/SyncManagerV2(19385): ­ƒöä For├ºando refresh das estat├¡sticas das rotas...
+10-30 15:14:29.485 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:29.485 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:29.485 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:29.485 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:29.485 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:14:29.486 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:29.625 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:29.625 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:29.625 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:29.625 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:29.625 D/AppRepository(19385):    Data fim: null
+10-30 15:14:29.626 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a Em andamento
+10-30 15:14:29.809 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:29.810 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:29.810 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:29.810 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:29.810 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:14:29.810 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:29.959 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:29.959 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:29.959 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:29.959 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:29.959 D/AppRepository(19385):    Data fim: null
+10-30 15:14:29.959 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a Em andamento
+10-30 15:14:29.962 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro de rotas:
+10-30 15:14:29.963 D/RoutesViewModel(19385):    Usu├írio: rossinys
+10-30 15:14:29.963 D/RoutesViewModel(19385):    Email: rossinys@gmail.com
+10-30 15:14:29.963 D/RoutesViewModel(19385):    ID: 1
+10-30 15:14:29.963 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:29.963 D/RoutesViewModel(19385):    Total de rotas: 2
+10-30 15:14:29.964 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 2 rotas
+10-30 15:14:30.144 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:30.144 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:30.144 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:30.144 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:30.144 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:14:30.145 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:30.290 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:30.290 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:30.290 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:30.291 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:30.291 D/AppRepository(19385):    Data fim: 1761846584000
+10-30 15:14:30.291 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:30.294 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro de rotas:
+10-30 15:14:30.294 D/RoutesViewModel(19385):    Usu├írio: rossinys
+10-30 15:14:30.294 D/RoutesViewModel(19385):    Email: rossinys@gmail.com
+10-30 15:14:30.294 D/RoutesViewModel(19385):    ID: 1
+10-30 15:14:30.294 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:30.294 D/RoutesViewModel(19385):    Total de rotas: 2
+10-30 15:14:30.294 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 2 rotas
+10-30 15:14:30.442 D/SyncManagerV2(19385): Ô£à Invalida├º├úo completa do cache global conclu├¡da
+10-30 15:14:30.442 D/SyncManagerV2(19385): Ô£à Cache das rotas invalidado com sucesso
+10-30 15:14:30.442 D/SyncManagerV2(19385): Ô£à PULL SYNC conclu├¡do com sucesso
+10-30 15:14:30.442 D/SyncManagerV2(19385): Ô£à SINCRONIZA├ç├âO COMPLETA FINALIZADA
+10-30 15:14:30.473 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:30.473 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:30.474 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:30.474 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:30.474 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:14:30.474 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:30.612 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:30.612 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:30.612 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:30.612 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:30.612 D/AppRepository(19385):    Data fim: 1761846584000
+10-30 15:14:30.612 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:30.639 D/RoutesAdapter(19385): Rota Luz: Status = EM_ANDAMENTO -> Texto = 'Em andamento'
+10-30 15:14:30.640 D/RoutesAdapter(19385): ­ƒöì DEBUG CICLO: cicloAtual=2, dataInicio=1761845176000, dataFim=1761845176000
+10-30 15:14:30.640 D/RoutesAdapter(19385): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=EM_ANDAMENTO, cicloAcertoAtual=2
+10-30 15:14:30.642 D/RoutesAdapter(19385): ­ƒöì TEXTO CICLO GERADO: '2┬║ Acerto - 30/10/2025 a 30/10/2025'
+10-30 15:14:30.651 D/RoutesAdapter(19385): Rota Sol: Status = EM_ANDAMENTO -> Texto = 'Em andamento'
+10-30 15:14:30.652 D/RoutesAdapter(19385): ­ƒöì DEBUG CICLO: cicloAtual=3, dataInicio=1761846584000, dataFim=1761846584000
+10-30 15:14:30.652 D/RoutesAdapter(19385): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=EM_ANDAMENTO, cicloAcertoAtual=3
+10-30 15:14:30.654 D/RoutesAdapter(19385): ­ƒöì TEXTO CICLO GERADO: '3┬║ Acerto - 30/10/2025 a 30/10/2025'
+10-30 15:14:41.499 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:41.499 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:41.499 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:41.499 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:41.499 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:14:41.499 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:41.535 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:41.535 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:41.535 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:41.535 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:41.535 D/AppRepository(19385):    Data fim: 1761846584000
+10-30 15:14:41.535 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:41.542 D/ClientListViewModel(19385): === INICIANDO CARREGAMENTO DE DADOS ROTA 1 ===
+10-30 15:14:41.544 D/ClientListViewModel(19385): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 15:14:41.547 D/ClientListViewModel(19385): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 15:14:41.563 D/ClientListViewModel(19385): Ô£à Ciclo em andamento carregado: 2┬║ Acerto (ID: 2, Status: EM_ANDAMENTO)
+10-30 15:14:41.564 D/ClientListViewModel(19385): Ô£à Ciclo em andamento carregado: 2┬║ Acerto (ID: 2, Status: EM_ANDAMENTO)
+10-30 15:14:41.597 D/ClientListViewModel(19385): === DADOS CLIENTES CARREGADOS ===
+10-30 15:14:41.597 D/ClientListViewModel(19385): Total clientes: 1, Ativos: 1
+10-30 15:14:41.597 D/AppRepository(19385): Buscando mesas para rota 1
+10-30 15:14:41.605 D/ClientListViewModel(19385): Ô£à Clientes acertados no ciclo -1: 0 de 1
+10-30 15:14:41.606 D/ClientListViewModel(19385): Ô£à Clientes acertados no ciclo -1: 0 de 1
+10-30 15:14:41.607 D/ClientListViewModel(19385): Ô£à Clientes acertados no ciclo -1: 0 de 1
+10-30 15:14:41.621 D/ClientListViewModel(19385): Ô£à Pend├¬ncias calculadas: 1 de 1 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 15:14:41.621 D/ClientListViewModel(19385): Ô£à Dados do progresso calculados: 0% de 1 clientes, 1 pend├¬ncias
+10-30 15:14:41.621 D/ClientListViewModel(19385): Ô£à Dados for├ºados recarregados: 1 clientes
+10-30 15:14:41.621 D/ClientListViewModel(19385): Ô£à Pend├¬ncias calculadas: 1 de 1 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 15:14:41.622 D/ClientListViewModel(19385): Ô£à Dados do progresso calculados: 0% de 1 clientes, 1 pend├¬ncias
+10-30 15:14:41.622 D/ClientListViewModel(19385): Ô£à Dados for├ºados recarregados: 1 clientes
+10-30 15:14:41.622 D/ClientListViewModel(19385): Ô£à Pend├¬ncias calculadas: 1 de 1 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 15:14:41.622 D/ClientListViewModel(19385): Ô£à Dados do progresso calculados: 0% de 1 clientes, 1 pend├¬ncias
+10-30 15:14:41.623 D/ClientListViewModel(19385): === DADOS MESAS CARREGADOS ===
+10-30 15:14:41.624 D/ClientListViewModel(19385): Mesas encontradas: 1
+10-30 15:14:41.624 D/ClientListViewModel(19385): Mesa: 2233 (ID: 1, ClienteId: 1)
+10-30 15:14:41.624 D/ClientListViewModel(19385): === ATUALIZANDO DADOS FINAIS ===
+10-30 15:14:41.624 D/ClientListViewModel(19385): Dados finais: 1 clientes, 1 mesas
+10-30 15:14:44.494 D/ClientListViewModel(19385): ­ƒöì Iniciando filtro PEND inclusivo para 1 clientes
+10-30 15:14:44.496 D/ClientListViewModel(19385): Verificando cliente Jo├úo: d├®bitoAtual = R$ 390,00
+10-30 15:14:44.504 D/ClientListViewModel(19385): Verificando pend├¬ncias - Cliente Jo├úo: d├®bitoAtual = R$ 390,00
+10-30 15:14:44.569 D/ClientListViewModel(19385): Cliente Jo├úo: temDebitoAlto=true, semAcertoRecente=false, temPendencia=true
+10-30 15:14:44.569 D/ClientListViewModel(19385): Ô£à Cliente Jo├úo tem pend├¬ncia: D├®bito=R$ 390,00, SemAcertoRecente=false
+10-30 15:14:44.569 D/ClientListViewModel(19385): Ô£à Cliente Jo├úo adicionado ao filtro PEND
+10-30 15:14:44.569 D/ClientListViewModel(19385): Ô£à Filtro PEND inclusivo: 1 clientes com pend├¬ncias encontrados
+10-30 15:14:52.575 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro de rotas:
+10-30 15:14:52.575 D/RoutesViewModel(19385):    Usu├írio: rossinys
+10-30 15:14:52.575 D/RoutesViewModel(19385):    Email: rossinys@gmail.com
+10-30 15:14:52.575 D/RoutesViewModel(19385):    ID: 1
+10-30 15:14:52.576 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:52.576 D/RoutesViewModel(19385):    Total de rotas: 0
+10-30 15:14:52.576 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 15:14:52.590 D/RoutesViewModel(19385): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 15:14:52.744 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:52.744 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:52.744 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:52.744 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:52.744 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:14:52.744 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:52.781 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:52.781 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:52.781 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:52.781 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:52.781 D/AppRepository(19385):    Data fim: 1761846584000
+10-30 15:14:52.781 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:52.783 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro de rotas:
+10-30 15:14:52.783 D/RoutesViewModel(19385):    Usu├írio: rossinys
+10-30 15:14:52.783 D/RoutesViewModel(19385):    Email: rossinys@gmail.com
+10-30 15:14:52.783 D/RoutesViewModel(19385):    ID: 1
+10-30 15:14:52.783 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:52.783 D/RoutesViewModel(19385):    Total de rotas: 2
+10-30 15:14:52.783 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 2 rotas
+10-30 15:14:52.835 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:52.835 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:52.835 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:52.835 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:52.835 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:14:52.835 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:52.873 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:52.873 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:52.873 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:52.873 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:52.873 D/AppRepository(19385):    Data fim: 1761846584000
+10-30 15:14:52.873 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:52.925 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:52.925 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:52.926 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:52.926 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:52.926 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:14:52.926 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:52.966 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:52.966 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:52.966 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:52.966 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:52.966 D/AppRepository(19385):    Data fim: 1761846584000
+10-30 15:14:52.966 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:52.970 D/RoutesViewModel(19385): ­ƒôè Dados atualizados: 2 rotas
+10-30 15:14:52.970 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro completo de rotas:
+10-30 15:14:52.970 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:14:52.971 D/RoutesViewModel(19385):    Total de rotas: 2
+10-30 15:14:52.971 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 2 rotas
+10-30 15:14:52.971 D/RoutesViewModel(19385): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas
+10-30 15:14:52.995 D/RoutesAdapter(19385): Rota Luz: Status = EM_ANDAMENTO -> Texto = 'Em andamento'
+10-30 15:14:52.995 D/RoutesAdapter(19385): ­ƒöì DEBUG CICLO: cicloAtual=2, dataInicio=1761845176000, dataFim=1761845176000
+10-30 15:14:52.995 D/RoutesAdapter(19385): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=EM_ANDAMENTO, cicloAcertoAtual=2
+10-30 15:14:52.995 D/RoutesAdapter(19385): ­ƒöì TEXTO CICLO GERADO: '2┬║ Acerto - 30/10/2025 a 30/10/2025'
+10-30 15:14:53.012 D/RoutesAdapter(19385): Rota Sol: Status = EM_ANDAMENTO -> Texto = 'Em andamento'
+10-30 15:14:53.012 D/RoutesAdapter(19385): ­ƒöì DEBUG CICLO: cicloAtual=3, dataInicio=1761846584000, dataFim=1761846584000
+10-30 15:14:53.012 D/RoutesAdapter(19385): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=EM_ANDAMENTO, cicloAcertoAtual=3
+10-30 15:14:53.012 D/RoutesAdapter(19385): ­ƒöì TEXTO CICLO GERADO: '3┬║ Acerto - 30/10/2025 a 30/10/2025'
+10-30 15:14:55.733 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:14:55.733 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:55.733 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:14:55.733 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:14:55.733 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:14:55.733 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:55.769 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:14:55.769 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:14:55.769 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:14:55.769 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:14:55.769 D/AppRepository(19385):    Data fim: 1761846584000
+10-30 15:14:55.769 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:14:55.774 D/ClientListViewModel(19385): === INICIANDO CARREGAMENTO DE DADOS ROTA 1 ===
+10-30 15:14:55.775 D/ClientListViewModel(19385): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 15:14:55.778 D/ClientListViewModel(19385): ­ƒöä Carregando ciclo para rota Luz (ID: 1)
+10-30 15:14:55.795 D/ClientListViewModel(19385): Ô£à Ciclo em andamento carregado: 2┬║ Acerto (ID: 2, Status: EM_ANDAMENTO)
+10-30 15:14:55.796 D/ClientListViewModel(19385): Ô£à Ciclo em andamento carregado: 2┬║ Acerto (ID: 2, Status: EM_ANDAMENTO)
+10-30 15:14:55.806 D/ClientListViewModel(19385): === DADOS CLIENTES CARREGADOS ===
+10-30 15:14:55.807 D/ClientListViewModel(19385): Total clientes: 1, Ativos: 1
+10-30 15:14:55.807 D/AppRepository(19385): Buscando mesas para rota 1
+10-30 15:14:55.813 D/ClientListViewModel(19385): Ô£à Clientes acertados no ciclo -1: 0 de 1
+10-30 15:14:55.816 D/ClientListViewModel(19385): Ô£à Clientes acertados no ciclo -1: 0 de 1
+10-30 15:14:55.817 D/ClientListViewModel(19385): Ô£à Clientes acertados no ciclo -1: 0 de 1
+10-30 15:14:55.830 D/ClientListViewModel(19385): Ô£à Pend├¬ncias calculadas: 1 de 1 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 15:14:55.830 D/ClientListViewModel(19385): Ô£à Dados do progresso calculados: 0% de 1 clientes, 1 pend├¬ncias
+10-30 15:14:55.830 D/ClientListViewModel(19385): Ô£à Dados for├ºados recarregados: 1 clientes
+10-30 15:14:55.831 D/ClientListViewModel(19385): Ô£à Pend├¬ncias calculadas: 1 de 1 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 15:14:55.831 D/ClientListViewModel(19385): Ô£à Dados do progresso calculados: 0% de 1 clientes, 1 pend├¬ncias
+10-30 15:14:55.831 D/ClientListViewModel(19385): Ô£à Dados for├ºados recarregados: 1 clientes
+10-30 15:14:55.833 D/ClientListViewModel(19385): Ô£à Pend├¬ncias calculadas: 1 de 1 clientes (d├®bito>R$300 ou sem acerto>4meses)
+10-30 15:14:55.833 D/ClientListViewModel(19385): Ô£à Dados do progresso calculados: 0% de 1 clientes, 1 pend├¬ncias
+10-30 15:14:55.835 D/ClientListViewModel(19385): === DADOS MESAS CARREGADOS ===
+10-30 15:14:55.835 D/ClientListViewModel(19385): Mesas encontradas: 1
+10-30 15:14:55.835 D/ClientListViewModel(19385): Mesa: 2233 (ID: 1, ClienteId: 1)
+10-30 15:14:55.835 D/ClientListViewModel(19385): === ATUALIZANDO DADOS FINAIS ===
+10-30 15:14:55.835 D/ClientListViewModel(19385): Dados finais: 1 clientes, 1 mesas
+10-30 15:15:21.291 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 15:15:21.291 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 15:15:21.291 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 15:15:21.291 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 15:15:21.291 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 15:15:21.291 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 15:15:21.291 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 15:15:21.291 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 15:15:21.291 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 15:15:21.291 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 15:15:21.291 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 15:15:21.292 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 15:15:21.292 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 15:15:21.292 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 15:16:21.327 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 15:16:21.327 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 15:16:21.327 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 15:16:21.327 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 15:16:21.327 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 15:16:21.327 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 15:16:21.327 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 15:16:21.327 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 15:16:21.328 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 15:16:21.328 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 15:16:21.328 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 15:16:21.328 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 15:16:21.328 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 15:16:21.328 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 15:17:21.367 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 15:17:21.368 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 15:17:21.368 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 15:17:21.368 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 15:17:21.368 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 15:17:21.368 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 15:17:21.368 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 15:17:21.368 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 15:17:21.368 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 15:17:21.368 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 15:17:21.368 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 15:17:21.368 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 15:17:21.368 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 15:17:21.368 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 15:18:01.729 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro de rotas:
+10-30 15:18:01.729 D/RoutesViewModel(19385):    Usu├írio: rossinys
+10-30 15:18:01.729 D/RoutesViewModel(19385):    Email: rossinys@gmail.com
+10-30 15:18:01.729 D/RoutesViewModel(19385):    ID: 1
+10-30 15:18:01.729 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:18:01.729 D/RoutesViewModel(19385):    Total de rotas: 0
+10-30 15:18:01.729 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 0 rotas
+10-30 15:18:01.761 D/RoutesViewModel(19385): ­ƒöä For├ºando refresh dos dados das rotas
+10-30 15:18:01.936 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:18:01.936 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:18:01.936 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:18:01.936 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:18:01.936 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:18:01.936 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:18:01.980 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:18:01.980 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:18:01.980 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:18:01.980 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:18:01.980 D/AppRepository(19385):    Data fim: 1761846584000
+10-30 15:18:01.980 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:18:02.036 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:18:02.036 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:18:02.036 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:18:02.036 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:18:02.036 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:18:02.036 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:18:02.083 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:18:02.083 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:18:02.083 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:18:02.084 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:18:02.084 D/AppRepository(19385):    Data fim: 1761846584000
+10-30 15:18:02.084 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:18:02.086 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro de rotas:
+10-30 15:18:02.086 D/RoutesViewModel(19385):    Usu├írio: rossinys
+10-30 15:18:02.086 D/RoutesViewModel(19385):    Email: rossinys@gmail.com
+10-30 15:18:02.086 D/RoutesViewModel(19385):    ID: 1
+10-30 15:18:02.086 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:18:02.086 D/RoutesViewModel(19385):    Total de rotas: 2
+10-30 15:18:02.086 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 2 rotas
+10-30 15:18:02.138 D/AppRepository(19385): ­ƒöì RotaResumo criado para Luz:
+10-30 15:18:02.138 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:18:02.139 D/AppRepository(19385):    Ciclo: 2 (da entidade Rota)
+10-30 15:18:02.139 D/AppRepository(19385):    Data in├¡cio: 1761845176000
+10-30 15:18:02.139 D/AppRepository(19385):    Data fim: 1761845176000
+10-30 15:18:02.139 D/AppRepository(19385):    Texto ciclo: 2┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:18:02.179 D/AppRepository(19385): ­ƒöì RotaResumo criado para Sol:
+10-30 15:18:02.179 D/AppRepository(19385):    Status: EM_ANDAMENTO (da entidade Rota)
+10-30 15:18:02.179 D/AppRepository(19385):    Ciclo: 3 (da entidade Rota)
+10-30 15:18:02.179 D/AppRepository(19385):    Data in├¡cio: 1761846584000
+10-30 15:18:02.179 D/AppRepository(19385):    Data fim: 1761846584000
+10-30 15:18:02.179 D/AppRepository(19385):    Texto ciclo: 3┬║ Acerto - 30/10/2025 a 30/10/2025
+10-30 15:18:02.183 D/RoutesViewModel(19385): ­ƒôè Dados atualizados: 2 rotas
+10-30 15:18:02.183 D/RoutesViewModel(19385): ­ƒöì Aplicando filtro completo de rotas:
+10-30 15:18:02.183 D/RoutesViewModel(19385):    ├ë Admin: true
+10-30 15:18:02.183 D/RoutesViewModel(19385):    Total de rotas: 2
+10-30 15:18:02.183 D/RoutesViewModel(19385): Ô£à ADMIN - Mostrando todas as 2 rotas
+10-30 15:18:02.183 D/RoutesViewModel(19385): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas
+10-30 15:18:02.206 D/RoutesAdapter(19385): Rota Luz: Status = EM_ANDAMENTO -> Texto = 'Em andamento'
+10-30 15:18:02.207 D/RoutesAdapter(19385): ­ƒöì DEBUG CICLO: cicloAtual=2, dataInicio=1761845176000, dataFim=1761845176000
+10-30 15:18:02.207 D/RoutesAdapter(19385): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=EM_ANDAMENTO, cicloAcertoAtual=2
+10-30 15:18:02.207 D/RoutesAdapter(19385): ­ƒöì TEXTO CICLO GERADO: '2┬║ Acerto - 30/10/2025 a 30/10/2025'
+10-30 15:18:02.227 D/RoutesAdapter(19385): Rota Sol: Status = EM_ANDAMENTO -> Texto = 'Em andamento'
+10-30 15:18:02.227 D/RoutesAdapter(19385): ­ƒöì DEBUG CICLO: cicloAtual=3, dataInicio=1761846584000, dataFim=1761846584000
+10-30 15:18:02.227 D/RoutesAdapter(19385): ­ƒöì DADOS DA ENTIDADE ROTA: statusAtual=EM_ANDAMENTO, cicloAcertoAtual=3
+10-30 15:18:02.227 D/RoutesAdapter(19385): ­ƒöì TEXTO CICLO GERADO: '3┬║ Acerto - 30/10/2025 a 30/10/2025'
+10-30 15:18:21.411 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 15:18:21.411 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 15:18:21.411 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 15:18:21.411 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 15:18:21.411 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 15:18:21.411 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 15:18:21.411 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 15:18:21.411 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 15:18:21.412 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 15:18:21.412 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 15:18:21.412 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 15:18:21.412 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 15:18:21.412 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 15:18:21.412 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 15:19:18.958 D/AppRepository(19926): Worker de sincroniza├º├úo agendado
+10-30 15:19:18.960 D/AppRepository(19926): Worker de limpeza agendado
+10-30 15:19:18.960 D/AppRepository(19926): Workers peri├│dicos inicializados
+10-30 15:19:18.962 D/AppRepository(19926): ­ƒôè Monitoramento de mem├│ria iniciado
+10-30 15:19:21.421 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 15:19:21.422 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 15:19:21.422 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 15:19:21.422 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 15:19:21.422 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 15:19:21.422 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 15:19:21.422 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 15:19:21.422 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 15:19:21.422 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 15:19:21.422 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 15:19:21.422 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 15:19:21.422 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 15:19:21.422 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 15:19:21.422 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 15:19:34.012 W/System.err(20200): android.content.pm.PackageManager$NameNotFoundException: com.example.gestaobilhares
+10-30 15:19:34.014 W/System.err(20200): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+10-30 15:19:34.014 W/System.err(20200): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+10-30 15:19:34.014 W/System.err(20200): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.a(:11)
+10-30 15:19:34.014 W/System.err(20200): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.b(:1)
+10-30 15:19:34.014 W/System.err(20200): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.c(Unknown Source:0)
+10-30 15:19:34.014 W/System.err(20200): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.a.run(Unknown Source:6)
+10-30 15:19:34.014 W/System.err(20200): 	at android.os.Handler.handleCallback(Handler.java:938)
+10-30 15:19:34.014 W/System.err(20200): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+10-30 15:19:34.014 W/System.err(20200): 	at android.os.Looper.loopOnce(Looper.java:226)
+10-30 15:19:34.014 W/System.err(20200): 	at android.os.Looper.loop(Looper.java:313)
+10-30 15:19:34.014 W/System.err(20200): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+10-30 15:20:21.548 W/System.err(25028): java.lang.NoSuchMethodException: android.bluetooth.IBluetoothManager$Stub$Proxy.getBluetoothGatt []
+10-30 15:20:21.551 W/System.err(25028): 	at java.lang.Class.getMethod(Class.java:2940)
+10-30 15:20:21.551 W/System.err(25028): 	at java.lang.Class.getDeclaredMethod(Class.java:2919)
+10-30 15:20:21.551 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getDeclaredMethod(BleUtils.java:346)
+10-30 15:20:21.551 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.getIBluetoothGatt(BleUtils.java:312)
+10-30 15:20:21.551 W/System.err(25028): 	at xfkj.fitpro.utils.BleUtils.releaseAllScanClient(BleUtils.java:46)
+10-30 15:20:21.551 W/System.err(25028): 	at xfkj.fitpro.service.BaseLeService$1.onConnectionStateChange(BaseLeService.java:229)
+10-30 15:20:21.551 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1$5.run(BluetoothGatt.java:336)
+10-30 15:20:21.551 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.runOrQueueCallback(BluetoothGatt.java:954)
+10-30 15:20:21.551 W/System.err(25028): 	at android.bluetooth.BluetoothGatt.access$200(BluetoothGatt.java:48)
+10-30 15:20:21.551 W/System.err(25028): 	at android.bluetooth.BluetoothGatt$1.onClientConnectionState(BluetoothGatt.java:331)
+10-30 15:20:21.551 W/System.err(25028): 	at android.bluetooth.IBluetoothGattCallback$Stub.onTransact(IBluetoothGattCallback.java:216)
+10-30 15:20:21.551 W/System.err(25028): 	at android.os.Binder.execTransactInternal(Binder.java:1220)
+10-30 15:20:21.551 W/System.err(25028): 	at android.os.Binder.execTransact(Binder.java:1179)
+10-30 15:20:21.958 W/System.err( 2095): java.nio.charset.MalformedInputException: Input length = 1
+10-30 15:20:21.966 W/System.err( 2095): 	at java.nio.charset.CoderResult.throwException(CoderResult.java:274)
+10-30 15:20:21.966 W/System.err( 2095): 	at sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:372)
+10-30 15:20:21.966 W/System.err( 2095): 	at sun.nio.cs.StreamDecoder.read(StreamDecoder.java:181)
+10-30 15:20:21.966 W/System.err( 2095): 	at java.io.InputStreamReader.read(InputStreamReader.java:177)
+10-30 15:20:21.966 W/System.err( 2095): 	at java.io.BufferedReader.fill(BufferedReader.java:172)
+10-30 15:20:21.966 W/System.err( 2095): 	at java.io.BufferedReader.readLine(BufferedReader.java:337)
+10-30 15:20:21.966 W/System.err( 2095): 	at java.io.BufferedReader.readLine(BufferedReader.java:403)
+10-30 15:20:21.966 W/System.err( 2095): 	at java.nio.file.Files.readAllLines(Files.java:3205)
+10-30 15:20:21.966 W/System.err( 2095): 	at java.nio.file.Files.readAllLines(Files.java:3242)
+10-30 15:20:21.966 W/System.err( 2095): 	at com.sec.internal.helper.SimpleEventLog.lambda$resize$2$SimpleEventLog(SimpleEventLog.java:183)
+10-30 15:20:21.966 W/System.err( 2095): 	at com.sec.internal.helper.SimpleEventLog$$ExternalSyntheticLambda0.run(Unknown Source:2)
+10-30 15:20:21.967 W/System.err( 2095): 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:524)
+10-30 15:20:21.967 W/System.err( 2095): 	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+10-30 15:20:21.967 W/System.err( 2095): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+10-30 15:20:21.967 W/System.err( 2095): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+10-30 15:20:21.967 W/System.err( 2095): 	at java.lang.Thread.run(Thread.java:1119)
