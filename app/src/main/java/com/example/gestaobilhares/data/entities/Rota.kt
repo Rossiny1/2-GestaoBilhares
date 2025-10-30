@@ -39,7 +39,7 @@ data class Rota(
     val dataAtualizacao: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "status_atual")
-    val statusAtual: StatusRota = StatusRota.PAUSADA,
+    val statusAtual: StatusRota = StatusRota.FINALIZADA,
     
     @ColumnInfo(name = "ciclo_acerto_atual")
     val cicloAcertoAtual: Int = 1,
