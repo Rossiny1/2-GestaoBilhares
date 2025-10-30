@@ -2808,21 +2808,25 @@ class AppRepository constructor(
     )
     
     // Métodos stub para sincronização - BLOQUEADOS para evitar população automática
+    @Suppress("UNUSED_PARAMETER")
     suspend fun syncRotas(_rotas: List<Rota>) {
         // BLOQUEADO: Sincronização de rotas desabilitada para evitar população automática
         android.util.Log.d("AppRepository", "SYNC ROTAS BLOQUEADO - Evitando população automática")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     suspend fun syncClientes(_clientes: List<Cliente>) {
         // BLOQUEADO: Sincronização de clientes desabilitada para evitar população automática
         android.util.Log.d("AppRepository", "SYNC CLIENTES BLOQUEADO - Evitando população automática")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     suspend fun syncAcertos(_acertos: List<Acerto>) {
         // BLOQUEADO: Sincronização de acertos desabilitada para evitar população automática
         android.util.Log.d("AppRepository", "SYNC ACERTOS BLOQUEADO - Evitando população automática")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     suspend fun syncColaboradores(_colaboradores: List<Colaborador>) {
         // BLOQUEADO: Sincronização de colaboradores desabilitada para evitar população automática
         android.util.Log.d("AppRepository", "SYNC COLABORADORES BLOQUEADO - Evitando população automática")
@@ -2843,6 +2847,39 @@ class AppRepository constructor(
         return try {
             val id = contratoLocacaoDao.inserirContrato(contrato)
             logDbInsertSuccess("CONTRATO", "Numero=${contrato.numeroContrato}, ID=$id")
+            // Enfileirar PUSH para Firestore
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "numeroContrato": "${contrato.numeroContrato}",
+                        "clienteId": ${contrato.clienteId},
+                        "locadorNome": "${contrato.locadorNome}",
+                        "locadorCnpj": "${contrato.locadorCnpj}",
+                        "locadorEndereco": "${contrato.locadorEndereco}",
+                        "locadorCep": "${contrato.locadorCep}",
+                        "locatarioNome": "${contrato.locatarioNome}",
+                        "locatarioCpf": "${contrato.locatarioCpf}",
+                        "locatarioEndereco": "${contrato.locatarioEndereco}",
+                        "locatarioTelefone": "${contrato.locatarioTelefone}",
+                        "locatarioEmail": "${contrato.locatarioEmail}",
+                        "valorMensal": ${contrato.valorMensal},
+                        "diaVencimento": ${contrato.diaVencimento},
+                        "tipoPagamento": "${contrato.tipoPagamento}",
+                        "percentualReceita": ${contrato.percentualReceita ?: 0.0},
+                        "dataContrato": ${contrato.dataContrato.time},
+                        "dataInicio": ${contrato.dataInicio.time},
+                        "status": "${contrato.status}",
+                        "dataEncerramento": ${contrato.dataEncerramento?.time ?: "null"},
+                        "dataCriacao": ${contrato.dataCriacao.time},
+                        "dataAtualizacao": ${contrato.dataAtualizacao.time}
+                    }
+                """.trimIndent()
+                adicionarOperacaoSync("ContratoLocacao", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("ContratoLocacao", id, "CREATE", "PENDING", null, payload)
+            } catch (syncError: Exception) {
+                android.util.Log.w("AppRepository", "Erro ao enfileirar ContratoLocacao CREATE: ${syncError.message}")
+            }
             id
         } catch (e: Exception) {
             logDbInsertError("CONTRATO", "Numero=${contrato.numeroContrato}", e)
@@ -2861,6 +2898,39 @@ class AppRepository constructor(
             } catch (e: Exception) {
                 Log.e("RepoContracts", "Falha ao ler contratos após atualizar", e)
             }
+            // Enfileirar PUSH UPDATE
+            try {
+                val payload = """
+                    {
+                        "id": ${contrato.id},
+                        "numeroContrato": "${contrato.numeroContrato}",
+                        "clienteId": ${contrato.clienteId},
+                        "locadorNome": "${contrato.locadorNome}",
+                        "locadorCnpj": "${contrato.locadorCnpj}",
+                        "locadorEndereco": "${contrato.locadorEndereco}",
+                        "locadorCep": "${contrato.locadorCep}",
+                        "locatarioNome": "${contrato.locatarioNome}",
+                        "locatarioCpf": "${contrato.locatarioCpf}",
+                        "locatarioEndereco": "${contrato.locatarioEndereco}",
+                        "locatarioTelefone": "${contrato.locatarioTelefone}",
+                        "locatarioEmail": "${contrato.locatarioEmail}",
+                        "valorMensal": ${contrato.valorMensal},
+                        "diaVencimento": ${contrato.diaVencimento},
+                        "tipoPagamento": "${contrato.tipoPagamento}",
+                        "percentualReceita": ${contrato.percentualReceita ?: 0.0},
+                        "dataContrato": ${contrato.dataContrato.time},
+                        "dataInicio": ${contrato.dataInicio.time},
+                        "status": "${contrato.status}",
+                        "dataEncerramento": ${contrato.dataEncerramento?.time ?: "null"},
+                        "dataCriacao": ${contrato.dataCriacao.time},
+                        "dataAtualizacao": ${contrato.dataAtualizacao.time}
+                    }
+                """.trimIndent()
+                adicionarOperacaoSync("ContratoLocacao", contrato.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("ContratoLocacao", contrato.id, "UPDATE", "PENDING", null, payload)
+            } catch (syncError: Exception) {
+                android.util.Log.w("AppRepository", "Erro ao enfileirar ContratoLocacao UPDATE: ${syncError.message}")
+            }
         } catch (e: Exception) {
             Log.e("RepoUpdate", "Erro ao atualizar contrato id=${contrato.id}", e)
             throw e
@@ -2876,7 +2946,16 @@ class AppRepository constructor(
         val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
         Log.d("RepoContracts", "Após encerrar direto: cliente=${clienteId} contratos=${apos.size} -> ${'$'}resumo")
     }
-    suspend fun excluirContrato(contrato: ContratoLocacao) = contratoLocacaoDao.excluirContrato(contrato)
+    suspend fun excluirContrato(contrato: ContratoLocacao) {
+        contratoLocacaoDao.excluirContrato(contrato)
+        // Enfileirar PUSH DELETE
+        try {
+            adicionarOperacaoSync("ContratoLocacao", contrato.id, "DELETE", payload = "{}", priority = 1)
+            logarOperacaoSync("ContratoLocacao", contrato.id, "DELETE", "PENDING", null, null)
+        } catch (syncError: Exception) {
+            android.util.Log.w("AppRepository", "Erro ao enfileirar ContratoLocacao DELETE: ${syncError.message}")
+        }
+    }
     suspend fun buscarContratoPorId(contratoId: Long) = contratoLocacaoDao.buscarContratoPorId(contratoId)
     suspend fun buscarMesasPorContrato(contratoId: Long) = contratoLocacaoDao.buscarMesasPorContrato(contratoId)
     suspend fun inserirContratoMesa(contratoMesa: ContratoMesa): Long {
