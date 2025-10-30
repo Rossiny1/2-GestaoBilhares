@@ -754,7 +754,8 @@ class AppRepository constructor(
                 val ultimoPorCliente = ultimos.associateBy({ it.clienteId }, { it.dataAcerto })
                 val agora = java.util.Calendar.getInstance()
                 clientes.count { cliente ->
-                    val debitoAlto = cliente.debitoAtual > 400
+                    // Critério alinhado com a UI: considerar pendência quando débito > R$300
+                    val debitoAlto = cliente.debitoAtual > 300
                     val dataUltimo = ultimoPorCliente[cliente.id]
                     val semAcerto4Meses = if (dataUltimo == null) {
                         true
