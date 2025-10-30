@@ -635,17 +635,18 @@ class AppRepository constructor(
                 val quantidadeMesas = calcularQuantidadeMesasSync(rota.id)
                 val percentualAcertados = calcularPercentualAcertadosSync(rota.id, clientesAtivos)
                 
-                // ✅ ATUALIZAÇÃO EM TEMPO REAL: Status baseado no estado atual dos ciclos
-                val status = determinarStatusRotaEmTempoReal(rota.id)
+                // ✅ CORREÇÃO: Usar status da entidade Rota (já atualizada pelo PULL)
+                val status = rota.statusAtual
                 
-                // ✅ CORREÇÃO: Usar ciclo atual real baseado nos acertos
-                val cicloAtual = calcularCicloAtualReal(rota.id)
-                val dataCiclo = obterDataCicloAtual(rota.id)
+                // ✅ CORREÇÃO: Usar dados da entidade Rota (já atualizada pelo PULL)
+                val cicloAtual = rota.cicloAcertoAtual
+                val dataCiclo = rota.dataInicioCiclo
                 
-                // ✅ NOVO: Obter datas de início e fim do ciclo
-                val (dataInicio, dataFim) = obterDatasCicloRota(rota.id)
+                // ✅ NOVO: Usar datas diretamente da entidade Rota
+                val dataInicio = rota.dataInicioCiclo
+                val dataFim = rota.dataFimCiclo
 
-                RotaResumo(
+                val rotaResumo = RotaResumo(
                     rota = rota,
                     clientesAtivos = clientesAtivos,
                     pendencias = pendencias,
@@ -657,6 +658,16 @@ class AppRepository constructor(
                     dataInicioCiclo = dataInicio,  // ✅ NOVO: Data de início
                     dataFimCiclo = dataFim        // ✅ NOVO: Data de fim
                 )
+                
+                // ✅ DEBUG: Log para verificar se os dados estão corretos
+                android.util.Log.d("AppRepository", "🔍 RotaResumo criado para ${rota.nome}:")
+                android.util.Log.d("AppRepository", "   Status: ${status} (da entidade Rota)")
+                android.util.Log.d("AppRepository", "   Ciclo: ${cicloAtual} (da entidade Rota)")
+                android.util.Log.d("AppRepository", "   Data início: ${dataInicio}")
+                android.util.Log.d("AppRepository", "   Data fim: ${dataFim}")
+                android.util.Log.d("AppRepository", "   Texto ciclo: ${rotaResumo.getCicloFormatado()}")
+                
+                rotaResumo
             }
         }
     }

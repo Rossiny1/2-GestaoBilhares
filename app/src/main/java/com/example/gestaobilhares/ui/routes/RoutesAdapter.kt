@@ -64,6 +64,7 @@ class RoutesAdapter(
                 // ✅ NOVO: Log para debug do status
                 android.util.Log.d("RoutesAdapter", "Rota ${rotaResumo.rota.nome}: Status = ${rotaResumo.status} -> Texto = '${rotaStatus.text}'")
                 android.util.Log.d("RoutesAdapter", "🔍 DEBUG CICLO: cicloAtual=${rotaResumo.cicloAtual}, dataInicio=${rotaResumo.dataInicioCiclo}, dataFim=${rotaResumo.dataFimCiclo}")
+                android.util.Log.d("RoutesAdapter", "🔍 DADOS DA ENTIDADE ROTA: statusAtual=${rotaResumo.rota.statusAtual}, cicloAcertoAtual=${rotaResumo.rota.cicloAcertoAtual}")
 
                 // Informações do ciclo atual
                 rotaCiclo.text = rotaResumo.getCicloFormatado()

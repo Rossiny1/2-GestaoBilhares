@@ -105,6 +105,26 @@ class ClientListViewModel constructor(
     val dadosRotaReais: StateFlow<DadosRotaReais> = _dadosRotaReais.asStateFlow()
 
     init {
+        // ✅ NOVO: Observar mudanças nas rotas para sincronização automática
+        viewModelScope.launch {
+            appRepository.getRotasResumoComAtualizacaoTempoReal().collect { rotasResumo ->
+                val rotaAtual = _rotaInfo.value
+                if (rotaAtual != null) {
+                    // Encontrar a rota atualizada na lista
+                    val rotaAtualizada = rotasResumo.find { it.rota.id == rotaAtual.id }?.rota
+                    if (rotaAtualizada != null && rotaAtualizada != rotaAtual) {
+                        android.util.Log.d("ClientListViewModel", "🔄 Rota sincronizada automaticamente: ${rotaAtualizada.nome}")
+                        android.util.Log.d("ClientListViewModel", "   Status: ${rotaAtualizada.statusAtual}")
+                        android.util.Log.d("ClientListViewModel", "   Ciclo: ${rotaAtualizada.cicloAcertoAtual}")
+                        
+                        _rotaInfo.value = rotaAtualizada
+                        carregarCicloAcertoReal(rotaAtualizada)
+                        carregarStatusRota()
+                    }
+                }
+            }
+        }
+        
         // Configurar fluxo reativo baseado no rotaId
         viewModelScope.launch {
             _rotaIdFlow.flatMapLatest { rotaId ->
@@ -428,6 +448,20 @@ class ClientListViewModel constructor(
                 _cicloAtivo.value = novoCiclo.copy(id = cicloId) // ✅ CORREÇÃO: Atualizar ciclo ativo
                 _statusCiclo.value = StatusCicloAcerto.EM_ANDAMENTO
                 _statusRota.value = StatusRota.EM_ANDAMENTO
+
+                // ✅ CONSISTÊNCIA LOCAL IMEDIATA: refletir início do ciclo na entidade Rota
+                try {
+                    appRepository.iniciarCicloRota(
+                        rotaId = rota.id,
+                        ciclo = proximoCiclo,
+                        dataInicio = novoCiclo.dataInicio.time
+                    )
+                } catch (e: Exception) {
+                    android.util.Log.w(
+                        "ClientListViewModel",
+                        "Falha ao atualizar Rota no início do ciclo: ${e.message}"
+                    )
+                }
                 
                 // ✅ NOVO: Reinicializar campos do card de progresso para o novo ciclo
                 _percentualAcertados.value = 0
