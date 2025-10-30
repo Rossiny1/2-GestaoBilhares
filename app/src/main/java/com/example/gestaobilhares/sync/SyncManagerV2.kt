@@ -2148,7 +2148,16 @@ class SyncManagerV2(
             for (document in snapshot.documents) {
                 try {
                     val data = document.data ?: continue
-                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    // Aceitar id em diferentes chaves e formatos (sem usar run { continue })
+                    val roomIdCandidate = ((data["id"] as? Number)?.toLong()
+                        ?: (data["roomId"] as? Number)?.toLong()
+                        ?: (data["id"] as? String)?.toLongOrNull()
+                        ?: (data["roomId"] as? String)?.toLongOrNull())
+                    if (roomIdCandidate == null) {
+                        android.util.Log.w("CONTRACT_PULL", "INVALID contrato id: doc=${document.id} dataKeys=${data.keys}")
+                        continue
+                    }
+                    val roomId = roomIdCandidate
                     
                     android.util.Log.d("SyncManagerV2", "🔄 Processando stock item: ${data["name"]} (Room ID: $roomId)")
                     
@@ -2598,12 +2607,136 @@ class SyncManagerV2(
      */
     private suspend fun pullContratosLocacaoFromFirestore(empresaId: String) {
         android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Contratos Locação do Firestore...")
-        
+        android.util.Log.d("CONTRACT_PULL", "INIT contratos empresa=$empresaId")
         try {
-            val contratosCollection = firestore.collection("empresas/$empresaId/contratosLocacao")
-            val snapshot = contratosCollection.get().await()
-            
-            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} contratos locação no Firestore")
+            val base = firestore.collection("empresas").document(empresaId)
+            val candidates = listOf("contratosLocacao", "contratolocacao", "contratoslocacao", "contratos")
+            var usedName = ""
+            var snapshot: com.google.firebase.firestore.QuerySnapshot? = null
+            for (name in candidates) {
+                val snap = base.collection(name).get().await()
+                android.util.Log.d("CONTRACT_PULL", "TRY '$name' size=${snap.size()}")
+                if (!snap.isEmpty) { usedName = name; snapshot = snap; break }
+            }
+            if (snapshot == null || snapshot.isEmpty) {
+                android.util.Log.w("CONTRACT_PULL", "EMPTY all top-level candidates; trying nested under clientes/rotas...")
+
+                val baseEmpresa = firestore.collection("empresas").document(empresaId)
+                var nestedSynced = 0
+                val contratoDaoNested = database.contratoLocacaoDao()
+
+                // 1) clientes/{clienteId}/contratos
+                val clientesSnap = baseEmpresa.collection("clientes").get().await()
+                for (clienteDoc in clientesSnap.documents) {
+                    try {
+                        val nested = clienteDoc.reference.collection("contratos").get().await()
+                        android.util.Log.d("CONTRACT_PULL", "TRY nested cliente contratos cliente=${clienteDoc.id} size=${nested.size()}")
+                        for (document in nested.documents) {
+                            val data = document.data ?: continue
+                            val roomIdCandidate = ((data["id"] as? Number)?.toLong()
+                                ?: (data["roomId"] as? Number)?.toLong()
+                                ?: (data["id"] as? String)?.toLongOrNull()
+                                ?: (data["roomId"] as? String)?.toLongOrNull())
+                            if (roomIdCandidate == null) { android.util.Log.w("CONTRACT_PULL", "INVALID nested cliente contrato id: ${document.id}"); continue }
+                            val contrato = com.example.gestaobilhares.data.entities.ContratoLocacao(
+                                id = roomIdCandidate,
+                                numeroContrato = (data["numeroContrato"] as? String) ?: (data["numero"] as? String) ?: "",
+                                clienteId = ((data["clienteId"] as? Number)?.toLong()
+                                    ?: (data["clienteId"] as? String)?.toLongOrNull() ?: clienteDoc.id.toLongOrNull() ?: 0L),
+                                locadorNome = data["locadorNome"] as? String ?: "BILHAR GLOBO R & A LTDA",
+                                locadorCnpj = data["locadorCnpj"] as? String ?: "34.994.884/0001-69",
+                                locadorEndereco = data["locadorEndereco"] as? String ?: "Rua João Pinheiro, nº 765, Bairro Centro, Montes Claros, MG",
+                                locadorCep = data["locadorCep"] as? String ?: "39.400-093",
+                                locatarioNome = data["locatarioNome"] as? String ?: "",
+                                locatarioCpf = data["locatarioCpf"] as? String ?: "",
+                                locatarioEndereco = data["locatarioEndereco"] as? String ?: "",
+                                locatarioTelefone = data["locatarioTelefone"] as? String ?: "",
+                                locatarioEmail = data["locatarioEmail"] as? String ?: "",
+                                valorMensal = (data["valorMensal"] as? Number)?.toDouble() ?: 0.0,
+                                diaVencimento = (data["diaVencimento"] as? Number)?.toInt() ?: 1,
+                                tipoPagamento = data["tipoPagamento"] as? String ?: "FIXO",
+                                percentualReceita = (data["percentualReceita"] as? Number)?.toDouble(),
+                                dataContrato = java.util.Date((data["dataContrato"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                                dataInicio = java.util.Date((data["dataInicio"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                                status = data["status"] as? String ?: "ATIVO",
+                                dataEncerramento = ((data["dataEncerramento"] as? Number)
+                                    ?: (data["dataEncerramento"] as? String)?.toLongOrNull())?.let { java.util.Date(it.toLong()) },
+                                assinaturaLocador = data["assinaturaLocador"] as? String,
+                                assinaturaLocatario = data["assinaturaLocatario"] as? String,
+                                distratoAssinaturaLocador = data["distratoAssinaturaLocador"] as? String,
+                                distratoAssinaturaLocatario = data["distratoAssinaturaLocatario"] as? String,
+                                distratoDataAssinatura = ((data["distratoDataAssinatura"] as? Number)
+                                    ?: (data["distratoDataAssinatura"] as? String)?.toLongOrNull())?.let { java.util.Date(it.toLong()) },
+                                dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                                dataAtualizacao = java.util.Date((data["dataAtualizacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                            )
+                            contratoDaoNested.inserirContrato(contrato)
+                            nestedSynced++
+                            android.util.Log.d("CONTRACT_PULL", "INSERT_NESTED_CLIENTE id=${contrato.id} numero=${contrato.numeroContrato}")
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("CONTRACT_PULL", "ERROR_NESTED_CLIENTE contratos cliente=${clienteDoc.id} ${e.message}", e)
+                    }
+                }
+
+                // 2) rotas/{rotaId}/contratos
+                val rotasSnap = baseEmpresa.collection("rotas").get().await()
+                for (rotaDoc in rotasSnap.documents) {
+                    try {
+                        val nested = rotaDoc.reference.collection("contratos").get().await()
+                        android.util.Log.d("CONTRACT_PULL", "TRY nested rota contratos rota=${rotaDoc.id} size=${nested.size()}")
+                        for (document in nested.documents) {
+                            val data = document.data ?: continue
+                            val roomIdCandidate = ((data["id"] as? Number)?.toLong()
+                                ?: (data["roomId"] as? Number)?.toLong()
+                                ?: (data["id"] as? String)?.toLongOrNull()
+                                ?: (data["roomId"] as? String)?.toLongOrNull())
+                            if (roomIdCandidate == null) { android.util.Log.w("CONTRACT_PULL", "INVALID nested rota contrato id: ${document.id}"); continue }
+                            val contrato = com.example.gestaobilhares.data.entities.ContratoLocacao(
+                                id = roomIdCandidate,
+                                numeroContrato = (data["numeroContrato"] as? String) ?: (data["numero"] as? String) ?: "",
+                                clienteId = ((data["clienteId"] as? Number)?.toLong()
+                                    ?: (data["clienteId"] as? String)?.toLongOrNull() ?: 0L),
+                                locadorNome = data["locadorNome"] as? String ?: "BILHAR GLOBO R & A LTDA",
+                                locadorCnpj = data["locadorCnpj"] as? String ?: "34.994.884/0001-69",
+                                locadorEndereco = data["locadorEndereco"] as? String ?: "Rua João Pinheiro, nº 765, Bairro Centro, Montes Claros, MG",
+                                locadorCep = data["locadorCep"] as? String ?: "39.400-093",
+                                locatarioNome = data["locatarioNome"] as? String ?: "",
+                                locatarioCpf = data["locatarioCpf"] as? String ?: "",
+                                locatarioEndereco = data["locatarioEndereco"] as? String ?: "",
+                                locatarioTelefone = data["locatarioTelefone"] as? String ?: "",
+                                locatarioEmail = data["locatarioEmail"] as? String ?: "",
+                                valorMensal = (data["valorMensal"] as? Number)?.toDouble() ?: 0.0,
+                                diaVencimento = (data["diaVencimento"] as? Number)?.toInt() ?: 1,
+                                tipoPagamento = data["tipoPagamento"] as? String ?: "FIXO",
+                                percentualReceita = (data["percentualReceita"] as? Number)?.toDouble(),
+                                dataContrato = java.util.Date((data["dataContrato"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                                dataInicio = java.util.Date((data["dataInicio"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                                status = data["status"] as? String ?: "ATIVO",
+                                dataEncerramento = ((data["dataEncerramento"] as? Number)
+                                    ?: (data["dataEncerramento"] as? String)?.toLongOrNull())?.let { java.util.Date(it.toLong()) },
+                                assinaturaLocador = data["assinaturaLocador"] as? String,
+                                assinaturaLocatario = data["assinaturaLocatario"] as? String,
+                                distratoAssinaturaLocador = data["distratoAssinaturaLocador"] as? String,
+                                distratoAssinaturaLocatario = data["distratoAssinaturaLocatario"] as? String,
+                                distratoDataAssinatura = ((data["distratoDataAssinatura"] as? Number)
+                                    ?: (data["distratoDataAssinatura"] as? String)?.toLongOrNull())?.let { java.util.Date(it.toLong()) },
+                                dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                                dataAtualizacao = java.util.Date((data["dataAtualizacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                            )
+                            contratoDaoNested.inserirContrato(contrato)
+                            nestedSynced++
+                            android.util.Log.d("CONTRACT_PULL", "INSERT_NESTED_ROTA id=${contrato.id} numero=${contrato.numeroContrato}")
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("CONTRACT_PULL", "ERROR_NESTED_ROTA contratos rota=${rotaDoc.id} ${e.message}", e)
+                    }
+                }
+
+                android.util.Log.d("CONTRACT_PULL", "SUMMARY_NESTED contratos synced=$nestedSynced")
+                return
+            }
+            android.util.Log.d("CONTRACT_PULL", "USING '$usedName' size=${snapshot.size()}")
             
             val contratoDao = database.contratoLocacaoDao()
             val contratosExistentesList = contratoDao.buscarTodosContratos().first()
@@ -2616,12 +2749,12 @@ class SyncManagerV2(
                     val data = document.data ?: continue
                     val roomId = (data["id"] as? Number)?.toLong() ?: continue
                     
-                    android.util.Log.d("SyncManagerV2", "🔄 Processando contrato: ${data["numeroContrato"]} - Cliente ${data["clienteId"]} (Room ID: $roomId)")
+                    android.util.Log.d("CONTRACT_PULL", "DOC id=${document.id} numero=${data["numeroContrato"]} cliente=${data["clienteId"]} roomId=$roomId")
                     
                     // Verificar se já existe
                     val jaExiste = contratosExistentesList.any { contrato -> contrato.id == roomId }
                     if (jaExiste) {
-                        android.util.Log.d("SyncManagerV2", "✅ Contrato já existe: ${data["numeroContrato"]} (ID: $roomId)")
+                        android.util.Log.d("CONTRACT_PULL", "SKIP_EXISTING numero=${data["numeroContrato"]} id=$roomId")
                         contratosExistentes++
                         continue
                     }
@@ -2629,8 +2762,10 @@ class SyncManagerV2(
                     // Criar entidade ContratoLocacao
                     val contrato = com.example.gestaobilhares.data.entities.ContratoLocacao(
                         id = roomId,
-                        numeroContrato = data["numeroContrato"] as? String ?: "",
-                        clienteId = (data["clienteId"] as? Number)?.toLong() ?: 0L,
+                        numeroContrato = (data["numeroContrato"] as? String)
+                            ?: (data["numero"] as? String) ?: "",
+                        clienteId = ((data["clienteId"] as? Number)?.toLong()
+                            ?: (data["clienteId"] as? String)?.toLongOrNull()) ?: 0L,
                         locadorNome = data["locadorNome"] as? String ?: "BILHAR GLOBO R & A LTDA",
                         locadorCnpj = data["locadorCnpj"] as? String ?: "34.994.884/0001-69",
                         locadorEndereco = data["locadorEndereco"] as? String ?: "Rua João Pinheiro, nº 765, Bairro Centro, Montes Claros, MG",
@@ -2647,12 +2782,14 @@ class SyncManagerV2(
                         dataContrato = java.util.Date((data["dataContrato"] as? Number)?.toLong() ?: System.currentTimeMillis()),
                         dataInicio = java.util.Date((data["dataInicio"] as? Number)?.toLong() ?: System.currentTimeMillis()),
                         status = data["status"] as? String ?: "ATIVO",
-                        dataEncerramento = (data["dataEncerramento"] as? Number)?.let { java.util.Date(it.toLong()) },
+                        dataEncerramento = ((data["dataEncerramento"] as? Number)
+                            ?: (data["dataEncerramento"] as? String)?.toLongOrNull())?.let { java.util.Date(it.toLong()) },
                         assinaturaLocador = data["assinaturaLocador"] as? String,
                         assinaturaLocatario = data["assinaturaLocatario"] as? String,
                         distratoAssinaturaLocador = data["distratoAssinaturaLocador"] as? String,
                         distratoAssinaturaLocatario = data["distratoAssinaturaLocatario"] as? String,
-                        distratoDataAssinatura = (data["distratoDataAssinatura"] as? Number)?.let { java.util.Date(it.toLong()) },
+                        distratoDataAssinatura = ((data["distratoDataAssinatura"] as? Number)
+                            ?: (data["distratoDataAssinatura"] as? String)?.toLongOrNull())?.let { java.util.Date(it.toLong()) },
                         dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis()),
                         dataAtualizacao = java.util.Date((data["dataAtualizacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
                     )
@@ -2660,20 +2797,16 @@ class SyncManagerV2(
                     // Inserir no banco local
                     contratoDao.inserirContrato(contrato)
                     contratosSincronizados++
-                    
-                    android.util.Log.d("SyncManagerV2", "✅ Contrato sincronizado: ${contrato.numeroContrato} (ID: $roomId)")
+                    android.util.Log.d("CONTRACT_PULL", "INSERT id=$roomId numero=${contrato.numeroContrato}")
                     
                 } catch (e: Exception) {
-                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar contrato ${document.id}: ${e.message}", e)
+                    android.util.Log.e("CONTRACT_PULL", "ERROR_PROCESS doc=${document.id} msg=${e.message}", e)
                 }
             }
-            
-            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Contratos Locação:")
-            android.util.Log.d("SyncManagerV2", "   Sincronizados: $contratosSincronizados")
-            android.util.Log.d("SyncManagerV2", "   Já existentes: $contratosExistentes")
+            android.util.Log.d("CONTRACT_PULL", "SUMMARY contratos synced=$contratosSincronizados existing=$contratosExistentes")
             
         } catch (e: Exception) {
-            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar contratos locação: ${e.message}", e)
+            android.util.Log.e("CONTRACT_PULL", "ERROR ${e.message}", e)
         }
     }
 
@@ -2758,33 +2891,115 @@ class SyncManagerV2(
      */
     private suspend fun pullContratoMesasFromFirestore(empresaId: String) {
         android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL ContratoMesas do Firestore...")
+        android.util.Log.d("CONTRACT_PULL", "INIT contratoMesas empresa=$empresaId")
         try {
-            val collectionName = getCollectionName("ContratoMesa")
-            val snapshot = firestore.collection("empresas").document(empresaId).collection(collectionName).get().await()
+            val base = firestore.collection("empresas").document(empresaId)
+            val candidates = listOf(
+                getCollectionName("ContratoMesa"),
+                "contratoMesas",
+                "contratosMesas",
+                "contratosmesas",
+                "contratomesas"
+            )
+            var usedName = ""
+            var snapshot: com.google.firebase.firestore.QuerySnapshot? = null
+            for (name in candidates) {
+                val snap = base.collection(name).get().await()
+                android.util.Log.d("CONTRACT_PULL", "TRY mesas '$name' size=${snap.size()}")
+                if (!snap.isEmpty) { usedName = name; snapshot = snap; break }
+            }
+            if (snapshot == null || snapshot.isEmpty) {
+                android.util.Log.w("CONTRACT_PULL", "EMPTY contratoMesas in top-level; trying nested under each contrato...")
+                // Fallback: ler subcoleções dentro de cada contrato
+                val baseContratos = firestore.collection("empresas").document(empresaId)
+                val contratosSnap = baseContratos.collection("contratosLocacao").get().await()
+                var nestedInserted = 0
+                val daoNested = database.contratoLocacaoDao()
+                for (contratoDoc in contratosSnap.documents) {
+                    try {
+                        val nestedCandidates = listOf("mesas", "contratoMesas", "contratosMesas")
+                        for (nc in nestedCandidates) {
+                            val nested = contratoDoc.reference.collection(nc).get().await()
+                            android.util.Log.d("CONTRACT_PULL", "TRY nested '$nc' contrato=${contratoDoc.id} size=${nested.size()}")
+                            if (nested.isEmpty) continue
+                            for (doc in nested.documents) {
+                                val data = doc.data ?: continue
+                                val contratoMesaIdCandidate = ((data["id"] as? Number)?.toLong()
+                                    ?: (data["roomId"] as? Number)?.toLong()
+                                    ?: (data["id"] as? String)?.toLongOrNull()
+                                    ?: (data["roomId"] as? String)?.toLongOrNull())
+                                if (contratoMesaIdCandidate == null) {
+                                    android.util.Log.w("CONTRACT_PULL", "INVALID nested contratoMesa id: doc=${doc.id} keys=${data.keys}")
+                                    continue
+                                }
+                                val entity = com.example.gestaobilhares.data.entities.ContratoMesa(
+                                    id = contratoMesaIdCandidate,
+                                    contratoId = ((data["contratoId"] as? Number)?.toLong()
+                                        ?: (data["contratoId"] as? String)?.toLongOrNull()
+                                        ?: contratoDoc.id.toLongOrNull() ?: 0L),
+                                    mesaId = ((data["mesaId"] as? Number)?.toLong()
+                                        ?: (data["mesaId"] as? String)?.toLongOrNull()) ?: 0L,
+                                    tipoEquipamento = data["tipoEquipamento"] as? String ?: "SINUCA",
+                                    numeroSerie = data["numeroSerie"] as? String ?: "",
+                                    valorFicha = (data["valorFicha"] as? Number)?.toDouble(),
+                                    valorFixo = (data["valorFixo"] as? Number)?.toDouble()
+                                )
+                                daoNested.inserirContratoMesa(entity)
+                                nestedInserted++
+                                android.util.Log.d("CONTRACT_PULL", "INSERT_MESA_NESTED id=${entity.id} contratoId=${entity.contratoId} mesaId=${entity.mesaId}")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("CONTRACT_PULL", "ERROR_NESTED_MESAS contrato=${contratoDoc.id} ${e.message}", e)
+                    }
+                }
+                android.util.Log.d("CONTRACT_PULL", "SUMMARY_MESAS_NESTED inserted=$nestedInserted")
+                return
+            }
+            android.util.Log.d("CONTRACT_PULL", "USING mesas '$usedName' size=${snapshot.size()}")
             val dao = database.contratoLocacaoDao()
             var countNew = 0
+            val contratosExistentes = dao.buscarTodosContratos().first()
             for (doc in snapshot.documents) {
                 try {
                     val data = doc.data ?: continue
-                    val roomId = (data["id"] as? Number)?.toLong() ?: continue
+                    // Aceitar id em diferentes chaves e formatos para ContratoMesa (sem run { continue })
+                    val contratoMesaIdCandidate = ((data["id"] as? Number)?.toLong()
+                        ?: (data["roomId"] as? Number)?.toLong()
+                        ?: (data["id"] as? String)?.toLongOrNull()
+                        ?: (data["roomId"] as? String)?.toLongOrNull())
+                    if (contratoMesaIdCandidate == null) {
+                        android.util.Log.w("CONTRACT_PULL", "INVALID contratoMesa id: doc=${doc.id} dataKeys=${data.keys}")
+                        continue
+                    }
+                    val roomId = contratoMesaIdCandidate
                     val entity = com.example.gestaobilhares.data.entities.ContratoMesa(
                         id = roomId,
-                        contratoId = (data["contratoId"] as? Number)?.toLong() ?: 0L,
-                        mesaId = (data["mesaId"] as? Number)?.toLong() ?: 0L,
+                        contratoId = ((data["contratoId"] as? Number)?.toLong()
+                            ?: (data["contratoId"] as? String)?.toLongOrNull()) ?: 0L,
+                        mesaId = ((data["mesaId"] as? Number)?.toLong()
+                            ?: (data["mesaId"] as? String)?.toLongOrNull()) ?: 0L,
                         tipoEquipamento = data["tipoEquipamento"] as? String ?: "SINUCA",
                         numeroSerie = data["numeroSerie"] as? String ?: "",
                         valorFicha = (data["valorFicha"] as? Number)?.toDouble(),
                         valorFixo = (data["valorFixo"] as? Number)?.toDouble()
                     )
+                    // Proteger contra FK inválida: pular se contrato pai não existir localmente
+                    val paiExiste = contratosExistentes.any { it.id == entity.contratoId }
+                    if (!paiExiste) {
+                        android.util.Log.w("CONTRACT_PULL", "SKIP_MESA_NO_PARENT_CONTRACT id=$roomId contratoId=${entity.contratoId}. Parent not found; pulando para evitar FK 787")
+                        continue
+                    }
                     dao.inserirContratoMesa(entity)
                     countNew++
+                    android.util.Log.d("CONTRACT_PULL", "INSERT_MESA id=$roomId contratoId=${entity.contratoId} mesaId=${entity.mesaId}")
                 } catch (e: Exception) {
-                    android.util.Log.e("SyncManagerV2", "Erro ao processar ContratoMesa ${doc.id}: ${e.message}", e)
+                    android.util.Log.e("CONTRACT_PULL", "ERROR_PROCESS_MESA doc=${doc.id} msg=${e.message}", e)
                 }
             }
-            android.util.Log.d("SyncManagerV2", "✅ ContratoMesas sincronizadas: $countNew")
+            android.util.Log.d("CONTRACT_PULL", "SUMMARY_MESAS synced=$countNew")
         } catch (e: Exception) {
-            android.util.Log.e("SyncManagerV2", "❌ Erro no PULL ContratoMesas: ${e.message}", e)
+            android.util.Log.e("CONTRACT_PULL", "ERROR_MESAS ${e.message}", e)
         }
     }
 
