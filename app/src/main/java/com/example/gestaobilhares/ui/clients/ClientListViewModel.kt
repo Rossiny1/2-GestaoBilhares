@@ -28,6 +28,8 @@ import java.util.Date
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
  * Filtros disponíveis para a lista de clientes
@@ -189,7 +191,11 @@ class ClientListViewModel constructor(
                         debitoTotal = debitoTotal
                     )
                 }
-            }.collect { card: CicloProgressoCard ->
+            }
+            // Evita "flicker" de abas após importação: aguarda dados estabilizarem
+            .debounce(250)
+            .distinctUntilChanged()
+            .collect { card: CicloProgressoCard ->
                 _cicloProgressoCard.value = card
             }
         }
