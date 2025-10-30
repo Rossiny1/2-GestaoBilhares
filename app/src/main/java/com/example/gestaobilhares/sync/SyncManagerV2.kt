@@ -3202,6 +3202,29 @@ class SyncManagerV2(
             android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Assinaturas Representante Legal:")
             android.util.Log.d("SyncManagerV2", "   Sincronizadas: $assinaturasSincronizadas")
             android.util.Log.d("SyncManagerV2", "   Já existentes: $assinaturasExistentes")
+            // ✅ Alinhar assinatura do representante aos contratos sem assinaturaLocador
+            try {
+                val contratoDao = database.contratoLocacaoDao()
+                val contratos = contratoDao.buscarTodosContratos().first()
+                val todasAssinaturas = assinaturaDao.obterTodasAssinaturas()
+                val assinaturaMaisRecente = todasAssinaturas.maxByOrNull { it.timestampCriacao }
+                var atualizados = 0
+                if (assinaturaMaisRecente != null) {
+                    for (contrato in contratos) {
+                        if (contrato.assinaturaLocador.isNullOrEmpty()) {
+                            val atualizado = contrato.copy(
+                                assinaturaLocador = assinaturaMaisRecente.assinaturaBase64,
+                                dataAtualizacao = java.util.Date()
+                            )
+                            contratoDao.atualizarContrato(atualizado)
+                            atualizados++
+                        }
+                    }
+                }
+                android.util.Log.d("CONTRACT_PULL", "ALIGN_REP_SIGNATURE updated=$atualizados")
+            } catch (e: Exception) {
+                android.util.Log.w("CONTRACT_PULL", "ALIGN_REP_SIGNATURE failed: ${e.message}")
+            }
             
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar assinaturas representante legal: ${e.message}", e)

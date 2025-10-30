@@ -3167,6 +3167,39 @@ class AppRepository constructor(
                 "ASSINATURA",
                 "Representante=${assinatura.nomeRepresentante}, ID=$id"
             )
+            // ✅ SINCRONIZAÇÃO: Enfileirar CREATE da assinatura do representante legal (espelhamento 1:1)
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "nomeRepresentante": "${assinatura.nomeRepresentante}",
+                        "cpfRepresentante": "${assinatura.cpfRepresentante}",
+                        "cargoRepresentante": "${assinatura.cargoRepresentante}",
+                        "assinaturaBase64": "${assinatura.assinaturaBase64}",
+                        "timestampCriacao": ${assinatura.timestampCriacao},
+                        "deviceId": "${assinatura.deviceId}",
+                        "hashIntegridade": "${assinatura.hashIntegridade}",
+                        "versaoSistema": "${assinatura.versaoSistema}",
+                        "dataCriacao": ${assinatura.dataCriacao.time},
+                        "criadoPor": "${assinatura.criadoPor}",
+                        "ativo": ${assinatura.ativo},
+                        "numeroProcuração": "${assinatura.numeroProcuração}",
+                        "dataProcuração": ${assinatura.dataProcuração.time},
+                        "poderesDelegados": "${assinatura.poderesDelegados}",
+                        "validadeProcuração": ${assinatura.validadeProcuração?.time ?: "null"},
+                        "totalUsos": ${assinatura.totalUsos},
+                        "ultimoUso": ${assinatura.ultimoUso?.time ?: "null"},
+                        "contratosAssinados": "${assinatura.contratosAssinados}",
+                        "validadaJuridicamente": ${assinatura.validadaJuridicamente},
+                        "dataValidacao": ${assinatura.dataValidacao?.time ?: "null"},
+                        "validadoPor": ${assinatura.validadoPor?.let { "\"$it\"" } ?: "null"}
+                    }
+                """.trimIndent()
+                adicionarOperacaoSync("AssinaturaRepresentanteLegal", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("AssinaturaRepresentanteLegal", id, "CREATE", "PENDING", null, payload)
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao enfileirar AssinaturaRepresentanteLegal: ${syncError.message}")
+            }
             id
         } catch (e: Exception) {
             logDbInsertError(
