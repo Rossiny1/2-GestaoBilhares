@@ -2871,6 +2871,11 @@ class AppRepository constructor(
                         "dataInicio": ${contrato.dataInicio.time},
                         "status": "${contrato.status}",
                         "dataEncerramento": ${contrato.dataEncerramento?.time ?: "null"},
+                        "assinaturaLocador": ${if (contrato.assinaturaLocador != null) "\"${contrato.assinaturaLocador}\"" else "null"},
+                        "assinaturaLocatario": ${if (contrato.assinaturaLocatario != null) "\"${contrato.assinaturaLocatario}\"" else "null"},
+                        "distratoAssinaturaLocador": ${if (contrato.distratoAssinaturaLocador != null) "\"${contrato.distratoAssinaturaLocador}\"" else "null"},
+                        "distratoAssinaturaLocatario": ${if (contrato.distratoAssinaturaLocatario != null) "\"${contrato.distratoAssinaturaLocatario}\"" else "null"},
+                        "distratoDataAssinatura": ${contrato.distratoDataAssinatura?.time ?: "null"},
                         "dataCriacao": ${contrato.dataCriacao.time},
                         "dataAtualizacao": ${contrato.dataAtualizacao.time}
                     }
@@ -2922,6 +2927,11 @@ class AppRepository constructor(
                         "dataInicio": ${contrato.dataInicio.time},
                         "status": "${contrato.status}",
                         "dataEncerramento": ${contrato.dataEncerramento?.time ?: "null"},
+                        "assinaturaLocador": ${if (contrato.assinaturaLocador != null) "\"${contrato.assinaturaLocador}\"" else "null"},
+                        "assinaturaLocatario": ${if (contrato.assinaturaLocatario != null) "\"${contrato.assinaturaLocatario}\"" else "null"},
+                        "distratoAssinaturaLocador": ${if (contrato.distratoAssinaturaLocador != null) "\"${contrato.distratoAssinaturaLocador}\"" else "null"},
+                        "distratoAssinaturaLocatario": ${if (contrato.distratoAssinaturaLocatario != null) "\"${contrato.distratoAssinaturaLocatario}\"" else "null"},
+                        "distratoDataAssinatura": ${contrato.distratoDataAssinatura?.time ?: "null"},
                         "dataCriacao": ${contrato.dataCriacao.time},
                         "dataAtualizacao": ${contrato.dataAtualizacao.time}
                     }
@@ -2945,6 +2955,47 @@ class AppRepository constructor(
         val apos = contratoLocacaoDao.buscarContratosPorCliente(clienteId).first()
         val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
         Log.d("RepoContracts", "Após encerrar direto: cliente=${clienteId} contratos=${apos.size} -> ${'$'}resumo")
+        // ✅ SINCRONIZAÇÃO: Enfileirar UPDATE do contrato encerrado (inclui distrato/assinaturas)
+        try {
+            val contrato = contratoLocacaoDao.buscarContratoPorId(contratoId)
+            if (contrato != null) {
+                val payload = """
+                    {
+                        "id": ${contrato.id},
+                        "numeroContrato": "${contrato.numeroContrato}",
+                        "clienteId": ${contrato.clienteId},
+                        "locadorNome": "${contrato.locadorNome}",
+                        "locadorCnpj": "${contrato.locadorCnpj}",
+                        "locadorEndereco": "${contrato.locadorEndereco}",
+                        "locadorCep": "${contrato.locadorCep}",
+                        "locatarioNome": "${contrato.locatarioNome}",
+                        "locatarioCpf": "${contrato.locatarioCpf}",
+                        "locatarioEndereco": "${contrato.locatarioEndereco}",
+                        "locatarioTelefone": "${contrato.locatarioTelefone}",
+                        "locatarioEmail": "${contrato.locatarioEmail}",
+                        "valorMensal": ${contrato.valorMensal},
+                        "diaVencimento": ${contrato.diaVencimento},
+                        "tipoPagamento": "${contrato.tipoPagamento}",
+                        "percentualReceita": ${contrato.percentualReceita ?: 0.0},
+                        "dataContrato": ${contrato.dataContrato.time},
+                        "dataInicio": ${contrato.dataInicio.time},
+                        "status": "${contrato.status}",
+                        "dataEncerramento": ${contrato.dataEncerramento?.time ?: "null"},
+                        "assinaturaLocador": ${if (contrato.assinaturaLocador != null) "\"${contrato.assinaturaLocador}\"" else "null"},
+                        "assinaturaLocatario": ${if (contrato.assinaturaLocatario != null) "\"${contrato.assinaturaLocatario}\"" else "null"},
+                        "distratoAssinaturaLocador": ${if (contrato.distratoAssinaturaLocador != null) "\"${contrato.distratoAssinaturaLocador}\"" else "null"},
+                        "distratoAssinaturaLocatario": ${if (contrato.distratoAssinaturaLocatario != null) "\"${contrato.distratoAssinaturaLocatario}\"" else "null"},
+                        "distratoDataAssinatura": ${contrato.distratoDataAssinatura?.time ?: "null"},
+                        "dataCriacao": ${contrato.dataCriacao.time},
+                        "dataAtualizacao": ${contrato.dataAtualizacao.time}
+                    }
+                """.trimIndent()
+                adicionarOperacaoSync("ContratoLocacao", contrato.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("ContratoLocacao", contrato.id, "UPDATE", "PENDING", null, payload)
+            }
+        } catch (e: Exception) {
+            Log.w("RepoUpdate", "Falha ao enfileirar UPDATE após encerrar contrato ${contratoId}: ${e.message}")
+        }
     }
     suspend fun excluirContrato(contrato: ContratoLocacao) {
         contratoLocacaoDao.excluirContrato(contrato)
