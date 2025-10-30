@@ -57,7 +57,7 @@ class RoutesViewModel constructor(
     // ✅ MODERNIZADO: Observa as rotas resumo do repository e aplica filtro de acesso
     private val rotasResumoOriginal: StateFlow<List<RotaResumo>> = appRepository.getRotasResumoComAtualizacaoTempoReal().stateIn(
         scope = viewModelScope,
-        started = SharingStarted.Eagerly, // ✅ CORREÇÃO: Usar Eagerly para garantir atualizações imediatas
+        started = SharingStarted.WhileSubscribed(5000), // ✅ CORREÇÃO: Usar WhileSubscribed para melhor performance
         initialValue = emptyList()
     )
 
@@ -68,7 +68,7 @@ class RoutesViewModel constructor(
         calcularEstatisticas(rotas.first())
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.Eagerly, // ✅ CORREÇÃO: Usar Eagerly para garantir atualizações imediatas
+        started = SharingStarted.WhileSubscribed(5000), // ✅ CORREÇÃO: Usar WhileSubscribed para melhor performance
         initialValue = EstatisticasGerais(0, 0, 0, 0.0, 0.0)
     )
 

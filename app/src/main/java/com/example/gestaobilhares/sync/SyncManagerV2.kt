@@ -539,6 +539,11 @@ class SyncManagerV2(
         pullCiclosFromFirestore(empresaId)
         delay(500) // Aguardar ciclos serem inseridos
         
+        // 5.1. ATUALIZAR ROTAS: Alinhar status das rotas com os ciclos importados
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 5.1: Atualizando status das rotas com ciclos importados...")
+        atualizarRotasComCiclosImportados()
+        delay(500) // Aguardar atualizações das rotas
+        
         // 6. SEXTO: Baixar colaboradores do Firestore
         android.util.Log.d("SyncManagerV2", "🔄 Fase 6: Sincronizando COLABORADORES...")
         pullColaboradoresFromFirestore(empresaId)
@@ -1073,7 +1078,7 @@ class SyncManagerV2(
             for (document in snapshot.documents) {
                 try {
                     val data = document.data ?: continue
-                    val roomId = data["roomId"] as? Long
+                    val roomId = (data["roomId"] as? Long) ?: (data["roomId"] as? Double)?.toLong()
                     val numeroCiclo = (data["numeroCiclo"] as? Double)?.toInt() ?: (data["numeroCiclo"] as? Long)?.toInt()
                     val rotaId = (data["rotaId"] as? Double)?.toLong() ?: (data["rotaId"] as? Long)
                     
@@ -1341,6 +1346,125 @@ class SyncManagerV2(
             
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro ao invalidar cache das rotas: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Atualizar status das rotas baseado nos ciclos importados
+     */
+    private suspend fun atualizarRotasComCiclosImportados() {
+        try {
+            android.util.Log.d("SyncManagerV2", "🔄 Atualizando status das rotas com ciclos importados...")
+            
+            // Buscar todas as rotas
+            val rotas = appRepository.obterTodasRotas().first()
+            android.util.Log.d("SyncManagerV2", "📊 Encontradas ${rotas.size} rotas para atualizar")
+            
+            for (rota in rotas) {
+                try {
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando rota: ${rota.nome} (ID: ${rota.id})")
+                    
+                    // Buscar o ciclo mais recente desta rota (em andamento ou finalizado)
+                    val cicloMaisRecente = try {
+                        runBlocking {
+                            val cicloDao = database.cicloAcertoDao()
+                            cicloDao.buscarUltimoCicloPorRota(rota.id)
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.w("SyncManagerV2", "❌ Erro ao buscar ciclo da rota ${rota.nome}: ${e.message}")
+                        null
+                    }
+                    
+                    if (cicloMaisRecente != null) {
+                        android.util.Log.d("SyncManagerV2", "✅ Ciclo encontrado para rota ${rota.nome}: ${cicloMaisRecente.numeroCiclo}º (Status: ${cicloMaisRecente.status})")
+                        
+                        // Atualizar a rota com os dados do ciclo
+                        val rotaAtualizada = rota.copy(
+                            statusAtual = when (cicloMaisRecente.status) {
+                                com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO -> com.example.gestaobilhares.data.entities.StatusRota.EM_ANDAMENTO
+                                com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO -> com.example.gestaobilhares.data.entities.StatusRota.FINALIZADA
+                                else -> com.example.gestaobilhares.data.entities.StatusRota.PAUSADA
+                            },
+                            cicloAcertoAtual = cicloMaisRecente.numeroCiclo,
+                            anoCiclo = cicloMaisRecente.ano,
+                            dataInicioCiclo = cicloMaisRecente.dataInicio.time,
+                            dataFimCiclo = if (cicloMaisRecente.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
+                                cicloMaisRecente.dataFim.time
+                            } else {
+                                null
+                            }
+                        )
+                        
+                        // Atualizar no banco
+                        val rotaDao = database.rotaDao()
+                        rotaDao.updateRota(rotaAtualizada)
+                        
+                        android.util.Log.d("SyncManagerV2", "✅ Rota ${rota.nome} atualizada: ${cicloMaisRecente.numeroCiclo}º Acerto ${if (cicloMaisRecente.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO) "em andamento" else "finalizado"}")
+                    } else {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Nenhum ciclo encontrado para rota ${rota.nome}")
+                        
+                        // Se não há ciclo, definir como pausada
+                        val rotaAtualizada = rota.copy(
+                            statusAtual = com.example.gestaobilhares.data.entities.StatusRota.PAUSADA,
+                            cicloAcertoAtual = 1,
+                            anoCiclo = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR),
+                            dataInicioCiclo = null,
+                            dataFimCiclo = null
+                        )
+                        
+                        val rotaDao = database.rotaDao()
+                        rotaDao.updateRota(rotaAtualizada)
+                        
+                        android.util.Log.d("SyncManagerV2", "✅ Rota ${rota.nome} definida como pausada (sem ciclos)")
+                    }
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao atualizar rota ${rota.nome}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "✅ Atualização das rotas com ciclos importados concluída")
+            
+            // ✅ NOVO: Forçar atualização das telas após PULL
+            try {
+                android.util.Log.d("SyncManagerV2", "🔄 Forçando atualização das telas após PULL...")
+                
+                // Invalidar cache para forçar recálculo
+                invalidarCacheRotas()
+                
+                // ✅ NOVO: Forçar atualização do Flow de rotas para notificar ViewModels
+                try {
+                    android.util.Log.d("SyncManagerV2", "🔄 Forçando atualização do Flow de rotas...")
+                    
+                    // Buscar todas as rotas e forçar recálculo
+                    val rotas = appRepository.obterTodasRotas().first()
+                    android.util.Log.d("SyncManagerV2", "📊 Forçando recálculo de ${rotas.size} rotas")
+                    
+                    // Forçar invalidação do cache de cada rota
+                    for (rota in rotas) {
+                        try {
+                            appRepository.invalidarCacheRota(rota.id)
+                            android.util.Log.d("SyncManagerV2", "✅ Cache invalidado para rota ${rota.nome}")
+                        } catch (e: Exception) {
+                            android.util.Log.w("SyncManagerV2", "❌ Erro ao invalidar cache da rota ${rota.nome}: ${e.message}")
+                        }
+                    }
+                    
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao forçar atualização do Flow: ${e.message}")
+                }
+                
+                // Aguardar um pouco para garantir que as atualizações sejam processadas
+                kotlinx.coroutines.delay(1000)
+                
+                android.util.Log.d("SyncManagerV2", "✅ Atualização das telas forçada com sucesso")
+                
+            } catch (e: Exception) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Erro ao forçar atualização das telas: ${e.message}")
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao atualizar rotas com ciclos importados: ${e.message}", e)
         }
     }
     
