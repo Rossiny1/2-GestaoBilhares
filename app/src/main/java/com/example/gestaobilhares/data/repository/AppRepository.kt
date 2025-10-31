@@ -2849,6 +2849,14 @@ class AppRepository constructor(
             logDbInsertSuccess("CONTRATO", "Numero=${contrato.numeroContrato}, ID=$id")
             // Enfileirar PUSH para Firestore
             try {
+                // ✅ SELO 1: Garantir que a assinatura do representante (locador) vá junto no contrato
+                val assinaturaAtiva = try { assinaturaRepresentanteLegalDao.obterAssinaturaAtiva() } catch (_: Exception) { null }
+                val assinaturaLocadorFinal = contrato.assinaturaLocador ?: assinaturaAtiva?.assinaturaBase64
+                if (assinaturaLocadorFinal != null && contrato.assinaturaLocador == null) {
+                    // Atualiza o registro recém-criado com a assinatura do representante
+                    val atualizado = contrato.copy(id = id, assinaturaLocador = assinaturaLocadorFinal, dataAtualizacao = java.util.Date())
+                    try { contratoLocacaoDao.atualizarContrato(atualizado) } catch (_: Exception) {}
+                }
                 val payload = """
                     {
                         "id": $id,
@@ -2871,7 +2879,7 @@ class AppRepository constructor(
                         "dataInicio": ${contrato.dataInicio.time},
                         "status": "${contrato.status}",
                         "dataEncerramento": ${contrato.dataEncerramento?.time ?: "null"},
-                        "assinaturaLocador": ${if (contrato.assinaturaLocador != null) "\"${contrato.assinaturaLocador}\"" else "null"},
+                        "assinaturaLocador": ${if (assinaturaLocadorFinal != null) "\"$assinaturaLocadorFinal\"" else "null"},
                         "assinaturaLocatario": ${if (contrato.assinaturaLocatario != null) "\"${contrato.assinaturaLocatario}\"" else "null"},
                         "distratoAssinaturaLocador": ${if (contrato.distratoAssinaturaLocador != null) "\"${contrato.distratoAssinaturaLocador}\"" else "null"},
                         "distratoAssinaturaLocatario": ${if (contrato.distratoAssinaturaLocatario != null) "\"${contrato.distratoAssinaturaLocatario}\"" else "null"},
@@ -2894,12 +2902,18 @@ class AppRepository constructor(
     suspend fun atualizarContrato(contrato: ContratoLocacao) {
         try {
             Log.d("RepoUpdate", "Atualizando contrato id=${contrato.id} cliente=${contrato.clienteId} status=${contrato.status} encerramento=${contrato.dataEncerramento}")
-            contratoLocacaoDao.atualizarContrato(contrato)
+            // ✅ SELO 2: Preencher assinatura do representante no contrato, se houver ativa e ainda não setada
+            val assinaturaAtiva = try { assinaturaRepresentanteLegalDao.obterAssinaturaAtiva() } catch (_: Exception) { null }
+            val assinaturaLocadorFinal = contrato.assinaturaLocador ?: assinaturaAtiva?.assinaturaBase64
+            val contratoParaSalvar = if (assinaturaLocadorFinal != null && contrato.assinaturaLocador == null) {
+                contrato.copy(assinaturaLocador = assinaturaLocadorFinal, dataAtualizacao = java.util.Date())
+            } else contrato
+            contratoLocacaoDao.atualizarContrato(contratoParaSalvar)
             // Leitura de verificação (apenas diagnóstico)
             try {
-                val apos = contratoLocacaoDao.buscarContratosPorCliente(contrato.clienteId).first()
+                val apos = contratoLocacaoDao.buscarContratosPorCliente(contratoParaSalvar.clienteId).first()
                 val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
-                Log.d("RepoContracts", "Após atualizar: cliente=${contrato.clienteId} contratos=${apos.size} -> ${'$'}resumo")
+                Log.d("RepoContracts", "Após atualizar: cliente=${contratoParaSalvar.clienteId} contratos=${apos.size} -> ${'$'}resumo")
             } catch (e: Exception) {
                 Log.e("RepoContracts", "Falha ao ler contratos após atualizar", e)
             }
@@ -2907,37 +2921,37 @@ class AppRepository constructor(
             try {
                 val payload = """
                     {
-                        "id": ${contrato.id},
-                        "numeroContrato": "${contrato.numeroContrato}",
-                        "clienteId": ${contrato.clienteId},
-                        "locadorNome": "${contrato.locadorNome}",
-                        "locadorCnpj": "${contrato.locadorCnpj}",
-                        "locadorEndereco": "${contrato.locadorEndereco}",
-                        "locadorCep": "${contrato.locadorCep}",
-                        "locatarioNome": "${contrato.locatarioNome}",
-                        "locatarioCpf": "${contrato.locatarioCpf}",
-                        "locatarioEndereco": "${contrato.locatarioEndereco}",
-                        "locatarioTelefone": "${contrato.locatarioTelefone}",
-                        "locatarioEmail": "${contrato.locatarioEmail}",
-                        "valorMensal": ${contrato.valorMensal},
-                        "diaVencimento": ${contrato.diaVencimento},
-                        "tipoPagamento": "${contrato.tipoPagamento}",
-                        "percentualReceita": ${contrato.percentualReceita ?: 0.0},
-                        "dataContrato": ${contrato.dataContrato.time},
-                        "dataInicio": ${contrato.dataInicio.time},
-                        "status": "${contrato.status}",
-                        "dataEncerramento": ${contrato.dataEncerramento?.time ?: "null"},
-                        "assinaturaLocador": ${if (contrato.assinaturaLocador != null) "\"${contrato.assinaturaLocador}\"" else "null"},
-                        "assinaturaLocatario": ${if (contrato.assinaturaLocatario != null) "\"${contrato.assinaturaLocatario}\"" else "null"},
-                        "distratoAssinaturaLocador": ${if (contrato.distratoAssinaturaLocador != null) "\"${contrato.distratoAssinaturaLocador}\"" else "null"},
-                        "distratoAssinaturaLocatario": ${if (contrato.distratoAssinaturaLocatario != null) "\"${contrato.distratoAssinaturaLocatario}\"" else "null"},
-                        "distratoDataAssinatura": ${contrato.distratoDataAssinatura?.time ?: "null"},
-                        "dataCriacao": ${contrato.dataCriacao.time},
-                        "dataAtualizacao": ${contrato.dataAtualizacao.time}
+                        "id": ${contratoParaSalvar.id},
+                        "numeroContrato": "${contratoParaSalvar.numeroContrato}",
+                        "clienteId": ${contratoParaSalvar.clienteId},
+                        "locadorNome": "${contratoParaSalvar.locadorNome}",
+                        "locadorCnpj": "${contratoParaSalvar.locadorCnpj}",
+                        "locadorEndereco": "${contratoParaSalvar.locadorEndereco}",
+                        "locadorCep": "${contratoParaSalvar.locadorCep}",
+                        "locatarioNome": "${contratoParaSalvar.locatarioNome}",
+                        "locatarioCpf": "${contratoParaSalvar.locatarioCpf}",
+                        "locatarioEndereco": "${contratoParaSalvar.locatarioEndereco}",
+                        "locatarioTelefone": "${contratoParaSalvar.locatarioTelefone}",
+                        "locatarioEmail": "${contratoParaSalvar.locatarioEmail}",
+                        "valorMensal": ${contratoParaSalvar.valorMensal},
+                        "diaVencimento": ${contratoParaSalvar.diaVencimento},
+                        "tipoPagamento": "${contratoParaSalvar.tipoPagamento}",
+                        "percentualReceita": ${contratoParaSalvar.percentualReceita ?: 0.0},
+                        "dataContrato": ${contratoParaSalvar.dataContrato.time},
+                        "dataInicio": ${contratoParaSalvar.dataInicio.time},
+                        "status": "${contratoParaSalvar.status}",
+                        "dataEncerramento": ${contratoParaSalvar.dataEncerramento?.time ?: "null"},
+                        "assinaturaLocador": ${if (assinaturaLocadorFinal != null) "\"$assinaturaLocadorFinal\"" else "null"},
+                        "assinaturaLocatario": ${if (contratoParaSalvar.assinaturaLocatario != null) "\"${contratoParaSalvar.assinaturaLocatario}\"" else "null"},
+                        "distratoAssinaturaLocador": ${if (contratoParaSalvar.distratoAssinaturaLocador != null) "\"${contratoParaSalvar.distratoAssinaturaLocador}\"" else "null"},
+                        "distratoAssinaturaLocatario": ${if (contratoParaSalvar.distratoAssinaturaLocatario != null) "\"${contratoParaSalvar.distratoAssinaturaLocatario}\"" else "null"},
+                        "distratoDataAssinatura": ${contratoParaSalvar.distratoDataAssinatura?.time ?: "null"},
+                        "dataCriacao": ${contratoParaSalvar.dataCriacao.time},
+                        "dataAtualizacao": ${contratoParaSalvar.dataAtualizacao.time}
                     }
                 """.trimIndent()
-                adicionarOperacaoSync("ContratoLocacao", contrato.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("ContratoLocacao", contrato.id, "UPDATE", "PENDING", null, payload)
+                adicionarOperacaoSync("ContratoLocacao", contratoParaSalvar.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("ContratoLocacao", contratoParaSalvar.id, "UPDATE", "PENDING", null, payload)
             } catch (syncError: Exception) {
                 android.util.Log.w("AppRepository", "Erro ao enfileirar ContratoLocacao UPDATE: ${syncError.message}")
             }
