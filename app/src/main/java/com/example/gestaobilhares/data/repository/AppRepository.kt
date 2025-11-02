@@ -1001,7 +1001,16 @@ class AppRepository constructor(
             val id = despesaDao.inserir(despesa)
             logDbInsertSuccess("DESPESA", "Descricao=${despesa.descricao}, ID=$id")
             
-            // ✅ FASE 3C: Adicionar à fila de sincronização
+            // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
+            val empresaId = obterEmpresaId()
+            val fotoUrl = uploadFotoSeNecessario(
+                caminhoLocal = despesa.fotoComprovante,
+                tipo = "comprovante",
+                empresaId = empresaId,
+                entityId = id
+            )
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto
             try {
                 val payload = """
                     {
@@ -1018,7 +1027,7 @@ class AppRepository constructor(
                         "origemLancamento": "${despesa.origemLancamento}",
                         "cicloAno": ${despesa.cicloAno ?: "null"},
                         "cicloNumero": ${despesa.cicloNumero ?: "null"},
-                        "fotoComprovante": "${despesa.fotoComprovante ?: ""}",
+                        "fotoComprovante": "${fotoUrl ?: ""}",
                         "veiculoId": ${despesa.veiculoId ?: "null"},
                         "kmRodado": ${despesa.kmRodado ?: "null"},
                         "litrosAbastecidos": ${despesa.litrosAbastecidos ?: "null"}
@@ -1027,6 +1036,17 @@ class AppRepository constructor(
                 
                 adicionarOperacaoSync("Despesa", id, "CREATE", payload, priority = 1)
                 logarOperacaoSync("Despesa", id, "CREATE", "PENDING", null, payload)
+                
+                // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
+                if (fotoUrl != null && fotoUrl != despesa.fotoComprovante) {
+                    try {
+                        val despesaAtualizada = despesa.copy(fotoComprovante = fotoUrl)
+                        despesaDao.atualizar(despesaAtualizada)
+                        Log.d("AppRepository", "✅ Despesa atualizada com URL do Firebase Storage")
+                    } catch (e: Exception) {
+                        Log.w("AppRepository", "Erro ao atualizar despesa com URL: ${e.message}")
+                    }
+                }
                 
             } catch (syncError: Exception) {
                 Log.w("AppRepository", "Erro ao adicionar despesa à fila de sync: ${syncError.message}")
@@ -1045,7 +1065,16 @@ class AppRepository constructor(
             despesaDao.atualizar(despesa)
             logDbUpdateSuccess("DESPESA", "ID=${despesa.id}")
             
-            // ✅ FASE 3C: Adicionar à fila de sincronização
+            // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
+            val empresaId = obterEmpresaId()
+            val fotoUrl = uploadFotoSeNecessario(
+                caminhoLocal = despesa.fotoComprovante,
+                tipo = "comprovante",
+                empresaId = empresaId,
+                entityId = despesa.id
+            )
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto
             try {
                 val payload = """
                     {
@@ -1062,7 +1091,7 @@ class AppRepository constructor(
                         "origemLancamento": "${despesa.origemLancamento}",
                         "cicloAno": ${despesa.cicloAno ?: "null"},
                         "cicloNumero": ${despesa.cicloNumero ?: "null"},
-                        "fotoComprovante": "${despesa.fotoComprovante ?: ""}",
+                        "fotoComprovante": "${fotoUrl ?: ""}",
                         "veiculoId": ${despesa.veiculoId ?: "null"},
                         "kmRodado": ${despesa.kmRodado ?: "null"},
                         "litrosAbastecidos": ${despesa.litrosAbastecidos ?: "null"}
@@ -1071,6 +1100,17 @@ class AppRepository constructor(
                 
                 adicionarOperacaoSync("Despesa", despesa.id, "UPDATE", payload, priority = 1)
                 logarOperacaoSync("Despesa", despesa.id, "UPDATE", "PENDING", null, payload)
+                
+                // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
+                if (fotoUrl != null && fotoUrl != despesa.fotoComprovante) {
+                    try {
+                        val despesaAtualizada = despesa.copy(fotoComprovante = fotoUrl)
+                        despesaDao.atualizar(despesaAtualizada)
+                        Log.d("AppRepository", "✅ Despesa atualizada com URL do Firebase Storage")
+                    } catch (e: Exception) {
+                        Log.w("AppRepository", "Erro ao atualizar despesa com URL: ${e.message}")
+                    }
+                }
                 
             } catch (syncError: Exception) {
                 Log.w("AppRepository", "Erro ao adicionar atualização de despesa à fila de sync: ${syncError.message}")
@@ -1350,7 +1390,16 @@ class AppRepository constructor(
             val id = mesaReformadaDao.inserir(mesaReformada)
             logDbInsertSuccess("MESAREFORMADA", "Mesa=${mesaReformada.numeroMesa}, ID=$id")
             
-            // ✅ FASE 3C: Adicionar à fila de sincronização
+            // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
+            val empresaId = obterEmpresaId()
+            val fotoUrl = uploadFotoSeNecessario(
+                caminhoLocal = mesaReformada.fotoReforma,
+                tipo = "foto_reforma",
+                empresaId = empresaId,
+                entityId = id
+            )
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto
             try {
                 val payload = """
                     {
@@ -1365,7 +1414,7 @@ class AppRepository constructor(
                         "numeroPanos": "${mesaReformada.numeroPanos ?: ""}",
                         "outros": ${mesaReformada.outros},
                         "observacoes": "${mesaReformada.observacoes ?: ""}",
-                        "fotoReforma": "${mesaReformada.fotoReforma ?: ""}",
+                        "fotoReforma": "${fotoUrl ?: ""}",
                         "dataReforma": "${mesaReformada.dataReforma.time}"
                     }
                 """.trimIndent()
@@ -1377,6 +1426,17 @@ class AppRepository constructor(
                     payload = payload
                 )
                 logarOperacaoSync("MESAREFORMADA", id, "INSERT", "Adicionado à fila de sync")
+                
+                // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
+                if (fotoUrl != null && fotoUrl != mesaReformada.fotoReforma) {
+                    try {
+                        val mesaReformadaAtualizada = mesaReformada.copy(fotoReforma = fotoUrl)
+                        mesaReformadaDao.atualizar(mesaReformadaAtualizada)
+                        Log.d("AppRepository", "✅ MesaReformada atualizada com URL do Firebase Storage")
+                    } catch (e: Exception) {
+                        Log.w("AppRepository", "Erro ao atualizar MesaReformada com URL: ${e.message}")
+                    }
+                }
                 
             } catch (syncError: Exception) {
                 Log.w("AppRepository", "Erro ao adicionar mesa reformada à fila de sync: ${syncError.message}")
@@ -3613,6 +3673,33 @@ class AppRepository constructor(
             val acertoMesas = acertoMesaDao.buscarPorAcertoId(acertoId)
             android.util.Log.d("AppRepository", "Incluindo ${acertoMesas.size} mesas no payload do acerto $acertoId")
             
+            // ✅ NOVO: Upload de fotos das mesas para Firebase Storage antes de sincronizar
+            val empresaId = obterEmpresaId()
+            val acertoMesasComFotos = acertoMesas.map { acertoMesa ->
+                val fotoUrl = uploadFotoSeNecessario(
+                    caminhoLocal = acertoMesa.fotoRelogioFinal,
+                    tipo = "relogio_final",
+                    empresaId = empresaId,
+                    entityId = acertoId,
+                    entityExtraId = acertoMesa.mesaId
+                )
+                
+                // Atualizar entidade local com URL se upload foi bem-sucedido
+                if (fotoUrl != null && fotoUrl != acertoMesa.fotoRelogioFinal) {
+                    try {
+                        val acertoMesaAtualizada = acertoMesa.copy(fotoRelogioFinal = fotoUrl)
+                        acertoMesaDao.atualizar(acertoMesaAtualizada)
+                        Log.d("AppRepository", "✅ AcertoMesa ${acertoMesa.id} atualizada com URL do Firebase Storage")
+                        acertoMesaAtualizada
+                    } catch (e: Exception) {
+                        Log.w("AppRepository", "Erro ao atualizar AcertoMesa com URL: ${e.message}")
+                        acertoMesa.copy(fotoRelogioFinal = fotoUrl ?: acertoMesa.fotoRelogioFinal)
+                    }
+                } else {
+                    acertoMesa.copy(fotoRelogioFinal = fotoUrl ?: acertoMesa.fotoRelogioFinal)
+                }
+            }
+            
             val payloadMap = mutableMapOf<String, Any?>(
                 "id" to acertoId,
                 "clienteId" to acerto.clienteId,
@@ -3634,7 +3721,7 @@ class AppRepository constructor(
                 "numeroPano" to acerto.numeroPano,
                 "dadosExtrasJson" to acerto.dadosExtrasJson,
                 "cicloId" to acerto.cicloId,
-                "acertoMesas" to acertoMesas.map { acertoMesa ->
+                "acertoMesas" to acertoMesasComFotos.map { acertoMesa ->
                     mapOf(
                         "id" to acertoMesa.id,
                         "acertoId" to acertoMesa.acertoId,
@@ -3649,9 +3736,9 @@ class AppRepository constructor(
                         "comDefeito" to acertoMesa.comDefeito,
                         "relogioReiniciou" to acertoMesa.relogioReiniciou,
                         "observacoes" to acertoMesa.observacoes,
-                        "fotoRelogioFinal" to acertoMesa.fotoRelogioFinal,
-                        "dataFoto" to acertoMesa.dataFoto,
-                        "dataCriacao" to acertoMesa.dataCriacao
+                        "fotoRelogioFinal" to (acertoMesa.fotoRelogioFinal ?: ""),
+                        "dataFoto" to (acertoMesa.dataFoto?.time ?: "null"),
+                        "dataCriacao" to acertoMesa.dataCriacao.time
                     )
                 }
             )
@@ -3762,6 +3849,72 @@ class AppRepository constructor(
     // ✅ FASE 3C: MÉTODOS DE SINCRONIZAÇÃO
     // ========================================
 
+    /**
+     * Obter empresaId das configurações de sincronização
+     */
+    private suspend fun obterEmpresaId(): String {
+        return try {
+            val config = syncConfigDao.buscarSyncConfigPorChave("empresa_id")
+            config?.value ?: "empresa_001" // Default se não encontrar
+        } catch (e: Exception) {
+            Log.w("AppRepository", "Erro ao obter empresa_id, usando default: ${e.message}")
+            "empresa_001"
+        }
+    }
+    
+    /**
+     * Upload de foto antes de sincronizar (helper genérico)
+     */
+    private suspend fun uploadFotoSeNecessario(
+        caminhoLocal: String?,
+        tipo: String,
+        empresaId: String,
+        entityId: Long,
+        entityExtraId: Long? = null
+    ): String? {
+        if (caminhoLocal.isNullOrBlank()) return null
+        
+        // ✅ Verificar se já é uma URL do Firebase Storage (não fazer upload novamente)
+        if (com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(caminhoLocal)) {
+            Log.d("AppRepository", "Foto já está no Firebase Storage: $caminhoLocal")
+            return caminhoLocal
+        }
+        
+        return try {
+            val urlFirebase = when (tipo) {
+                "comprovante" -> {
+                    com.example.gestaobilhares.utils.FirebaseStorageManager.uploadFotoComprovante(
+                        empresaId, entityId, caminhoLocal
+                    )
+                }
+                "relogio_final" -> {
+                    if (entityExtraId != null) {
+                        com.example.gestaobilhares.utils.FirebaseStorageManager.uploadFotoRelogioFinal(
+                            empresaId, entityId, entityExtraId, caminhoLocal
+                        )
+                    } else null
+                }
+                "foto_reforma" -> {
+                    com.example.gestaobilhares.utils.FirebaseStorageManager.uploadFotoReforma(
+                        empresaId, entityId, caminhoLocal
+                    )
+                }
+                else -> null
+            }
+            
+            if (urlFirebase != null) {
+                Log.d("AppRepository", "✅ Foto enviada para Firebase Storage: $urlFirebase")
+            } else {
+                Log.w("AppRepository", "⚠️ Upload de foto falhou, mantendo caminho local: $caminhoLocal")
+            }
+            
+            urlFirebase ?: caminhoLocal // Fallback para caminho local se upload falhar
+        } catch (e: Exception) {
+            Log.e("AppRepository", "Erro ao fazer upload de foto: ${e.message}", e)
+            caminhoLocal // Em caso de erro, manter caminho local
+        }
+    }
+    
     /**
      * Adicionar operação à fila de sincronização
      */
@@ -4560,6 +4713,16 @@ class AppRepository constructor(
         val id = acertoMesaDao.inserir(acertoMesa)
         
         try {
+            // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
+            val empresaId = obterEmpresaId()
+            val fotoUrl = uploadFotoSeNecessario(
+                caminhoLocal = acertoMesa.fotoRelogioFinal,
+                tipo = "relogio_final",
+                empresaId = empresaId,
+                entityId = acertoMesa.acertoId,
+                entityExtraId = acertoMesa.mesaId
+            )
+            
             val payload = mapOf(
                 "id" to id,
                 "acertoId" to acertoMesa.acertoId,
@@ -4568,11 +4731,24 @@ class AppRepository constructor(
                 "relogioFinal" to acertoMesa.relogioFinal,
                 "valorFicha" to acertoMesa.valorFicha,
                 "comissaoFicha" to acertoMesa.comissaoFicha,
-                "subtotal" to acertoMesa.subtotal
+                "subtotal" to acertoMesa.subtotal,
+                "fotoRelogioFinal" to (fotoUrl ?: ""),
+                "dataFoto" to (acertoMesa.dataFoto?.time ?: "null")
             )
             
             adicionarOperacaoSync("ACERTOMESA", id, "INSERT", Gson().toJson(payload))
             logarOperacaoSync("ACERTOMESA", id, "INSERT", "Adicionado à fila de sync")
+            
+            // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
+            if (fotoUrl != null && fotoUrl != acertoMesa.fotoRelogioFinal) {
+                try {
+                    val acertoMesaAtualizada = acertoMesa.copy(fotoRelogioFinal = fotoUrl)
+                    acertoMesaDao.atualizar(acertoMesaAtualizada)
+                    Log.d("AppRepository", "✅ AcertoMesa atualizada com URL do Firebase Storage")
+                } catch (e: Exception) {
+                    Log.w("AppRepository", "Erro ao atualizar AcertoMesa com URL: ${e.message}")
+                }
+            }
             
         } catch (e: Exception) {
             Log.e("AppRepository", "Erro ao adicionar AcertoMesa à fila de sync: ${e.message}")
@@ -4588,8 +4764,43 @@ class AppRepository constructor(
         acertoMesaDao.atualizar(acertoMesa)
         
         try {
-            adicionarOperacaoSync("ACERTOMESA", acertoMesa.id, "UPDATE", Gson().toJson(acertoMesa))
+            // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
+            val empresaId = obterEmpresaId()
+            val fotoUrl = uploadFotoSeNecessario(
+                caminhoLocal = acertoMesa.fotoRelogioFinal,
+                tipo = "relogio_final",
+                empresaId = empresaId,
+                entityId = acertoMesa.acertoId,
+                entityExtraId = acertoMesa.mesaId
+            )
+            
+            // Criar payload com URL da foto
+            val payloadMap = mutableMapOf<String, Any?>(
+                "id" to acertoMesa.id,
+                "acertoId" to acertoMesa.acertoId,
+                "mesaId" to acertoMesa.mesaId,
+                "relogioInicial" to acertoMesa.relogioInicial,
+                "relogioFinal" to acertoMesa.relogioFinal,
+                "valorFicha" to acertoMesa.valorFicha,
+                "comissaoFicha" to acertoMesa.comissaoFicha,
+                "subtotal" to acertoMesa.subtotal,
+                "fotoRelogioFinal" to (fotoUrl ?: ""),
+                "dataFoto" to (acertoMesa.dataFoto?.time ?: "null")
+            )
+            
+            adicionarOperacaoSync("ACERTOMESA", acertoMesa.id, "UPDATE", Gson().toJson(payloadMap))
             logarOperacaoSync("ACERTOMESA", acertoMesa.id, "UPDATE", "Adicionado à fila de sync")
+            
+            // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
+            if (fotoUrl != null && fotoUrl != acertoMesa.fotoRelogioFinal) {
+                try {
+                    val acertoMesaAtualizada = acertoMesa.copy(fotoRelogioFinal = fotoUrl)
+                    acertoMesaDao.atualizar(acertoMesaAtualizada)
+                    Log.d("AppRepository", "✅ AcertoMesa atualizada com URL do Firebase Storage")
+                } catch (e: Exception) {
+                    Log.w("AppRepository", "Erro ao atualizar AcertoMesa com URL: ${e.message}")
+                }
+            }
             
         } catch (e: Exception) {
             Log.e("AppRepository", "Erro ao adicionar atualização de AcertoMesa à fila de sync: ${e.message}")
@@ -4603,8 +4814,45 @@ class AppRepository constructor(
         mesaReformadaDao.atualizar(mesaReformada)
         
         try {
-            adicionarOperacaoSync("MESAREFORMADA", mesaReformada.id, "UPDATE", Gson().toJson(mesaReformada))
+            // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
+            val empresaId = obterEmpresaId()
+            val fotoUrl = uploadFotoSeNecessario(
+                caminhoLocal = mesaReformada.fotoReforma,
+                tipo = "foto_reforma",
+                empresaId = empresaId,
+                entityId = mesaReformada.id
+            )
+            
+            // Criar payload com URL da foto
+            val payloadMap = mutableMapOf<String, Any?>(
+                "id" to mesaReformada.id,
+                "mesaId" to mesaReformada.mesaId,
+                "numeroMesa" to mesaReformada.numeroMesa,
+                "tipoMesa" to mesaReformada.tipoMesa,
+                "tamanhoMesa" to mesaReformada.tamanhoMesa,
+                "pintura" to mesaReformada.pintura,
+                "tabela" to mesaReformada.tabela,
+                "panos" to mesaReformada.panos,
+                "numeroPanos" to (mesaReformada.numeroPanos ?: ""),
+                "outros" to mesaReformada.outros,
+                "observacoes" to (mesaReformada.observacoes ?: ""),
+                "fotoReforma" to (fotoUrl ?: ""),
+                "dataReforma" to mesaReformada.dataReforma.time
+            )
+            
+            adicionarOperacaoSync("MESAREFORMADA", mesaReformada.id, "UPDATE", Gson().toJson(payloadMap))
             logarOperacaoSync("MESAREFORMADA", mesaReformada.id, "UPDATE", "Adicionado à fila de sync")
+            
+            // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
+            if (fotoUrl != null && fotoUrl != mesaReformada.fotoReforma) {
+                try {
+                    val mesaReformadaAtualizada = mesaReformada.copy(fotoReforma = fotoUrl)
+                    mesaReformadaDao.atualizar(mesaReformadaAtualizada)
+                    Log.d("AppRepository", "✅ MesaReformada atualizada com URL do Firebase Storage")
+                } catch (e: Exception) {
+                    Log.w("AppRepository", "Erro ao atualizar MesaReformada com URL: ${e.message}")
+                }
+            }
             
         } catch (e: Exception) {
             Log.e("AppRepository", "Erro ao adicionar atualização de MesaReformada à fila de sync: ${e.message}")
