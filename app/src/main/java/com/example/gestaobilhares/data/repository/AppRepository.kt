@@ -73,6 +73,7 @@ class AppRepository constructor(
     private val assinaturaRepresentanteLegalDao: AssinaturaRepresentanteLegalDao,
     private val logAuditoriaAssinaturaDao: LogAuditoriaAssinaturaDao,
     private val panoEstoqueDao: com.example.gestaobilhares.data.dao.PanoEstoqueDao,
+    private val panoMesaDao: com.example.gestaobilhares.data.dao.PanoMesaDao,
     private val mesaVendidaDao: com.example.gestaobilhares.data.dao.MesaVendidaDao,
     private val stockItemDao: com.example.gestaobilhares.data.dao.StockItemDao,
     private val veiculoDao: com.example.gestaobilhares.data.dao.VeiculoDao,
@@ -1167,6 +1168,92 @@ class AppRepository constructor(
     }
     suspend fun deletarPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque) = panoEstoqueDao.deletar(pano)
     suspend fun atualizarDisponibilidadePano(id: Long, disponivel: Boolean) = panoEstoqueDao.atualizarDisponibilidade(id, disponivel)
+
+    // ==================== PANO MESA ====================
+    
+    fun obterPanoMesaPorMesa(mesaId: Long) = panoMesaDao.buscarPorMesa(mesaId)
+    suspend fun obterPanoAtualMesa(mesaId: Long) = panoMesaDao.buscarPanoAtualMesa(mesaId)
+    fun obterPanoMesaPorPano(panoId: Long) = panoMesaDao.buscarPorPano(panoId)
+    suspend fun obterUltimaTrocaMesa(mesaId: Long) = panoMesaDao.buscarUltimaTrocaMesa(mesaId)
+    suspend fun inserirPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa): Long {
+        logDbInsertStart("PANOMESA", "MesaID=${panoMesa.mesaId}, PanoID=${panoMesa.panoId}")
+        return try {
+            val id = panoMesaDao.inserir(panoMesa)
+            logDbInsertSuccess("PANOMESA", "MesaID=${panoMesa.mesaId}, PanoID=${panoMesa.panoId}, ID=$id")
+            
+            // ✅ SINCRONIZAÇÃO: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "mesaId": ${panoMesa.mesaId},
+                        "panoId": ${panoMesa.panoId},
+                        "dataTroca": ${panoMesa.dataTroca.time},
+                        "ativo": ${panoMesa.ativo},
+                        "observacoes": "${panoMesa.observacoes ?: ""}",
+                        "dataCriacao": ${panoMesa.dataCriacao.time}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("PanoMesa", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("PanoMesa", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar PanoMesa à fila de sync: ${syncError.message}")
+            }
+            
+            id
+        } catch (e: Exception) {
+            logDbInsertError("PANOMESA", "MesaID=${panoMesa.mesaId}, PanoID=${panoMesa.panoId}", e)
+            throw e
+        }
+    }
+    suspend fun atualizarPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa) {
+        logDbUpdateStart("PANOMESA", "ID=${panoMesa.id}, MesaID=${panoMesa.mesaId}")
+        try {
+            panoMesaDao.atualizar(panoMesa)
+            logDbUpdateSuccess("PANOMESA", "ID=${panoMesa.id}, MesaID=${panoMesa.mesaId}")
+            
+            // ✅ SINCRONIZAÇÃO: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${panoMesa.id},
+                        "mesaId": ${panoMesa.mesaId},
+                        "panoId": ${panoMesa.panoId},
+                        "dataTroca": ${panoMesa.dataTroca.time},
+                        "ativo": ${panoMesa.ativo},
+                        "observacoes": "${panoMesa.observacoes ?: ""}",
+                        "dataCriacao": ${panoMesa.dataCriacao.time}
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("PanoMesa", panoMesa.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("PanoMesa", panoMesa.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de PanoMesa à fila de sync: ${syncError.message}")
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("PANOMESA", "ID=${panoMesa.id}", e)
+            throw e
+        }
+    }
+    suspend fun deletarPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa) {
+        panoMesaDao.deletar(panoMesa)
+        // ✅ SINCRONIZAÇÃO: Enfileirar DELETE
+        try {
+            val payload = """{ "id": ${panoMesa.id} }"""
+            adicionarOperacaoSync("PanoMesa", panoMesa.id, "DELETE", payload, priority = 1)
+            logarOperacaoSync("PanoMesa", panoMesa.id, "DELETE", "PENDING", null, payload)
+        } catch (syncError: Exception) {
+            android.util.Log.w("AppRepository", "Erro ao enfileirar PanoMesa DELETE: ${syncError.message}")
+        }
+    }
+    suspend fun desativarPanoAtualMesa(mesaId: Long) = panoMesaDao.desativarPanoAtualMesa(mesaId)
+    suspend fun ativarPanoMesa(mesaId: Long, panoId: Long) = panoMesaDao.ativarPanoMesa(mesaId, panoId)
+    fun buscarHistoricoTrocasMesa(mesaId: Long) = panoMesaDao.buscarHistoricoTrocasMesa(mesaId)
 
     // ==================== MESA VENDIDA ====================
     
@@ -3225,27 +3312,7 @@ class AppRepository constructor(
         }
     }
 
-    suspend fun inserirLogAuditoriaAssinatura(log: LogAuditoriaAssinatura): Long {
-        logDbInsertStart(
-            "LOG_ASSINATURA",
-            "Tipo=${log.tipoOperacao}, ContratoID=${log.idContrato ?: "N/A"}"
-        )
-        return try {
-            val id = logAuditoriaAssinaturaDao.inserirLog(log)
-            logDbInsertSuccess(
-                "LOG_ASSINATURA",
-                "Tipo=${log.tipoOperacao}, ID=$id"
-            )
-            id
-        } catch (e: Exception) {
-            logDbInsertError(
-                "LOG_ASSINATURA",
-                "Tipo=${log.tipoOperacao}, ContratoID=${log.idContrato ?: "N/A"}",
-                e
-            )
-            throw e
-        }
-    }
+    suspend fun inserirLogAuditoriaAssinatura(log: LogAuditoriaAssinatura): Long = inserirLogAuditoriaAssinaturaSync(log)
 
     // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
     // suspend fun inserirProcuração(procuração: ProcuraçãoRepresentante): Long {
@@ -3530,7 +3597,7 @@ class AppRepository constructor(
     
     suspend fun inserirHistoricoManutencao(historico: HistoricoManutencaoVeiculo): Long = inserirHistoricoManutencaoVeiculoSync(historico)
     suspend fun inserirHistoricoCombustivel(historico: HistoricoCombustivelVeiculo): Long = inserirHistoricoCombustivelVeiculoSync(historico)
-    suspend fun inserirAcertoMesa(acertoMesa: AcertoMesa): Long = acertoMesaDao.inserir(acertoMesa)
+    suspend fun inserirAcertoMesa(acertoMesa: AcertoMesa): Long = inserirAcertoMesaSync(acertoMesa)
     
     /**
      * ✅ NOVO: Adicionar acerto à fila de sincronização com dados das mesas

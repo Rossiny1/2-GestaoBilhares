@@ -425,6 +425,7 @@ class SyncManagerV2(
         "mesareformada" -> "mesasReformadas"
         "aditivocontrato" -> "aditivosContrato"
         "aditivomesa" -> "aditivoMesas"
+        "panomesa" -> "panoMesas"
         else -> entityType.lowercase(Locale.getDefault()) + "s"
     }
 
@@ -649,7 +650,12 @@ class SyncManagerV2(
         pullMesaReformadaFromFirestore(empresaId)
         delay(500) // Aguardar mesa reformada serem inseridas
         
-        // 22. VIGÉSIMO SEGUNDO: (REMOVIDO) NÃO criar ciclos automaticamente após PULL
+        // 22. VIGÉSIMO SEGUNDO: Sincronizar PanoMesa
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 22: Sincronizando PANO MESA...")
+        pullPanoMesaFromFirestore(empresaId)
+        delay(500) // Aguardar pano mesa serem inseridos
+        
+        // 23. VIGÉSIMO TERCEIRO: (REMOVIDO) NÃO criar ciclos automaticamente após PULL
         // Motivo: Garantir espelhamento 1:1 com a nuvem. Se a nuvem já contém os ciclos
         // corretos (ex.: 3º e 4º em andamento), criar localmente pode introduzir
         // inconsistências (ex.: 1º finalizado). Mantemos apenas os ciclos vindos do Firestore.
@@ -1988,10 +1994,15 @@ class SyncManagerV2(
             val panoEstoqueDao = database.panoEstoqueDao()
             val panosExistentesList = panoEstoqueDao.listarTodos().first()
             
-            for (document in snapshot) {
+            for (document in snapshot.documents) {
                 try {
-                    val data = document.data
-                    val roomId = document.id.toLongOrNull() ?: continue
+                    val data = document.data ?: continue
+                    // ✅ CORREÇÃO: Ler roomId do campo "id" do documento (padrão dos outros PULLs)
+                    val roomId = ((data["id"] as? Number)?.toLong()
+                        ?: (data["roomId"] as? Number)?.toLong()
+                        ?: document.id.toLongOrNull()) ?: continue
+                    
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando pano: ${data["numero"]} (Room ID: $roomId)")
                     
                     // Verificar se já existe
                     val jaExiste = panosExistentesList.any { pano -> pano.id == roomId }
@@ -3433,6 +3444,92 @@ class SyncManagerV2(
             
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro ao sincronizar MesaReformada: ${e.message}")
+        }
+    }
+
+    /**
+     * PULL: Baixar PanoMesa do Firestore
+     */
+    private suspend fun pullPanoMesaFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL PanoMesa do Firestore...")
+        
+        try {
+            val collectionName = getCollectionName("panomesa")
+            val snapshot = firestore.collection("empresas")
+                .document(empresaId)
+                .collection(collectionName)
+                .get()
+                .await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} PanoMesa no Firestore")
+            
+            val panoMesaDao = database.panoMesaDao()
+            
+            var panoMesasSincronizadas = 0
+            var panoMesasExistentes = 0
+            
+            // ✅ ESTRATÉGIA: Buscar todas as mesas e verificar PanoMesa existentes através delas
+            val todasMesas = database.mesaDao().obterTodasMesas().first()
+            val panoMesasExistentesIds = mutableSetOf<Long>()
+            for (mesa in todasMesas) {
+                try {
+                    val panoAtual = panoMesaDao.buscarPanoAtualMesa(mesa.id)
+                    panoAtual?.let { panoMesasExistentesIds.add(it.id) }
+                    // Buscar histórico também
+                    val historico = panoMesaDao.buscarHistoricoTrocasMesa(mesa.id).first()
+                    historico.forEach { panoMesasExistentesIds.add(it.id) }
+                } catch (_: Exception) {}
+            }
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    // ✅ Ler roomId do campo "id" do documento (padrão dos outros PULLs)
+                    val roomId = ((data["id"] as? Number)?.toLong()
+                        ?: (data["roomId"] as? Number)?.toLong()
+                        ?: document.id.toLongOrNull()) ?: continue
+                    
+                    val mesaId = ((data["mesaId"] as? Number)?.toLong() ?: continue).toLong()
+                    val panoId = ((data["panoId"] as? Number)?.toLong() ?: continue).toLong()
+                    
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando PanoMesa: MesaID=$mesaId PanoID=$panoId (Room ID: $roomId)")
+                    
+                    // Verificar se já existe pelo ID
+                    val jaExiste = panoMesasExistentesIds.contains(roomId)
+                    
+                    if (!jaExiste) {
+                        // Criar entidade PanoMesa
+                        val panoMesa = com.example.gestaobilhares.data.entities.PanoMesa(
+                            id = roomId,
+                            mesaId = mesaId,
+                            panoId = panoId,
+                            dataTroca = java.util.Date((data["dataTroca"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                            ativo = (data["ativo"] as? Boolean) ?: true,
+                            observacoes = data["observacoes"] as? String,
+                            dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                        )
+                        
+                        // Inserir no Room (OnConflictStrategy.REPLACE já está configurado no DAO)
+                        panoMesaDao.inserir(panoMesa)
+                        panoMesasSincronizadas++
+                        panoMesasExistentesIds.add(roomId) // Adicionar ao set para próximas iterações
+                        android.util.Log.d("SyncManagerV2", "✅ PanoMesa sincronizado: MesaID=$mesaId PanoID=$panoId (ID: $roomId)")
+                    } else {
+                        panoMesasExistentes++
+                        android.util.Log.d("SyncManagerV2", "⏭️ PanoMesa já existe: MesaID=$mesaId PanoID=$panoId (ID: $roomId)")
+                    }
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar PanoMesa ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL PanoMesa:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $panoMesasSincronizadas")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $panoMesasExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar PanoMesa: ${e.message}", e)
         }
     }
 
