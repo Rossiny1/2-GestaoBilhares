@@ -1018,12 +1018,40 @@ class SyncManagerV2(
                                             comDefeito = mesaData["comDefeito"] as? Boolean ?: false,
                                             relogioReiniciou = mesaData["relogioReiniciou"] as? Boolean ?: false,
                                             observacoes = mesaData["observacoes"] as? String,
-                                            fotoRelogioFinal = mesaData["fotoRelogioFinal"] as? String,
-                                            dataFoto = null, // ✅ CORREÇÃO: dataFoto é Date?, não String
+                                            fotoRelogioFinal = null, // Será preenchido após download
+                                            dataFoto = null, // Será preenchido após processar timestamp
                                             dataCriacao = java.util.Date()
                                         )
                                         
-                                        acertoMesaDao.inserir(acertoMesa)
+                                        // ✅ NOVO: Download de foto do Firebase Storage se for URL
+                                        val fotoUrlFirebaseMesa = mesaData["fotoRelogioFinal"] as? String
+                                        val fotoRelogioLocalMesa = if (!fotoUrlFirebaseMesa.isNullOrBlank()) {
+                                            try {
+                                                val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
+                                                    context = context,
+                                                    urlFirebase = fotoUrlFirebaseMesa,
+                                                    tipoFoto = "relogio_final"
+                                                )
+                                                if (caminhoLocal != null) {
+                                                    android.util.Log.d("SyncManagerV2", "✅ Foto de relógio final (mesa) baixada: $caminhoLocal")
+                                                }
+                                                caminhoLocal
+                                            } catch (e: Exception) {
+                                                android.util.Log.e("SyncManagerV2", "Erro ao baixar foto de relógio final (mesa): ${e.message}")
+                                                fotoUrlFirebaseMesa // Fallback: manter URL se download falhar
+                                            }
+                                        } else null
+                                        
+                                        // Processar dataFoto do timestamp
+                                        val dataFotoTimestamp = (mesaData["dataFoto"] as? Number)?.toLong()
+                                        
+                                        // Atualizar acertoMesa com foto e dataFoto
+                                        val acertoMesaComFoto = acertoMesa.copy(
+                                            fotoRelogioFinal = fotoRelogioLocalMesa,
+                                            dataFoto = dataFotoTimestamp?.let { java.util.Date(it) }
+                                        )
+                                        
+                                        acertoMesaDao.inserir(acertoMesaComFoto)
                                         android.util.Log.d("SyncManagerV2", "✅ Mesa ${acertoMesa.mesaId} sincronizada para acerto $roomId")
                                     } catch (e: Exception) {
                                         android.util.Log.w("SyncManagerV2", "❌ Erro ao processar mesa do acerto: ${e.message}")
@@ -1950,14 +1978,38 @@ class SyncManagerV2(
                         origemLancamento = data["origemLancamento"] as? String ?: "ROTA",
                         cicloAno = (data["cicloAno"] as? Double)?.toInt(),
                         cicloNumero = (data["cicloNumero"] as? Double)?.toInt(),
-                        fotoComprovante = data["fotoComprovante"] as? String,
+                        fotoComprovante = null, // Será preenchido após download
                         veiculoId = (data["veiculoId"] as? Double)?.toLong(),
                         kmRodado = (data["kmRodado"] as? Double)?.toLong(),
                         litrosAbastecidos = data["litrosAbastecidos"] as? Double
                     )
                     
+                    // ✅ NOVO: Download de foto do Firebase Storage se for URL
+                    val fotoUrlFirebase = data["fotoComprovante"] as? String
+                    val fotoComprovanteLocal = if (!fotoUrlFirebase.isNullOrBlank()) {
+                        try {
+                            val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
+                                context = context,
+                                urlFirebase = fotoUrlFirebase,
+                                tipoFoto = "comprovante"
+                            )
+                            if (caminhoLocal != null) {
+                                android.util.Log.d("SyncManagerV2", "✅ Foto de comprovante baixada: $caminhoLocal")
+                            } else {
+                                android.util.Log.w("SyncManagerV2", "⚠️ Falha ao baixar foto de comprovante: $fotoUrlFirebase")
+                            }
+                            caminhoLocal
+                        } catch (e: Exception) {
+                            android.util.Log.e("SyncManagerV2", "Erro ao baixar foto de comprovante: ${e.message}")
+                            fotoUrlFirebase // Fallback: manter URL se download falhar
+                        }
+                    } else null
+                    
+                    // Atualizar despesa com caminho local da foto
+                    val despesaComFoto = despesa.copy(fotoComprovante = fotoComprovanteLocal)
+                    
                     // Inserir no Room
-                    despesaDao.inserir(despesa)
+                    despesaDao.inserir(despesaComFoto)
                     despesasSincronizadas++
                     
                     android.util.Log.d("SyncManagerV2", "✅ Despesa sincronizada: ${despesa.descricao} (ID: $roomId)")
@@ -3358,6 +3410,29 @@ class SyncManagerV2(
                         continue
                     }
                     
+                    // ✅ NOVO: Download de foto do Firebase Storage se for URL
+                    val fotoUrlFirebase = data["fotoRelogioFinal"] as? String
+                    val fotoRelogioLocal = if (!fotoUrlFirebase.isNullOrBlank()) {
+                        try {
+                            val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
+                                context = context,
+                                urlFirebase = fotoUrlFirebase,
+                                tipoFoto = "relogio_final"
+                            )
+                            if (caminhoLocal != null) {
+                                android.util.Log.d("SyncManagerV2", "✅ Foto de relógio final baixada: $caminhoLocal")
+                            } else {
+                                android.util.Log.w("SyncManagerV2", "⚠️ Falha ao baixar foto de relógio final: $fotoUrlFirebase")
+                            }
+                            caminhoLocal
+                        } catch (e: Exception) {
+                            android.util.Log.e("SyncManagerV2", "Erro ao baixar foto de relógio final: ${e.message}")
+                            fotoUrlFirebase // Fallback: manter URL se download falhar
+                        }
+                    } else null
+                    
+                    val dataFotoTimestamp = (data["dataFoto"] as? Number)?.toLong()
+                    
                     val acertoMesa = AcertoMesa(
                         id = roomId,
                         acertoId = (data["acertoId"] as? Number)?.toLong() ?: 0L,
@@ -3367,7 +3442,9 @@ class SyncManagerV2(
                         fichasJogadas = (data["fichasJogadas"] as? Number)?.toInt() ?: 0,
                         valorFicha = (data["valorFicha"] as? Number)?.toDouble() ?: 0.0,
                         comissaoFicha = (data["comissaoFicha"] as? Number)?.toDouble() ?: 0.0,
-                        subtotal = (data["subtotal"] as? Number)?.toDouble() ?: 0.0
+                        subtotal = (data["subtotal"] as? Number)?.toDouble() ?: 0.0,
+                        fotoRelogioFinal = fotoRelogioLocal,
+                        dataFoto = dataFotoTimestamp?.let { Date(it) }
                     )
                     
                     acertoMesaDao.inserir(acertoMesa)
@@ -3416,6 +3493,27 @@ class SyncManagerV2(
                         continue
                     }
                     
+                    // ✅ NOVO: Download de foto do Firebase Storage se for URL
+                    val fotoUrlFirebase = data["fotoReforma"] as? String
+                    val fotoReformaLocal = if (!fotoUrlFirebase.isNullOrBlank()) {
+                        try {
+                            val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
+                                context = context,
+                                urlFirebase = fotoUrlFirebase,
+                                tipoFoto = "foto_reforma"
+                            )
+                            if (caminhoLocal != null) {
+                                android.util.Log.d("SyncManagerV2", "✅ Foto de reforma baixada: $caminhoLocal")
+                            } else {
+                                android.util.Log.w("SyncManagerV2", "⚠️ Falha ao baixar foto de reforma: $fotoUrlFirebase")
+                            }
+                            caminhoLocal
+                        } catch (e: Exception) {
+                            android.util.Log.e("SyncManagerV2", "Erro ao baixar foto de reforma: ${e.message}")
+                            fotoUrlFirebase // Fallback: manter URL se download falhar
+                        }
+                    } else null
+                    
                     val mesaReformada = MesaReformada(
                         id = roomId,
                         mesaId = (data["mesaId"] as? Number)?.toLong() ?: 0L,
@@ -3428,7 +3526,7 @@ class SyncManagerV2(
                         numeroPanos = data["numeroPanos"] as? String,
                         outros = (data["outros"] as? Boolean) ?: false,
                         observacoes = data["observacoes"] as? String,
-                        fotoReforma = data["fotoReforma"] as? String,
+                        fotoReforma = fotoReformaLocal,
                         dataReforma = Date((data["dataReforma"] as? Number)?.toLong() ?: System.currentTimeMillis())
                     )
                     
