@@ -102,7 +102,9 @@ class HistoricoManutencaoMesaViewModel constructor(
         descricao: String?,
         responsavel: String?,
         observacoes: String?,
-        custo: Double? = null
+        custo: Double? = null,
+        fotoAntes: String? = null,
+        fotoDepois: String? = null
     ) {
         viewModelScope.launch {
             try {
@@ -116,6 +118,8 @@ class HistoricoManutencaoMesaViewModel constructor(
                     responsavel = responsavel,
                     observacoes = observacoes,
                     custo = custo,
+                    fotoAntes = fotoAntes,
+                    fotoDepois = fotoDepois,
                     dataManutencao = java.util.Date()
                 )
                 
