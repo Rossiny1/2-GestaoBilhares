@@ -1019,25 +1019,30 @@ class AppRepository constructor(
             
             Log.d("AppRepository", "📷 Resultado upload despesa: fotoUrl='$fotoUrl' (original: '${despesa.fotoComprovante}')")
             
-            // ✅ CRÍTICO: Atualizar banco com URL do Firebase Storage se upload foi bem-sucedido
-            val despesaAtualizada = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
-                Log.d("AppRepository", "📷 ✅ Atualizando banco com URL do Firebase Storage: '$fotoUrl'")
-                val despesaComUrl = despesa.copy(id = id, fotoComprovante = fotoUrl)
-                despesaDao.atualizar(despesaComUrl)
-                despesaComUrl
-            } else {
-                if (fotoUrl == null && !despesa.fotoComprovante.isNullOrBlank()) {
-                    Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
-                    val despesaSemFoto = despesa.copy(id = id, fotoComprovante = null)
-                    despesaDao.atualizar(despesaSemFoto)
-                    despesaSemFoto
-                } else {
-                    despesa
-                }
+            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
+            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
+            // - A URL do Firebase é usada apenas no payload de sincronização
+            // - Isso garante que a visualização local funcione corretamente
+            
+            val despesaAtualizada = despesa.copy(id = id)
+            
+            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
+            if (fotoUrl == null && !despesa.fotoComprovante.isNullOrBlank()) {
+                Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
+                val despesaSemFoto = despesaAtualizada.copy(fotoComprovante = null)
+                despesaDao.atualizar(despesaSemFoto)
+                // Usar despesaSemFoto para o payload
             }
             
-            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto
+            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto (se upload foi bem-sucedido)
             try {
+                // ✅ Usar URL do Firebase no payload (se upload foi bem-sucedido), senão string vazia
+                val fotoUrlParaPayload = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                    fotoUrl // URL do Firebase para sincronização
+                } else {
+                    "" // String vazia - foto não será sincronizada
+                }
+                
                 val payload = """
                     {
                         "id": $id,
@@ -1053,7 +1058,7 @@ class AppRepository constructor(
                         "origemLancamento": "${despesaAtualizada.origemLancamento}",
                         "cicloAno": ${despesaAtualizada.cicloAno ?: "null"},
                         "cicloNumero": ${despesaAtualizada.cicloNumero ?: "null"},
-                        "fotoComprovante": "${fotoUrl ?: ""}",
+                        "fotoComprovante": "$fotoUrlParaPayload",
                         "veiculoId": ${despesaAtualizada.veiculoId ?: "null"},
                         "kmRodado": ${despesaAtualizada.kmRodado ?: "null"},
                         "litrosAbastecidos": ${despesaAtualizada.litrosAbastecidos ?: "null"}
@@ -1093,25 +1098,30 @@ class AppRepository constructor(
             
             Log.d("AppRepository", "📷 Resultado upload despesa (UPDATE): fotoUrl='$fotoUrl' (original: '${despesa.fotoComprovante}')")
             
-            // ✅ CRÍTICO: Atualizar banco com URL do Firebase Storage se upload foi bem-sucedido
-            val despesaAtualizada = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
-                Log.d("AppRepository", "📷 ✅ Atualizando banco com URL do Firebase Storage: '$fotoUrl'")
-                val despesaComUrl = despesa.copy(fotoComprovante = fotoUrl)
-                despesaDao.atualizar(despesaComUrl)
-                despesaComUrl
-            } else {
-                if (fotoUrl == null && !despesa.fotoComprovante.isNullOrBlank()) {
-                    Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
-                    val despesaSemFoto = despesa.copy(fotoComprovante = null)
-                    despesaDao.atualizar(despesaSemFoto)
-                    despesaSemFoto
-                } else {
-                    despesa
-                }
+            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
+            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
+            // - A URL do Firebase é usada apenas no payload de sincronização
+            // - Isso garante que a visualização local funcione corretamente
+            
+            val despesaAtualizada = despesa
+            
+            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
+            if (fotoUrl == null && !despesa.fotoComprovante.isNullOrBlank()) {
+                Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
+                val despesaSemFoto = despesaAtualizada.copy(fotoComprovante = null)
+                despesaDao.atualizar(despesaSemFoto)
+                // Usar despesaSemFoto para o payload
             }
             
-            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto
+            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto (se upload foi bem-sucedido)
             try {
+                // ✅ Usar URL do Firebase no payload (se upload foi bem-sucedido), senão string vazia
+                val fotoUrlParaPayload = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                    fotoUrl // URL do Firebase para sincronização
+                } else {
+                    "" // String vazia - foto não será sincronizada
+                }
+                
                 val payload = """
                     {
                         "id": ${despesaAtualizada.id},
@@ -1127,7 +1137,7 @@ class AppRepository constructor(
                         "origemLancamento": "${despesaAtualizada.origemLancamento}",
                         "cicloAno": ${despesaAtualizada.cicloAno ?: "null"},
                         "cicloNumero": ${despesaAtualizada.cicloNumero ?: "null"},
-                        "fotoComprovante": "${fotoUrl ?: ""}",
+                        "fotoComprovante": "$fotoUrlParaPayload",
                         "veiculoId": ${despesaAtualizada.veiculoId ?: "null"},
                         "kmRodado": ${despesaAtualizada.kmRodado ?: "null"},
                         "litrosAbastecidos": ${despesaAtualizada.litrosAbastecidos ?: "null"}
@@ -1428,25 +1438,30 @@ class AppRepository constructor(
             
             Log.d("AppRepository", "📷 Resultado upload MesaReformada: fotoUrl='$fotoUrl' (original: '${mesaReformada.fotoReforma}')")
             
-            // ✅ CRÍTICO: Atualizar banco com URL do Firebase Storage se upload foi bem-sucedido
-            val mesaReformadaAtualizada = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
-                Log.d("AppRepository", "📷 ✅ Atualizando banco com URL do Firebase Storage: '$fotoUrl'")
-                val mesaComUrl = mesaReformada.copy(id = id, fotoReforma = fotoUrl)
-                mesaReformadaDao.atualizar(mesaComUrl)
-                mesaComUrl
-            } else {
-                if (fotoUrl == null && !mesaReformada.fotoReforma.isNullOrBlank()) {
-                    Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
-                    val mesaSemFoto = mesaReformada.copy(id = id, fotoReforma = null)
-                    mesaReformadaDao.atualizar(mesaSemFoto)
-                    mesaSemFoto
-                } else {
-                    mesaReformada
-                }
+            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
+            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
+            // - A URL do Firebase é usada apenas no payload de sincronização
+            // - Isso garante que a visualização local funcione corretamente
+            
+            val mesaReformadaAtualizada = mesaReformada.copy(id = id)
+            
+            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
+            if (fotoUrl == null && !mesaReformada.fotoReforma.isNullOrBlank()) {
+                Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
+                val mesaSemFoto = mesaReformadaAtualizada.copy(fotoReforma = null)
+                mesaReformadaDao.atualizar(mesaSemFoto)
+                // Usar mesaSemFoto para o payload
             }
             
-            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto
+            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto (se upload foi bem-sucedido)
             try {
+                // ✅ Usar URL do Firebase no payload (se upload foi bem-sucedido), senão string vazia
+                val fotoUrlParaPayload = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                    fotoUrl // URL do Firebase para sincronização
+                } else {
+                    "" // String vazia - foto não será sincronizada
+                }
+                
                 val payload = """
                     {
                         "id": $id,
@@ -1460,7 +1475,7 @@ class AppRepository constructor(
                         "numeroPanos": "${mesaReformadaAtualizada.numeroPanos ?: ""}",
                         "outros": ${mesaReformadaAtualizada.outros},
                         "observacoes": "${mesaReformadaAtualizada.observacoes ?: ""}",
-                        "fotoReforma": "${fotoUrl ?: ""}",
+                        "fotoReforma": "$fotoUrlParaPayload",
                         "dataReforma": "${mesaReformadaAtualizada.dataReforma.time}"
                     }
                 """.trimIndent()
@@ -1671,26 +1686,37 @@ class AppRepository constructor(
             
             Log.d("AppRepository", "📷 Resultado uploads: fotoAntes='$fotoAntesUrl', fotoDepois='$fotoDepoisUrl'")
             
-            // ✅ CRÍTICO: Atualizar banco com URLs do Firebase Storage se upload foi bem-sucedido
+            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
+            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
+            // - A URL do Firebase é usada apenas no payload de sincronização
+            // - Isso garante que a visualização local funcione corretamente
+            
             var historicoAtualizado = historico.copy(id = id)
-            if (fotoAntesUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoAntesUrl)) {
-                historicoAtualizado = historicoAtualizado.copy(fotoAntes = fotoAntesUrl)
-            } else if (fotoAntesUrl == null && !historico.fotoAntes.isNullOrBlank()) {
+            
+            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
+            if (fotoAntesUrl == null && !historico.fotoAntes.isNullOrBlank()) {
                 historicoAtualizado = historicoAtualizado.copy(fotoAntes = null)
-            }
-            if (fotoDepoisUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoDepoisUrl)) {
-                historicoAtualizado = historicoAtualizado.copy(fotoDepois = fotoDepoisUrl)
-            } else if (fotoDepoisUrl == null && !historico.fotoDepois.isNullOrBlank()) {
-                historicoAtualizado = historicoAtualizado.copy(fotoDepois = null)
-            }
-            
-            if (historicoAtualizado != historico) {
                 historicoManutencaoMesaDao.atualizar(historicoAtualizado)
-                Log.d("AppRepository", "📷 ✅ Banco atualizado com URLs do Firebase Storage")
+            }
+            if (fotoDepoisUrl == null && !historico.fotoDepois.isNullOrBlank()) {
+                historicoAtualizado = historicoAtualizado.copy(fotoDepois = null)
+                historicoManutencaoMesaDao.atualizar(historicoAtualizado)
             }
             
-            // ✅ FASE 3C: Adicionar à fila de sincronização
+            // ✅ FASE 3C: Adicionar à fila de sincronização com URLs do Firebase (se upload foi bem-sucedido)
             try {
+                // ✅ Usar URLs do Firebase no payload (se upload foi bem-sucedido), senão string vazia
+                val fotoAntesUrlParaPayload = if (fotoAntesUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoAntesUrl)) {
+                    fotoAntesUrl
+                } else {
+                    ""
+                }
+                val fotoDepoisUrlParaPayload = if (fotoDepoisUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoDepoisUrl)) {
+                    fotoDepoisUrl
+                } else {
+                    ""
+                }
+                
                 val payload = """
                     {
                         "id": $id,
@@ -1702,8 +1728,8 @@ class AppRepository constructor(
                         "responsavel": "${historicoAtualizado.responsavel ?: ""}",
                         "observacoes": "${historicoAtualizado.observacoes ?: ""}",
                         "custo": ${historicoAtualizado.custo ?: "null"},
-                        "fotoAntes": "${fotoAntesUrl ?: ""}",
-                        "fotoDepois": "${fotoDepoisUrl ?: ""}",
+                        "fotoAntes": "$fotoAntesUrlParaPayload",
+                        "fotoDepois": "$fotoDepoisUrlParaPayload",
                         "dataCriacao": ${historicoAtualizado.dataCriacao.time}
                     }
                 """.trimIndent()
@@ -1748,26 +1774,37 @@ class AppRepository constructor(
             
             Log.d("AppRepository", "📷 Resultado uploads: fotoAntes='$fotoAntesUrl', fotoDepois='$fotoDepoisUrl'")
             
-            // ✅ CRÍTICO: Atualizar banco com URLs do Firebase Storage se upload foi bem-sucedido
+            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
+            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
+            // - A URL do Firebase é usada apenas no payload de sincronização
+            // - Isso garante que a visualização local funcione corretamente
+            
             var historicoAtualizado = historico
-            if (fotoAntesUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoAntesUrl)) {
-                historicoAtualizado = historicoAtualizado.copy(fotoAntes = fotoAntesUrl)
-            } else if (fotoAntesUrl == null && !historico.fotoAntes.isNullOrBlank()) {
+            
+            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
+            if (fotoAntesUrl == null && !historico.fotoAntes.isNullOrBlank()) {
                 historicoAtualizado = historicoAtualizado.copy(fotoAntes = null)
-            }
-            if (fotoDepoisUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoDepoisUrl)) {
-                historicoAtualizado = historicoAtualizado.copy(fotoDepois = fotoDepoisUrl)
-            } else if (fotoDepoisUrl == null && !historico.fotoDepois.isNullOrBlank()) {
-                historicoAtualizado = historicoAtualizado.copy(fotoDepois = null)
-            }
-            
-            if (historicoAtualizado != historico) {
                 historicoManutencaoMesaDao.atualizar(historicoAtualizado)
-                Log.d("AppRepository", "📷 ✅ Banco atualizado com URLs do Firebase Storage")
+            }
+            if (fotoDepoisUrl == null && !historico.fotoDepois.isNullOrBlank()) {
+                historicoAtualizado = historicoAtualizado.copy(fotoDepois = null)
+                historicoManutencaoMesaDao.atualizar(historicoAtualizado)
             }
             
-            // ✅ FASE 3C: Adicionar à fila de sincronização
+            // ✅ FASE 3C: Adicionar à fila de sincronização com URLs do Firebase (se upload foi bem-sucedido)
             try {
+                // ✅ Usar URLs do Firebase no payload (se upload foi bem-sucedido), senão string vazia
+                val fotoAntesUrlParaPayload = if (fotoAntesUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoAntesUrl)) {
+                    fotoAntesUrl
+                } else {
+                    ""
+                }
+                val fotoDepoisUrlParaPayload = if (fotoDepoisUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoDepoisUrl)) {
+                    fotoDepoisUrl
+                } else {
+                    ""
+                }
+                
                 val payload = """
                     {
                         "id": ${historicoAtualizado.id},
@@ -1779,8 +1816,8 @@ class AppRepository constructor(
                         "responsavel": "${historicoAtualizado.responsavel ?: ""}",
                         "observacoes": "${historicoAtualizado.observacoes ?: ""}",
                         "custo": ${historicoAtualizado.custo ?: "null"},
-                        "fotoAntes": "${fotoAntesUrl ?: ""}",
-                        "fotoDepois": "${fotoDepoisUrl ?: ""}",
+                        "fotoAntes": "$fotoAntesUrlParaPayload",
+                        "fotoDepois": "$fotoDepoisUrlParaPayload",
                         "dataCriacao": ${historicoAtualizado.dataCriacao.time}
                     }
                 """.trimIndent()
@@ -5190,21 +5227,26 @@ class AppRepository constructor(
             
             Log.d("AppRepository", "📷 Resultado upload MesaReformada (UPDATE): fotoUrl='$fotoUrl' (original: '${mesaReformada.fotoReforma}')")
             
-            // ✅ CRÍTICO: Atualizar banco com URL do Firebase Storage se upload foi bem-sucedido
-            val mesaReformadaAtualizada = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
-                Log.d("AppRepository", "📷 ✅ Atualizando banco com URL do Firebase Storage: '$fotoUrl'")
-                val mesaComUrl = mesaReformada.copy(fotoReforma = fotoUrl)
-                mesaReformadaDao.atualizar(mesaComUrl)
-                mesaComUrl
+            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
+            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
+            // - A URL do Firebase é usada apenas no payload de sincronização
+            // - Isso garante que a visualização local funcione corretamente
+            
+            val mesaReformadaAtualizada = mesaReformada
+            
+            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
+            if (fotoUrl == null && !mesaReformada.fotoReforma.isNullOrBlank()) {
+                Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
+                val mesaSemFoto = mesaReformadaAtualizada.copy(fotoReforma = null)
+                mesaReformadaDao.atualizar(mesaSemFoto)
+                // Usar mesaSemFoto para o payload
+            }
+            
+            // ✅ Usar URL do Firebase no payload (se upload foi bem-sucedido), senão string vazia
+            val fotoUrlParaPayload = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                fotoUrl // URL do Firebase para sincronização
             } else {
-                if (fotoUrl == null && !mesaReformada.fotoReforma.isNullOrBlank()) {
-                    Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
-                    val mesaSemFoto = mesaReformada.copy(fotoReforma = null)
-                    mesaReformadaDao.atualizar(mesaSemFoto)
-                    mesaSemFoto
-                } else {
-                    mesaReformada
-                }
+                "" // String vazia - foto não será sincronizada
             }
             
             // Criar payload com URL da foto
@@ -5220,7 +5262,7 @@ class AppRepository constructor(
                 "numeroPanos" to (mesaReformadaAtualizada.numeroPanos ?: ""),
                 "outros" to mesaReformadaAtualizada.outros,
                 "observacoes" to (mesaReformadaAtualizada.observacoes ?: ""),
-                "fotoReforma" to (fotoUrl ?: ""),
+                "fotoReforma" to fotoUrlParaPayload,
                 "dataReforma" to mesaReformadaAtualizada.dataReforma.time
             )
             
