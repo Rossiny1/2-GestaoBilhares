@@ -45,7 +45,8 @@ class MesasReformadasFragment : Fragment() {
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
         val database = AppDatabase.getDatabase(requireContext())
         val mesaReformadaRepository = MesaReformadaRepository(database.mesaReformadaDao())
-        viewModel = MesasReformadasViewModel(mesaReformadaRepository)
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        viewModel = MesasReformadasViewModel(mesaReformadaRepository, appRepository)
         
         setupRecyclerView()
         setupClickListeners()
@@ -56,8 +57,11 @@ class MesasReformadasFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = MesasReformadasAdapter { mesaReformada ->
-            mostrarDetalhesMesaReformada(mesaReformada)
+        adapter = MesasReformadasAdapter { mesaComHistorico ->
+            // Mostrar detalhes da primeira reforma (ou criar um diálogo específico)
+            if (mesaComHistorico.reformas.isNotEmpty()) {
+                mostrarDetalhesMesaReformada(mesaComHistorico.reformas.first())
+            }
         }
 
         binding.rvMesasReformadas.apply {

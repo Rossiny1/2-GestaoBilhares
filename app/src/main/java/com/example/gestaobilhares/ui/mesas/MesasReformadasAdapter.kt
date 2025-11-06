@@ -7,18 +7,22 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestaobilhares.data.entities.MesaReformada
+import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
+import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.example.gestaobilhares.databinding.ItemMesaReformadaBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
 /**
  * Adapter para a lista de mesas reformadas.
+ * ✅ NOVO: Agrupa reformas por mesa e exibe histórico de manutenções
  */
 class MesasReformadasAdapter(
-    private val onItemClick: (MesaReformada) -> Unit
-) : ListAdapter<MesaReformada, MesasReformadasAdapter.ViewHolder>(DiffCallback()) {
+    private val onItemClick: (MesaReformadaComHistorico) -> Unit
+) : ListAdapter<MesaReformadaComHistorico, MesasReformadasAdapter.ViewHolder>(DiffCallback()) {
 
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
+    private val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemMesaReformadaBinding.inflate(
@@ -37,56 +41,107 @@ class MesasReformadasAdapter(
         private val binding: ItemMesaReformadaBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(mesa: MesaReformada) {
-            // Número da mesa
-            binding.tvNumeroMesa.text = "Mesa ${mesa.numeroMesa}"
+        fun bind(mesaComHistorico: MesaReformadaComHistorico) {
+            val ultimaReforma = mesaComHistorico.reformas.firstOrNull()
             
-            // Data da reforma
-            binding.tvDataReforma.text = dateFormat.format(mesa.dataReforma)
+            // Número da mesa
+            binding.tvNumeroMesa.text = "Mesa ${mesaComHistorico.numeroMesa}"
+            
+            // Data da última reforma
+            if (mesaComHistorico.dataUltimaReforma != null) {
+                binding.tvDataReforma.text = dateFormat.format(mesaComHistorico.dataUltimaReforma)
+            } else {
+                binding.tvDataReforma.text = ""
+            }
             
             // Tipo da mesa
-            binding.tvTipoMesa.text = "${mesa.tipoMesa} - ${mesa.tamanhoMesa}"
+            binding.tvTipoMesa.text = "${mesaComHistorico.tipoMesa} - ${mesaComHistorico.tamanhoMesa}"
             
-            // Itens reformados
-            val itensReformados = buildString {
-                val itens = mutableListOf<String>()
-                if (mesa.pintura) itens.add("Pintura")
-                if (mesa.tabela) itens.add("Tabela")
-                if (mesa.panos) {
-                    val panosText = if (mesa.numeroPanos != null) {
-                        "Panos (${mesa.numeroPanos})"
-                    } else {
-                        "Panos"
-                    }
-                    itens.add(panosText)
-                }
-                if (mesa.outros) itens.add("Outros")
-                
-                append(itens.joinToString(", "))
-            }
-            binding.tvItensReformados.text = itensReformados
-            
-            // Observações
-            if (!mesa.observacoes.isNullOrBlank()) {
-                binding.tvObservacoes.text = "Observações: ${mesa.observacoes}"
-                binding.tvObservacoes.visibility = View.VISIBLE
+            // Total de reformas
+            if (mesaComHistorico.totalReformas > 1) {
+                binding.tvTotalReformas.text = "${mesaComHistorico.totalReformas} reformas realizadas"
+                binding.tvTotalReformas.visibility = View.VISIBLE
             } else {
-                binding.tvObservacoes.visibility = View.GONE
+                binding.tvTotalReformas.visibility = View.GONE
+            }
+            
+            // Itens reformados da última reforma
+            if (ultimaReforma != null) {
+                val itensReformados = buildString {
+                    val itens = mutableListOf<String>()
+                    if (ultimaReforma.pintura) itens.add("Pintura")
+                    if (ultimaReforma.tabela) itens.add("Tabela")
+                    if (ultimaReforma.panos) {
+                        val panosText = if (ultimaReforma.numeroPanos != null) {
+                            "Panos (${ultimaReforma.numeroPanos})"
+                        } else {
+                            "Panos"
+                        }
+                        itens.add(panosText)
+                    }
+                    if (ultimaReforma.outros) itens.add("Outros")
+                    
+                    append(itens.joinToString(", "))
+                }
+                binding.tvItensReformados.text = itensReformados
+                
+                // Observações da última reforma
+                if (!ultimaReforma.observacoes.isNullOrBlank()) {
+                    binding.tvObservacoes.text = "Observações: ${ultimaReforma.observacoes}"
+                    binding.tvObservacoes.visibility = View.VISIBLE
+                } else {
+                    binding.tvObservacoes.visibility = View.GONE
+                }
+            }
+            
+            // ✅ NOVO: Exibir histórico de manutenções
+            if (mesaComHistorico.historicoManutencoes.isNotEmpty()) {
+                binding.layoutHistorico.visibility = View.VISIBLE
+                binding.tvHistoricoTitulo.visibility = View.VISIBLE
+                
+                val historicoText = buildString {
+                    mesaComHistorico.historicoManutencoes.take(5).forEachIndexed { index, historico ->
+                        if (index > 0) append("\n")
+                        append("• ${formatarTipoManutencao(historico.tipoManutencao)}")
+                        append(" - ${dateFormat.format(historico.dataManutencao)}")
+                        if (!historico.descricao.isNullOrBlank()) {
+                            append(": ${historico.descricao}")
+                        }
+                    }
+                    if (mesaComHistorico.historicoManutencoes.size > 5) {
+                        append("\n... e mais ${mesaComHistorico.historicoManutencoes.size - 5} manutenções")
+                    }
+                }
+                binding.tvHistoricoManutencoes.text = historicoText
+            } else {
+                binding.layoutHistorico.visibility = View.GONE
+                binding.tvHistoricoTitulo.visibility = View.GONE
             }
             
             // Click listener
             binding.root.setOnClickListener {
-                onItemClick(mesa)
+                onItemClick(mesaComHistorico)
+            }
+        }
+        
+        private fun formatarTipoManutencao(tipo: TipoManutencao): String {
+            return when (tipo) {
+                TipoManutencao.PINTURA -> "Pintura"
+                TipoManutencao.TROCA_PANO -> "Troca de Pano"
+                TipoManutencao.TROCA_TABELA -> "Troca de Tabela"
+                TipoManutencao.REPARO_ESTRUTURAL -> "Reparo Estrutural"
+                TipoManutencao.LIMPEZA -> "Limpeza"
+                TipoManutencao.OUTROS -> "Outros"
             }
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<MesaReformada>() {
-        override fun areItemsTheSame(oldItem: MesaReformada, newItem: MesaReformada): Boolean {
-            return oldItem.id == newItem.id
+    class DiffCallback : DiffUtil.ItemCallback<MesaReformadaComHistorico>() {
+        override fun areItemsTheSame(oldItem: MesaReformadaComHistorico, newItem: MesaReformadaComHistorico): Boolean {
+            return oldItem.numeroMesa == newItem.numeroMesa
         }
 
-        override fun areContentsTheSame(oldItem: MesaReformada, newItem: MesaReformada): Boolean {
+        override fun areContentsTheSame(oldItem: MesaReformadaComHistorico, newItem: MesaReformadaComHistorico): Boolean {
             return oldItem == newItem
         }
     }
