@@ -3625,6 +3625,9 @@ class SyncManagerV2(
             android.util.Log.d("SyncManagerV2", "🔄 Sincronizando MesaReformada do Firestore...")
             
             val collectionName = getCollectionName("mesaReformada")
+            android.util.Log.d("SyncManagerV2", "📋 Collection name: $collectionName")
+            android.util.Log.d("SyncManagerV2", "📋 Empresa ID: $empresaId")
+            
             val snapshot = firestore.collection("empresas")
                 .document(empresaId)
                 .collection(collectionName)
@@ -3633,18 +3636,39 @@ class SyncManagerV2(
             
             android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} MesaReformada no Firestore")
             
+            if (snapshot.isEmpty) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Nenhuma MesaReformada encontrada no Firestore")
+                return
+            }
+            
             val mesaReformadaDao = database.mesaReformadaDao()
             val mesasReformadasExistentes = runBlocking { mesaReformadaDao.listarTodas().first() }
+            android.util.Log.d("SyncManagerV2", "📋 Mesas reformadas existentes localmente: ${mesasReformadasExistentes.size}")
+            
+            var mesasSincronizadas = 0
+            var mesasExistentes = 0
+            var mesasComErro = 0
             
             for (document in snapshot) {
                 try {
                     val data = document.data
-                    val roomId = document.id.toLongOrNull() ?: continue
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando documento: ${document.id}")
+                    android.util.Log.d("SyncManagerV2", "🔍 Dados do documento: $data")
+                    
+                    val roomId = document.id.toLongOrNull()
+                    if (roomId == null) {
+                        android.util.Log.e("SyncManagerV2", "❌ Document ID inválido (não é número): ${document.id}")
+                        mesasComErro++
+                        continue
+                    }
+                    
+                    android.util.Log.d("SyncManagerV2", "🔍 Room ID: $roomId")
                     
                     // Verificar se já existe
                     val jaExiste = mesasReformadasExistentes.any { mesaReformada -> mesaReformada.id == roomId }
                     if (jaExiste) {
                         android.util.Log.d("SyncManagerV2", "⏭️ MesaReformada $roomId já existe, pulando...")
+                        mesasExistentes++
                         continue
                     }
                     
@@ -3682,12 +3706,59 @@ class SyncManagerV2(
                         null
                     }
                     
+                    // Extrair dados com tratamento de erros
+                    val mesaId = try {
+                        (data["mesaId"] as? Number)?.toLong() ?: 0L
+                    } catch (e: Exception) {
+                        android.util.Log.e("SyncManagerV2", "❌ Erro ao extrair mesaId: ${e.message}")
+                        0L
+                    }
+                    
+                    val numeroMesa = data["numeroMesa"] as? String ?: ""
+                    android.util.Log.d("SyncManagerV2", "🔍 Número da mesa: $numeroMesa")
+                    
+                    val tipoMesaStr = data["tipoMesa"] as? String ?: "SINUCA"
+                    val tipoMesa = try {
+                        TipoMesa.valueOf(tipoMesaStr)
+                    } catch (e: Exception) {
+                        android.util.Log.e("SyncManagerV2", "❌ Erro ao converter tipoMesa '$tipoMesaStr': ${e.message}")
+                        TipoMesa.SINUCA
+                    }
+                    
+                    val tamanhoMesaStr = data["tamanhoMesa"] as? String ?: "MEDIA"
+                    val tamanhoMesa = try {
+                        TamanhoMesa.valueOf(tamanhoMesaStr)
+                    } catch (e: Exception) {
+                        android.util.Log.e("SyncManagerV2", "❌ Erro ao converter tamanhoMesa '$tamanhoMesaStr': ${e.message}")
+                        TamanhoMesa.MEDIA
+                    }
+                    
+                    val dataReformaLong = try {
+                        // ✅ CORREÇÃO: Tentar ler como String (formato ISO) ou Number (timestamp)
+                        when (val dataReformaValue = data["dataReforma"]) {
+                            is String -> {
+                                // Se for String, tentar parsear como timestamp Long
+                                dataReformaValue.toLongOrNull() ?: System.currentTimeMillis()
+                            }
+                            is Number -> {
+                                dataReformaValue.toLong()
+                            }
+                            else -> {
+                                android.util.Log.w("SyncManagerV2", "⚠️ dataReforma em formato desconhecido: ${dataReformaValue?.javaClass?.simpleName}")
+                                System.currentTimeMillis()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("SyncManagerV2", "❌ Erro ao extrair dataReforma: ${e.message}")
+                        System.currentTimeMillis()
+                    }
+                    
                     val mesaReformada = MesaReformada(
                         id = roomId,
-                        mesaId = (data["mesaId"] as? Number)?.toLong() ?: 0L,
-                        numeroMesa = data["numeroMesa"] as? String ?: "",
-                        tipoMesa = TipoMesa.valueOf(data["tipoMesa"] as? String ?: "SINUCA"),
-                        tamanhoMesa = TamanhoMesa.valueOf(data["tamanhoMesa"] as? String ?: "MEDIA"),
+                        mesaId = mesaId,
+                        numeroMesa = numeroMesa,
+                        tipoMesa = tipoMesa,
+                        tamanhoMesa = tamanhoMesa,
                         pintura = (data["pintura"] as? Boolean) ?: false,
                         tabela = (data["tabela"] as? Boolean) ?: false,
                         panos = (data["panos"] as? Boolean) ?: false,
@@ -3695,21 +3766,30 @@ class SyncManagerV2(
                         outros = (data["outros"] as? Boolean) ?: false,
                         observacoes = data["observacoes"] as? String,
                         fotoReforma = fotoReformaLocal,
-                        dataReforma = Date((data["dataReforma"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                        dataReforma = Date(dataReformaLong)
                     )
                     
+                    android.util.Log.d("SyncManagerV2", "📝 Inserindo MesaReformada: ID=$roomId, Mesa=$numeroMesa, Foto=${fotoReformaLocal != null}")
                     mesaReformadaDao.inserir(mesaReformada)
-                    android.util.Log.d("SyncManagerV2", "✅ MesaReformada $roomId inserido")
+                    mesasSincronizadas++
+                    android.util.Log.d("SyncManagerV2", "✅ MesaReformada $roomId inserida com sucesso")
                     
                 } catch (e: Exception) {
-                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar MesaReformada ${document.id}: ${e.message}")
+                    mesasComErro++
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar MesaReformada ${document.id}: ${e.message}", e)
+                    android.util.Log.e("SyncManagerV2", "❌ Stack trace completo:", e)
                 }
             }
             
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL MesaReformada:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizadas: $mesasSincronizadas")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $mesasExistentes")
+            android.util.Log.d("SyncManagerV2", "   Com erro: $mesasComErro")
             android.util.Log.d("SyncManagerV2", "✅ Sincronização de MesaReformada concluída")
             
         } catch (e: Exception) {
-            android.util.Log.e("SyncManagerV2", "❌ Erro ao sincronizar MesaReformada: ${e.message}")
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao sincronizar MesaReformada: ${e.message}", e)
+            android.util.Log.e("SyncManagerV2", "❌ Stack trace completo:", e)
         }
     }
 

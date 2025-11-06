@@ -36,13 +36,15 @@ try {
     Require-Device $adb
     & $adb logcat -c | Out-Null
 
-    Write-Host "Exibindo logs em tempo real (contratos e fotos)" -ForegroundColor Cyan
+    Write-Host "Exibindo logs em tempo real (contratos, fotos e MesaReformada)" -ForegroundColor Cyan
     Write-Host "Reproduza: APP vazio → Sincronizar → Abrir Gerenciar Contratos" -ForegroundColor Cyan
     Write-Host "OU: Criar acerto com foto → Sincronizar → Verificar logs de upload" -ForegroundColor Cyan
+    Write-Host "OU: Criar reforma de mesa com foto → Sincronizar → Verificar logs de upload/download" -ForegroundColor Cyan
 
-    # Filtros focados em contratos e fotos
+    # Filtros focados em contratos, fotos e MesaReformada
     # Tags: CONTRACT_PULL (nova), SyncManagerV2, AppRepository, ContractManagementViewModel, ContratoLocacaoDao, AndroidRuntime, System.err
     # Tags adicionais para fotos: FirebaseStorageManager, SettlementViewModel, SETTLEMENT, Timber
+    # Tags adicionais para MesaReformada: NovaReformaFragment, NovaReformaViewModel, MesaReformadaDao
     $filters = @(
         "AndroidRuntime:E",
         "System.err:W",
@@ -55,7 +57,10 @@ try {
         "FirebaseStorageManager:V",
         "SettlementViewModel:V",
         "SETTLEMENT:V",
-        "Timber:V"
+        "Timber:V",
+        "NovaReformaFragment:V",
+        "NovaReformaViewModel:V",
+        "MesaReformadaDao:V"
     )
 
     $args = @("logcat", "-v", "time", "-s") + $filters

@@ -411,6 +411,9 @@ class NovaReformaFragment : Fragment() {
     private fun registrarManutencoesNoHistorico(mesaReformada: MesaReformada) {
         val mesa = mesaSelecionada ?: return
         
+        // ✅ NOVO: Usar a foto da reforma como fotoDepois para todas as manutenções
+        val fotoReforma = mesaReformada.fotoReforma
+        
         // Registrar pintura
         if (mesaReformada.pintura) {
             historicoViewModel.registrarManutencao(
@@ -419,7 +422,8 @@ class NovaReformaFragment : Fragment() {
                 tipoManutencao = TipoManutencao.PINTURA,
                 descricao = "Pintura da mesa realizada durante reforma",
                 responsavel = "Sistema de Reforma",
-                observacoes = mesaReformada.observacoes
+                observacoes = mesaReformada.observacoes,
+                fotoDepois = fotoReforma
             )
         }
         
@@ -437,7 +441,8 @@ class NovaReformaFragment : Fragment() {
                 tipoManutencao = TipoManutencao.TROCA_PANO,
                 descricao = descricaoPano,
                 responsavel = "Sistema de Reforma",
-                observacoes = mesaReformada.observacoes
+                observacoes = mesaReformada.observacoes,
+                fotoDepois = fotoReforma
             )
         }
         
@@ -449,7 +454,8 @@ class NovaReformaFragment : Fragment() {
                 tipoManutencao = TipoManutencao.TROCA_TABELA,
                 descricao = "Troca de tabela realizada durante reforma",
                 responsavel = "Sistema de Reforma",
-                observacoes = mesaReformada.observacoes
+                observacoes = mesaReformada.observacoes,
+                fotoDepois = fotoReforma
             )
         }
         
@@ -461,7 +467,8 @@ class NovaReformaFragment : Fragment() {
                 tipoManutencao = TipoManutencao.OUTROS,
                 descricao = "Outras manutenções realizadas durante reforma",
                 responsavel = "Sistema de Reforma",
-                observacoes = mesaReformada.observacoes
+                observacoes = mesaReformada.observacoes,
+                fotoDepois = fotoReforma
             )
         }
     }

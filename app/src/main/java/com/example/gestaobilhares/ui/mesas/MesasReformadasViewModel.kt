@@ -30,12 +30,13 @@ class MesasReformadasViewModel constructor(
         viewModelScope.launch {
             try {
                 showLoading()
+                // ✅ CORREÇÃO: Observar o Flow continuamente para atualizar quando dados são importados
                 mesaReformadaRepository.listarTodas().collect { mesas ->
                     _mesasReformadas.value = mesas
+                    hideLoading() // Ocultar loading após primeira coleta
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar mesas reformadas: ${e.message}"
-            } finally {
                 hideLoading()
             }
         }

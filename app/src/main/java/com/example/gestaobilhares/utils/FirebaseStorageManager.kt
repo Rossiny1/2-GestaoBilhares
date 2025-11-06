@@ -157,37 +157,51 @@ object FirebaseStorageManager {
      */
     private suspend fun uploadFile(arquivo: File, storagePath: String): String? {
         return try {
-            Log.d(TAG, "📤 Iniciando upload: $storagePath")
-            Log.d(TAG, "   Arquivo: ${arquivo.absolutePath}")
-            Log.d(TAG, "   Tamanho: ${arquivo.length()} bytes")
-            Log.d(TAG, "   Existe: ${arquivo.exists()}")
+            Log.d(TAG, "📤 ========================================")
+            Log.d(TAG, "📤 INICIANDO UPLOAD PARA FIREBASE STORAGE")
+            Log.d(TAG, "📤 ========================================")
+            Log.d(TAG, "📤 Storage path: $storagePath")
+            Log.d(TAG, "📤 Arquivo: ${arquivo.absolutePath}")
+            Log.d(TAG, "📤 Tamanho: ${arquivo.length()} bytes")
+            Log.d(TAG, "📤 Existe: ${arquivo.exists()}")
             
             if (!arquivo.exists()) {
-                Log.e(TAG, "❌ ERRO: Arquivo não existe para upload: ${arquivo.absolutePath}")
+                Log.e(TAG, "❌ ERRO CRÍTICO: Arquivo não existe para upload: ${arquivo.absolutePath}")
                 return null
             }
             
             val storageRef: StorageReference = storage.reference.child(storagePath)
-            Log.d(TAG, "   Storage path: $storagePath")
-            Log.d(TAG, "   Storage ref: ${storageRef.path}")
+            Log.d(TAG, "📤 Storage reference criado: ${storageRef.path}")
             
             val uploadTask = storageRef.putFile(Uri.fromFile(arquivo))
-            Log.d(TAG, "   Upload task iniciado, aguardando conclusão...")
+            Log.d(TAG, "📤 Upload task iniciado, aguardando conclusão...")
             
             // Aguardar upload concluir
             val snapshot = uploadTask.await()
-            Log.d(TAG, "   Upload task concluído, obtendo URL...")
+            Log.d(TAG, "📤 Upload task concluído!")
+            Log.d(TAG, "📤 Bytes transferidos: ${snapshot.bytesTransferred}")
+            Log.d(TAG, "📤 Total bytes: ${snapshot.totalByteCount}")
+            Log.d(TAG, "📤 Obtendo URL de download...")
             
             // ✅ CORREÇÃO: Obter URL diretamente do storage reference após upload
             // Isso é mais confiável que tentar obter do snapshot
             val downloadUrl = storageRef.downloadUrl.await()
             val urlString = downloadUrl.toString()
             
-            Log.d(TAG, "✅ Upload concluído com sucesso: $urlString")
+            Log.d(TAG, "✅ ========================================")
+            Log.d(TAG, "✅ UPLOAD CONCLUÍDO COM SUCESSO!")
+            Log.d(TAG, "✅ URL: $urlString")
+            Log.d(TAG, "✅ ========================================")
             urlString
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Erro no upload de $storagePath: ${e.message}", e)
-            Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
+            Log.e(TAG, "❌ ========================================")
+            Log.e(TAG, "❌ ERRO AO FAZER UPLOAD PARA FIREBASE STORAGE")
+            Log.e(TAG, "❌ ========================================")
+            Log.e(TAG, "❌ Storage path: $storagePath")
+            Log.e(TAG, "❌ Arquivo: ${arquivo.absolutePath}")
+            Log.e(TAG, "❌ Erro: ${e.message}")
+            Log.e(TAG, "❌ Stack trace:", e)
+            Log.e(TAG, "❌ ========================================")
             null
         }
     }

@@ -1438,6 +1438,12 @@ class AppRepository constructor(
             
             Log.d("AppRepository", "📷 Resultado upload MesaReformada: fotoUrl='$fotoUrl' (original: '${mesaReformada.fotoReforma}')")
             
+            // ✅ CRÍTICO: Aguardar um pouco para garantir que o upload foi concluído
+            if (fotoUrl != null) {
+                kotlinx.coroutines.delay(500)
+                Log.d("AppRepository", "📷 Aguardou 500ms após upload bem-sucedido")
+            }
+            
             // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
             // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
             // - A URL do Firebase é usada apenas no payload de sincronização
@@ -1483,10 +1489,10 @@ class AppRepository constructor(
                 adicionarOperacaoSync(
                     entityType = "mesareformada",
                     entityId = id,
-                    operation = "INSERT",
+                    operation = "CREATE",
                     payload = payload
                 )
-                logarOperacaoSync("MESAREFORMADA", id, "INSERT", "Adicionado à fila de sync")
+                logarOperacaoSync("MESAREFORMADA", id, "CREATE", "Adicionado à fila de sync")
                 
             } catch (syncError: Exception) {
                 Log.w("AppRepository", "Erro ao adicionar mesa reformada à fila de sync: ${syncError.message}")
@@ -1685,6 +1691,12 @@ class AppRepository constructor(
             )
             
             Log.d("AppRepository", "📷 Resultado uploads: fotoAntes='$fotoAntesUrl', fotoDepois='$fotoDepoisUrl'")
+            
+            // ✅ CRÍTICO: Aguardar um pouco para garantir que os uploads foram concluídos
+            if (fotoAntesUrl != null || fotoDepoisUrl != null) {
+                kotlinx.coroutines.delay(500)
+                Log.d("AppRepository", "📷 Aguardou 500ms após upload(s) bem-sucedido(s)")
+            }
             
             // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
             // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
