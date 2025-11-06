@@ -88,6 +88,11 @@ class AppRepository constructor(
     // ✅ FASE 4A: Cache Manager para otimização de performance
     private val cacheManager = AppCacheManager.getInstance()
     
+    // ✅ CACHE TEMPORÁRIO: Armazena URLs do Firebase Storage para AcertoMesa
+    // Chave: acertoMesaId (Long), Valor: firebaseUrl (String)
+    // Usado para garantir que a URL do Firebase seja preservada entre inserirAcertoMesaSync() e adicionarAcertoComMesasParaSync()
+    private val fotoFirebaseUrlCache = mutableMapOf<Long, String>()
+    
     // ✅ FASE 4D: Otimizações de memória
     private val memoryOptimizer = MemoryOptimizer.getInstance()
     private val weakReferenceManager = WeakReferenceManager.getInstance()
@@ -1003,6 +1008,8 @@ class AppRepository constructor(
             
             // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
             val empresaId = obterEmpresaId()
+            Log.d("AppRepository", "📷 Processando foto de comprovante para despesa $id: foto='${despesa.fotoComprovante}'")
+            
             val fotoUrl = uploadFotoSeNecessario(
                 caminhoLocal = despesa.fotoComprovante,
                 tipo = "comprovante",
@@ -1010,43 +1017,51 @@ class AppRepository constructor(
                 entityId = id
             )
             
+            Log.d("AppRepository", "📷 Resultado upload despesa: fotoUrl='$fotoUrl' (original: '${despesa.fotoComprovante}')")
+            
+            // ✅ CRÍTICO: Atualizar banco com URL do Firebase Storage se upload foi bem-sucedido
+            val despesaAtualizada = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                Log.d("AppRepository", "📷 ✅ Atualizando banco com URL do Firebase Storage: '$fotoUrl'")
+                val despesaComUrl = despesa.copy(id = id, fotoComprovante = fotoUrl)
+                despesaDao.atualizar(despesaComUrl)
+                despesaComUrl
+            } else {
+                if (fotoUrl == null && !despesa.fotoComprovante.isNullOrBlank()) {
+                    Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
+                    val despesaSemFoto = despesa.copy(id = id, fotoComprovante = null)
+                    despesaDao.atualizar(despesaSemFoto)
+                    despesaSemFoto
+                } else {
+                    despesa
+                }
+            }
+            
             // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto
             try {
                 val payload = """
                     {
                         "id": $id,
-                        "rotaId": ${despesa.rotaId},
-                        "descricao": "${despesa.descricao}",
-                        "valor": ${despesa.valor},
-                        "categoria": "${despesa.categoria}",
-                        "tipoDespesa": "${despesa.tipoDespesa}",
-                        "dataHora": "${despesa.dataHora}",
-                        "observacoes": "${despesa.observacoes}",
-                        "criadoPor": "${despesa.criadoPor}",
-                        "cicloId": ${despesa.cicloId ?: "null"},
-                        "origemLancamento": "${despesa.origemLancamento}",
-                        "cicloAno": ${despesa.cicloAno ?: "null"},
-                        "cicloNumero": ${despesa.cicloNumero ?: "null"},
+                        "rotaId": ${despesaAtualizada.rotaId},
+                        "descricao": "${despesaAtualizada.descricao}",
+                        "valor": ${despesaAtualizada.valor},
+                        "categoria": "${despesaAtualizada.categoria}",
+                        "tipoDespesa": "${despesaAtualizada.tipoDespesa}",
+                        "dataHora": "${despesaAtualizada.dataHora}",
+                        "observacoes": "${despesaAtualizada.observacoes}",
+                        "criadoPor": "${despesaAtualizada.criadoPor}",
+                        "cicloId": ${despesaAtualizada.cicloId ?: "null"},
+                        "origemLancamento": "${despesaAtualizada.origemLancamento}",
+                        "cicloAno": ${despesaAtualizada.cicloAno ?: "null"},
+                        "cicloNumero": ${despesaAtualizada.cicloNumero ?: "null"},
                         "fotoComprovante": "${fotoUrl ?: ""}",
-                        "veiculoId": ${despesa.veiculoId ?: "null"},
-                        "kmRodado": ${despesa.kmRodado ?: "null"},
-                        "litrosAbastecidos": ${despesa.litrosAbastecidos ?: "null"}
+                        "veiculoId": ${despesaAtualizada.veiculoId ?: "null"},
+                        "kmRodado": ${despesaAtualizada.kmRodado ?: "null"},
+                        "litrosAbastecidos": ${despesaAtualizada.litrosAbastecidos ?: "null"}
                     }
                 """.trimIndent()
                 
                 adicionarOperacaoSync("Despesa", id, "CREATE", payload, priority = 1)
                 logarOperacaoSync("Despesa", id, "CREATE", "PENDING", null, payload)
-                
-                // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
-                if (fotoUrl != null && fotoUrl != despesa.fotoComprovante) {
-                    try {
-                        val despesaAtualizada = despesa.copy(fotoComprovante = fotoUrl)
-                        despesaDao.atualizar(despesaAtualizada)
-                        Log.d("AppRepository", "✅ Despesa atualizada com URL do Firebase Storage")
-                    } catch (e: Exception) {
-                        Log.w("AppRepository", "Erro ao atualizar despesa com URL: ${e.message}")
-                    }
-                }
                 
             } catch (syncError: Exception) {
                 Log.w("AppRepository", "Erro ao adicionar despesa à fila de sync: ${syncError.message}")
@@ -1067,6 +1082,8 @@ class AppRepository constructor(
             
             // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
             val empresaId = obterEmpresaId()
+            Log.d("AppRepository", "📷 Processando foto de comprovante para despesa ${despesa.id} (UPDATE): foto='${despesa.fotoComprovante}'")
+            
             val fotoUrl = uploadFotoSeNecessario(
                 caminhoLocal = despesa.fotoComprovante,
                 tipo = "comprovante",
@@ -1074,43 +1091,51 @@ class AppRepository constructor(
                 entityId = despesa.id
             )
             
+            Log.d("AppRepository", "📷 Resultado upload despesa (UPDATE): fotoUrl='$fotoUrl' (original: '${despesa.fotoComprovante}')")
+            
+            // ✅ CRÍTICO: Atualizar banco com URL do Firebase Storage se upload foi bem-sucedido
+            val despesaAtualizada = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                Log.d("AppRepository", "📷 ✅ Atualizando banco com URL do Firebase Storage: '$fotoUrl'")
+                val despesaComUrl = despesa.copy(fotoComprovante = fotoUrl)
+                despesaDao.atualizar(despesaComUrl)
+                despesaComUrl
+            } else {
+                if (fotoUrl == null && !despesa.fotoComprovante.isNullOrBlank()) {
+                    Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
+                    val despesaSemFoto = despesa.copy(fotoComprovante = null)
+                    despesaDao.atualizar(despesaSemFoto)
+                    despesaSemFoto
+                } else {
+                    despesa
+                }
+            }
+            
             // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto
             try {
                 val payload = """
                     {
-                        "id": ${despesa.id},
-                        "rotaId": ${despesa.rotaId},
-                        "descricao": "${despesa.descricao}",
-                        "valor": ${despesa.valor},
-                        "categoria": "${despesa.categoria}",
-                        "tipoDespesa": "${despesa.tipoDespesa}",
-                        "dataHora": "${despesa.dataHora}",
-                        "observacoes": "${despesa.observacoes}",
-                        "criadoPor": "${despesa.criadoPor}",
-                        "cicloId": ${despesa.cicloId ?: "null"},
-                        "origemLancamento": "${despesa.origemLancamento}",
-                        "cicloAno": ${despesa.cicloAno ?: "null"},
-                        "cicloNumero": ${despesa.cicloNumero ?: "null"},
+                        "id": ${despesaAtualizada.id},
+                        "rotaId": ${despesaAtualizada.rotaId},
+                        "descricao": "${despesaAtualizada.descricao}",
+                        "valor": ${despesaAtualizada.valor},
+                        "categoria": "${despesaAtualizada.categoria}",
+                        "tipoDespesa": "${despesaAtualizada.tipoDespesa}",
+                        "dataHora": "${despesaAtualizada.dataHora}",
+                        "observacoes": "${despesaAtualizada.observacoes}",
+                        "criadoPor": "${despesaAtualizada.criadoPor}",
+                        "cicloId": ${despesaAtualizada.cicloId ?: "null"},
+                        "origemLancamento": "${despesaAtualizada.origemLancamento}",
+                        "cicloAno": ${despesaAtualizada.cicloAno ?: "null"},
+                        "cicloNumero": ${despesaAtualizada.cicloNumero ?: "null"},
                         "fotoComprovante": "${fotoUrl ?: ""}",
-                        "veiculoId": ${despesa.veiculoId ?: "null"},
-                        "kmRodado": ${despesa.kmRodado ?: "null"},
-                        "litrosAbastecidos": ${despesa.litrosAbastecidos ?: "null"}
+                        "veiculoId": ${despesaAtualizada.veiculoId ?: "null"},
+                        "kmRodado": ${despesaAtualizada.kmRodado ?: "null"},
+                        "litrosAbastecidos": ${despesaAtualizada.litrosAbastecidos ?: "null"}
                     }
                 """.trimIndent()
                 
-                adicionarOperacaoSync("Despesa", despesa.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("Despesa", despesa.id, "UPDATE", "PENDING", null, payload)
-                
-                // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
-                if (fotoUrl != null && fotoUrl != despesa.fotoComprovante) {
-                    try {
-                        val despesaAtualizada = despesa.copy(fotoComprovante = fotoUrl)
-                        despesaDao.atualizar(despesaAtualizada)
-                        Log.d("AppRepository", "✅ Despesa atualizada com URL do Firebase Storage")
-                    } catch (e: Exception) {
-                        Log.w("AppRepository", "Erro ao atualizar despesa com URL: ${e.message}")
-                    }
-                }
+                adicionarOperacaoSync("Despesa", despesaAtualizada.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("Despesa", despesaAtualizada.id, "UPDATE", "PENDING", null, payload)
                 
             } catch (syncError: Exception) {
                 Log.w("AppRepository", "Erro ao adicionar atualização de despesa à fila de sync: ${syncError.message}")
@@ -1392,6 +1417,8 @@ class AppRepository constructor(
             
             // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
             val empresaId = obterEmpresaId()
+            Log.d("AppRepository", "📷 Processando foto de reforma para MesaReformada $id: foto='${mesaReformada.fotoReforma}'")
+            
             val fotoUrl = uploadFotoSeNecessario(
                 caminhoLocal = mesaReformada.fotoReforma,
                 tipo = "foto_reforma",
@@ -1399,23 +1426,42 @@ class AppRepository constructor(
                 entityId = id
             )
             
+            Log.d("AppRepository", "📷 Resultado upload MesaReformada: fotoUrl='$fotoUrl' (original: '${mesaReformada.fotoReforma}')")
+            
+            // ✅ CRÍTICO: Atualizar banco com URL do Firebase Storage se upload foi bem-sucedido
+            val mesaReformadaAtualizada = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                Log.d("AppRepository", "📷 ✅ Atualizando banco com URL do Firebase Storage: '$fotoUrl'")
+                val mesaComUrl = mesaReformada.copy(id = id, fotoReforma = fotoUrl)
+                mesaReformadaDao.atualizar(mesaComUrl)
+                mesaComUrl
+            } else {
+                if (fotoUrl == null && !mesaReformada.fotoReforma.isNullOrBlank()) {
+                    Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
+                    val mesaSemFoto = mesaReformada.copy(id = id, fotoReforma = null)
+                    mesaReformadaDao.atualizar(mesaSemFoto)
+                    mesaSemFoto
+                } else {
+                    mesaReformada
+                }
+            }
+            
             // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto
             try {
                 val payload = """
                     {
                         "id": $id,
-                        "mesaId": ${mesaReformada.mesaId},
-                        "numeroMesa": "${mesaReformada.numeroMesa}",
-                        "tipoMesa": "${mesaReformada.tipoMesa}",
-                        "tamanhoMesa": "${mesaReformada.tamanhoMesa}",
-                        "pintura": ${mesaReformada.pintura},
-                        "tabela": ${mesaReformada.tabela},
-                        "panos": ${mesaReformada.panos},
-                        "numeroPanos": "${mesaReformada.numeroPanos ?: ""}",
-                        "outros": ${mesaReformada.outros},
-                        "observacoes": "${mesaReformada.observacoes ?: ""}",
+                        "mesaId": ${mesaReformadaAtualizada.mesaId},
+                        "numeroMesa": "${mesaReformadaAtualizada.numeroMesa}",
+                        "tipoMesa": "${mesaReformadaAtualizada.tipoMesa}",
+                        "tamanhoMesa": "${mesaReformadaAtualizada.tamanhoMesa}",
+                        "pintura": ${mesaReformadaAtualizada.pintura},
+                        "tabela": ${mesaReformadaAtualizada.tabela},
+                        "panos": ${mesaReformadaAtualizada.panos},
+                        "numeroPanos": "${mesaReformadaAtualizada.numeroPanos ?: ""}",
+                        "outros": ${mesaReformadaAtualizada.outros},
+                        "observacoes": "${mesaReformadaAtualizada.observacoes ?: ""}",
                         "fotoReforma": "${fotoUrl ?: ""}",
-                        "dataReforma": "${mesaReformada.dataReforma.time}"
+                        "dataReforma": "${mesaReformadaAtualizada.dataReforma.time}"
                     }
                 """.trimIndent()
                 
@@ -1426,17 +1472,6 @@ class AppRepository constructor(
                     payload = payload
                 )
                 logarOperacaoSync("MESAREFORMADA", id, "INSERT", "Adicionado à fila de sync")
-                
-                // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
-                if (fotoUrl != null && fotoUrl != mesaReformada.fotoReforma) {
-                    try {
-                        val mesaReformadaAtualizada = mesaReformada.copy(fotoReforma = fotoUrl)
-                        mesaReformadaDao.atualizar(mesaReformadaAtualizada)
-                        Log.d("AppRepository", "✅ MesaReformada atualizada com URL do Firebase Storage")
-                    } catch (e: Exception) {
-                        Log.w("AppRepository", "Erro ao atualizar MesaReformada com URL: ${e.message}")
-                    }
-                }
                 
             } catch (syncError: Exception) {
                 Log.w("AppRepository", "Erro ao adicionar mesa reformada à fila de sync: ${syncError.message}")
@@ -1617,22 +1652,59 @@ class AppRepository constructor(
             val id = historicoManutencaoMesaDao.inserir(historico)
             logDbInsertSuccess("HISTORICO_MANUTENCAO_MESA", "Mesa=${historico.numeroMesa}, ID=$id")
             
+            // ✅ NOVO: Upload de fotos para Firebase Storage antes de sincronizar
+            val empresaId = obterEmpresaId()
+            Log.d("AppRepository", "📷 Processando fotos de manutenção para histórico $id")
+            
+            val fotoAntesUrl = uploadFotoSeNecessario(
+                caminhoLocal = historico.fotoAntes,
+                tipo = "foto_antes",
+                empresaId = empresaId,
+                entityId = id
+            )
+            val fotoDepoisUrl = uploadFotoSeNecessario(
+                caminhoLocal = historico.fotoDepois,
+                tipo = "foto_depois",
+                empresaId = empresaId,
+                entityId = id
+            )
+            
+            Log.d("AppRepository", "📷 Resultado uploads: fotoAntes='$fotoAntesUrl', fotoDepois='$fotoDepoisUrl'")
+            
+            // ✅ CRÍTICO: Atualizar banco com URLs do Firebase Storage se upload foi bem-sucedido
+            var historicoAtualizado = historico.copy(id = id)
+            if (fotoAntesUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoAntesUrl)) {
+                historicoAtualizado = historicoAtualizado.copy(fotoAntes = fotoAntesUrl)
+            } else if (fotoAntesUrl == null && !historico.fotoAntes.isNullOrBlank()) {
+                historicoAtualizado = historicoAtualizado.copy(fotoAntes = null)
+            }
+            if (fotoDepoisUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoDepoisUrl)) {
+                historicoAtualizado = historicoAtualizado.copy(fotoDepois = fotoDepoisUrl)
+            } else if (fotoDepoisUrl == null && !historico.fotoDepois.isNullOrBlank()) {
+                historicoAtualizado = historicoAtualizado.copy(fotoDepois = null)
+            }
+            
+            if (historicoAtualizado != historico) {
+                historicoManutencaoMesaDao.atualizar(historicoAtualizado)
+                Log.d("AppRepository", "📷 ✅ Banco atualizado com URLs do Firebase Storage")
+            }
+            
             // ✅ FASE 3C: Adicionar à fila de sincronização
             try {
                 val payload = """
                     {
                         "id": $id,
-                        "mesaId": ${historico.mesaId},
-                        "numeroMesa": "${historico.numeroMesa}",
-                        "tipoManutencao": "${historico.tipoManutencao}",
-                        "descricao": "${historico.descricao ?: ""}",
-                        "dataManutencao": ${historico.dataManutencao.time},
-                        "responsavel": "${historico.responsavel ?: ""}",
-                        "observacoes": "${historico.observacoes ?: ""}",
-                        "custo": ${historico.custo ?: "null"},
-                        "fotoAntes": "${historico.fotoAntes ?: ""}",
-                        "fotoDepois": "${historico.fotoDepois ?: ""}",
-                        "dataCriacao": ${historico.dataCriacao.time}
+                        "mesaId": ${historicoAtualizado.mesaId},
+                        "numeroMesa": "${historicoAtualizado.numeroMesa}",
+                        "tipoManutencao": "${historicoAtualizado.tipoManutencao}",
+                        "descricao": "${historicoAtualizado.descricao ?: ""}",
+                        "dataManutencao": ${historicoAtualizado.dataManutencao.time},
+                        "responsavel": "${historicoAtualizado.responsavel ?: ""}",
+                        "observacoes": "${historicoAtualizado.observacoes ?: ""}",
+                        "custo": ${historicoAtualizado.custo ?: "null"},
+                        "fotoAntes": "${fotoAntesUrl ?: ""}",
+                        "fotoDepois": "${fotoDepoisUrl ?: ""}",
+                        "dataCriacao": ${historicoAtualizado.dataCriacao.time}
                     }
                 """.trimIndent()
                 
@@ -1657,27 +1729,64 @@ class AppRepository constructor(
             historicoManutencaoMesaDao.atualizar(historico)
             logDbUpdateSuccess("HISTORICO_MANUTENCAO_MESA", "ID=${historico.id}")
             
+            // ✅ NOVO: Upload de fotos para Firebase Storage antes de sincronizar
+            val empresaId = obterEmpresaId()
+            Log.d("AppRepository", "📷 Processando fotos de manutenção para histórico ${historico.id} (UPDATE)")
+            
+            val fotoAntesUrl = uploadFotoSeNecessario(
+                caminhoLocal = historico.fotoAntes,
+                tipo = "foto_antes",
+                empresaId = empresaId,
+                entityId = historico.id
+            )
+            val fotoDepoisUrl = uploadFotoSeNecessario(
+                caminhoLocal = historico.fotoDepois,
+                tipo = "foto_depois",
+                empresaId = empresaId,
+                entityId = historico.id
+            )
+            
+            Log.d("AppRepository", "📷 Resultado uploads: fotoAntes='$fotoAntesUrl', fotoDepois='$fotoDepoisUrl'")
+            
+            // ✅ CRÍTICO: Atualizar banco com URLs do Firebase Storage se upload foi bem-sucedido
+            var historicoAtualizado = historico
+            if (fotoAntesUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoAntesUrl)) {
+                historicoAtualizado = historicoAtualizado.copy(fotoAntes = fotoAntesUrl)
+            } else if (fotoAntesUrl == null && !historico.fotoAntes.isNullOrBlank()) {
+                historicoAtualizado = historicoAtualizado.copy(fotoAntes = null)
+            }
+            if (fotoDepoisUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoDepoisUrl)) {
+                historicoAtualizado = historicoAtualizado.copy(fotoDepois = fotoDepoisUrl)
+            } else if (fotoDepoisUrl == null && !historico.fotoDepois.isNullOrBlank()) {
+                historicoAtualizado = historicoAtualizado.copy(fotoDepois = null)
+            }
+            
+            if (historicoAtualizado != historico) {
+                historicoManutencaoMesaDao.atualizar(historicoAtualizado)
+                Log.d("AppRepository", "📷 ✅ Banco atualizado com URLs do Firebase Storage")
+            }
+            
             // ✅ FASE 3C: Adicionar à fila de sincronização
             try {
                 val payload = """
                     {
-                        "id": ${historico.id},
-                        "mesaId": ${historico.mesaId},
-                        "numeroMesa": "${historico.numeroMesa}",
-                        "tipoManutencao": "${historico.tipoManutencao}",
-                        "descricao": "${historico.descricao ?: ""}",
-                        "dataManutencao": ${historico.dataManutencao.time},
-                        "responsavel": "${historico.responsavel ?: ""}",
-                        "observacoes": "${historico.observacoes ?: ""}",
-                        "custo": ${historico.custo ?: "null"},
-                        "fotoAntes": "${historico.fotoAntes ?: ""}",
-                        "fotoDepois": "${historico.fotoDepois ?: ""}",
-                        "dataCriacao": ${historico.dataCriacao.time}
+                        "id": ${historicoAtualizado.id},
+                        "mesaId": ${historicoAtualizado.mesaId},
+                        "numeroMesa": "${historicoAtualizado.numeroMesa}",
+                        "tipoManutencao": "${historicoAtualizado.tipoManutencao}",
+                        "descricao": "${historicoAtualizado.descricao ?: ""}",
+                        "dataManutencao": ${historicoAtualizado.dataManutencao.time},
+                        "responsavel": "${historicoAtualizado.responsavel ?: ""}",
+                        "observacoes": "${historicoAtualizado.observacoes ?: ""}",
+                        "custo": ${historicoAtualizado.custo ?: "null"},
+                        "fotoAntes": "${fotoAntesUrl ?: ""}",
+                        "fotoDepois": "${fotoDepoisUrl ?: ""}",
+                        "dataCriacao": ${historicoAtualizado.dataCriacao.time}
                     }
                 """.trimIndent()
                 
-                adicionarOperacaoSync("HistoricoManutencaoMesa", historico.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("HistoricoManutencaoMesa", historico.id, "UPDATE", "PENDING", null, payload)
+                adicionarOperacaoSync("HistoricoManutencaoMesa", historicoAtualizado.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("HistoricoManutencaoMesa", historicoAtualizado.id, "UPDATE", "PENDING", null, payload)
                 
             } catch (syncError: Exception) {
                 Log.w("AppRepository", "Erro ao adicionar atualização de histórico manutenção mesa à fila de sync: ${syncError.message}")
@@ -3663,41 +3772,115 @@ class AppRepository constructor(
      * ✅ NOVO: Adicionar acerto à fila de sincronização com dados das mesas
      */
     suspend fun adicionarAcertoComMesasParaSync(acertoId: Long) {
-        try {
-            val acerto = acertoDao.buscarPorId(acertoId)
-            if (acerto == null) {
-                Log.w("AppRepository", "Acerto $acertoId não encontrado para sincronização")
-                return
-            }
+            try {
+                val acerto = acertoDao.buscarPorId(acertoId)
+                if (acerto == null) {
+                    Log.w("AppRepository", "Acerto $acertoId não encontrado para sincronização")
+                    return
+                }
+
+                // ✅ CRÍTICO: Aguardar mais tempo para garantir que uploads de fotos sejam concluídos
+                // O delay de 5000ms em SettlementViewModel pode não ser suficiente se o upload demorar
+                Log.d("AppRepository", "📷 Aguardando 2 segundos adicionais para garantir uploads completos...")
+                kotlinx.coroutines.delay(2000)
+                Log.d("AppRepository", "📷 Delay concluído, verificando cache...")
             
+            // ✅ CRÍTICO: Buscar mesas do banco novamente para garantir que temos as URLs atualizadas
+            // (caso inserirAcertoMesaSync já tenha feito upload)
             val acertoMesas = acertoMesaDao.buscarPorAcertoId(acertoId)
+            
+            // ✅ CRÍTICO: Verificar se o cache está vazio e tentar fazer upload novamente se necessário
+            if (fotoFirebaseUrlCache.isEmpty() && acertoMesas.isNotEmpty()) {
+                Log.w("AppRepository", "⚠️ AVISO: Cache de URLs do Firebase está vazio!")
+                Log.w("AppRepository", "   Isso pode indicar que o upload não foi feito em inserirAcertoMesaSync()")
+                Log.w("AppRepository", "   Tentando fazer upload novamente para ${acertoMesas.size} mesas...")
+            }
             android.util.Log.d("AppRepository", "Incluindo ${acertoMesas.size} mesas no payload do acerto $acertoId")
             
-            // ✅ NOVO: Upload de fotos das mesas para Firebase Storage antes de sincronizar
-            val empresaId = obterEmpresaId()
+            // ✅ OFICIAL FIREBASE: Usar URLs que já foram enviadas em inserirAcertoMesaSync()
+            // O upload já foi feito quando inserirAcertoMesaSync() foi chamado
+            // O banco já foi atualizado com a URL do Firebase Storage se upload foi bem-sucedido
+            Log.d("AppRepository", "📷 adicionarAcertoComMesasParaSync: Processando ${acertoMesas.size} mesas para acerto $acertoId")
+            Log.d("AppRepository", "📷 Cache de URLs do Firebase possui ${fotoFirebaseUrlCache.size} entradas")
+            fotoFirebaseUrlCache.forEach { (id, url) ->
+                Log.d("AppRepository", "   Cache: AcertoMesa ID=$id -> URL='$url'")
+            }
+            
+            acertoMesas.forEachIndexed { index, mesa ->
+                val fotoUrl = mesa.fotoRelogioFinal
+                val isFirebaseUrl = !fotoUrl.isNullOrBlank() && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)
+                val temNoCache = fotoFirebaseUrlCache.containsKey(mesa.id)
+                Log.d("AppRepository", "📷 Mesa ${index + 1}: id=${mesa.id}, mesaId=${mesa.mesaId}")
+                Log.d("AppRepository", "   Foto no banco: '$fotoUrl' (é URL Firebase: $isFirebaseUrl)")
+                Log.d("AppRepository", "   Tem no cache: $temNoCache ${if (temNoCache) "-> URL: '${fotoFirebaseUrlCache[mesa.id]}'" else ""}")
+            }
+            
+            // ✅ ESTRATÉGIA DEFINITIVA: Buscar URLs do Firebase Storage a partir do payload individual de cada mesa
+            // Como inserirAcertoMesaSync() já fez upload e adicionou à fila de sync, precisamos buscar
+            // a URL do Firebase Storage de outra forma. Vamos verificar se há uma operação de sync pendente
+            // ou tentar fazer upload novamente se necessário
+            
             val acertoMesasComFotos = acertoMesas.map { acertoMesa ->
-                val fotoUrl = uploadFotoSeNecessario(
-                    caminhoLocal = acertoMesa.fotoRelogioFinal,
-                    tipo = "relogio_final",
-                    empresaId = empresaId,
-                    entityId = acertoId,
-                    entityExtraId = acertoMesa.mesaId
-                )
-                
-                // Atualizar entidade local com URL se upload foi bem-sucedido
-                if (fotoUrl != null && fotoUrl != acertoMesa.fotoRelogioFinal) {
-                    try {
-                        val acertoMesaAtualizada = acertoMesa.copy(fotoRelogioFinal = fotoUrl)
-                        acertoMesaDao.atualizar(acertoMesaAtualizada)
-                        Log.d("AppRepository", "✅ AcertoMesa ${acertoMesa.id} atualizada com URL do Firebase Storage")
-                        acertoMesaAtualizada
-                    } catch (e: Exception) {
-                        Log.w("AppRepository", "Erro ao atualizar AcertoMesa com URL: ${e.message}")
-                        acertoMesa.copy(fotoRelogioFinal = fotoUrl ?: acertoMesa.fotoRelogioFinal)
+                // ✅ ESTRATÉGIA DEFINITIVA: Usar cache primeiro, depois verificar banco
+                // 1. Verificar cache (URL do Firebase armazenada em inserirAcertoMesaSync)
+                // 2. Se não encontrar, verificar se o banco tem URL do Firebase
+                // 3. Se não encontrar, tentar fazer upload do caminho local
+                val fotoUrlParaPayload = when {
+                    // ✅ PRIORIDADE 1: Cache (URL do Firebase armazenada durante inserção)
+                    fotoFirebaseUrlCache.containsKey(acertoMesa.id) -> {
+                        val urlDoCache = fotoFirebaseUrlCache[acertoMesa.id]!!
+                        Log.d("AppRepository", "📷 ✅ Mesa ${acertoMesa.mesaId}: URL encontrada no cache: '$urlDoCache'")
+                        urlDoCache
                     }
-                } else {
-                    acertoMesa.copy(fotoRelogioFinal = fotoUrl ?: acertoMesa.fotoRelogioFinal)
+                    // ✅ PRIORIDADE 2: Banco já tem URL do Firebase (raro, mas possível)
+                    !acertoMesa.fotoRelogioFinal.isNullOrBlank() && 
+                    com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(acertoMesa.fotoRelogioFinal) -> {
+                        Log.d("AppRepository", "📷 ✅ Mesa ${acertoMesa.mesaId}: URL encontrada no banco: '${acertoMesa.fotoRelogioFinal}'")
+                        acertoMesa.fotoRelogioFinal
+                    }
+                    // ✅ PRIORIDADE 3: Caminho local - tentar fazer upload
+                    !acertoMesa.fotoRelogioFinal.isNullOrBlank() -> {
+                        Log.d("AppRepository", "📷 Tentando upload para mesa ${acertoMesa.mesaId}: caminho local='${acertoMesa.fotoRelogioFinal}'")
+                        val empresaId = obterEmpresaId()
+                        val fotoUrl = uploadFotoSeNecessario(
+                            caminhoLocal = acertoMesa.fotoRelogioFinal,
+                            tipo = "relogio_final",
+                            empresaId = empresaId,
+                            entityId = acertoMesa.acertoId,
+                            entityExtraId = acertoMesa.mesaId
+                        )
+                        if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                            Log.d("AppRepository", "📷 ✅ Upload bem-sucedido agora: '$fotoUrl'")
+                            // ✅ Armazenar no cache para próximas chamadas
+                            fotoFirebaseUrlCache[acertoMesa.id] = fotoUrl
+                            fotoUrl // Usar URL no payload
+                        } else {
+                            Log.w("AppRepository", "⚠️ Upload falhou - foto não será sincronizada (caminho local mantido)")
+                            "" // String vazia no payload
+                        }
+                    }
+                    // Sem foto
+                    else -> {
+                        Log.d("AppRepository", "📷 Mesa ${acertoMesa.mesaId}: Sem foto")
+                        "" // String vazia no payload
+                    }
                 }
+                
+                // ✅ Criar cópia APENAS para o payload (não alterar o banco)
+                // O campo fotoRelogioFinal no banco continua com o caminho local
+                acertoMesa.copy(fotoRelogioFinal = fotoUrlParaPayload)
+            }
+            
+            // ✅ Limpar cache após usar (para evitar vazamento de memória)
+            // O cache será usado apenas durante o processo de sincronização
+            // Log.d("AppRepository", "📷 Limpando cache de URLs do Firebase (${fotoFirebaseUrlCache.size} entradas)")
+            // fotoFirebaseUrlCache.clear() // ✅ COMENTADO: Manter cache até sincronização completa
+            
+            Log.d("AppRepository", "📷 ✅ Payload preparado com ${acertoMesasComFotos.size} mesas. Criando payload do Firestore...")
+            Log.d("AppRepository", "📷 Cache de URLs do Firebase: ${fotoFirebaseUrlCache.size} entradas para este acerto")
+            acertoMesasComFotos.forEachIndexed { index, mesa ->
+                val fotoUrl = mesa.fotoRelogioFinal
+                Log.d("AppRepository", "📷 Mesa ${index + 1} no payload: mesaId=${mesa.mesaId}, fotoUrl='$fotoUrl' (é URL Firebase: ${!fotoUrl.isNullOrBlank() && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)})")
             }
             
             val payloadMap = mutableMapOf<String, Any?>(
@@ -3742,10 +3925,29 @@ class AppRepository constructor(
                     )
                 }
             )
-
-            val payload = com.google.gson.Gson().toJson(payloadMap)
-            adicionarOperacaoSync("Acerto", acertoId, "CREATE", payload, priority = 1)
-            logarOperacaoSync("Acerto", acertoId, "CREATE", "PENDING", null, payload)
+            
+            // ✅ LOG CRÍTICO: Verificar payload final antes de enviar
+            val payloadFinal = com.google.gson.Gson().toJson(payloadMap)
+            Log.d("AppRepository", "📷 ========================================")
+            Log.d("AppRepository", "📷 PAYLOAD FINAL DO ACERTO PRONTO PARA SYNC:")
+            Log.d("AppRepository", "📷   Acerto ID: $acertoId")
+            val acertoMesasPayload = payloadMap["acertoMesas"] as? List<Map<String, Any?>>
+            acertoMesasPayload?.forEachIndexed { index, mesa ->
+                val fotoUrl = mesa["fotoRelogioFinal"] as? String
+                val temUrl = !fotoUrl.isNullOrBlank()
+                val isFirebaseUrl = temUrl && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)
+                Log.d("AppRepository", "📷   Mesa ${index + 1} (ID: ${mesa["mesaId"]}): fotoUrl='$fotoUrl'")
+                Log.d("AppRepository", "📷     Tem URL? $temUrl | É URL Firebase? $isFirebaseUrl")
+                if (!temUrl || !isFirebaseUrl) {
+                    Log.e("AppRepository", "📷     ❌ PROBLEMA: URL não está sendo enviada corretamente!")
+                } else {
+                    Log.d("AppRepository", "📷     ✅ URL do Firebase será enviada ao Firestore")
+                }
+            }
+            Log.d("AppRepository", "📷 ========================================")
+            
+            adicionarOperacaoSync("Acerto", acertoId, "CREATE", payloadFinal, priority = 1)
+            logarOperacaoSync("Acerto", acertoId, "CREATE", "PENDING", null, payloadFinal)
             
         } catch (syncError: Exception) {
             Log.w("AppRepository", "Erro ao adicionar acerto com mesas à fila de sync: ${syncError.message}")
@@ -3872,46 +4074,82 @@ class AppRepository constructor(
         entityId: Long,
         entityExtraId: Long? = null
     ): String? {
-        if (caminhoLocal.isNullOrBlank()) return null
+        if (caminhoLocal.isNullOrBlank()) {
+            Log.d("AppRepository", "📷 Nenhum caminho de foto fornecido para $tipo (entityId=$entityId)")
+            return null
+        }
         
         // ✅ Verificar se já é uma URL do Firebase Storage (não fazer upload novamente)
         if (com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(caminhoLocal)) {
-            Log.d("AppRepository", "Foto já está no Firebase Storage: $caminhoLocal")
+            Log.d("AppRepository", "📷 Foto já está no Firebase Storage: $caminhoLocal")
             return caminhoLocal
         }
+        
+        // ✅ CRÍTICO: Verificar se o arquivo existe antes de fazer upload
+        val arquivo = java.io.File(caminhoLocal)
+        if (!arquivo.exists()) {
+            Log.e("AppRepository", "❌ ERRO CRÍTICO: Arquivo de foto não existe: $caminhoLocal")
+            Log.e("AppRepository", "❌ Tipo: $tipo, EntityId: $entityId, EntityExtraId: $entityExtraId")
+            return null // Retornar null em vez de caminho local inválido
+        }
+        
+        Log.d("AppRepository", "📷 Iniciando upload de foto:")
+        Log.d("AppRepository", "   Tipo: $tipo")
+        Log.d("AppRepository", "   Caminho local: $caminhoLocal")
+        Log.d("AppRepository", "   Tamanho: ${arquivo.length()} bytes")
+        Log.d("AppRepository", "   EntityId: $entityId, EntityExtraId: $entityExtraId")
         
         return try {
             val urlFirebase = when (tipo) {
                 "comprovante" -> {
+                    Log.d("AppRepository", "📤 Uploading comprovante para despesa $entityId")
                     com.example.gestaobilhares.utils.FirebaseStorageManager.uploadFotoComprovante(
                         empresaId, entityId, caminhoLocal
                     )
                 }
                 "relogio_final" -> {
                     if (entityExtraId != null) {
+                        Log.d("AppRepository", "📤 Uploading foto relógio final para acerto $entityId, mesa $entityExtraId")
                         com.example.gestaobilhares.utils.FirebaseStorageManager.uploadFotoRelogioFinal(
                             empresaId, entityId, entityExtraId, caminhoLocal
                         )
-                    } else null
+                    } else {
+                        Log.e("AppRepository", "❌ entityExtraId é null para relogio_final")
+                        null
+                    }
                 }
                 "foto_reforma" -> {
+                    Log.d("AppRepository", "📤 Uploading foto reforma para mesa reformada $entityId")
                     com.example.gestaobilhares.utils.FirebaseStorageManager.uploadFotoReforma(
                         empresaId, entityId, caminhoLocal
                     )
                 }
-                else -> null
+                "foto_antes", "foto_depois" -> {
+                    Log.d("AppRepository", "📤 Uploading foto $tipo para manutenção $entityId")
+                    com.example.gestaobilhares.utils.FirebaseStorageManager.uploadFotoManutencao(
+                        empresaId, entityId, tipo.replace("foto_", ""), caminhoLocal
+                    )
+                }
+                else -> {
+                    Log.e("AppRepository", "❌ Tipo de foto desconhecido: $tipo")
+                    null
+                }
             }
             
             if (urlFirebase != null) {
-                Log.d("AppRepository", "✅ Foto enviada para Firebase Storage: $urlFirebase")
+                Log.d("AppRepository", "✅ SUCESSO: Foto enviada para Firebase Storage: $urlFirebase")
+                urlFirebase // ✅ CRÍTICO: Retornar URL do Firebase, não caminho local
             } else {
-                Log.w("AppRepository", "⚠️ Upload de foto falhou, mantendo caminho local: $caminhoLocal")
+                Log.e("AppRepository", "❌ FALHA: Upload de foto retornou null")
+                Log.e("AppRepository", "❌ Caminho original: $caminhoLocal")
+                // ✅ CRÍTICO: NÃO retornar caminho local como fallback - isso causaria o problema
+                // Se o upload falhar, retornar null e não sincronizar a foto
+                null
             }
-            
-            urlFirebase ?: caminhoLocal // Fallback para caminho local se upload falhar
         } catch (e: Exception) {
-            Log.e("AppRepository", "Erro ao fazer upload de foto: ${e.message}", e)
-            caminhoLocal // Em caso de erro, manter caminho local
+            Log.e("AppRepository", "❌ EXCEÇÃO ao fazer upload de foto: ${e.message}", e)
+            // ✅ CRÍTICO: NÃO retornar caminho local em caso de erro
+            null
         }
     }
     
@@ -4711,47 +4949,154 @@ class AppRepository constructor(
      */
     suspend fun inserirAcertoMesaSync(acertoMesa: AcertoMesa): Long {
         val id = acertoMesaDao.inserir(acertoMesa)
+        Log.d("AppRepository", "📷 ========================================")
+        Log.d("AppRepository", "📷 inserirAcertoMesaSync: INÍCIO")
+        Log.d("AppRepository", "📷 AcertoMesa inserido com ID: $id")
+        Log.d("AppRepository", "📷 Mesa ID: ${acertoMesa.mesaId}, Acerto ID: ${acertoMesa.acertoId}")
+        Log.d("AppRepository", "📷 Foto original: '${acertoMesa.fotoRelogioFinal}'")
         
         try {
-            // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
+            // ✅ CRÍTICO: Verificar se há foto antes de tentar upload
+            if (acertoMesa.fotoRelogioFinal.isNullOrBlank()) {
+                Log.w("AppRepository", "📷 ⚠️ Nenhuma foto para mesa ${acertoMesa.mesaId}")
+                fotoFirebaseUrlCache.remove(id) // Garantir que não há cache antigo
+                return id
+            }
+            
+            // ✅ CRÍTICO: Verificar se o arquivo existe antes de fazer upload
+            val arquivo = java.io.File(acertoMesa.fotoRelogioFinal)
+            if (!arquivo.exists()) {
+                Log.e("AppRepository", "📷 ❌ ERRO CRÍTICO: Arquivo não existe: '${acertoMesa.fotoRelogioFinal}'")
+                Log.e("AppRepository", "📷   Caminho absoluto: ${arquivo.absolutePath}")
+                Log.e("AppRepository", "📷   Arquivo existe? ${arquivo.exists()}")
+                fotoFirebaseUrlCache.remove(id)
+                return id
+            }
+            
+            Log.d("AppRepository", "📷 ✅ Arquivo existe: ${arquivo.length()} bytes")
+            
+            // ✅ NOVO: Upload de foto para Firebase Storage ANTES de sincronizar
             val empresaId = obterEmpresaId()
-            val fotoUrl = uploadFotoSeNecessario(
-                caminhoLocal = acertoMesa.fotoRelogioFinal,
-                tipo = "relogio_final",
-                empresaId = empresaId,
-                entityId = acertoMesa.acertoId,
-                entityExtraId = acertoMesa.mesaId
-            )
+            Log.d("AppRepository", "📷 Iniciando upload para Firebase Storage...")
+            Log.d("AppRepository", "   Empresa ID: $empresaId")
+            Log.d("AppRepository", "   Tipo: relogio_final")
+            Log.d("AppRepository", "   Entity ID (Acerto): ${acertoMesa.acertoId}")
+            Log.d("AppRepository", "   Entity Extra ID (Mesa): ${acertoMesa.mesaId}")
+            
+            // ✅ CRÍTICO: Fazer upload de forma síncrona e aguardar conclusão
+            val fotoUrl = try {
+                Log.d("AppRepository", "📷 Iniciando upload de forma síncrona...")
+                uploadFotoSeNecessario(
+                    caminhoLocal = acertoMesa.fotoRelogioFinal,
+                    tipo = "relogio_final",
+                    empresaId = empresaId,
+                    entityId = acertoMesa.acertoId,
+                    entityExtraId = acertoMesa.mesaId
+                ).also { url ->
+                    Log.d("AppRepository", "📷 Upload concluído, resultado: ${if (url.isNullOrBlank()) "NULL/VAZIO" else "URL: $url"}")
+                }
+            } catch (e: Exception) {
+                Log.e("AppRepository", "📷 ❌ EXCEÇÃO durante upload: ${e.message}", e)
+                Log.e("AppRepository", "📷 Stack trace: ${e.stackTraceToString()}")
+                null
+            }
+            
+            Log.d("AppRepository", "📷 ========================================")
+            Log.d("AppRepository", "📷 RESULTADO DO UPLOAD:")
+            Log.d("AppRepository", "📷   fotoUrl retornada: '$fotoUrl'")
+            Log.d("AppRepository", "📷   fotoUrl é null? ${fotoUrl == null}")
+            Log.d("AppRepository", "📷   fotoUrl é vazio? ${fotoUrl.isNullOrBlank()}")
+            
+            if (fotoUrl != null && !fotoUrl.isBlank()) {
+                val isFirebaseUrl = com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)
+                Log.d("AppRepository", "📷   fotoUrl é URL do Firebase? $isFirebaseUrl")
+                if (!isFirebaseUrl) {
+                    Log.e("AppRepository", "📷   ❌ ERRO: fotoUrl não é uma URL válida do Firebase Storage!")
+                    Log.e("AppRepository", "📷   Valor retornado: '$fotoUrl'")
+                    Log.e("AppRepository", "📷   Tamanho da string: ${fotoUrl.length}")
+                    Log.e("AppRepository", "📷   Primeiros 50 caracteres: ${fotoUrl.take(50)}")
+                }
+            } else {
+                Log.e("AppRepository", "📷   ❌❌❌ ERRO CRÍTICO: Upload retornou null ou vazio!")
+                Log.e("AppRepository", "📷   O upload pode ter falhado silenciosamente")
+                Log.e("AppRepository", "📷   Verifique os logs do FirebaseStorageManager acima")
+            }
+            
+            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
+            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
+            // - A URL do Firebase é armazenada em cache temporário para uso no payload completo
+            // - Isso garante que o botão "Ver Foto" funcione localmente e a URL seja preservada para sync
+            
+            // ✅ CRÍTICO: Garantir que o ID correto seja usado (retornado pelo insert)
+            val acertoMesaComId = acertoMesa.copy(id = id)
+            
+            // ✅ CRÍTICO: Armazenar URL do Firebase no cache se upload foi bem-sucedido
+            if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                Log.d("AppRepository", "📷 ✅✅✅ UPLOAD BEM-SUCEDIDO ✅✅✅")
+                Log.d("AppRepository", "📷 ✅ URL do Firebase: '$fotoUrl'")
+                Log.d("AppRepository", "📷 ✅ Armazenando URL no cache para AcertoMesa ID: $id")
+                fotoFirebaseUrlCache[id] = fotoUrl
+                Log.d("AppRepository", "📷 ✅ Cache atualizado. Total de entradas: ${fotoFirebaseUrlCache.size}")
+                Log.d("AppRepository", "📷 ✅ Mantendo caminho local no banco: '${acertoMesa.fotoRelogioFinal}'")
+                Log.d("AppRepository", "📷 ✅ URL do Firebase será usada no payload de sincronização via cache")
+            } else if (fotoUrl == null && !acertoMesa.fotoRelogioFinal.isNullOrBlank()) {
+                Log.e("AppRepository", "📷 ❌❌❌ ERRO CRÍTICO: Upload falhou - fotoUrl retornou null ❌❌❌")
+                Log.e("AppRepository", "📷   Caminho local: '${acertoMesa.fotoRelogioFinal}'")
+                Log.e("AppRepository", "📷   AcertoMesa ID: $id, Mesa ID: ${acertoMesa.mesaId}, Acerto ID: ${acertoMesa.acertoId}")
+                Log.e("AppRepository", "📷   Arquivo existe? ${java.io.File(acertoMesa.fotoRelogioFinal).exists()}")
+                Log.w("AppRepository", "📷 ⚠️ Mantendo caminho local no banco para uso local")
+                // Remover do cache se existir (upload falhou)
+                fotoFirebaseUrlCache.remove(id)
+            } else if (fotoUrl != null && !com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                Log.e("AppRepository", "📷 ❌❌❌ ERRO CRÍTICO: Upload retornou URL inválida ❌❌❌")
+                Log.e("AppRepository", "📷   Valor: '$fotoUrl'")
+                Log.e("AppRepository", "📷   Não é uma URL do Firebase Storage")
+                fotoFirebaseUrlCache.remove(id)
+            } else {
+                Log.d("AppRepository", "📷 Sem foto para AcertoMesa ID: $id")
+                // Sem foto - remover do cache se existir
+                fotoFirebaseUrlCache.remove(id)
+            }
+            
+            // ✅ Usar URL do Firebase Storage no payload de sync (se disponível)
+            // Se não houver URL do Firebase, usar string vazia (não sincronizar foto)
+            val fotoUrlParaPayload = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                fotoUrl // URL do Firebase para sincronização
+            } else {
+                "" // String vazia - foto não será sincronizada
+            }
+            
+            Log.d("AppRepository", "📷 Payload individual de ACERTOMESA:")
+            Log.d("AppRepository", "📷   fotoUrlParaPayload: '$fotoUrlParaPayload'")
             
             val payload = mapOf(
                 "id" to id,
-                "acertoId" to acertoMesa.acertoId,
-                "mesaId" to acertoMesa.mesaId,
-                "relogioInicial" to acertoMesa.relogioInicial,
-                "relogioFinal" to acertoMesa.relogioFinal,
-                "valorFicha" to acertoMesa.valorFicha,
-                "comissaoFicha" to acertoMesa.comissaoFicha,
-                "subtotal" to acertoMesa.subtotal,
-                "fotoRelogioFinal" to (fotoUrl ?: ""),
-                "dataFoto" to (acertoMesa.dataFoto?.time ?: "null")
+                "acertoId" to acertoMesaComId.acertoId,
+                "mesaId" to acertoMesaComId.mesaId,
+                "relogioInicial" to acertoMesaComId.relogioInicial,
+                "relogioFinal" to acertoMesaComId.relogioFinal,
+                "valorFicha" to acertoMesaComId.valorFicha,
+                "comissaoFicha" to acertoMesaComId.comissaoFicha,
+                "subtotal" to acertoMesaComId.subtotal,
+                "fotoRelogioFinal" to fotoUrlParaPayload, // URL do Firebase Storage para sync (ou vazio)
+                "dataFoto" to (acertoMesaComId.dataFoto?.time ?: "null")
             )
             
-            adicionarOperacaoSync("ACERTOMESA", id, "INSERT", Gson().toJson(payload))
-            logarOperacaoSync("ACERTOMESA", id, "INSERT", "Adicionado à fila de sync")
+            // ✅ Usar acertoMesaComId (que mantém o caminho local) como retorno
+            val acertoMesaAtualizado = acertoMesaComId
             
-            // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
-            if (fotoUrl != null && fotoUrl != acertoMesa.fotoRelogioFinal) {
-                try {
-                    val acertoMesaAtualizada = acertoMesa.copy(fotoRelogioFinal = fotoUrl)
-                    acertoMesaDao.atualizar(acertoMesaAtualizada)
-                    Log.d("AppRepository", "✅ AcertoMesa atualizada com URL do Firebase Storage")
-                } catch (e: Exception) {
-                    Log.w("AppRepository", "Erro ao atualizar AcertoMesa com URL: ${e.message}")
-                }
-            }
+            // ✅ NOTA: O payload individual de ACERTOMESA é usado apenas para sincronização individual
+            // O payload completo do ACERTO (com mesas aninhadas) é criado em adicionarAcertoComMesasParaSync()
+            // e tem prioridade sobre o payload individual
+            adicionarOperacaoSync("ACERTOMESA", id, "INSERT", Gson().toJson(payload))
+            logarOperacaoSync("ACERTOMESA", id, "INSERT", "Adicionado à fila de sync (URL do Firebase no cache)")
+            
+            Log.d("AppRepository", "📷 inserirAcertoMesaSync: FIM")
+            Log.d("AppRepository", "📷 ========================================")
             
         } catch (e: Exception) {
-            Log.e("AppRepository", "Erro ao adicionar AcertoMesa à fila de sync: ${e.message}")
+            Log.e("AppRepository", "📷 ❌ ERRO em inserirAcertoMesaSync: ${e.message}", e)
+            e.printStackTrace()
         }
         
         return id
@@ -4766,6 +5111,9 @@ class AppRepository constructor(
         try {
             // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
             val empresaId = obterEmpresaId()
+            Log.d("AppRepository", "📷 atualizarAcertoMesaSync: Processando foto para mesa ${acertoMesa.mesaId}, acerto ${acertoMesa.acertoId}")
+            Log.d("AppRepository", "📷 Foto original: '${acertoMesa.fotoRelogioFinal}'")
+            
             val fotoUrl = uploadFotoSeNecessario(
                 caminhoLocal = acertoMesa.fotoRelogioFinal,
                 tipo = "relogio_final",
@@ -4774,33 +5122,48 @@ class AppRepository constructor(
                 entityExtraId = acertoMesa.mesaId
             )
             
+            Log.d("AppRepository", "📷 atualizarAcertoMesaSync: Resultado upload para mesa ${acertoMesa.mesaId}: fotoUrl='$fotoUrl'")
+            
+            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
+            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
+            // - A URL do Firebase é usada APENAS no payload de sincronização
+            // - Isso garante que o botão "Ver Foto" funcione localmente mesmo sem internet
+            
+            // ✅ NUNCA substituir o caminho local pela URL do Firebase no banco
+            val acertoMesaAtualizado = acertoMesa
+            
+            if (fotoUrl == null && !acertoMesa.fotoRelogioFinal.isNullOrBlank()) {
+                Log.w("AppRepository", "⚠️ Upload falhou - mantendo caminho local no banco para uso local")
+                Log.w("AppRepository", "   Caminho local será mantido: '${acertoMesa.fotoRelogioFinal}'")
+            } else if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                Log.d("AppRepository", "📷 ✅ Upload bem-sucedido - URL do Firebase: '$fotoUrl'")
+                Log.d("AppRepository", "📷 ✅ Mantendo caminho local no banco: '${acertoMesa.fotoRelogioFinal}'")
+                Log.d("AppRepository", "📷 ✅ URL do Firebase será usada APENAS no payload de sincronização")
+            }
+            
+            // ✅ Usar URL do Firebase Storage no payload de sync (se disponível)
+            val fotoUrlParaPayload = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                fotoUrl // URL do Firebase para sincronização
+            } else {
+                "" // String vazia - foto não será sincronizada
+            }
+            
             // Criar payload com URL da foto
             val payloadMap = mutableMapOf<String, Any?>(
-                "id" to acertoMesa.id,
-                "acertoId" to acertoMesa.acertoId,
-                "mesaId" to acertoMesa.mesaId,
-                "relogioInicial" to acertoMesa.relogioInicial,
-                "relogioFinal" to acertoMesa.relogioFinal,
-                "valorFicha" to acertoMesa.valorFicha,
-                "comissaoFicha" to acertoMesa.comissaoFicha,
-                "subtotal" to acertoMesa.subtotal,
-                "fotoRelogioFinal" to (fotoUrl ?: ""),
-                "dataFoto" to (acertoMesa.dataFoto?.time ?: "null")
+                "id" to acertoMesaAtualizado.id,
+                "acertoId" to acertoMesaAtualizado.acertoId,
+                "mesaId" to acertoMesaAtualizado.mesaId,
+                "relogioInicial" to acertoMesaAtualizado.relogioInicial,
+                "relogioFinal" to acertoMesaAtualizado.relogioFinal,
+                "valorFicha" to acertoMesaAtualizado.valorFicha,
+                "comissaoFicha" to acertoMesaAtualizado.comissaoFicha,
+                "subtotal" to acertoMesaAtualizado.subtotal,
+                "fotoRelogioFinal" to fotoUrlParaPayload, // URL do Firebase Storage para sync (ou vazio)
+                "dataFoto" to (acertoMesaAtualizado.dataFoto?.time ?: "null")
             )
             
-            adicionarOperacaoSync("ACERTOMESA", acertoMesa.id, "UPDATE", Gson().toJson(payloadMap))
-            logarOperacaoSync("ACERTOMESA", acertoMesa.id, "UPDATE", "Adicionado à fila de sync")
-            
-            // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
-            if (fotoUrl != null && fotoUrl != acertoMesa.fotoRelogioFinal) {
-                try {
-                    val acertoMesaAtualizada = acertoMesa.copy(fotoRelogioFinal = fotoUrl)
-                    acertoMesaDao.atualizar(acertoMesaAtualizada)
-                    Log.d("AppRepository", "✅ AcertoMesa atualizada com URL do Firebase Storage")
-                } catch (e: Exception) {
-                    Log.w("AppRepository", "Erro ao atualizar AcertoMesa com URL: ${e.message}")
-                }
-            }
+            adicionarOperacaoSync("ACERTOMESA", acertoMesaAtualizado.id, "UPDATE", Gson().toJson(payloadMap))
+            logarOperacaoSync("ACERTOMESA", acertoMesaAtualizado.id, "UPDATE", "Adicionado à fila de sync")
             
         } catch (e: Exception) {
             Log.e("AppRepository", "Erro ao adicionar atualização de AcertoMesa à fila de sync: ${e.message}")
@@ -4816,6 +5179,8 @@ class AppRepository constructor(
         try {
             // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
             val empresaId = obterEmpresaId()
+            Log.d("AppRepository", "📷 Processando foto de reforma para MesaReformada ${mesaReformada.id} (UPDATE): foto='${mesaReformada.fotoReforma}'")
+            
             val fotoUrl = uploadFotoSeNecessario(
                 caminhoLocal = mesaReformada.fotoReforma,
                 tipo = "foto_reforma",
@@ -4823,36 +5188,44 @@ class AppRepository constructor(
                 entityId = mesaReformada.id
             )
             
-            // Criar payload com URL da foto
-            val payloadMap = mutableMapOf<String, Any?>(
-                "id" to mesaReformada.id,
-                "mesaId" to mesaReformada.mesaId,
-                "numeroMesa" to mesaReformada.numeroMesa,
-                "tipoMesa" to mesaReformada.tipoMesa,
-                "tamanhoMesa" to mesaReformada.tamanhoMesa,
-                "pintura" to mesaReformada.pintura,
-                "tabela" to mesaReformada.tabela,
-                "panos" to mesaReformada.panos,
-                "numeroPanos" to (mesaReformada.numeroPanos ?: ""),
-                "outros" to mesaReformada.outros,
-                "observacoes" to (mesaReformada.observacoes ?: ""),
-                "fotoReforma" to (fotoUrl ?: ""),
-                "dataReforma" to mesaReformada.dataReforma.time
-            )
+            Log.d("AppRepository", "📷 Resultado upload MesaReformada (UPDATE): fotoUrl='$fotoUrl' (original: '${mesaReformada.fotoReforma}')")
             
-            adicionarOperacaoSync("MESAREFORMADA", mesaReformada.id, "UPDATE", Gson().toJson(payloadMap))
-            logarOperacaoSync("MESAREFORMADA", mesaReformada.id, "UPDATE", "Adicionado à fila de sync")
-            
-            // ✅ Atualizar entidade local com URL do Firebase Storage se upload foi bem-sucedido
-            if (fotoUrl != null && fotoUrl != mesaReformada.fotoReforma) {
-                try {
-                    val mesaReformadaAtualizada = mesaReformada.copy(fotoReforma = fotoUrl)
-                    mesaReformadaDao.atualizar(mesaReformadaAtualizada)
-                    Log.d("AppRepository", "✅ MesaReformada atualizada com URL do Firebase Storage")
-                } catch (e: Exception) {
-                    Log.w("AppRepository", "Erro ao atualizar MesaReformada com URL: ${e.message}")
+            // ✅ CRÍTICO: Atualizar banco com URL do Firebase Storage se upload foi bem-sucedido
+            val mesaReformadaAtualizada = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
+                Log.d("AppRepository", "📷 ✅ Atualizando banco com URL do Firebase Storage: '$fotoUrl'")
+                val mesaComUrl = mesaReformada.copy(fotoReforma = fotoUrl)
+                mesaReformadaDao.atualizar(mesaComUrl)
+                mesaComUrl
+            } else {
+                if (fotoUrl == null && !mesaReformada.fotoReforma.isNullOrBlank()) {
+                    Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
+                    val mesaSemFoto = mesaReformada.copy(fotoReforma = null)
+                    mesaReformadaDao.atualizar(mesaSemFoto)
+                    mesaSemFoto
+                } else {
+                    mesaReformada
                 }
             }
+            
+            // Criar payload com URL da foto
+            val payloadMap = mutableMapOf<String, Any?>(
+                "id" to mesaReformadaAtualizada.id,
+                "mesaId" to mesaReformadaAtualizada.mesaId,
+                "numeroMesa" to mesaReformadaAtualizada.numeroMesa,
+                "tipoMesa" to mesaReformadaAtualizada.tipoMesa,
+                "tamanhoMesa" to mesaReformadaAtualizada.tamanhoMesa,
+                "pintura" to mesaReformadaAtualizada.pintura,
+                "tabela" to mesaReformadaAtualizada.tabela,
+                "panos" to mesaReformadaAtualizada.panos,
+                "numeroPanos" to (mesaReformadaAtualizada.numeroPanos ?: ""),
+                "outros" to mesaReformadaAtualizada.outros,
+                "observacoes" to (mesaReformadaAtualizada.observacoes ?: ""),
+                "fotoReforma" to (fotoUrl ?: ""),
+                "dataReforma" to mesaReformadaAtualizada.dataReforma.time
+            )
+            
+            adicionarOperacaoSync("MESAREFORMADA", mesaReformadaAtualizada.id, "UPDATE", Gson().toJson(payloadMap))
+            logarOperacaoSync("MESAREFORMADA", mesaReformadaAtualizada.id, "UPDATE", "Adicionado à fila de sync")
             
         } catch (e: Exception) {
             Log.e("AppRepository", "Erro ao adicionar atualização de MesaReformada à fila de sync: ${e.message}")

@@ -587,12 +587,26 @@ class SettlementViewModel constructor(
                 logOperation("SETTLEMENT", "Total de AcertoMesa a inserir: ${acertoMesas.size}")
                 acertoMesas.forEachIndexed { index, acertoMesa ->
                     logOperation("SETTLEMENT", "AcertoMesa ${index + 1}: Mesa ${acertoMesa.mesaId} - Subtotal: R$ ${acertoMesa.subtotal}")
+                    logOperation("SETTLEMENT", "   📷 Foto: '${acertoMesa.fotoRelogioFinal}'")
                 }
                 
-                acertoMesas.forEach { appRepository.inserirAcertoMesa(it) }
+                // ✅ CRÍTICO: Inserir mesas e aguardar uploads completarem
+                acertoMesas.forEach { mesa ->
+                    val mesaId = appRepository.inserirAcertoMesa(mesa)
+                    logOperation("SETTLEMENT", "✅ Mesa ${mesa.mesaId} salva com ID: $mesaId")
+                }
                 logOperation("SETTLEMENT", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
                 
+                // ✅ CRÍTICO: Aguardar tempo suficiente para garantir que uploads de fotos sejam concluídos
+                // O upload para Firebase Storage pode levar alguns segundos dependendo do tamanho da foto
+                // e da velocidade da conexão
+                logOperation("SETTLEMENT", "⏳ Aguardando uploads de fotos completarem...")
+                kotlinx.coroutines.delay(5000) // Aumentado para 5 segundos para garantir upload completo
+                logOperation("SETTLEMENT", "✅ Delay concluído, criando payload de sincronização...")
+                
                 // ✅ CORREÇÃO CRÍTICA: Adicionar acerto à fila de sync APÓS inserir as mesas
+                // Aguardar mais um pouco para garantir que o cache está populado
+                kotlinx.coroutines.delay(1000)
                 appRepository.adicionarAcertoComMesasParaSync(acertoId)
                 logOperation("SETTLEMENT", "✅ Acerto $acertoId adicionado à fila de sync com ${acertoMesas.size} mesas")
                 

@@ -608,6 +608,22 @@ class SettlementDetailFragment : Fragment() {
             AppLogger.log("SettlementDetailFragment", "=== VISUALIZANDO FOTO ===")
             AppLogger.log("SettlementDetailFragment", "Caminho da foto: $caminhoFoto")
 
+            // ✅ NOVO: Verificar se é URL do Firebase Storage
+            val isFirebaseUrl = caminhoFoto.startsWith("https://") && 
+                                (caminhoFoto.contains("firebasestorage.googleapis.com") || 
+                                 caminhoFoto.contains("firebase"))
+            
+            if (isFirebaseUrl) {
+                AppLogger.log("SettlementDetailFragment", "⚠️ Recebida URL do Firebase Storage - isso não deveria acontecer")
+                AppLogger.log("SettlementDetailFragment", "   O banco deveria ter caminho local, não URL do Firebase")
+                android.widget.Toast.makeText(
+                    requireContext(),
+                    "Erro: Foto não disponível localmente. A foto será baixada na próxima sincronização.",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+                return
+            }
+
             // ✅ CORREÇÃO MELHORADA: Converter URI do content provider para caminho real
             val caminhoReal = if (caminhoFoto.startsWith("content://")) {
                 try {
