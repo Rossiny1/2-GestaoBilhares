@@ -280,6 +280,25 @@ class SyncManagerV2(
                         android.util.Log.w("SyncManagerV2", "⚠️ Acerto sem clienteId - Usando cliente padrão")
                         // Não cancelar, usar cliente padrão
                     }
+                    // ✅ CRÍTICO: Verificar fotos nas mesas do acerto
+                    val acertoMesas = payloadMap["acertoMesas"] as? List<Map<String, Any?>>
+                    if (acertoMesas != null) {
+                        android.util.Log.d("SyncManagerV2", "📷 Verificando fotos em ${acertoMesas.size} mesas do acerto...")
+                        acertoMesas.forEachIndexed { index, mesa ->
+                            val fotoUrl = mesa["fotoRelogioFinal"] as? String
+                            val temUrl = !fotoUrl.isNullOrBlank()
+                            val isFirebaseUrl = temUrl && fotoUrl?.startsWith("https://firebasestorage.googleapis.com") == true
+                            android.util.Log.d("SyncManagerV2", "📷   Mesa ${index + 1}: fotoUrl='$fotoUrl'")
+                            android.util.Log.d("SyncManagerV2", "📷     Tem URL? $temUrl | É URL Firebase? $isFirebaseUrl")
+                            if (!temUrl || !isFirebaseUrl) {
+                                android.util.Log.e("SyncManagerV2", "📷     ❌ ERRO CRÍTICO: URL da foto não está presente ou é inválida!")
+                            } else {
+                                android.util.Log.d("SyncManagerV2", "📷     ✅ URL válida do Firebase será enviada")
+                            }
+                        }
+                    } else {
+                        android.util.Log.w("SyncManagerV2", "📷 ⚠️ Acerto sem mesas ou campo acertoMesas não encontrado")
+                    }
                 }
                 "rota" -> {
                     val nome = payloadMap["nome"]?.toString()
@@ -305,6 +324,27 @@ class SyncManagerV2(
                     val payloadWithRoomId = payloadMap.toMutableMap().apply {
                         put("roomId", operation.entityId)
                         put("syncTimestamp", System.currentTimeMillis())
+                    }
+                    
+                    // ✅ CRÍTICO: Verificar fotos no payload final antes de enviar
+                    if (operation.entityType.lowercase() == "acerto") {
+                        val acertoMesas = payloadWithRoomId["acertoMesas"] as? List<Map<String, Any?>>
+                        if (acertoMesas != null) {
+                            android.util.Log.d("SyncManagerV2", "📷 ========================================")
+                            android.util.Log.d("SyncManagerV2", "📷 PAYLOAD FINAL ANTES DE ENVIAR AO FIRESTORE:")
+                            acertoMesas.forEachIndexed { index, mesa ->
+                                val fotoUrl = mesa["fotoRelogioFinal"] as? String
+                                android.util.Log.d("SyncManagerV2", "📷   Mesa ${index + 1}: fotoUrl='$fotoUrl'")
+                                if (fotoUrl.isNullOrBlank()) {
+                                    android.util.Log.e("SyncManagerV2", "📷     ❌❌❌ ERRO: URL da foto está VAZIA no payload final!")
+                                } else if (!fotoUrl.startsWith("https://firebasestorage.googleapis.com")) {
+                                    android.util.Log.e("SyncManagerV2", "📷     ❌❌❌ ERRO: URL não é do Firebase Storage: '$fotoUrl'")
+                                } else {
+                                    android.util.Log.d("SyncManagerV2", "📷     ✅ URL válida será enviada ao Firestore")
+                                }
+                            }
+                            android.util.Log.d("SyncManagerV2", "📷 ========================================")
+                        }
                     }
                     
                     // ✅ NOVO: Para operações UPDATE, usar merge para não sobrescrever
@@ -1025,22 +1065,49 @@ class SyncManagerV2(
                                         
                                         // ✅ NOVO: Download de foto do Firebase Storage se for URL
                                         val fotoUrlFirebaseMesa = mesaData["fotoRelogioFinal"] as? String
+                                        android.util.Log.d("SyncManagerV2", "🔍 Processando foto para mesa ${mesaData["mesaId"]}: URL='$fotoUrlFirebaseMesa'")
+                                        android.util.Log.d("SyncManagerV2", "   Tipo do campo: ${mesaData["fotoRelogioFinal"]?.javaClass?.simpleName}")
+                                        android.util.Log.d("SyncManagerV2", "   Campo vazio: ${fotoUrlFirebaseMesa.isNullOrBlank()}")
+                                        
                                         val fotoRelogioLocalMesa = if (!fotoUrlFirebaseMesa.isNullOrBlank()) {
                                             try {
-                                                val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
-                                                    context = context,
-                                                    urlFirebase = fotoUrlFirebaseMesa,
-                                                    tipoFoto = "relogio_final"
-                                                )
-                                                if (caminhoLocal != null) {
-                                                    android.util.Log.d("SyncManagerV2", "✅ Foto de relógio final (mesa) baixada: $caminhoLocal")
+                                                // ✅ Verificar se é URL do Firebase Storage
+                                                val isUrlFirebase = com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrlFirebaseMesa)
+                                                android.util.Log.d("SyncManagerV2", "   É URL do Firebase Storage: $isUrlFirebase")
+                                                
+                                                if (isUrlFirebase) {
+                                                    android.util.Log.d("SyncManagerV2", "📥 Iniciando download de foto do Firebase Storage: $fotoUrlFirebaseMesa")
+                                                    val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
+                                                        context = context,
+                                                        urlFirebase = fotoUrlFirebaseMesa,
+                                                        tipoFoto = "relogio_final"
+                                                    )
+                                                    if (caminhoLocal != null) {
+                                                        android.util.Log.d("SyncManagerV2", "✅ Foto de relógio final (mesa) baixada com sucesso: $caminhoLocal")
+                                                        // Verificar se arquivo existe
+                                                        val arquivo = java.io.File(caminhoLocal)
+                                                        if (arquivo.exists()) {
+                                                            android.util.Log.d("SyncManagerV2", "✅ Arquivo confirmado existente: ${arquivo.length()} bytes")
+                                                        } else {
+                                                            android.util.Log.e("SyncManagerV2", "❌ Arquivo não existe após download: $caminhoLocal")
+                                                        }
+                                                    } else {
+                                                        android.util.Log.e("SyncManagerV2", "❌ Download retornou null para: $fotoUrlFirebaseMesa")
+                                                    }
+                                                    caminhoLocal
+                                                } else {
+                                                    // Não é URL do Firebase Storage - pode ser caminho local antigo (não deve acontecer)
+                                                    android.util.Log.w("SyncManagerV2", "⚠️ Campo fotoRelogioFinal não é URL do Firebase Storage: $fotoUrlFirebaseMesa")
+                                                    null
                                                 }
-                                                caminhoLocal
                                             } catch (e: Exception) {
-                                                android.util.Log.e("SyncManagerV2", "Erro ao baixar foto de relógio final (mesa): ${e.message}")
-                                                fotoUrlFirebaseMesa // Fallback: manter URL se download falhar
+                                                android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar foto de relógio final (mesa): ${e.message}", e)
+                                                null // Não usar URL como fallback, deixar null
                                             }
-                                        } else null
+                                        } else {
+                                            android.util.Log.d("SyncManagerV2", "⏭️ Nenhuma foto para mesa ${mesaData["mesaId"]} (URL vazia ou null)")
+                                            null
+                                        }
                                         
                                         // Processar dataFoto do timestamp
                                         val dataFotoTimestamp = (mesaData["dataFoto"] as? Number)?.toLong()
@@ -1051,8 +1118,10 @@ class SyncManagerV2(
                                             dataFoto = dataFotoTimestamp?.let { java.util.Date(it) }
                                         )
                                         
+                                        // ✅ CRÍTICO: Salvar no banco local com o caminho da foto baixada
+                                        android.util.Log.d("SyncManagerV2", "📷 Salvando mesa ${acertoMesa.mesaId} no banco local com foto: '${fotoRelogioLocalMesa}'")
                                         acertoMesaDao.inserir(acertoMesaComFoto)
-                                        android.util.Log.d("SyncManagerV2", "✅ Mesa ${acertoMesa.mesaId} sincronizada para acerto $roomId")
+                                        android.util.Log.d("SyncManagerV2", "✅ Mesa ${acertoMesa.mesaId} sincronizada para acerto $roomId com foto salva no banco local")
                                     } catch (e: Exception) {
                                         android.util.Log.w("SyncManagerV2", "❌ Erro ao processar mesa do acerto: ${e.message}")
                                     }
@@ -1986,24 +2055,37 @@ class SyncManagerV2(
                     
                     // ✅ NOVO: Download de foto do Firebase Storage se for URL
                     val fotoUrlFirebase = data["fotoComprovante"] as? String
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando foto de comprovante para despesa $roomId: URL='$fotoUrlFirebase'")
+                    
                     val fotoComprovanteLocal = if (!fotoUrlFirebase.isNullOrBlank()) {
                         try {
+                            android.util.Log.d("SyncManagerV2", "📥 Iniciando download de foto de comprovante: $fotoUrlFirebase")
                             val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
                                 context = context,
                                 urlFirebase = fotoUrlFirebase,
                                 tipoFoto = "comprovante"
                             )
                             if (caminhoLocal != null) {
-                                android.util.Log.d("SyncManagerV2", "✅ Foto de comprovante baixada: $caminhoLocal")
+                                android.util.Log.d("SyncManagerV2", "✅ Foto de comprovante baixada com sucesso: $caminhoLocal")
+                                // Verificar se arquivo existe
+                                val arquivo = java.io.File(caminhoLocal)
+                                if (arquivo.exists()) {
+                                    android.util.Log.d("SyncManagerV2", "✅ Arquivo confirmado existente: ${arquivo.length()} bytes")
+                                } else {
+                                    android.util.Log.e("SyncManagerV2", "❌ Arquivo não existe após download: $caminhoLocal")
+                                }
                             } else {
-                                android.util.Log.w("SyncManagerV2", "⚠️ Falha ao baixar foto de comprovante: $fotoUrlFirebase")
+                                android.util.Log.e("SyncManagerV2", "❌ Download retornou null para: $fotoUrlFirebase")
                             }
                             caminhoLocal
                         } catch (e: Exception) {
-                            android.util.Log.e("SyncManagerV2", "Erro ao baixar foto de comprovante: ${e.message}")
-                            fotoUrlFirebase // Fallback: manter URL se download falhar
+                            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar foto de comprovante: ${e.message}", e)
+                            null // Não usar URL como fallback
                         }
-                    } else null
+                    } else {
+                        android.util.Log.d("SyncManagerV2", "⏭️ Nenhuma foto de comprovante para despesa $roomId")
+                        null
+                    }
                     
                     // Atualizar despesa com caminho local da foto
                     val despesaComFoto = despesa.copy(fotoComprovante = fotoComprovanteLocal)
@@ -2366,6 +2448,63 @@ class SyncManagerV2(
                         continue
                     }
                     
+                    // ✅ NOVO: Download de fotos do Firebase Storage se for URL
+                    val fotoAntesUrlFirebase = data["fotoAntes"] as? String
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando fotoAntes para histórico ${data["numeroMesa"]}: URL='$fotoAntesUrlFirebase'")
+                    
+                    val fotoAntesLocal = if (!fotoAntesUrlFirebase.isNullOrBlank()) {
+                        try {
+                            val isUrlFirebase = com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoAntesUrlFirebase)
+                            if (isUrlFirebase) {
+                                android.util.Log.d("SyncManagerV2", "📥 Baixando fotoAntes do Firebase Storage: $fotoAntesUrlFirebase")
+                                val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
+                                    context = context,
+                                    urlFirebase = fotoAntesUrlFirebase,
+                                    tipoFoto = "manutencao_antes"
+                                )
+                                if (caminhoLocal != null) {
+                                    android.util.Log.d("SyncManagerV2", "✅ FotoAntes baixada: $caminhoLocal")
+                                }
+                                caminhoLocal
+                            } else {
+                                null
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar fotoAntes: ${e.message}", e)
+                            null
+                        }
+                    } else {
+                        null
+                    }
+                    
+                    val fotoDepoisUrlFirebase = data["fotoDepois"] as? String
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando fotoDepois para histórico ${data["numeroMesa"]}: URL='$fotoDepoisUrlFirebase'")
+                    
+                    val fotoDepoisLocal = if (!fotoDepoisUrlFirebase.isNullOrBlank()) {
+                        try {
+                            val isUrlFirebase = com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoDepoisUrlFirebase)
+                            if (isUrlFirebase) {
+                                android.util.Log.d("SyncManagerV2", "📥 Baixando fotoDepois do Firebase Storage: $fotoDepoisUrlFirebase")
+                                val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
+                                    context = context,
+                                    urlFirebase = fotoDepoisUrlFirebase,
+                                    tipoFoto = "manutencao_depois"
+                                )
+                                if (caminhoLocal != null) {
+                                    android.util.Log.d("SyncManagerV2", "✅ FotoDepois baixada: $caminhoLocal")
+                                }
+                                caminhoLocal
+                            } else {
+                                null
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar fotoDepois: ${e.message}", e)
+                            null
+                        }
+                    } else {
+                        null
+                    }
+                    
                     // Criar entidade HistoricoManutencaoMesa
                     val historico = com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa(
                         id = roomId,
@@ -2377,12 +2516,13 @@ class SyncManagerV2(
                         responsavel = data["responsavel"] as? String,
                         observacoes = data["observacoes"] as? String,
                         custo = (data["custo"] as? Number)?.toDouble(),
-                        fotoAntes = data["fotoAntes"] as? String,
-                        fotoDepois = data["fotoDepois"] as? String,
+                        fotoAntes = fotoAntesLocal,
+                        fotoDepois = fotoDepoisLocal,
                         dataCriacao = java.util.Date((data["dataCriacao"] as? Number)?.toLong() ?: System.currentTimeMillis())
                     )
                     
-                    // Inserir no banco local
+                    // ✅ CRÍTICO: Salvar no banco local com caminhos das fotos baixadas
+                    android.util.Log.d("SyncManagerV2", "📷 Salvando histórico ${historico.numeroMesa} no banco local com fotos: antes='$fotoAntesLocal', depois='$fotoDepoisLocal'")
                     historicoDao.inserir(historico)
                     historicosSincronizados++
                     
@@ -3412,24 +3552,37 @@ class SyncManagerV2(
                     
                     // ✅ NOVO: Download de foto do Firebase Storage se for URL
                     val fotoUrlFirebase = data["fotoRelogioFinal"] as? String
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando foto de relógio final para AcertoMesa $roomId: URL='$fotoUrlFirebase'")
+                    
                     val fotoRelogioLocal = if (!fotoUrlFirebase.isNullOrBlank()) {
                         try {
+                            android.util.Log.d("SyncManagerV2", "📥 Iniciando download de foto de relógio final: $fotoUrlFirebase")
                             val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
                                 context = context,
                                 urlFirebase = fotoUrlFirebase,
                                 tipoFoto = "relogio_final"
                             )
                             if (caminhoLocal != null) {
-                                android.util.Log.d("SyncManagerV2", "✅ Foto de relógio final baixada: $caminhoLocal")
+                                android.util.Log.d("SyncManagerV2", "✅ Foto de relógio final baixada com sucesso: $caminhoLocal")
+                                // Verificar se arquivo existe
+                                val arquivo = java.io.File(caminhoLocal)
+                                if (arquivo.exists()) {
+                                    android.util.Log.d("SyncManagerV2", "✅ Arquivo confirmado existente: ${arquivo.length()} bytes")
+                                } else {
+                                    android.util.Log.e("SyncManagerV2", "❌ Arquivo não existe após download: $caminhoLocal")
+                                }
                             } else {
-                                android.util.Log.w("SyncManagerV2", "⚠️ Falha ao baixar foto de relógio final: $fotoUrlFirebase")
+                                android.util.Log.e("SyncManagerV2", "❌ Download retornou null para: $fotoUrlFirebase")
                             }
                             caminhoLocal
                         } catch (e: Exception) {
-                            android.util.Log.e("SyncManagerV2", "Erro ao baixar foto de relógio final: ${e.message}")
-                            fotoUrlFirebase // Fallback: manter URL se download falhar
+                            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar foto de relógio final: ${e.message}", e)
+                            null // Não usar URL como fallback
                         }
-                    } else null
+                    } else {
+                        android.util.Log.d("SyncManagerV2", "⏭️ Nenhuma foto de relógio final para AcertoMesa $roomId")
+                        null
+                    }
                     
                     val dataFotoTimestamp = (data["dataFoto"] as? Number)?.toLong()
                     
@@ -3443,12 +3596,14 @@ class SyncManagerV2(
                         valorFicha = (data["valorFicha"] as? Number)?.toDouble() ?: 0.0,
                         comissaoFicha = (data["comissaoFicha"] as? Number)?.toDouble() ?: 0.0,
                         subtotal = (data["subtotal"] as? Number)?.toDouble() ?: 0.0,
-                        fotoRelogioFinal = fotoRelogioLocal,
+                        fotoRelogioFinal = fotoRelogioLocal, // ✅ Caminho local da foto baixada
                         dataFoto = dataFotoTimestamp?.let { Date(it) }
                     )
                     
+                    // ✅ CRÍTICO: Salvar no banco local com o caminho da foto baixada
+                    android.util.Log.d("SyncManagerV2", "📷 Salvando AcertoMesa $roomId no banco local com foto: '${fotoRelogioLocal}'")
                     acertoMesaDao.inserir(acertoMesa)
-                    android.util.Log.d("SyncManagerV2", "✅ AcertoMesa $roomId inserido")
+                    android.util.Log.d("SyncManagerV2", "✅ AcertoMesa $roomId inserido com foto salva no banco local")
                     
                 } catch (e: Exception) {
                     android.util.Log.e("SyncManagerV2", "❌ Erro ao processar AcertoMesa ${document.id}: ${e.message}")
@@ -3495,24 +3650,37 @@ class SyncManagerV2(
                     
                     // ✅ NOVO: Download de foto do Firebase Storage se for URL
                     val fotoUrlFirebase = data["fotoReforma"] as? String
+                    android.util.Log.d("SyncManagerV2", "🔍 Processando foto de reforma para MesaReformada $roomId: URL='$fotoUrlFirebase'")
+                    
                     val fotoReformaLocal = if (!fotoUrlFirebase.isNullOrBlank()) {
                         try {
+                            android.util.Log.d("SyncManagerV2", "📥 Iniciando download de foto de reforma: $fotoUrlFirebase")
                             val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
                                 context = context,
                                 urlFirebase = fotoUrlFirebase,
                                 tipoFoto = "foto_reforma"
                             )
                             if (caminhoLocal != null) {
-                                android.util.Log.d("SyncManagerV2", "✅ Foto de reforma baixada: $caminhoLocal")
+                                android.util.Log.d("SyncManagerV2", "✅ Foto de reforma baixada com sucesso: $caminhoLocal")
+                                // Verificar se arquivo existe
+                                val arquivo = java.io.File(caminhoLocal)
+                                if (arquivo.exists()) {
+                                    android.util.Log.d("SyncManagerV2", "✅ Arquivo confirmado existente: ${arquivo.length()} bytes")
+                                } else {
+                                    android.util.Log.e("SyncManagerV2", "❌ Arquivo não existe após download: $caminhoLocal")
+                                }
                             } else {
-                                android.util.Log.w("SyncManagerV2", "⚠️ Falha ao baixar foto de reforma: $fotoUrlFirebase")
+                                android.util.Log.e("SyncManagerV2", "❌ Download retornou null para: $fotoUrlFirebase")
                             }
                             caminhoLocal
                         } catch (e: Exception) {
-                            android.util.Log.e("SyncManagerV2", "Erro ao baixar foto de reforma: ${e.message}")
-                            fotoUrlFirebase // Fallback: manter URL se download falhar
+                            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar foto de reforma: ${e.message}", e)
+                            null // Não usar URL como fallback
                         }
-                    } else null
+                    } else {
+                        android.util.Log.d("SyncManagerV2", "⏭️ Nenhuma foto de reforma para MesaReformada $roomId")
+                        null
+                    }
                     
                     val mesaReformada = MesaReformada(
                         id = roomId,
