@@ -20,8 +20,9 @@ interface AditivoContratoDao {
     @Query("SELECT * FROM aditivos_contrato ORDER BY dataCriacao DESC")
     fun buscarTodosAditivos(): Flow<List<AditivoContrato>>
     
-    @Query("SELECT COUNT(*) FROM aditivos_contrato WHERE strftime('%Y', dataCriacao/1000, 'unixepoch') = :ano")
-    suspend fun contarAditivosPorAno(ano: String): Int
+    // ✅ FASE 2: Query otimizada usando range query (pode usar índices) em vez de strftime()
+    @Query("SELECT COUNT(*) FROM aditivos_contrato WHERE dataCriacao >= :inicioAno AND dataCriacao < :fimAno")
+    suspend fun contarAditivosPorAno(inicioAno: Long, fimAno: Long): Int
     
     @Query("SELECT COUNT(*) FROM aditivos_contrato")
     suspend fun contarAditivosGerados(): Int

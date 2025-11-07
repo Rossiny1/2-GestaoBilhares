@@ -26,8 +26,9 @@ interface ContratoLocacaoDao {
     @Query("SELECT * FROM contratos_locacao ORDER BY dataCriacao DESC")
     fun buscarTodosContratos(): Flow<List<ContratoLocacao>>
     
-    @Query("SELECT COUNT(*) FROM contratos_locacao WHERE strftime('%Y', dataCriacao/1000, 'unixepoch') = :ano")
-    suspend fun contarContratosPorAno(ano: String): Int
+    // ✅ FASE 2: Query otimizada usando range query (pode usar índices) em vez de strftime()
+    @Query("SELECT COUNT(*) FROM contratos_locacao WHERE dataCriacao >= :inicioAno AND dataCriacao < :fimAno")
+    suspend fun contarContratosPorAno(inicioAno: Long, fimAno: Long): Int
     
     @Query("SELECT COUNT(*) FROM contratos_locacao")
     suspend fun contarContratosGerados(): Int

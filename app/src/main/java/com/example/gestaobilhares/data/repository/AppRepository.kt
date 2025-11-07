@@ -3218,7 +3218,11 @@ class AppRepository constructor(
     suspend fun buscarContratoPorNumero(numeroContrato: String) = contratoLocacaoDao.buscarContratoPorNumero(numeroContrato)
     fun buscarContratosAtivos() = contratoLocacaoDao.buscarContratosAtivos()
     fun buscarTodosContratos() = contratoLocacaoDao.buscarTodosContratos()
-    suspend fun contarContratosPorAno(ano: String) = contratoLocacaoDao.contarContratosPorAno(ano)
+    // ✅ FASE 2: Converter ano (String) para timestamps de início e fim do ano
+    suspend fun contarContratosPorAno(ano: String): Int {
+        val (inicioAno, fimAno) = calcularRangeAno(ano)
+        return contratoLocacaoDao.contarContratosPorAno(inicioAno, fimAno)
+    }
     suspend fun contarContratosGerados() = contratoLocacaoDao.contarContratosGerados()
     suspend fun contarContratosAssinados() = contratoLocacaoDao.contarContratosAssinados()
     suspend fun obterContratosAssinados() = contratoLocacaoDao.obterContratosAssinados()
@@ -3482,7 +3486,11 @@ class AppRepository constructor(
     suspend fun buscarAditivoPorNumero(numeroAditivo: String) = aditivoContratoDao.buscarAditivoPorNumero(numeroAditivo)
     suspend fun buscarAditivoPorId(aditivoId: Long) = aditivoContratoDao.buscarAditivoPorId(aditivoId)
     fun buscarTodosAditivos() = aditivoContratoDao.buscarTodosAditivos()
-    suspend fun contarAditivosPorAno(ano: String) = aditivoContratoDao.contarAditivosPorAno(ano)
+    // ✅ FASE 2: Converter ano (String) para timestamps de início e fim do ano
+    suspend fun contarAditivosPorAno(ano: String): Int {
+        val (inicioAno, fimAno) = calcularRangeAno(ano)
+        return aditivoContratoDao.contarAditivosPorAno(inicioAno, fimAno)
+    }
     suspend fun contarAditivosGerados() = aditivoContratoDao.contarAditivosGerados()
     suspend fun contarAditivosAssinados() = aditivoContratoDao.contarAditivosAssinados()
     suspend fun inserirAditivo(aditivo: AditivoContrato): Long {
@@ -5336,6 +5344,28 @@ class AppRepository constructor(
         transactionOptimizer.cancelPendingTransactions()
         performanceTuner.resetStats()
         Log.d("AppRepository", "Todas as otimizações de banco foram limpas")
+    }
+    
+    /**
+     * ✅ FASE 2: Calcula timestamps de início e fim do ano para range queries otimizadas
+     */
+    private fun calcularRangeAno(ano: String): Pair<Long, Long> {
+        val anoInt = ano.toIntOrNull() ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+        val calendar = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.YEAR, anoInt)
+            set(java.util.Calendar.MONTH, java.util.Calendar.JANUARY)
+            set(java.util.Calendar.DAY_OF_MONTH, 1)
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val inicioAno = calendar.timeInMillis
+        
+        calendar.add(java.util.Calendar.YEAR, 1)
+        val fimAno = calendar.timeInMillis
+        
+        return Pair(inicioAno, fimAno)
     }
     
 } 

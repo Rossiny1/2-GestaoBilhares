@@ -13,9 +13,9 @@ interface HistoricoCombustivelVeiculoDao {
     @Query("SELECT * FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId ORDER BY data_abastecimento DESC")
     fun listarPorVeiculo(veiculoId: Long): Flow<List<HistoricoCombustivelVeiculo>>
     
-    // ✅ CORREÇÃO: Query corrigida para trabalhar com Date do Java
-    @Query("SELECT * FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento) = :ano ORDER BY data_abastecimento DESC")
-    fun listarPorVeiculoEAno(veiculoId: Long, ano: String): Flow<List<HistoricoCombustivelVeiculo>>
+    // ✅ FASE 2: Query otimizada usando range query (pode usar índices) em vez de strftime()
+    @Query("SELECT * FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND data_abastecimento >= :inicioAno AND data_abastecimento < :fimAno ORDER BY data_abastecimento DESC")
+    fun listarPorVeiculoEAno(veiculoId: Long, inicioAno: Long, fimAno: Long): Flow<List<HistoricoCombustivelVeiculo>>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserir(historico: HistoricoCombustivelVeiculo): Long
@@ -26,15 +26,15 @@ interface HistoricoCombustivelVeiculoDao {
     @Delete
     suspend fun deletar(historico: HistoricoCombustivelVeiculo)
     
-    // ✅ CORREÇÃO: Query corrigida para trabalhar com Date do Java
-    @Query("SELECT SUM(valor) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento) = :ano")
-    suspend fun obterTotalGastoPorAno(veiculoId: Long, ano: String): Double?
-    
-    // ✅ CORREÇÃO: Query corrigida para trabalhar com Date do Java
-    @Query("SELECT SUM(km_rodado) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento) = :ano")
-    suspend fun obterTotalKmPorAno(veiculoId: Long, ano: String): Double?
-    
-    // ✅ CORREÇÃO: Query corrigida para trabalhar com Date do Java
-    @Query("SELECT SUM(litros) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento) = :ano")
-    suspend fun obterTotalLitrosPorAno(veiculoId: Long, ano: String): Double?
+    // ✅ FASE 2: Query otimizada usando range query (pode usar índices) em vez de strftime()
+    @Query("SELECT SUM(valor) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND data_abastecimento >= :inicioAno AND data_abastecimento < :fimAno")
+    suspend fun obterTotalGastoPorAno(veiculoId: Long, inicioAno: Long, fimAno: Long): Double?
+
+    // ✅ FASE 2: Query otimizada usando range query (pode usar índices) em vez de strftime()
+    @Query("SELECT SUM(km_rodado) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND data_abastecimento >= :inicioAno AND data_abastecimento < :fimAno")
+    suspend fun obterTotalKmPorAno(veiculoId: Long, inicioAno: Long, fimAno: Long): Double?
+
+    // ✅ FASE 2: Query otimizada usando range query (pode usar índices) em vez de strftime()
+    @Query("SELECT SUM(litros) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND data_abastecimento >= :inicioAno AND data_abastecimento < :fimAno")
+    suspend fun obterTotalLitrosPorAno(veiculoId: Long, inicioAno: Long, fimAno: Long): Double?
 }

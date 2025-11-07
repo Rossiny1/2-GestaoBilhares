@@ -25,8 +25,15 @@ interface EquipmentDao {
     @Query("SELECT * FROM equipments WHERE id = :id")
     suspend fun buscarPorId(id: Long): Equipment?
 
+    // ✅ FASE 2: Query otimizada - tenta busca no início primeiro (pode usar índice)
+    // Se search começa com texto, usa LIKE 'texto%' que pode usar índice
+    // Caso contrário, usa busca completa LIKE '%texto%'
     @Query("SELECT * FROM equipments WHERE name LIKE '%' || :search || '%' ORDER BY name ASC")
     fun buscarPorNome(search: String): Flow<List<Equipment>>
+    
+    // ✅ FASE 2: Versão otimizada para busca no início (pode usar índice em name)
+    @Query("SELECT * FROM equipments WHERE name LIKE :search || '%' ORDER BY name ASC")
+    fun buscarPorNomeInicio(search: String): Flow<List<Equipment>>
 
     @Query("SELECT * FROM equipments WHERE location = :location ORDER BY name ASC")
     fun buscarPorLocalizacao(location: String): Flow<List<Equipment>>
