@@ -75,13 +75,8 @@ object ReciboPrinterHelper {
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
         val dataFormatada = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
 
-        // Título
-        val titulo = if (acertoId != null) {
-            "RECIBO DE ACERTO #${acertoId.toString().padStart(4, '0')}"
-        } else {
-            "RECIBO DE ACERTO"
-        }
-        txtTitulo.text = titulo
+        // Título - SEMPRE sem número
+        txtTitulo.text = "RECIBO DE ACERTO"
 
         // ✅ CORREÇÃO: Cliente - SEMPRE exibir (mesma lógica da data)
         txtClienteValor.text = clienteNome
@@ -94,7 +89,7 @@ object ReciboPrinterHelper {
             rowCpfCliente.visibility = View.GONE
         }
         
-        // ✅ CORREÇÃO: Número do recibo - SEMPRE exibir (mesma lógica da data)
+        // ✅ CORREÇÃO: Número do recibo - MANTER visível embaixo dos clientes
         val rowNumeroRecibo = reciboView.findViewById<android.widget.LinearLayout>(R.id.rowNumeroRecibo)
         val txtNumeroRecibo = reciboView.findViewById<android.widget.TextView>(R.id.txtNumeroRecibo)
         txtNumeroRecibo.text = acertoId?.toString() ?: "N/A"
@@ -185,13 +180,8 @@ object ReciboPrinterHelper {
         val dataAtual = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
         val texto = StringBuilder()
         
-        // ✅ TÍTULO (mesmo do recibo impresso)
-        val titulo = if (acertoId != null) {
-            "🎱 *RECIBO DE ACERTO #${acertoId.toString().padStart(4, '0')}*"
-        } else {
-            "🎱 *RECIBO DE ACERTO*"
-        }
-        texto.append("$titulo\n")
+        // ✅ TÍTULO (mesmo do recibo impresso - sem número)
+        texto.append("🎱 *RECIBO DE ACERTO*\n")
         texto.append("================================\n\n")
         
         // ✅ CLIENTE E CPF (mesmo do recibo impresso)
