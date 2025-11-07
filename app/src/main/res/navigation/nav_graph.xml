@@ -558,10 +558,6 @@
         android:id="@+id/stockFragment"
         android:name="com.example.gestaobilhares.ui.inventory.stock.StockFragment"
         android:label="Estoque" />
-    <fragment
-        android:id="@+id/othersInventoryFragment"
-        android:name="com.example.gestaobilhares.ui.inventory.others.OthersInventoryFragment"
-        android:label="Outros" />
 
     <!-- ✅ NOVO: Fragmentos de Contratos -->
     <dialog

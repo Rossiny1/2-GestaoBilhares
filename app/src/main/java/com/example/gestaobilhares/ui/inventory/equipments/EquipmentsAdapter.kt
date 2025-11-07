@@ -32,9 +32,9 @@ class EquipmentsAdapter(
         fun bind(equipment: Equipment) {
             binding.apply {
                 tvEquipmentName.text = equipment.name
-                tvEquipmentType.text = equipment.type
-                tvEquipmentStatus.text = equipment.status
-                tvEquipmentLocation.text = equipment.location
+                tvEquipmentDescription.text = equipment.description.ifEmpty { "Sem descrição" }
+                tvEquipmentQuantity.text = "Qtd: ${equipment.quantity}"
+                tvEquipmentLocation.text = equipment.location.ifEmpty { "Sem localização" }
                 
                 root.setOnClickListener {
                     onEquipmentClick(equipment)

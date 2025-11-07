@@ -47,11 +47,12 @@ import java.util.Date
         HistoricoCombustivelVeiculo::class, // ✅ NOVO: HISTÓRICO DE COMBUSTÍVEL DE VEÍCULOS
         PanoMesa::class, // ✅ NOVO: VINCULAÇÃO PANO-MESA
         com.example.gestaobilhares.data.entities.StockItem::class, // ✅ NOVO: ITENS GENÉRICOS DO ESTOQUE
+        Equipment::class, // ✅ NOVO: EQUIPAMENTOS
         SyncLog::class, // ✅ FASE 3B: LOG DE SINCRONIZAÇÃO
         SyncQueue::class, // ✅ FASE 3B: FILA DE SINCRONIZAÇÃO
         SyncConfig::class // ✅ FASE 3B: CONFIGURAÇÕES DE SINCRONIZAÇÃO
     ],
-    version = 43, // ✅ FASE 3B: Entidades de sincronização adicionadas
+    version = 44, // ✅ NOVO: Equipment adicionado
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -179,6 +180,9 @@ abstract class AppDatabase : RoomDatabase() {
     
     // ✅ NOVO: DAO de itens genéricos do estoque
     abstract fun stockItemDao(): com.example.gestaobilhares.data.dao.StockItemDao
+    
+    // ✅ NOVO: DAO de equipamentos
+    abstract fun equipmentDao(): com.example.gestaobilhares.data.dao.EquipmentDao
     
     // ✅ FASE 3B: DAOs de sincronização
     abstract fun syncLogDao(): com.example.gestaobilhares.data.dao.SyncLogDao

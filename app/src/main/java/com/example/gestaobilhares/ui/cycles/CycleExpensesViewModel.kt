@@ -30,7 +30,9 @@ data class CycleExpenseItem(
     val valor: Double,
     val categoria: String,
     val data: Date,
-    val observacoes: String? = null
+    val observacoes: String? = null,
+    val fotoComprovante: String? = null,
+    val dataFotoComprovante: Date? = null
 )
 
 /**
@@ -73,7 +75,9 @@ class CycleExpensesViewModel(
                         valor = despesa.valor,
                         categoria = despesa.categoria,
                         data = despesa.dataHora.toDate(), // Converter LocalDateTime para Date
-                        observacoes = despesa.observacoes
+                        observacoes = despesa.observacoes,
+                        fotoComprovante = despesa.fotoComprovante,
+                        dataFotoComprovante = despesa.dataFotoComprovante
                     )
                 }
 

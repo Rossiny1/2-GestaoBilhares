@@ -57,6 +57,7 @@ object RepositoryFactory {
             panoMesaDao = database.panoMesaDao(),
             mesaVendidaDao = database.mesaVendidaDao(),
             stockItemDao = database.stockItemDao(),
+            equipmentDao = database.equipmentDao(),
             veiculoDao = database.veiculoDao(),
             categoriaDespesaDao = database.categoriaDespesaDao(),
             tipoDespesaDao = database.tipoDespesaDao(),

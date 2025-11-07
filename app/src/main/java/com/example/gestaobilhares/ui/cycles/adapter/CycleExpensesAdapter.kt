@@ -18,7 +18,8 @@ import java.util.Locale
 class CycleExpensesAdapter(
     private val isCicloFinalizado: Boolean,
     private val onExpenseClick: (CycleExpenseItem) -> Unit,
-    private val onExpenseDelete: (CycleExpenseItem) -> Unit
+    private val onExpenseDelete: (CycleExpenseItem) -> Unit,
+    private val onViewPhoto: (CycleExpenseItem) -> Unit
 ) : ListAdapter<CycleExpenseItem, CycleExpensesAdapter.ExpenseViewHolder>(ExpenseDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExpenseViewHolder {
@@ -27,7 +28,7 @@ class CycleExpensesAdapter(
             parent,
             false
         )
-        return ExpenseViewHolder(binding, onExpenseClick, onExpenseDelete)
+        return ExpenseViewHolder(binding, onExpenseClick, onExpenseDelete, onViewPhoto)
     }
 
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
@@ -37,7 +38,8 @@ class CycleExpensesAdapter(
     inner class ExpenseViewHolder(
         private val binding: ItemCycleExpenseBinding,
         private val onExpenseClick: (CycleExpenseItem) -> Unit,
-        private val onExpenseDelete: (CycleExpenseItem) -> Unit
+        private val onExpenseDelete: (CycleExpenseItem) -> Unit,
+        private val onViewPhoto: (CycleExpenseItem) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
@@ -56,6 +58,16 @@ class CycleExpensesAdapter(
                     tvExpenseObservations.visibility = android.view.View.VISIBLE
                 } else {
                     tvExpenseObservations.visibility = android.view.View.GONE
+                }
+
+                // ✅ NOVO: Botão de visualizar foto - mostrar apenas se houver foto
+                if (!despesa.fotoComprovante.isNullOrEmpty()) {
+                    btnViewPhoto.visibility = android.view.View.VISIBLE
+                    btnViewPhoto.setOnClickListener {
+                        onViewPhoto(despesa)
+                    }
+                } else {
+                    btnViewPhoto.visibility = android.view.View.GONE
                 }
 
                 // ✅ NOVA LÓGICA: Sempre permitir clique, mas com feedback visual diferente

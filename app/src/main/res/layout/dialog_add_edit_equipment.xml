@@ -14,7 +14,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Nome do Equipamento"
+            android:hint="Nome do Item"
             app:startIconDrawable="@drawable/ic_equipment">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -29,13 +29,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Tipo"
+            android:hint="Descrição"
             app:startIconDrawable="@drawable/ic_category">
 
-            <Spinner
-                android:id="@+id/spinnerType"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etDescription"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:minLines="3"
+                android:maxLines="5" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -43,13 +46,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Status"
+            android:hint="Quantidade"
             app:startIconDrawable="@drawable/ic_status">
 
-            <Spinner
-                android:id="@+id/spinnerStatus"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etQuantity"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:inputType="number" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
