@@ -254,4 +254,29 @@ object DateUtils {
         calendar.set(Calendar.MILLISECOND, 999)
         return calendar.time
     }
+    
+    /**
+     * ✅ FASE 2: Calcula timestamps de início e fim do ano para range queries otimizadas
+     * Função centralizada para eliminar duplicação de código
+     * @param ano Ano como String (ex: "2025")
+     * @return Pair<Long, Long> com timestamps de início e fim do ano
+     */
+    fun calcularRangeAno(ano: String): Pair<Long, Long> {
+        val anoInt = ano.toIntOrNull() ?: Calendar.getInstance().get(Calendar.YEAR)
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.YEAR, anoInt)
+            set(Calendar.MONTH, Calendar.JANUARY)
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val inicioAno = calendar.timeInMillis
+        
+        calendar.add(Calendar.YEAR, 1)
+        val fimAno = calendar.timeInMillis
+        
+        return Pair(inicioAno, fimAno)
+    }
 }
