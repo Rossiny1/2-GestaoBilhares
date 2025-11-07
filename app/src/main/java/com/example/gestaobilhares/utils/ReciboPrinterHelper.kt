@@ -379,7 +379,7 @@ object ReciboPrinterHelper {
         Thread {
             var erro: String? = null
             try {
-                val printerHelper = com.example.gestaobilhares.ui.settlement.BluetoothPrinterHelper(printerDevice)
+                val printerHelper = com.example.gestaobilhares.utils.BluetoothPrinterHelper(printerDevice)
                 if (printerHelper.connect()) {
                     // Inflar o layout do recibo
                     val inflater = android.view.LayoutInflater.from(context)

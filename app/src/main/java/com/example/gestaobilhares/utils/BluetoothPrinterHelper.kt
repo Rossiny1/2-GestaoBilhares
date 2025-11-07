@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.settlement
+package com.example.gestaobilhares.utils
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -12,6 +12,10 @@ import android.view.View
 import android.graphics.Bitmap
 import android.graphics.Canvas
 
+/**
+ * ✅ FASE 1: Movido de ui/settlement/ para utils/ (é utilitário, não UI)
+ * Helper para comunicação Bluetooth com impressoras térmicas
+ */
 class BluetoothPrinterHelper(private val device: BluetoothDevice) {
     private var socket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
@@ -220,4 +224,5 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             e.printStackTrace()
         }
     }
-} 
+}
+

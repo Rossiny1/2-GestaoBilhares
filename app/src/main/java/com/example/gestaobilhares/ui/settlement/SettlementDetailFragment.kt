@@ -30,7 +30,7 @@ import com.example.gestaobilhares.R
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
-import com.example.gestaobilhares.ui.settlement.BluetoothPrinterHelper
+import com.example.gestaobilhares.utils.BluetoothPrinterHelper
 import androidx.core.app.ActivityCompat
 import java.io.File
 

@@ -12,7 +12,6 @@ import com.example.gestaobilhares.data.entities.NivelAcesso
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import com.example.gestaobilhares.utils.NetworkUtils
-import com.example.gestaobilhares.utils.SyncManager
 import com.example.gestaobilhares.utils.UserSessionManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -37,9 +36,6 @@ class AuthViewModel constructor() : BaseViewModel() {
     
     // Utilitário de rede
     private lateinit var networkUtils: NetworkUtils
-    
-    // Gerenciador de sincronização
-    private lateinit var syncManager: SyncManager
     
     // Gerenciador de sessão do usuário
     private lateinit var userSessionManager: UserSessionManager
@@ -89,13 +85,8 @@ class AuthViewModel constructor() : BaseViewModel() {
                 // Continuar sem NetworkUtils (modo offline)
             }
             
-            try {
-                syncManager = SyncManager(context, appRepository)
-                android.util.Log.d("AuthViewModel", "✅ SyncManager inicializado")
-            } catch (e: Exception) {
-                android.util.Log.e("AuthViewModel", "Erro ao inicializar SyncManager: ${e.message}")
-                // Continuar sem SyncManager
-            }
+            // ✅ FASE 1: SyncManager antigo removido - usar SyncManagerV2 quando necessário
+            // A sincronização é gerenciada pelo SyncManagerV2 em outros pontos do app
             
             try {
                 userSessionManager = UserSessionManager.getInstance(context)
@@ -114,10 +105,9 @@ class AuthViewModel constructor() : BaseViewModel() {
                         val wasOffline = _isOnline.value == false
                         _isOnline.value = isAvailable
                         
-                        // Se voltou a ter conexão, sincronizar dados
-                        if (wasOffline && isAvailable && ::syncManager.isInitialized) {
-                            syncManager.onConnectionRestored()
-                        }
+                        // ✅ FASE 1: SyncManager antigo removido
+                        // A sincronização é gerenciada pelo SyncManagerV2 em outros pontos do app
+                        // Quando necessário, pode ser acionada manualmente via UI
                     }
                 } catch (e: Exception) {
                     android.util.Log.e("AuthViewModel", "Erro ao observar conectividade: ${e.message}")

@@ -31,11 +31,13 @@ import com.example.gestaobilhares.ui.optimization.ViewStubManager
 import com.example.gestaobilhares.ui.optimization.OptimizedViewHolder
 import com.example.gestaobilhares.ui.optimization.LayoutOptimizer
 import com.example.gestaobilhares.ui.optimization.RecyclerViewOptimizer
-// ✅ FASE 4D: Otimizações de Rede
+    // ✅ FASE 4D: Otimizações de Rede
 import com.example.gestaobilhares.network.NetworkCompressionManager
 import com.example.gestaobilhares.network.BatchOperationsManager
 import com.example.gestaobilhares.network.RetryLogicManager
 import com.example.gestaobilhares.network.NetworkCacheManager
+// ✅ FASE 2: Utilitários de data centralizados
+import com.example.gestaobilhares.utils.DateUtils
 import kotlinx.coroutines.Deferred
 // ✅ FASE 4D: Otimizações Avançadas de Banco
 import com.example.gestaobilhares.database.DatabaseConnectionPool
@@ -3218,9 +3220,9 @@ class AppRepository constructor(
     suspend fun buscarContratoPorNumero(numeroContrato: String) = contratoLocacaoDao.buscarContratoPorNumero(numeroContrato)
     fun buscarContratosAtivos() = contratoLocacaoDao.buscarContratosAtivos()
     fun buscarTodosContratos() = contratoLocacaoDao.buscarTodosContratos()
-    // ✅ FASE 2: Converter ano (String) para timestamps de início e fim do ano
+    // ✅ FASE 2: Converter ano (String) para timestamps de início e fim do ano usando função centralizada
     suspend fun contarContratosPorAno(ano: String): Int {
-        val (inicioAno, fimAno) = calcularRangeAno(ano)
+        val (inicioAno, fimAno) = DateUtils.calcularRangeAno(ano)
         return contratoLocacaoDao.contarContratosPorAno(inicioAno, fimAno)
     }
     suspend fun contarContratosGerados() = contratoLocacaoDao.contarContratosGerados()
@@ -3486,9 +3488,9 @@ class AppRepository constructor(
     suspend fun buscarAditivoPorNumero(numeroAditivo: String) = aditivoContratoDao.buscarAditivoPorNumero(numeroAditivo)
     suspend fun buscarAditivoPorId(aditivoId: Long) = aditivoContratoDao.buscarAditivoPorId(aditivoId)
     fun buscarTodosAditivos() = aditivoContratoDao.buscarTodosAditivos()
-    // ✅ FASE 2: Converter ano (String) para timestamps de início e fim do ano
+    // ✅ FASE 2: Converter ano (String) para timestamps de início e fim do ano usando função centralizada
     suspend fun contarAditivosPorAno(ano: String): Int {
-        val (inicioAno, fimAno) = calcularRangeAno(ano)
+        val (inicioAno, fimAno) = DateUtils.calcularRangeAno(ano)
         return aditivoContratoDao.contarAditivosPorAno(inicioAno, fimAno)
     }
     suspend fun contarAditivosGerados() = aditivoContratoDao.contarAditivosGerados()
@@ -5344,28 +5346,6 @@ class AppRepository constructor(
         transactionOptimizer.cancelPendingTransactions()
         performanceTuner.resetStats()
         Log.d("AppRepository", "Todas as otimizações de banco foram limpas")
-    }
-    
-    /**
-     * ✅ FASE 2: Calcula timestamps de início e fim do ano para range queries otimizadas
-     */
-    private fun calcularRangeAno(ano: String): Pair<Long, Long> {
-        val anoInt = ano.toIntOrNull() ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
-        val calendar = java.util.Calendar.getInstance().apply {
-            set(java.util.Calendar.YEAR, anoInt)
-            set(java.util.Calendar.MONTH, java.util.Calendar.JANUARY)
-            set(java.util.Calendar.DAY_OF_MONTH, 1)
-            set(java.util.Calendar.HOUR_OF_DAY, 0)
-            set(java.util.Calendar.MINUTE, 0)
-            set(java.util.Calendar.SECOND, 0)
-            set(java.util.Calendar.MILLISECOND, 0)
-        }
-        val inicioAno = calendar.timeInMillis
-        
-        calendar.add(java.util.Calendar.YEAR, 1)
-        val fimAno = calendar.timeInMillis
-        
-        return Pair(inicioAno, fimAno)
     }
     
 } 
