@@ -28,7 +28,10 @@ import java.util.Date
         androidx.room.Index(value = ["numero_ciclo"]),
         androidx.room.Index(value = ["rota_id", "ano", "numero_ciclo"]), // Índice composto único
         androidx.room.Index(value = ["data_inicio"]),
-        androidx.room.Index(value = ["data_fim"])
+        androidx.room.Index(value = ["data_fim"]),
+        // ✅ FASE PRIORIDADE ALTA: Índices para otimização de queries
+        androidx.room.Index(value = ["status"]),
+        androidx.room.Index(value = ["rota_id", "status"])
     ]
 )
 data class CicloAcertoEntity(

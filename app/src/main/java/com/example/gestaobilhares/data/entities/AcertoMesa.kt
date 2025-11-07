@@ -29,7 +29,10 @@ import java.util.Date
     indices = [
         androidx.room.Index(value = ["acerto_id"]),
         androidx.room.Index(value = ["mesa_id"]),
-        androidx.room.Index(value = ["acerto_id", "mesa_id"], unique = true)
+        androidx.room.Index(value = ["acerto_id", "mesa_id"], unique = true),
+        // ✅ FASE PRIORIDADE ALTA: Índices para otimização de queries
+        androidx.room.Index(value = ["data_criacao"]),
+        androidx.room.Index(value = ["mesa_id", "data_criacao"])
     ]
 )
 data class AcertoMesa(

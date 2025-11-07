@@ -9,7 +9,14 @@ import java.util.Date
  * Entidade que representa um equipamento no inventário.
  * Campos: Nome, Descrição, Quantidade e Localização.
  */
-@Entity(tableName = "equipments")
+@Entity(
+    tableName = "equipments",
+    indices = [
+        // ✅ FASE PRIORIDADE ALTA: Índices para otimização de queries
+        androidx.room.Index(value = ["name"]),
+        androidx.room.Index(value = ["location"])
+    ]
+)
 data class Equipment(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

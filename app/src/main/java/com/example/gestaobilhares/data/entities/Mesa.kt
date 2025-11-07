@@ -25,7 +25,11 @@ import java.io.Serializable
         )
     ],
     indices = [
-        androidx.room.Index(value = ["cliente_id"])
+        androidx.room.Index(value = ["cliente_id"]),
+        // ✅ FASE PRIORIDADE ALTA: Índices para otimização de queries
+        androidx.room.Index(value = ["numero"]),
+        androidx.room.Index(value = ["cliente_id", "ativa"]),
+        androidx.room.Index(value = ["tipo_mesa"])
     ]
 )
 data class Mesa(
