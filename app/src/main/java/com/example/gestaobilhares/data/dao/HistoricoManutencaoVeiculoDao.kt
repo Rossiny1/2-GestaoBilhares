@@ -13,20 +13,20 @@ interface HistoricoManutencaoVeiculoDao {
     @Query("SELECT * FROM historico_manutencao_veiculo WHERE veiculo_id = :veiculoId ORDER BY data_manutencao DESC")
     fun listarPorVeiculo(veiculoId: Long): Flow<List<HistoricoManutencaoVeiculo>>
     
-    // ✅ CORREÇÃO: Query corrigida para trabalhar com Date do Java
-    @Query("SELECT * FROM historico_manutencao_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_manutencao) = :ano ORDER BY data_manutencao DESC")
-    fun listarPorVeiculoEAno(veiculoId: Long, ano: String): Flow<List<HistoricoManutencaoVeiculo>>
-    
+    // ✅ FASE 2: Query otimizada usando range query (pode usar índices) em vez de strftime()
+    @Query("SELECT * FROM historico_manutencao_veiculo WHERE veiculo_id = :veiculoId AND data_manutencao >= :inicioAno AND data_manutencao < :fimAno ORDER BY data_manutencao DESC")
+    fun listarPorVeiculoEAno(veiculoId: Long, inicioAno: Long, fimAno: Long): Flow<List<HistoricoManutencaoVeiculo>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserir(historico: HistoricoManutencaoVeiculo): Long
-    
+
     @Update
     suspend fun atualizar(historico: HistoricoManutencaoVeiculo)
-    
+
     @Delete
     suspend fun deletar(historico: HistoricoManutencaoVeiculo)
-    
-    // ✅ CORREÇÃO: Query corrigida para trabalhar com Date do Java
-    @Query("SELECT SUM(valor) FROM historico_manutencao_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_manutencao) = :ano")
-    suspend fun obterTotalGastoPorAno(veiculoId: Long, ano: String): Double?
+
+    // ✅ FASE 2: Query otimizada usando range query (pode usar índices) em vez de strftime()
+    @Query("SELECT SUM(valor) FROM historico_manutencao_veiculo WHERE veiculo_id = :veiculoId AND data_manutencao >= :inicioAno AND data_manutencao < :fimAno")
+    suspend fun obterTotalGastoPorAno(veiculoId: Long, inicioAno: Long, fimAno: Long): Double?
 }
