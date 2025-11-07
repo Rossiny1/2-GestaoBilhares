@@ -107,47 +107,9 @@
             android:textSize="12sp"
             android:maxLines="2"
             android:ellipsize="end"
-            android:layout_marginBottom="8dp"
             android:visibility="gone"
             tools:text="Observações: Mesa estava com desgaste na pintura..."
             tools:visibility="visible" />
-
-        <!-- ✅ NOVO: Histórico de manutenções -->
-        <LinearLayout
-            android:id="@+id/layoutHistorico"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="?attr/colorSurfaceVariant"
-            android:padding="12dp"
-            android:layout_marginTop="8dp"
-            android:visibility="gone"
-            tools:visibility="visible">
-
-            <TextView
-                android:id="@+id/tvHistoricoTitulo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="📋 Histórico de Manutenções"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp"
-                android:visibility="gone"
-                tools:text="📋 Histórico de Manutenções"
-                tools:visibility="visible" />
-
-            <TextView
-                android:id="@+id/tvHistoricoManutencoes"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="• Pintura - 15/10/2024: Pintura completa da mesa\n• Troca de Pano - 10/10/2024: Troca de pano - Números: P001, P002"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="12sp"
-                android:lineSpacingExtra="4dp"
-                tools:text="• Pintura - 15/10/2024: Pintura completa da mesa\n• Troca de Pano - 10/10/2024: Troca de pano - Números: P001, P002" />
-
-        </LinearLayout>
 
     </LinearLayout>
 

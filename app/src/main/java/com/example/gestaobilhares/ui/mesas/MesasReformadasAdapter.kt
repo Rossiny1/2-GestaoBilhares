@@ -94,30 +94,6 @@ class MesasReformadasAdapter(
                 }
             }
             
-            // ✅ NOVO: Exibir histórico de manutenções
-            if (mesaComHistorico.historicoManutencoes.isNotEmpty()) {
-                binding.layoutHistorico.visibility = View.VISIBLE
-                binding.tvHistoricoTitulo.visibility = View.VISIBLE
-                
-                val historicoText = buildString {
-                    mesaComHistorico.historicoManutencoes.take(5).forEachIndexed { index, historico ->
-                        if (index > 0) append("\n")
-                        append("• ${formatarTipoManutencao(historico.tipoManutencao)}")
-                        append(" - ${dateFormat.format(historico.dataManutencao)}")
-                        if (!historico.descricao.isNullOrBlank()) {
-                            append(": ${historico.descricao}")
-                        }
-                    }
-                    if (mesaComHistorico.historicoManutencoes.size > 5) {
-                        append("\n... e mais ${mesaComHistorico.historicoManutencoes.size - 5} manutenções")
-                    }
-                }
-                binding.tvHistoricoManutencoes.text = historicoText
-            } else {
-                binding.layoutHistorico.visibility = View.GONE
-                binding.tvHistoricoTitulo.visibility = View.GONE
-            }
-            
             // Click listener
             binding.root.setOnClickListener {
                 onItemClick(mesaComHistorico)

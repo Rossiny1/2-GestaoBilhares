@@ -4,13 +4,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.MesaReformada
@@ -58,10 +61,8 @@ class MesasReformadasFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = MesasReformadasAdapter { mesaComHistorico ->
-            // Mostrar detalhes da primeira reforma (ou criar um diálogo específico)
-            if (mesaComHistorico.reformas.isNotEmpty()) {
-                mostrarDetalhesMesaReformada(mesaComHistorico.reformas.first())
-            }
+            // ✅ NOVO: Mostrar diálogo com histórico completo
+            mostrarDetalhesMesaComHistorico(mesaComHistorico)
         }
 
         binding.rvMesasReformadas.apply {
@@ -78,6 +79,50 @@ class MesasReformadasFragment : Fragment() {
         binding.fabNovaReforma.setOnClickListener {
             // Navegar para a tela de nova reforma
             findNavController().navigate(R.id.novaReformaFragment)
+        }
+        
+        // ✅ NOVO: Botão de filtro
+        binding.btnFiltrar.setOnClickListener {
+            mostrarDialogoFiltro()
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Mostra diálogo para filtrar por número da mesa
+     */
+    private fun mostrarDialogoFiltro() {
+        val input = EditText(requireContext())
+        input.hint = "Digite o número da mesa"
+        input.inputType = android.text.InputType.TYPE_CLASS_TEXT
+        
+        // Obter filtro atual e preencher o campo
+        viewLifecycleOwner.lifecycleScope.launch {
+            val filtroAtual = viewModel.filtroNumeroMesa.first()
+            if (filtroAtual != null) {
+                input.setText(filtroAtual)
+            }
+            
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Filtrar por Número da Mesa")
+                .setView(input)
+                .setPositiveButton("Filtrar") { _, _ ->
+                    val numero = input.text.toString().trim()
+                    if (numero.isNotEmpty()) {
+                        viewModel.filtrarPorNumero(numero)
+                    } else {
+                        viewModel.removerFiltro()
+                    }
+                }
+                .setNegativeButton("Cancelar", null)
+                .apply {
+                    // Mostrar botão "Limpar Filtro" apenas se houver filtro ativo
+                    if (filtroAtual != null) {
+                        setNeutralButton("Limpar Filtro") { _, _ ->
+                            viewModel.removerFiltro()
+                        }
+                    }
+                }
+                .show()
         }
     }
 
@@ -117,6 +162,18 @@ class MesasReformadasFragment : Fragment() {
         try {
             val dialog = DetalhesMesaReformadaDialog.newInstance(mesaReformada)
             dialog.show(parentFragmentManager, "DetalhesMesaReformadaDialog")
+        } catch (e: Exception) {
+            // Log do erro se necessário
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Mostra diálogo com detalhes da mesa e histórico completo
+     */
+    private fun mostrarDetalhesMesaComHistorico(mesaComHistorico: MesaReformadaComHistorico) {
+        try {
+            val dialog = DetalhesMesaReformadaComHistoricoDialog.newInstance(mesaComHistorico)
+            dialog.show(parentFragmentManager, "DetalhesMesaReformadaComHistoricoDialog")
         } catch (e: Exception) {
             // Log do erro se necessário
         }
