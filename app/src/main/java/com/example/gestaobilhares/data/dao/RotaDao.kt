@@ -51,7 +51,9 @@ interface RotaDao {
     
     /**
      * Insere múltiplas rotas de uma vez.
+     * ✅ FASE 3: @Transaction garante que todas as inserções sejam atômicas
      */
+    @Transaction
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertRotas(rotas: List<Rota>): List<Long>
     
@@ -63,7 +65,9 @@ interface RotaDao {
     
     /**
      * Atualiza múltiplas rotas.
+     * ✅ FASE 3: @Transaction garante que todas as atualizações sejam atômicas
      */
+    @Transaction
     @Update
     suspend fun updateRotas(rotas: List<Rota>)
     

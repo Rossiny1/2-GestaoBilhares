@@ -12,6 +12,8 @@ interface AcertoMesaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserir(acertoMesa: AcertoMesa): Long
 
+    // ✅ FASE 3: @Transaction garante que todas as inserções sejam atômicas
+    @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserirLista(acertoMesas: List<AcertoMesa>)
 

@@ -43,6 +43,8 @@ interface AditivoContratoDao {
     @Query("SELECT * FROM aditivo_mesas WHERE aditivoId = :aditivoId")
     suspend fun buscarMesasPorAditivo(aditivoId: Long): List<AditivoMesa>
     
+    // ✅ FASE 3: @Transaction garante que todas as inserções sejam atômicas
+    @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserirAditivoMesas(aditivoMesas: List<AditivoMesa>): List<Long>
     
