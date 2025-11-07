@@ -52,7 +52,7 @@ import java.util.Date
         SyncQueue::class, // ✅ FASE 3B: FILA DE SINCRONIZAÇÃO
         SyncConfig::class // ✅ FASE 3B: CONFIGURAÇÕES DE SINCRONIZAÇÃO
     ],
-    version = 44, // ✅ NOVO: Equipment adicionado
+    version = 45, // ✅ FASE PRIORIDADE ALTA: Índices de otimização adicionados
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -951,13 +951,51 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
+                /**
+                 * ✅ FASE PRIORIDADE ALTA: Migração para adicionar índices de otimização
+                 */
+                val MIGRATION_44_45 = object : androidx.room.migration.Migration(44, 45) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            android.util.Log.d("AppDatabase", "Migration 44→45: Criando índices de otimização")
+                            
+                            // Índices para tabela mesas
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_mesas_numero ON mesas (numero)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_mesas_cliente_id_ativa ON mesas (cliente_id, ativa)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_mesas_tipo_mesa ON mesas (tipo_mesa)")
+                            
+                            // Índices para tabela acerto_mesas
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_acerto_mesas_data_criacao ON acerto_mesas (data_criacao)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_acerto_mesas_mesa_id_data_criacao ON acerto_mesas (mesa_id, data_criacao)")
+                            
+                            // Índices para tabela equipments
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_equipments_name ON equipments (name)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_equipments_location ON equipments (location)")
+                            
+                            // Índices para tabela ciclos_acerto
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_ciclos_acerto_status ON ciclos_acerto (status)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_ciclos_acerto_rota_id_status ON ciclos_acerto (rota_id, status)")
+                            
+                            // Índices para tabela despesas
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_dataHora ON despesas (dataHora)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_rotaId_dataHora ON despesas (rotaId, dataHora)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_origemLancamento_dataHora ON despesas (origemLancamento, dataHora)")
+                            
+                            android.util.Log.d("AppDatabase", "Migration 44→45: Índices de otimização criados com sucesso")
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 44_45: ${e.message}", e)
+                            // Não relançar exceção - índices podem já existir
+                        }
+                    }
+                }
+
                 try {
                     val builder = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,
                         DATABASE_NAME
                     )
-                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_39_40, MIGRATION_40_41, MIGRATION_41_42, MIGRATION_42_43)
+                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_39_40, MIGRATION_40_41, MIGRATION_41_42, MIGRATION_42_43, MIGRATION_44_45)
                         .addCallback(object : RoomDatabase.Callback() {
                             override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                                 super.onOpen(db)

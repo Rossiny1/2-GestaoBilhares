@@ -40,7 +40,11 @@ import java.util.Date
         Index(value = ["origemLancamento"]),
         Index(value = ["cicloAno"]),
         Index(value = ["cicloNumero"]),
-        Index(value = ["cicloAno", "cicloNumero"]) 
+        Index(value = ["cicloAno", "cicloNumero"]),
+        // ✅ FASE PRIORIDADE ALTA: Índices para otimização de queries
+        Index(value = ["dataHora"]),
+        Index(value = ["rotaId", "dataHora"]),
+        Index(value = ["origemLancamento", "dataHora"])
     ]
 )
 data class Despesa(
