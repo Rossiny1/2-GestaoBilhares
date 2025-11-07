@@ -1605,8 +1605,8 @@ class AppRepository constructor(
                         "description": "${equipment.description ?: ""}",
                         "quantity": ${equipment.quantity},
                         "location": "${equipment.location ?: ""}",
-                        "createdAt": "${equipment.createdAt.time}",
-                        "updatedAt": "${equipment.updatedAt.time}"
+                        "createdAt": ${equipment.createdAt.time},
+                        "updatedAt": ${equipment.updatedAt.time}
                     }
                 """.trimIndent()
                 
@@ -1640,8 +1640,8 @@ class AppRepository constructor(
                         "description": "${equipment.description ?: ""}",
                         "quantity": ${equipment.quantity},
                         "location": "${equipment.location ?: ""}",
-                        "createdAt": "${equipment.createdAt.time}",
-                        "updatedAt": "${equipment.updatedAt.time}"
+                        "createdAt": ${equipment.createdAt.time},
+                        "updatedAt": ${equipment.updatedAt.time}
                     }
                 """.trimIndent()
                 
@@ -3607,19 +3607,6 @@ class AppRepository constructor(
 
     suspend fun inserirLogAuditoriaAssinatura(log: LogAuditoriaAssinatura): Long = inserirLogAuditoriaAssinaturaSync(log)
 
-    // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
-    // suspend fun inserirProcuração(procuração: ProcuraçãoRepresentante): Long {
-    //     logDbInsertStart("PROCURACAO", "Representante=${procuração.representanteOutorgadoNome}, Empresa=${procuração.empresaNome}")
-    //     return try {
-    //         val id = .inserirProcuração(procuração)
-    //         logDbInsertSuccess("PROCURACAO", "Representante=${procuração.representanteOutorgadoNome}, ID=$id")
-    //         id
-    //     } catch (e: Exception) {
-    //         logDbInsertError("PROCURACAO", "Representante=${procuração.representanteOutorgadoNome}", e)
-    //         throw e
-    //     }
-    // }
-
     suspend fun atualizarAditivo(aditivo: AditivoContrato) {
         aditivoContratoDao.atualizarAditivo(aditivo)
         // ✅ SINCRONIZAÇÃO: Enfileirar UPDATE
@@ -3709,27 +3696,6 @@ class AppRepository constructor(
     suspend fun contarUsosAssinaturaAuditoria(idAssinatura: Long) = logAuditoriaAssinaturaDao.contarUsosAssinatura(idAssinatura)
     suspend fun obterLogsAuditoriaNaoValidados() = logAuditoriaAssinaturaDao.obterLogsNaoValidados()
     suspend fun validarLogAuditoria(id: Long, dataValidacao: java.util.Date, validadoPor: String) = logAuditoriaAssinaturaDao.validarLog(id, dataValidacao, validadoPor)
-    
-    // ==================== PROCURAÇÕES ====================
-    
-    // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
-    // suspend fun obter.obterProcuraçõesAtivas()
-    // fun obter.obterProcuraçõesAtivasFlow()
-    // suspend fun obter.obterProcuraçãoPorUsuario(usuario)
-    // fun obter.obterProcuraçãoPorUsuarioFlow(usuario)
-    // suspend fun obter.obterProcuraçãoPorCpf(cpf)
-    // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
-    // suspend fun obterTodas.obterTodasProcurações()
-    // fun obterTodas.obterTodasProcuraçõesFlow()
-    // suspend fun obter.obterProcuraçãoPorId(id)
-    // suspend fun obter.obterProcuraçãoPorNumero(numero)
-    // suspend fun atualizar.atualizarProcuração(procuração)
-    // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
-    // suspend fun revogar.revogarProcuração(id, dataRevogacao, motivo)
-    // suspend fun contar.contarProcuraçõesAtivas()
-    // suspend fun obter.obterProcuraçõesValidadas()
-    // suspend fun obter.obterProcuraçõesVencidas(dataAtual)
-    // suspend fun validar.validarProcuração(id, dataValidacao, validadoPor)
     
     // ==================== MÉTODOS PARA CÁLCULO DE METAS ====================
     
