@@ -59,6 +59,8 @@ interface ContratoLocacaoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserirContratoMesa(contratoMesa: ContratoMesa): Long
     
+    // ✅ FASE 3: @Transaction garante que todas as inserções sejam atômicas
+    @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserirContratoMesas(contratoMesas: List<ContratoMesa>): List<Long>
     
