@@ -3,13 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="@color/background_dark">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="20dp"
+        android:background="@color/background_dark">
 
         <!-- Título -->
         <TextView
@@ -19,7 +21,7 @@
             android:text="Gerar Relatório Detalhado"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@color/purple_600"
+            android:textColor="@color/text_on_primary"
             android:gravity="center"
             android:layout_marginBottom="16dp" />
 
@@ -29,7 +31,7 @@
             android:layout_height="48dp"
             android:layout_gravity="center_horizontal"
             android:src="@drawable/ic_report"
-            android:background="@drawable/circle_purple_bg"
+            android:backgroundTint="@color/primary_blue"
             android:padding="8dp"
             android:layout_marginBottom="16dp"
             android:contentDescription="Relatório" />
@@ -41,7 +43,7 @@
             android:layout_height="wrap_content"
             android:text="Deseja gerar um relatório PDF detalhado do fechamento da rota?"
             android:textSize="14sp"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="@color/text_secondary"
             android:lineSpacingExtra="2dp"
             android:layout_marginBottom="16dp"
             android:gravity="center" />
@@ -53,7 +55,9 @@
             android:layout_marginBottom="20dp"
             app:cardCornerRadius="8dp"
             app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/light_gray">
+            app:cardBackgroundColor="@color/surface_primary"
+            app:strokeColor="@color/primary_blue"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -67,7 +71,7 @@
                     android:text="Informações do Ciclo"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:textColor="@color/purple_600"
+                    android:textColor="@color/primary_blue"
                     android:layout_marginBottom="8dp" />
 
                 <TextView
@@ -76,7 +80,7 @@
                     android:layout_height="wrap_content"
                     android:text="Ciclo 2025 - #001"
                     android:textSize="11sp"
-                    android:textColor="?attr/colorOnSurface"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp" />
 
                 <TextView
@@ -85,7 +89,7 @@
                     android:layout_height="wrap_content"
                     android:text="Rota: Centro"
                     android:textSize="11sp"
-                    android:textColor="?attr/colorOnSurface"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="4dp" />
 
                 <TextView
@@ -94,7 +98,7 @@
                     android:layout_height="wrap_content"
                     android:text="Início: 01/01/2025 08:00"
                     android:textSize="11sp"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:textColor="@color/text_primary" />
 
             </LinearLayout>
 
@@ -110,7 +114,7 @@
             android:visibility="gone"
             app:indicatorSize="36dp"
             app:trackThickness="3dp"
-            app:indicatorColor="@color/purple_600" />
+            app:indicatorColor="@color/primary_blue" />
 
         <!-- Botões -->
         <LinearLayout
@@ -138,7 +142,7 @@
                 android:text="Gerar PDF"
                 android:layout_marginStart="8dp"
                 android:textSize="14sp"
-                android:backgroundTint="@color/purple_600"
+                android:backgroundTint="@color/primary_blue"
                 style="@style/Widget.Material3.Button" />
 
         </LinearLayout>
