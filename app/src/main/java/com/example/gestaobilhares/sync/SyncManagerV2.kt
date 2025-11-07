@@ -466,6 +466,7 @@ class SyncManagerV2(
         "aditivocontrato" -> "aditivosContrato"
         "aditivomesa" -> "aditivoMesas"
         "panomesa" -> "panoMesas"
+        "equipment" -> "equipments"
         else -> entityType.lowercase(Locale.getDefault()) + "s"
     }
 
@@ -614,6 +615,11 @@ class SyncManagerV2(
         android.util.Log.d("SyncManagerV2", "🔄 Fase 11: Sincronizando VEÍCULOS...")
         pullVeiculosFromFirestore(empresaId)
         delay(500) // Aguardar veículos serem inseridos
+        
+        // 11.5. DÉCIMO PRIMEIRO E MEIO: Sincronizar Equipamentos
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 11.5: Sincronizando EQUIPAMENTOS...")
+        pullEquipmentFromFirestore(empresaId)
+        delay(500) // Aguardar equipamentos serem inseridos
         
         // 12. DÉCIMO SEGUNDO: Sincronizar Histórico Manutenção Mesa
         android.util.Log.d("SyncManagerV2", "🔄 Fase 12: Sincronizando HISTÓRICO MANUTENÇÃO MESA...")
@@ -2412,6 +2418,79 @@ class SyncManagerV2(
             
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar veículos: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Baixar Equipamentos do Firestore
+     */
+    private suspend fun pullEquipmentFromFirestore(empresaId: String) {
+        android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL Equipamentos do Firestore...")
+        
+        try {
+            val equipmentsCollection = firestore.collection("empresas/$empresaId/equipments")
+            val snapshot = equipmentsCollection.get().await()
+            
+            android.util.Log.d("SyncManagerV2", "📥 Encontrados ${snapshot.size()} equipamentos no Firestore")
+            
+            val equipmentDao = database.equipmentDao()
+            val equipmentsExistentesList = equipmentDao.listarTodos().first()
+            
+            var equipmentsSincronizados = 0
+            var equipmentsExistentes = 0
+            
+            for (document in snapshot.documents) {
+                try {
+                    val data = document.data ?: continue
+                    // Aceitar id em diferentes chaves e formatos
+                    val roomIdCandidate = ((data["id"] as? Number)?.toLong()
+                        ?: (data["roomId"] as? Number)?.toLong()
+                        ?: (data["id"] as? String)?.toLongOrNull()
+                        ?: (data["roomId"] as? String)?.toLongOrNull())
+                    if (roomIdCandidate == null) {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Equipment sem ID válido: doc=${document.id} dataKeys=${data.keys}")
+                        continue
+                    }
+                    val roomId = roomIdCandidate
+                    
+                    android.util.Log.d("SyncManagerV2", "🔄 Processando equipamento: ${data["name"]} (Room ID: $roomId)")
+                    
+                    // Verificar se já existe
+                    val jaExiste = equipmentsExistentesList.any { equipment -> equipment.id == roomId }
+                    if (jaExiste) {
+                        android.util.Log.d("SyncManagerV2", "✅ Equipamento já existe: ${data["name"]} (ID: $roomId)")
+                        equipmentsExistentes++
+                        continue
+                    }
+                    
+                    // Criar entidade Equipment
+                    val equipment = com.example.gestaobilhares.data.entities.Equipment(
+                        id = roomId,
+                        name = data["name"] as? String ?: "",
+                        description = data["description"] as? String,
+                        quantity = (data["quantity"] as? Number)?.toInt() ?: 0,
+                        location = data["location"] as? String,
+                        createdAt = java.util.Date((data["createdAt"] as? Number)?.toLong() ?: System.currentTimeMillis()),
+                        updatedAt = java.util.Date((data["updatedAt"] as? Number)?.toLong() ?: System.currentTimeMillis())
+                    )
+                    
+                    // Inserir no banco local
+                    equipmentDao.inserir(equipment)
+                    equipmentsSincronizados++
+                    
+                    android.util.Log.d("SyncManagerV2", "✅ Equipamento sincronizado: ${equipment.name} (ID: $roomId)")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "❌ Erro ao processar equipamento ${document.id}: ${e.message}", e)
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "📊 Resumo PULL Equipamentos:")
+            android.util.Log.d("SyncManagerV2", "   Sincronizados: $equipmentsSincronizados")
+            android.util.Log.d("SyncManagerV2", "   Já existentes: $equipmentsExistentes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao baixar equipamentos: ${e.message}", e)
         }
     }
 

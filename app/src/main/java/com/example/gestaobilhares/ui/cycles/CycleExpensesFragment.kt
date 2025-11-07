@@ -20,10 +20,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.cycles.adapter.CycleExpensesAdapter
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 /**
  * Fragment para listar despesas do ciclo
