@@ -27,10 +27,6 @@ class InventorySelectionDialog : DialogFragment() {
             dismiss()
             findNavController().navigate(R.id.equipmentsFragment)
         }
-        view.findViewById<View>(R.id.cardOutros).setOnClickListener {
-            dismiss()
-            findNavController().navigate(R.id.othersInventoryFragment)
-        }
 
         return MaterialAlertDialogBuilder(requireContext())
             .setView(view)

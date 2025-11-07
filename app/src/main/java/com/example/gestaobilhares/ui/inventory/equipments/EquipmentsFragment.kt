@@ -30,10 +30,9 @@ class EquipmentsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente com AppRepository
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = EquipmentsViewModel()
+        viewModel = EquipmentsViewModel(appRepository)
         
         setupRecyclerView()
         observeData()
@@ -58,7 +57,11 @@ class EquipmentsFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.fabAddEquipment.setOnClickListener {
-            AddEditEquipmentDialog().show(childFragmentManager, "add_equipment")
+            // ✅ CORREÇÃO: Usar callback para recarregar dados após salvar
+            AddEditEquipmentDialog.newInstance {
+                android.util.Log.d("EquipmentsFragment", "Equipamento salvo - recarregando dados...")
+                viewModel.refreshData()
+            }.show(childFragmentManager, "add_equipment")
         }
     }
 

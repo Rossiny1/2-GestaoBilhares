@@ -104,16 +104,37 @@
 
         </LinearLayout>
 
-        <!-- Botão de exclusão -->
-        <ImageButton
-            android:id="@+id/btnDeleteExpense"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+        <!-- Botões de ação -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_delete"
-            android:contentDescription="Excluir despesa"
-            app:tint="@color/error_red" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Botão de visualizar foto -->
+            <ImageButton
+                android:id="@+id/btnViewPhoto"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_camera"
+                android:contentDescription="Visualizar foto do comprovante"
+                android:visibility="gone"
+                app:tint="@color/primary_blue" />
+
+            <!-- Botão de exclusão -->
+            <ImageButton
+                android:id="@+id/btnDeleteExpense"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_delete"
+                android:contentDescription="Excluir despesa"
+                app:tint="@color/error_red" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

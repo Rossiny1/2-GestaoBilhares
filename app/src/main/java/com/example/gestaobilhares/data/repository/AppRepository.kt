@@ -76,6 +76,7 @@ class AppRepository constructor(
     private val panoMesaDao: com.example.gestaobilhares.data.dao.PanoMesaDao,
     private val mesaVendidaDao: com.example.gestaobilhares.data.dao.MesaVendidaDao,
     private val stockItemDao: com.example.gestaobilhares.data.dao.StockItemDao,
+    private val equipmentDao: com.example.gestaobilhares.data.dao.EquipmentDao,
     private val veiculoDao: com.example.gestaobilhares.data.dao.VeiculoDao,
     private val categoriaDespesaDao: CategoriaDespesaDao,
     private val tipoDespesaDao: TipoDespesaDao,
@@ -1584,6 +1585,80 @@ class AppRepository constructor(
     }
     suspend fun deletarStockItem(stockItem: com.example.gestaobilhares.data.entities.StockItem) = stockItemDao.deletar(stockItem)
     suspend fun atualizarQuantidadeStockItem(id: Long, newQuantity: Int, updatedAt: java.util.Date) = stockItemDao.atualizarQuantidade(id, newQuantity, updatedAt)
+
+    // ==================== EQUIPMENT ====================
+    
+    fun obterTodosEquipments() = equipmentDao.listarTodos()
+    suspend fun obterEquipmentPorId(id: Long) = equipmentDao.buscarPorId(id)
+    suspend fun inserirEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment): Long {
+        logDbInsertStart("EQUIPMENT", "Nome=${equipment.name}, Quantidade=${equipment.quantity}")
+        return try {
+            val id = equipmentDao.inserir(equipment)
+            logDbInsertSuccess("EQUIPMENT", "Nome=${equipment.name}, ID=$id")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": $id,
+                        "name": "${equipment.name}",
+                        "description": "${equipment.description ?: ""}",
+                        "quantity": ${equipment.quantity},
+                        "location": "${equipment.location ?: ""}",
+                        "createdAt": "${equipment.createdAt.time}",
+                        "updatedAt": "${equipment.updatedAt.time}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Equipment", id, "CREATE", payload, priority = 1)
+                logarOperacaoSync("Equipment", id, "CREATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar criação de equipment à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+            id
+        } catch (e: Exception) {
+            logDbInsertError("EQUIPMENT", "Nome=${equipment.name}", e)
+            throw e
+        }
+    }
+    
+    suspend fun atualizarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) {
+        logDbUpdateStart("EQUIPMENT", "ID=${equipment.id}, Nome=${equipment.name}")
+        try {
+            equipmentDao.atualizar(equipment)
+            logDbUpdateSuccess("EQUIPMENT", "ID=${equipment.id}")
+            
+            // ✅ FASE 3C: Adicionar à fila de sincronização
+            try {
+                val payload = """
+                    {
+                        "id": ${equipment.id},
+                        "name": "${equipment.name}",
+                        "description": "${equipment.description ?: ""}",
+                        "quantity": ${equipment.quantity},
+                        "location": "${equipment.location ?: ""}",
+                        "createdAt": "${equipment.createdAt.time}",
+                        "updatedAt": "${equipment.updatedAt.time}"
+                    }
+                """.trimIndent()
+                
+                adicionarOperacaoSync("Equipment", equipment.id, "UPDATE", payload, priority = 1)
+                logarOperacaoSync("Equipment", equipment.id, "UPDATE", "PENDING", null, payload)
+                
+            } catch (syncError: Exception) {
+                Log.w("AppRepository", "Erro ao adicionar atualização de equipment à fila de sync: ${syncError.message}")
+                // Não falha a operação principal por erro de sync
+            }
+            
+        } catch (e: Exception) {
+            logDbUpdateError("EQUIPMENT", "ID=${equipment.id}", e)
+            throw e
+        }
+    }
+    suspend fun deletarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) = equipmentDao.deletar(equipment)
 
     // ==================== VEICULO ====================
     

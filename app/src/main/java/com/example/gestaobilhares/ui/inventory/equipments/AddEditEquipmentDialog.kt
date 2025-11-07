@@ -2,23 +2,37 @@ package com.example.gestaobilhares.ui.inventory.equipments
 
 import android.app.Dialog
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.example.gestaobilhares.databinding.DialogAddEditEquipmentBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
+/**
+ * Diálogo para adicionar ou editar um equipamento.
+ * Solicita: Nome do item, Descrição, Quantidade e Localização.
+ */
 class AddEditEquipmentDialog : DialogFragment() {
     
     private var _binding: DialogAddEditEquipmentBinding? = null
     private val binding get() = _binding!!
+    
+    private lateinit var viewModel: EquipmentsViewModel
+    private var onItemSaved: (() -> Unit)? = null
+
+    companion object {
+        fun newInstance(onItemSaved: (() -> Unit)? = null): AddEditEquipmentDialog {
+            val dialog = AddEditEquipmentDialog()
+            dialog.onItemSaved = onItemSaved
+            return dialog
+        }
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddEditEquipmentBinding.inflate(layoutInflater)
         
-        setupSpinners()
-        setupClickListeners()
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        viewModel = EquipmentsViewModel(appRepository)
         
         return MaterialAlertDialogBuilder(requireContext())
             .setView(binding.root)
@@ -30,38 +44,62 @@ class AddEditEquipmentDialog : DialogFragment() {
             .create()
     }
 
-    private fun setupSpinners() {
-        // Configurar spinner de tipo
-        val types = listOf("Mesa", "Acessório", "Ferramenta", "Outros")
-        val typeAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, types)
-        typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerType.adapter = typeAdapter
-
-        // Configurar spinner de status
-        val statuses = listOf("Ativo", "Inativo", "Manutenção", "Vendido")
-        val statusAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, statuses)
-        statusAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerStatus.adapter = statusAdapter
-    }
-
-    private fun setupClickListeners() {
-        // TODO: Implementar listeners se necessário
-    }
-
+    /**
+     * Valida e salva os dados do equipamento no banco de dados.
+     * Verifica se os campos obrigatórios foram preenchidos.
+     */
     private fun saveEquipment() {
         val name = binding.etEquipmentName.text.toString().trim()
-        val type = binding.spinnerType.selectedItem.toString()
-        val status = binding.spinnerStatus.selectedItem.toString()
+        val description = binding.etDescription.text.toString().trim()
+        val quantityText = binding.etQuantity.text.toString().trim()
         val location = binding.etLocation.text.toString().trim()
 
+        // Validação do nome (obrigatório)
         if (name.isEmpty()) {
             binding.etEquipmentName.error = "Nome é obrigatório"
             return
         }
 
-        // TODO: Implementar salvamento no banco de dados
-        // Por enquanto, apenas fechar o diálogo
-        dismiss()
+        // Validação da quantidade (obrigatória e deve ser um número válido)
+        if (quantityText.isEmpty()) {
+            binding.etQuantity.error = "Quantidade é obrigatória"
+            return
+        }
+
+        val quantity = try {
+            quantityText.toInt()
+        } catch (e: NumberFormatException) {
+            binding.etQuantity.error = "Quantidade deve ser um número válido"
+            return
+        }
+
+        if (quantity < 0) {
+            binding.etQuantity.error = "Quantidade não pode ser negativa"
+            return
+        }
+
+        try {
+            val equipment = Equipment(
+                name = name,
+                description = description,
+                quantity = quantity,
+                location = location
+            )
+            
+            // Salvar no banco de dados via ViewModel
+            viewModel.adicionarEquipment(equipment)
+            
+            // Mostrar sucesso e fechar diálogo
+            Toast.makeText(requireContext(), "Equipamento adicionado com sucesso!", Toast.LENGTH_SHORT).show()
+            
+            // ✅ CORREÇÃO: Notificar callback para atualizar a lista
+            onItemSaved?.invoke()
+            
+            dismiss()
+            
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Erro ao salvar equipamento: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onDestroyView() {
