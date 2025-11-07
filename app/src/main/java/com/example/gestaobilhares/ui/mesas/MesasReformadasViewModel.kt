@@ -45,6 +45,10 @@ class MesasReformadasViewModel constructor(
     private val _mesasReformadas = MutableStateFlow<List<MesaReformadaComHistorico>>(emptyList())
     val mesasReformadas: StateFlow<List<MesaReformadaComHistorico>> = _mesasReformadas.asStateFlow()
 
+    // ✅ NOVO: Filtro por número da mesa
+    private val _filtroNumeroMesa = MutableStateFlow<String?>(null)
+    val filtroNumeroMesa: StateFlow<String?> = _filtroNumeroMesa.asStateFlow()
+
     // isLoading já existe na BaseViewModel
 
     private val _errorMessage = MutableStateFlow<String?>(null)
@@ -54,16 +58,17 @@ class MesasReformadasViewModel constructor(
         viewModelScope.launch {
             try {
                 showLoading()
-                // ✅ NOVO: Combinar reformas e histórico, agrupando por mesa
+                // ✅ NOVO: Combinar reformas, histórico e filtro, agrupando por mesa
                 combine(
                     mesaReformadaRepository.listarTodas(),
-                    appRepository.obterTodosHistoricoManutencaoMesa()
-                ) { mesasReformadas, historicoManutencoes ->
+                    appRepository.obterTodosHistoricoManutencaoMesa(),
+                    _filtroNumeroMesa
+                ) { mesasReformadas, historicoManutencoes, filtro ->
                     // Agrupar reformas por número da mesa
                     val reformasPorMesa = mesasReformadas.groupBy { it.numeroMesa }
                     
                     // Criar lista de MesaReformadaComHistorico
-                    reformasPorMesa.map { (numeroMesa, reformas) ->
+                    val mesasAgrupadas = reformasPorMesa.map { (numeroMesa, reformas) ->
                         val primeiraReforma = reformas.first()
                         val historicoDaMesa = historicoManutencoes.filter { 
                             it.numeroMesa == numeroMesa 
@@ -78,8 +83,17 @@ class MesasReformadasViewModel constructor(
                             historicoManutencoes = historicoDaMesa
                         )
                     }.sortedByDescending { it.dataUltimaReforma?.time ?: 0L }
-                }.collect { mesasAgrupadas ->
-                    _mesasReformadas.value = mesasAgrupadas
+                    
+                    // ✅ NOVO: Aplicar filtro se houver
+                    if (filtro.isNullOrBlank()) {
+                        mesasAgrupadas
+                    } else {
+                        mesasAgrupadas.filter { 
+                            it.numeroMesa.contains(filtro, ignoreCase = true) 
+                        }
+                    }
+                }.collect { mesasFiltradas ->
+                    _mesasReformadas.value = mesasFiltradas
                     hideLoading() // Ocultar loading após primeira coleta
                 }
             } catch (e: Exception) {
@@ -87,6 +101,20 @@ class MesasReformadasViewModel constructor(
                 hideLoading()
             }
         }
+    }
+    
+    /**
+     * ✅ NOVO: Define o filtro por número da mesa
+     */
+    fun filtrarPorNumero(numero: String?) {
+        _filtroNumeroMesa.value = numero?.trim()?.takeIf { it.isNotEmpty() }
+    }
+    
+    /**
+     * ✅ NOVO: Remove o filtro
+     */
+    fun removerFiltro() {
+        _filtroNumeroMesa.value = null
     }
 
     // clearError já existe na BaseViewModel

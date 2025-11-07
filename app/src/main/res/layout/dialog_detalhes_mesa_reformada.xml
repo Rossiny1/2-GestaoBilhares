@@ -256,6 +256,47 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- ✅ NOVO: Histórico de Manutenções -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardHistorico"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/primary_blue"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="📋 Histórico de Manutenções"
+                        android:textColor="@color/primary_blue"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:id="@+id/tvHistoricoManutencoes"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="• Pintura - 15/10/2024: Pintura completa da mesa\n• Troca de Pano - 10/10/2024: Troca de pano - Números: P001, P002"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="4dp"
+                        tools:text="• Pintura - 15/10/2024: Pintura completa da mesa\n• Troca de Pano - 10/10/2024: Troca de pano - Números: P001, P002" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
 
     </ScrollView>

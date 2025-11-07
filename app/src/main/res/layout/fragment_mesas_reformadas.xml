@@ -40,6 +40,15 @@
                 android:maxLines="1"
                 android:ellipsize="end" />
 
+            <ImageButton
+                android:id="@+id/btnFiltrar"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Filtrar por número"
+                android:src="@drawable/ic_filter_list"
+                app:tint="?attr/colorOnPrimary" />
+
         </LinearLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
