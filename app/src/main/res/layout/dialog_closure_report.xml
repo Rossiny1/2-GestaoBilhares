@@ -3,14 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:maxWidth="400dp"
-    android:layout_gravity="center">
+    android:minWidth="320dp"
+    android:paddingHorizontal="16dp"
+    android:layout_gravity="center"
+    android:background="@color/background_dark">
 
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="@color/background_dark">
 
     <!-- Título -->
     <TextView
@@ -20,7 +23,7 @@
         android:text="Relatório de Fechamento"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="@color/text_primary"
+        android:textColor="@color/text_on_primary"
         android:gravity="center"
         android:layout_marginBottom="20dp" />
 
@@ -30,7 +33,10 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
         app:cardCornerRadius="8dp"
-        app:cardElevation="2dp">
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/surface_primary"
+        app:strokeColor="@color/primary_blue"
+        app:strokeWidth="1dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -44,7 +50,7 @@
                 android:text="Resumo dos Dados"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/primary_blue"
                 android:layout_marginBottom="12dp" />
 
             <LinearLayout
@@ -60,7 +66,7 @@
                     android:layout_weight="1"
                     android:text="Faturamento: R$ 0,00"
                     android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/tvDespesas"
@@ -69,7 +75,7 @@
                     android:layout_weight="1"
                     android:text="Despesas: R$ 0,00"
                     android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="@color/text_primary" />
 
             </LinearLayout>
 
@@ -86,7 +92,7 @@
                     android:layout_weight="1"
                     android:text="Lucro: R$ 0,00"
                     android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/tvMesas"
@@ -95,7 +101,7 @@
                     android:layout_weight="1"
                     android:text="Mesas: 0"
                     android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="@color/text_primary" />
 
             </LinearLayout>
 
@@ -111,7 +117,7 @@
                     android:layout_weight="1"
                     android:text="Descontos Totais: R$ 0,00"
                     android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:layout_width="0dp"
@@ -119,7 +125,7 @@
                     android:layout_weight="1"
                     android:text=""
                     android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="@color/text_primary" />
 
             </LinearLayout>
 
@@ -158,7 +164,9 @@
             android:layout_height="wrap_content"
             android:text="Gerar PDF"
             android:drawableStart="@drawable/ic_report"
-            android:drawablePadding="8dp" />
+            android:drawablePadding="8dp"
+            app:backgroundTint="@color/primary_blue"
+            app:iconTint="@color/text_on_primary" />
 
     </LinearLayout>
 

@@ -58,6 +58,12 @@ class CycleReportDialog : DialogFragment() {
             .setView(binding.root)
             .create()
             
+        // ✅ CORREÇÃO: Configurar largura do diálogo
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.9).toInt(), // 90% da largura da tela
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+            
         // Configurar UI
         setupUI()
         setupClickListeners()

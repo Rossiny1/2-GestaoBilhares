@@ -59,6 +59,8 @@ class ClosureReportDialog : DialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setStyle(STYLE_NORMAL, android.R.style.Theme_Material_Light_Dialog)
+        
         arguments?.let {
             anoSelecionado = it.getInt("ano")
             numeroAcerto = it.getInt("numeroAcerto")
@@ -84,6 +86,15 @@ class ClosureReportDialog : DialogFragment() {
         
         setupUI()
         setupClickListeners()
+    }
+    
+    override fun onStart() {
+        super.onStart()
+        // ✅ CORREÇÃO: Configurar largura do diálogo para ocupar mais espaço
+        dialog?.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.9).toInt(), // 90% da largura da tela
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 
     private fun setupUI() {
