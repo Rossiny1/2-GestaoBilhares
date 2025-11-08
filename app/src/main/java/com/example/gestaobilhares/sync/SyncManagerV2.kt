@@ -739,6 +739,11 @@ class SyncManagerV2(
             android.util.Log.d("SyncManagerV2", "🔄 Fase 7: Invalidando cache das rotas...")
             invalidarCacheRotas()
             
+            // ✅ CORREÇÃO: Forçar atualização das rotas para disparar Flow e atualizar UI imediatamente
+            // Isso garante que os cards de rotas mostrem os dados corretos sem delay
+            android.util.Log.d("SyncManagerV2", "🔄 Forçando atualização das rotas para disparar Flow...")
+            forcarAtualizacaoRotas()
+            
             android.util.Log.d("SyncManagerV2", "✅ PULL SYNC concluído com sucesso")
             
         } catch (e: Exception) {
@@ -1447,6 +1452,34 @@ class SyncManagerV2(
             
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro ao criar ciclos automaticamente: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * ✅ CORREÇÃO: Forçar atualização das rotas para disparar Flow e atualizar UI imediatamente
+     * Faz uma atualização trivial (atualiza data_atualizacao) para disparar o Flow e forçar recálculo
+     */
+    private suspend fun forcarAtualizacaoRotas() {
+        try {
+            android.util.Log.d("SyncManagerV2", "🔄 Forçando atualização das rotas para disparar Flow...")
+            
+            val rotas = appRepository.obterTodasRotas().first()
+            val timestamp = System.currentTimeMillis()
+            
+            for (rota in rotas) {
+                try {
+                    // Fazer uma atualização trivial para disparar o Flow
+                    // Isso força o recálculo dos dados e atualiza a UI imediatamente
+                    database.rotaDao().atualizarStatus(rota.id, rota.statusAtual.name, timestamp)
+                    android.util.Log.d("SyncManagerV2", "✅ Rota ${rota.nome} atualizada para disparar Flow")
+                } catch (e: Exception) {
+                    android.util.Log.w("SyncManagerV2", "❌ Erro ao atualizar rota ${rota.nome}: ${e.message}")
+                }
+            }
+            
+            android.util.Log.d("SyncManagerV2", "✅ Todas as rotas atualizadas - Flow será disparado")
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Erro ao forçar atualização das rotas: ${e.message}", e)
         }
     }
     

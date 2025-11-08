@@ -52,7 +52,7 @@ import java.util.Date
         SyncQueue::class, // ✅ FASE 3B: FILA DE SINCRONIZAÇÃO
         SyncConfig::class // ✅ FASE 3B: CONFIGURAÇÕES DE SINCRONIZAÇÃO
     ],
-    version = 45, // ✅ FASE PRIORIDADE ALTA: Índices de otimização adicionados
+    version = 46, // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Metadados de assinatura adicionados
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -989,13 +989,94 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
+                /**
+                 * ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Migration para adicionar metadados de assinatura
+                 * Adiciona campos necessários para validade jurídica conforme Lei 14.063/2020
+                 */
+                val MIGRATION_45_46 = object : androidx.room.migration.Migration(45, 46) {
+                    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            android.util.Log.d("AppDatabase", "Migration 45→46: Adicionando metadados de assinatura para conformidade jurídica")
+                            
+                            // Verificar se as colunas já existem antes de adicionar
+                            val cursor = db.query("PRAGMA table_info(contratos_locacao)")
+                            val existingColumns = mutableListOf<String>()
+                            while (cursor.moveToNext()) {
+                                existingColumns.add(cursor.getString(1))
+                            }
+                            cursor.close()
+                            
+                            // Metadados da assinatura do locatário
+                            if (!existingColumns.contains("locatarioAssinaturaHash")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN locatarioAssinaturaHash TEXT")
+                            }
+                            if (!existingColumns.contains("locatarioAssinaturaDeviceId")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN locatarioAssinaturaDeviceId TEXT")
+                            }
+                            if (!existingColumns.contains("locatarioAssinaturaIpAddress")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN locatarioAssinaturaIpAddress TEXT")
+                            }
+                            if (!existingColumns.contains("locatarioAssinaturaTimestamp")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN locatarioAssinaturaTimestamp INTEGER")
+                            }
+                            if (!existingColumns.contains("locatarioAssinaturaPressaoMedia")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN locatarioAssinaturaPressaoMedia REAL")
+                            }
+                            if (!existingColumns.contains("locatarioAssinaturaVelocidadeMedia")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN locatarioAssinaturaVelocidadeMedia REAL")
+                            }
+                            if (!existingColumns.contains("locatarioAssinaturaDuracao")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN locatarioAssinaturaDuracao INTEGER")
+                            }
+                            if (!existingColumns.contains("locatarioAssinaturaTotalPontos")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN locatarioAssinaturaTotalPontos INTEGER")
+                            }
+                            
+                            // Metadados da assinatura do locador
+                            if (!existingColumns.contains("locadorAssinaturaHash")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN locadorAssinaturaHash TEXT")
+                            }
+                            if (!existingColumns.contains("locadorAssinaturaDeviceId")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN locadorAssinaturaDeviceId TEXT")
+                            }
+                            if (!existingColumns.contains("locadorAssinaturaTimestamp")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN locadorAssinaturaTimestamp INTEGER")
+                            }
+                            
+                            // Hash do documento completo
+                            if (!existingColumns.contains("documentoHash")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN documentoHash TEXT")
+                            }
+                            
+                            // Confirmação de presença física
+                            if (!existingColumns.contains("presencaFisicaConfirmada")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN presencaFisicaConfirmada INTEGER NOT NULL DEFAULT 0")
+                            }
+                            if (!existingColumns.contains("presencaFisicaConfirmadaPor")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN presencaFisicaConfirmadaPor TEXT")
+                            }
+                            if (!existingColumns.contains("presencaFisicaConfirmadaCpf")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN presencaFisicaConfirmadaCpf TEXT")
+                            }
+                            if (!existingColumns.contains("presencaFisicaConfirmadaTimestamp")) {
+                                db.execSQL("ALTER TABLE contratos_locacao ADD COLUMN presencaFisicaConfirmadaTimestamp INTEGER")
+                            }
+                            
+                            android.util.Log.d("AppDatabase", "Migration 45→46: Metadados de assinatura adicionados com sucesso")
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 45_46: ${e.message}", e)
+                            // Não relançar exceção - colunas podem já existir
+                        }
+                    }
+                }
+
                 try {
                     val builder = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,
                         DATABASE_NAME
                     )
-                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_39_40, MIGRATION_40_41, MIGRATION_41_42, MIGRATION_42_43, MIGRATION_44_45)
+                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_39_40, MIGRATION_40_41, MIGRATION_41_42, MIGRATION_42_43, MIGRATION_44_45, MIGRATION_45_46)
                         .addCallback(object : RoomDatabase.Callback() {
                             override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                                 super.onOpen(db)

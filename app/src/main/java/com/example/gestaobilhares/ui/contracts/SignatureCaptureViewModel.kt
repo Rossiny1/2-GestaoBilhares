@@ -61,6 +61,33 @@ class SignatureCaptureViewModel : ViewModel() {
     }
     
     fun salvarAssinatura(assinaturaBase64: String) {
+        salvarAssinaturaComMetadados(
+            assinaturaBase64 = assinaturaBase64,
+            hashAssinatura = null,
+            deviceId = null,
+            ipAddress = null,
+            timestamp = null,
+            pressaoMedia = null,
+            velocidadeMedia = null,
+            duracao = null,
+            totalPontos = null
+        )
+    }
+    
+    /**
+     * ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Salva assinatura com metadados completos
+     */
+    fun salvarAssinaturaComMetadados(
+        assinaturaBase64: String,
+        hashAssinatura: String?,
+        deviceId: String?,
+        ipAddress: String?,
+        timestamp: Long?,
+        pressaoMedia: Float?,
+        velocidadeMedia: Float?,
+        duracao: Long?,
+        totalPontos: Int?
+    ) {
         viewModelScope.launch {
             _loading.value = true
             try {
@@ -68,6 +95,15 @@ class SignatureCaptureViewModel : ViewModel() {
                 
                 val contratoAtualizado = contrato.copy(
                     assinaturaLocatario = assinaturaBase64,
+                    // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Metadados da assinatura do locatário
+                    locatarioAssinaturaHash = hashAssinatura,
+                    locatarioAssinaturaDeviceId = deviceId,
+                    locatarioAssinaturaIpAddress = ipAddress,
+                    locatarioAssinaturaTimestamp = timestamp ?: System.currentTimeMillis(),
+                    locatarioAssinaturaPressaoMedia = pressaoMedia,
+                    locatarioAssinaturaVelocidadeMedia = velocidadeMedia,
+                    locatarioAssinaturaDuracao = duracao,
+                    locatarioAssinaturaTotalPontos = totalPontos,
                     dataAtualizacao = Date()
                 )
                 

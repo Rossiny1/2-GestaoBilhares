@@ -280,6 +280,7 @@ class ClientListViewModel constructor(
 
     /**
      * ✅ FASE 9B: Carrega clientes da rota com filtros combinados (método original)
+     * ✅ CORREÇÃO: Usar query com débito atual para garantir dados atualizados imediatamente
      */
     fun carregarClientes(rotaId: Long) {
         if (BuildConfig.DEBUG) {
@@ -295,20 +296,24 @@ class ClientListViewModel constructor(
             try {
                 showLoading()
                 
-                // ✅ CORREÇÃO: Carregar dados uma vez e depois observar mudanças
-                val clientes = appRepository.obterClientesPorRota(rotaId).first()
+                // ✅ CORREÇÃO: Usar query com débito atual para garantir dados atualizados imediatamente
+                // Isso garante que clientes pagos apareçam corretamente na aba "Pago" sem delay
+                val clientes = appRepository.obterClientesPorRotaComDebitoAtual(rotaId).first()
                 _clientesTodos.value = clientes
                 aplicarFiltrosCombinados() // Aplicar filtros após carregar
                 
                 // ✅ NOVO: Calcular dados do card de progresso
                 calcularDadosProgressoCiclo(clientes)
                 
-                // ✅ NOVO: Continuar observando mudanças
-                appRepository.obterClientesPorRota(rotaId).collect { clientesAtualizados ->
+                android.util.Log.d("ClientListViewModel", "✅ Clientes carregados imediatamente: ${clientes.size} clientes")
+                
+                // ✅ NOVO: Continuar observando mudanças com query otimizada
+                appRepository.obterClientesPorRotaComDebitoAtual(rotaId).collect { clientesAtualizados ->
                     if (clientesAtualizados != _clientesTodos.value) {
                         _clientesTodos.value = clientesAtualizados
                         aplicarFiltrosCombinados()
                         calcularDadosProgressoCiclo(clientesAtualizados)
+                        android.util.Log.d("ClientListViewModel", "🔄 Clientes atualizados: ${clientesAtualizados.size} clientes")
                     }
                 }
             } catch (e: Exception) {
@@ -462,6 +467,15 @@ class ClientListViewModel constructor(
                         ciclo = proximoCiclo,
                         dataInicio = novoCiclo.dataInicio.time
                     )
+                    
+                    // ✅ CORREÇÃO: Forçar atualização da rota para disparar Flow e atualizar UI imediatamente
+                    // Isso garante que o card da rota na tela de Rotas seja atualizado sem delay
+                    val rotaAtualizada = appRepository.buscarRotaPorId(rota.id)
+                    if (rotaAtualizada != null) {
+                        // Fazer uma atualização trivial para disparar o Flow
+                        appRepository.atualizarRota(rotaAtualizada.copy(dataAtualizacao = System.currentTimeMillis()))
+                        android.util.Log.d("ClientListViewModel", "✅ Rota atualizada para disparar Flow - UI será atualizada imediatamente")
+                    }
                 } catch (e: Exception) {
                     android.util.Log.w(
                         "ClientListViewModel",
@@ -482,6 +496,11 @@ class ClientListViewModel constructor(
                 
                 // ✅ NOTIFICAR MUDANÇA DE STATUS para atualização em tempo real
                 notificarMudancaStatusRota(rota.id)
+                
+                // ✅ CORREÇÃO: Recarregar clientes IMEDIATAMENTE após iniciar novo acerto
+                // Isso garante que os clientes apareçam corretamente nas abas (em aberto/pago)
+                android.util.Log.d("ClientListViewModel", "🔄 Recarregando clientes imediatamente após iniciar novo acerto")
+                carregarClientes(rota.id)
                 
             } catch (e: Exception) {
                 logError("CICLO_INICIAR", "Erro ao iniciar rota: ${e.message}", e)

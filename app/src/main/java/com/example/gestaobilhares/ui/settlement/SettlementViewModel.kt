@@ -590,54 +590,66 @@ class SettlementViewModel constructor(
                     logOperation("SETTLEMENT", "   📷 Foto: '${acertoMesa.fotoRelogioFinal}'")
                 }
                 
-                // ✅ CRÍTICO: Inserir mesas e aguardar uploads completarem
+                // ✅ CRÍTICO: Inserir mesas
                 acertoMesas.forEach { mesa ->
                     val mesaId = appRepository.inserirAcertoMesa(mesa)
                     logOperation("SETTLEMENT", "✅ Mesa ${mesa.mesaId} salva com ID: $mesaId")
                 }
                 logOperation("SETTLEMENT", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
                 
-                // ✅ CRÍTICO: Aguardar tempo suficiente para garantir que uploads de fotos sejam concluídos
-                // O upload para Firebase Storage pode levar alguns segundos dependendo do tamanho da foto
-                // e da velocidade da conexão
-                logOperation("SETTLEMENT", "⏳ Aguardando uploads de fotos completarem...")
-                kotlinx.coroutines.delay(5000) // Aumentado para 5 segundos para garantir upload completo
-                logOperation("SETTLEMENT", "✅ Delay concluído, criando payload de sincronização...")
-                
-                // ✅ CORREÇÃO CRÍTICA: Adicionar acerto à fila de sync APÓS inserir as mesas
-                // Aguardar mais um pouco para garantir que o cache está populado
-                kotlinx.coroutines.delay(1000)
-                appRepository.adicionarAcertoComMesasParaSync(acertoId)
-                logOperation("SETTLEMENT", "✅ Acerto $acertoId adicionado à fila de sync com ${acertoMesas.size} mesas")
-                
-                // ✅ NOVO: Registrar troca de pano no histórico de manutenção
-                if (dadosAcerto.panoTrocado && com.example.gestaobilhares.utils.StringUtils.isNaoVazia(dadosAcerto.numeroPano)) {
-                    registrarTrocaPanoNoHistorico(dadosAcerto.mesas.map { mesa ->
-                        com.example.gestaobilhares.ui.settlement.MesaDTO(
-                            id = mesa.id,
-                            numero = mesa.numero,
-                            relogioInicial = mesa.relogioInicial,
-                            relogioFinal = mesa.relogioFinal,
-                            tipoMesa = mesa.tipoMesa,
-                            tamanho = com.example.gestaobilhares.data.entities.TamanhoMesa.MEDIA,
-                            estadoConservacao = com.example.gestaobilhares.data.entities.EstadoConservacao.BOM,
-                            valorFixo = mesa.valorFixo,
-                            valorFicha = 0.0,
-                            comissaoFicha = 0.0,
-                            ativa = true
-                        )
-                    }, dadosAcerto.numeroPano ?: "")
-                }
-                
                 // ✅ CRÍTICO: Atualizar o débito atual na tabela de clientes
                 appRepository.atualizarDebitoAtual(clienteId, debitoAtual)
                 logOperation("SETTLEMENT", "Débito atual atualizado na tabela clientes: R$ $debitoAtual")
                 
-                // ✅ NOVO: Verificar se a atualização foi bem-sucedida
-                val clienteAtualizado = appRepository.obterClientePorId(clienteId)
-                logOperation("SETTLEMENT", "🔍 VERIFICAÇÃO: Débito atual na tabela clientes após atualização: R$ ${clienteAtualizado?.debitoAtual}")
-                
+                // ✅ CORREÇÃO: Emitir resultado IMEDIATAMENTE para não bloquear a UI
+                // O diálogo de resumo deve aparecer instantaneamente
                 _resultadoSalvamento.value = ResultadoSalvamento.Sucesso(acertoId)
+                logOperation("SETTLEMENT", "✅ Resultado de salvamento emitido - diálogo será exibido imediatamente")
+                
+                // ✅ NOVO: Processar uploads e sync em background (sem bloquear UI)
+                // Isso permite que o diálogo apareça imediatamente enquanto o sync acontece em background
+                viewModelScope.launch {
+                    try {
+                        // ✅ NOVO: Registrar troca de pano no histórico de manutenção (background)
+                        if (dadosAcerto.panoTrocado && com.example.gestaobilhares.utils.StringUtils.isNaoVazia(dadosAcerto.numeroPano)) {
+                            registrarTrocaPanoNoHistorico(dadosAcerto.mesas.map { mesa ->
+                                com.example.gestaobilhares.ui.settlement.MesaDTO(
+                                    id = mesa.id,
+                                    numero = mesa.numero,
+                                    relogioInicial = mesa.relogioInicial,
+                                    relogioFinal = mesa.relogioFinal,
+                                    tipoMesa = mesa.tipoMesa,
+                                    tamanho = com.example.gestaobilhares.data.entities.TamanhoMesa.MEDIA,
+                                    estadoConservacao = com.example.gestaobilhares.data.entities.EstadoConservacao.BOM,
+                                    valorFixo = mesa.valorFixo,
+                                    valorFicha = 0.0,
+                                    comissaoFicha = 0.0,
+                                    ativa = true
+                                )
+                            }, dadosAcerto.numeroPano ?: "")
+                        }
+                        
+                        // ✅ CRÍTICO: Aguardar tempo suficiente para garantir que uploads de fotos sejam concluídos
+                        // O upload para Firebase Storage pode levar alguns segundos dependendo do tamanho da foto
+                        // e da velocidade da conexão
+                        logOperation("SETTLEMENT", "⏳ [BACKGROUND] Aguardando uploads de fotos completarem...")
+                        kotlinx.coroutines.delay(5000) // Aumentado para 5 segundos para garantir upload completo
+                        logOperation("SETTLEMENT", "✅ [BACKGROUND] Delay concluído, criando payload de sincronização...")
+                        
+                        // ✅ CORREÇÃO CRÍTICA: Adicionar acerto à fila de sync APÓS inserir as mesas
+                        // Aguardar mais um pouco para garantir que o cache está populado
+                        kotlinx.coroutines.delay(1000)
+                        appRepository.adicionarAcertoComMesasParaSync(acertoId)
+                        logOperation("SETTLEMENT", "✅ [BACKGROUND] Acerto $acertoId adicionado à fila de sync com ${acertoMesas.size} mesas")
+                        
+                        // ✅ NOVO: Verificar se a atualização foi bem-sucedida (background)
+                        val clienteAtualizado = appRepository.obterClientePorId(clienteId)
+                        logOperation("SETTLEMENT", "🔍 [BACKGROUND] VERIFICAÇÃO: Débito atual na tabela clientes após atualização: R$ ${clienteAtualizado?.debitoAtual}")
+                    } catch (e: Exception) {
+                        logError("SETTLEMENT", "Erro ao processar sync em background: ${e.localizedMessage}", e)
+                        // Não emitir erro aqui pois o acerto já foi salvo com sucesso
+                    }
+                }
             } catch (e: Exception) {
                 logError("SETTLEMENT", "Erro ao salvar acerto: ${e.localizedMessage}", e)
                 _resultadoSalvamento.value = ResultadoSalvamento.Erro(e.localizedMessage ?: "Erro desconhecido")

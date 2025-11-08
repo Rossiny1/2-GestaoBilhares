@@ -49,6 +49,30 @@ class ContractPdfGenerator(private val context: Context) {
             document.close()
         }
         
+        // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Gerar hash do documento após criação
+        try {
+            val documentIntegrityManager = DocumentIntegrityManager(context)
+            val pdfBytes = file.readBytes()
+            val documentoHash = documentIntegrityManager.generateDocumentHash(pdfBytes)
+            
+            // Atualizar contrato com hash do documento
+            val repository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(context)
+            kotlinx.coroutines.runBlocking {
+                try {
+                    val contratoAtualizado = contrato.copy(
+                        documentoHash = documentoHash,
+                        dataAtualizacao = Date()
+                    )
+                    repository.atualizarContrato(contratoAtualizado)
+                    android.util.Log.d("ContractPdfGenerator", "Hash do documento gerado e salvo: ${documentoHash.take(20)}...")
+                } catch (e: Exception) {
+                    android.util.Log.e("ContractPdfGenerator", "Erro ao salvar hash do documento: ${e.message}", e)
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ContractPdfGenerator", "Erro ao gerar hash do documento: ${e.message}", e)
+        }
+        
         return file
     }
 
