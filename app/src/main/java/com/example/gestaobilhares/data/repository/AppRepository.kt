@@ -444,25 +444,41 @@ class AppRepository constructor(
     suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) {
         logDbUpdateStart("CLIENTE_DEBITO", "ClienteID=$clienteId, NovoDebito=$novoDebito")
         try {
-            clienteDao.atualizarDebitoAtual(clienteId, novoDebito)
+            // ✅ CORREÇÃO CRÍTICA: Atualizar débito e dataUltimaAtualizacao em uma única operação
+            // Isso garante que o Room detecte a mudança e re-emita o Flow imediatamente
+            val cliente = obterClientePorId(clienteId)
+            if (cliente != null) {
+                // Atualizar débito e dataUltimaAtualizacao simultaneamente
+                val clienteAtualizado = cliente.copy(
+                    debitoAtual = novoDebito,
+                    dataUltimaAtualizacao = java.util.Date()
+                )
+                clienteDao.atualizar(clienteAtualizado)
+                Log.d("AppRepository", "✅ Débito atualizado para cliente $clienteId: $novoDebito - Flow será re-emitido imediatamente")
+            } else {
+                // Fallback: usar método direto se cliente não for encontrado
+                clienteDao.atualizarDebitoAtual(clienteId, novoDebito)
+                Log.w("AppRepository", "⚠️ Cliente $clienteId não encontrado, usando atualização direta")
+            }
+            
             logDbUpdateSuccess("CLIENTE_DEBITO", "ClienteID=$clienteId, NovoDebito=$novoDebito")
             
             // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
             try {
-                val cliente = obterClientePorId(clienteId)
-                if (cliente != null) {
+                val clienteParaSync = obterClientePorId(clienteId)
+                if (clienteParaSync != null) {
                     val payload = """
                         {
-                            "id": ${cliente.id},
-                            "nome": "${cliente.nome}",
-                            "telefone": "${cliente.telefone}",
-                            "endereco": "${cliente.endereco}",
-                            "rotaId": ${cliente.rotaId},
-                            "ativo": ${cliente.ativo},
-                            "dataCadastro": "${cliente.dataCadastro}",
+                            "id": ${clienteParaSync.id},
+                            "nome": "${clienteParaSync.nome}",
+                            "telefone": "${clienteParaSync.telefone}",
+                            "endereco": "${clienteParaSync.endereco}",
+                            "rotaId": ${clienteParaSync.rotaId},
+                            "ativo": ${clienteParaSync.ativo},
+                            "dataCadastro": "${clienteParaSync.dataCadastro}",
                             "debitoAtual": $novoDebito,
-                            "valorFicha": ${cliente.valorFicha},
-                            "comissaoFicha": ${cliente.comissaoFicha}
+                            "valorFicha": ${clienteParaSync.valorFicha},
+                            "comissaoFicha": ${clienteParaSync.comissaoFicha}
                         }
                     """.trimIndent()
                     
@@ -4337,24 +4353,59 @@ class AppRepository constructor(
      * Útil após sincronização de acertos vindos do Firestore, garantindo que o card de clientes
      * reflita o débito real (campo clientes.debito_atual alinhado ao último acerto.debito_atual).
      */
+    // ✅ CORREÇÃO OFICIAL: Room detecta mudanças em JOIN apenas quando TODAS as tabelas envolvidas são atualizadas
+    // A query obterClientesPorRotaComDebitoAtual faz JOIN com acertos, então precisamos atualizar AMBAS as tabelas
+    @androidx.room.Transaction
     suspend fun reconciliarDebitosClientes() {
         try {
             Log.d("AppRepository", "🔄 Reconciliando débitos dos clientes com base no último acerto...")
             val clientes = clienteDao.obterTodos().first()
             var atualizados = 0
+            val clientesParaAtualizar = mutableListOf<Triple<Long, Double, Acerto?>>()
+            
+            // ✅ CORREÇÃO: Primeiro, coletar todos os débitos que precisam ser atualizados
             for (cliente in clientes) {
                 try {
                     val ultimoAcerto = acertoDao.buscarUltimoAcertoPorCliente(cliente.id)
                     val debitoUltimo = ultimoAcerto?.debitoAtual ?: 0.0
-                    if (debitoUltimo != cliente.debitoAtual) {
-                        clienteDao.atualizarDebitoAtual(cliente.id, debitoUltimo)
-                        atualizados++
-                        Log.d("AppRepository", "✅ Cliente ${cliente.id} (${cliente.nome}): debito_atual ${cliente.debitoAtual} -> $debitoUltimo")
+                    if (kotlin.math.abs(debitoUltimo - cliente.debitoAtual) > 0.01) { // Comparação com tolerância para double
+                        clientesParaAtualizar.add(Triple(cliente.id, debitoUltimo, ultimoAcerto))
+                        Log.d("AppRepository", "📝 Cliente ${cliente.id} (${cliente.nome}): debito_atual ${cliente.debitoAtual} -> $debitoUltimo")
                     }
                 } catch (e: Exception) {
-                    Log.w("AppRepository", "⚠️ Falha ao reconciliar cliente ${cliente.id}: ${e.message}")
+                    Log.w("AppRepository", "⚠️ Falha ao calcular débito do cliente ${cliente.id}: ${e.message}")
                 }
             }
+            
+            // ✅ CORREÇÃO OFICIAL: Atualizar clientes E acertos em uma única transação
+            // Isso garante que o Room detecte mudanças na query com JOIN
+            for ((clienteId, novoDebito, ultimoAcerto) in clientesParaAtualizar) {
+                try {
+                    // 1. Atualizar cliente
+                    val cliente = obterClientePorId(clienteId)
+                    if (cliente != null) {
+                        val clienteAtualizado = cliente.copy(
+                            debitoAtual = novoDebito,
+                            dataUltimaAtualizacao = java.util.Date()
+                        )
+                        clienteDao.atualizar(clienteAtualizado)
+                        
+                        // 2. ✅ CRÍTICO: Atualizar também o último acerto para forçar o Room a detectar mudança no JOIN
+                        if (ultimoAcerto != null) {
+                            val acertoAtualizado = ultimoAcerto.copy(
+                                syncTimestamp = System.currentTimeMillis()
+                            )
+                            acertoDao.atualizar(acertoAtualizado)
+                        }
+                        
+                        atualizados++
+                        Log.d("AppRepository", "✅ Cliente $clienteId atualizado: debito_atual = $novoDebito (cliente + acerto atualizados)")
+                    }
+                } catch (e: Exception) {
+                    Log.w("AppRepository", "⚠️ Falha ao atualizar cliente $clienteId: ${e.message}")
+                }
+            }
+            
             Log.d("AppRepository", "✅ Reconciliação concluída. Clientes atualizados: $atualizados")
         } catch (e: Exception) {
             Log.e("AppRepository", "❌ Erro na reconciliação de débitos: ${e.message}", e)
