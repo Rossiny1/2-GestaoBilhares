@@ -58,7 +58,6 @@ class SignatureCaptureFragment : Fragment() {
         try {
             // ✅ LOG CRASH: Inicializando ViewModel
             android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.onViewCreated - Inicializando ViewModel")
-            val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
             val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
             viewModel = SignatureCaptureViewModel()
             viewModel.initializeRepository(appRepository)
@@ -235,8 +234,7 @@ class SignatureCaptureFragment : Fragment() {
                     // Verificação imediata
                     try {
                         val apos = repo.buscarContratosPorCliente(contratoAtual.clienteId).first()
-                        val resumo = apos.joinToString { _ -> "id=${'$'}{contratoAtual.id},status=${'$'}{contratoAtual.status},enc=${'$'}{contratoAtual.dataEncerramento}" }
-                        android.util.Log.d("DistratoFlow", "✅ Após salvar assinatura distrato: ${'$'}resumo")
+                        android.util.Log.d("DistratoFlow", "✅ Após salvar assinatura distrato: ${apos.size} contratos encontrados")
                     } catch (e: Exception) {
                         android.util.Log.e("DistratoFlow", "Falha verificação pós-assinatura distrato", e)
                     }
@@ -295,10 +293,16 @@ class SignatureCaptureFragment : Fragment() {
                 // ✅ NOVO: Obter assinatura do representante legal automaticamente
                 val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
                 
-                val pdfFile = pdfGenerator.generateContractPdf(contrato, mesas, assinaturaRepresentante)
+                // ✅ FASE 12.5: generateContractPdf agora retorna Pair<File, String?> (hash)
+                val (pdfFile, documentoHash) = pdfGenerator.generateContractPdf(contrato, mesas, assinaturaRepresentante)
                 if (!pdfFile.exists() || pdfFile.length() == 0L) {
                     Toast.makeText(requireContext(), "Erro: Arquivo PDF não foi gerado corretamente", Toast.LENGTH_LONG).show()
                     return@launch
+                }
+                
+                // ✅ FASE 12.5: Salvar hash de forma assíncrona (removido runBlocking)
+                documentoHash?.let { hash ->
+                    pdfGenerator.salvarHashDocumento(contrato, hash)
                 }
                 val message = "Contrato de locação ${contrato.numeroContrato} assinado com sucesso!"
                 val pdfUri = androidx.core.content.FileProvider.getUriForFile(
@@ -406,8 +410,7 @@ class SignatureCaptureFragment : Fragment() {
                     // Verificação imediata (diagnóstico)
                     try {
                         val apos = repo.buscarContratosPorCliente(contrato.clienteId).first()
-                        val resumo = apos.joinToString { _ -> "id=${'$'}{contrato.id},status=${'$'}{contrato.status},enc=${'$'}{contrato.dataEncerramento}" }
-                        android.util.Log.d("DistratoFlow", "Após atualizar (SignatureCapture): ${'$'}resumo")
+                        android.util.Log.d("DistratoFlow", "Após atualizar (SignatureCapture): ${apos.size} contratos encontrados")
                     } catch (e: Exception) {
                         android.util.Log.e("DistratoFlow", "Falha verificação pós-atualização (SignatureCapture)", e)
                     }

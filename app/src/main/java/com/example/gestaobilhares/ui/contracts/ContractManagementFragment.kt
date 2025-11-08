@@ -162,7 +162,7 @@ class ContractManagementFragment : Fragment() {
                     ))
                 }
                 // Adiciona distrato se houver (status) ou se existir PDF (fallback)
-                val statusUpper = (contrato.status ?: "").trim().uppercase()
+                val statusUpper = contrato.status.trim().uppercase()
                 val isDistratoStatus = (
                     statusUpper == "ENCERRADO_QUITADO" ||
                     statusUpper == "RESCINDIDO_COM_DIVIDA" ||
@@ -199,7 +199,8 @@ class ContractManagementFragment : Fragment() {
                 if (isDistratoStatus || hasDataEncerramento || distratoData != null) {
                     val dataDoc = contrato.dataEncerramento
                         ?: distratoData
-                        ?: (contrato.dataAtualizacao ?: contrato.dataCriacao)
+                        ?: contrato.dataAtualizacao
+                        ?: contrato.dataCriacao
                     android.util.Log.d("DocsDialog", "✅ Adicionando DISTRATO para contrato ${contrato.numeroContrato} data=${dataDoc}")
                     documentos.add(DocumentoItem(
                         tipo = "DISTRATO",
@@ -452,7 +453,7 @@ class ContractManagementFragment : Fragment() {
         // Observar loading
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.isLoading.collect { isLoading ->
+                viewModel.isLoading.collect { _ ->
                     // Implementar loading se necessário
                 }
             }
@@ -511,7 +512,13 @@ class ContractManagementFragment : Fragment() {
                 // ✅ NOVO: Obter assinatura do representante legal automaticamente
                 val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
                 
-                val pdfFile = contractPdfGenerator.generateContractPdf(contrato, mesas, assinaturaRepresentante)
+                // ✅ FASE 12.5: generateContractPdf agora retorna Pair<File, String?> (hash)
+                val (pdfFile, documentoHash) = contractPdfGenerator.generateContractPdf(contrato, mesas, assinaturaRepresentante)
+                
+                // ✅ FASE 12.5: Salvar hash de forma assíncrona (removido runBlocking)
+                documentoHash?.let { hash ->
+                    contractPdfGenerator.salvarHashDocumento(contrato, hash)
+                }
                 
                 if (pdfFile.exists()) {
                     // Tentar abrir PDF com visualizador padrão
@@ -774,7 +781,13 @@ class ContractManagementFragment : Fragment() {
                 // ✅ NOVO: Obter assinatura do representante legal automaticamente
                 val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
                 
-                val pdfFile = contractPdfGenerator.generateContractPdf(contrato, mesas, assinaturaRepresentante)
+                // ✅ FASE 12.5: generateContractPdf agora retorna Pair<File, String?> (hash)
+                val (pdfFile, documentoHash) = contractPdfGenerator.generateContractPdf(contrato, mesas, assinaturaRepresentante)
+                
+                // ✅ FASE 12.5: Salvar hash de forma assíncrona (removido runBlocking)
+                documentoHash?.let { hash ->
+                    contractPdfGenerator.salvarHashDocumento(contrato, hash)
+                }
                 
                 if (pdfFile.exists()) {
                     // Compartilhar PDF via WhatsApp ou outros apps

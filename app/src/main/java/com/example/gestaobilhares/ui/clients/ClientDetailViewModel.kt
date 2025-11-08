@@ -22,7 +22,8 @@ import com.example.gestaobilhares.BuildConfig
  * FASE 4A - Implementação crítica com dados mock
  */
 class ClientDetailViewModel(
-    private val appRepository: com.example.gestaobilhares.data.repository.AppRepository
+    private val appRepository: com.example.gestaobilhares.data.repository.AppRepository,
+    private val userSessionManager: com.example.gestaobilhares.utils.UserSessionManager? = null
 ) : BaseViewModel() {
 
     private val _clientDetails = MutableStateFlow<ClienteResumo?>(null)
@@ -188,10 +189,10 @@ class ClientDetailViewModel(
     /**
      * ✅ NOVO FLUXO: Verifica se mesa pode ser retirada ou precisa de acerto
      */
-    suspend fun verificarSeRetiradaEPermitida(_mesaId: Long, _clienteId: Long): RetiradaStatus {
+    suspend fun verificarSeRetiradaEPermitida(mesaId: Long, _clienteId: Long): RetiradaStatus {
         return try {
             // Buscar último acerto da mesa
-            val ultimoAcertoMesa = appRepository.buscarUltimoAcertoPorMesa(_mesaId)
+            val ultimoAcertoMesa = appRepository.buscarUltimoAcertoPorMesa(mesaId)
             val hoje = java.util.Calendar.getInstance()
             hoje.set(java.util.Calendar.HOUR_OF_DAY, 0)
             hoje.set(java.util.Calendar.MINUTE, 0)
@@ -248,10 +249,12 @@ class ClientDetailViewModel(
         }
     }
 
+    /**
+     * Verifica se o usuário atual é administrador
+     * ✅ FASE 12.7: Usar UserSessionManager para verificação real
+     */
     fun isAdminUser(): Boolean {
-        // TODO: Implementar checagem real de permissão do usuário logado
-        // Exemplo mock: return true para admin, false para user comum
-        return true // Trocar para lógica real
+        return userSessionManager?.isAdmin() ?: false
     }
 
     fun salvarObservacaoCliente(clienteId: Long, _observacao: String) {

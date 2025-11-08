@@ -17,7 +17,8 @@ import kotlinx.coroutines.launch
  * Implementa CRUD de rotas com controle de acesso administrativo.
  */
 class RouteManagementViewModel(
-    private val appRepository: AppRepository
+    private val appRepository: AppRepository,
+    private val userSessionManager: com.example.gestaobilhares.utils.UserSessionManager? = null
 ) : BaseViewModel() {
 
     // Lista de rotas observável
@@ -58,20 +59,12 @@ class RouteManagementViewModel(
 
     /**
      * Verifica se o usuário atual tem acesso de administrador.
-     * Por enquanto, simula verificação. Na implementação final,
-     * deve verificar no banco de dados pelo Firebase UID.
+     * ✅ FASE 12.7: Usar UserSessionManager para verificação real
      */
     fun checkAdminAccess() {
         viewModelScope.launch {
             try {
-                // TODO: Implementar verificação real com Firebase UID
-                // Por enquanto, assume que tem acesso admin para demonstração
-                // Em produção, fazer:
-                // val currentUser = FirebaseAuth.getInstance().currentUser
-                // val colaborador = colaboradorRepository.getByFirebaseUid(currentUser?.uid)
-                // _hasAdminAccess.value = colaborador?.nivelAcesso == NivelAcesso.ADMIN
-                
-                _hasAdminAccess.value = true // Temporário para demonstração
+                _hasAdminAccess.value = userSessionManager?.isAdmin() ?: false
             } catch (e: Exception) {
                 _hasAdminAccess.value = false
                 _errorMessage.value = "Erro ao verificar permissões: ${e.message}"
@@ -102,15 +95,11 @@ class RouteManagementViewModel(
                     dataAtualizacao = System.currentTimeMillis()
                 )
 
-                val rotaId = appRepository.inserirRota(novaRota)
+                val _rotaId = appRepository.inserirRota(novaRota)
                 
-                if (rotaId != null) {
-                    _successMessage.value = "Rota \"$nome\" criada com sucesso"
-                    // ✅ NOVO: Recarregar lista de rotas após criação
-                    loadRotas()
-                } else {
-                    _errorMessage.value = "Erro ao criar rota. Verifique se já existe uma rota com este nome."
-                }
+                _successMessage.value = "Rota \"$nome\" criada com sucesso"
+                // ✅ NOVO: Recarregar lista de rotas após criação
+                loadRotas()
                 
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao criar rota: ${e.message}"

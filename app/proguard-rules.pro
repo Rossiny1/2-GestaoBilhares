@@ -30,3 +30,22 @@
 # iText warnings
 -dontwarn org.bouncycastle.**
 -dontwarn org.spongycastle.**
+
+# ✅ FASE 12.10: Otimizações de Performance e Tamanho do APK
+
+# Remover logs em release
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+}
+
+# Otimizações de código
+-optimizationpasses 5
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-verbose
+
+# Remover código não utilizado
+-allowaccessmodification
+-repackageclasses ''

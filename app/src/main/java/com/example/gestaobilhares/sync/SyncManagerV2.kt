@@ -1266,12 +1266,10 @@ class SyncManagerV2(
                     android.util.Log.d("CYCLE_PULL", "DOC id=${document.id} roomId=$roomId rotaId=$rotaId numero=$numeroCiclo ano=${data["ano"]} dataInicio=${data["dataInicio"]} dataFim=${data["dataFim"]} status=${data["status"]}")
                     
                     if (roomId != null && numeroCiclo != null && rotaId != null) {
-                        // Verificar se já existe no Room
+                        // ✅ FASE 12.5: Verificar se já existe no Room (removido runBlocking - função já é suspend)
                         val cicloExistente = try {
-                            runBlocking { 
-                                val cicloDao = database.cicloAcertoDao()
-                                cicloDao.buscarPorId(roomId)
-                            }
+                            val cicloDao = database.cicloAcertoDao()
+                            cicloDao.buscarPorId(roomId)
                         } catch (e: Exception) {
                             null
                         }
@@ -1372,21 +1370,19 @@ class SyncManagerV2(
                     val cicloExistente = appRepository.buscarCicloAtualPorRota(rota.id)
                     
                     if (cicloExistente == null) {
-                        // Buscar acertos desta rota para determinar o ciclo
+                        // ✅ FASE 12.5: Buscar acertos desta rota para determinar o ciclo (removido runBlocking - função já é suspend)
                         val acertos = try {
-                            runBlocking { 
-                                // Buscar clientes da rota primeiro
-                                val clienteDao = database.clienteDao()
-                                val clientes = clienteDao.obterClientesPorRota(rota.id).first()
-                                val clienteIds = clientes.map { cliente -> cliente.id }
-                                
-                                if (clienteIds.isNotEmpty()) {
-                                    // Buscar acertos dos clientes desta rota
-                                    val acertoDao = database.acertoDao()
-                                    acertoDao.buscarUltimosAcertosPorClientes(clienteIds)
-                                } else {
-                                    emptyList()
-                                }
+                            // Buscar clientes da rota primeiro
+                            val clienteDao = database.clienteDao()
+                            val clientes = clienteDao.obterClientesPorRota(rota.id).first()
+                            val clienteIds = clientes.map { cliente -> cliente.id }
+                            
+                            if (clienteIds.isNotEmpty()) {
+                                // Buscar acertos dos clientes desta rota
+                                val acertoDao = database.acertoDao()
+                                acertoDao.buscarUltimosAcertosPorClientes(clienteIds)
+                            } else {
+                                emptyList()
                             }
                         } catch (e: Exception) {
                             android.util.Log.w("SyncManagerV2", "Erro ao buscar acertos da rota ${rota.nome}: ${e.message}")
@@ -1506,25 +1502,22 @@ class SyncManagerV2(
             try {
                 android.util.Log.d("SyncManagerV2", "🔄 Forçando invalidação completa do cache global...")
                 
-                // Invalidar cache de ciclos também
+                // ✅ FASE 12.5: Invalidar cache de ciclos também (removido runBlocking - função já é suspend)
                 val ciclos = try {
-                    runBlocking { 
-                        val cicloDao = database.cicloAcertoDao()
-                        // Buscar ciclos de todas as rotas
-                        val rotas = appRepository.obterTodasRotas().first()
-                        val todosCiclos = mutableListOf<com.example.gestaobilhares.data.entities.CicloAcertoEntity>()
-                        
-                        for (rota in rotas) {
-                            try {
-                                val ciclosRota = cicloDao.buscarCiclosPorRota(rota.id)
-                                todosCiclos.addAll(ciclosRota)
-                            } catch (e: Exception) {
-                                android.util.Log.w("SyncManagerV2", "❌ Erro ao buscar ciclos da rota ${rota.nome}: ${e.message}")
-                            }
+                    val cicloDao = database.cicloAcertoDao()
+                    // Buscar ciclos de todas as rotas
+                    val rotas = appRepository.obterTodasRotas().first()
+                    val todosCiclos = mutableListOf<com.example.gestaobilhares.data.entities.CicloAcertoEntity>()
+                    
+                    for (rota in rotas) {
+                        try {
+                            val ciclosRota = cicloDao.buscarCiclosPorRota(rota.id)
+                            todosCiclos.addAll(ciclosRota)
+                        } catch (e: Exception) {
+                            android.util.Log.w("SyncManagerV2", "❌ Erro ao buscar ciclos da rota ${rota.nome}: ${e.message}")
                         }
-                        
-                        todosCiclos
                     }
+                    todosCiclos
                 } catch (e: Exception) {
                     android.util.Log.w("SyncManagerV2", "❌ Erro ao buscar ciclos: ${e.message}")
                     emptyList<com.example.gestaobilhares.data.entities.CicloAcertoEntity>()
@@ -1573,30 +1566,28 @@ class SyncManagerV2(
                 try {
                     android.util.Log.d("SyncManagerV2", "🔍 Processando rota: ${rota.nome} (ID: ${rota.id})")
                     
-                    // Buscar ciclos da rota e aplicar a mesma regra local:
+                    // ✅ FASE 12.5: Buscar ciclos da rota e aplicar a mesma regra local (removido runBlocking - função já é suspend):
                     // 1) Se existir EM_ANDAMENTO, usar o mais recente
                     // 2) Caso contrário, usar o FINALIZADO mais recente
                     val (cicloMaisRecente, origem) = try {
-                        runBlocking {
-                            val cicloDao = database.cicloAcertoDao()
-                            val ciclos = cicloDao.buscarCiclosPorRota(rota.id)
-                            val emAndamento = ciclos
-                                .filter { it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO }
+                        val cicloDao = database.cicloAcertoDao()
+                        val ciclos = cicloDao.buscarCiclosPorRota(rota.id)
+                        val emAndamento = ciclos
+                            .filter { it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO }
+                            .maxWithOrNull(
+                                compareBy<com.example.gestaobilhares.data.entities.CicloAcertoEntity> { it.numeroCiclo }
+                                    .thenBy { it.dataInicio?.time ?: 0L }
+                            )
+                        if (emAndamento != null) {
+                            Pair(emAndamento, "EM_ANDAMENTO")
+                        } else {
+                            val finalizado = ciclos
+                                .filter { it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO }
                                 .maxWithOrNull(
                                     compareBy<com.example.gestaobilhares.data.entities.CicloAcertoEntity> { it.numeroCiclo }
-                                        .thenBy { it.dataInicio?.time ?: 0L }
+                                        .thenBy { it.dataFim?.time ?: it.dataInicio?.time ?: 0L }
                                 )
-                            if (emAndamento != null) {
-                                Pair(emAndamento, "EM_ANDAMENTO")
-                            } else {
-                                val finalizado = ciclos
-                                    .filter { it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO }
-                                    .maxWithOrNull(
-                                        compareBy<com.example.gestaobilhares.data.entities.CicloAcertoEntity> { it.numeroCiclo }
-                                            .thenBy { it.dataFim?.time ?: it.dataInicio?.time ?: 0L }
-                                    )
-                                Pair(finalizado, "FINALIZADO")
-                            }
+                            Pair(finalizado, "FINALIZADO")
                         }
                     } catch (e: Exception) {
                         android.util.Log.w("SyncManagerV2", "❌ Erro ao buscar ciclos da rota ${rota.nome}: ${e.message}")
@@ -1975,6 +1966,20 @@ class SyncManagerV2(
                         continue
                     }
                     
+                    // ✅ FASE 12.7: Helper para converter Timestamp do Firestore para Date
+                    fun converterTimestampParaDate(timestamp: Any?): java.util.Date? {
+                        return when (timestamp) {
+                            is com.google.firebase.Timestamp -> timestamp.toDate()
+                            is Long -> java.util.Date(timestamp)
+                            is String -> try {
+                                com.example.gestaobilhares.utils.DateUtils.parseDataISO(timestamp)
+                            } catch (e: Exception) {
+                                null
+                            }
+                            else -> null
+                        }
+                    }
+                    
                     // Converter dados do Firestore para entidade Room
                     val colaborador = com.example.gestaobilhares.data.entities.Colaborador(
                         id = roomId,
@@ -1982,7 +1987,7 @@ class SyncManagerV2(
                         email = data["email"] as? String ?: "",
                         telefone = data["telefone"] as? String,
                         cpf = data["cpf"] as? String,
-                        dataNascimento = null, // TODO: Implementar conversão de data se necessário
+                        dataNascimento = converterTimestampParaDate(data["dataNascimento"]),
                         endereco = data["endereco"] as? String,
                         bairro = data["bairro"] as? String,
                         cidade = data["cidade"] as? String,
@@ -2003,16 +2008,16 @@ class SyncManagerV2(
                         },
                         ativo = data["ativo"] as? Boolean ?: true,
                         aprovado = data["aprovado"] as? Boolean ?: false,
-                        dataAprovacao = null, // TODO: Implementar conversão de data se necessário
+                        dataAprovacao = converterTimestampParaDate(data["dataAprovacao"]),
                         aprovadoPor = data["aprovadoPor"] as? String,
                         firebaseUid = data["firebaseUid"] as? String,
                         googleId = data["googleId"] as? String,
                         senhaTemporaria = data["senhaTemporaria"] as? String,
                         emailAcesso = data["emailAcesso"] as? String,
                         observacoes = data["observacoes"] as? String,
-                        dataCadastro = java.util.Date(),
-                        dataUltimoAcesso = null, // TODO: Implementar conversão de data se necessário
-                        dataUltimaAtualizacao = java.util.Date()
+                        dataCadastro = converterTimestampParaDate(data["dataCadastro"]) ?: java.util.Date(),
+                        dataUltimoAcesso = converterTimestampParaDate(data["dataUltimoAcesso"]),
+                        dataUltimaAtualizacao = converterTimestampParaDate(data["dataUltimaAtualizacao"]) ?: java.util.Date()
                     )
                     
                     // Inserir no Room
@@ -3753,8 +3758,9 @@ class SyncManagerV2(
                 return
             }
             
+            // ✅ FASE 12.5: Removido runBlocking - função já é suspend
             val mesaReformadaDao = database.mesaReformadaDao()
-            val mesasReformadasExistentes = runBlocking { mesaReformadaDao.listarTodas().first() }
+            val mesasReformadasExistentes = mesaReformadaDao.listarTodas().first()
             android.util.Log.d("SyncManagerV2", "📋 Mesas reformadas existentes localmente: ${mesasReformadasExistentes.size}")
             
             var mesasSincronizadas = 0

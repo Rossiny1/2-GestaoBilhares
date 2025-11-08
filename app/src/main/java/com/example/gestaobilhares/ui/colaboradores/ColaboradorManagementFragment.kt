@@ -48,9 +48,9 @@ class ColaboradorManagementFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar ViewModel
-        val _database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = ColaboradorManagementViewModel(appRepository)
+        val userSessionManager = com.example.gestaobilhares.utils.UserSessionManager.getInstance(requireContext())
+        viewModel = ColaboradorManagementViewModel(appRepository, userSessionManager)
         
         setupRecyclerView()
         setupClickListeners()
@@ -208,7 +208,6 @@ class ColaboradorManagementFragment : Fragment() {
                 FiltroColaborador.ATIVOS -> "Nenhum colaborador ativo"
                 FiltroColaborador.PENDENTES -> "Nenhum colaborador pendente de aprovação"
                 FiltroColaborador.ADMINISTRADORES -> "Nenhum administrador encontrado"
-                else -> "Nenhum colaborador encontrado"
             }
             binding.tvEmptyMessage.text = mensagem
         }

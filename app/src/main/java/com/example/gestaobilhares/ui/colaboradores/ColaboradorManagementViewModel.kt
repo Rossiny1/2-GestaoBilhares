@@ -17,7 +17,8 @@ import kotlinx.coroutines.flow.first
  * Implementa CRUD de colaboradores com controle de acesso administrativo.
  */
 class ColaboradorManagementViewModel(
-    private val appRepository: AppRepository
+    private val appRepository: AppRepository,
+    private val userSessionManager: com.example.gestaobilhares.utils.UserSessionManager? = null
 ) : BaseViewModel() {
 
     // ==================== DADOS OBSERVÁVEIS ====================
@@ -72,7 +73,7 @@ class ColaboradorManagementViewModel(
                 carregarEstatisticas()
                 
                 // Carregar colaboradores com filtro atual
-                aplicarFiltro(_filtroAtual.value ?: FiltroColaborador.TODOS)
+                aplicarFiltro(_filtroAtual.value)
                 
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar dados: ${e.message}"
@@ -254,13 +255,12 @@ class ColaboradorManagementViewModel(
     
     /**
      * Verifica se o usuário atual tem acesso de administrador
+     * ✅ FASE 12.7: Usar UserSessionManager para verificação real
      */
     private fun verificarAcessoAdmin() {
         viewModelScope.launch {
             try {
-                // TODO: Implementar verificação real com Firebase UID
-                // Por enquanto, assume que tem acesso admin para demonstração
-                _hasAdminAccess.value = true
+                _hasAdminAccess.value = userSessionManager?.isAdmin() ?: false
             } catch (e: Exception) {
                 _hasAdminAccess.value = false
                 _errorMessage.value = "Erro ao verificar permissões: ${e.message}"

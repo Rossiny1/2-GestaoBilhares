@@ -20,7 +20,27 @@ import java.util.*
 
 class ContractPdfGenerator(private val context: Context) {
     
-    fun generateContractPdf(contrato: ContratoLocacao, mesas: List<Mesa>, assinaturaRepresentante: String? = null): File {
+    /**
+     * ✅ FASE 12.5: Função suspend para salvar hash do documento (removido runBlocking)
+     */
+    suspend fun salvarHashDocumento(contrato: ContratoLocacao, documentoHash: String) {
+        try {
+            val repository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(context)
+            val contratoAtualizado = contrato.copy(
+                documentoHash = documentoHash,
+                dataAtualizacao = Date()
+            )
+            repository.atualizarContrato(contratoAtualizado)
+            android.util.Log.d("ContractPdfGenerator", "Hash do documento gerado e salvo: ${documentoHash.take(20)}...")
+        } catch (e: Exception) {
+            android.util.Log.e("ContractPdfGenerator", "Erro ao salvar hash do documento: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * ✅ FASE 12.5: Retorna Pair<File, String?> onde String? é o hash do documento
+     */
+    fun generateContractPdf(contrato: ContratoLocacao, mesas: List<Mesa>, assinaturaRepresentante: String? = null): Pair<File, String?> {
         val fileName = "contrato_${contrato.numeroContrato}_${System.currentTimeMillis()}.pdf"
         val file = File(context.getExternalFilesDir(null), fileName)
         
@@ -50,30 +70,18 @@ class ContractPdfGenerator(private val context: Context) {
         }
         
         // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Gerar hash do documento após criação
+        // ✅ FASE 12.5: Retornar hash para ser salvo de forma assíncrona (removido runBlocking)
+        var documentoHash: String? = null
         try {
             val documentIntegrityManager = DocumentIntegrityManager(context)
             val pdfBytes = file.readBytes()
-            val documentoHash = documentIntegrityManager.generateDocumentHash(pdfBytes)
-            
-            // Atualizar contrato com hash do documento
-            val repository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(context)
-            kotlinx.coroutines.runBlocking {
-                try {
-                    val contratoAtualizado = contrato.copy(
-                        documentoHash = documentoHash,
-                        dataAtualizacao = Date()
-                    )
-                    repository.atualizarContrato(contratoAtualizado)
-                    android.util.Log.d("ContractPdfGenerator", "Hash do documento gerado e salvo: ${documentoHash.take(20)}...")
-                } catch (e: Exception) {
-                    android.util.Log.e("ContractPdfGenerator", "Erro ao salvar hash do documento: ${e.message}", e)
-                }
-            }
+            documentoHash = documentIntegrityManager.generateDocumentHash(pdfBytes)
+            android.util.Log.d("ContractPdfGenerator", "Hash do documento gerado: ${documentoHash.take(20)}...")
         } catch (e: Exception) {
             android.util.Log.e("ContractPdfGenerator", "Erro ao gerar hash do documento: ${e.message}", e)
         }
         
-        return file
+        return Pair(file, documentoHash)
     }
 
     data class FechamentoResumo(
@@ -316,7 +324,7 @@ class ContractPdfGenerator(private val context: Context) {
         addStandardClauses(document, font, fontBold)
     }
     
-    private fun addClause(document: Document, title: String, fontBold: com.itextpdf.kernel.font.PdfFont, font: com.itextpdf.kernel.font.PdfFont) {
+    private fun addClause(document: Document, title: String, fontBold: com.itextpdf.kernel.font.PdfFont, _font: com.itextpdf.kernel.font.PdfFont) {
         val clause = Paragraph(title)
             .setFont(fontBold)
             .setFontSize(12f)

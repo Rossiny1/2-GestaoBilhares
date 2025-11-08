@@ -63,9 +63,9 @@ class ClientListFragment : Fragment() {
         })
         
         // ✅ FASE 8C: Inicializar ViewModel com todos os repositórios necessários
-        val _database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = ClientListViewModel(appRepository)
+        val userSessionManager = com.example.gestaobilhares.utils.UserSessionManager.getInstance(requireContext())
+        viewModel = ClientListViewModel(appRepository, userSessionManager)
         
         try {
             // Verificar se binding está disponível
