@@ -727,6 +727,11 @@ class SyncManagerV2(
             android.util.Log.d("SyncManagerV2", "🔧 CORREÇÃO: Corrigindo acertos PENDENTE para FINALIZADO")
             appRepository.corrigirAcertosPendentesParaFinalizados()
             
+            // ✅ CORREÇÃO CRÍTICA: Aguardar um pouco para que o Room processe todas as inserções/atualizações
+            // Isso garante que todas as mudanças sejam detectadas antes de forçar atualizações
+            android.util.Log.d("SyncManagerV2", "⏳ Aguardando processamento do Room após importação...")
+            delay(1000) // Aguardar 1 segundo para Room processar todas as mudanças
+            
             // ✅ NOVO: Reconciliar débitos dos clientes com base no último acerto importado
             // ✅ CORREÇÃO: Executar ANTES de invalidar cache para garantir atualização imediata
             try {
@@ -741,6 +746,9 @@ class SyncManagerV2(
                 android.util.Log.w("SyncManagerV2", "⚠️ Erro ao reconciliar débitos: ${e.message}")
             }
             
+            // ✅ CORREÇÃO CRÍTICA: Aguardar um pouco após reconciliação para Room processar
+            delay(500)
+            
             // 7. SÉTIMO: Invalidar cache das rotas para forçar recálculo dos dados
             android.util.Log.d("SyncManagerV2", "🔄 Fase 7: Invalidando cache das rotas...")
             invalidarCacheRotas()
@@ -749,6 +757,9 @@ class SyncManagerV2(
             // Isso garante que os cards de rotas mostrem os dados corretos sem delay
             android.util.Log.d("SyncManagerV2", "🔄 Forçando atualização das rotas para disparar Flow...")
             forcarAtualizacaoRotas()
+            
+            // ✅ CORREÇÃO CRÍTICA: Aguardar um pouco após forçar atualização para garantir que Flows sejam re-emitidos
+            delay(500)
             
             android.util.Log.d("SyncManagerV2", "✅ PULL SYNC concluído com sucesso")
             
