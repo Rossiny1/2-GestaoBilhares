@@ -728,9 +728,15 @@ class SyncManagerV2(
             appRepository.corrigirAcertosPendentesParaFinalizados()
             
             // ✅ NOVO: Reconciliar débitos dos clientes com base no último acerto importado
+            // ✅ CORREÇÃO: Executar ANTES de invalidar cache para garantir atualização imediata
             try {
                 android.util.Log.d("SyncManagerV2", "🔄 Reconciliando débitos dos clientes pós-sync...")
                 appRepository.reconciliarDebitosClientes()
+                android.util.Log.d("SyncManagerV2", "✅ Débitos reconciliados - Flow será re-emitido imediatamente")
+                
+                // ✅ CORREÇÃO OFICIAL: A reconciliação já atualiza clientes E acertos em transação
+                // Não precisamos atualizar acertos novamente aqui, pois já foi feito na reconciliação
+                android.util.Log.d("SyncManagerV2", "✅ Débitos reconciliados - clientes e acertos já atualizados em transação")
             } catch (e: Exception) {
                 android.util.Log.w("SyncManagerV2", "⚠️ Erro ao reconciliar débitos: ${e.message}")
             }
@@ -1455,6 +1461,8 @@ class SyncManagerV2(
      * ✅ CORREÇÃO: Forçar atualização das rotas para disparar Flow e atualizar UI imediatamente
      * Faz uma atualização trivial (atualiza data_atualizacao) para disparar o Flow e forçar recálculo
      */
+    // ✅ CORREÇÃO OFICIAL: Room detecta mudanças apenas quando a entidade completa é atualizada
+    // Usar updateRota completo em vez de apenas atualizarStatus para garantir detecção de mudança
     private suspend fun forcarAtualizacaoRotas() {
         try {
             android.util.Log.d("SyncManagerV2", "🔄 Forçando atualização das rotas para disparar Flow...")
@@ -1464,16 +1472,17 @@ class SyncManagerV2(
             
             for (rota in rotas) {
                 try {
-                    // Fazer uma atualização trivial para disparar o Flow
-                    // Isso força o recálculo dos dados e atualiza a UI imediatamente
-                    database.rotaDao().atualizarStatus(rota.id, rota.statusAtual.name, timestamp)
-                    android.util.Log.d("SyncManagerV2", "✅ Rota ${rota.nome} atualizada para disparar Flow")
+                    // ✅ CORREÇÃO OFICIAL: Atualizar a rota completa para garantir que o Room detecte a mudança
+                    // O Room só detecta mudanças quando a entidade completa é atualizada via @Update
+                    val rotaAtualizada = rota.copy(dataAtualizacao = timestamp)
+                    database.rotaDao().updateRota(rotaAtualizada)
+                    android.util.Log.d("SyncManagerV2", "✅ Rota ${rota.nome} atualizada (updateRota completo) para disparar Flow")
                 } catch (e: Exception) {
                     android.util.Log.w("SyncManagerV2", "❌ Erro ao atualizar rota ${rota.nome}: ${e.message}")
                 }
             }
             
-            android.util.Log.d("SyncManagerV2", "✅ Todas as rotas atualizadas - Flow será disparado")
+            android.util.Log.d("SyncManagerV2", "✅ Todas as rotas atualizadas - Flow será disparado imediatamente")
         } catch (e: Exception) {
             android.util.Log.e("SyncManagerV2", "❌ Erro ao forçar atualização das rotas: ${e.message}", e)
         }

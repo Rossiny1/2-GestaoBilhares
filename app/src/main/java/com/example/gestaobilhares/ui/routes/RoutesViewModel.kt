@@ -55,11 +55,22 @@ class RoutesViewModel constructor(
     val rotasResumo: StateFlow<List<RotaResumo>> = _rotasResumoFiltradas.asStateFlow()
     
     // ✅ MODERNIZADO: Observa as rotas resumo do repository e aplica filtro de acesso
-    private val rotasResumoOriginal: StateFlow<List<RotaResumo>> = appRepository.getRotasResumoComAtualizacaoTempoReal().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000), // ✅ CORREÇÃO: Usar WhileSubscribed para melhor performance
-        initialValue = emptyList()
-    )
+    // ✅ CORREÇÃO: Carregar dados imediatamente ao inicializar para evitar delay
+    private val rotasResumoOriginal: StateFlow<List<RotaResumo>> = run {
+        val initialValue = kotlinx.coroutines.runBlocking {
+            try {
+                appRepository.getRotasResumoComAtualizacaoTempoReal().first()
+            } catch (e: Exception) {
+                android.util.Log.w("RoutesViewModel", "Erro ao carregar rotas inicialmente: ${e.message}")
+                emptyList()
+            }
+        }
+        appRepository.getRotasResumoComAtualizacaoTempoReal().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = initialValue
+        )
+    }
 
     // ✅ MODERNIZADO: Estatísticas gerais calculadas a partir das rotas
     val estatisticas: StateFlow<EstatisticasGerais> = combine(
