@@ -5,6 +5,7 @@ import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.utils.PasswordHasher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -181,11 +182,14 @@ class ColaboradorManagementViewModel(
             try {
                 showLoading()
                 
+                // ✅ FASE 12.1: Hashear senha antes de armazenar (nunca texto plano)
+                val senhaHash = PasswordHasher.hashPassword(senha)
+                
                 // Atualizar colaborador com credenciais e aprovação
                 appRepository.aprovarColaboradorComCredenciais(
                     colaboradorId = colaboradorId,
                     email = email,
-                    senha = senha,
+                    senha = senhaHash, // ✅ SEGURANÇA: Armazenar hash, não texto plano
                     nivelAcesso = nivelAcesso,
                     observacoes = observacoes,
                     dataAprovacao = java.util.Date(),

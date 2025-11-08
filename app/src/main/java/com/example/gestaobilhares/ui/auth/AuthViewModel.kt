@@ -13,6 +13,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import com.example.gestaobilhares.utils.NetworkUtils
 import com.example.gestaobilhares.utils.UserSessionManager
+import com.example.gestaobilhares.utils.PasswordHasher
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -222,32 +223,27 @@ class AuthViewModel constructor() : BaseViewModel() {
                     android.util.Log.d("AuthViewModel", "   Senha temporária: ${colaborador.senhaTemporaria}")
                     android.util.Log.d("AuthViewModel", "   Firebase UID: ${colaborador.firebaseUid}")
                 
-                    // ✅ NOVO: Sistema híbrido - aceitar senha Firebase ou senha temporária
+                    // ✅ FASE 12.1: Sistema seguro de validação offline
+                    // Validação offline: usar hash de senha armazenado
+                    // Validação online: sempre usar Firebase Auth (já validado acima)
                     val senhaValida = when {
-                        // Senha temporária do sistema local
-                        colaborador.senhaTemporaria == senha -> true
-                        // Senha padrão para desenvolvimento
-                        senha == "123456" -> true
-                        // ✅ NOVO: Para usuários que já fizeram login online, aceitar qualquer senha
-                        // (assumindo que a autenticação Firebase já validou anteriormente)
-                        colaborador.firebaseUid != null -> true
+                        // ✅ SEGURANÇA: Verificar hash de senha temporária (offline)
+                        colaborador.senhaTemporaria != null && 
+                        PasswordHasher.verifyPassword(senha, colaborador.senhaTemporaria) -> true
+                        // ❌ REMOVIDO: Senha padrão hardcoded (vulnerabilidade de segurança)
+                        // ❌ REMOVIDO: Aceitar qualquer senha para firebaseUid (vulnerabilidade crítica)
+                        // Se usuário tem firebaseUid mas está offline, deve usar senha temporária com hash
                         else -> false
                     }
                     
-                    android.util.Log.d("AuthViewModel", "🔍 Validação de senha:")
-                    android.util.Log.d("AuthViewModel", "   Senha fornecida: $senha")
-                    android.util.Log.d("AuthViewModel", "   Senha temporária: ${colaborador.senhaTemporaria}")
-                    android.util.Log.d("AuthViewModel", "   Senha padrão: 123456")
-                    android.util.Log.d("AuthViewModel", "   Firebase UID presente: ${colaborador.firebaseUid != null}")
+                    android.util.Log.d("AuthViewModel", "🔍 Validação de senha OFFLINE:")
+                    android.util.Log.d("AuthViewModel", "   Senha fornecida: ${senha.length} caracteres")
+                    android.util.Log.d("AuthViewModel", "   Hash armazenado: ${if (colaborador.senhaTemporaria != null) "presente" else "ausente"}")
+                    android.util.Log.d("AuthViewModel", "   Firebase UID: ${if (colaborador.firebaseUid != null) "presente" else "ausente"}")
                     android.util.Log.d("AuthViewModel", "   Senha válida: $senhaValida")
                     
                     if (senhaValida) {
-                        val tipoAutenticacao = when {
-                            colaborador.senhaTemporaria == senha -> "senha temporária"
-                            senha == "123456" -> "senha padrão desenvolvimento"
-                            colaborador.firebaseUid != null -> "usuário previamente autenticado online"
-                            else -> "desconhecido"
-                        }
+                        val tipoAutenticacao = "senha temporária (hash validado)"
                         android.util.Log.d("AuthViewModel", "✅ LOGIN OFFLINE SUCESSO! (Tipo: $tipoAutenticacao)")
 
                         android.util.Log.w(
@@ -308,13 +304,16 @@ class AuthViewModel constructor() : BaseViewModel() {
                             "🚨 CRIANDO COLABORADOR ADMIN AUTOMATICAMENTE - EMAIL: $email"
                         )
 
+                        // ✅ FASE 12.1: Armazenar hash da senha, nunca texto plano
+                        val senhaHash = PasswordHasher.hashPassword(senha)
+                        
                         val novoColaborador = Colaborador(
                             nome = email.substringBefore("@"),
                             email = email,
                             nivelAcesso = NivelAcesso.ADMIN,
                             aprovado = true,
                             ativo = true,
-                            senhaTemporaria = senha, // Salvar senha para login offline futuro
+                            senhaTemporaria = senhaHash, // ✅ SEGURANÇA: Armazenar hash, não texto plano
                             dataAprovacao = java.util.Date(),
                             aprovadoPor = "Sistema (Admin Padrão Offline)"
                         )

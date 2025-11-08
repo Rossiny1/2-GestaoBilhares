@@ -2749,6 +2749,9 @@ class AppRepository constructor(
                         "aprovadoPor": "${colaborador.aprovadoPor ?: ""}",
                         "firebaseUid": "${colaborador.firebaseUid ?: ""}",
                         "googleId": "${colaborador.googleId ?: ""}",
+                        // ✅ FASE 12.1: Senha temporária sincronizada como hash (não texto plano)
+                        // ⚠️ NOTA: Idealmente senhas não deveriam ser sincronizadas, mas é necessário para login offline
+                        // O hash é seguro (PBKDF2 com salt) e não pode ser revertido para senha original
                         "senhaTemporaria": "${colaborador.senhaTemporaria ?: ""}",
                         "emailAcesso": "${colaborador.emailAcesso ?: ""}",
                         "observacoes": "${colaborador.observacoes ?: ""}",
