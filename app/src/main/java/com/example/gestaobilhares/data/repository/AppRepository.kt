@@ -3271,7 +3271,23 @@ class AppRepository constructor(
                         "distratoAssinaturaLocatario": ${if (contrato.distratoAssinaturaLocatario != null) "\"${contrato.distratoAssinaturaLocatario}\"" else "null"},
                         "distratoDataAssinatura": ${contrato.distratoDataAssinatura?.time ?: "null"},
                         "dataCriacao": ${contrato.dataCriacao.time},
-                        "dataAtualizacao": ${contrato.dataAtualizacao.time}
+                        "dataAtualizacao": ${contrato.dataAtualizacao.time},
+                        "locatarioAssinaturaHash": ${if (contrato.locatarioAssinaturaHash != null) "\"${contrato.locatarioAssinaturaHash}\"" else "null"},
+                        "locatarioAssinaturaDeviceId": ${if (contrato.locatarioAssinaturaDeviceId != null) "\"${contrato.locatarioAssinaturaDeviceId}\"" else "null"},
+                        "locatarioAssinaturaIpAddress": ${if (contrato.locatarioAssinaturaIpAddress != null) "\"${contrato.locatarioAssinaturaIpAddress}\"" else "null"},
+                        "locatarioAssinaturaTimestamp": ${contrato.locatarioAssinaturaTimestamp ?: "null"},
+                        "locatarioAssinaturaPressaoMedia": ${contrato.locatarioAssinaturaPressaoMedia ?: "null"},
+                        "locatarioAssinaturaVelocidadeMedia": ${contrato.locatarioAssinaturaVelocidadeMedia ?: "null"},
+                        "locatarioAssinaturaDuracao": ${contrato.locatarioAssinaturaDuracao ?: "null"},
+                        "locatarioAssinaturaTotalPontos": ${contrato.locatarioAssinaturaTotalPontos ?: "null"},
+                        "locadorAssinaturaHash": ${if (contrato.locadorAssinaturaHash != null) "\"${contrato.locadorAssinaturaHash}\"" else "null"},
+                        "locadorAssinaturaDeviceId": ${if (contrato.locadorAssinaturaDeviceId != null) "\"${contrato.locadorAssinaturaDeviceId}\"" else "null"},
+                        "locadorAssinaturaTimestamp": ${contrato.locadorAssinaturaTimestamp ?: "null"},
+                        "documentoHash": ${if (contrato.documentoHash != null) "\"${contrato.documentoHash}\"" else "null"},
+                        "presencaFisicaConfirmada": ${contrato.presencaFisicaConfirmada},
+                        "presencaFisicaConfirmadaPor": ${if (contrato.presencaFisicaConfirmadaPor != null) "\"${contrato.presencaFisicaConfirmadaPor}\"" else "null"},
+                        "presencaFisicaConfirmadaCpf": ${if (contrato.presencaFisicaConfirmadaCpf != null) "\"${contrato.presencaFisicaConfirmadaCpf}\"" else "null"},
+                        "presencaFisicaConfirmadaTimestamp": ${contrato.presencaFisicaConfirmadaTimestamp ?: "null"}
                     }
                 """.trimIndent()
                 adicionarOperacaoSync("ContratoLocacao", id, "CREATE", payload, priority = 1)
@@ -3333,7 +3349,23 @@ class AppRepository constructor(
                         "distratoAssinaturaLocatario": ${if (contratoParaSalvar.distratoAssinaturaLocatario != null) "\"${contratoParaSalvar.distratoAssinaturaLocatario}\"" else "null"},
                         "distratoDataAssinatura": ${contratoParaSalvar.distratoDataAssinatura?.time ?: "null"},
                         "dataCriacao": ${contratoParaSalvar.dataCriacao.time},
-                        "dataAtualizacao": ${contratoParaSalvar.dataAtualizacao.time}
+                        "dataAtualizacao": ${contratoParaSalvar.dataAtualizacao.time},
+                        "locatarioAssinaturaHash": ${if (contratoParaSalvar.locatarioAssinaturaHash != null) "\"${contratoParaSalvar.locatarioAssinaturaHash}\"" else "null"},
+                        "locatarioAssinaturaDeviceId": ${if (contratoParaSalvar.locatarioAssinaturaDeviceId != null) "\"${contratoParaSalvar.locatarioAssinaturaDeviceId}\"" else "null"},
+                        "locatarioAssinaturaIpAddress": ${if (contratoParaSalvar.locatarioAssinaturaIpAddress != null) "\"${contratoParaSalvar.locatarioAssinaturaIpAddress}\"" else "null"},
+                        "locatarioAssinaturaTimestamp": ${contratoParaSalvar.locatarioAssinaturaTimestamp ?: "null"},
+                        "locatarioAssinaturaPressaoMedia": ${contratoParaSalvar.locatarioAssinaturaPressaoMedia ?: "null"},
+                        "locatarioAssinaturaVelocidadeMedia": ${contratoParaSalvar.locatarioAssinaturaVelocidadeMedia ?: "null"},
+                        "locatarioAssinaturaDuracao": ${contratoParaSalvar.locatarioAssinaturaDuracao ?: "null"},
+                        "locatarioAssinaturaTotalPontos": ${contratoParaSalvar.locatarioAssinaturaTotalPontos ?: "null"},
+                        "locadorAssinaturaHash": ${if (contratoParaSalvar.locadorAssinaturaHash != null) "\"${contratoParaSalvar.locadorAssinaturaHash}\"" else "null"},
+                        "locadorAssinaturaDeviceId": ${if (contratoParaSalvar.locadorAssinaturaDeviceId != null) "\"${contratoParaSalvar.locadorAssinaturaDeviceId}\"" else "null"},
+                        "locadorAssinaturaTimestamp": ${contratoParaSalvar.locadorAssinaturaTimestamp ?: "null"},
+                        "documentoHash": ${if (contratoParaSalvar.documentoHash != null) "\"${contratoParaSalvar.documentoHash}\"" else "null"},
+                        "presencaFisicaConfirmada": ${contratoParaSalvar.presencaFisicaConfirmada},
+                        "presencaFisicaConfirmadaPor": ${if (contratoParaSalvar.presencaFisicaConfirmadaPor != null) "\"${contratoParaSalvar.presencaFisicaConfirmadaPor}\"" else "null"},
+                        "presencaFisicaConfirmadaCpf": ${if (contratoParaSalvar.presencaFisicaConfirmadaCpf != null) "\"${contratoParaSalvar.presencaFisicaConfirmadaCpf}\"" else "null"},
+                        "presencaFisicaConfirmadaTimestamp": ${contratoParaSalvar.presencaFisicaConfirmadaTimestamp ?: "null"}
                     }
                 """.trimIndent()
                 adicionarOperacaoSync("ContratoLocacao", contratoParaSalvar.id, "UPDATE", payload, priority = 1)

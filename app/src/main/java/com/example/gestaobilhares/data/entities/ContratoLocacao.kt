@@ -52,6 +52,31 @@ data class ContratoLocacao(
     val dataEncerramento: Date? = null,
     val assinaturaLocador: String? = null, // Base64 da assinatura
     val assinaturaLocatario: String? = null, // Base64 da assinatura
+    
+    // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Metadados da assinatura do locatário
+    val locatarioAssinaturaHash: String? = null, // Hash SHA-256 da assinatura do locatário
+    val locatarioAssinaturaDeviceId: String? = null, // Device ID que capturou a assinatura
+    val locatarioAssinaturaIpAddress: String? = null, // IP no momento da assinatura
+    val locatarioAssinaturaTimestamp: Long? = null, // Timestamp da assinatura (milliseconds)
+    val locatarioAssinaturaPressaoMedia: Float? = null, // Pressão média da assinatura
+    val locatarioAssinaturaVelocidadeMedia: Float? = null, // Velocidade média da assinatura
+    val locatarioAssinaturaDuracao: Long? = null, // Duração da assinatura em ms
+    val locatarioAssinaturaTotalPontos: Int? = null, // Total de pontos capturados
+    
+    // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Metadados da assinatura do locador
+    val locadorAssinaturaHash: String? = null, // Hash SHA-256 da assinatura do locador
+    val locadorAssinaturaDeviceId: String? = null, // Device ID que capturou a assinatura
+    val locadorAssinaturaTimestamp: Long? = null, // Timestamp da assinatura (milliseconds)
+    
+    // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Hash do documento completo
+    val documentoHash: String? = null, // Hash SHA-256 do PDF final do contrato
+    
+    // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Confirmação de presença física
+    val presencaFisicaConfirmada: Boolean = false, // Se a presença física foi confirmada
+    val presencaFisicaConfirmadaPor: String? = null, // Nome de quem confirmou
+    val presencaFisicaConfirmadaCpf: String? = null, // CPF de quem confirmou
+    val presencaFisicaConfirmadaTimestamp: Long? = null, // Timestamp da confirmação
+    
     // Assinaturas do distrato (capturadas no ato do encerramento)
     val distratoAssinaturaLocador: String? = null,
     val distratoAssinaturaLocatario: String? = null,

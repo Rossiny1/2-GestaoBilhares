@@ -389,3 +389,27 @@ class RoutesViewModel : ViewModel() {
 3. **FACILITAR MANUTENÇÃO**: Código organizado e acessível
 4. **CENTRALIZAR**: Funcionalidades relacionadas em um local
 5. **SIMPLIFICAR**: Evitar fragmentação desnecessária
+
+## 📚 MELHORIAS DE DOCUMENTAÇÃO (2025)
+
+### **Padrões de Documentação**
+
+- ✅ **Comentários no Código**: Código bem documentado com explicações claras
+- ✅ **Documentação Técnica**: `.cursor/rules/` com documentação completa
+- ✅ **Relatórios de Análise**: RELATORIO_ANALISE_JURIDICA, RELATORIO_ANALISE_BANCO_DADOS, RELATORIO_AVALIACAO_PROJETO_2025
+- ✅ **Status do Projeto**: Documentação atualizada em 5-STATUS-ATUAL-PROJETO.md
+
+### **Melhorias Planejadas (Fase 12.6)**
+
+- 🔄 **README.md**: Criar README completo com setup, arquitetura, guia de uso
+- 🔄 **API Documentation**: Documentar APIs e endpoints principais
+- 🔄 **Guia de Contribuição**: Criar guia para contribuidores
+- 🔄 **Changelog**: Adicionar histórico de mudanças
+
+### **Boas Práticas de Documentação**
+
+1. **Sempre documentar** funcionalidades complexas
+2. **Atualizar documentação** quando código muda
+3. **Usar exemplos** para facilitar compreensão
+4. **Manter consistência** no formato de documentação
+5. **Incluir diagramas** quando necessário para visualização

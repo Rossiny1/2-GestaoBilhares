@@ -3,19 +3,27 @@ package com.example.gestaobilhares.ui.common
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import com.example.gestaobilhares.utils.SignaturePoint
+import com.example.gestaobilhares.utils.SignatureStatistics
 import java.io.ByteArrayOutputStream
 
 /**
  * View personalizada para captura de assinatura digital.
  * Implementação nativa sem dependências externas.
+ * ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Atualizado para capturar metadados completos
  */
 class SignatureView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+
+    companion object {
+        private const val TAG = "SignatureView"
+    }
 
     private val paint = Paint().apply {
         color = Color.BLACK
@@ -27,6 +35,12 @@ class SignatureView @JvmOverloads constructor(
 
     private val path = Path()
     private val paths = mutableListOf<Path>()
+    
+    // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Metadados da assinatura para análise jurídica
+    private val signaturePoints = mutableListOf<SignaturePoint>()
+    private var startTime = 0L
+    private var lastTouchTime = 0L
+    
     private var lastTouchX = 0f
     private var lastTouchY = 0f
 
@@ -63,6 +77,7 @@ class SignatureView @JvmOverloads constructor(
         
         val x = event.x
         val y = event.y
+        val currentTime = System.currentTimeMillis()
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -71,18 +86,48 @@ class SignatureView @JvmOverloads constructor(
                 path.moveTo(x, y)
                 lastTouchX = x
                 lastTouchY = y
+                lastTouchTime = currentTime
+                
+                // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Iniciar captura de metadados
+                if (startTime == 0L) {
+                    startTime = currentTime
+                }
+                captureSignaturePoint(x, y, event.pressure, currentTime, 0f)
+                
                 onSignedListener?.onStartSigning()
             }
             MotionEvent.ACTION_MOVE -> {
-                // ✅ CORREÇÃO: Usar quadTo para linhas suaves
-                path.quadTo(lastTouchX, lastTouchY, (x + lastTouchX) / 2, (y + lastTouchY) / 2)
-                lastTouchX = x
-                lastTouchY = y
+                val dx = Math.abs(x - lastTouchX)
+                val dy = Math.abs(y - lastTouchY)
+                
+                if (dx >= 2 || dy >= 2) {
+                    // ✅ CORREÇÃO: Usar quadTo para linhas suaves
+                    path.quadTo(lastTouchX, lastTouchY, (x + lastTouchX) / 2, (y + lastTouchY) / 2)
+                    
+                    // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Calcular velocidade e capturar ponto
+                    val timeDelta = currentTime - lastTouchTime
+                    val distance = Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+                    val velocity = if (timeDelta > 0) distance / timeDelta else 0f
+                    captureSignaturePoint(x, y, event.pressure, currentTime, velocity)
+                    
+                    lastTouchX = x
+                    lastTouchY = y
+                    lastTouchTime = currentTime
+                }
             }
             MotionEvent.ACTION_UP -> {
                 // ✅ CORREÇÃO: Finalizar path e adicionar à lista
                 path.lineTo(x, y)
                 paths.add(Path(path))
+                
+                // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Capturar ponto final
+                val timeDelta = currentTime - lastTouchTime
+                val dx = Math.abs(x - lastTouchX)
+                val dy = Math.abs(y - lastTouchY)
+                val distance = Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+                val velocity = if (timeDelta > 0) distance / timeDelta else 0f
+                captureSignaturePoint(x, y, event.pressure, currentTime, velocity)
+                
                 path.reset()
                 onSignedListener?.onSigned()
             }
@@ -94,6 +139,26 @@ class SignatureView @JvmOverloads constructor(
 
         invalidate()
         return true
+    }
+    
+    /**
+     * ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Captura ponto da assinatura com metadados
+     */
+    private fun captureSignaturePoint(
+        x: Float,
+        y: Float,
+        pressure: Float,
+        timestamp: Long,
+        velocity: Float
+    ) {
+        val point = SignaturePoint(
+            x = x,
+            y = y,
+            pressure = pressure,
+            timestamp = timestamp,
+            velocity = velocity
+        )
+        signaturePoints.add(point)
     }
 
     /**
@@ -112,8 +177,21 @@ class SignatureView @JvmOverloads constructor(
     fun clear() {
         paths.clear()
         path.reset()
+        signaturePoints.clear()
+        startTime = 0L
+        lastTouchTime = 0L
         invalidate()
         onSignedListener?.onClear()
+    }
+    
+    /**
+     * ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Obtém duração da assinatura
+     */
+    private fun getSignatureDuration(): Long {
+        return if (startTime > 0 && signaturePoints.isNotEmpty()) {
+            val lastPoint = signaturePoints.maxByOrNull { it.timestamp }
+            lastPoint?.timestamp?.minus(startTime) ?: 0L
+        } else 0L
     }
 
     /**
@@ -153,12 +231,26 @@ class SignatureView @JvmOverloads constructor(
         }
 
     /**
-     * Obtém estatísticas da assinatura
+     * ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Obtém estatísticas da assinatura para análise jurídica
      */
     fun getSignatureStatistics(): SignatureStatistics {
+        val totalPoints = signaturePoints.size
+        val duration = getSignatureDuration()
+        val averagePressure = if (totalPoints > 0) {
+            signaturePoints.map { it.pressure }.average()
+        } else 0.0
+        val averageVelocity = if (totalPoints > 0) {
+            signaturePoints.map { it.velocity }.average()
+        } else 0.0
+        
+        Log.d(TAG, "Estatísticas calculadas: pontos=$totalPoints, duração=${duration}ms, pressão=${averagePressure}, velocidade=${averageVelocity}")
+        
         return SignatureStatistics(
-            pointCount = paths.size * 5, // Aproximação mais realista
-            isEmpty = isEmpty()
+            totalPoints = totalPoints,
+            duration = duration,
+            averagePressure = averagePressure.toFloat(),
+            averageVelocity = averageVelocity.toFloat(),
+            startTime = startTime
         )
     }
 
@@ -170,15 +262,5 @@ class SignatureView @JvmOverloads constructor(
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
         val byteArray = outputStream.toByteArray()
         return android.util.Base64.encodeToString(byteArray, android.util.Base64.DEFAULT)
-    }
-
-    /**
-     * Classe para estatísticas da assinatura
-     */
-    data class SignatureStatistics(
-        val pointCount: Int,
-        val isEmpty: Boolean
-    ) {
-        fun isValidSignature(): Boolean = pointCount > 3 && !isEmpty
     }
 }

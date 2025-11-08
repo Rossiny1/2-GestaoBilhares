@@ -172,16 +172,16 @@ class SignatureCaptureFragment : Fragment() {
         
         val statistics = binding.signatureView.getSignatureStatistics()
         Log.d(TAG, "Assinatura válida: ${statistics.isValidSignature()}")
-        Log.d(TAG, "Point count: ${statistics.pointCount}, isEmpty: ${statistics.isEmpty}")
+        Log.d(TAG, "Total points: ${statistics.totalPoints}, duration: ${statistics.duration}")
         
         // ✅ CORREÇÃO: Validação mais permissiva
-        if (statistics.isEmpty) {
+        if (statistics.totalPoints < 1) {
             Toast.makeText(requireContext(), "Por favor, assine", Toast.LENGTH_SHORT).show()
             return
         }
         
         // Validação mínima: apenas verificar se não está vazia
-        if (statistics.pointCount < 1) {
+        if (statistics.totalPoints < 3) {
             Toast.makeText(requireContext(), "Assinatura muito simples. Por favor, assine novamente.", Toast.LENGTH_LONG).show()
             return
         }
@@ -189,18 +189,21 @@ class SignatureCaptureFragment : Fragment() {
         signatureBitmap = binding.signatureView.signatureBitmap
         val signatureHash = documentIntegrityManager?.generateSignatureHash(signatureBitmap!!) ?: "hash_fallback"
         val contrato = viewModel.contrato.value
+        
+        // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Coletar metadados completos
+        val documentHash = documentIntegrityManager?.generateDocumentHash(ByteArray(0)) ?: "doc_hash_fallback"
+        val metadata = metadataCollector?.collectSignatureMetadata(documentHash, signatureHash) ?: com.example.gestaobilhares.utils.SignatureMetadata(
+            timestamp = System.currentTimeMillis(),
+            deviceId = "fallback_device",
+            ipAddress = "fallback_ip",
+            geolocation = null,
+            documentHash = documentHash,
+            signatureHash = signatureHash,
+            userAgent = "fallback_agent",
+            screenResolution = "fallback_resolution"
+        )
+        
         if (contrato != null) {
-            val documentHash = documentIntegrityManager?.generateDocumentHash(ByteArray(0)) ?: "doc_hash_fallback"
-            val metadata = metadataCollector?.collectSignatureMetadata(documentHash, signatureHash) ?: com.example.gestaobilhares.utils.SignatureMetadata(
-                timestamp = System.currentTimeMillis(),
-                deviceId = "fallback_device",
-                ipAddress = "fallback_ip",
-                geolocation = null,
-                documentHash = documentHash,
-                signatureHash = signatureHash,
-                userAgent = "fallback_agent",
-                screenResolution = "fallback_resolution"
-            )
             viewLifecycleOwner.lifecycleScope.launch {
                 legalLogger?.logSignatureEvent(
                     contratoId = contrato.id,
@@ -244,7 +247,18 @@ class SignatureCaptureFragment : Fragment() {
         } else {
             // ✅ LOG CRASH: Salvando assinatura de contrato
             android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - Salvando assinatura de contrato")
-            viewModel.salvarAssinatura(assinaturaBase64)
+            // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Salvar assinatura com metadados completos
+            viewModel.salvarAssinaturaComMetadados(
+                assinaturaBase64 = assinaturaBase64,
+                hashAssinatura = signatureHash,
+                deviceId = metadata.deviceId,
+                ipAddress = metadata.ipAddress,
+                timestamp = metadata.timestamp,
+                pressaoMedia = statistics.averagePressure,
+                velocidadeMedia = statistics.averageVelocity,
+                duracao = statistics.duration,
+                totalPontos = statistics.totalPoints
+            )
         }
     }
     
