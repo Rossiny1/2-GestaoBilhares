@@ -135,6 +135,21 @@
 
 ## 🔐 SEGURANÇA E VALIDAÇÃO
 
+### **Autenticação e Segurança de Senhas (Fase 12.1 - CONCLUÍDA ✅)**
+
+- **PasswordHasher**: Utilitário para hash seguro de senhas
+  - **Algoritmo**: PBKDF2 com SHA-256
+  - **Configurações**: 10.000 iterações, salt aleatório de 16 bytes, hash de 256 bits
+  - **Métodos**: `hashPassword()`, `verifyPassword()`, `isValidHashFormat()`
+  - **Segurança**: Comparação timing-safe, previne timing attacks
+- **AuthViewModel**: Autenticação híbrida (online/offline)
+  - **Online**: Firebase Auth (sem mudanças)
+  - **Offline**: Validação usando hash de senha (PBKDF2)
+  - **Vulnerabilidades Corrigidas**: Senha padrão removida, validação insegura removida
+- **ColaboradorManagementViewModel**: Aprovação segura de colaboradores
+  - Senhas temporárias hasheadas antes de armazenar
+  - Nunca armazena senhas em texto plano
+
 ### **Assinatura Eletrônica**
 
 - **SignatureView**: Captura de assinatura manual
@@ -217,6 +232,19 @@
 - **ContractPdfGenerator**: Contratos de locação
 - **PdfReportGenerator**: Relatórios de acerto
 - **ClosureReportPdfGenerator**: Relatórios de fechamento
+
+### **Utilitários Principais**
+
+- **PasswordHasher**: Hash seguro de senhas (PBKDF2-SHA256) - Fase 12.1 ✅
+- **DateUtils**: Utilitários de data (calcularRangeAno centralizado)
+- **BluetoothPrinterHelper**: Comunicação com impressoras térmicas
+- **NetworkUtils**: Verificação de conectividade
+- **UserSessionManager**: Gerenciamento de sessão do usuário
+- **DocumentIntegrityManager**: Hash SHA-256 para documentos
+- **SignatureMetadataCollector**: Coleta de metadados de assinatura
+- **ImageCompressionUtils**: Compressão de imagens
+- **FinancialCalculator**: Cálculos financeiros
+- **DataValidator**: Validação de dados
 
 ## 🛠️ FERRAMENTAS DE DESENVOLVIMENTO
 
