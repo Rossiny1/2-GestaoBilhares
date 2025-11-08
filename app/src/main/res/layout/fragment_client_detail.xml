@@ -51,6 +51,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
                     android:src="@drawable/ic_whatsapp"
+                    android:contentDescription="Abrir WhatsApp do cliente"
                     app:backgroundTint="@color/green_500"
                     app:fabSize="mini"
                     app:tint="@color/white" />
@@ -60,6 +61,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_phone"
+                    android:contentDescription="Ligar para o cliente"
                     app:backgroundTint="@color/accent_teal"
                     app:fabSize="mini"
                     app:tint="@color/white" />
@@ -70,6 +72,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:src="@drawable/ic_edit"
+                    android:contentDescription="Editar cliente"
                     app:backgroundTint="@color/orange_500"
                     app:fabSize="mini"
                     app:tint="@color/white" />
@@ -123,6 +126,7 @@
                         android:src="@drawable/ic_location"
                         android:clickable="true"
                         android:focusable="true"
+                        android:contentDescription="Abrir localização no mapa"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         app:tint="@color/white" />
 
@@ -282,6 +286,7 @@
                     android:layout_height="16dp"
                     android:src="@drawable/ic_sinuca"
                     android:contentDescription="Ícone de sinuca"
+                    android:importantForAccessibility="no"
                     app:tint="?attr/colorOnPrimary" />
 
                 <TextView
@@ -349,6 +354,7 @@
                     android:layout_marginEnd="8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_chevron_left"
+                    android:contentDescription="Acerto anterior"
                     app:tint="?attr/colorOnSurfaceVariant" />
 
                 <ImageButton
@@ -357,6 +363,7 @@
                         android:layout_height="40dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_chevron_right"
+                    android:contentDescription="Próximo acerto"
                     app:tint="?attr/colorOnSurfaceVariant" />
 
             </LinearLayout>

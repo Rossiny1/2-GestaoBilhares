@@ -92,7 +92,9 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_table"
-                    app:tint="@color/text_secondary" />
+                    app:tint="@color/text_secondary"
+                    android:contentDescription="Ícone de mesas"
+                    android:importantForAccessibility="no" />
 
                 <TextView
                     android:id="@+id/rotaMesas"
@@ -118,7 +120,9 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_warning"
-                    app:tint="@color/warning_orange" />
+                    app:tint="@color/warning_orange"
+                    android:contentDescription="Ícone de pendências"
+                    android:importantForAccessibility="no" />
 
                 <TextView
                     android:id="@+id/rotaPendencias"
