@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -235,10 +236,13 @@ class AppRepository constructor(
      * Usa query otimizada que calcula débito atual diretamente no banco
      * ✅ FASE 12.3: Descriptografa dados sensíveis após ler
      */
+    // ✅ CORREÇÃO OFICIAL: Usar conflate() para garantir que mudanças sejam processadas imediatamente
     fun obterClientesPorRotaComDebitoAtual(rotaId: Long): Flow<List<Cliente>> = 
-        clienteDao.obterClientesPorRotaComDebitoAtual(rotaId).map { clientes ->
-            clientes.map { decryptCliente(it) ?: it }
-        }
+        clienteDao.obterClientesPorRotaComDebitoAtual(rotaId)
+            .conflate() // ✅ CRÍTICO: Processar mudanças imediatamente, sem buffer
+            .map { clientes ->
+                clientes.map { decryptCliente(it) ?: it }
+            }
     
     // ✅ FASE 12.3: Métodos helper para criptografia de dados sensíveis
     
@@ -790,55 +794,59 @@ class AppRepository constructor(
     fun obterRotasAtivas() = rotaDao.getAllRotasAtivas()
     
     // ✅ NOVO: Método para obter resumo de rotas com atualização em tempo real
+    // ✅ CORREÇÃO OFICIAL: Usar @OptIn para flatMapLatest e garantir que o Flow seja re-emitido imediatamente
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     fun getRotasResumoComAtualizacaoTempoReal(): Flow<List<RotaResumo>> {
         // ✅ FASE 12.5: Usar flatMapLatest com flow { } para executar cálculos suspensos sem runBlocking
-        return rotaDao.getAllRotasAtivas().flatMapLatest { rotas ->
-            flow {
-                val rotasResumo = rotas.map { rota ->
-                    // Usar dados reais calculados (agora são suspend)
-                    val clientesAtivos = calcularClientesAtivosSync(rota.id)
-                    val pendencias = calcularPendenciasSync(rota.id)
-                    val valorAcertado = calcularValorAcertadoSync(rota.id)
-                    val quantidadeMesas = calcularQuantidadeMesasSync(rota.id)
-                    val percentualAcertados = calcularPercentualAcertadosSync(rota.id, clientesAtivos)
-                    
-                    // ✅ CORREÇÃO: Usar status da entidade Rota (já atualizada pelo PULL)
-                    val status = rota.statusAtual
-                    
-                    // ✅ CORREÇÃO: Usar dados da entidade Rota (já atualizada pelo PULL)
-                    val cicloAtual = rota.cicloAcertoAtual
-                    val dataCiclo = rota.dataInicioCiclo
-                    
-                    // ✅ NOVO: Usar datas diretamente da entidade Rota
-                    val dataInicio = rota.dataInicioCiclo
-                    val dataFim = rota.dataFimCiclo
+        // ✅ CORREÇÃO: Usar conflate() para garantir que mudanças sejam processadas imediatamente
+        return rotaDao.getAllRotasAtivas()
+            .conflate() // ✅ CRÍTICO: Processar mudanças imediatamente, sem buffer
+            .flatMapLatest { rotas ->
+                flow {
+                    val rotasResumo = rotas.map { rota ->
+                        // Usar dados reais calculados (agora são suspend)
+                        val clientesAtivos = calcularClientesAtivosSync(rota.id)
+                        val pendencias = calcularPendenciasSync(rota.id)
+                        val valorAcertado = calcularValorAcertadoSync(rota.id)
+                        val quantidadeMesas = calcularQuantidadeMesasSync(rota.id)
+                        val percentualAcertados = calcularPercentualAcertadosSync(rota.id, clientesAtivos)
+                        
+                        // ✅ CORREÇÃO: Usar status da entidade Rota (já atualizada pelo PULL)
+                        val status = rota.statusAtual
+                        
+                        // ✅ CORREÇÃO: Usar dados da entidade Rota (já atualizada pelo PULL)
+                        val cicloAtual = rota.cicloAcertoAtual
+                        
+                        // ✅ NOVO: Usar datas diretamente da entidade Rota
+                        val dataInicio = rota.dataInicioCiclo
+                        val dataFim = rota.dataFimCiclo
 
-                    val rotaResumo = RotaResumo(
-                        rota = rota,
-                        clientesAtivos = clientesAtivos,
-                        pendencias = pendencias,
-                        valorAcertado = valorAcertado,
-                        quantidadeMesas = quantidadeMesas,
-                        percentualAcertados = percentualAcertados,
-                        status = status,
-                        cicloAtual = cicloAtual,
-                        dataInicioCiclo = dataInicio,  // ✅ NOVO: Data de início
-                        dataFimCiclo = dataFim        // ✅ NOVO: Data de fim
-                    )
-                    
-                    // ✅ DEBUG: Log para verificar se os dados estão corretos
-                    android.util.Log.d("AppRepository", "🔍 RotaResumo criado para ${rota.nome}:")
-                    android.util.Log.d("AppRepository", "   Status: ${status} (da entidade Rota)")
-                    android.util.Log.d("AppRepository", "   Ciclo: ${cicloAtual} (da entidade Rota)")
-                    android.util.Log.d("AppRepository", "   Data início: ${dataInicio}")
-                    android.util.Log.d("AppRepository", "   Data fim: ${dataFim}")
-                    android.util.Log.d("AppRepository", "   Texto ciclo: ${rotaResumo.getCicloFormatado()}")
-                    
-                    rotaResumo
+                        val rotaResumo = RotaResumo(
+                            rota = rota,
+                            clientesAtivos = clientesAtivos,
+                            pendencias = pendencias,
+                            valorAcertado = valorAcertado,
+                            quantidadeMesas = quantidadeMesas,
+                            percentualAcertados = percentualAcertados,
+                            status = status,
+                            cicloAtual = cicloAtual,
+                            dataInicioCiclo = dataInicio,  // ✅ NOVO: Data de início
+                            dataFimCiclo = dataFim        // ✅ NOVO: Data de fim
+                        )
+                        
+                        // ✅ DEBUG: Log para verificar se os dados estão corretos
+                        android.util.Log.d("AppRepository", "🔍 RotaResumo criado para ${rota.nome}:")
+                        android.util.Log.d("AppRepository", "   Status: ${status} (da entidade Rota)")
+                        android.util.Log.d("AppRepository", "   Ciclo: ${cicloAtual} (da entidade Rota)")
+                        android.util.Log.d("AppRepository", "   Data início: ${dataInicio}")
+                        android.util.Log.d("AppRepository", "   Data fim: ${dataFim}")
+                        android.util.Log.d("AppRepository", "   Texto ciclo: ${rotaResumo.getCicloFormatado()}")
+                        
+                        rotaResumo
+                    }
+                    emit(rotasResumo)
                 }
-                emit(rotasResumo)
             }
-        }
     }
     
     // ✅ FASE 12.5: Métodos auxiliares para calcular dados reais das rotas (versões suspend - removido runBlocking)
