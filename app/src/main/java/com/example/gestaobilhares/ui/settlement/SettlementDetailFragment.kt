@@ -448,16 +448,13 @@ class SettlementDetailFragment : Fragment() {
 
     
     /**
-     * ✅ NOVA FUNÇÃO: Busca informações completas da mesa (versão síncrona)
+     * ✅ FASE 12.5: Busca informações completas da mesa (versão suspend - removido runBlocking)
      */
-    private fun buscarMesaCompleta(mesaId: Long): Mesa? {
+    private suspend fun buscarMesaCompleta(mesaId: Long): Mesa? {
         return try {
-            // Usar runBlocking para chamar função suspensa de forma síncrona
-            kotlinx.coroutines.runBlocking {
-                val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-                val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao(), appRepository)
-                mesaRepository.buscarPorId(mesaId)
-            }
+            val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+            val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao(), appRepository)
+            mesaRepository.buscarPorId(mesaId)
         } catch (e: Exception) {
             Log.e("SettlementDetailFragment", "Erro ao buscar mesa: ${e.message}")
             null

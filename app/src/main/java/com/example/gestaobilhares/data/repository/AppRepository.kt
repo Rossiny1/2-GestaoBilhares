@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +40,8 @@ import com.example.gestaobilhares.network.RetryLogicManager
 import com.example.gestaobilhares.network.NetworkCacheManager
 // ✅ FASE 2: Utilitários de data centralizados
 import com.example.gestaobilhares.utils.DateUtils
+// ✅ FASE 12.3: Criptografia de dados sensíveis
+import com.example.gestaobilhares.utils.DataEncryption
 import kotlinx.coroutines.Deferred
 // ✅ FASE 4D: Otimizações Avançadas de Banco
 import com.example.gestaobilhares.database.DatabaseConnectionPool
@@ -212,26 +216,160 @@ class AppRepository constructor(
     
     /**
      * ✅ MODERNIZADO: Obtém todos os clientes com cache StateFlow
+     * ✅ FASE 12.3: Descriptografa dados sensíveis após ler
      */
-    fun obterTodosClientes(): Flow<List<Cliente>> = clienteDao.obterTodos()
+    fun obterTodosClientes(): Flow<List<Cliente>> = clienteDao.obterTodos().map { clientes ->
+        clientes.map { decryptCliente(it) ?: it }
+    }
     
     /**
      * ✅ MODERNIZADO: Obtém clientes por rota com cache
+     * ✅ FASE 12.3: Descriptografa dados sensíveis após ler
      */
-    fun obterClientesPorRota(rotaId: Long): Flow<List<Cliente>> = clienteDao.obterClientesPorRota(rotaId)
+    fun obterClientesPorRota(rotaId: Long): Flow<List<Cliente>> = clienteDao.obterClientesPorRota(rotaId).map { clientes ->
+        clientes.map { decryptCliente(it) ?: it }
+    }
     
     /**
      * ✅ FASE 2A: Método otimizado com débito atual calculado
      * Usa query otimizada que calcula débito atual diretamente no banco
+     * ✅ FASE 12.3: Descriptografa dados sensíveis após ler
      */
     fun obterClientesPorRotaComDebitoAtual(rotaId: Long): Flow<List<Cliente>> = 
-        clienteDao.obterClientesPorRotaComDebitoAtual(rotaId)
+        clienteDao.obterClientesPorRotaComDebitoAtual(rotaId).map { clientes ->
+            clientes.map { decryptCliente(it) ?: it }
+        }
     
-    suspend fun obterClientePorId(id: Long) = clienteDao.obterPorId(id)
+    // ✅ FASE 12.3: Métodos helper para criptografia de dados sensíveis
+    
+    /**
+     * Criptografa dados sensíveis de um Cliente antes de salvar
+     */
+    private fun encryptCliente(cliente: Cliente): Cliente {
+        return cliente.copy(
+            cpfCnpj = cliente.cpfCnpj?.let { DataEncryption.encrypt(it) ?: it }
+        )
+    }
+    
+    /**
+     * Descriptografa dados sensíveis de um Cliente após ler
+     */
+    private fun decryptCliente(cliente: Cliente?): Cliente? {
+        return cliente?.copy(
+            cpfCnpj = cliente.cpfCnpj?.let { DataEncryption.decrypt(it) ?: it }
+        )
+    }
+    
+    /**
+     * Criptografa dados sensíveis de um ContratoLocacao antes de salvar
+     */
+    private fun encryptContratoLocacao(contrato: ContratoLocacao): ContratoLocacao {
+        return contrato.copy(
+            locatarioCpf = DataEncryption.encrypt(contrato.locatarioCpf) ?: contrato.locatarioCpf,
+            assinaturaLocatario = contrato.assinaturaLocatario?.let { DataEncryption.encrypt(it) ?: it },
+            assinaturaLocador = contrato.assinaturaLocador?.let { DataEncryption.encrypt(it) ?: it },
+            distratoAssinaturaLocador = contrato.distratoAssinaturaLocador?.let { DataEncryption.encrypt(it) ?: it },
+            distratoAssinaturaLocatario = contrato.distratoAssinaturaLocatario?.let { DataEncryption.encrypt(it) ?: it },
+            presencaFisicaConfirmadaCpf = contrato.presencaFisicaConfirmadaCpf?.let { DataEncryption.encrypt(it) ?: it }
+        )
+    }
+    
+    /**
+     * Descriptografa dados sensíveis de um ContratoLocacao após ler
+     */
+    private fun decryptContratoLocacao(contrato: ContratoLocacao?): ContratoLocacao? {
+        return contrato?.copy(
+            locatarioCpf = DataEncryption.decrypt(contrato.locatarioCpf) ?: contrato.locatarioCpf,
+            assinaturaLocatario = contrato.assinaturaLocatario?.let { DataEncryption.decrypt(it) ?: it },
+            assinaturaLocador = contrato.assinaturaLocador?.let { DataEncryption.decrypt(it) ?: it },
+            distratoAssinaturaLocador = contrato.distratoAssinaturaLocador?.let { DataEncryption.decrypt(it) ?: it },
+            distratoAssinaturaLocatario = contrato.distratoAssinaturaLocatario?.let { DataEncryption.decrypt(it) ?: it },
+            presencaFisicaConfirmadaCpf = contrato.presencaFisicaConfirmadaCpf?.let { DataEncryption.decrypt(it) ?: it }
+        )
+    }
+    
+    /**
+     * Criptografa dados sensíveis de um Colaborador antes de salvar
+     */
+    private fun encryptColaborador(colaborador: Colaborador): Colaborador {
+        return colaborador.copy(
+            cpf = colaborador.cpf?.let { DataEncryption.encrypt(it) ?: it }
+            // senhaTemporaria já está como hash (Fase 12.1), não precisa criptografar novamente
+        )
+    }
+    
+    /**
+     * Descriptografa dados sensíveis de um Colaborador após ler
+     */
+    private fun decryptColaborador(colaborador: Colaborador?): Colaborador? {
+        return colaborador?.copy(
+            cpf = colaborador.cpf?.let { DataEncryption.decrypt(it) ?: it }
+        )
+    }
+    
+    /**
+     * Criptografa dados sensíveis de uma MesaVendida antes de salvar
+     */
+    private fun encryptMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida): com.example.gestaobilhares.data.entities.MesaVendida {
+        return mesaVendida.copy(
+            cpfCnpjComprador = mesaVendida.cpfCnpjComprador?.let { DataEncryption.encrypt(it) ?: it }
+        )
+    }
+    
+    /**
+     * Descriptografa dados sensíveis de uma MesaVendida após ler
+     */
+    private fun decryptMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida?): com.example.gestaobilhares.data.entities.MesaVendida? {
+        return mesaVendida?.copy(
+            cpfCnpjComprador = mesaVendida.cpfCnpjComprador?.let { DataEncryption.decrypt(it) ?: it }
+        )
+    }
+    
+    /**
+     * Criptografa dados sensíveis de uma AssinaturaRepresentanteLegal antes de salvar
+     */
+    private fun encryptAssinaturaRepresentanteLegal(assinatura: com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal): com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal {
+        return assinatura.copy(
+            cpfRepresentante = DataEncryption.encrypt(assinatura.cpfRepresentante) ?: assinatura.cpfRepresentante,
+            assinaturaBase64 = DataEncryption.encrypt(assinatura.assinaturaBase64) ?: assinatura.assinaturaBase64
+        )
+    }
+    
+    /**
+     * Descriptografa dados sensíveis de uma AssinaturaRepresentanteLegal após ler
+     */
+    private fun decryptAssinaturaRepresentanteLegal(assinatura: com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal?): com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal? {
+        return assinatura?.copy(
+            cpfRepresentante = DataEncryption.decrypt(assinatura.cpfRepresentante) ?: assinatura.cpfRepresentante,
+            assinaturaBase64 = DataEncryption.decrypt(assinatura.assinaturaBase64) ?: assinatura.assinaturaBase64
+        )
+    }
+    
+    /**
+     * Criptografa dados sensíveis de um LogAuditoriaAssinatura antes de salvar
+     */
+    private fun encryptLogAuditoriaAssinatura(log: com.example.gestaobilhares.data.entities.LogAuditoriaAssinatura): com.example.gestaobilhares.data.entities.LogAuditoriaAssinatura {
+        return log.copy(
+            cpfUsuario = DataEncryption.encrypt(log.cpfUsuario) ?: log.cpfUsuario
+        )
+    }
+    
+    /**
+     * Descriptografa dados sensíveis de um LogAuditoriaAssinatura após ler
+     */
+    private fun decryptLogAuditoriaAssinatura(log: com.example.gestaobilhares.data.entities.LogAuditoriaAssinatura?): com.example.gestaobilhares.data.entities.LogAuditoriaAssinatura? {
+        return log?.copy(
+            cpfUsuario = DataEncryption.decrypt(log.cpfUsuario) ?: log.cpfUsuario
+        )
+    }
+    
+    suspend fun obterClientePorId(id: Long) = decryptCliente(clienteDao.obterPorId(id))
     suspend fun inserirCliente(cliente: Cliente): Long {
         logDbInsertStart("CLIENTE", "Nome=${cliente.nome}, RotaID=${cliente.rotaId}")
         return try {
-            val id = clienteDao.inserir(cliente)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val clienteEncrypted = encryptCliente(cliente)
+            val id = clienteDao.inserir(clienteEncrypted)
             logDbInsertSuccess("CLIENTE", "Nome=${cliente.nome}, ID=$id")
             
             // ✅ FASE 3C: Adicionar à fila de sincronização
@@ -267,7 +405,9 @@ class AppRepository constructor(
     suspend fun atualizarCliente(cliente: Cliente) {
         logDbUpdateStart("CLIENTE", "ID=${cliente.id}, Nome=${cliente.nome}")
         try {
-            clienteDao.atualizar(cliente)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val clienteEncrypted = encryptCliente(cliente)
+            clienteDao.atualizar(clienteEncrypted)
             logDbUpdateSuccess("CLIENTE", "ID=${cliente.id}, Nome=${cliente.nome}")
             
             // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
@@ -635,110 +775,114 @@ class AppRepository constructor(
     
     // ✅ NOVO: Método para obter resumo de rotas com atualização em tempo real
     fun getRotasResumoComAtualizacaoTempoReal(): Flow<List<RotaResumo>> {
-        return rotaDao.getAllRotasAtivas().map { rotas ->
-            rotas.map { rota ->
-                // Usar dados reais calculados
-                val clientesAtivos = calcularClientesAtivosSync(rota.id)
-                val pendencias = calcularPendenciasSync(rota.id)
-                val valorAcertado = calcularValorAcertadoSync(rota.id)
-                val quantidadeMesas = calcularQuantidadeMesasSync(rota.id)
-                val percentualAcertados = calcularPercentualAcertadosSync(rota.id, clientesAtivos)
-                
-                // ✅ CORREÇÃO: Usar status da entidade Rota (já atualizada pelo PULL)
-                val status = rota.statusAtual
-                
-                // ✅ CORREÇÃO: Usar dados da entidade Rota (já atualizada pelo PULL)
-                val cicloAtual = rota.cicloAcertoAtual
-                val dataCiclo = rota.dataInicioCiclo
-                
-                // ✅ NOVO: Usar datas diretamente da entidade Rota
-                val dataInicio = rota.dataInicioCiclo
-                val dataFim = rota.dataFimCiclo
+        // ✅ FASE 12.5: Usar flatMapLatest com flow { } para executar cálculos suspensos sem runBlocking
+        return rotaDao.getAllRotasAtivas().flatMapLatest { rotas ->
+            flow {
+                val rotasResumo = rotas.map { rota ->
+                    // Usar dados reais calculados (agora são suspend)
+                    val clientesAtivos = calcularClientesAtivosSync(rota.id)
+                    val pendencias = calcularPendenciasSync(rota.id)
+                    val valorAcertado = calcularValorAcertadoSync(rota.id)
+                    val quantidadeMesas = calcularQuantidadeMesasSync(rota.id)
+                    val percentualAcertados = calcularPercentualAcertadosSync(rota.id, clientesAtivos)
+                    
+                    // ✅ CORREÇÃO: Usar status da entidade Rota (já atualizada pelo PULL)
+                    val status = rota.statusAtual
+                    
+                    // ✅ CORREÇÃO: Usar dados da entidade Rota (já atualizada pelo PULL)
+                    val cicloAtual = rota.cicloAcertoAtual
+                    val dataCiclo = rota.dataInicioCiclo
+                    
+                    // ✅ NOVO: Usar datas diretamente da entidade Rota
+                    val dataInicio = rota.dataInicioCiclo
+                    val dataFim = rota.dataFimCiclo
 
-                val rotaResumo = RotaResumo(
-                    rota = rota,
-                    clientesAtivos = clientesAtivos,
-                    pendencias = pendencias,
-                    valorAcertado = valorAcertado,
-                    quantidadeMesas = quantidadeMesas,
-                    percentualAcertados = percentualAcertados,
-                    status = status,
-                    cicloAtual = cicloAtual,
-                    dataInicioCiclo = dataInicio,  // ✅ NOVO: Data de início
-                    dataFimCiclo = dataFim        // ✅ NOVO: Data de fim
-                )
-                
-                // ✅ DEBUG: Log para verificar se os dados estão corretos
-                android.util.Log.d("AppRepository", "🔍 RotaResumo criado para ${rota.nome}:")
-                android.util.Log.d("AppRepository", "   Status: ${status} (da entidade Rota)")
-                android.util.Log.d("AppRepository", "   Ciclo: ${cicloAtual} (da entidade Rota)")
-                android.util.Log.d("AppRepository", "   Data início: ${dataInicio}")
-                android.util.Log.d("AppRepository", "   Data fim: ${dataFim}")
-                android.util.Log.d("AppRepository", "   Texto ciclo: ${rotaResumo.getCicloFormatado()}")
-                
-                rotaResumo
+                    val rotaResumo = RotaResumo(
+                        rota = rota,
+                        clientesAtivos = clientesAtivos,
+                        pendencias = pendencias,
+                        valorAcertado = valorAcertado,
+                        quantidadeMesas = quantidadeMesas,
+                        percentualAcertados = percentualAcertados,
+                        status = status,
+                        cicloAtual = cicloAtual,
+                        dataInicioCiclo = dataInicio,  // ✅ NOVO: Data de início
+                        dataFimCiclo = dataFim        // ✅ NOVO: Data de fim
+                    )
+                    
+                    // ✅ DEBUG: Log para verificar se os dados estão corretos
+                    android.util.Log.d("AppRepository", "🔍 RotaResumo criado para ${rota.nome}:")
+                    android.util.Log.d("AppRepository", "   Status: ${status} (da entidade Rota)")
+                    android.util.Log.d("AppRepository", "   Ciclo: ${cicloAtual} (da entidade Rota)")
+                    android.util.Log.d("AppRepository", "   Data início: ${dataInicio}")
+                    android.util.Log.d("AppRepository", "   Data fim: ${dataFim}")
+                    android.util.Log.d("AppRepository", "   Texto ciclo: ${rotaResumo.getCicloFormatado()}")
+                    
+                    rotaResumo
+                }
+                emit(rotasResumo)
             }
         }
     }
     
-    // ✅ NOVO: Métodos auxiliares para calcular dados reais das rotas (versões sync)
-    private fun calcularClientesAtivosSync(rotaId: Long): Int {
+    // ✅ FASE 12.5: Métodos auxiliares para calcular dados reais das rotas (versões suspend - removido runBlocking)
+    private suspend fun calcularClientesAtivosSync(rotaId: Long): Int {
         return try {
-            runBlocking { clienteDao.obterClientesPorRota(rotaId).first().count { it.ativo } }
+            clienteDao.obterClientesPorRota(rotaId).first().count { it.ativo }
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular clientes ativos da rota $rotaId: ${e.message}")
             0
         }
     }
     
-    private fun calcularPendenciasSync(rotaId: Long): Int {
+    private suspend fun calcularPendenciasSync(rotaId: Long): Int {
         return try {
-            runBlocking { calcularPendenciasReaisPorRota(rotaId) }
+            calcularPendenciasReaisPorRota(rotaId)
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular pendências da rota $rotaId: ${e.message}")
             0
         }
     }
     
-    private fun calcularValorAcertadoSync(rotaId: Long): Double {
+    private suspend fun calcularValorAcertadoSync(rotaId: Long): Double {
         return try {
-            runBlocking { calcularValorAcertadoPorRotaECiclo(rotaId, obterCicloAtualIdPorRota(rotaId)) }
+            calcularValorAcertadoPorRotaECiclo(rotaId, obterCicloAtualIdPorRota(rotaId))
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular valor acertado da rota $rotaId: ${e.message}")
             0.0
         }
     }
     
-    private fun calcularQuantidadeMesasSync(rotaId: Long): Int {
+    private suspend fun calcularQuantidadeMesasSync(rotaId: Long): Int {
         return try {
-            runBlocking { calcularQuantidadeMesasPorRota(rotaId) }
+            calcularQuantidadeMesasPorRota(rotaId)
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular quantidade de mesas da rota $rotaId: ${e.message}")
             0
         }
     }
     
-    private fun calcularPercentualAcertadosSync(rotaId: Long, clientesAtivos: Int): Int {
+    private suspend fun calcularPercentualAcertadosSync(rotaId: Long, clientesAtivos: Int): Int {
         return try {
-            runBlocking { calcularPercentualClientesAcertados(rotaId, obterCicloAtualIdPorRota(rotaId), clientesAtivos) }
+            calcularPercentualClientesAcertados(rotaId, obterCicloAtualIdPorRota(rotaId), clientesAtivos)
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular percentual de clientes acertados da rota $rotaId: ${e.message}")
             0
         }
     }
     
-    private fun calcularCicloAtualReal(rotaId: Long): Int {
+    private suspend fun calcularCicloAtualReal(rotaId: Long): Int {
         return try {
-            runBlocking { obterCicloAtualRota(rotaId).first }
+            obterCicloAtualRota(rotaId).first
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular ciclo atual da rota $rotaId: ${e.message}")
             1
         }
     }
     
-    private fun obterDataCicloAtual(rotaId: Long): Long? {
+    private suspend fun obterDataCicloAtual(rotaId: Long): Long? {
         return try {
-            runBlocking { obterCicloAtualRota(rotaId).third }
+            obterCicloAtualRota(rotaId).third
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao obter data do ciclo atual da rota $rotaId: ${e.message}")
             null
@@ -1335,12 +1479,17 @@ class AppRepository constructor(
 
     // ==================== MESA VENDIDA ====================
     
-    fun obterTodasMesasVendidas() = mesaVendidaDao.listarTodas()
-    suspend fun obterMesaVendidaPorId(id: Long) = mesaVendidaDao.buscarPorId(id)
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    fun obterTodasMesasVendidas() = mesaVendidaDao.listarTodas().map { mesas ->
+        mesas.map { decryptMesaVendida(it) ?: it }
+    }
+    suspend fun obterMesaVendidaPorId(id: Long) = decryptMesaVendida(mesaVendidaDao.buscarPorId(id))
     suspend fun inserirMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida): Long {
         logDbInsertStart("MESAVENDIDA", "Numero=${mesaVendida.numeroMesa}, Comprador=${mesaVendida.nomeComprador}")
         return try {
-            val id = mesaVendidaDao.inserir(mesaVendida)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val mesaVendidaEncrypted = encryptMesaVendida(mesaVendida)
+            val id = mesaVendidaDao.inserir(mesaVendidaEncrypted)
             logDbInsertSuccess("MESAVENDIDA", "Numero=${mesaVendida.numeroMesa}, ID=$id")
             
             // ✅ FASE 3C: Adicionar à fila de sincronização
@@ -1381,7 +1530,9 @@ class AppRepository constructor(
     suspend fun atualizarMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida) {
         logDbUpdateStart("MESAVENDIDA", "ID=${mesaVendida.id}, Numero=${mesaVendida.numeroMesa}")
         try {
-            mesaVendidaDao.atualizar(mesaVendida)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val mesaVendidaEncrypted = encryptMesaVendida(mesaVendida)
+            mesaVendidaDao.atualizar(mesaVendidaEncrypted)
             logDbUpdateSuccess("MESAVENDIDA", "ID=${mesaVendida.id}")
             
             // ✅ FASE 3C: Adicionar à fila de sincronização
@@ -2241,7 +2392,9 @@ class AppRepository constructor(
     suspend fun inserirContratoLocacaoSync(contrato: com.example.gestaobilhares.data.entities.ContratoLocacao): Long {
         logDbInsertStart("CONTRATO_LOCACAO", "Numero=${contrato.numeroContrato}, Cliente=${contrato.clienteId}")
         return try {
-            val id = contratoLocacaoDao.inserirContrato(contrato)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val contratoEncrypted = encryptContratoLocacao(contrato)
+            val id = contratoLocacaoDao.inserirContrato(contratoEncrypted)
             logDbInsertSuccess("CONTRATO_LOCACAO", "Numero=${contrato.numeroContrato}, ID=$id")
             
             // ✅ FASE 3C: Adicionar à fila de sincronização
@@ -2296,7 +2449,9 @@ class AppRepository constructor(
     suspend fun atualizarContratoLocacaoSync(contrato: com.example.gestaobilhares.data.entities.ContratoLocacao) {
         logDbUpdateStart("CONTRATO_LOCACAO", "ID=${contrato.id}, Numero=${contrato.numeroContrato}")
         try {
-            contratoLocacaoDao.atualizarContrato(contrato)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val contratoEncrypted = encryptContratoLocacao(contrato)
+            contratoLocacaoDao.atualizarContrato(contratoEncrypted)
             logDbUpdateSuccess("CONTRATO_LOCACAO", "ID=${contrato.id}")
             
             // ✅ FASE 3C: Adicionar à fila de sincronização
@@ -2352,7 +2507,9 @@ class AppRepository constructor(
     suspend fun inserirAssinaturaRepresentanteLegalSync(assinatura: com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal): Long {
         logDbInsertStart("ASSINATURA_REPRESENTANTE_LEGAL", "Nome=${assinatura.nomeRepresentante}, CPF=${assinatura.cpfRepresentante}")
         return try {
-            val id = assinaturaRepresentanteLegalDao.inserirAssinatura(assinatura)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val assinaturaEncrypted = encryptAssinaturaRepresentanteLegal(assinatura)
+            val id = assinaturaRepresentanteLegalDao.inserirAssinatura(assinaturaEncrypted)
             logDbInsertSuccess("ASSINATURA_REPRESENTANTE_LEGAL", "Nome=${assinatura.nomeRepresentante}, ID=$id")
             
             // ✅ FASE 3C: Adicionar à fila de sincronização
@@ -2402,7 +2559,9 @@ class AppRepository constructor(
     suspend fun atualizarAssinaturaRepresentanteLegalSync(assinatura: com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal) {
         logDbUpdateStart("ASSINATURA_REPRESENTANTE_LEGAL", "ID=${assinatura.id}, Nome=${assinatura.nomeRepresentante}")
         try {
-            assinaturaRepresentanteLegalDao.atualizarAssinatura(assinatura)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val assinaturaEncrypted = encryptAssinaturaRepresentanteLegal(assinatura)
+            assinaturaRepresentanteLegalDao.atualizarAssinatura(assinaturaEncrypted)
             logDbUpdateSuccess("ASSINATURA_REPRESENTANTE_LEGAL", "ID=${assinatura.id}")
             
             // ✅ FASE 3C: Adicionar à fila de sincronização
@@ -2453,7 +2612,9 @@ class AppRepository constructor(
     suspend fun inserirLogAuditoriaAssinaturaSync(log: com.example.gestaobilhares.data.entities.LogAuditoriaAssinatura): Long {
         logDbInsertStart("LOG_AUDITORIA_ASSINATURA", "Tipo=${log.tipoOperacao}, Usuario=${log.usuarioExecutou}")
         return try {
-            val id = logAuditoriaAssinaturaDao.inserirLog(log)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val logEncrypted = encryptLogAuditoriaAssinatura(log)
+            val id = logAuditoriaAssinaturaDao.inserirLog(logEncrypted)
             logDbInsertSuccess("LOG_AUDITORIA_ASSINATURA", "Tipo=${log.tipoOperacao}, ID=$id")
             
             // ✅ FASE 3C: Adicionar à fila de sincronização
@@ -2671,21 +2832,35 @@ class AppRepository constructor(
     
     // ==================== COLABORADOR ====================
     
-    fun obterTodosColaboradores() = colaboradorDao.obterTodos()
-    fun obterColaboradoresAtivos() = colaboradorDao.obterAtivos()
-    fun obterColaboradoresAprovados() = colaboradorDao.obterAprovados()
-    fun obterColaboradoresPendentesAprovacao() = colaboradorDao.obterPendentesAprovacao()
-    fun obterColaboradoresPorNivelAcesso(nivelAcesso: NivelAcesso) = colaboradorDao.obterPorNivelAcesso(nivelAcesso)
-    
-    suspend fun obterColaboradorPorId(id: Long) = colaboradorDao.obterPorId(id)
-    suspend fun obterColaboradorPorEmail(email: String) = colaboradorDao.obterPorEmail(email)
-    suspend fun obterColaboradorPorFirebaseUid(firebaseUid: String) = colaboradorDao.obterPorFirebaseUid(firebaseUid)
-    suspend fun obterColaboradorPorGoogleId(googleId: String) = colaboradorDao.obterPorGoogleId(googleId)
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    fun obterTodosColaboradores() = colaboradorDao.obterTodos().map { colaboradores ->
+        colaboradores.map { decryptColaborador(it) ?: it }
+    }
+    fun obterColaboradoresAtivos() = colaboradorDao.obterAtivos().map { colaboradores ->
+        colaboradores.map { decryptColaborador(it) ?: it }
+    }
+    fun obterColaboradoresAprovados() = colaboradorDao.obterAprovados().map { colaboradores ->
+        colaboradores.map { decryptColaborador(it) ?: it }
+    }
+    fun obterColaboradoresPendentesAprovacao() = colaboradorDao.obterPendentesAprovacao().map { colaboradores ->
+        colaboradores.map { decryptColaborador(it) ?: it }
+    }
+    fun obterColaboradoresPorNivelAcesso(nivelAcesso: NivelAcesso) = colaboradorDao.obterPorNivelAcesso(nivelAcesso).map { colaboradores ->
+        colaboradores.map { decryptColaborador(it) ?: it }
+    }
+
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    suspend fun obterColaboradorPorId(id: Long) = decryptColaborador(colaboradorDao.obterPorId(id))
+    suspend fun obterColaboradorPorEmail(email: String) = decryptColaborador(colaboradorDao.obterPorEmail(email))
+    suspend fun obterColaboradorPorFirebaseUid(firebaseUid: String) = decryptColaborador(colaboradorDao.obterPorFirebaseUid(firebaseUid))
+    suspend fun obterColaboradorPorGoogleId(googleId: String) = decryptColaborador(colaboradorDao.obterPorGoogleId(googleId))
     
     suspend fun inserirColaborador(colaborador: Colaborador): Long {
         logDbInsertStart("COLABORADOR", "Nome=${colaborador.nome}, Email=${colaborador.email}, Nivel=${colaborador.nivelAcesso}")
         return try {
-            val id = colaboradorDao.inserir(colaborador)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val colaboradorEncrypted = encryptColaborador(colaborador)
+            val id = colaboradorDao.inserir(colaboradorEncrypted)
             logDbInsertSuccess("COLABORADOR", "Email=${colaborador.email}, ID=$id")
             
             // ✅ FASE 3C: Adicionar à fila de sincronização
@@ -2719,7 +2894,9 @@ class AppRepository constructor(
     suspend fun atualizarColaborador(colaborador: Colaborador) {
         logDbUpdateStart("COLABORADOR", "ID=${colaborador.id}, Nome=${colaborador.nome}")
         try {
-            colaboradorDao.atualizar(colaborador)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val colaboradorEncrypted = encryptColaborador(colaborador)
+            colaboradorDao.atualizar(colaboradorEncrypted)
             logDbUpdateSuccess("COLABORADOR", "ID=${colaborador.id}, Nome=${colaborador.nome}")
             
             // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
@@ -2891,9 +3068,10 @@ class AppRepository constructor(
     /**
      * Busca colaborador responsável principal por uma rota
      */
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
     suspend fun buscarColaboradorResponsavelPrincipal(rotaId: Long): Colaborador? {
         return try {
-            colaboradorDao?.buscarColaboradorResponsavelPrincipal(rotaId)
+            decryptColaborador(colaboradorDao?.buscarColaboradorResponsavelPrincipal(rotaId))
         } catch (e: Exception) {
             Log.e("AppRepository", "Erro ao buscar colaborador responsável: ${e.message}", e)
             null
@@ -2931,6 +3109,8 @@ class AppRepository constructor(
     // ==================== COLABORADOR ROTA ====================
     
     fun obterRotasPorColaborador(colaboradorId: Long) = colaboradorDao.obterRotasPorColaborador(colaboradorId)
+    // ✅ NOTA: obterColaboradoresPorRota retorna ColaboradorRota (relação), não Colaborador
+    // ColaboradorRota não contém dados sensíveis, então não precisa descriptografar
     fun obterColaboradoresPorRota(rotaId: Long) = colaboradorDao.obterColaboradoresPorRota(rotaId)
     suspend fun obterRotaPrincipal(colaboradorId: Long) = colaboradorDao.obterRotaPrincipal(colaboradorId)
     suspend fun inserirColaboradorRota(colaboradorRota: ColaboradorRota): Long {
@@ -3219,10 +3399,17 @@ class AppRepository constructor(
     
     // ==================== CONTRATOS DE LOCAÇÃO ====================
     
-    fun buscarContratosPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratosPorCliente(clienteId)
-    suspend fun buscarContratoPorNumero(numeroContrato: String) = contratoLocacaoDao.buscarContratoPorNumero(numeroContrato)
-    fun buscarContratosAtivos() = contratoLocacaoDao.buscarContratosAtivos()
-    fun buscarTodosContratos() = contratoLocacaoDao.buscarTodosContratos()
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    fun buscarContratosPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratosPorCliente(clienteId).map { contratos ->
+        contratos.map { decryptContratoLocacao(it) ?: it }
+    }
+    suspend fun buscarContratoPorNumero(numeroContrato: String) = decryptContratoLocacao(contratoLocacaoDao.buscarContratoPorNumero(numeroContrato))
+    fun buscarContratosAtivos() = contratoLocacaoDao.buscarContratosAtivos().map { contratos ->
+        contratos.map { decryptContratoLocacao(it) ?: it }
+    }
+    fun buscarTodosContratos() = contratoLocacaoDao.buscarTodosContratos().map { contratos ->
+        contratos.map { decryptContratoLocacao(it) ?: it }
+    }
     // ✅ FASE 2: Converter ano (String) para timestamps de início e fim do ano usando função centralizada
     suspend fun contarContratosPorAno(ano: String): Int {
         val (inicioAno, fimAno) = DateUtils.calcularRangeAno(ano)
@@ -3230,11 +3417,16 @@ class AppRepository constructor(
     }
     suspend fun contarContratosGerados() = contratoLocacaoDao.contarContratosGerados()
     suspend fun contarContratosAssinados() = contratoLocacaoDao.contarContratosAssinados()
-    suspend fun obterContratosAssinados() = contratoLocacaoDao.obterContratosAssinados()
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    suspend fun obterContratosAssinados() = contratoLocacaoDao.obterContratosAssinados().map { contrato ->
+        decryptContratoLocacao(contrato) ?: contrato
+    }
     suspend fun inserirContrato(contrato: ContratoLocacao): Long {
         logDbInsertStart("CONTRATO", "Numero=${contrato.numeroContrato}, ClienteID=${contrato.clienteId}")
         return try {
-            val id = contratoLocacaoDao.inserirContrato(contrato)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val contratoEncrypted = encryptContratoLocacao(contrato)
+            val id = contratoLocacaoDao.inserirContrato(contratoEncrypted)
             logDbInsertSuccess("CONTRATO", "Numero=${contrato.numeroContrato}, ID=$id")
             // Enfileirar PUSH para Firestore
             try {
@@ -3310,9 +3502,11 @@ class AppRepository constructor(
             // ✅ SELO 2: Preencher assinatura do representante no contrato, se houver ativa e ainda não setada
             val assinaturaAtiva = try { assinaturaRepresentanteLegalDao.obterAssinaturaAtiva() } catch (_: Exception) { null }
             val assinaturaLocadorFinal = contrato.assinaturaLocador ?: assinaturaAtiva?.assinaturaBase64
-            val contratoParaSalvar = if (assinaturaLocadorFinal != null && contrato.assinaturaLocador == null) {
+            val contratoComAssinatura = if (assinaturaLocadorFinal != null && contrato.assinaturaLocador == null) {
                 contrato.copy(assinaturaLocador = assinaturaLocadorFinal, dataAtualizacao = java.util.Date())
             } else contrato
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val contratoParaSalvar = encryptContratoLocacao(contratoComAssinatura)
             contratoLocacaoDao.atualizarContrato(contratoParaSalvar)
             // Leitura de verificação (apenas diagnóstico)
             try {
@@ -3442,7 +3636,8 @@ class AppRepository constructor(
             android.util.Log.w("AppRepository", "Erro ao enfileirar ContratoLocacao DELETE: ${syncError.message}")
         }
     }
-    suspend fun buscarContratoPorId(contratoId: Long) = contratoLocacaoDao.buscarContratoPorId(contratoId)
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    suspend fun buscarContratoPorId(contratoId: Long) = decryptContratoLocacao(contratoLocacaoDao.buscarContratoPorId(contratoId))
     suspend fun buscarMesasPorContrato(contratoId: Long) = contratoLocacaoDao.buscarMesasPorContrato(contratoId)
     suspend fun inserirContratoMesa(contratoMesa: ContratoMesa): Long {
         logDbInsertStart("CONTRATO_MESA", "ContratoID=${contratoMesa.contratoId}, MesaID=${contratoMesa.mesaId}")
@@ -3601,7 +3796,9 @@ class AppRepository constructor(
             "Representante=${assinatura.nomeRepresentante}, NumeroProcuração=${assinatura.numeroProcuração}"
         )
         return try {
-            val id = assinaturaRepresentanteLegalDao.inserirAssinatura(assinatura)
+            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+            val assinaturaEncrypted = encryptAssinaturaRepresentanteLegal(assinatura)
+            val id = assinaturaRepresentanteLegalDao.inserirAssinatura(assinaturaEncrypted)
             logDbInsertSuccess(
                 "ASSINATURA",
                 "Representante=${assinatura.nomeRepresentante}, ID=$id"
@@ -3716,30 +3913,69 @@ class AppRepository constructor(
     
     // ==================== ASSINATURA REPRESENTANTE LEGAL ====================
     
-    suspend fun obterAssinaturaRepresentanteLegalAtiva() = assinaturaRepresentanteLegalDao.obterAssinaturaAtiva()
-    fun obterAssinaturaRepresentanteLegalAtivaFlow() = assinaturaRepresentanteLegalDao.obterAssinaturaAtivaFlow()
-    suspend fun obterTodasAssinaturasRepresentanteLegal() = assinaturaRepresentanteLegalDao.obterTodasAssinaturas()
-    fun obterTodasAssinaturasRepresentanteLegalFlow() = assinaturaRepresentanteLegalDao.obterTodasAssinaturasFlow()
-    suspend fun obterAssinaturaRepresentanteLegalPorId(id: Long) = assinaturaRepresentanteLegalDao.obterAssinaturaPorId(id)
-    suspend fun atualizarAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal) = assinaturaRepresentanteLegalDao.atualizarAssinatura(assinatura)
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    suspend fun obterAssinaturaRepresentanteLegalAtiva() = decryptAssinaturaRepresentanteLegal(assinaturaRepresentanteLegalDao.obterAssinaturaAtiva())
+    fun obterAssinaturaRepresentanteLegalAtivaFlow() = assinaturaRepresentanteLegalDao.obterAssinaturaAtivaFlow().map { assinatura ->
+        decryptAssinaturaRepresentanteLegal(assinatura) ?: assinatura
+    }
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    suspend fun obterTodasAssinaturasRepresentanteLegal() = assinaturaRepresentanteLegalDao.obterTodasAssinaturas().map { assinatura ->
+        decryptAssinaturaRepresentanteLegal(assinatura) ?: assinatura
+    }
+    fun obterTodasAssinaturasRepresentanteLegalFlow() = assinaturaRepresentanteLegalDao.obterTodasAssinaturasFlow().map { lista ->
+        lista.map { assinatura ->
+            decryptAssinaturaRepresentanteLegal(assinatura) ?: assinatura
+        }
+    }
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    suspend fun obterAssinaturaRepresentanteLegalPorId(id: Long) = decryptAssinaturaRepresentanteLegal(assinaturaRepresentanteLegalDao.obterAssinaturaPorId(id))
+    suspend fun atualizarAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal) {
+        // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
+        val assinaturaEncrypted = encryptAssinaturaRepresentanteLegal(assinatura)
+        assinaturaRepresentanteLegalDao.atualizarAssinatura(assinaturaEncrypted)
+    }
     suspend fun desativarAssinaturaRepresentanteLegal(id: Long) = assinaturaRepresentanteLegalDao.desativarAssinatura(id)
     suspend fun incrementarUsoAssinatura(id: Long, dataUso: java.util.Date) = assinaturaRepresentanteLegalDao.incrementarUso(id, dataUso)
     suspend fun contarAssinaturasRepresentanteLegalAtivas() = assinaturaRepresentanteLegalDao.contarAssinaturasAtivas()
-    suspend fun obterAssinaturasRepresentanteLegalValidadas() = assinaturaRepresentanteLegalDao.obterAssinaturasValidadas()
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    suspend fun obterAssinaturasRepresentanteLegalValidadas() = assinaturaRepresentanteLegalDao.obterAssinaturasValidadas().map { assinatura ->
+        decryptAssinaturaRepresentanteLegal(assinatura) ?: assinatura
+    }
     
     // ==================== LOGS DE AUDITORIA ====================
     
-    suspend fun obterTodosLogsAuditoria() = logAuditoriaAssinaturaDao.obterTodosLogs()
-    fun obterTodosLogsAuditoriaFlow() = logAuditoriaAssinaturaDao.obterTodosLogsFlow()
-    suspend fun obterLogsAuditoriaPorAssinatura(idAssinatura: Long) = logAuditoriaAssinaturaDao.obterLogsPorAssinatura(idAssinatura)
-    suspend fun obterLogsAuditoriaPorContrato(idContrato: Long) = logAuditoriaAssinaturaDao.obterLogsPorContrato(idContrato)
-    suspend fun obterLogsAuditoriaPorTipoOperacao(tipoOperacao: String) = logAuditoriaAssinaturaDao.obterLogsPorTipoOperacao(tipoOperacao)
-    suspend fun obterLogsAuditoriaPorPeriodo(dataInicio: java.util.Date, dataFim: java.util.Date) = logAuditoriaAssinaturaDao.obterLogsPorPeriodo(dataInicio, dataFim)
-    suspend fun obterLogsAuditoriaPorUsuario(usuario: String) = logAuditoriaAssinaturaDao.obterLogsPorUsuario(usuario)
-    suspend fun obterLogsAuditoriaComErro() = logAuditoriaAssinaturaDao.obterLogsComErro()
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    suspend fun obterTodosLogsAuditoria() = logAuditoriaAssinaturaDao.obterTodosLogs().map { log ->
+        decryptLogAuditoriaAssinatura(log) ?: log
+    }
+    fun obterTodosLogsAuditoriaFlow() = logAuditoriaAssinaturaDao.obterTodosLogsFlow().map { lista ->
+        lista.map { log ->
+            decryptLogAuditoriaAssinatura(log) ?: log
+        }
+    }
+    suspend fun obterLogsAuditoriaPorAssinatura(idAssinatura: Long) = logAuditoriaAssinaturaDao.obterLogsPorAssinatura(idAssinatura).map { log ->
+        decryptLogAuditoriaAssinatura(log) ?: log
+    }
+    suspend fun obterLogsAuditoriaPorContrato(idContrato: Long) = logAuditoriaAssinaturaDao.obterLogsPorContrato(idContrato).map { log ->
+        decryptLogAuditoriaAssinatura(log) ?: log
+    }
+    suspend fun obterLogsAuditoriaPorTipoOperacao(tipoOperacao: String) = logAuditoriaAssinaturaDao.obterLogsPorTipoOperacao(tipoOperacao).map { log ->
+        decryptLogAuditoriaAssinatura(log) ?: log
+    }
+    suspend fun obterLogsAuditoriaPorPeriodo(dataInicio: java.util.Date, dataFim: java.util.Date) = logAuditoriaAssinaturaDao.obterLogsPorPeriodo(dataInicio, dataFim).map { log ->
+        decryptLogAuditoriaAssinatura(log) ?: log
+    }
+    suspend fun obterLogsAuditoriaPorUsuario(usuario: String) = logAuditoriaAssinaturaDao.obterLogsPorUsuario(usuario).map { log ->
+        decryptLogAuditoriaAssinatura(log) ?: log
+    }
+    suspend fun obterLogsAuditoriaComErro() = logAuditoriaAssinaturaDao.obterLogsComErro().map { log ->
+        decryptLogAuditoriaAssinatura(log) ?: log
+    }
     suspend fun contarLogsAuditoriaDesde(dataInicio: java.util.Date) = logAuditoriaAssinaturaDao.contarLogsDesde(dataInicio)
     suspend fun contarUsosAssinaturaAuditoria(idAssinatura: Long) = logAuditoriaAssinaturaDao.contarUsosAssinatura(idAssinatura)
-    suspend fun obterLogsAuditoriaNaoValidados() = logAuditoriaAssinaturaDao.obterLogsNaoValidados()
+    suspend fun obterLogsAuditoriaNaoValidados() = logAuditoriaAssinaturaDao.obterLogsNaoValidados().map { log ->
+        decryptLogAuditoriaAssinatura(log) ?: log
+    }
     suspend fun validarLogAuditoria(id: Long, dataValidacao: java.util.Date, validadoPor: String) = logAuditoriaAssinaturaDao.validarLog(id, dataValidacao, validadoPor)
     
     // ==================== MÉTODOS PARA CÁLCULO DE METAS ====================
@@ -4179,7 +4415,8 @@ class AppRepository constructor(
             android.util.Log.e("AppRepository", "❌ Erro na correção de acertos PENDENTE: ${e.message}")
         }
     }
-    suspend fun buscarContratoAtivoPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratoAtivoPorCliente(clienteId)
+    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    suspend fun buscarContratoAtivoPorCliente(clienteId: Long) = decryptContratoLocacao(contratoLocacaoDao.buscarContratoAtivoPorCliente(clienteId))
     suspend fun inserirHistoricoManutencaoMesa(historico: HistoricoManutencaoMesa): Long = inserirHistoricoManutencaoMesaSync(historico)
 
     // ========================================
@@ -4418,35 +4655,43 @@ class AppRepository constructor(
     /**
      * ✅ FASE 4A: Buscar rotas com cache inteligente
      * Cache TTL: 2 minutos (dados de rota mudam pouco)
+     * ✅ FASE 12.5: Removido runBlocking - usando flow builder
      */
     fun buscarRotasComCache(): Flow<List<Rota>> {
         val cacheKey = "rotas_ativas"
         
-        return flowOf(
-            cacheManager.get<List<Rota>>(cacheKey) ?: run {
+        return flow {
+            val cached = cacheManager.get<List<Rota>>(cacheKey)
+            if (cached != null) {
+                emit(cached)
+            } else {
                 Log.d("AppRepository", "Cache MISS: $cacheKey - Carregando do banco")
-                val rotas = runBlocking { rotaDao.getAllRotasAtivas().first() }
+                val rotas = rotaDao.getAllRotasAtivas().first()
                 cacheManager.put(cacheKey, rotas, TimeUnit.MINUTES.toMillis(2))
-                rotas
+                emit(rotas)
             }
-        )
+        }
     }
     
     /**
      * ✅ FASE 4A: Buscar clientes por rota com cache inteligente
      * Cache TTL: 1 minuto (dados de cliente mudam mais frequentemente)
+     * ✅ FASE 12.5: Removido runBlocking - usando flow builder
      */
     fun buscarClientesPorRotaComCache(rotaId: Long): Flow<List<Cliente>> {
         val cacheKey = "clientes_rota_$rotaId"
         
-        return flowOf(
-            cacheManager.get<List<Cliente>>(cacheKey) ?: run {
+        return flow {
+            val cached = cacheManager.get<List<Cliente>>(cacheKey)
+            if (cached != null) {
+                emit(cached)
+            } else {
                 Log.d("AppRepository", "Cache MISS: $cacheKey - Carregando do banco")
-                val clientes = runBlocking { clienteDao.obterClientesPorRota(rotaId).first() }
+                val clientes = clienteDao.obterClientesPorRota(rotaId).first()
                 cacheManager.put(cacheKey, clientes, TimeUnit.MINUTES.toMillis(1))
-                clientes
+                emit(clientes)
             }
-        )
+        }
     }
     
     /**

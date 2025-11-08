@@ -42,12 +42,17 @@ android {
             enableAndroidTestCoverage = false
         }
         release {
+            // ✅ FASE 12.10: Otimizações de tamanho do APK
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // ✅ FASE 12.10: Otimizações adicionais para reduzir tamanho
+            isDebuggable = false
+            isJniDebuggable = false
+            // ✅ REMOVIDO: isRenderscriptDebuggable (deprecated no AGP 9.0)
         }
     }
     
@@ -161,5 +166,22 @@ dependencies {
     // DataStore (Preferences)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("com.jakewharton.timber:timber:5.0.1")
+
+    // ✅ FASE 12.2: Dependências de Teste
+    // Testes Unitários
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation("app.cash.turbine:turbine:1.0.0") // Para testar Flows
+    
+    // Testes de Instrumentação (Android)
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("androidx.room:room-testing:2.6.1")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 
 } 

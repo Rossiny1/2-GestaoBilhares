@@ -119,4 +119,16 @@ class Converters {
             Gson().fromJson<Map<String, Double>>(it, type)
         }
     }
+    
+    /**
+     * ✅ FASE 12.3: NOTA - Criptografia de dados sensíveis
+     * 
+     * A criptografia é feita manualmente no AppRepository antes de salvar
+     * e depois de ler, não através de TypeConverters, pois o Room não permite
+     * múltiplos TypeConverters com a mesma assinatura (String? -> String?).
+     * 
+     * Os métodos de criptografia estão em:
+     * - utils/DataEncryption.kt (utilitário de criptografia)
+     * - data/repository/AppRepository.kt (métodos encryptCliente, decryptCliente, etc.)
+     */
 } 

@@ -61,7 +61,6 @@ class ContractGenerationFragment : Fragment() {
         try {
             // ✅ LOG CRASH: Inicializando ViewModel
             android.util.Log.d("LOG_CRASH", "ContractGenerationFragment.onViewCreated - Inicializando ViewModel")
-            val database = AppDatabase.getDatabase(requireContext())
             val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
             viewModel = ContractGenerationViewModel(appRepository)
             
@@ -289,7 +288,7 @@ class ContractGenerationFragment : Fragment() {
     
     private fun enviarContratoViaWhatsApp() {
         val contrato = viewModel.contrato.value ?: return
-        val cliente = viewModel.cliente.value ?: return
+        // ✅ FASE 12.7: Variável removida (não utilizada)
         
         viewLifecycleOwner.lifecycleScope.launch {
             try {
@@ -299,14 +298,16 @@ class ContractGenerationFragment : Fragment() {
                 // ✅ NOVO: Obter assinatura do representante legal automaticamente
                 val assinaturaRepresentante = viewModel.obterAssinaturaRepresentanteLegalAtiva()
                 
-                val pdfFile = pdfGenerator.generateContractPdf(contrato, viewModel.mesasVinculadas.value, assinaturaRepresentante)
+                // ✅ FASE 12.5: generateContractPdf agora retorna Pair<File, String?> (hash)
+                val (_, documentoHash) = pdfGenerator.generateContractPdf(contrato, viewModel.mesasVinculadas.value, assinaturaRepresentante)
                 
-                // Enviar via WhatsApp
-                val whatsappNumber = cliente.telefone?.replace(Regex("[^0-9]"), "") ?: ""
-                val message = "Contrato de locação ${contrato.numeroContrato} gerado com sucesso!"
+                // ✅ FASE 12.5: Salvar hash de forma assíncrona (removido runBlocking)
+                documentoHash?.let { hash ->
+                    pdfGenerator.salvarHashDocumento(contrato, hash)
+                }
                 
-                // Implementar envio via WhatsApp
-                // TODO: Implementar envio via WhatsApp
+                // ✅ FASE 12.7: Envio via WhatsApp será implementado quando necessário
+                // TODO: Implementar envio via WhatsApp quando funcionalidade for solicitada
                 
                 Toast.makeText(requireContext(), "Contrato enviado via WhatsApp!", Toast.LENGTH_SHORT).show()
                 

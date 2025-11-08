@@ -75,7 +75,8 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         _binding = FragmentClientDetailBinding.inflate(inflater, container, false)
 
         val clientId = args.clienteId
-        viewModel = ClientDetailViewModel(appRepository)
+        val userSessionManager = com.example.gestaobilhares.utils.UserSessionManager.getInstance(requireContext())
+        viewModel = ClientDetailViewModel(appRepository, userSessionManager)
         setupRecyclerView()
         observeViewModel()
         setupListeners(clientId)
@@ -331,7 +332,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         }
     }
 
-    private fun animateFabContainer(container: View, index: Int, startDelay: Long, show: Boolean = true, onEndAction: (() -> Unit)? = null) {
+    private fun animateFabContainer(container: View, _index: Int, startDelay: Long, show: Boolean = true, onEndAction: (() -> Unit)? = null) {
         if (_binding == null) return // Verificar se o binding ainda existe
         
         val translationY = if (show) 0f else 100f
@@ -402,21 +403,11 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         Log.d("ClientDetailFragment", "Observação adicionada: $textoObservacao")
     }
 
-    private suspend fun gerarDistratoAposRetiradaMesa(contrato: ContratoLocacao, mesaRemovida: Mesa) {
+    private suspend fun gerarDistratoAposRetiradaMesa(contrato: ContratoLocacao, _mesaRemovida: Mesa) {
         try {
-            // Buscar mesas restantes do cliente
-            val mesasRestantes = viewModel.mesasCliente.first()
-            
             // Buscar último acerto do cliente usando AppRepository
             val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-            val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(args.clienteId)
-            val totalRecebido = ultimoAcerto?.valorRecebido ?: 0.0
-            val despesasViagem = 0.0
-            val subtotal = totalRecebido - despesasViagem
-            val comissaoMotorista = subtotal * 0.03
-            val comissaoIltair = totalRecebido * 0.02
-            val totalGeral = subtotal - comissaoMotorista - comissaoIltair
-            val saldo = ultimoAcerto?.debitoAtual ?: 0.0
+            // ✅ FASE 12.7: Variável removida (não utilizada)
             
             // Atualizar status do contrato para aguardando assinatura
             val agora = java.util.Date()

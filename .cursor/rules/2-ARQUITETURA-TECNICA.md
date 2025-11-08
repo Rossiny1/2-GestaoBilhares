@@ -168,6 +168,17 @@
 - ✅ **Documento Hash**: Hash SHA-256 do PDF final gerado automaticamente
 - ✅ **Database Version 46**: Migration 45→46 com todos os campos de conformidade
 
+### **Criptografia de Dados Sensíveis (Fase 12.3 ✅)**
+
+- ✅ **Android Keystore**: Chaves protegidas pelo sistema operacional (hardware quando disponível)
+- ✅ **Algoritmo**: AES-GCM (256 bits) - recomendado pelo Android
+- ✅ **Dados Criptografados**:
+  - CPF/CNPJ em Cliente, Colaborador, MesaVendida, ContratoLocacao
+  - Assinaturas (Base64) em ContratoLocacao e AssinaturaRepresentanteLegal
+  - CPF em LogAuditoriaAssinatura
+- ✅ **Implementação**: Criptografia automática no Repository antes de salvar, descriptografia após ler
+- ✅ **Compatibilidade**: Suporta dados legados (não criptografados) - migração gradual
+
 ## 📱 COMPONENTES UI
 
 ### **Fragments Principais**
@@ -236,6 +247,7 @@
 ### **Utilitários Principais**
 
 - **PasswordHasher**: Hash seguro de senhas (PBKDF2-SHA256) - Fase 12.1 ✅
+- **DataEncryption**: Criptografia de dados sensíveis (AES-GCM 256 bits, Android Keystore) - Fase 12.3 ✅
 - **DateUtils**: Utilitários de data (calcularRangeAno centralizado)
 - **BluetoothPrinterHelper**: Comunicação com impressoras térmicas
 - **NetworkUtils**: Verificação de conectividade

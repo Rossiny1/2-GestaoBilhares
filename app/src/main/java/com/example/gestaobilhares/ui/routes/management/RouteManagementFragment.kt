@@ -48,7 +48,8 @@ class RouteManagementFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = RouteManagementViewModel(appRepository)
+        val userSessionManager = com.example.gestaobilhares.utils.UserSessionManager.getInstance(requireContext())
+        viewModel = RouteManagementViewModel(appRepository, userSessionManager)
         
         setupRecyclerView()
         setupClickListeners()
