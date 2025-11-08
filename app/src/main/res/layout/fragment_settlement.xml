@@ -87,7 +87,9 @@
                             android:layout_height="20dp"
                             android:layout_marginEnd="8dp"
                             android:src="@drawable/ic_user"
-                            app:tint="@color/purple_600" />
+                            app:tint="@color/purple_600"
+                            android:contentDescription="Ícone de cliente"
+                            android:importantForAccessibility="no" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -186,7 +188,9 @@
                             android:layout_height="20dp"
                             android:layout_marginEnd="8dp"
                             android:src="@drawable/ic_money"
-                            app:tint="@color/purple_600" />
+                            app:tint="@color/purple_600"
+                            android:contentDescription="Ícone de valores"
+                            android:importantForAccessibility="no" />
 
                         <TextView
                             android:layout_width="wrap_content"

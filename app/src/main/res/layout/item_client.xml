@@ -20,7 +20,9 @@
             android:layout_width="4dp"
             android:layout_height="match_parent"
             android:layout_marginEnd="12dp"
-            android:background="@drawable/status_indicator_success" />
+            android:background="@drawable/status_indicator_success"
+            android:contentDescription="Indicador de status do cliente"
+            android:importantForAccessibility="no" />
 
         <!-- Informações do cliente -->
         <LinearLayout
@@ -101,7 +103,9 @@
                         android:layout_height="16dp"
                         android:layout_marginEnd="4dp"
                         android:src="@drawable/ic_billiard_balls"
-                        android:tint="@color/error_red" />
+                        android:tint="@color/error_red"
+                        android:contentDescription="Ícone de débito"
+                        android:importantForAccessibility="no" />
 
                     <TextView
                         android:id="@+id/tvCurrentDebt"

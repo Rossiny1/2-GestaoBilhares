@@ -51,6 +51,8 @@
             android:scaleType="centerInside"
             android:layout_marginTop="60dp"
             android:layout_marginBottom="16dp"
+            android:contentDescription="Logo da empresa"
+            android:importantForAccessibility="no"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -125,6 +127,9 @@
             android:text="Esqueceu a senha?"
             android:textColor="@color/primary_blue"
             android:textStyle="bold"
+            android:contentDescription="Esqueceu a senha? Toque para recuperar"
+            android:clickable="true"
+            android:focusable="true"
             app:layout_constraintTop_toBottomOf="@id/passwordLayout"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="8dp" />
