@@ -182,8 +182,7 @@ class ImageCompressionUtils(
     private fun saveCompressedBitmap(bitmap: Bitmap): File? {
         return try {
             // Criar arquivo temporário
-            val timeStamp = System.currentTimeMillis()
-            // ✅ CORREÇÃO: Variável fileName não usada - removida
+            // ✅ CORREÇÃO: Variáveis timeStamp e fileName não usadas - removidas
             val tempFile = File.createTempFile("compressed_", ".jpg", context.cacheDir)
             
             // ✅ ESTRATÉGIA INTELIGENTE: Compressão adaptativa para 100KB

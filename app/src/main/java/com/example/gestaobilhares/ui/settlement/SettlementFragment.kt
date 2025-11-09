@@ -997,7 +997,7 @@ class SettlementFragment : Fragment() {
      * Atualiza o display do total em tempo real no diálogo de métodos de pagamento
      */
     private fun updateTotalDisplay(
-        paymentInputs: Map<String, com.google.android.material.textfield.TextInputEditText>,
+        @Suppress("UNUSED_PARAMETER") paymentInputs: Map<String, com.google.android.material.textfield.TextInputEditText>,
         moneyWatchers: Map<String, com.example.gestaobilhares.utils.MoneyTextWatcher>,
         tvTotalInformado: TextView
     ) {
@@ -1039,7 +1039,7 @@ class SettlementFragment : Fragment() {
         binding.btnSaveSettlement.isEnabled = false
         viewModel.setLoading(true)
 
-        val valorRecebido = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
+        // ✅ CORREÇÃO: valorRecebido não é usado - o valor é calculado a partir dos paymentValues no ViewModel
         val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
         val observacao = binding.etObservacao.text.toString().trim()
         // Removido: funcionalidade de pano movida para sistema de troca separado
