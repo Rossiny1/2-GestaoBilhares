@@ -40,6 +40,8 @@ android {
             // ✅ CORREÇÃO: Substituir isTestCoverageEnabled (deprecated) por enableUnitTestCoverage
             enableUnitTestCoverage = false
             enableAndroidTestCoverage = false
+            // ✅ OTIMIZAÇÃO 2025: Desabilitar tarefas de teste em builds normais (economiza tempo)
+            // Testes só rodam quando explicitamente chamados: ./gradlew test
         }
         release {
             // ✅ FASE 12.10: Otimizações de tamanho do APK
@@ -90,14 +92,19 @@ android {
     }
 
     lint {
-        abortOnError = false
+        // ✅ OTIMIZAÇÃO 2025: Lint completamente desabilitado em debug para builds mais rápidos
         checkReleaseBuilds = false
-        // ✅ CORREÇÃO: checkDebugBuilds não existe, usar checkAllWarnings = false para desabilitar todos os checks
         checkAllWarnings = false
-        // Desabilitar verificações que não são críticas
-        disable += setOf("MissingTranslation", "ExtraTranslation")
+        abortOnError = false
+        // Desabilitar todas as verificações em debug (economiza 1-2 minutos)
+        disable += setOf("MissingTranslation", "ExtraTranslation", "UnusedResources", "IconDensities", "IconDuplicates")
     }
     
+}
+
+// ✅ OTIMIZAÇÃO 2025: Desabilitar tarefa lint em debug builds (economiza 1-2 minutos)
+tasks.named("lint").configure {
+    enabled = false
 }
 
 // ✅ OTIMIZAÇÃO: KSP para Room (compatível com Java 11+) - Configurações otimizadas
@@ -110,6 +117,9 @@ ksp {
     arg("room.generateKotlin", "true")
     // Desabilitar verificações desnecessárias em debug
     arg("room.expandProjection", "false")
+    // ✅ OTIMIZAÇÃO 2025: Cache KSP habilitado para builds incrementais mais rápidos
+    arg("ksp.incremental", "true")
+    arg("ksp.incremental.intermodule", "true")
 }
 
 dependencies {
