@@ -274,7 +274,14 @@ object DateUtils {
         }
         val inicioAno = calendar.timeInMillis
         
-        calendar.add(Calendar.YEAR, 1)
+        // Fim do ano: 31 de dezembro às 23:59:59.999 (mesmo ano)
+        calendar.set(Calendar.YEAR, anoInt) // Garantir que o ano está correto
+        calendar.set(Calendar.MONTH, Calendar.DECEMBER)
+        calendar.set(Calendar.DAY_OF_MONTH, 31)
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
         val fimAno = calendar.timeInMillis
         
         return Pair(inicioAno, fimAno)

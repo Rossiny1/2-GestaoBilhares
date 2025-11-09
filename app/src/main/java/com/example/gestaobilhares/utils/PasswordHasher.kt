@@ -1,8 +1,8 @@
 package com.example.gestaobilhares.utils
 
-import android.util.Base64
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.util.Base64
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
@@ -52,8 +52,8 @@ object PasswordHasher {
         val hash = keyFactory.generateSecret(spec).encoded
         
         // Retornar salt e hash em Base64 separados por ":"
-        val saltBase64 = Base64.encodeToString(salt, Base64.NO_WRAP)
-        val hashBase64 = Base64.encodeToString(hash, Base64.NO_WRAP)
+        val saltBase64 = Base64.getEncoder().encodeToString(salt)
+        val hashBase64 = Base64.getEncoder().encodeToString(hash)
         
         return "$saltBase64:$hashBase64"
     }
@@ -78,8 +78,8 @@ object PasswordHasher {
                 return false
             }
             
-            val salt = Base64.decode(parts[0], Base64.NO_WRAP)
-            val storedHashBytes = Base64.decode(parts[1], Base64.NO_WRAP)
+            val salt = Base64.getDecoder().decode(parts[0])
+            val storedHashBytes = Base64.getDecoder().decode(parts[1])
             
             // Gerar hash da senha fornecida usando o mesmo salt
             val spec = PBEKeySpec(
@@ -118,8 +118,8 @@ object PasswordHasher {
         }
         
         try {
-            Base64.decode(parts[0], Base64.NO_WRAP)
-            Base64.decode(parts[1], Base64.NO_WRAP)
+            Base64.getDecoder().decode(parts[0])
+            Base64.getDecoder().decode(parts[1])
             return true
         } catch (e: Exception) {
             return false

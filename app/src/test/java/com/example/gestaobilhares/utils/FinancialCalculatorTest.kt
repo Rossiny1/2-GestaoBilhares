@@ -257,35 +257,34 @@ class FinancialCalculatorTest {
     // ==================== HELPERS ====================
 
     private fun createAcerto(clienteId: Long, valorRecebido: Double, metodosPagamentoJson: String): Acerto {
+        val agora = Date()
         return Acerto(
             id = 0L,
             clienteId = clienteId,
             rotaId = 1L,
             cicloId = 1L,
-            dataAcerto = Date(),
+            dataAcerto = agora,
+            periodoInicio = agora,
+            periodoFim = agora,
             valorRecebido = valorRecebido,
             debitoAnterior = 0.0,
             debitoAtual = 0.0,
             observacoes = "",
             metodosPagamentoJson = metodosPagamentoJson,
-            dataCriacao = Date(),
-            dataAtualizacao = Date()
+            dataCriacao = agora
         )
     }
 
     private fun createDespesa(categoria: String, valor: Double): Despesa {
         return Despesa(
             id = 0L,
-            cicloId = 1L,
-            categoria = categoria,
-            tipo = "",
+            rotaId = 1L,
+            descricao = "Despesa de $categoria",
             valor = valor,
-            quantidade = 1,
-            dataDespesa = Date(),
+            categoria = categoria,
+            cicloId = 1L,
             observacoes = "",
-            veiculoId = null,
-            dataCriacao = Date(),
-            dataAtualizacao = Date()
+            veiculoId = null
         )
     }
 }
