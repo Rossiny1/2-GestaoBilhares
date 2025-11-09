@@ -142,7 +142,8 @@ class PdfReportGenerator(private val context: Context) {
             routeInfo.addCell(createCell("DATA INÍCIO:", true))
             routeInfo.addCell(createCell(dateFormatter.format(ciclo.dataInicio), false))
             routeInfo.addCell(createCell("DATA FIM:", true))
-            routeInfo.addCell(createCell(ciclo.dataFim?.let { dateFormatter.format(it) } ?: "Em andamento", false))
+            // ✅ CORREÇÃO: dataFim é Date (não nullable), safe call desnecessário
+            routeInfo.addCell(createCell(dateFormatter.format(ciclo.dataFim), false))
             
             document.add(routeInfo)
             
@@ -331,7 +332,8 @@ class PdfReportGenerator(private val context: Context) {
                 expensesTable.addCell(createCell(despesa.descricao, false))
                 expensesTable.addCell(createCell(try { despesa.dataHora.format(localDateTimeFormatter) } catch (e: Exception) { "Data inválida" }, false))
                 expensesTable.addCell(createCell(currencyFormatter.format(despesa.valor), false))
-                expensesTable.addCell(createCell(despesa.observacoes ?: "", false))
+                // ✅ CORREÇÃO: observacoes é String (não nullable), elvis operator desnecessário
+                expensesTable.addCell(createCell(despesa.observacoes, false))
             }
             
             // ✅ NOVO: Total da categoria integrado na tabela com fundo cinza
@@ -357,7 +359,7 @@ class PdfReportGenerator(private val context: Context) {
     /**
      * ✅ NOVA: Resumo final completamente reformulado conforme especificação
      */
-    private fun addEnhancedFinalSummary(document: Document, ciclo: CicloAcertoEntity, acertos: List<Acerto>, despesas: List<Despesa>) {
+    private fun addEnhancedFinalSummary(document: Document, @Suppress("UNUSED_PARAMETER") ciclo: CicloAcertoEntity, acertos: List<Acerto>, despesas: List<Despesa>) {
         val finalTitle = Paragraph("RESUMO DO FECHAMENTO")
             .setFontSize(14f) // ✅ REDUZIDO: era 16f
             .setBold()

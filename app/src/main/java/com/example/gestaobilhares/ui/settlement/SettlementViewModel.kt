@@ -302,7 +302,8 @@ class SettlementViewModel constructor(
                 
                 // Buscar cliente uma única vez
                 val cliente = appRepository.obterClientePorId(clienteId) ?: throw IllegalStateException("Cliente não encontrado para o ID: $clienteId")
-                val rotaId = cliente.rotaId ?: throw IllegalStateException("Cliente $clienteId não está vinculado a uma rota. Não é possível criar acerto.")
+                // ✅ CORREÇÃO: rotaId é Long (não nullable), elvis operator desnecessário
+                val rotaId = cliente.rotaId
                 
                 // Buscar ciclo como no pré-refatoração: fonte única (obterCicloAtualRota)
                 val cicloId = appRepository.obterCicloAtualIdPorRota(rotaId)
@@ -397,7 +398,7 @@ class SettlementViewModel constructor(
                 // ✅ CORREÇÃO: Logs detalhados para debug das observações
                 logOperation("SETTLEMENT", "=== SALVANDO ACERTO NO BANCO - DEBUG OBSERVAÇÕES ===")
                 logOperation("SETTLEMENT", "Observação recebida dos dados: '${dadosAcerto.observacao}'")
-                logOperation("SETTLEMENT", "Observação é nula? ${dadosAcerto.observacao == null}")
+                // ✅ CORREÇÃO: observacao é String (não nullable), verificação == null sempre false - removida
                 logOperation("SETTLEMENT", "Observação é vazia? ${dadosAcerto.observacao.isEmpty()}")
                 logOperation("SETTLEMENT", "Observação é blank? ${dadosAcerto.observacao.isBlank()}")
                 

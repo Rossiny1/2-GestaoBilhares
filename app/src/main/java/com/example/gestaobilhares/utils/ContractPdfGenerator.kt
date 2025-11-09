@@ -324,7 +324,7 @@ class ContractPdfGenerator(private val context: Context) {
         addStandardClauses(document, font, fontBold)
     }
     
-    private fun addClause(document: Document, title: String, fontBold: com.itextpdf.kernel.font.PdfFont, _font: com.itextpdf.kernel.font.PdfFont) {
+    private fun addClause(document: Document, title: String, fontBold: com.itextpdf.kernel.font.PdfFont, @Suppress("UNUSED_PARAMETER") _font: com.itextpdf.kernel.font.PdfFont) {
         val clause = Paragraph(title)
             .setFont(fontBold)
             .setFontSize(12f)

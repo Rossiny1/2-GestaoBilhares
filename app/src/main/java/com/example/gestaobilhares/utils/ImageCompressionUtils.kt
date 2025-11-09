@@ -183,7 +183,7 @@ class ImageCompressionUtils(
         return try {
             // Criar arquivo temporário
             val timeStamp = System.currentTimeMillis()
-            val fileName = "compressed_${timeStamp}.jpg"
+            // ✅ CORREÇÃO: Variável fileName não usada - removida
             val tempFile = File.createTempFile("compressed_", ".jpg", context.cacheDir)
             
             // ✅ ESTRATÉGIA INTELIGENTE: Compressão adaptativa para 100KB

@@ -189,7 +189,7 @@ class AditivoPdfGenerator(private val context: Context) {
         }
     }
     
-    private fun addClause(document: Document, title: String, fontBold: com.itextpdf.kernel.font.PdfFont, font: com.itextpdf.kernel.font.PdfFont) {
+    private fun addClause(document: Document, title: String, fontBold: com.itextpdf.kernel.font.PdfFont, @Suppress("UNUSED_PARAMETER") font: com.itextpdf.kernel.font.PdfFont) {
         val clause = Paragraph(title)
             .setFont(fontBold)
             .setFontSize(12f)

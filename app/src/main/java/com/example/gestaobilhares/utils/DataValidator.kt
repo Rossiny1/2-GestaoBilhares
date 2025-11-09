@@ -220,7 +220,7 @@ object DataValidator {
         valor: Double,
         quantidade: Int,
         categoria: String?,
-        tipo: String?,
+        @Suppress("UNUSED_PARAMETER") tipo: String?,
         veiculoId: Long?
     ): ResultadoValidacao {
         val erros = mutableListOf<String>()
