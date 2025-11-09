@@ -609,10 +609,28 @@ Todas as funcionalidades principais foram implementadas, testadas e validadas. O
     - ✅ **Solução**: Analytics de uso
     - **Tempo Estimado**: 1 semana
 
-14. **Fase 12.14: Refatoração de Arquivos Grandes (BAIXA)**
-    - ✅ **Solução**: Dividir AppRepository se necessário
-    - ✅ **Solução**: Dividir SyncManagerV2 se necessário
+14. **Fase 12.14: Refatoração de Arquivos Grandes (EM PROGRESSO ⏳)**
+    - ✅ **Etapa 1 Concluída**: Handlers criados, integrados e build validado
+    - ✅ **Estrutura Base Criada**: BasePullHandler implementado
+    - ✅ **Handlers Principais Criados**: 5 handlers extraídos (Cliente, Rota, Mesa, Acerto, Ciclo)
+    - ✅ **Handlers Integrados**: Métodos pull* principais substituídos pelos handlers especializados
+    - ✅ **Build Validado**: Compilação bem-sucedida após integração
+    - ✅ **Limpeza Concluída**: 5 métodos @Deprecated removidos (~740 linhas removidas)
+    - ✅ **Build Validado Após Limpeza**: Compilação bem-sucedida após remoção dos métodos deprecated
+    - ✅ **Etapa 2 Concluída**: 4 repositories internos criados (Cliente, Acerto, Mesa, Rota) e AppRepository atualizado para delegar
+    - ✅ **Build Final Validado**: Compilação bem-sucedida após delegação completa
+    - ✅ **Refatoração Principal Concluída**: AppRepository reduzido de ~5600 para ~5100 linhas
+    - ✅ **Decisão Arquitetural**: Repositories restantes (Despesa, Ciclo, Colaborador) mantidos no AppRepository pois dependem de helpers privados complexos. Extração futura requer refatoração adicional.
+    - ✅ **Status**: Refatoração concluída e pronta para testes
     - **Tempo Estimado**: 1-2 semanas
+    - **Arquivos Criados**:
+     - `sync/handlers/BasePullHandler.kt` (novo - handler base)
+     - `sync/handlers/ClientePullHandler.kt` (novo - handler de clientes)
+     - `sync/handlers/RotaPullHandler.kt` (novo - handler de rotas)
+     - `sync/handlers/MesaPullHandler.kt` (novo - handler de mesas)
+     - `sync/handlers/AcertoPullHandler.kt` (novo - handler de acertos + mesas + fotos)
+     - `sync/handlers/CicloPullHandler.kt` (novo - handler de ciclos)
+     - `.cursor/rules/REFATORACAO-ARQUIVOS-GRANDES.md` (novo - documentação)
 
 #### **Outras Melhorias Planejadas**
 

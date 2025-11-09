@@ -101,6 +101,53 @@ class AppRepository constructor(
     // Usado para garantir que a URL do Firebase seja preservada entre inserirAcertoMesaSync() e adicionarAcertoComMesasParaSync()
     private val fotoFirebaseUrlCache = mutableMapOf<Long, String>()
     
+    // ✅ FASE 12.14 Etapa 2: Repositories internos especializados
+    private val clienteRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.ClienteRepositoryInternal(
+            clienteDao = clienteDao,
+            syncQueueDao = syncQueueDao
+        )
+    }
+    
+    private val acertoRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.AcertoRepositoryInternal(
+            acertoDao = acertoDao,
+            acertoMesaDao = acertoMesaDao
+        )
+    }
+    
+    private val mesaRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.MesaRepositoryInternal(
+            mesaDao = mesaDao
+        )
+    }
+    
+    private val rotaRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.RotaRepositoryInternal(
+            rotaDao = rotaDao
+        )
+    }
+    
+    // ✅ FASE 12.14 Etapa 2: Repositories internos restantes
+    private val despesaRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.DespesaRepositoryInternal(
+            despesaDao = despesaDao
+        )
+    }
+    
+    private val cicloRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.CicloRepositoryInternal(
+            cicloAcertoDao = cicloAcertoDao
+        )
+    }
+    
+    private val colaboradorRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.ColaboradorRepositoryInternal(
+            colaboradorDao = colaboradorDao,
+            syncQueueDao = syncQueueDao
+        )
+    }
+    
     // ✅ FASE 4D: Otimizações de memória
     private val memoryOptimizer = MemoryOptimizer.getInstance()
     private val weakReferenceManager = WeakReferenceManager.getInstance()
@@ -218,31 +265,25 @@ class AppRepository constructor(
     /**
      * ✅ MODERNIZADO: Obtém todos os clientes com cache StateFlow
      * ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
      */
-    fun obterTodosClientes(): Flow<List<Cliente>> = clienteDao.obterTodos().map { clientes ->
-        clientes.map { decryptCliente(it) ?: it }
-    }
+    fun obterTodosClientes(): Flow<List<Cliente>> = clienteRepositoryInternal.obterTodosClientes()
     
     /**
      * ✅ MODERNIZADO: Obtém clientes por rota com cache
      * ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
      */
-    fun obterClientesPorRota(rotaId: Long): Flow<List<Cliente>> = clienteDao.obterClientesPorRota(rotaId).map { clientes ->
-        clientes.map { decryptCliente(it) ?: it }
-    }
+    fun obterClientesPorRota(rotaId: Long): Flow<List<Cliente>> = clienteRepositoryInternal.obterClientesPorRota(rotaId)
     
     /**
      * ✅ FASE 2A: Método otimizado com débito atual calculado
      * Usa query otimizada que calcula débito atual diretamente no banco
      * ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
      */
-    // ✅ CORREÇÃO OFICIAL: Usar conflate() para garantir que mudanças sejam processadas imediatamente
     fun obterClientesPorRotaComDebitoAtual(rotaId: Long): Flow<List<Cliente>> = 
-        clienteDao.obterClientesPorRotaComDebitoAtual(rotaId)
-            .conflate() // ✅ CRÍTICO: Processar mudanças imediatamente, sem buffer
-            .map { clientes ->
-                clientes.map { decryptCliente(it) ?: it }
-            }
+        clienteRepositoryInternal.obterClientesPorRotaComDebitoAtual(rotaId)
     
     // ✅ FASE 12.3: Métodos helper para criptografia de dados sensíveis
     
@@ -367,264 +408,195 @@ class AppRepository constructor(
         )
     }
     
-    suspend fun obterClientePorId(id: Long) = decryptCliente(clienteDao.obterPorId(id))
-    suspend fun inserirCliente(cliente: Cliente): Long {
-        logDbInsertStart("CLIENTE", "Nome=${cliente.nome}, RotaID=${cliente.rotaId}")
-        return try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val clienteEncrypted = encryptCliente(cliente)
-            val id = clienteDao.inserir(clienteEncrypted)
-            logDbInsertSuccess("CLIENTE", "Nome=${cliente.nome}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "nome": "${cliente.nome}",
-                        "telefone": "${cliente.telefone}",
-                        "endereco": "${cliente.endereco}",
-                        "rotaId": ${cliente.rotaId},
-                        "ativo": ${cliente.ativo},
-                        "dataCadastro": "${cliente.dataCadastro}",
-                        "valorFicha": ${cliente.valorFicha},
-                        "comissaoFicha": ${cliente.comissaoFicha}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Cliente", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("Cliente", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar cliente à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("CLIENTE", "Nome=${cliente.nome}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarCliente(cliente: Cliente) {
-        logDbUpdateStart("CLIENTE", "ID=${cliente.id}, Nome=${cliente.nome}")
-        try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val clienteEncrypted = encryptCliente(cliente)
-            clienteDao.atualizar(clienteEncrypted)
-            logDbUpdateSuccess("CLIENTE", "ID=${cliente.id}, Nome=${cliente.nome}")
-            
-            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${cliente.id},
-                        "nome": "${cliente.nome}",
-                        "telefone": "${cliente.telefone}",
-                        "endereco": "${cliente.endereco}",
-                        "rotaId": ${cliente.rotaId},
-                        "ativo": ${cliente.ativo},
-                        "dataCadastro": "${cliente.dataCadastro}",
-                        "debitoAtual": ${cliente.debitoAtual},
-                        "valorFicha": ${cliente.valorFicha},
-                        "comissaoFicha": ${cliente.comissaoFicha}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Cliente", cliente.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("Cliente", cliente.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de cliente à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("CLIENTE", "ID=${cliente.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarCliente(cliente: Cliente) = clienteDao.deletar(cliente)
-    suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) {
-        logDbUpdateStart("CLIENTE_DEBITO", "ClienteID=$clienteId, NovoDebito=$novoDebito")
-        try {
-            // ✅ CORREÇÃO CRÍTICA: Atualizar débito e dataUltimaAtualizacao em uma única operação
-            // Isso garante que o Room detecte a mudança e re-emita o Flow imediatamente
-            val cliente = obterClientePorId(clienteId)
-            if (cliente != null) {
-                // Atualizar débito e dataUltimaAtualizacao simultaneamente
-                val clienteAtualizado = cliente.copy(
-                    debitoAtual = novoDebito,
-                    dataUltimaAtualizacao = java.util.Date()
-                )
-                clienteDao.atualizar(clienteAtualizado)
-                Log.d("AppRepository", "✅ Débito atualizado para cliente $clienteId: $novoDebito - Flow será re-emitido imediatamente")
-            } else {
-                // Fallback: usar método direto se cliente não for encontrado
-                clienteDao.atualizarDebitoAtual(clienteId, novoDebito)
-                Log.w("AppRepository", "⚠️ Cliente $clienteId não encontrado, usando atualização direta")
-            }
-            
-            logDbUpdateSuccess("CLIENTE_DEBITO", "ClienteID=$clienteId, NovoDebito=$novoDebito")
-            
-            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
-            try {
-                val clienteParaSync = obterClientePorId(clienteId)
-                if (clienteParaSync != null) {
-                    val payload = """
-                        {
-                            "id": ${clienteParaSync.id},
-                            "nome": "${clienteParaSync.nome}",
-                            "telefone": "${clienteParaSync.telefone}",
-                            "endereco": "${clienteParaSync.endereco}",
-                            "rotaId": ${clienteParaSync.rotaId},
-                            "ativo": ${clienteParaSync.ativo},
-                            "dataCadastro": "${clienteParaSync.dataCadastro}",
-                            "debitoAtual": $novoDebito,
-                            "valorFicha": ${clienteParaSync.valorFicha},
-                            "comissaoFicha": ${clienteParaSync.comissaoFicha}
-                        }
-                    """.trimIndent()
-                    
-                    adicionarOperacaoSync("Cliente", clienteId, "UPDATE", payload, priority = 1)
-                    logarOperacaoSync("Cliente", clienteId, "UPDATE", "PENDING", null, payload)
-                }
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de débito à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("CLIENTE_DEBITO", "ClienteID=$clienteId", e)
-            throw e
-        }
-    }
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
+     */
+    suspend fun obterClientePorId(id: Long) = clienteRepositoryInternal.obterClientePorId(id)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
+     */
+    suspend fun inserirCliente(cliente: Cliente): Long = 
+        clienteRepositoryInternal.inserirCliente(
+            cliente = cliente,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
+     */
+    suspend fun atualizarCliente(cliente: Cliente) = 
+        clienteRepositoryInternal.atualizarCliente(
+            cliente = cliente,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
+     */
+    suspend fun deletarCliente(cliente: Cliente) = clienteRepositoryInternal.deletarCliente(cliente)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
+     */
+    suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) = 
+        clienteRepositoryInternal.atualizarDebitoAtual(
+            clienteId = clienteId,
+            novoDebito = novoDebito,
+            obterClientePorId = ::obterClientePorId,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
+     */
     suspend fun calcularDebitoAtualEmTempoReal(clienteId: Long) = 
-        clienteDao.calcularDebitoAtualEmTempoReal(clienteId)
+        clienteRepositoryInternal.calcularDebitoAtualEmTempoReal(clienteId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
+     */
     suspend fun obterClienteComDebitoAtual(clienteId: Long) = 
-        clienteDao.obterClienteComDebitoAtual(clienteId)
+        clienteRepositoryInternal.obterClienteComDebitoAtual(clienteId)
     
     /**
      * ✅ NOVO: Busca o ID da rota associada a um cliente
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
      */
-                suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? {
-                    return try {
-                        if (BuildConfig.DEBUG) {
-                            android.util.Log.d("AppRepository", "Buscando cliente ID: $clienteId")
-                        }
-                        val cliente = obterClientePorId(clienteId)
-                        if (BuildConfig.DEBUG) {
-                            android.util.Log.d("AppRepository", "Cliente encontrado: ${cliente?.nome}, rotaId: ${cliente?.rotaId}")
-                        }
-                        cliente?.rotaId
-                    } catch (e: Exception) {
-                        android.util.Log.e("AppRepository", "Erro ao buscar rota ID por cliente: ${e.message}", e)
-                        null
-                    }
-                }
+    suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? = 
+        clienteRepositoryInternal.buscarRotaIdPorCliente(clienteId)
     
     // ==================== ACERTO ====================
     
-    fun obterAcertosPorCliente(clienteId: Long) = acertoDao.buscarPorCliente(clienteId)
-    suspend fun obterAcertoPorId(id: Long) = acertoDao.buscarPorId(id)
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
+    fun obterAcertosPorCliente(clienteId: Long) = acertoRepositoryInternal.obterAcertosPorCliente(clienteId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
+    suspend fun obterAcertoPorId(id: Long) = acertoRepositoryInternal.obterAcertoPorId(id)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
     suspend fun buscarUltimoAcertoPorCliente(clienteId: Long) = 
-        acertoDao.buscarUltimoAcertoPorCliente(clienteId)
-    fun obterTodosAcertos() = acertoDao.listarTodos()
-    fun buscarAcertosPorCicloId(cicloId: Long) = acertoDao.buscarPorCicloId(cicloId)
-    fun buscarClientesPorRota(rotaId: Long) = clienteDao.obterClientesPorRota(rotaId)
-    suspend fun buscarRotaPorId(rotaId: Long) = rotaDao.getRotaById(rotaId)
-    suspend fun inserirAcerto(acerto: Acerto): Long {
-        logDbInsertStart("ACERTO", "ClienteID=${acerto.clienteId}, RotaID=${acerto.rotaId}, Valor=${acerto.valorRecebido}")
-        return try {
-            val id = acertoDao.inserir(acerto)
-            logDbInsertSuccess("ACERTO", "ClienteID=${acerto.clienteId}, ID=$id")
-            
-            // ✅ CORREÇÃO: Não adicionar à fila de sync aqui - será feito pelo SettlementViewModel
-            // após inserir as mesas do acerto
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("ACERTO", "ClienteID=${acerto.clienteId}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarAcerto(acerto: Acerto) {
-        logDbUpdateStart("ACERTO", "ID=${acerto.id}, ClienteID=${acerto.clienteId}")
-        try {
-            acertoDao.atualizar(acerto)
-            logDbUpdateSuccess("ACERTO", "ID=${acerto.id}, ClienteID=${acerto.clienteId}")
-            
-            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
-            try {
-                val payloadMap = mutableMapOf<String, Any?>(
-                    "id" to acerto.id,
-                    "clienteId" to acerto.clienteId,
-                    "colaboradorId" to acerto.colaboradorId,
-                    "dataAcerto" to acerto.dataAcerto,
-                    "periodoInicio" to acerto.periodoInicio,
-                    "periodoFim" to acerto.periodoFim,
-                    "totalMesas" to acerto.totalMesas,
-                    "debitoAnterior" to acerto.debitoAnterior,
-                    "valorTotal" to acerto.valorTotal,
-                    "desconto" to acerto.desconto,
-                    "valorComDesconto" to acerto.valorComDesconto,
-                    "valorRecebido" to acerto.valorRecebido,
-                    "debitoAtual" to acerto.debitoAtual,
-                    "status" to acerto.status.name,
-                    "observacoes" to acerto.observacoes,
-                    "dataCriacao" to acerto.dataCriacao,
-                    "dataFinalizacao" to acerto.dataFinalizacao,
-                    "representante" to acerto.representante,
-                    "tipoAcerto" to acerto.tipoAcerto,
-                    "panoTrocado" to acerto.panoTrocado,
-                    "numeroPano" to acerto.numeroPano,
-                    "rotaId" to acerto.rotaId,
-                    "cicloId" to acerto.cicloId,
-                    "syncTimestamp" to acerto.syncTimestamp,
-                    "syncVersion" to acerto.syncVersion,
-                    "syncStatus" to acerto.syncStatus.name
-                )
-                // Adicionar JSONs que já podem estar formatados
-                acerto.metodosPagamentoJson?.let { payloadMap["metodosPagamentoJson"] = it }
-                acerto.dadosExtrasJson?.let { payloadMap["dadosExtrasJson"] = it }
-
-                val payload = com.google.gson.Gson().toJson(payloadMap)
-
-                adicionarOperacaoSync("Acerto", acerto.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("Acerto", acerto.id, "UPDATE", "PENDING", null, payload)
-
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de acerto à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("ACERTO", "ID=${acerto.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarAcerto(acerto: Acerto) = acertoDao.deletar(acerto)
+        acertoRepositoryInternal.buscarUltimoAcertoPorCliente(clienteId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
+    fun obterTodosAcertos() = acertoRepositoryInternal.obterTodosAcertos()
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
+    fun buscarAcertosPorCicloId(cicloId: Long) = acertoRepositoryInternal.buscarAcertosPorCicloId(cicloId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ClienteRepositoryInternal
+     */
+    fun buscarClientesPorRota(rotaId: Long) = obterClientesPorRota(rotaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    suspend fun buscarRotaPorId(rotaId: Long) = obterRotaPorId(rotaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
+    suspend fun inserirAcerto(acerto: Acerto): Long = 
+        acertoRepositoryInternal.inserirAcerto(
+            acerto = acerto,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError
+        )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
+    suspend fun atualizarAcerto(acerto: Acerto) = 
+        acertoRepositoryInternal.atualizarAcerto(
+            acerto = acerto,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
+    suspend fun deletarAcerto(acerto: Acerto) = acertoRepositoryInternal.deletarAcerto(acerto)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
     suspend fun buscarUltimoAcertoPorMesa(mesaId: Long) = 
-        acertoDao.buscarUltimoAcertoPorMesa(mesaId)
+        acertoRepositoryInternal.buscarUltimoAcertoPorMesa(mesaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
     suspend fun buscarUltimoAcertoMesaItem(mesaId: Long) =
-        acertoMesaDao.buscarUltimoAcertoMesa(mesaId)
+        acertoRepositoryInternal.buscarUltimoAcertoMesaItem(mesaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
     suspend fun buscarObservacaoUltimoAcerto(clienteId: Long) = 
-        acertoDao.buscarObservacaoUltimoAcerto(clienteId)
+        acertoRepositoryInternal.buscarObservacaoUltimoAcerto(clienteId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
     suspend fun buscarUltimosAcertosPorClientes(clienteIds: List<Long>) =
-        acertoDao.buscarUltimosAcertosPorClientes(clienteIds)
-    suspend fun buscarCicloAtivo(rotaId: Long) = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
-    fun buscarPorRotaECicloId(rotaId: Long, cicloId: Long) = acertoDao.buscarPorRotaECicloId(rotaId, cicloId)
-    suspend fun buscarAcertoMesaPorMesa(mesaId: Long) = acertoMesaDao.buscarUltimoAcertoMesa(mesaId)
-    // ✅ REMOVIDO: Método duplicado que não adiciona à fila de sync
-    // Use inserirAcerto() que adiciona à fila de sincronização
-    suspend fun buscarPorId(id: Long) = acertoDao.buscarPorId(id)
+        acertoRepositoryInternal.buscarUltimosAcertosPorClientes(clienteIds)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para CicloRepositoryInternal
+     */
+    suspend fun buscarCicloAtivo(rotaId: Long) = cicloRepositoryInternal.buscarCicloAtivo(rotaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
+    fun buscarPorRotaECicloId(rotaId: Long, cicloId: Long) = acertoRepositoryInternal.buscarPorRotaECicloId(rotaId, cicloId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
+    suspend fun buscarAcertoMesaPorMesa(mesaId: Long) = acertoRepositoryInternal.buscarAcertoMesaPorMesa(mesaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para AcertoRepositoryInternal
+     */
+    suspend fun buscarPorId(id: Long) = acertoRepositoryInternal.buscarPorId(id)
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para CicloRepositoryInternal
+     */
     suspend fun atualizarValoresCiclo(
         cicloId: Long,
         valorTotalAcertado: Double,
         valorTotalDespesas: Double,
         clientesAcertados: Int
-    ) = cicloAcertoDao.atualizarValoresCiclo(cicloId, valorTotalAcertado, valorTotalDespesas, clientesAcertados)
+    ) = cicloRepositoryInternal.atualizarValoresCiclo(cicloId, valorTotalAcertado, valorTotalDespesas, clientesAcertados)
     suspend fun obterPanoPorId(id: Long) = panoEstoqueDao.buscarPorId(id)
     suspend fun marcarPanoComoUsadoPorNumero(numeroPano: String, motivo: String) {
         val pano = panoEstoqueDao.buscarPorNumero(numeroPano)
@@ -637,161 +609,124 @@ class AppRepository constructor(
     
     // ==================== MESA ====================
     
-    suspend fun obterMesaPorId(id: Long) = mesaDao.obterMesaPorId(id)
-    fun obterMesasPorCliente(clienteId: Long) = mesaDao.obterMesasPorCliente(clienteId)
-    fun obterMesasDisponiveis() = mesaDao.obterMesasDisponiveis()
-    suspend fun inserirMesa(mesa: Mesa): Long {
-        logDbInsertStart("MESA", "Numero=${mesa.numero}, ClienteID=${mesa.clienteId}")
-        return try {
-            // ✅ VALIDAÇÃO: Verificar se já existe mesa com mesmo número
-            val mesaExistente = mesaDao.buscarPorNumero(mesa.numero)
-            if (mesaExistente != null) {
-                android.util.Log.w("AppRepository", "⚠️ Mesa com número '${mesa.numero}' já existe (ID: ${mesaExistente.id})")
-                throw IllegalArgumentException("Mesa com número '${mesa.numero}' já existe")
-            }
-            
-            val id = mesaDao.inserir(mesa)
-            logDbInsertSuccess("MESA", "Numero=${mesa.numero}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "numero": "${mesa.numero}",
-                        "clienteId": ${mesa.clienteId},
-                        "ativa": ${mesa.ativa},
-                        "tipoMesa": "${mesa.tipoMesa}",
-                        "tamanho": "${mesa.tamanho}",
-                        "estadoConservacao": "${mesa.estadoConservacao}",
-                        "valorFixo": ${mesa.valorFixo},
-                        // ✅ REMOVIDO: fichasInicial e fichasFinal - usando apenas relogioInicial e relogioFinal
-                        "relogioInicial": ${mesa.relogioInicial},
-                        "relogioFinal": ${mesa.relogioFinal},
-                        "dataInstalacao": "${mesa.dataInstalacao}",
-                        "observacoes": "${mesa.observacoes ?: ""}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Mesa", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("Mesa", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar mesa à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("MESA", "Numero=${mesa.numero}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarMesa(mesa: Mesa) {
-        logDbUpdateStart("MESA", "ID=${mesa.id}, Numero=${mesa.numero}")
-        try {
-            mesaDao.atualizar(mesa)
-            logDbUpdateSuccess("MESA", "ID=${mesa.id}, Numero=${mesa.numero}")
-            
-            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${mesa.id},
-                        "numero": "${mesa.numero}",
-                        "clienteId": ${mesa.clienteId},
-                        "ativa": ${mesa.ativa},
-                        "tipoMesa": "${mesa.tipoMesa}",
-                        "tamanho": "${mesa.tamanho}",
-                        "estadoConservacao": "${mesa.estadoConservacao}",
-                        "valorFixo": ${mesa.valorFixo},
-                        "relogioInicial": ${mesa.relogioInicial},
-                        "relogioFinal": ${mesa.relogioFinal},
-                        "dataInstalacao": "${mesa.dataInstalacao}",
-                        "observacoes": "${mesa.observacoes ?: ""}",
-                        "panoAtualId": ${mesa.panoAtualId ?: "null"},
-                        "dataUltimaTrocaPano": "${mesa.dataUltimaTrocaPano ?: ""}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Mesa", mesa.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("Mesa", mesa.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de mesa à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("MESA", "ID=${mesa.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarMesa(mesa: Mesa) = mesaDao.deletar(mesa)
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
+    suspend fun obterMesaPorId(id: Long) = mesaRepositoryInternal.obterMesaPorId(id)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
+    fun obterMesasPorCliente(clienteId: Long) = mesaRepositoryInternal.obterMesasPorCliente(clienteId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
+    fun obterMesasDisponiveis() = mesaRepositoryInternal.obterMesasDisponiveis()
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
+    suspend fun inserirMesa(mesa: Mesa): Long = 
+        mesaRepositoryInternal.inserirMesa(
+            mesa = mesa,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
+    suspend fun atualizarMesa(mesa: Mesa) = 
+        mesaRepositoryInternal.atualizarMesa(
+            mesa = mesa,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
+    suspend fun deletarMesa(mesa: Mesa) = mesaRepositoryInternal.deletarMesa(mesa)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
     suspend fun vincularMesaACliente(mesaId: Long, clienteId: Long) = 
-        mesaDao.vincularMesa(mesaId, clienteId)
+        mesaRepositoryInternal.vincularMesaACliente(mesaId, clienteId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
     suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double) = 
-        mesaDao.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
-    suspend fun desvincularMesaDeCliente(mesaId: Long) = mesaDao.desvincularMesa(mesaId)
-    suspend fun retirarMesa(mesaId: Long) = mesaDao.retirarMesa(mesaId)
-    suspend fun atualizarRelogioMesa(mesaId: Long, relogioInicial: Int, relogioFinal: Int) {
-        logDbUpdateStart("MESA_RELOGIO", "MesaID=$mesaId, RelogioInicial=$relogioInicial, RelogioFinal=$relogioFinal")
-        try {
-            mesaDao.atualizarRelogioMesa(mesaId, relogioInicial, relogioFinal)
-            logDbUpdateSuccess("MESA_RELOGIO", "MesaID=$mesaId, RelogioInicial=$relogioInicial, RelogioFinal=$relogioFinal")
-            
-            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
-            try {
-                val mesa = mesaDao.obterMesaPorId(mesaId)
-                if (mesa != null) {
-                    val payload = """
-                        {
-                            "id": ${mesa.id},
-                            "numero": "${mesa.numero}",
-                            "clienteId": ${mesa.clienteId},
-                            "ativa": ${mesa.ativa},
-                            "tipoMesa": "${mesa.tipoMesa}",
-                            "tamanho": "${mesa.tamanho}",
-                            "estadoConservacao": "${mesa.estadoConservacao}",
-                            "valorFixo": ${mesa.valorFixo},
-                            "relogioInicial": $relogioInicial,
-                            "relogioFinal": $relogioFinal,
-                            "dataInstalacao": "${mesa.dataInstalacao}",
-                            "observacoes": "${mesa.observacoes ?: ""}",
-                            "panoAtualId": ${mesa.panoAtualId ?: "null"},
-                            "dataUltimaTrocaPano": "${mesa.dataUltimaTrocaPano ?: ""}"
-                        }
-                    """.trimIndent()
-                    
-                    adicionarOperacaoSync("Mesa", mesaId, "UPDATE", payload, priority = 1)
-                    logarOperacaoSync("Mesa", mesaId, "UPDATE", "PENDING", null, payload)
-                }
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de relógio à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("MESA_RELOGIO", "MesaID=$mesaId", e)
-            throw e
-        }
-    }
+        mesaRepositoryInternal.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
+    suspend fun desvincularMesaDeCliente(mesaId: Long) = mesaRepositoryInternal.desvincularMesaDeCliente(mesaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
+    suspend fun retirarMesa(mesaId: Long) = mesaRepositoryInternal.retirarMesa(mesaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
+    suspend fun atualizarRelogioMesa(mesaId: Long, relogioInicial: Int, relogioFinal: Int) = 
+        mesaRepositoryInternal.atualizarRelogioMesa(
+            mesaId = mesaId,
+            relogioInicial = relogioInicial,
+            relogioFinal = relogioFinal,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
     suspend fun atualizarRelogioFinal(mesaId: Long, relogioFinal: Int) = 
-        mesaDao.atualizarRelogioFinal(mesaId, relogioFinal)
+        mesaRepositoryInternal.atualizarRelogioFinal(mesaId, relogioFinal)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
     suspend fun obterMesasPorClienteDireto(clienteId: Long) = 
-        mesaDao.obterMesasPorClienteDireto(clienteId)
-    fun buscarMesasPorRota(rotaId: Long) = mesaDao.buscarMesasPorRota(rotaId).also {
-        android.util.Log.d("AppRepository", "Buscando mesas para rota $rotaId")
-    }
+        mesaRepositoryInternal.obterMesasPorClienteDireto(clienteId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
+    fun buscarMesasPorRota(rotaId: Long) = mesaRepositoryInternal.buscarMesasPorRota(rotaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
     suspend fun contarMesasAtivasPorClientes(clienteIds: List<Long>) =
-        mesaDao.contarMesasAtivasPorClientes(clienteIds)
+        mesaRepositoryInternal.contarMesasAtivasPorClientes(clienteIds)
     fun obterTodasMesas() = mesaDao.obterTodasMesas()
     
     // ==================== ROTA ====================
     
-    fun obterTodasRotas() = rotaDao.getAllRotas()
-    fun obterRotasAtivas() = rotaDao.getAllRotasAtivas()
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    fun obterTodasRotas() = rotaRepositoryInternal.obterTodasRotas()
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    fun obterRotasAtivas() = rotaRepositoryInternal.obterRotasAtivas()
     
     // ✅ NOVO: Método para obter resumo de rotas com atualização em tempo real
     // ✅ CORREÇÃO OFICIAL: Usar @OptIn para flatMapLatest e garantir que o Flow seja re-emitido imediatamente
@@ -850,9 +785,10 @@ class AppRepository constructor(
     }
     
     // ✅ FASE 12.5: Métodos auxiliares para calcular dados reais das rotas (versões suspend - removido runBlocking)
+    // ✅ FASE 12.14 Etapa 2: Usa repository interno
     private suspend fun calcularClientesAtivosSync(rotaId: Long): Int {
         return try {
-            clienteDao.obterClientesPorRota(rotaId).first().count { it.ativo }
+            obterClientesPorRota(rotaId).first().count { it.ativo }
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular clientes ativos da rota $rotaId: ${e.message}")
             0
@@ -913,18 +849,20 @@ class AppRepository constructor(
         }
     }
     
+    // ✅ FASE 12.14 Etapa 2: Usa repository interno
     private suspend fun calcularClientesAtivosPorRota(rotaId: Long): Int {
         return try {
-            clienteDao.obterClientesPorRota(rotaId).first().count { it.ativo }
+            obterClientesPorRota(rotaId).first().count { it.ativo }
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular clientes ativos da rota $rotaId: ${e.message}")
             0
         }
     }
     
+    // ✅ FASE 12.14 Etapa 2: Usa repository interno
     private suspend fun calcularPendenciasReaisPorRota(rotaId: Long): Int {
         return try {
-                val clientes = clienteDao.obterClientesPorRota(rotaId).first()
+                val clientes = obterClientesPorRota(rotaId).first()
             if (clientes.isEmpty()) return 0
                 val clienteIds = clientes.map { it.id }
                 val ultimos = buscarUltimosAcertosPorClientes(clienteIds)
@@ -962,7 +900,7 @@ class AppRepository constructor(
     
     private suspend fun calcularQuantidadeMesasPorRota(rotaId: Long): Int {
         return try {
-                mesaDao.buscarMesasPorRota(rotaId).first().size
+                buscarMesasPorRota(rotaId).first().size
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao calcular quantidade de mesas da rota $rotaId: ${e.message}")
             0
@@ -1011,6 +949,7 @@ class AppRepository constructor(
     /**
      * Exposição pública do ciclo atual da rota no formato usado antes da refatoração.
      * Retorna apenas o ID do ciclo para vínculo de acertos.
+     * ✅ FASE 12.14 Etapa 2: Usa repository interno
      */
     suspend fun obterCicloAtualIdPorRota(rotaId: Long): Long? {
         return try {
@@ -1018,7 +957,7 @@ class AppRepository constructor(
             if (cicloAtual != null) {
                 cicloAtual.id
                 } else {
-                val rota = rotaDao.getRotaById(rotaId)
+                val rota = obterRotaPorId(rotaId)
                 if (rota != null && rota.cicloAcertoAtual != 0 && rota.anoCiclo != 0) {
                     val cicloDaRota = cicloAcertoDao.buscarPorRotaNumeroEAno(rotaId, rota.cicloAcertoAtual, rota.anoCiclo)
                     cicloDaRota?.id
@@ -1062,283 +1001,222 @@ class AppRepository constructor(
         }
     }
     
-    suspend fun obterRotaPorId(id: Long) = rotaDao.getRotaById(id)
-    fun obterRotaPorIdFlow(id: Long) = rotaDao.obterRotaPorId(id)
-    suspend fun obterRotaPorNome(nome: String) = rotaDao.getRotaByNome(nome)
-    suspend fun inserirRota(rota: Rota): Long {
-        logDbInsertStart("ROTA", "Nome=${rota.nome}")
-        return try {
-            val id = rotaDao.insertRota(rota)
-            logDbInsertSuccess("ROTA", "Nome=${rota.nome}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "nome": "${rota.nome}",
-                        "descricao": "${rota.descricao}",
-                        "ativa": ${rota.ativa},
-                        "dataCriacao": ${rota.dataCriacao}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Rota", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("Rota", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar rota à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("ROTA", "Nome=${rota.nome}", e)
-            throw e
-        }
-    }
-    suspend fun inserirRotas(rotas: List<Rota>): List<Long> {
-        logDbInsertStart("ROTA_LIST", "Quantidade=${rotas.size}")
-        return try {
-            val ids = rotaDao.insertRotas(rotas)
-            logDbInsertSuccess("ROTA_LIST", "IDs=${ids.joinToString()}")
-            ids
-        } catch (e: Exception) {
-            logDbInsertError("ROTA_LIST", "Quantidade=${rotas.size}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarRota(rota: Rota) {
-        logDbUpdateStart("ROTA", "ID=${rota.id}, Nome=${rota.nome}")
-        try {
-            rotaDao.updateRota(rota)
-            logDbUpdateSuccess("ROTA", "ID=${rota.id}, Nome=${rota.nome}")
-            
-            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${rota.id},
-                        "nome": "${rota.nome}",
-                        "descricao": "${rota.descricao ?: ""}",
-                        "colaboradorResponsavel": "${rota.colaboradorResponsavel}",
-                        "cidades": "${rota.cidades}",
-                        "ativa": ${rota.ativa},
-                        "cor": "${rota.cor}",
-                        "dataCriacao": ${rota.dataCriacao},
-                        "dataAtualizacao": ${rota.dataAtualizacao},
-                        "statusAtual": "${rota.statusAtual.name}",
-                        "cicloAcertoAtual": ${rota.cicloAcertoAtual},
-                        "anoCiclo": ${rota.anoCiclo},
-                        "dataInicioCiclo": ${rota.dataInicioCiclo ?: "null"},
-                        "dataFimCiclo": ${rota.dataFimCiclo ?: "null"}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Rota", rota.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("Rota", rota.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de rota à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("ROTA", "ID=${rota.id}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarRotas(rotas: List<Rota>) = rotaDao.updateRotas(rotas)
-    suspend fun deletarRota(rota: Rota) = rotaDao.deleteRota(rota)
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    suspend fun obterRotaPorId(id: Long) = rotaRepositoryInternal.obterRotaPorId(id)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    fun obterRotaPorIdFlow(id: Long) = rotaRepositoryInternal.obterRotaPorIdFlow(id)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    suspend fun obterRotaPorNome(nome: String) = rotaRepositoryInternal.obterRotaPorNome(nome)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    suspend fun inserirRota(rota: Rota): Long = 
+        rotaRepositoryInternal.inserirRota(
+            rota = rota,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    suspend fun inserirRotas(rotas: List<Rota>): List<Long> = 
+        rotaRepositoryInternal.inserirRotas(
+            rotas = rotas,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError
+        )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    suspend fun atualizarRota(rota: Rota) = 
+        rotaRepositoryInternal.atualizarRota(
+            rota = rota,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    suspend fun atualizarRotas(rotas: List<Rota>) = rotaRepositoryInternal.atualizarRotas(rotas)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    suspend fun deletarRota(rota: Rota) = rotaRepositoryInternal.deletarRota(rota)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
     suspend fun desativarRota(rotaId: Long, timestamp: Long = System.currentTimeMillis()) = 
-        rotaDao.desativarRota(rotaId, timestamp)
+        rotaRepositoryInternal.desativarRota(rotaId, timestamp)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
     suspend fun ativarRota(rotaId: Long, timestamp: Long = System.currentTimeMillis()) = 
-        rotaDao.ativarRota(rotaId, timestamp)
+        rotaRepositoryInternal.ativarRota(rotaId, timestamp)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
     suspend fun atualizarStatus(rotaId: Long, status: String, timestamp: Long = System.currentTimeMillis()) = 
-        rotaDao.atualizarStatus(rotaId, status, timestamp)
+        rotaRepositoryInternal.atualizarStatus(rotaId, status, timestamp)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
     suspend fun atualizarCicloAcerto(rotaId: Long, ciclo: Int, timestamp: Long = System.currentTimeMillis()) = 
-        rotaDao.atualizarCicloAcerto(rotaId, ciclo, timestamp)
+        rotaRepositoryInternal.atualizarCicloAcerto(rotaId, ciclo, timestamp)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
     suspend fun iniciarCicloRota(rotaId: Long, ciclo: Int, dataInicio: Long, timestamp: Long = System.currentTimeMillis()) = 
-        rotaDao.iniciarCicloRota(rotaId, ciclo, dataInicio, timestamp)
+        rotaRepositoryInternal.iniciarCicloRota(rotaId, ciclo, dataInicio, timestamp)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
     suspend fun finalizarCicloRota(rotaId: Long, dataFim: Long, timestamp: Long = System.currentTimeMillis()) = 
-        rotaDao.finalizarCicloRota(rotaId, dataFim, timestamp)
-    suspend fun existeRotaComNome(nome: String, excludeId: Long = 0) = 
-        rotaDao.existeRotaComNome(nome, excludeId)
-    suspend fun contarRotasAtivas() = rotaDao.contarRotasAtivas()
+        rotaRepositoryInternal.finalizarCicloRota(rotaId, dataFim, timestamp)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    suspend fun existeRotaComNome(nome: String, excludeId: Long = 0): Int = 
+        rotaRepositoryInternal.existeRotaComNome(nome, excludeId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para RotaRepositoryInternal
+     */
+    suspend fun contarRotasAtivas() = rotaRepositoryInternal.contarRotasAtivas()
     
     // ==================== DESPESA ====================
     
-    fun obterTodasDespesas() = despesaDao.buscarTodasComRota()
-    fun obterDespesasPorRota(rotaId: Long) = despesaDao.buscarPorRota(rotaId)
-    suspend fun obterDespesaPorId(id: Long) = despesaDao.buscarPorId(id)
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    fun obterTodasDespesas() = despesaRepositoryInternal.obterTodasDespesas()
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    fun obterDespesasPorRota(rotaId: Long) = despesaRepositoryInternal.obterDespesasPorRota(rotaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    suspend fun obterDespesaPorId(id: Long) = despesaRepositoryInternal.obterDespesaPorId(id)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
     suspend fun inserirDespesa(despesa: Despesa): Long {
-        logDbInsertStart("DESPESA", "Descricao=${despesa.descricao}, RotaID=${despesa.rotaId}")
-        return try {
-            val id = despesaDao.inserir(despesa)
-            logDbInsertSuccess("DESPESA", "Descricao=${despesa.descricao}, ID=$id")
-            
-            // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
-            val empresaId = obterEmpresaId()
-            Log.d("AppRepository", "📷 Processando foto de comprovante para despesa $id: foto='${despesa.fotoComprovante}'")
-            
-            val fotoUrl = uploadFotoSeNecessario(
-                caminhoLocal = despesa.fotoComprovante,
-                tipo = "comprovante",
-                empresaId = empresaId,
-                entityId = id
-            )
-            
-            Log.d("AppRepository", "📷 Resultado upload despesa: fotoUrl='$fotoUrl' (original: '${despesa.fotoComprovante}')")
-            
-            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
-            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
-            // - A URL do Firebase é usada apenas no payload de sincronização
-            // - Isso garante que a visualização local funcione corretamente
-            
-            val despesaAtualizada = despesa.copy(id = id)
-            
-            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
-            if (fotoUrl == null && !despesa.fotoComprovante.isNullOrBlank()) {
-                Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
-                val despesaSemFoto = despesaAtualizada.copy(fotoComprovante = null)
-                despesaDao.atualizar(despesaSemFoto)
-                // Usar despesaSemFoto para o payload
+        val uploadFoto = this::uploadFotoSeNecessario
+        return despesaRepositoryInternal.inserirDespesa(
+            despesa = despesa,
+            obterEmpresaId = { obterEmpresaId() },
+            uploadFotoSeNecessario = { caminhoLocal, tipo, empresaId, entityId, entityExtraId ->
+                uploadFoto(caminhoLocal, tipo, empresaId, entityId, entityExtraId)
+            },
+            logDbInsertStart = { entity, info -> logDbInsertStart(entity, info) },
+            logDbInsertSuccess = { entity, info -> logDbInsertSuccess(entity, info) },
+            logDbInsertError = { entity, info, error -> logDbInsertError(entity, info, error) },
+            adicionarOperacaoSync = { entityType, entityId, operation, payload, priority ->
+                adicionarOperacaoSync(entityType, entityId, operation, payload, priority)
+            },
+            logarOperacaoSync = { entityType, entityId, operation, status, error, payload ->
+                logarOperacaoSync(entityType, entityId, operation, status, error, payload)
             }
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto (se upload foi bem-sucedido)
-            try {
-                // ✅ Usar URL do Firebase no payload (se upload foi bem-sucedido), senão string vazia
-                val fotoUrlParaPayload = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
-                    fotoUrl // URL do Firebase para sincronização
-                } else {
-                    "" // String vazia - foto não será sincronizada
-                }
-                
-                val payload = """
-                    {
-                        "id": $id,
-                        "rotaId": ${despesaAtualizada.rotaId},
-                        "descricao": "${despesaAtualizada.descricao}",
-                        "valor": ${despesaAtualizada.valor},
-                        "categoria": "${despesaAtualizada.categoria}",
-                        "tipoDespesa": "${despesaAtualizada.tipoDespesa}",
-                        "dataHora": "${despesaAtualizada.dataHora}",
-                        "observacoes": "${despesaAtualizada.observacoes}",
-                        "criadoPor": "${despesaAtualizada.criadoPor}",
-                        "cicloId": ${despesaAtualizada.cicloId ?: "null"},
-                        "origemLancamento": "${despesaAtualizada.origemLancamento}",
-                        "cicloAno": ${despesaAtualizada.cicloAno ?: "null"},
-                        "cicloNumero": ${despesaAtualizada.cicloNumero ?: "null"},
-                        "fotoComprovante": "$fotoUrlParaPayload",
-                        "veiculoId": ${despesaAtualizada.veiculoId ?: "null"},
-                        "kmRodado": ${despesaAtualizada.kmRodado ?: "null"},
-                        "litrosAbastecidos": ${despesaAtualizada.litrosAbastecidos ?: "null"}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Despesa", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("Despesa", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar despesa à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("DESPESA", "Descricao=${despesa.descricao}", e)
-            throw e
-        }
+        )
     }
-    suspend fun atualizarDespesa(despesa: Despesa) {
-        logDbUpdateStart("DESPESA", "ID=${despesa.id}, Descricao=${despesa.descricao}")
-        try {
-            despesaDao.atualizar(despesa)
-            logDbUpdateSuccess("DESPESA", "ID=${despesa.id}")
-            
-            // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
-            val empresaId = obterEmpresaId()
-            Log.d("AppRepository", "📷 Processando foto de comprovante para despesa ${despesa.id} (UPDATE): foto='${despesa.fotoComprovante}'")
-            
-            val fotoUrl = uploadFotoSeNecessario(
-                caminhoLocal = despesa.fotoComprovante,
-                tipo = "comprovante",
-                empresaId = empresaId,
-                entityId = despesa.id
-            )
-            
-            Log.d("AppRepository", "📷 Resultado upload despesa (UPDATE): fotoUrl='$fotoUrl' (original: '${despesa.fotoComprovante}')")
-            
-            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
-            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
-            // - A URL do Firebase é usada apenas no payload de sincronização
-            // - Isso garante que a visualização local funcione corretamente
-            
-            val despesaAtualizada = despesa
-            
-            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
-            if (fotoUrl == null && !despesa.fotoComprovante.isNullOrBlank()) {
-                Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
-                val despesaSemFoto = despesaAtualizada.copy(fotoComprovante = null)
-                despesaDao.atualizar(despesaSemFoto)
-                // Usar despesaSemFoto para o payload
-            }
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto (se upload foi bem-sucedido)
-            try {
-                // ✅ Usar URL do Firebase no payload (se upload foi bem-sucedido), senão string vazia
-                val fotoUrlParaPayload = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
-                    fotoUrl // URL do Firebase para sincronização
-                } else {
-                    "" // String vazia - foto não será sincronizada
-                }
-                
-                val payload = """
-                    {
-                        "id": ${despesaAtualizada.id},
-                        "rotaId": ${despesaAtualizada.rotaId},
-                        "descricao": "${despesaAtualizada.descricao}",
-                        "valor": ${despesaAtualizada.valor},
-                        "categoria": "${despesaAtualizada.categoria}",
-                        "tipoDespesa": "${despesaAtualizada.tipoDespesa}",
-                        "dataHora": "${despesaAtualizada.dataHora}",
-                        "observacoes": "${despesaAtualizada.observacoes}",
-                        "criadoPor": "${despesaAtualizada.criadoPor}",
-                        "cicloId": ${despesaAtualizada.cicloId ?: "null"},
-                        "origemLancamento": "${despesaAtualizada.origemLancamento}",
-                        "cicloAno": ${despesaAtualizada.cicloAno ?: "null"},
-                        "cicloNumero": ${despesaAtualizada.cicloNumero ?: "null"},
-                        "fotoComprovante": "$fotoUrlParaPayload",
-                        "veiculoId": ${despesaAtualizada.veiculoId ?: "null"},
-                        "kmRodado": ${despesaAtualizada.kmRodado ?: "null"},
-                        "litrosAbastecidos": ${despesaAtualizada.litrosAbastecidos ?: "null"}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Despesa", despesaAtualizada.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("Despesa", despesaAtualizada.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de despesa à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("DESPESA", "ID=${despesa.id}", e)
-            throw e
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    suspend fun atualizarDespesa(despesa: Despesa) = despesaRepositoryInternal.atualizarDespesa(
+        despesa = despesa,
+        obterEmpresaId = { obterEmpresaId() },
+        uploadFotoSeNecessario = { caminhoLocal, tipo, empresaId, entityId, entityExtraId ->
+            this@AppRepository.uploadFotoSeNecessario(caminhoLocal, tipo, empresaId, entityId, entityExtraId)
+        },
+        logDbUpdateStart = { entity, info -> logDbUpdateStart(entity, info) },
+        logDbUpdateSuccess = { entity, info -> logDbUpdateSuccess(entity, info) },
+        logDbUpdateError = { entity, info, error -> logDbUpdateError(entity, info, error) },
+        adicionarOperacaoSync = { entityType, entityId, operation, payload, priority ->
+            adicionarOperacaoSync(entityType, entityId, operation, payload, priority)
+        },
+        logarOperacaoSync = { entityType, entityId, operation, status, error, payload ->
+            logarOperacaoSync(entityType, entityId, operation, status, error, payload)
         }
-    }
-    suspend fun deletarDespesa(despesa: Despesa) = despesaDao.deletar(despesa)
-    suspend fun calcularTotalPorRota(rotaId: Long) = despesaDao.calcularTotalPorRota(rotaId)
-    suspend fun calcularTotalGeral() = despesaDao.calcularTotalGeral()
-    suspend fun contarDespesasPorRota(rotaId: Long) = despesaDao.contarPorRota(rotaId)
-    suspend fun deletarDespesasPorRota(rotaId: Long) = despesaDao.deletarPorRota(rotaId)
-    fun buscarDespesasPorCicloId(cicloId: Long) = despesaDao.buscarPorCicloId(cicloId)
-    fun buscarDespesasPorRotaECicloId(rotaId: Long, cicloId: Long) = despesaDao.buscarPorRotaECicloId(rotaId, cicloId)
+    )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    suspend fun deletarDespesa(despesa: Despesa) = despesaRepositoryInternal.deletarDespesa(despesa)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    suspend fun calcularTotalPorRota(rotaId: Long) = despesaRepositoryInternal.calcularTotalPorRota(rotaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    suspend fun calcularTotalGeral() = despesaRepositoryInternal.calcularTotalGeral()
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    suspend fun contarDespesasPorRota(rotaId: Long) = despesaRepositoryInternal.contarDespesasPorRota(rotaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    suspend fun deletarDespesasPorRota(rotaId: Long) = despesaRepositoryInternal.deletarDespesasPorRota(rotaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    fun buscarDespesasPorCicloId(cicloId: Long) = despesaRepositoryInternal.buscarDespesasPorCicloId(cicloId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    fun buscarDespesasPorRotaECicloId(rotaId: Long, cicloId: Long) = 
+        despesaRepositoryInternal.buscarDespesasPorRotaECicloId(rotaId, cicloId)
 
-    // ✅ NOVO: despesas globais
-    suspend fun buscarDespesasGlobaisPorCiclo(ano: Int, numero: Int): List<Despesa> = despesaDao.buscarGlobaisPorCiclo(ano, numero)
-    suspend fun somarDespesasGlobaisPorCiclo(ano: Int, numero: Int): Double = despesaDao.somarGlobaisPorCiclo(ano, numero)
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    suspend fun buscarDespesasGlobaisPorCiclo(ano: Int, numero: Int): List<Despesa> = 
+        despesaRepositoryInternal.buscarDespesasGlobaisPorCiclo(ano, numero)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para DespesaRepositoryInternal
+     */
+    suspend fun somarDespesasGlobaisPorCiclo(ano: Int, numero: Int): Double = 
+        despesaRepositoryInternal.somarDespesasGlobaisPorCiclo(ano, numero)
 
     // ==================== PANO ESTOQUE ====================
     
@@ -2856,130 +2734,100 @@ class AppRepository constructor(
     
     // ==================== COLABORADOR ====================
     
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    fun obterTodosColaboradores() = colaboradorDao.obterTodos().map { colaboradores ->
-        colaboradores.map { decryptColaborador(it) ?: it }
-    }
-    fun obterColaboradoresAtivos() = colaboradorDao.obterAtivos().map { colaboradores ->
-        colaboradores.map { decryptColaborador(it) ?: it }
-    }
-    fun obterColaboradoresAprovados() = colaboradorDao.obterAprovados().map { colaboradores ->
-        colaboradores.map { decryptColaborador(it) ?: it }
-    }
-    fun obterColaboradoresPendentesAprovacao() = colaboradorDao.obterPendentesAprovacao().map { colaboradores ->
-        colaboradores.map { decryptColaborador(it) ?: it }
-    }
-    fun obterColaboradoresPorNivelAcesso(nivelAcesso: NivelAcesso) = colaboradorDao.obterPorNivelAcesso(nivelAcesso).map { colaboradores ->
-        colaboradores.map { decryptColaborador(it) ?: it }
-    }
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    fun obterTodosColaboradores() = colaboradorRepositoryInternal.obterTodosColaboradores()
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    fun obterColaboradoresAtivos() = colaboradorRepositoryInternal.obterColaboradoresAtivos()
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    fun obterColaboradoresAprovados() = colaboradorRepositoryInternal.obterColaboradoresAprovados()
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    fun obterColaboradoresPendentesAprovacao() = colaboradorRepositoryInternal.obterColaboradoresPendentesAprovacao()
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    fun obterColaboradoresPorNivelAcesso(nivelAcesso: NivelAcesso) = 
+        colaboradorRepositoryInternal.obterColaboradoresPorNivelAcesso(nivelAcesso)
 
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    suspend fun obterColaboradorPorId(id: Long) = decryptColaborador(colaboradorDao.obterPorId(id))
-    suspend fun obterColaboradorPorEmail(email: String) = decryptColaborador(colaboradorDao.obterPorEmail(email))
-    suspend fun obterColaboradorPorFirebaseUid(firebaseUid: String) = decryptColaborador(colaboradorDao.obterPorFirebaseUid(firebaseUid))
-    suspend fun obterColaboradorPorGoogleId(googleId: String) = decryptColaborador(colaboradorDao.obterPorGoogleId(googleId))
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    suspend fun obterColaboradorPorId(id: Long) = colaboradorRepositoryInternal.obterColaboradorPorId(id)
     
-    suspend fun inserirColaborador(colaborador: Colaborador): Long {
-        logDbInsertStart("COLABORADOR", "Nome=${colaborador.nome}, Email=${colaborador.email}, Nivel=${colaborador.nivelAcesso}")
-        return try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val colaboradorEncrypted = encryptColaborador(colaborador)
-            val id = colaboradorDao.inserir(colaboradorEncrypted)
-            logDbInsertSuccess("COLABORADOR", "Email=${colaborador.email}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "nome": "${colaborador.nome}",
-                        "email": "${colaborador.email}",
-                        "nivelAcesso": "${colaborador.nivelAcesso}",
-                        "ativo": ${colaborador.ativo},
-                        "aprovado": ${colaborador.aprovado},
-                        "dataCadastro": "${colaborador.dataCadastro}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Colaborador", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("Colaborador", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar colaborador à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("COLABORADOR", "Email=${colaborador.email}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarColaborador(colaborador: Colaborador) {
-        logDbUpdateStart("COLABORADOR", "ID=${colaborador.id}, Nome=${colaborador.nome}")
-        try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val colaboradorEncrypted = encryptColaborador(colaborador)
-            colaboradorDao.atualizar(colaboradorEncrypted)
-            logDbUpdateSuccess("COLABORADOR", "ID=${colaborador.id}, Nome=${colaborador.nome}")
-            
-            // ✅ CORREÇÃO: Adicionar operação UPDATE à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${colaborador.id},
-                        "nome": "${colaborador.nome}",
-                        "email": "${colaborador.email}",
-                        "telefone": "${colaborador.telefone ?: ""}",
-                        "cpf": "${colaborador.cpf ?: ""}",
-                        "endereco": "${colaborador.endereco ?: ""}",
-                        "bairro": "${colaborador.bairro ?: ""}",
-                        "cidade": "${colaborador.cidade ?: ""}",
-                        "estado": "${colaborador.estado ?: ""}",
-                        "cep": "${colaborador.cep ?: ""}",
-                        "rg": "${colaborador.rg ?: ""}",
-                        "orgaoEmissor": "${colaborador.orgaoEmissor ?: ""}",
-                        "estadoCivil": "${colaborador.estadoCivil ?: ""}",
-                        "nomeMae": "${colaborador.nomeMae ?: ""}",
-                        "nomePai": "${colaborador.nomePai ?: ""}",
-                        "fotoPerfil": "${colaborador.fotoPerfil ?: ""}",
-                        "nivelAcesso": "${colaborador.nivelAcesso.name}",
-                        "ativo": ${colaborador.ativo},
-                        "aprovado": ${colaborador.aprovado},
-                        "dataAprovacao": "${colaborador.dataAprovacao ?: ""}",
-                        "aprovadoPor": "${colaborador.aprovadoPor ?: ""}",
-                        "firebaseUid": "${colaborador.firebaseUid ?: ""}",
-                        "googleId": "${colaborador.googleId ?: ""}",
-                        // ✅ FASE 12.1: Senha temporária sincronizada como hash (não texto plano)
-                        // ⚠️ NOTA: Idealmente senhas não deveriam ser sincronizadas, mas é necessário para login offline
-                        // O hash é seguro (PBKDF2 com salt) e não pode ser revertido para senha original
-                        "senhaTemporaria": "${colaborador.senhaTemporaria ?: ""}",
-                        "emailAcesso": "${colaborador.emailAcesso ?: ""}",
-                        "observacoes": "${colaborador.observacoes ?: ""}",
-                        "dataCadastro": "${colaborador.dataCadastro}",
-                        "dataUltimoAcesso": "${colaborador.dataUltimoAcesso ?: ""}",
-                        "dataUltimaAtualizacao": "${colaborador.dataUltimaAtualizacao}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Colaborador", colaborador.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("Colaborador", colaborador.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de colaborador à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("COLABORADOR", "ID=${colaborador.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarColaborador(colaborador: Colaborador) = colaboradorDao.deletar(colaborador)
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    suspend fun obterColaboradorPorEmail(email: String) = colaboradorRepositoryInternal.obterColaboradorPorEmail(email)
     
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    suspend fun obterColaboradorPorFirebaseUid(firebaseUid: String) = 
+        colaboradorRepositoryInternal.obterColaboradorPorFirebaseUid(firebaseUid)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    suspend fun obterColaboradorPorGoogleId(googleId: String) = 
+        colaboradorRepositoryInternal.obterColaboradorPorGoogleId(googleId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    suspend fun inserirColaborador(colaborador: Colaborador): Long = colaboradorRepositoryInternal.inserirColaborador(
+        colaborador = colaborador,
+        logDbInsertStart = { entity, info -> logDbInsertStart(entity, info) },
+        logDbInsertSuccess = { entity, info -> logDbInsertSuccess(entity, info) },
+        logDbInsertError = { entity, info, error -> logDbInsertError(entity, info, error) },
+        adicionarOperacaoSync = { entityType, entityId, operation, payload, priority ->
+            adicionarOperacaoSync(entityType, entityId, operation, payload, priority)
+        },
+        logarOperacaoSync = { entityType, entityId, operation, status, error, payload ->
+            logarOperacaoSync(entityType, entityId, operation, status, error, payload)
+        }
+    )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    suspend fun atualizarColaborador(colaborador: Colaborador) = colaboradorRepositoryInternal.atualizarColaborador(
+        colaborador = colaborador,
+        logDbUpdateStart = { entity, info -> logDbUpdateStart(entity, info) },
+        logDbUpdateSuccess = { entity, info -> logDbUpdateSuccess(entity, info) },
+        logDbUpdateError = { entity, info, error -> logDbUpdateError(entity, info, error) },
+        adicionarOperacaoSync = { entityType, entityId, operation, payload, priority ->
+            adicionarOperacaoSync(entityType, entityId, operation, payload, priority)
+        },
+        logarOperacaoSync = { entityType, entityId, operation, status, error, payload ->
+            logarOperacaoSync(entityType, entityId, operation, status, error, payload)
+        }
+    )
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    suspend fun deletarColaborador(colaborador: Colaborador) = colaboradorRepositoryInternal.deletarColaborador(colaborador)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
     suspend fun aprovarColaborador(colaboradorId: Long, dataAprovacao: java.util.Date, aprovadoPor: String) = 
-        colaboradorDao.aprovarColaborador(colaboradorId, dataAprovacao, aprovadoPor)
+        colaboradorRepositoryInternal.aprovarColaborador(colaboradorId, dataAprovacao, aprovadoPor)
     
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
     suspend fun aprovarColaboradorComCredenciais(
         colaboradorId: Long,
         email: String,
@@ -2988,16 +2836,31 @@ class AppRepository constructor(
         observacoes: String,
         dataAprovacao: java.util.Date,
         aprovadoPor: String
-    ) = colaboradorDao.aprovarColaboradorComCredenciais(
+    ) = colaboradorRepositoryInternal.aprovarColaboradorComCredenciais(
         colaboradorId, email, senha, nivelAcesso, observacoes, dataAprovacao, aprovadoPor
     )
-    suspend fun alterarStatusColaborador(colaboradorId: Long, ativo: Boolean) = 
-        colaboradorDao.alterarStatus(colaboradorId, ativo)
-    suspend fun atualizarUltimoAcessoColaborador(colaboradorId: Long, dataUltimoAcesso: java.util.Date) = 
-        colaboradorDao.atualizarUltimoAcesso(colaboradorId, dataUltimoAcesso)
     
-    suspend fun contarColaboradoresAtivos() = colaboradorDao.contarAtivos()
-    suspend fun contarColaboradoresPendentesAprovacao() = colaboradorDao.contarPendentesAprovacao()
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    suspend fun alterarStatusColaborador(colaboradorId: Long, ativo: Boolean) = 
+        colaboradorRepositoryInternal.alterarStatusColaborador(colaboradorId, ativo)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    suspend fun atualizarUltimoAcessoColaborador(colaboradorId: Long, dataUltimoAcesso: java.util.Date) = 
+        colaboradorRepositoryInternal.atualizarUltimoAcessoColaborador(colaboradorId, dataUltimoAcesso)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    suspend fun contarColaboradoresAtivos() = colaboradorRepositoryInternal.contarColaboradoresAtivos()
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para ColaboradorRepositoryInternal
+     */
+    suspend fun contarColaboradoresPendentesAprovacao() = colaboradorRepositoryInternal.contarColaboradoresPendentesAprovacao()
     
     // ==================== META COLABORADOR ====================
     
@@ -3092,10 +2955,14 @@ class AppRepository constructor(
     /**
      * Busca colaborador responsável principal por uma rota
      */
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
+    /**
+     * ✅ FASE 12.14 Etapa 2: Busca colaborador responsável principal usando repository interno
+     */
     suspend fun buscarColaboradorResponsavelPrincipal(rotaId: Long): Colaborador? {
         return try {
-            decryptColaborador(colaboradorDao?.buscarColaboradorResponsavelPrincipal(rotaId))
+            // O DAO retorna Colaborador criptografado, então usa o repository interno para descriptografar
+            val colaboradorEncrypted = colaboradorDao.buscarColaboradorResponsavelPrincipal(rotaId)
+            colaboradorRepositoryInternal.descriptografarColaborador(colaboradorEncrypted)
         } catch (e: Exception) {
             Log.e("AppRepository", "Erro ao buscar colaborador responsável: ${e.message}", e)
             null
@@ -3211,71 +3078,55 @@ class AppRepository constructor(
     
     // ==================== CICLO ACERTO ====================
     
-    fun obterTodosCiclos() = cicloAcertoDao.listarTodos()
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para CicloRepositoryInternal
+     */
+    fun obterTodosCiclos() = cicloRepositoryInternal.obterTodosCiclos()
     
-    suspend fun buscarUltimoCicloFinalizadoPorRota(rotaId: Long) = cicloAcertoDao.buscarUltimoCicloFinalizadoPorRota(rotaId)
-    suspend fun buscarCiclosPorRotaEAno(rotaId: Long, ano: Int) = cicloAcertoDao.buscarCiclosPorRotaEAno(rotaId, ano)
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para CicloRepositoryInternal
+     */
+    suspend fun buscarUltimoCicloFinalizadoPorRota(rotaId: Long) = 
+        cicloRepositoryInternal.buscarUltimoCicloFinalizadoPorRota(rotaId)
     
-    suspend fun buscarCiclosPorRota(rotaId: Long) = cicloAcertoDao.buscarCiclosPorRota(rotaId)
-    suspend fun buscarProximoNumeroCiclo(rotaId: Long, ano: Int) = cicloAcertoDao.buscarProximoNumeroCiclo(rotaId, ano)
-    suspend fun inserirCicloAcerto(ciclo: CicloAcertoEntity): Long {
-        logDbInsertStart("CICLO", "RotaID=${ciclo.rotaId}, Numero=${ciclo.numeroCiclo}, Status=${ciclo.status}")
-        return try {
-            val id = cicloAcertoDao.inserir(ciclo)
-            logDbInsertSuccess("CICLO", "ID=$id, RotaID=${ciclo.rotaId}")
-            
-            // ✅ CORREÇÃO: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "numeroCiclo": ${ciclo.numeroCiclo},
-                        "rotaId": ${ciclo.rotaId},
-                        "ano": ${ciclo.ano},
-                        "dataInicio": "${ciclo.dataInicio}",
-                        "dataFim": "${ciclo.dataFim}",
-                        "status": "${ciclo.status.name}",
-                        "totalClientes": ${ciclo.totalClientes},
-                        "clientesAcertados": ${ciclo.clientesAcertados},
-                        "valorTotalAcertado": ${ciclo.valorTotalAcertado},
-                        "valorTotalDespesas": ${ciclo.valorTotalDespesas},
-                        "lucroLiquido": ${ciclo.lucroLiquido},
-                        "debitoTotal": ${ciclo.debitoTotal},
-                        "observacoes": "${ciclo.observacoes ?: ""}",
-                        "criadoPor": "${ciclo.criadoPor}",
-                        "dataCriacao": "${ciclo.dataCriacao}",
-                        "dataAtualizacao": "${ciclo.dataAtualizacao}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("CicloAcerto", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("CicloAcerto", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar ciclo à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("CICLO", "RotaID=${ciclo.rotaId}", e)
-            throw e
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para CicloRepositoryInternal
+     */
+    suspend fun buscarCiclosPorRotaEAno(rotaId: Long, ano: Int) = 
+        cicloRepositoryInternal.buscarCiclosPorRotaEAno(rotaId, ano)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para CicloRepositoryInternal
+     */
+    suspend fun buscarCiclosPorRota(rotaId: Long) = cicloRepositoryInternal.buscarCiclosPorRota(rotaId)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para CicloRepositoryInternal
+     */
+    suspend fun buscarProximoNumeroCiclo(rotaId: Long, ano: Int) = 
+        cicloRepositoryInternal.buscarProximoNumeroCiclo(rotaId, ano)
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para CicloRepositoryInternal
+     */
+    suspend fun inserirCicloAcerto(ciclo: CicloAcertoEntity): Long = cicloRepositoryInternal.inserirCicloAcerto(
+        ciclo = ciclo,
+        logDbInsertStart = { entity, info -> logDbInsertStart(entity, info) },
+        logDbInsertSuccess = { entity, info -> logDbInsertSuccess(entity, info) },
+        logDbInsertError = { entity, info, error -> logDbInsertError(entity, info, error) },
+        adicionarOperacaoSync = { entityType, entityId, operation, payload, priority ->
+            adicionarOperacaoSync(entityType, entityId, operation, payload, priority)
+        },
+        logarOperacaoSync = { entityType, entityId, operation, status, error, payload ->
+            logarOperacaoSync(entityType, entityId, operation, status, error, payload)
         }
-    }
+    )
 
     /**
-     * Busca ciclos que podem ter metas definidas (em andamento ou planejados)
+     * ✅ FASE 12.14 Etapa 2: Delegado para CicloRepositoryInternal
      */
-    suspend fun buscarCiclosParaMetas(rotaId: Long): List<CicloAcertoEntity> {
-        val cicloEmAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
-        val ciclosFuturos = cicloAcertoDao.buscarCiclosFuturosPorRota(rotaId)
-        
-        val listaCombinada = mutableListOf<CicloAcertoEntity>()
-        cicloEmAndamento?.let { listaCombinada.add(it) }
-        listaCombinada.addAll(ciclosFuturos)
-        
-        return listaCombinada
-    }
+    suspend fun buscarCiclosParaMetas(rotaId: Long): List<CicloAcertoEntity> = 
+        cicloRepositoryInternal.buscarCiclosParaMetas(rotaId)
     
     // ==================== MÉTODOS PARA RELATÓRIOS ====================
     
