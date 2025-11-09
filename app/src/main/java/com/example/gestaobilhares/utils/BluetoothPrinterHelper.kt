@@ -97,7 +97,7 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             // 3. Enviar linha a linha (8 pixels de altura por vez)
             val bytesPerLine = targetWidth / 8
             val ESC = 0x1B.toByte()
-            val GS = 0x1D.toByte()
+            // ✅ CORREÇÃO: Variável GS não usada - removida
             for (y in 0 until targetHeight step 8) {
                 val cmd = byteArrayOf(ESC, 0x2A, 0x00, (bytesPerLine and 0xFF).toByte(), (bytesPerLine shr 8).toByte())
                 outputStream?.write(cmd)
@@ -207,11 +207,11 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
         val measuredHeight = view.measuredHeight
         view.layout(0, 0, measuredWidth, measuredHeight)
         // Forçar layout completo
-        view.isDrawingCacheEnabled = true
+        // ✅ CORREÇÃO: isDrawingCacheEnabled deprecated - não é mais necessário no Android moderno
+        @Suppress("DEPRECATION")
         val bitmap = android.graphics.Bitmap.createBitmap(measuredWidth, measuredHeight, android.graphics.Bitmap.Config.ARGB_8888)
         val canvas = android.graphics.Canvas(bitmap)
         view.draw(canvas)
-        view.isDrawingCacheEnabled = false
         // Imprimir usando GS v 0
         printBitmapRasterGS(bitmap)
     }

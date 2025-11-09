@@ -35,7 +35,7 @@ object ReciboPrinterHelper {
      * @param acertoId ID do acerto (opcional, para títulos)
      */
     fun preencherReciboImpressaoCompleto(
-        context: Context,
+        @Suppress("UNUSED_PARAMETER") context: Context,
         reciboView: View,
         clienteNome: String,
         clienteCpf: String? = null,
@@ -173,7 +173,7 @@ object ReciboPrinterHelper {
         debitoAtual: Double,
         observacao: String?,
         valorFicha: Double,
-        acertoId: Long? = null,
+        @Suppress("UNUSED_PARAMETER") acertoId: Long? = null,
         numeroContrato: String? = null
     ): String {
         val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
@@ -260,7 +260,7 @@ object ReciboPrinterHelper {
         context: Context,
         clienteNome: String,
         clienteCpf: String? = null,
-        clienteTelefone: String? = null,
+        @Suppress("UNUSED_PARAMETER") clienteTelefone: String? = null,
         mesasCompletas: List<Mesa>,
         debitoAnterior: Double,
         valorTotalMesas: Double,
@@ -295,6 +295,8 @@ object ReciboPrinterHelper {
                 return
             }
             
+            // ✅ CORREÇÃO: getDefaultAdapter deprecated - usar BluetoothManager
+            @Suppress("DEPRECATION")
             val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
             if (bluetoothAdapter == null) {
                 onErro("Bluetooth não disponível neste dispositivo")

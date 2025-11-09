@@ -132,6 +132,8 @@ class SignatureMetadataCollector constructor(
         return try {
             val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
             val displayMetrics = DisplayMetrics()
+            // ✅ CORREÇÃO: defaultDisplay e getMetrics deprecated - usar WindowMetrics no Android R+
+            @Suppress("DEPRECATION")
             windowManager.defaultDisplay.getMetrics(displayMetrics)
             
             "${displayMetrics.widthPixels}x${displayMetrics.heightPixels}"

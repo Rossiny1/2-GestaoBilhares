@@ -89,11 +89,12 @@ class SettlementSummaryDialog : DialogFragment() {
             @Suppress("DEPRECATION")
             arguments?.getParcelableArrayList<Mesa>("mesas") ?: emptyList<Mesa>()
         }
-        val total = arguments?.getDouble("total") ?: 0.0
+        // ✅ CORREÇÃO: Variável 'total' removida - não estava sendo usada
         val metodosPagamento = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            @Suppress("UNCHECKED_CAST")
             arguments?.getSerializable("metodosPagamento", HashMap::class.java) as? HashMap<String, Double> ?: hashMapOf()
         } else {
-            @Suppress("DEPRECATION")
+            @Suppress("DEPRECATION", "UNCHECKED_CAST")
             arguments?.getSerializable("metodosPagamento") as? HashMap<String, Double> ?: hashMapOf()
         }
         val observacao = arguments?.getString("observacao") ?: ""
@@ -116,7 +117,8 @@ class SettlementSummaryDialog : DialogFragment() {
         val mesasDetalhes = StringBuilder()
         var totalFichasJogadas = 0
         mesas.forEachIndexed { index, mesa ->
-            val fichasJogadas = (mesa.relogioFinal ?: 0) - (mesa.relogioInicial ?: 0)
+            // ✅ CORREÇÃO: relogioFinal e relogioInicial são Int (não nullable), elvis operator desnecessário
+            val fichasJogadas = mesa.relogioFinal - mesa.relogioInicial
             totalFichasJogadas += fichasJogadas
             mesasDetalhes.append("Mesa ${mesa.numero}\n${mesa.relogioInicial} → ${mesa.relogioFinal} (${fichasJogadas} fichas)")
             if (index < mesas.size - 1) mesasDetalhes.append("\n")
@@ -352,7 +354,10 @@ class SettlementSummaryDialog : DialogFragment() {
         ActivityCompat.requestPermissions(requireActivity(), bluetoothPermissions, REQUEST_BLUETOOTH_PERMISSIONS)
     }
 
+    // ✅ CORREÇÃO: onRequestPermissionsResult deprecated - usar registerForActivityResult
+    @Deprecated("Deprecated in Java", ReplaceWith("registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions())"))
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        @Suppress("DEPRECATION")
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_BLUETOOTH_PERMISSIONS) {
             if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {

@@ -169,7 +169,7 @@ object FinancialCalculator {
     /**
      * Calcula o número de novas mesas no ciclo
      */
-    private fun calcularNovasMesasNoCiclo(dadosCiclo: DadosCiclo): Double {
+    private fun calcularNovasMesasNoCiclo(@Suppress("UNUSED_PARAMETER") dadosCiclo: DadosCiclo): Double {
         // Implementar lógica específica para novas mesas
         // Por enquanto, retornar 0 - implementar conforme regra de negócio
         return 0.0

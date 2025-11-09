@@ -238,7 +238,6 @@ class SettlementFragment : Fragment() {
         Log.d("LOG_CRASH", "SettlementFragment.onViewCreated - INÍCIO")
         
         // Inicializar ViewModel aqui onde o contexto está disponível
-        val database = AppDatabase.getDatabase(requireContext())
         appRepository = RepositoryFactory.getAppRepository(requireContext())
         viewModel = SettlementViewModel(appRepository)
         
@@ -673,7 +672,7 @@ class SettlementFragment : Fragment() {
                 // Retornar 0 temporariamente - será atualizado pelo cálculo assíncrono
                 0.0
             },
-            onFotoCapturada = { mesaId, caminhoFoto, dataFoto ->
+            onFotoCapturada = { mesaId, caminhoFoto, _ ->
                 // ✅ NOVO: Callback quando foto é capturada
                 Log.d("SettlementFragment", "Foto capturada para mesa $mesaId: $caminhoFoto")
                 // Aqui você pode fazer qualquer processamento adicional se necessário
@@ -1052,7 +1051,7 @@ class SettlementFragment : Fragment() {
         Log.d("SettlementFragment", "=== SALVANDO ACERTO - DEBUG OBSERVAÇÕES ===")
         Log.d("SettlementFragment", "Campo observação (RAW): '${binding.etObservacao.text}'")
         Log.d("SettlementFragment", "Campo observação (TRIM): '$observacao'")
-        Log.d("SettlementFragment", "Observação é nula? ${observacao == null}")
+        // ✅ CORREÇÃO: observacao é String (não nullable), verificação == null sempre false - removida
         Log.d("SettlementFragment", "Observação é vazia? ${observacao.isEmpty()}")
         Log.d("SettlementFragment", "Observação é blank? ${observacao.isBlank()}")
         Log.d("SettlementFragment", "Tamanho da observação: ${observacao.length}")

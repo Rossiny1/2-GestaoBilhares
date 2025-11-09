@@ -26,7 +26,7 @@ class ChartGenerator(private val context: Context) {
     /**
      * Gera um gráfico de pizza para faturamento por rota
      */
-    fun generateRevenuePieChart(data: Map<String, Double>, title: String): Bitmap? {
+    fun generateRevenuePieChart(data: Map<String, Double>, @Suppress("UNUSED_PARAMETER") title: String): Bitmap? {
         return try {
             val pieChart = createPieChart()
             val entries = mutableListOf<PieEntry>()
@@ -89,7 +89,7 @@ class ChartGenerator(private val context: Context) {
     /**
      * Gera um gráfico de pizza para despesas por tipo
      */
-    fun generateExpensesPieChart(data: Map<String, Double>, title: String): Bitmap? {
+    fun generateExpensesPieChart(data: Map<String, Double>, @Suppress("UNUSED_PARAMETER") title: String): Bitmap? {
         return try {
             val pieChart = createPieChart()
             val entries = mutableListOf<PieEntry>()
