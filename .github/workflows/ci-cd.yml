@@ -1,0 +1,208 @@
+name: CI/CD Pipeline
+
+on:
+  # ✅ EXECUTA EM PUSH: Quando código é enviado ao repositório
+  push:
+    branches: [ main, master, develop ]
+  # ✅ EXECUTA EM PR: Antes de merge (essencial para validação)
+  pull_request:
+    branches: [ main, master, develop ]
+  # ✅ EXECUTA MANUALMENTE: Via GitHub Actions UI quando necessário
+  workflow_dispatch:
+  
+  # ❌ NÃO executa em commits locais (antes do push)
+  # Isso economiza recursos e permite múltiplos commits locais
+
+jobs:
+  # ✅ FASE 12.12: Job de Testes Unitários
+  unit-tests:
+    name: Testes Unitários
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Configurar JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'gradle'
+      
+      - name: Dar permissão ao Gradle Wrapper
+        run: chmod +x gradlew
+      
+      - name: Executar testes unitários
+        run: ./gradlew test --no-daemon
+      
+      - name: Publicar resultados dos testes
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: '**/build/test-results/**/*.xml'
+          check_name: 'Testes Unitários'
+          comment_mode: 'off'
+      
+      - name: Upload relatório de testes
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: app/build/test-results/
+          retention-days: 7
+
+  # ✅ FASE 12.12: Job de Testes Instrumentados (Android)
+  instrumented-tests:
+    name: Testes Instrumentados
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Configurar JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'gradle'
+      
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v3
+      
+      - name: Dar permissão ao Gradle Wrapper
+        run: chmod +x gradlew
+      
+      - name: Executar testes instrumentados
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          script: ./gradlew connectedAndroidTest --no-daemon
+      
+      - name: Upload relatório de testes instrumentados
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-test-results
+          path: app/build/outputs/androidTest-results/
+          retention-days: 7
+
+  # ✅ FASE 12.12: Job de Análise de Código (Lint)
+  code-analysis:
+    name: Análise de Código
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Configurar JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'gradle'
+      
+      - name: Dar permissão ao Gradle Wrapper
+        run: chmod +x gradlew
+      
+      - name: Executar Android Lint
+        run: ./gradlew lint --no-daemon
+      
+      - name: Upload relatório de Lint
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lint-results
+          path: app/build/reports/lint-results*.html
+          retention-days: 7
+      
+      - name: Verificar warnings críticos
+        run: |
+          if grep -r "Error:" app/build/reports/lint-results*.html; then
+            echo "❌ Erros de lint encontrados!"
+            exit 1
+          fi
+
+  # ✅ FASE 12.12: Job de Build do APK
+  build-apk:
+    name: Build APK
+    runs-on: ubuntu-latest
+    needs: [unit-tests, code-analysis]
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Configurar JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'gradle'
+      
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v3
+      
+      - name: Dar permissão ao Gradle Wrapper
+        run: chmod +x gradlew
+      
+      - name: Build APK Debug
+        run: ./gradlew assembleDebug --no-daemon
+      
+      - name: Build APK Release
+        run: ./gradlew assembleRelease --no-daemon
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      
+      - name: Upload APK Debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+      
+      - name: Upload APK Release
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: app-release
+          path: app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
+      
+      - name: Análise de tamanho do APK
+        run: |
+          echo "📦 Tamanho do APK Debug:"
+          ls -lh app/build/outputs/apk/debug/app-debug.apk
+          echo "📦 Tamanho do APK Release:"
+          ls -lh app/build/outputs/apk/release/app-release.apk
+
+  # ✅ FASE 12.12: Job de Deploy (opcional - requer configuração)
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: [build-apk]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Download APK Release
+        uses: actions/download-artifact@v4
+        with:
+          name: app-release
+          path: ./
+      
+      - name: Criar Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: app-release.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

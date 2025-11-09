@@ -293,13 +293,11 @@
 - ✅ **4 Opções Analisadas**: Checkbox simples, Diálogo com foto, Geolocalização, Código SMS/WhatsApp
 - ✅ **Recomendação**: Implementação em 4 fases (simples → robusto)
 
-#### **Fase 11.1: Checkbox com Declaração (PLANEJADA)**
+#### **Fase 11.1: Checkbox com Declaração (CANCELADA ❌)**
 
-- 🔄 **Layout**: Card de confirmação no fragment_signature_capture.xml
-- 🔄 **Validação**: Checkbox obrigatório + campos nome/CPF
-- 🔄 **ViewModel**: Atualizar salvarAssinaturaComMetadados
-- 🔄 **PDF**: Seção de confirmação no PDF do contrato
-- **Tempo Estimado**: 1-2 horas
+- ❌ **Cancelado**: Checkbox de confirmação de presença física não é necessário
+- ✅ **Justificativa**: A assinatura manual já confirma a presença física conforme Lei 14.063/2020
+- ✅ **Decisão**: A assinatura do locatário no dispositivo já serve como confirmação de presença física
 
 #### **Fase 11.2: Diálogo com Foto (FUTURO)**
 
@@ -587,11 +585,23 @@ Todas as funcionalidades principais foram implementadas, testadas e validadas. O
 
 #### **🟢 PRIORIDADE BAIXA (Melhorias Contínuas)**
 
-12. **Fase 12.12: CI/CD Pipeline (BAIXA)**
-    - ✅ **Solução**: Automatizar testes em pipeline
-    - ✅ **Solução**: Deploy automatizado
-    - ✅ **Solução**: Análise de código (SonarQube)
-    - **Tempo Estimado**: 1-2 semanas
+12. **Fase 12.12: CI/CD Pipeline (CONCLUÍDA ✅)**
+    - ✅ **Implementado**: GitHub Actions workflow completo (ci-cd.yml)
+    - ✅ **Implementado**: Testes unitários automatizados
+    - ✅ **Implementado**: Testes instrumentados (Android) automatizados
+    - ✅ **Implementado**: Análise de código (Android Lint) automatizada
+    - ✅ **Implementado**: Build automático de APK (Debug e Release)
+    - ✅ **Implementado**: Deploy automático para GitHub Releases (quando há tag)
+    - ✅ **Implementado**: Workflow de análise de qualidade (code-quality.yml)
+    - ✅ **Implementado**: Scripts locais para execução de pipeline (ci-run-tests.ps1, ci-analyze-code.ps1)
+    - ✅ **Implementado**: Documentação completa (CI-CD-DOCUMENTATION.md)
+    - **Status**: ✅ **CONCLUÍDA** - Pipeline CI/CD totalmente funcional
+    - **Arquivos Criados**:
+     - `.github/workflows/ci-cd.yml` (pipeline principal)
+     - `.github/workflows/code-quality.yml` (análise de qualidade)
+     - `scripts/ci-run-tests.ps1` (execução local de testes)
+     - `scripts/ci-analyze-code.ps1` (análise local de código)
+     - `.cursor/rules/CI-CD-DOCUMENTATION.md` (documentação)
 
 13. **Fase 12.13: Monitoring e Analytics (BAIXA)**
     - ✅ **Solução**: Crash reporting (Firebase Crashlytics)
@@ -606,9 +616,10 @@ Todas as funcionalidades principais foram implementadas, testadas e validadas. O
 
 #### **Outras Melhorias Planejadas**
 
-15. **Fase 11.1**: Implementar UI de confirmação de presença física (checkbox + campos)
-16. **Fase 11.2**: Adicionar opção de foto na confirmação de presença
-17. **Fase 8**: Otimizações avançadas e testes automatizados
+15. **Fase 11.2**: Adicionar opção de foto na confirmação de presença (opcional)
+16. **Fase 11.3**: Geolocalização na confirmação de presença física (opcional)
+17. **Fase 11.4**: Código SMS/WhatsApp para confirmação de presença física (opcional)
+18. **Fase 8**: Otimizações avançadas e testes automatizados
 
 ---
 

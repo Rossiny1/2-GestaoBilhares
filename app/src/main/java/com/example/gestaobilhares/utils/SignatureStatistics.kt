@@ -19,7 +19,7 @@ data class SignatureStatistics(
         return totalPoints >= 3 && // Mínimo de 3 pontos (ajustado para rubricas simples)
                 duration >= 200 && // Mínimo de 0.2 segundos (ajustado para assinaturas muito rápidas)
                 duration <= 60000 && // Máximo de 60 segundos
-                averagePressure > 0.0001f && // Pressão mínima ultra reduzida para compatibilidade com canetas
+                averagePressure >= 0.0001f && // Pressão mínima ultra reduzida para compatibilidade com canetas
                 averagePressure <= 1.0f // Pressão máxima
     }
     
