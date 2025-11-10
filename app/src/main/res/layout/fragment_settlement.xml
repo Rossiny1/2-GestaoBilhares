@@ -87,7 +87,7 @@
                             android:layout_height="20dp"
                             android:layout_marginEnd="8dp"
                             android:src="@drawable/ic_user"
-                            app:tint="@color/purple_600"
+                            app:tint="?attr/colorPrimary"
                             android:contentDescription="Ícone de cliente"
                             android:importantForAccessibility="no" />
 
@@ -95,7 +95,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Cliente"
-                            android:textColor="@color/purple_600"
+                            android:textColor="?attr/colorPrimary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
@@ -188,7 +188,7 @@
                             android:layout_height="20dp"
                             android:layout_marginEnd="8dp"
                             android:src="@drawable/ic_money"
-                            app:tint="@color/purple_600"
+                            app:tint="?attr/colorPrimary"
                             android:contentDescription="Ícone de valores"
                             android:importantForAccessibility="no" />
 
@@ -196,7 +196,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Totais"
-                            android:textColor="@color/purple_600"
+                            android:textColor="?attr/colorPrimary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 

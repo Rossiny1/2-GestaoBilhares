@@ -3,107 +3,174 @@
     
     <!-- 🎨 DESIGN SYSTEM PROFISSIONAL - GestaoBilhares -->
     
-    <!-- ✨ CARDS PADRONIZADOS RESPONSIVOS -->
+    <!-- ✨ CARDS PADRONIZADOS RESPONSIVOS - Material Design 3 -->
     <style name="AppCard" parent="Widget.Material3.CardView.Elevated">
-        <item name="cardBackgroundColor">@color/card_background_dark</item>
-        <item name="strokeColor">@color/card_stroke</item>
+        <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <item name="strokeColor">?attr/colorOutline</item>
         <item name="strokeWidth">1dp</item>
-        <item name="cardCornerRadius">@dimen/card_corner_radius</item>
-        <item name="cardElevation">@dimen/card_elevation</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">1dp</item>
         <item name="android:layout_marginBottom">@dimen/card_margin</item>
-        <item name="android:foreground">@drawable/card_ripple_effect</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
     </style>
     
     <style name="AppCard.Primary">
-        <item name="strokeColor">@color/primary_blue</item>
+        <item name="strokeColor">?attr/colorPrimary</item>
         <item name="strokeWidth">2dp</item>
+        <item name="cardElevation">2dp</item>
     </style>
     
     <style name="AppCard.Success">
         <item name="strokeColor">@color/success_green</item>
+        <item name="strokeWidth">2dp</item>
     </style>
     
     <style name="AppCard.Warning">
         <item name="strokeColor">@color/warning_orange</item>
+        <item name="strokeWidth">2dp</item>
     </style>
     
     <style name="AppCard.Error">
-        <item name="strokeColor">@color/error_red</item>
+        <item name="strokeColor">?attr/colorError</item>
+        <item name="strokeWidth">2dp</item>
     </style>
     
-    <!-- 🔘 BOTÕES PADRONIZADOS -->
+    <!-- 🔘 BOTÕES PADRONIZADOS - Material Design 3 -->
     <style name="AppButton" parent="Widget.Material3.Button">
-        <item name="backgroundTint">@color/accent_teal</item>
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorOnPrimary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:paddingHorizontal">24dp</item>
+        <item name="android:paddingVertical">12dp</item>
+    </style>
+    
+    <style name="AppButton.Secondary" parent="Widget.Material3.Button">
+        <item name="backgroundTint">?attr/colorSecondary</item>
+        <item name="android:textColor">?attr/colorOnSecondary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="cornerRadius">12dp</item>
+    </style>
+    
+    <style name="AppButton.Success" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/button_success</item>
         <item name="android:textColor">@color/text_on_primary</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textStyle">bold</item>
         <item name="android:minHeight">48dp</item>
-        <item name="android:elevation">2dp</item>
-        <item name="android:stateListAnimator">@null</item>
+        <item name="cornerRadius">12dp</item>
     </style>
     
-    <style name="AppButton.Secondary">
-        <item name="backgroundTint">@color/button_secondary</item>
-    </style>
-    
-    <style name="AppButton.Success">
-        <item name="backgroundTint">@color/button_success</item>
-    </style>
-    
-    <style name="AppButton.Warning">
+    <style name="AppButton.Warning" parent="Widget.Material3.Button">
         <item name="backgroundTint">@color/button_warning</item>
+        <item name="android:textColor">@color/text_on_primary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="cornerRadius">12dp</item>
     </style>
     
-    <style name="AppButton.Error">
-        <item name="backgroundTint">@color/button_error</item>
+    <style name="AppButton.Error" parent="Widget.Material3.Button">
+        <item name="backgroundTint">?attr/colorError</item>
+        <item name="android:textColor">?attr/colorOnError</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="cornerRadius">12dp</item>
     </style>
     
     <style name="AppButton.Outlined" parent="Widget.Material3.Button.OutlinedButton">
-        <item name="strokeColor">@color/primary_blue</item>
-        <item name="android:textColor">@color/primary_blue</item>
-        <item name="cornerRadius">8dp</item>
+        <item name="strokeColor">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="cornerRadius">12dp</item>
         <item name="android:textAllCaps">false</item>
         <item name="strokeWidth">2dp</item>
+        <item name="android:minHeight">48dp</item>
     </style>
     
-    <!-- 📝 TEXTOS PADRONIZADOS PROFISSIONAIS -->
-    <style name="AppText">
-        <item name="android:textColor">@color/text_primary</item>
+    <style name="AppButton.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
+    
+    <!-- 📝 TEXTOS PADRONIZADOS PROFISSIONAIS - Material Design 3 Typography Scale -->
+    <style name="AppText" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:includeFontPadding">false</item>
+        <item name="android:letterSpacing">0.01</item>
     </style>
     
-    <style name="AppText.Title">
-        <item name="android:textSize">26sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:layout_marginBottom">16dp</item>
+    <!-- Display Large: 57sp - Títulos principais de telas -->
+    <style name="AppText.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:includeFontPadding">false</item>
         <item name="android:lineSpacingExtra">4dp</item>
     </style>
     
-    <style name="AppText.Subtitle">
-        <item name="android:textSize">20sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:layout_marginBottom">12dp</item>
+    <!-- Headline Large: 32sp - Títulos de seções -->
+    <style name="AppText.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+    
+    <!-- Title Large: 22sp - Títulos de cards -->
+    <style name="AppText.Title" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:includeFontPadding">false</item>
         <item name="android:lineSpacingExtra">3dp</item>
     </style>
     
-    <style name="AppText.Body">
-        <item name="android:textSize">16sp</item>
+    <!-- Title Medium: 16sp - Subtítulos -->
+    <style name="AppText.Subtitle" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+    </style>
+    
+    <!-- Body Large: 16sp - Texto principal -->
+    <style name="AppText.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:includeFontPadding">false</item>
         <item name="android:lineSpacingExtra">3dp</item>
         <item name="android:lineSpacingMultiplier">1.1</item>
     </style>
     
-    <style name="AppText.Caption">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/text_secondary</item>
+    <!-- Body Medium: 14sp - Texto secundário -->
+    <style name="AppText.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:includeFontPadding">false</item>
         <item name="android:lineSpacingExtra">2dp</item>
     </style>
     
-    <style name="AppText.Small">
-        <item name="android:textSize">12sp</item>
-        <item name="android:textColor">@color/text_tertiary</item>
+    <!-- Label Large: 14sp - Labels e captions -->
+    <style name="AppText.Caption" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+    
+    <!-- Label Small: 11sp - Texto pequeno -->
+    <style name="AppText.Small" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:includeFontPadding">false</item>
         <item name="android:lineSpacingExtra">1dp</item>
     </style>
     
@@ -118,40 +185,56 @@
         <item name="android:layout_marginEnd">8dp</item>
     </style>
     
-    <!-- 📄 CAMPOS DE INPUT -->
+    <!-- 📄 CAMPOS DE INPUT - Material Design 3 -->
     <style name="AppTextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
-        <item name="boxBackgroundColor">@color/surface_elevated</item>
-        <item name="boxStrokeColor">@color/primary_blue</item>
-        <item name="boxStrokeWidth">2dp</item>
-        <item name="android:textColorHint">@color/text_secondary</item>
-        <item name="hintTextColor">@color/text_secondary</item>
+        <item name="boxBackgroundColor">?attr/colorSurface</item>
+        <item name="boxStrokeColor">?attr/colorOutline</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="android:textColorHint">?attr/colorOnSurfaceVariant</item>
+        <item name="hintTextColor">?attr/colorPrimary</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.App.MediumComponent</item>
     </style>
     
     <!-- 🔐 CAMPOS DE LOGIN SEM MUDANÇA DE COR -->
     <style name="AppTextInputLogin" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="boxBackgroundColor">@android:color/transparent</item>
-        <item name="boxStrokeColor">@color/primary_blue</item>
+        <item name="boxStrokeColor">?attr/colorPrimary</item>
         <item name="boxStrokeWidth">2dp</item>
-        <item name="android:textColorHint">@color/text_secondary</item>
-        <item name="hintTextColor">@color/primary_blue</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="android:textColorHint">?attr/colorOnSurfaceVariant</item>
+        <item name="hintTextColor">?attr/colorPrimary</item>
         <item name="boxBackgroundMode">outline</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.App.MediumComponent</item>
     </style>
     
-    <!-- 📊 PROGRESS E LOADING -->
+    <!-- 📊 PROGRESS E LOADING - Material Design 3 -->
     <style name="AppProgressBar" parent="Widget.Material3.CircularProgressIndicator">
-        <item name="indicatorColor">@color/primary_blue</item>
-        <item name="trackColor">@color/surface_secondary</item>
+        <item name="indicatorColor">?attr/colorPrimary</item>
+        <item name="trackColor">?attr/colorSurfaceVariant</item>
+        <item name="trackThickness">4dp</item>
     </style>
     
-    <!-- 🎛️ SWITCHES E CHECKBOXES -->
+    <style name="AppProgressBar.Linear" parent="Widget.Material3.LinearProgressIndicator">
+        <item name="indicatorColor">?attr/colorPrimary</item>
+        <item name="trackColor">?attr/colorSurfaceVariant</item>
+        <item name="trackThickness">4dp</item>
+    </style>
+    
+    <!-- 🎛️ SWITCHES E CHECKBOXES - Material Design 3 -->
     <style name="AppSwitch" parent="Widget.Material3.CompoundButton.Switch">
-        <item name="thumbTint">@color/primary_blue</item>
-        <item name="trackTint">@color/surface_secondary</item>
+        <item name="thumbTint">?attr/colorPrimary</item>
+        <item name="trackTint">?attr/colorSurfaceVariant</item>
     </style>
     
     <style name="AppCheckBox" parent="Widget.Material3.CompoundButton.CheckBox">
-        <item name="buttonTint">@color/primary_blue</item>
-        <item name="android:textColor">@color/text_primary</item>
+        <item name="buttonTint">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+    
+    <style name="AppRadioButton" parent="Widget.Material3.CompoundButton.RadioButton">
+        <item name="buttonTint">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
     
     <!-- 📱 TOOLBAR E APPBAR -->

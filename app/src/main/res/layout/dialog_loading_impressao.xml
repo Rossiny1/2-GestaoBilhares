@@ -13,8 +13,8 @@
         android:layout_marginBottom="16dp"
         app:indicatorSize="48dp"
         app:trackThickness="4dp"
-        app:indicatorColor="@color/purple_500"
-        app:trackColor="@color/purple_200" />
+        app:indicatorColor="?attr/colorPrimary"
+        app:trackColor="?attr/colorOutlineVariant" />
 
     <TextView
         android:layout_width="wrap_content"

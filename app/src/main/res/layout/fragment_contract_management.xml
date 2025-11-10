@@ -236,7 +236,7 @@
                             android:layout_width="32dp"
                             android:layout_height="32dp"
                             android:src="@drawable/ic_check"
-                            app:tint="@color/purple_600" />
+                            app:tint="?attr/colorPrimary" />
 
                         <TextView
                             android:id="@+id/tvContratosAssinados"
@@ -244,7 +244,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:text="0"
-                            android:textColor="@color/purple_600"
+                            android:textColor="?attr/colorPrimary"
                             android:textSize="24sp"
                             android:textStyle="bold" />
 
