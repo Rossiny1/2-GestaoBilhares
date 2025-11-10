@@ -38,6 +38,11 @@ internal class MesaRepositoryInternal(
     }
     
     /**
+     * Obtém todas as mesas
+     */
+    fun obterTodasMesas() = mesaDao.obterTodasMesas()
+    
+    /**
      * Obtém mesas por cliente (direto)
      */
     suspend fun obterMesasPorClienteDireto(clienteId: Long): List<Mesa> = 
