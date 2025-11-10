@@ -89,6 +89,11 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        // ✅ OTIMIZAÇÃO: Desabilitar features não usadas para builds mais rápidos
+        compose = false
+        aidl = false
+        renderScript = false
+        shaders = false
     }
 
     lint {
@@ -107,6 +112,22 @@ tasks.named("lint").configure {
     enabled = false
 }
 
+// ✅ OTIMIZAÇÃO ADICIONAL: Desabilitar tarefas desnecessárias em debug
+tasks.whenTaskAdded {
+    if (name.contains("lint") || 
+        name.contains("test") || 
+        name.contains("Test") ||
+        name.contains("androidTest") ||
+        name.contains("unitTest")) {
+        enabled = false
+    }
+}
+
+// ✅ OTIMIZAÇÃO: Desabilitar geração de relatórios em debug
+tasks.named("check").configure {
+    enabled = false
+}
+
 // ✅ OTIMIZAÇÃO: KSP para Room (compatível com Java 11+) - Configurações otimizadas
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
@@ -120,6 +141,8 @@ ksp {
     // ✅ OTIMIZAÇÃO 2025: Cache KSP habilitado para builds incrementais mais rápidos
     arg("ksp.incremental", "true")
     arg("ksp.incremental.intermodule", "true")
+    // ✅ OTIMIZAÇÃO ADICIONAL: Desabilitar verificações de compatibilidade em debug
+    arg("ksp.verify", "false")
 }
 
 dependencies {

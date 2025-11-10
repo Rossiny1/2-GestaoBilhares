@@ -116,8 +116,8 @@
     <color name="blue_700">#1976D2</color>
     <color name="info">#2196F3</color>
     
-    <!-- Cores roxas -->
-    <color name="purple_100">#E1BEE7</color>
+    <!-- ✅ CORREÇÃO: purple_100 agora usa cor do tema (teal) -->
+    <color name="purple_100">@color/accent_teal</color>
     
     <!-- Cores cinzas -->
     <color name="gray_50">#FAFAFA</color>

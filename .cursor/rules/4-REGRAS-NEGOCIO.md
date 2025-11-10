@@ -1,9 +1,10 @@
-# 3. REGRAS DE NEGÓCIO
+# 4. REGRAS DE NEGÓCIO
+
+> **Documento de regras** - Regras de negócio, validações, cálculos financeiros e lógica de sistema.
 
 ## 💰 SISTEMA DE ACERTOS
 
-### **Ciclos de Acerto**
-
+### Ciclos de Acerto
 - **Por Rota**: Cada rota tem seus próprios ciclos
 - **Numeração Anual**: 1º ao 12º acerto por ano
 - **Geração Automática**: Novo ciclo criado ao clicar "Iniciar Rota"
@@ -12,59 +13,57 @@
 - **Finalização**: Dados consolidados e imutáveis após finalização
 - **Histórico**: Visualização de todos os ciclos finalizados
 
-### **Tipos de Pagamento**
-
+### Tipos de Pagamento
 - **Fichas Jogadas**: Percentual da receita (padrão 40%)
 - **Valor Fixo**: Valor mensal definido
 - **Múltiplos Pagamentos**: Dialog para discriminar valores por método
 - **Métodos Suportados**: PIX, Cartão, Cheque, Dinheiro
 - **Processamento JSON**: Armazenamento estruturado dos métodos de pagamento
 
-### **Cálculos e Validações**
-
+### Cálculos e Validações
 - **Relógio com Defeito**: Usa média de fichas dos últimos acertos válidos
 - **Débitos**: Soma dos débitos pendentes da rota no período
 - **Pendências**: Clientes com débito >R$400 OU sem acerto há 4+ meses
 
 ## 🎯 FILTROS E DESTAQUES
 
-### **Filtros de Clientes**
-
+### Filtros de Clientes
 - **Débito Alto**: >R$300 (linha vermelha)
 - **Sem Acerto**: 4+ meses (linha amarela)
 - **Demais Casos**: Linha verde
 - **Exibição Padrão**: Clientes com mesas locadas OU débitos pendentes
 
-### **Filtros de Rotas**
-
+### Filtros de Rotas
 - **Por Ciclo**: Filtro horizontal de acertos
 - **Por Usuário**: Representantes veem apenas suas rotas
 - **Status**: Em Andamento / Finalizada
 
 ## 🏢 GESTÃO DE MESAS
 
-### **Estados das Mesas**
-
+### Estados das Mesas
 - **Depósito**: Mesas disponíveis para locação
 - **Locada**: Mesa vinculada a um cliente
 - **Inativa**: Mesa retirada ou com problema
 
-### **Movimentação**
-
+### Movimentação
 - **Vincular**: Mesa sai do depósito → vai para cliente
 - **Retirar**: Mesa volta para depósito
 
+### Tipos de Mesa
+- **Sinuca**: Mesa de sinuca
+- **Pembolim**: Mesa de pembolim
+- **Jukebox**: Mesa de jukebox
+- **Pool/Snooker**: Outros tipos
+
 ## 🚗 GESTÃO DE VEÍCULOS
 
-### **Histórico de Manutenção**
-
+### Histórico de Manutenção
 - **Registro Completo**: Data, descrição, valor, quilometragem, tipo
 - **Filtros por Ano**: Visualização por período específico
 - **Resumo Financeiro**: Total gasto em manutenções
 - **Tipos de Manutenção**: Preventiva, corretiva, revisão
 
-### **Histórico de Abastecimento**
-
+### Histórico de Abastecimento
 - **Registro de Combustível**: Data, valor, litros, quilometragem
 - **Cálculo de Consumo**: Km/litro automático
 - **Filtros por Ano**: Visualização por período específico
@@ -72,44 +71,31 @@
 
 ## 👥 GESTÃO DE COLABORADORES
 
-### **Transferência de Clientes**
-
+### Transferência de Clientes
 - **Entre Rotas**: Cliente pode ser transferido de uma rota para outra
 - **Preservação de Dados**: Histórico e mesas mantidos
 - **Validação**: Apenas rotas diferentes permitidas
 - **Log de Auditoria**: Registro de todas as transferências
 
-### **Sistema de Metas**
-
+### Sistema de Metas
 - **Vinculação**: Ciclo de acerto + rota + colaborador
 - **Métricas**: % clientes cobrados, faturamento, novas mesas, média por mesa
 - **Acompanhamento**: Progresso em tempo real
 - **Relatórios**: Performance por colaborador
-- **Cadastro**: Todas as mesas criadas no depósito
-
-### **Tipos de Mesa**
-
-- **Sinuca**: Mesa de sinuca
-- **Pembolim**: Mesa de pembolim
-- **Jukebox**: Mesa de jukebox
-- **Pool/Snooker**: Outros tipos
 
 ## 📋 CONTRATOS DE LOCAÇÃO
 
-### **Geração Automática**
-
+### Geração Automática
 - **Trigger**: Após vincular mesa ao cliente
 - **Numeração**: Formato "2025-0002"
 - **Dados**: Preenchimento automático do cliente e equipamentos
 
-### **Tipos de Contrato**
-
+### Tipos de Contrato
 - **Valor Fixo**: Valor mensal definido
 - **Percentual**: % da receita (padrão 40%)
 - **Múltiplos Equipamentos**: Suporte a várias mesas
 
-### **Validação Jurídica**
-
+### Validação Jurídica
 - **Assinatura Eletrônica Simples**: Conforme Lei 14.063/2020
 - **Metadados**: Timestamp, device ID, IP, pressão, velocidade
 - **Integridade**: Hash SHA-256 do documento e assinatura
@@ -117,59 +103,37 @@
 
 ## 📊 RELATÓRIOS E IMPRESSÃO
 
-### **Relatórios de Acerto**
-
+### Relatórios de Acerto
 - **PDF**: Geração automática após salvar
 - **WhatsApp**: Compartilhamento via mensagem
 - **Impressão**: Impressora térmica 58mm
 
-### **Relatórios de Fechamento**
-
+### Relatórios de Fechamento
 - **Por Ciclo**: Dados de um acerto específico
 - **Anual**: Consolidação de todos os acertos do ano
 - **Gráficos**: Pizza de receitas por rota e despesas por tipo
 
 ## 🎯 METAS DE DESEMPENHO
 
-### **Estrutura**
-
+### Estrutura
 - **Vínculo**: Ciclo de acerto + rota + colaborador
 - **Métricas**: % clientes cobrados, faturamento, novas mesas, média por mesa
 - **Acompanhamento**: Comparação com metas definidas
 
-## 🧭 NAVEGAÇÃO E FLUXOS
-
-### **Fluxo Principal de Navegação**
-
-- **Login** → **Rotas** → **Clientes da Rota** → **Detalhes do Cliente** → **Acerto** → **Impressão**
-- **Botão de Retorno**: Sempre volta para tela anterior no stack
-- **ClientDetailFragment**: Botão de retorno sempre vai para ClientListFragment
-- **Controle de Stack**: popUpTo e popUpToInclusive para limpeza do stack
-
-### **Navegação por Localização**
-
-- **Ícone de Localização**: Clique abre apps de navegação
-- **Coordenadas**: Latitude e longitude do cliente
-- **Apps Suportados**: Google Maps, Waze, qualquer app de mapas
-- **Fallback**: Múltiplas estratégias de abertura
-
-### **Fluxos de Contrato**
-
-- **Geração** → **Assinatura** → **Envio WhatsApp** → **Retorno para Cliente**
-- **Aditivo**: Mesa adicional → Assinatura → Envio → Retorno
-- **Distrato**: Retirada de mesa → Assinatura → Envio → Retorno
-
 ## 🔐 SEGURANÇA E AUDITORIA
 
-### **Logs Jurídicos**
-
+### Logs Jurídicos
 - **Eventos**: Assinatura, geração de contrato, alterações
 - **Metadados**: Device ID, IP, timestamp, pressão, velocidade
 - **Integridade**: Hash SHA-256 para verificação
 - **Auditoria**: Trilha completa de eventos
 
-### **Validações**
-
+### Validações
 - **Assinatura**: Características biométricas válidas
 - **Documento**: Integridade verificada por hash
 - **Presença**: Confirmação de presença física do locatário
+
+---
+
+**Última atualização**: 2025-01-09
+

@@ -31,7 +31,7 @@
                 android:layout_height="20dp"
                 android:layout_marginEnd="8dp"
                 android:src="@drawable/ic_table"
-                app:tint="@color/purple_600" />
+                app:tint="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/tvNumeroMesa"
@@ -39,7 +39,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Mesa"
-                android:textColor="@color/purple_600"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 tools:text="Mesa M1A" />

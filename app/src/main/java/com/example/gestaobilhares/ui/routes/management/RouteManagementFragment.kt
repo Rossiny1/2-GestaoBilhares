@@ -1,14 +1,11 @@
 package com.example.gestaobilhares.ui.routes.management
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -20,8 +17,7 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentRouteManagementBinding
 import com.example.gestaobilhares.databinding.DialogAddEditRouteBinding
 import com.example.gestaobilhares.data.entities.Rota
-import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.data.database.AppDatabase
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 /**
  * Fragment para gerenciamento de rotas (CRUD).
  * Permite criar, editar e excluir rotas.
@@ -172,7 +168,7 @@ class RouteManagementFragment : Fragment() {
             dialogBinding.colaboradorEditText.setText(it.colaboradorResponsavel)
         }
 
-        val dialog = AlertDialog.Builder(requireContext(), R.style.DarkDialogTheme)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle(if (rota == null) "Nova Rota" else "Editar Rota")
             .setView(dialogBinding.root)
             .setPositiveButton(if (rota == null) "Criar" else "Salvar") { _, _ ->
@@ -208,7 +204,7 @@ class RouteManagementFragment : Fragment() {
      * Mostra o diálogo de confirmação para excluir uma rota.
      */
     private fun showDeleteConfirmationDialog(rota: Rota) {
-        AlertDialog.Builder(requireContext(), R.style.DarkDialogTheme)
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Excluir Rota")
             .setMessage("Tem certeza que deseja excluir a rota \"${rota.nome}\"?\n\nEsta ação não pode ser desfeita.")
             .setPositiveButton("Excluir") { _, _ ->

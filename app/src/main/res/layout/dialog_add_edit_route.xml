@@ -6,27 +6,27 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="#23273A">
+    android:background="?attr/colorSurface">
 
     <!-- Nome da Rota -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        app:hintTextColor="#A68EFF"
-        app:boxBackgroundColor="#33273A"
-        app:boxStrokeColor="#A68EFF"
+        app:hintTextColor="?attr/colorPrimary"
+        app:boxBackgroundColor="?attr/colorSurface"
+        app:boxStrokeColor="?attr/colorPrimary"
         app:startIconDrawable="@drawable/ic_route"
-        app:startIconTint="#A68EFF"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        app:startIconTint="?attr/colorPrimary"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/nomeEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Nome da Rota *"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#99FFFFFF"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:inputType="textCapWords" />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -36,20 +36,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        app:hintTextColor="#A68EFF"
-        app:boxBackgroundColor="#33273A"
-        app:boxStrokeColor="#A68EFF"
+        app:hintTextColor="?attr/colorPrimary"
+        app:boxBackgroundColor="?attr/colorSurface"
+        app:boxStrokeColor="?attr/colorPrimary"
         app:startIconDrawable="@drawable/ic_person"
-        app:startIconTint="#A68EFF"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        app:startIconTint="?attr/colorPrimary"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/colaboradorEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Colaborador Responsável"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#99FFFFFF"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:inputType="textCapWords" />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -59,20 +59,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        app:hintTextColor="#A68EFF"
-        app:boxBackgroundColor="#33273A"
-        app:boxStrokeColor="#A68EFF"
+        app:hintTextColor="?attr/colorPrimary"
+        app:boxBackgroundColor="?attr/colorSurface"
+        app:boxStrokeColor="?attr/colorPrimary"
         app:startIconDrawable="@drawable/ic_location"
-        app:startIconTint="#A68EFF"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        app:startIconTint="?attr/colorPrimary"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/cidadesEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Cidades da Rota"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#99FFFFFF"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:inputType="textCapWords"
             android:minLines="2"
             android:maxLines="3" />
@@ -84,7 +84,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="💡 Separe as cidades por vírgula (ex: São Paulo, Santos, Guarujá)"
-        android:textColor="#66FFFFFF"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="12sp"
         android:layout_marginBottom="16dp"
         android:drawablePadding="8dp" />
@@ -94,7 +94,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="* Campos obrigatórios"
-        android:textColor="#99FFFFFF"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="12sp"
         android:gravity="end" />
 

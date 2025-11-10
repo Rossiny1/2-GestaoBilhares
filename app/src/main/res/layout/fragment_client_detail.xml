@@ -489,7 +489,7 @@
                 android:contentDescription="Gerar Contrato"
                 android:src="@drawable/ic_contract"
                 app:fabSize="mini"
-                app:backgroundTint="@color/purple_600"
+                app:backgroundTint="?attr/colorPrimary"
                 app:tint="@color/white"
                 android:clickable="false" />
 
