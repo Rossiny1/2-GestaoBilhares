@@ -148,6 +148,54 @@ class AppRepository constructor(
         )
     }
     
+    // ✅ FASE 12.14 Etapa 3: Repository interno para contratos
+    private val contratoRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.ContratoRepositoryInternal(
+            contratoLocacaoDao = contratoLocacaoDao,
+            aditivoContratoDao = aditivoContratoDao,
+            assinaturaRepresentanteLegalDao = assinaturaRepresentanteLegalDao,
+            logAuditoriaAssinaturaDao = logAuditoriaAssinaturaDao,
+            syncQueueDao = syncQueueDao
+        )
+    }
+    
+    // ✅ FASE 12.14 Etapa 4: Repository interno para veículos
+    private val veiculoRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.VeiculoRepositoryInternal(
+            veiculoDao = veiculoDao,
+            historicoManutencaoVeiculoDao = historicoManutencaoVeiculoDao,
+            historicoCombustivelVeiculoDao = historicoCombustivelVeiculoDao
+        )
+    }
+    
+    // ✅ FASE 12.14 Etapa 5: Repository interno para estoque
+    private val estoqueRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.EstoqueRepositoryInternal(
+            panoEstoqueDao = panoEstoqueDao,
+            panoMesaDao = panoMesaDao,
+            stockItemDao = stockItemDao,
+            equipmentDao = equipmentDao,
+            mesaVendidaDao = mesaVendidaDao,
+            mesaReformadaDao = mesaReformadaDao,
+            historicoManutencaoMesaDao = historicoManutencaoMesaDao
+        )
+    }
+    
+    // ✅ FASE 12.14 Etapa 6: Repository interno para metas
+    private val metaRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.MetaRepositoryInternal(
+            colaboradorDao = colaboradorDao
+        )
+    }
+    
+    // ✅ FASE 12.14 Etapa 7: Repository interno para categorias e tipos de despesa
+    private val categoriaTipoDespesaRepositoryInternal by lazy {
+        com.example.gestaobilhares.data.repository.internal.CategoriaTipoDespesaRepositoryInternal(
+            categoriaDespesaDao = categoriaDespesaDao,
+            tipoDespesaDao = tipoDespesaDao
+        )
+    }
+    
     // ✅ FASE 4D: Otimizações de memória
     private val memoryOptimizer = MemoryOptimizer.getInstance()
     private val weakReferenceManager = WeakReferenceManager.getInstance()
@@ -171,73 +219,30 @@ class AppRepository constructor(
     private val transactionOptimizer = TransactionOptimizationManager.getInstance()
     
     // ==================== CATEGORIAS E TIPOS DE DESPESA ====================
-    fun buscarCategoriasAtivas() = categoriaDespesaDao.buscarAtivas()
-    suspend fun buscarCategoriaPorNome(nome: String) = categoriaDespesaDao.buscarPorNome(nome)
-    suspend fun categoriaExiste(nome: String): Boolean = categoriaDespesaDao.contarPorNome(nome) > 0
-    suspend fun criarCategoria(nova: NovaCategoriaDespesa): Long {
-        val entity = CategoriaDespesa(
-            nome = nova.nome,
-            descricao = nova.descricao,
-            criadoPor = nova.criadoPor
+    
+    // ✅ FASE 12.14 Etapa 7: Delegado para CategoriaTipoDespesaRepositoryInternal
+    fun buscarCategoriasAtivas() = categoriaTipoDespesaRepositoryInternal.buscarCategoriasAtivas()
+    suspend fun buscarCategoriaPorNome(nome: String) = categoriaTipoDespesaRepositoryInternal.buscarCategoriaPorNome(nome)
+    suspend fun categoriaExiste(nome: String): Boolean = categoriaTipoDespesaRepositoryInternal.categoriaExiste(nome)
+    
+    suspend fun criarCategoria(nova: NovaCategoriaDespesa): Long = 
+        categoriaTipoDespesaRepositoryInternal.criarCategoria(
+            nova = nova,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
         )
-        val id = categoriaDespesaDao.inserir(entity)
-        
-        // ✅ SINCRONIZAÇÃO: CREATE CategoriaDespesa
-        try {
-            val payload = """
-                {
-                    "id": $id,
-                    "nome": "${entity.nome}",
-                    "descricao": "${entity.descricao}",
-                    "criadoPor": "${entity.criadoPor}",
-                    "ativo": ${entity.ativa},
-                    "dataCriacao": ${entity.dataCriacao.time}
-                }
-            """.trimIndent()
-            adicionarOperacaoSync("CategoriaDespesa", id, "CREATE", payload, priority = 1)
-            logarOperacaoSync("CategoriaDespesa", id, "CREATE", "PENDING", null, payload)
-        } catch (syncError: Exception) {
-            Log.w("AppRepository", "Erro ao adicionar categoria à fila de sync: ${syncError.message}")
-        }
-        
-        return id
-    }
-    fun buscarTiposPorCategoria(categoriaId: Long) = tipoDespesaDao.buscarPorCategoria(categoriaId)
-    suspend fun buscarTipoPorNome(nome: String) = tipoDespesaDao.buscarPorNome(nome)
-    suspend fun tipoExiste(nome: String, categoriaId: Long): Boolean {
-        val tipo = tipoDespesaDao.buscarPorNome(nome)
-        return tipo != null && tipo.categoriaId == categoriaId
-    }
-    suspend fun criarTipo(novo: NovoTipoDespesa): Long {
-        val entity = TipoDespesa(
-            categoriaId = novo.categoriaId,
-            nome = novo.nome,
-            descricao = novo.descricao,
-            criadoPor = novo.criadoPor
+    
+    fun buscarTiposPorCategoria(categoriaId: Long) = categoriaTipoDespesaRepositoryInternal.buscarTiposPorCategoria(categoriaId)
+    suspend fun buscarTipoPorNome(nome: String) = categoriaTipoDespesaRepositoryInternal.buscarTipoPorNome(nome)
+    suspend fun tipoExiste(nome: String, categoriaId: Long): Boolean = 
+        categoriaTipoDespesaRepositoryInternal.tipoExiste(nome, categoriaId)
+    
+    suspend fun criarTipo(novo: NovoTipoDespesa): Long = 
+        categoriaTipoDespesaRepositoryInternal.criarTipo(
+            novo = novo,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
         )
-        val id = tipoDespesaDao.inserir(entity)
-        
-        // ✅ SINCRONIZAÇÃO: CREATE TipoDespesa
-        try {
-            val payload = """
-                {
-                    "id": $id,
-                    "categoriaId": ${entity.categoriaId},
-                    "nome": "${entity.nome}",
-                    "descricao": "${entity.descricao}",
-                    "criadoPor": "${entity.criadoPor}",
-                    "ativo": ${entity.ativo},
-                    "dataCriacao": ${entity.dataCriacao.time}
-                }
-            """.trimIndent()
-            adicionarOperacaoSync("TipoDespesa", id, "CREATE", payload, priority = 1)
-            logarOperacaoSync("TipoDespesa", id, "CREATE", "PENDING", null, payload)
-        } catch (syncError: Exception) {
-            Log.w("AppRepository", "Erro ao adicionar tipo à fila de sync: ${syncError.message}")
-        }
-        
-        return id
-    }
 
     
     // ==================== STATEFLOW CACHE (MODERNIZAÇÃO 2025) ====================
@@ -597,15 +602,13 @@ class AppRepository constructor(
         valorTotalDespesas: Double,
         clientesAcertados: Int
     ) = cicloRepositoryInternal.atualizarValoresCiclo(cicloId, valorTotalAcertado, valorTotalDespesas, clientesAcertados)
-    suspend fun obterPanoPorId(id: Long) = panoEstoqueDao.buscarPorId(id)
-    suspend fun marcarPanoComoUsadoPorNumero(numeroPano: String, motivo: String) {
-        val pano = panoEstoqueDao.buscarPorNumero(numeroPano)
-        if (pano != null) {
-            panoEstoqueDao.atualizarDisponibilidade(pano.id, false)
-        }
-    }
-    suspend fun buscarPorNumero(numeroPano: String) = panoEstoqueDao.buscarPorNumero(numeroPano)
-    suspend fun marcarPanoComoUsado(panoId: Long, motivo: String) = panoEstoqueDao.atualizarDisponibilidade(panoId, false)
+    // ✅ FASE 12.14 Etapa 5: Delegado para EstoqueRepositoryInternal
+    suspend fun obterPanoPorId(id: Long) = estoqueRepositoryInternal.obterPanoEstoquePorId(id)
+    suspend fun marcarPanoComoUsadoPorNumero(numeroPano: String, motivo: String) = 
+        estoqueRepositoryInternal.marcarPanoComoUsadoPorNumero(numeroPano, motivo)
+    suspend fun buscarPorNumero(numeroPano: String) = estoqueRepositoryInternal.buscarPorNumero(numeroPano)
+    suspend fun marcarPanoComoUsado(panoId: Long, motivo: String) = 
+        estoqueRepositoryInternal.marcarPanoComoUsado(panoId, motivo)
     
     // ==================== MESA ====================
     
@@ -714,7 +717,11 @@ class AppRepository constructor(
      */
     suspend fun contarMesasAtivasPorClientes(clienteIds: List<Long>) =
         mesaRepositoryInternal.contarMesasAtivasPorClientes(clienteIds)
-    fun obterTodasMesas() = mesaDao.obterTodasMesas()
+    
+    /**
+     * ✅ FASE 12.14 Etapa 2: Delegado para MesaRepositoryInternal
+     */
+    fun obterTodasMesas() = mesaRepositoryInternal.obterTodasMesas()
     
     // ==================== ROTA ====================
     
@@ -934,7 +941,7 @@ class AppRepository constructor(
                 } else {
                     // ✅ CORREÇÃO: Retornar o ciclo finalizado, não o próximo
                     android.util.Log.d("AppRepository", "✅ Usando ciclo FINALIZADO: ${cicloAtual.numeroCiclo}")
-                    Triple(cicloAtual.numeroCiclo, cicloAtual.id, cicloAtual.dataFim?.time)
+                    Triple(cicloAtual.numeroCiclo, cicloAtual.id, cicloAtual.dataFim.time)
                 }
                     } else {
                 android.util.Log.d("AppRepository", "✅ Primeiro ciclo: 1")
@@ -977,7 +984,7 @@ class AppRepository constructor(
         return try {
             val ciclo = cicloAcertoDao.buscarCicloAtualPorRota(rotaId)
             if (ciclo != null) {
-                Pair(ciclo.dataInicio.time, ciclo.dataFim?.time)
+                Pair(ciclo.dataInicio.time, ciclo.dataFim.time)
             } else {
                 Pair(null, null)
             }
@@ -1220,347 +1227,121 @@ class AppRepository constructor(
 
     // ==================== PANO ESTOQUE ====================
     
-    fun obterTodosPanosEstoque() = panoEstoqueDao.listarTodos()
-    fun obterPanosDisponiveis() = panoEstoqueDao.listarDisponiveis()
-    suspend fun obterPanoEstoquePorId(id: Long) = panoEstoqueDao.buscarPorId(id)
-    suspend fun inserirPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque): Long {
-        logDbInsertStart("PANOESTOQUE", "Numero=${pano.numero}, Cor=${pano.cor}")
-        return try {
-            val id = panoEstoqueDao.inserir(pano)
-            logDbInsertSuccess("PANOESTOQUE", "Numero=${pano.numero}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "numero": "${pano.numero}",
-                        "cor": "${pano.cor}",
-                        "tamanho": "${pano.tamanho}",
-                        "material": "${pano.material}",
-                        "disponivel": ${pano.disponivel},
-                        "observacoes": "${pano.observacoes ?: ""}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("PanoEstoque", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("PanoEstoque", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar pano estoque à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("PANOESTOQUE", "Numero=${pano.numero}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque) {
-        logDbUpdateStart("PANOESTOQUE", "ID=${pano.id}, Numero=${pano.numero}")
-        try {
-            panoEstoqueDao.atualizar(pano)
-            logDbUpdateSuccess("PANOESTOQUE", "ID=${pano.id}")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${pano.id},
-                        "numero": "${pano.numero}",
-                        "cor": "${pano.cor}",
-                        "tamanho": "${pano.tamanho}",
-                        "material": "${pano.material}",
-                        "disponivel": ${pano.disponivel},
-                        "observacoes": "${pano.observacoes ?: ""}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("PanoEstoque", pano.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("PanoEstoque", pano.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de pano estoque à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("PANOESTOQUE", "ID=${pano.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque) = panoEstoqueDao.deletar(pano)
-    suspend fun atualizarDisponibilidadePano(id: Long, disponivel: Boolean) = panoEstoqueDao.atualizarDisponibilidade(id, disponivel)
+    // ✅ FASE 12.14 Etapa 5: Delegado para EstoqueRepositoryInternal
+    fun obterTodosPanosEstoque() = estoqueRepositoryInternal.obterTodosPanosEstoque()
+    fun obterPanosDisponiveis() = estoqueRepositoryInternal.obterPanosDisponiveis()
+    suspend fun obterPanoEstoquePorId(id: Long) = estoqueRepositoryInternal.obterPanoEstoquePorId(id)
+    
+    suspend fun inserirPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque): Long = 
+        estoqueRepositoryInternal.inserirPanoEstoque(
+            pano = pano,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque) = 
+        estoqueRepositoryInternal.atualizarPanoEstoque(
+            pano = pano,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun deletarPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque) = 
+        estoqueRepositoryInternal.deletarPanoEstoque(pano)
+    
+    suspend fun atualizarDisponibilidadePano(id: Long, disponivel: Boolean) = 
+        estoqueRepositoryInternal.atualizarDisponibilidadePano(id, disponivel)
 
     // ==================== PANO MESA ====================
     
-    fun obterPanoMesaPorMesa(mesaId: Long) = panoMesaDao.buscarPorMesa(mesaId)
-    suspend fun obterPanoAtualMesa(mesaId: Long) = panoMesaDao.buscarPanoAtualMesa(mesaId)
-    fun obterPanoMesaPorPano(panoId: Long) = panoMesaDao.buscarPorPano(panoId)
-    suspend fun obterUltimaTrocaMesa(mesaId: Long) = panoMesaDao.buscarUltimaTrocaMesa(mesaId)
-    suspend fun inserirPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa): Long {
-        logDbInsertStart("PANOMESA", "MesaID=${panoMesa.mesaId}, PanoID=${panoMesa.panoId}")
-        return try {
-            val id = panoMesaDao.inserir(panoMesa)
-            logDbInsertSuccess("PANOMESA", "MesaID=${panoMesa.mesaId}, PanoID=${panoMesa.panoId}, ID=$id")
-            
-            // ✅ SINCRONIZAÇÃO: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "mesaId": ${panoMesa.mesaId},
-                        "panoId": ${panoMesa.panoId},
-                        "dataTroca": ${panoMesa.dataTroca.time},
-                        "ativo": ${panoMesa.ativo},
-                        "observacoes": "${panoMesa.observacoes ?: ""}",
-                        "dataCriacao": ${panoMesa.dataCriacao.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("PanoMesa", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("PanoMesa", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar PanoMesa à fila de sync: ${syncError.message}")
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("PANOMESA", "MesaID=${panoMesa.mesaId}, PanoID=${panoMesa.panoId}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa) {
-        logDbUpdateStart("PANOMESA", "ID=${panoMesa.id}, MesaID=${panoMesa.mesaId}")
-        try {
-            panoMesaDao.atualizar(panoMesa)
-            logDbUpdateSuccess("PANOMESA", "ID=${panoMesa.id}, MesaID=${panoMesa.mesaId}")
-            
-            // ✅ SINCRONIZAÇÃO: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${panoMesa.id},
-                        "mesaId": ${panoMesa.mesaId},
-                        "panoId": ${panoMesa.panoId},
-                        "dataTroca": ${panoMesa.dataTroca.time},
-                        "ativo": ${panoMesa.ativo},
-                        "observacoes": "${panoMesa.observacoes ?: ""}",
-                        "dataCriacao": ${panoMesa.dataCriacao.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("PanoMesa", panoMesa.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("PanoMesa", panoMesa.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de PanoMesa à fila de sync: ${syncError.message}")
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("PANOMESA", "ID=${panoMesa.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa) {
-        panoMesaDao.deletar(panoMesa)
-        // ✅ SINCRONIZAÇÃO: Enfileirar DELETE
-        try {
-            val payload = """{ "id": ${panoMesa.id} }"""
-            adicionarOperacaoSync("PanoMesa", panoMesa.id, "DELETE", payload, priority = 1)
-            logarOperacaoSync("PanoMesa", panoMesa.id, "DELETE", "PENDING", null, payload)
-        } catch (syncError: Exception) {
-            android.util.Log.w("AppRepository", "Erro ao enfileirar PanoMesa DELETE: ${syncError.message}")
-        }
-    }
-    suspend fun desativarPanoAtualMesa(mesaId: Long) = panoMesaDao.desativarPanoAtualMesa(mesaId)
-    suspend fun ativarPanoMesa(mesaId: Long, panoId: Long) = panoMesaDao.ativarPanoMesa(mesaId, panoId)
-    fun buscarHistoricoTrocasMesa(mesaId: Long) = panoMesaDao.buscarHistoricoTrocasMesa(mesaId)
+    // ✅ FASE 12.14 Etapa 5: Delegado para EstoqueRepositoryInternal
+    fun obterPanoMesaPorMesa(mesaId: Long) = estoqueRepositoryInternal.obterPanoMesaPorMesa(mesaId)
+    suspend fun obterPanoAtualMesa(mesaId: Long) = estoqueRepositoryInternal.obterPanoAtualMesa(mesaId)
+    fun obterPanoMesaPorPano(panoId: Long) = estoqueRepositoryInternal.obterPanoMesaPorPano(panoId)
+    suspend fun obterUltimaTrocaMesa(mesaId: Long) = estoqueRepositoryInternal.obterUltimaTrocaMesa(mesaId)
+    
+    suspend fun inserirPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa): Long = 
+        estoqueRepositoryInternal.inserirPanoMesa(
+            panoMesa = panoMesa,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa) = 
+        estoqueRepositoryInternal.atualizarPanoMesa(
+            panoMesa = panoMesa,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun deletarPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa) = 
+        estoqueRepositoryInternal.deletarPanoMesa(
+            panoMesa = panoMesa,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun desativarPanoAtualMesa(mesaId: Long) = estoqueRepositoryInternal.desativarPanoAtualMesa(mesaId)
+    suspend fun ativarPanoMesa(mesaId: Long, panoId: Long) = estoqueRepositoryInternal.ativarPanoMesa(mesaId, panoId)
+    fun buscarHistoricoTrocasMesa(mesaId: Long) = estoqueRepositoryInternal.buscarHistoricoTrocasMesa(mesaId)
 
     // ==================== MESA VENDIDA ====================
     
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    fun obterTodasMesasVendidas() = mesaVendidaDao.listarTodas().map { mesas ->
-        mesas.map { decryptMesaVendida(it) ?: it }
-    }
-    suspend fun obterMesaVendidaPorId(id: Long) = decryptMesaVendida(mesaVendidaDao.buscarPorId(id))
-    suspend fun inserirMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida): Long {
-        logDbInsertStart("MESAVENDIDA", "Numero=${mesaVendida.numeroMesa}, Comprador=${mesaVendida.nomeComprador}")
-        return try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val mesaVendidaEncrypted = encryptMesaVendida(mesaVendida)
-            val id = mesaVendidaDao.inserir(mesaVendidaEncrypted)
-            logDbInsertSuccess("MESAVENDIDA", "Numero=${mesaVendida.numeroMesa}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "mesaIdOriginal": ${mesaVendida.mesaIdOriginal},
-                        "numeroMesa": "${mesaVendida.numeroMesa}",
-                        "tipoMesa": "${mesaVendida.tipoMesa}",
-                        "tamanhoMesa": "${mesaVendida.tamanhoMesa}",
-                        "estadoConservacao": "${mesaVendida.estadoConservacao}",
-                        "nomeComprador": "${mesaVendida.nomeComprador}",
-                        "telefoneComprador": "${mesaVendida.telefoneComprador ?: ""}",
-                        "cpfCnpjComprador": "${mesaVendida.cpfCnpjComprador ?: ""}",
-                        "enderecoComprador": "${mesaVendida.enderecoComprador ?: ""}",
-                        "valorVenda": ${mesaVendida.valorVenda},
-                        "dataVenda": "${mesaVendida.dataVenda}",
-                        "observacoes": "${mesaVendida.observacoes ?: ""}",
-                        "dataCriacao": "${mesaVendida.dataCriacao}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("MesaVendida", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("MesaVendida", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar mesa vendida à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("MESAVENDIDA", "Numero=${mesaVendida.numeroMesa}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida) {
-        logDbUpdateStart("MESAVENDIDA", "ID=${mesaVendida.id}, Numero=${mesaVendida.numeroMesa}")
-        try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val mesaVendidaEncrypted = encryptMesaVendida(mesaVendida)
-            mesaVendidaDao.atualizar(mesaVendidaEncrypted)
-            logDbUpdateSuccess("MESAVENDIDA", "ID=${mesaVendida.id}")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${mesaVendida.id},
-                        "mesaIdOriginal": ${mesaVendida.mesaIdOriginal},
-                        "numeroMesa": "${mesaVendida.numeroMesa}",
-                        "tipoMesa": "${mesaVendida.tipoMesa}",
-                        "tamanhoMesa": "${mesaVendida.tamanhoMesa}",
-                        "estadoConservacao": "${mesaVendida.estadoConservacao}",
-                        "nomeComprador": "${mesaVendida.nomeComprador}",
-                        "telefoneComprador": "${mesaVendida.telefoneComprador ?: ""}",
-                        "cpfCnpjComprador": "${mesaVendida.cpfCnpjComprador ?: ""}",
-                        "enderecoComprador": "${mesaVendida.enderecoComprador ?: ""}",
-                        "valorVenda": ${mesaVendida.valorVenda},
-                        "dataVenda": "${mesaVendida.dataVenda}",
-                        "observacoes": "${mesaVendida.observacoes ?: ""}",
-                        "dataCriacao": "${mesaVendida.dataCriacao}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("MesaVendida", mesaVendida.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("MesaVendida", mesaVendida.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de mesa vendida à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("MESAVENDIDA", "ID=${mesaVendida.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida) = mesaVendidaDao.deletar(mesaVendida)
+    // ✅ FASE 12.14 Etapa 5: Delegado para EstoqueRepositoryInternal
+    fun obterTodasMesasVendidas() = estoqueRepositoryInternal.obterTodasMesasVendidas(::decryptMesaVendida)
+    suspend fun obterMesaVendidaPorId(id: Long) = estoqueRepositoryInternal.obterMesaVendidaPorId(id, ::decryptMesaVendida)
+    
+    suspend fun inserirMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida): Long = 
+        estoqueRepositoryInternal.inserirMesaVendida(
+            mesaVendida = mesaVendida,
+            encryptMesaVendida = ::encryptMesaVendida,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida) = 
+        estoqueRepositoryInternal.atualizarMesaVendida(
+            mesaVendida = mesaVendida,
+            encryptMesaVendida = ::encryptMesaVendida,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun deletarMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida) = 
+        estoqueRepositoryInternal.deletarMesaVendida(mesaVendida)
 
     // ==================== MESA REFORMADA ====================
     
-    suspend fun inserirMesaReformada(mesaReformada: MesaReformada): Long {
-        logDbInsertStart("MESAREFORMADA", "Mesa=${mesaReformada.numeroMesa}, Data=${mesaReformada.dataReforma}")
-        return try {
-            val id = mesaReformadaDao.inserir(mesaReformada)
-            logDbInsertSuccess("MESAREFORMADA", "Mesa=${mesaReformada.numeroMesa}, ID=$id")
-            
-            // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
-            val empresaId = obterEmpresaId()
-            Log.d("AppRepository", "📷 Processando foto de reforma para MesaReformada $id: foto='${mesaReformada.fotoReforma}'")
-            
-            val fotoUrl = uploadFotoSeNecessario(
-                caminhoLocal = mesaReformada.fotoReforma,
-                tipo = "foto_reforma",
-                empresaId = empresaId,
-                entityId = id
-            )
-            
-            Log.d("AppRepository", "📷 Resultado upload MesaReformada: fotoUrl='$fotoUrl' (original: '${mesaReformada.fotoReforma}')")
-            
-            // ✅ CRÍTICO: Aguardar um pouco para garantir que o upload foi concluído
-            if (fotoUrl != null) {
-                kotlinx.coroutines.delay(500)
-                Log.d("AppRepository", "📷 Aguardou 500ms após upload bem-sucedido")
-            }
-            
-            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
-            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
-            // - A URL do Firebase é usada apenas no payload de sincronização
-            // - Isso garante que a visualização local funcione corretamente
-            
-            val mesaReformadaAtualizada = mesaReformada.copy(id = id)
-            
-            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
-            if (fotoUrl == null && !mesaReformada.fotoReforma.isNullOrBlank()) {
-                Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
-                val mesaSemFoto = mesaReformadaAtualizada.copy(fotoReforma = null)
-                mesaReformadaDao.atualizar(mesaSemFoto)
-                // Usar mesaSemFoto para o payload
-            }
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização com URL da foto (se upload foi bem-sucedido)
-            try {
-                // ✅ Usar URL do Firebase no payload (se upload foi bem-sucedido), senão string vazia
-                val fotoUrlParaPayload = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
-                    fotoUrl // URL do Firebase para sincronização
-                } else {
-                    "" // String vazia - foto não será sincronizada
-                }
-                
-                val payload = """
-                    {
-                        "id": $id,
-                        "mesaId": ${mesaReformadaAtualizada.mesaId},
-                        "numeroMesa": "${mesaReformadaAtualizada.numeroMesa}",
-                        "tipoMesa": "${mesaReformadaAtualizada.tipoMesa}",
-                        "tamanhoMesa": "${mesaReformadaAtualizada.tamanhoMesa}",
-                        "pintura": ${mesaReformadaAtualizada.pintura},
-                        "tabela": ${mesaReformadaAtualizada.tabela},
-                        "panos": ${mesaReformadaAtualizada.panos},
-                        "numeroPanos": "${mesaReformadaAtualizada.numeroPanos ?: ""}",
-                        "outros": ${mesaReformadaAtualizada.outros},
-                        "observacoes": "${mesaReformadaAtualizada.observacoes ?: ""}",
-                        "fotoReforma": "$fotoUrlParaPayload",
-                        "dataReforma": "${mesaReformadaAtualizada.dataReforma.time}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync(
-                    entityType = "mesareformada",
-                    entityId = id,
-                    operation = "CREATE",
-                    payload = payload
-                )
-                logarOperacaoSync("MESAREFORMADA", id, "CREATE", "Adicionado à fila de sync")
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar mesa reformada à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("MESAREFORMADA", "Mesa=${mesaReformada.numeroMesa}", e)
-            throw e
-        }
-    }
+    // ✅ FASE 12.14 Etapa 5: Delegado para EstoqueRepositoryInternal
+    suspend fun inserirMesaReformada(mesaReformada: MesaReformada): Long = 
+        estoqueRepositoryInternal.inserirMesaReformada(
+            mesaReformada = mesaReformada,
+            obterEmpresaId = ::obterEmpresaId,
+            uploadFotoSeNecessario = ::uploadFotoSeNecessario,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
 
     // ==================== STOCK ITEM ====================
     
@@ -1643,931 +1424,282 @@ class AppRepository constructor(
 
     // ==================== EQUIPMENT ====================
     
-    fun obterTodosEquipments() = equipmentDao.listarTodos()
-    suspend fun obterEquipmentPorId(id: Long) = equipmentDao.buscarPorId(id)
-    suspend fun inserirEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment): Long {
-        logDbInsertStart("EQUIPMENT", "Nome=${equipment.name}, Quantidade=${equipment.quantity}")
-        return try {
-            val id = equipmentDao.inserir(equipment)
-            logDbInsertSuccess("EQUIPMENT", "Nome=${equipment.name}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "name": "${equipment.name}",
-                        "description": "${equipment.description ?: ""}",
-                        "quantity": ${equipment.quantity},
-                        "location": "${equipment.location ?: ""}",
-                        "createdAt": ${equipment.createdAt.time},
-                        "updatedAt": ${equipment.updatedAt.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Equipment", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("Equipment", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar criação de equipment à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("EQUIPMENT", "Nome=${equipment.name}", e)
-            throw e
-        }
-    }
+    // ✅ FASE 12.14 Etapa 5: Delegado para EstoqueRepositoryInternal
+    fun obterTodosEquipments() = estoqueRepositoryInternal.obterTodosEquipments()
+    suspend fun obterEquipmentPorId(id: Long) = estoqueRepositoryInternal.obterEquipmentPorId(id)
     
-    suspend fun atualizarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) {
-        logDbUpdateStart("EQUIPMENT", "ID=${equipment.id}, Nome=${equipment.name}")
-        try {
-            equipmentDao.atualizar(equipment)
-            logDbUpdateSuccess("EQUIPMENT", "ID=${equipment.id}")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${equipment.id},
-                        "name": "${equipment.name}",
-                        "description": "${equipment.description ?: ""}",
-                        "quantity": ${equipment.quantity},
-                        "location": "${equipment.location ?: ""}",
-                        "createdAt": ${equipment.createdAt.time},
-                        "updatedAt": ${equipment.updatedAt.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Equipment", equipment.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("Equipment", equipment.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de equipment à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("EQUIPMENT", "ID=${equipment.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) = equipmentDao.deletar(equipment)
+    suspend fun inserirEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment): Long = 
+        estoqueRepositoryInternal.inserirEquipment(
+            equipment = equipment,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) = 
+        estoqueRepositoryInternal.atualizarEquipment(
+            equipment = equipment,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun deletarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) = 
+        estoqueRepositoryInternal.deletarEquipment(equipment)
 
     // ==================== VEICULO ====================
     
-    fun obterTodosVeiculos() = veiculoDao.listar()
-    suspend fun obterVeiculoPorId(id: Long) = veiculoDao.listar().first().find { it.id == id }
-    suspend fun inserirVeiculo(veiculo: com.example.gestaobilhares.data.entities.Veiculo): Long {
-        logDbInsertStart("VEICULO", "Nome=${veiculo.nome}, Placa=${veiculo.placa}")
-        return try {
-            val id = veiculoDao.inserir(veiculo)
-            logDbInsertSuccess("VEICULO", "Nome=${veiculo.nome}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "nome": "${veiculo.nome}",
-                        "placa": "${veiculo.placa}",
-                        "marca": "${veiculo.marca}",
-                        "modelo": "${veiculo.modelo}",
-                        "anoModelo": ${veiculo.anoModelo},
-                        "kmAtual": ${veiculo.kmAtual},
-                        "dataCompra": ${veiculo.dataCompra?.time ?: "null"},
-                        "observacoes": "${veiculo.observacoes ?: ""}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Veiculo", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("Veiculo", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar criação de veículo à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("VEICULO", "Nome=${veiculo.nome}", e)
-            throw e
-        }
-    }
+    // ✅ FASE 12.14 Etapa 4: Delegado para VeiculoRepositoryInternal
+    fun obterTodosVeiculos() = veiculoRepositoryInternal.obterTodosVeiculos()
+    suspend fun obterVeiculoPorId(id: Long) = veiculoRepositoryInternal.obterVeiculoPorId(id)
     
-    suspend fun atualizarVeiculo(veiculo: com.example.gestaobilhares.data.entities.Veiculo) {
-        logDbUpdateStart("VEICULO", "ID=${veiculo.id}, Nome=${veiculo.nome}")
-        try {
-            veiculoDao.atualizar(veiculo)
-            logDbUpdateSuccess("VEICULO", "ID=${veiculo.id}")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${veiculo.id},
-                        "nome": "${veiculo.nome}",
-                        "placa": "${veiculo.placa}",
-                        "marca": "${veiculo.marca}",
-                        "modelo": "${veiculo.modelo}",
-                        "anoModelo": ${veiculo.anoModelo},
-                        "kmAtual": ${veiculo.kmAtual},
-                        "dataCompra": ${veiculo.dataCompra?.time ?: "null"},
-                        "observacoes": "${veiculo.observacoes ?: ""}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("Veiculo", veiculo.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("Veiculo", veiculo.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de veículo à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("VEICULO", "ID=${veiculo.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarVeiculo(veiculo: com.example.gestaobilhares.data.entities.Veiculo) = veiculoDao.deletar(veiculo)
+    suspend fun inserirVeiculo(veiculo: com.example.gestaobilhares.data.entities.Veiculo): Long = 
+        veiculoRepositoryInternal.inserirVeiculo(
+            veiculo = veiculo,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarVeiculo(veiculo: com.example.gestaobilhares.data.entities.Veiculo) = 
+        veiculoRepositoryInternal.atualizarVeiculo(
+            veiculo = veiculo,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun deletarVeiculo(veiculo: com.example.gestaobilhares.data.entities.Veiculo) = 
+        veiculoRepositoryInternal.deletarVeiculo(veiculo)
 
     // ==================== HISTORICO MANUTENCAO MESA ====================
     
-    fun obterTodosHistoricoManutencaoMesa() = historicoManutencaoMesaDao.listarTodos()
-    suspend fun obterHistoricoManutencaoMesaPorId(id: Long) = historicoManutencaoMesaDao.buscarPorId(id)
-    suspend fun inserirHistoricoManutencaoMesaSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa): Long {
-        logDbInsertStart("HISTORICO_MANUTENCAO_MESA", "Mesa=${historico.numeroMesa}, Tipo=${historico.tipoManutencao}")
-        return try {
-            val id = historicoManutencaoMesaDao.inserir(historico)
-            logDbInsertSuccess("HISTORICO_MANUTENCAO_MESA", "Mesa=${historico.numeroMesa}, ID=$id")
-            
-            // ✅ NOVO: Upload de fotos para Firebase Storage antes de sincronizar
-            val empresaId = obterEmpresaId()
-            Log.d("AppRepository", "📷 Processando fotos de manutenção para histórico $id")
-            
-            val fotoAntesUrl = uploadFotoSeNecessario(
-                caminhoLocal = historico.fotoAntes,
-                tipo = "foto_antes",
-                empresaId = empresaId,
-                entityId = id
-            )
-            val fotoDepoisUrl = uploadFotoSeNecessario(
-                caminhoLocal = historico.fotoDepois,
-                tipo = "foto_depois",
-                empresaId = empresaId,
-                entityId = id
-            )
-            
-            Log.d("AppRepository", "📷 Resultado uploads: fotoAntes='$fotoAntesUrl', fotoDepois='$fotoDepoisUrl'")
-            
-            // ✅ CRÍTICO: Aguardar um pouco para garantir que os uploads foram concluídos
-            if (fotoAntesUrl != null || fotoDepoisUrl != null) {
-                kotlinx.coroutines.delay(500)
-                Log.d("AppRepository", "📷 Aguardou 500ms após upload(s) bem-sucedido(s)")
-            }
-            
-            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
-            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
-            // - A URL do Firebase é usada apenas no payload de sincronização
-            // - Isso garante que a visualização local funcione corretamente
-            
-            var historicoAtualizado = historico.copy(id = id)
-            
-            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
-            if (fotoAntesUrl == null && !historico.fotoAntes.isNullOrBlank()) {
-                historicoAtualizado = historicoAtualizado.copy(fotoAntes = null)
-                historicoManutencaoMesaDao.atualizar(historicoAtualizado)
-            }
-            if (fotoDepoisUrl == null && !historico.fotoDepois.isNullOrBlank()) {
-                historicoAtualizado = historicoAtualizado.copy(fotoDepois = null)
-                historicoManutencaoMesaDao.atualizar(historicoAtualizado)
-            }
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização com URLs do Firebase (se upload foi bem-sucedido)
-            try {
-                // ✅ Usar URLs do Firebase no payload (se upload foi bem-sucedido), senão string vazia
-                val fotoAntesUrlParaPayload = if (fotoAntesUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoAntesUrl)) {
-                    fotoAntesUrl
-                } else {
-                    ""
-                }
-                val fotoDepoisUrlParaPayload = if (fotoDepoisUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoDepoisUrl)) {
-                    fotoDepoisUrl
-                } else {
-                    ""
-                }
-                
-                val payload = """
-                    {
-                        "id": $id,
-                        "mesaId": ${historicoAtualizado.mesaId},
-                        "numeroMesa": "${historicoAtualizado.numeroMesa}",
-                        "tipoManutencao": "${historicoAtualizado.tipoManutencao}",
-                        "descricao": "${historicoAtualizado.descricao ?: ""}",
-                        "dataManutencao": ${historicoAtualizado.dataManutencao.time},
-                        "responsavel": "${historicoAtualizado.responsavel ?: ""}",
-                        "observacoes": "${historicoAtualizado.observacoes ?: ""}",
-                        "custo": ${historicoAtualizado.custo ?: "null"},
-                        "fotoAntes": "$fotoAntesUrlParaPayload",
-                        "fotoDepois": "$fotoDepoisUrlParaPayload",
-                        "dataCriacao": ${historicoAtualizado.dataCriacao.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("HistoricoManutencaoMesa", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("HistoricoManutencaoMesa", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar criação de histórico manutenção mesa à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("HISTORICO_MANUTENCAO_MESA", "Mesa=${historico.numeroMesa}", e)
-            throw e
-        }
-    }
+    // ✅ FASE 12.14 Etapa 5: Delegado para EstoqueRepositoryInternal
+    fun obterTodosHistoricoManutencaoMesa() = estoqueRepositoryInternal.obterTodosHistoricoManutencaoMesa()
+    suspend fun obterHistoricoManutencaoMesaPorId(id: Long) = estoqueRepositoryInternal.obterHistoricoManutencaoMesaPorId(id)
     
-    suspend fun atualizarHistoricoManutencaoMesaSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa) {
-        logDbUpdateStart("HISTORICO_MANUTENCAO_MESA", "ID=${historico.id}, Mesa=${historico.numeroMesa}")
-        try {
-            historicoManutencaoMesaDao.atualizar(historico)
-            logDbUpdateSuccess("HISTORICO_MANUTENCAO_MESA", "ID=${historico.id}")
-            
-            // ✅ NOVO: Upload de fotos para Firebase Storage antes de sincronizar
-            val empresaId = obterEmpresaId()
-            Log.d("AppRepository", "📷 Processando fotos de manutenção para histórico ${historico.id} (UPDATE)")
-            
-            val fotoAntesUrl = uploadFotoSeNecessario(
-                caminhoLocal = historico.fotoAntes,
-                tipo = "foto_antes",
-                empresaId = empresaId,
-                entityId = historico.id
-            )
-            val fotoDepoisUrl = uploadFotoSeNecessario(
-                caminhoLocal = historico.fotoDepois,
-                tipo = "foto_depois",
-                empresaId = empresaId,
-                entityId = historico.id
-            )
-            
-            Log.d("AppRepository", "📷 Resultado uploads: fotoAntes='$fotoAntesUrl', fotoDepois='$fotoDepoisUrl'")
-            
-            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
-            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
-            // - A URL do Firebase é usada apenas no payload de sincronização
-            // - Isso garante que a visualização local funcione corretamente
-            
-            var historicoAtualizado = historico
-            
-            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
-            if (fotoAntesUrl == null && !historico.fotoAntes.isNullOrBlank()) {
-                historicoAtualizado = historicoAtualizado.copy(fotoAntes = null)
-                historicoManutencaoMesaDao.atualizar(historicoAtualizado)
-            }
-            if (fotoDepoisUrl == null && !historico.fotoDepois.isNullOrBlank()) {
-                historicoAtualizado = historicoAtualizado.copy(fotoDepois = null)
-                historicoManutencaoMesaDao.atualizar(historicoAtualizado)
-            }
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização com URLs do Firebase (se upload foi bem-sucedido)
-            try {
-                // ✅ Usar URLs do Firebase no payload (se upload foi bem-sucedido), senão string vazia
-                val fotoAntesUrlParaPayload = if (fotoAntesUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoAntesUrl)) {
-                    fotoAntesUrl
-                } else {
-                    ""
-                }
-                val fotoDepoisUrlParaPayload = if (fotoDepoisUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoDepoisUrl)) {
-                    fotoDepoisUrl
-                } else {
-                    ""
-                }
-                
-                val payload = """
-                    {
-                        "id": ${historicoAtualizado.id},
-                        "mesaId": ${historicoAtualizado.mesaId},
-                        "numeroMesa": "${historicoAtualizado.numeroMesa}",
-                        "tipoManutencao": "${historicoAtualizado.tipoManutencao}",
-                        "descricao": "${historicoAtualizado.descricao ?: ""}",
-                        "dataManutencao": ${historicoAtualizado.dataManutencao.time},
-                        "responsavel": "${historicoAtualizado.responsavel ?: ""}",
-                        "observacoes": "${historicoAtualizado.observacoes ?: ""}",
-                        "custo": ${historicoAtualizado.custo ?: "null"},
-                        "fotoAntes": "$fotoAntesUrlParaPayload",
-                        "fotoDepois": "$fotoDepoisUrlParaPayload",
-                        "dataCriacao": ${historicoAtualizado.dataCriacao.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("HistoricoManutencaoMesa", historicoAtualizado.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("HistoricoManutencaoMesa", historicoAtualizado.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de histórico manutenção mesa à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("HISTORICO_MANUTENCAO_MESA", "ID=${historico.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarHistoricoManutencaoMesa(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa) = historicoManutencaoMesaDao.deletar(historico)
+    suspend fun inserirHistoricoManutencaoMesaSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa): Long = 
+        estoqueRepositoryInternal.inserirHistoricoManutencaoMesa(
+            historico = historico,
+            obterEmpresaId = ::obterEmpresaId,
+            uploadFotoSeNecessario = ::uploadFotoSeNecessario,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarHistoricoManutencaoMesaSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa) = 
+        estoqueRepositoryInternal.atualizarHistoricoManutencaoMesa(
+            historico = historico,
+            obterEmpresaId = ::obterEmpresaId,
+            uploadFotoSeNecessario = ::uploadFotoSeNecessario,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun deletarHistoricoManutencaoMesa(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa) = 
+        estoqueRepositoryInternal.deletarHistoricoManutencaoMesa(historico)
 
     // ==================== HISTORICO MANUTENCAO VEICULO ====================
     
-    fun obterTodosHistoricoManutencaoVeiculo() = historicoManutencaoVeiculoDao.listarTodos()
-    suspend fun obterHistoricoManutencaoVeiculoPorId(id: Long) = historicoManutencaoVeiculoDao.listarTodos().first().find { it.id == id }
-    suspend fun inserirHistoricoManutencaoVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo): Long {
-        logDbInsertStart("HISTORICO_MANUTENCAO_VEICULO", "Veiculo=${historico.veiculoId}, Tipo=${historico.tipoManutencao}")
-        return try {
-            val id = historicoManutencaoVeiculoDao.inserir(historico)
-            logDbInsertSuccess("HISTORICO_MANUTENCAO_VEICULO", "Veiculo=${historico.veiculoId}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "veiculoId": ${historico.veiculoId},
-                        "tipoManutencao": "${historico.tipoManutencao}",
-                        "descricao": "${historico.descricao}",
-                        "dataManutencao": ${historico.dataManutencao.time},
-                        "valor": ${historico.valor},
-                        "kmVeiculo": ${historico.kmVeiculo},
-                        "responsavel": "${historico.responsavel ?: ""}",
-                        "observacoes": "${historico.observacoes ?: ""}",
-                        "dataCriacao": ${historico.dataCriacao.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("HistoricoManutencaoVeiculo", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("HistoricoManutencaoVeiculo", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar criação de histórico manutenção veículo à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("HISTORICO_MANUTENCAO_VEICULO", "Veiculo=${historico.veiculoId}", e)
-            throw e
-        }
-    }
+    // ✅ FASE 12.14 Etapa 4: Delegado para VeiculoRepositoryInternal
+    fun obterTodosHistoricoManutencaoVeiculo() = veiculoRepositoryInternal.obterTodosHistoricoManutencaoVeiculo()
+    suspend fun obterHistoricoManutencaoVeiculoPorId(id: Long) = veiculoRepositoryInternal.obterHistoricoManutencaoVeiculoPorId(id)
     
-    suspend fun atualizarHistoricoManutencaoVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo) {
-        logDbUpdateStart("HISTORICO_MANUTENCAO_VEICULO", "ID=${historico.id}, Veiculo=${historico.veiculoId}")
-        try {
-            historicoManutencaoVeiculoDao.atualizar(historico)
-            logDbUpdateSuccess("HISTORICO_MANUTENCAO_VEICULO", "ID=${historico.id}")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${historico.id},
-                        "veiculoId": ${historico.veiculoId},
-                        "tipoManutencao": "${historico.tipoManutencao}",
-                        "descricao": "${historico.descricao}",
-                        "dataManutencao": ${historico.dataManutencao.time},
-                        "valor": ${historico.valor},
-                        "kmVeiculo": ${historico.kmVeiculo},
-                        "responsavel": "${historico.responsavel ?: ""}",
-                        "observacoes": "${historico.observacoes ?: ""}",
-                        "dataCriacao": ${historico.dataCriacao.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("HistoricoManutencaoVeiculo", historico.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("HistoricoManutencaoVeiculo", historico.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de histórico manutenção veículo à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("HISTORICO_MANUTENCAO_VEICULO", "ID=${historico.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarHistoricoManutencaoVeiculo(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo) = historicoManutencaoVeiculoDao.deletar(historico)
+    suspend fun inserirHistoricoManutencaoVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo): Long = 
+        veiculoRepositoryInternal.inserirHistoricoManutencaoVeiculo(
+            historico = historico,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarHistoricoManutencaoVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo) = 
+        veiculoRepositoryInternal.atualizarHistoricoManutencaoVeiculo(
+            historico = historico,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun deletarHistoricoManutencaoVeiculo(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo) = 
+        veiculoRepositoryInternal.deletarHistoricoManutencaoVeiculo(historico)
 
     // ==================== HISTORICO COMBUSTIVEL VEICULO ====================
     
-    fun obterTodosHistoricoCombustivelVeiculo() = historicoCombustivelVeiculoDao.listarTodos()
-    suspend fun obterHistoricoCombustivelVeiculoPorId(id: Long) = historicoCombustivelVeiculoDao.listarTodos().first().find { it.id == id }
-    suspend fun inserirHistoricoCombustivelVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo): Long {
-        logDbInsertStart("HISTORICO_COMBUSTIVEL_VEICULO", "Veiculo=${historico.veiculoId}, Litros=${historico.litros}")
-        return try {
-            val id = historicoCombustivelVeiculoDao.inserir(historico)
-            logDbInsertSuccess("HISTORICO_COMBUSTIVEL_VEICULO", "Veiculo=${historico.veiculoId}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "veiculoId": ${historico.veiculoId},
-                        "dataAbastecimento": ${historico.dataAbastecimento.time},
-                        "litros": ${historico.litros},
-                        "valor": ${historico.valor},
-                        "kmVeiculo": ${historico.kmVeiculo},
-                        "kmRodado": ${historico.kmRodado},
-                        "posto": "${historico.posto ?: ""}",
-                        "observacoes": "${historico.observacoes ?: ""}",
-                        "dataCriacao": ${historico.dataCriacao.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("HistoricoCombustivelVeiculo", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("HistoricoCombustivelVeiculo", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar criação de histórico combustível veículo à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("HISTORICO_COMBUSTIVEL_VEICULO", "Veiculo=${historico.veiculoId}", e)
-            throw e
-        }
-    }
+    // ✅ FASE 12.14 Etapa 4: Delegado para VeiculoRepositoryInternal
+    fun obterTodosHistoricoCombustivelVeiculo() = veiculoRepositoryInternal.obterTodosHistoricoCombustivelVeiculo()
+    suspend fun obterHistoricoCombustivelVeiculoPorId(id: Long) = veiculoRepositoryInternal.obterHistoricoCombustivelVeiculoPorId(id)
     
-    suspend fun atualizarHistoricoCombustivelVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo) {
-        logDbUpdateStart("HISTORICO_COMBUSTIVEL_VEICULO", "ID=${historico.id}, Veiculo=${historico.veiculoId}")
-        try {
-            historicoCombustivelVeiculoDao.atualizar(historico)
-            logDbUpdateSuccess("HISTORICO_COMBUSTIVEL_VEICULO", "ID=${historico.id}")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${historico.id},
-                        "veiculoId": ${historico.veiculoId},
-                        "dataAbastecimento": ${historico.dataAbastecimento.time},
-                        "litros": ${historico.litros},
-                        "valor": ${historico.valor},
-                        "kmVeiculo": ${historico.kmVeiculo},
-                        "kmRodado": ${historico.kmRodado},
-                        "posto": "${historico.posto ?: ""}",
-                        "observacoes": "${historico.observacoes ?: ""}",
-                        "dataCriacao": ${historico.dataCriacao.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("HistoricoCombustivelVeiculo", historico.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("HistoricoCombustivelVeiculo", historico.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de histórico combustível veículo à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("HISTORICO_COMBUSTIVEL_VEICULO", "ID=${historico.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarHistoricoCombustivelVeiculo(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo) = historicoCombustivelVeiculoDao.deletar(historico)
+    suspend fun inserirHistoricoCombustivelVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo): Long = 
+        veiculoRepositoryInternal.inserirHistoricoCombustivelVeiculo(
+            historico = historico,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarHistoricoCombustivelVeiculoSync(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo) = 
+        veiculoRepositoryInternal.atualizarHistoricoCombustivelVeiculo(
+            historico = historico,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun deletarHistoricoCombustivelVeiculo(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo) = 
+        veiculoRepositoryInternal.deletarHistoricoCombustivelVeiculo(historico)
 
     // ==================== CATEGORIA DESPESA ====================
     
-    fun obterTodasCategoriasDespesa() = categoriaDespesaDao.buscarTodas()
-    suspend fun obterCategoriaDespesaPorId(id: Long) = categoriaDespesaDao.buscarPorId(id)
-    suspend fun inserirCategoriaDespesaSync(categoria: com.example.gestaobilhares.data.entities.CategoriaDespesa): Long {
-        logDbInsertStart("CATEGORIA_DESPESA", "Nome=${categoria.nome}")
-        return try {
-            val id = categoriaDespesaDao.inserir(categoria)
-            logDbInsertSuccess("CATEGORIA_DESPESA", "Nome=${categoria.nome}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "nome": "${categoria.nome}",
-                        "descricao": "${categoria.descricao}",
-                        "ativa": ${categoria.ativa},
-                        "dataCriacao": ${categoria.dataCriacao.time},
-                        "dataAtualizacao": ${categoria.dataAtualizacao.time},
-                        "criadoPor": "${categoria.criadoPor}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("CategoriaDespesa", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("CategoriaDespesa", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar criação de categoria despesa à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("CATEGORIA_DESPESA", "Nome=${categoria.nome}", e)
-            throw e
-        }
-    }
+    // ✅ FASE 12.14 Etapa 7: Delegado para CategoriaTipoDespesaRepositoryInternal
+    fun obterTodasCategoriasDespesa() = categoriaTipoDespesaRepositoryInternal.obterTodasCategoriasDespesa()
+    suspend fun obterCategoriaDespesaPorId(id: Long) = categoriaTipoDespesaRepositoryInternal.obterCategoriaDespesaPorId(id)
     
-    suspend fun atualizarCategoriaDespesaSync(categoria: com.example.gestaobilhares.data.entities.CategoriaDespesa) {
-        logDbUpdateStart("CATEGORIA_DESPESA", "ID=${categoria.id}, Nome=${categoria.nome}")
-        try {
-            categoriaDespesaDao.atualizar(categoria)
-            logDbUpdateSuccess("CATEGORIA_DESPESA", "ID=${categoria.id}")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${categoria.id},
-                        "nome": "${categoria.nome}",
-                        "descricao": "${categoria.descricao}",
-                        "ativa": ${categoria.ativa},
-                        "dataCriacao": ${categoria.dataCriacao.time},
-                        "dataAtualizacao": ${categoria.dataAtualizacao.time},
-                        "criadoPor": "${categoria.criadoPor}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("CategoriaDespesa", categoria.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("CategoriaDespesa", categoria.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de categoria despesa à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("CATEGORIA_DESPESA", "ID=${categoria.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarCategoriaDespesa(categoria: com.example.gestaobilhares.data.entities.CategoriaDespesa) = categoriaDespesaDao.deletar(categoria)
+    suspend fun inserirCategoriaDespesaSync(categoria: com.example.gestaobilhares.data.entities.CategoriaDespesa): Long = 
+        categoriaTipoDespesaRepositoryInternal.inserirCategoriaDespesaSync(
+            categoria = categoria,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarCategoriaDespesaSync(categoria: com.example.gestaobilhares.data.entities.CategoriaDespesa) = 
+        categoriaTipoDespesaRepositoryInternal.atualizarCategoriaDespesaSync(
+            categoria = categoria,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun deletarCategoriaDespesa(categoria: com.example.gestaobilhares.data.entities.CategoriaDespesa) = 
+        categoriaTipoDespesaRepositoryInternal.deletarCategoriaDespesa(categoria)
 
     // ==================== TIPO DESPESA ====================
     
-    fun obterTodosTiposDespesa() = tipoDespesaDao.buscarTodos()
-    suspend fun obterTipoDespesaPorId(id: Long) = tipoDespesaDao.buscarPorId(id)
-    suspend fun inserirTipoDespesaSync(tipo: com.example.gestaobilhares.data.entities.TipoDespesa): Long {
-        logDbInsertStart("TIPO_DESPESA", "Nome=${tipo.nome}, Categoria=${tipo.categoriaId}")
-        return try {
-            val id = tipoDespesaDao.inserir(tipo)
-            logDbInsertSuccess("TIPO_DESPESA", "Nome=${tipo.nome}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "categoriaId": ${tipo.categoriaId},
-                        "nome": "${tipo.nome}",
-                        "descricao": "${tipo.descricao}",
-                        "ativo": ${tipo.ativo},
-                        "dataCriacao": ${tipo.dataCriacao.time},
-                        "dataAtualizacao": ${tipo.dataAtualizacao.time},
-                        "criadoPor": "${tipo.criadoPor}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("TipoDespesa", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("TipoDespesa", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar criação de tipo despesa à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("TIPO_DESPESA", "Nome=${tipo.nome}", e)
-            throw e
-        }
-    }
+    // ✅ FASE 12.14 Etapa 7: Delegado para CategoriaTipoDespesaRepositoryInternal
+    fun obterTodosTiposDespesa() = categoriaTipoDespesaRepositoryInternal.obterTodosTiposDespesa()
+    suspend fun obterTipoDespesaPorId(id: Long) = categoriaTipoDespesaRepositoryInternal.obterTipoDespesaPorId(id)
     
-    suspend fun atualizarTipoDespesaSync(tipo: com.example.gestaobilhares.data.entities.TipoDespesa) {
-        logDbUpdateStart("TIPO_DESPESA", "ID=${tipo.id}, Nome=${tipo.nome}")
-        try {
-            tipoDespesaDao.atualizar(tipo)
-            logDbUpdateSuccess("TIPO_DESPESA", "ID=${tipo.id}")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${tipo.id},
-                        "categoriaId": ${tipo.categoriaId},
-                        "nome": "${tipo.nome}",
-                        "descricao": "${tipo.descricao}",
-                        "ativo": ${tipo.ativo},
-                        "dataCriacao": ${tipo.dataCriacao.time},
-                        "dataAtualizacao": ${tipo.dataAtualizacao.time},
-                        "criadoPor": "${tipo.criadoPor}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("TipoDespesa", tipo.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("TipoDespesa", tipo.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de tipo despesa à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("TIPO_DESPESA", "ID=${tipo.id}", e)
-            throw e
-        }
-    }
-    suspend fun deletarTipoDespesa(tipo: com.example.gestaobilhares.data.entities.TipoDespesa) = tipoDespesaDao.deletar(tipo)
+    suspend fun inserirTipoDespesaSync(tipo: com.example.gestaobilhares.data.entities.TipoDespesa): Long = 
+        categoriaTipoDespesaRepositoryInternal.inserirTipoDespesaSync(
+            tipo = tipo,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarTipoDespesaSync(tipo: com.example.gestaobilhares.data.entities.TipoDespesa) = 
+        categoriaTipoDespesaRepositoryInternal.atualizarTipoDespesaSync(
+            tipo = tipo,
+            logDbUpdateStart = ::logDbUpdateStart,
+            logDbUpdateSuccess = ::logDbUpdateSuccess,
+            logDbUpdateError = ::logDbUpdateError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun deletarTipoDespesa(tipo: com.example.gestaobilhares.data.entities.TipoDespesa) = 
+        categoriaTipoDespesaRepositoryInternal.deletarTipoDespesa(tipo)
 
     // ==================== CONTRATO LOCAÇÃO ====================
     
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal (métodos Sync)
     suspend fun inserirContratoLocacaoSync(contrato: com.example.gestaobilhares.data.entities.ContratoLocacao): Long {
-        logDbInsertStart("CONTRATO_LOCACAO", "Numero=${contrato.numeroContrato}, Cliente=${contrato.clienteId}")
-        return try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val contratoEncrypted = encryptContratoLocacao(contrato)
-            val id = contratoLocacaoDao.inserirContrato(contratoEncrypted)
-            logDbInsertSuccess("CONTRATO_LOCACAO", "Numero=${contrato.numeroContrato}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "numeroContrato": "${contrato.numeroContrato}",
-                        "clienteId": ${contrato.clienteId},
-                        "locadorNome": "${contrato.locadorNome}",
-                        "locadorCnpj": "${contrato.locadorCnpj}",
-                        "locadorEndereco": "${contrato.locadorEndereco}",
-                        "locadorCep": "${contrato.locadorCep}",
-                        "locatarioNome": "${contrato.locatarioNome}",
-                        "locatarioCpf": "${contrato.locatarioCpf}",
-                        "locatarioEndereco": "${contrato.locatarioEndereco}",
-                        "locatarioTelefone": "${contrato.locatarioTelefone}",
-                        "locatarioEmail": "${contrato.locatarioEmail}",
-                        "valorMensal": ${contrato.valorMensal},
-                        "diaVencimento": ${contrato.diaVencimento},
-                        "tipoPagamento": "${contrato.tipoPagamento}",
-                        "percentualReceita": ${contrato.percentualReceita ?: "null"},
-                        "dataContrato": ${contrato.dataContrato.time},
-                        "dataInicio": ${contrato.dataInicio.time},
-                        "status": "${contrato.status}",
-                        "dataEncerramento": ${contrato.dataEncerramento?.time ?: "null"},
-                        "assinaturaLocador": "${contrato.assinaturaLocador ?: ""}",
-                        "assinaturaLocatario": "${contrato.assinaturaLocatario ?: ""}",
-                        "distratoAssinaturaLocador": "${contrato.distratoAssinaturaLocador ?: ""}",
-                        "distratoAssinaturaLocatario": "${contrato.distratoAssinaturaLocatario ?: ""}",
-                        "distratoDataAssinatura": ${contrato.distratoDataAssinatura?.time ?: "null"},
-                        "dataCriacao": ${contrato.dataCriacao.time},
-                        "dataAtualizacao": ${contrato.dataAtualizacao.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("ContratoLocacao", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("ContratoLocacao", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar criação de contrato locação à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("CONTRATO_LOCACAO", "Numero=${contrato.numeroContrato}", e)
-            throw e
+        val obterAssinaturaAtiva: suspend () -> AssinaturaRepresentanteLegal? = {
+            try { 
+                decryptAssinaturaRepresentanteLegal(assinaturaRepresentanteLegalDao.obterAssinaturaAtiva())
+            } catch (_: Exception) { null }
         }
+        return contratoRepositoryInternal.inserirContrato(
+            contrato = contrato,
+            encryptContrato = ::encryptContratoLocacao,
+            obterAssinaturaAtiva = obterAssinaturaAtiva,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
     }
     
     suspend fun atualizarContratoLocacaoSync(contrato: com.example.gestaobilhares.data.entities.ContratoLocacao) {
-        logDbUpdateStart("CONTRATO_LOCACAO", "ID=${contrato.id}, Numero=${contrato.numeroContrato}")
-        try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val contratoEncrypted = encryptContratoLocacao(contrato)
-            contratoLocacaoDao.atualizarContrato(contratoEncrypted)
-            logDbUpdateSuccess("CONTRATO_LOCACAO", "ID=${contrato.id}")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${contrato.id},
-                        "numeroContrato": "${contrato.numeroContrato}",
-                        "clienteId": ${contrato.clienteId},
-                        "locadorNome": "${contrato.locadorNome}",
-                        "locadorCnpj": "${contrato.locadorCnpj}",
-                        "locadorEndereco": "${contrato.locadorEndereco}",
-                        "locadorCep": "${contrato.locadorCep}",
-                        "locatarioNome": "${contrato.locatarioNome}",
-                        "locatarioCpf": "${contrato.locatarioCpf}",
-                        "locatarioEndereco": "${contrato.locatarioEndereco}",
-                        "locatarioTelefone": "${contrato.locatarioTelefone}",
-                        "locatarioEmail": "${contrato.locatarioEmail}",
-                        "valorMensal": ${contrato.valorMensal},
-                        "diaVencimento": ${contrato.diaVencimento},
-                        "tipoPagamento": "${contrato.tipoPagamento}",
-                        "percentualReceita": ${contrato.percentualReceita ?: "null"},
-                        "dataContrato": ${contrato.dataContrato.time},
-                        "dataInicio": ${contrato.dataInicio.time},
-                        "status": "${contrato.status}",
-                        "dataEncerramento": ${contrato.dataEncerramento?.time ?: "null"},
-                        "assinaturaLocador": "${contrato.assinaturaLocador ?: ""}",
-                        "assinaturaLocatario": "${contrato.assinaturaLocatario ?: ""}",
-                        "distratoAssinaturaLocador": "${contrato.distratoAssinaturaLocador ?: ""}",
-                        "distratoAssinaturaLocatario": "${contrato.distratoAssinaturaLocatario ?: ""}",
-                        "distratoDataAssinatura": ${contrato.distratoDataAssinatura?.time ?: "null"},
-                        "dataCriacao": ${contrato.dataCriacao.time},
-                        "dataAtualizacao": ${contrato.dataAtualizacao.time}
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("ContratoLocacao", contrato.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("ContratoLocacao", contrato.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de contrato locação à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("CONTRATO_LOCACAO", "ID=${contrato.id}", e)
-            throw e
+        val obterAssinaturaAtiva: suspend () -> AssinaturaRepresentanteLegal? = {
+            try { 
+                decryptAssinaturaRepresentanteLegal(assinaturaRepresentanteLegalDao.obterAssinaturaAtiva())
+            } catch (_: Exception) { null }
         }
+        contratoRepositoryInternal.atualizarContrato(
+            contrato = contrato,
+            encryptContrato = ::encryptContratoLocacao,
+            obterAssinaturaAtiva = obterAssinaturaAtiva,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
     }
 
     // ==================== ASSINATURA REPRESENTANTE LEGAL ====================
     
-    suspend fun inserirAssinaturaRepresentanteLegalSync(assinatura: com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal): Long {
-        logDbInsertStart("ASSINATURA_REPRESENTANTE_LEGAL", "Nome=${assinatura.nomeRepresentante}, CPF=${assinatura.cpfRepresentante}")
-        return try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val assinaturaEncrypted = encryptAssinaturaRepresentanteLegal(assinatura)
-            val id = assinaturaRepresentanteLegalDao.inserirAssinatura(assinaturaEncrypted)
-            logDbInsertSuccess("ASSINATURA_REPRESENTANTE_LEGAL", "Nome=${assinatura.nomeRepresentante}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "nomeRepresentante": "${assinatura.nomeRepresentante}",
-                        "cpfRepresentante": "${assinatura.cpfRepresentante}",
-                        "cargoRepresentante": "${assinatura.cargoRepresentante}",
-                        "assinaturaBase64": "${assinatura.assinaturaBase64}",
-                        "timestampCriacao": ${assinatura.timestampCriacao},
-                        "deviceId": "${assinatura.deviceId}",
-                        "hashIntegridade": "${assinatura.hashIntegridade}",
-                        "versaoSistema": "${assinatura.versaoSistema}",
-                        "dataCriacao": ${assinatura.dataCriacao.time},
-                        "criadoPor": "${assinatura.criadoPor}",
-                        "ativo": ${assinatura.ativo},
-                        "numeroProcuração": "${assinatura.numeroProcuração}",
-                        "dataProcuração": ${assinatura.dataProcuração.time},
-                        "poderesDelegados": "${assinatura.poderesDelegados}",
-                        "validadeProcuração": ${assinatura.validadeProcuração?.time ?: "null"},
-                        "totalUsos": ${assinatura.totalUsos},
-                        "ultimoUso": ${assinatura.ultimoUso?.time ?: "null"},
-                        "contratosAssinados": "${assinatura.contratosAssinados}",
-                        "validadaJuridicamente": ${assinatura.validadaJuridicamente},
-                        "dataValidacao": ${assinatura.dataValidacao?.time ?: "null"},
-                        "validadoPor": "${assinatura.validadoPor ?: ""}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("AssinaturaRepresentanteLegal", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("AssinaturaRepresentanteLegal", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar criação de assinatura representante legal à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("ASSINATURA_REPRESENTANTE_LEGAL", "Nome=${assinatura.nomeRepresentante}", e)
-            throw e
-        }
-    }
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal (métodos Sync)
+    suspend fun inserirAssinaturaRepresentanteLegalSync(assinatura: com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal): Long = 
+        contratoRepositoryInternal.inserirAssinaturaRepresentanteLegal(
+            assinatura = assinatura,
+            encryptAssinatura = ::encryptAssinaturaRepresentanteLegal,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
     
     suspend fun atualizarAssinaturaRepresentanteLegalSync(assinatura: com.example.gestaobilhares.data.entities.AssinaturaRepresentanteLegal) {
-        logDbUpdateStart("ASSINATURA_REPRESENTANTE_LEGAL", "ID=${assinatura.id}, Nome=${assinatura.nomeRepresentante}")
-        try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val assinaturaEncrypted = encryptAssinaturaRepresentanteLegal(assinatura)
-            assinaturaRepresentanteLegalDao.atualizarAssinatura(assinaturaEncrypted)
-            logDbUpdateSuccess("ASSINATURA_REPRESENTANTE_LEGAL", "ID=${assinatura.id}")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": ${assinatura.id},
-                        "nomeRepresentante": "${assinatura.nomeRepresentante}",
-                        "cpfRepresentante": "${assinatura.cpfRepresentante}",
-                        "cargoRepresentante": "${assinatura.cargoRepresentante}",
-                        "assinaturaBase64": "${assinatura.assinaturaBase64}",
-                        "timestampCriacao": ${assinatura.timestampCriacao},
-                        "deviceId": "${assinatura.deviceId}",
-                        "hashIntegridade": "${assinatura.hashIntegridade}",
-                        "versaoSistema": "${assinatura.versaoSistema}",
-                        "dataCriacao": ${assinatura.dataCriacao.time},
-                        "criadoPor": "${assinatura.criadoPor}",
-                        "ativo": ${assinatura.ativo},
-                        "numeroProcuração": "${assinatura.numeroProcuração}",
-                        "dataProcuração": ${assinatura.dataProcuração.time},
-                        "poderesDelegados": "${assinatura.poderesDelegados}",
-                        "validadeProcuração": ${assinatura.validadeProcuração?.time ?: "null"},
-                        "totalUsos": ${assinatura.totalUsos},
-                        "ultimoUso": ${assinatura.ultimoUso?.time ?: "null"},
-                        "contratosAssinados": "${assinatura.contratosAssinados}",
-                        "validadaJuridicamente": ${assinatura.validadaJuridicamente},
-                        "dataValidacao": ${assinatura.dataValidacao?.time ?: "null"},
-                        "validadoPor": "${assinatura.validadoPor ?: ""}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("AssinaturaRepresentanteLegal", assinatura.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("AssinaturaRepresentanteLegal", assinatura.id, "UPDATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar atualização de assinatura representante legal à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-        } catch (e: Exception) {
-            logDbUpdateError("ASSINATURA_REPRESENTANTE_LEGAL", "ID=${assinatura.id}", e)
-            throw e
-        }
+        contratoRepositoryInternal.atualizarAssinaturaRepresentanteLegal(
+            assinatura = assinatura,
+            encryptAssinatura = ::encryptAssinaturaRepresentanteLegal
+        )
+        // Sincronização será feita pelo método atualizarContrato quando necessário
     }
 
     // ==================== LOG AUDITORIA ASSINATURA ====================
     
-    suspend fun inserirLogAuditoriaAssinaturaSync(log: com.example.gestaobilhares.data.entities.LogAuditoriaAssinatura): Long {
-        logDbInsertStart("LOG_AUDITORIA_ASSINATURA", "Tipo=${log.tipoOperacao}, Usuario=${log.usuarioExecutou}")
-        return try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val logEncrypted = encryptLogAuditoriaAssinatura(log)
-            val id = logAuditoriaAssinaturaDao.inserirLog(logEncrypted)
-            logDbInsertSuccess("LOG_AUDITORIA_ASSINATURA", "Tipo=${log.tipoOperacao}, ID=$id")
-            
-            // ✅ FASE 3C: Adicionar à fila de sincronização
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "tipoOperacao": "${log.tipoOperacao}",
-                        "idAssinatura": ${log.idAssinatura},
-                        "idContrato": ${log.idContrato ?: "null"},
-                        "idAditivo": ${log.idAditivo ?: "null"},
-                        "usuarioExecutou": "${log.usuarioExecutou}",
-                        "cpfUsuario": "${log.cpfUsuario}",
-                        "cargoUsuario": "${log.cargoUsuario}",
-                        "timestamp": ${log.timestamp},
-                        "deviceId": "${log.deviceId}",
-                        "versaoApp": "${log.versaoApp}",
-                        "hashDocumento": "${log.hashDocumento}",
-                        "hashAssinatura": "${log.hashAssinatura}",
-                        "latitude": ${log.latitude ?: "null"},
-                        "longitude": ${log.longitude ?: "null"},
-                        "endereco": "${log.endereco ?: ""}",
-                        "ipAddress": "${log.ipAddress ?: ""}",
-                        "userAgent": "${log.userAgent ?: ""}",
-                        "tipoDocumento": "${log.tipoDocumento}",
-                        "numeroDocumento": "${log.numeroDocumento}",
-                        "valorContrato": ${log.valorContrato ?: "null"},
-                        "sucesso": ${log.sucesso},
-                        "mensagemErro": "${log.mensagemErro ?: ""}",
-                        "dataOperacao": ${log.dataOperacao.time},
-                        "observacoes": "${log.observacoes ?: ""}",
-                        "validadoJuridicamente": ${log.validadoJuridicamente},
-                        "dataValidacao": ${log.dataValidacao?.time ?: "null"},
-                        "validadoPor": "${log.validadoPor ?: ""}"
-                    }
-                """.trimIndent()
-                
-                adicionarOperacaoSync("LogAuditoriaAssinatura", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("LogAuditoriaAssinatura", id, "CREATE", "PENDING", null, payload)
-                
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar criação de log auditoria assinatura à fila de sync: ${syncError.message}")
-                // Não falha a operação principal por erro de sync
-            }
-            
-            id
-        } catch (e: Exception) {
-            logDbInsertError("LOG_AUDITORIA_ASSINATURA", "Tipo=${log.tipoOperacao}", e)
-            throw e
-        }
-    }
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal (métodos Sync)
+    suspend fun inserirLogAuditoriaAssinaturaSync(log: com.example.gestaobilhares.data.entities.LogAuditoriaAssinatura): Long = 
+        contratoRepositoryInternal.inserirLogAuditoriaAssinatura(
+            log = log,
+            encryptLog = ::encryptLogAuditoriaAssinatura,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
 
     // ✅ NOVO: obter mesas por ciclo (a partir dos acertos do ciclo)
     suspend fun contarMesasPorCiclo(cicloId: Long): Int {
@@ -2624,8 +1756,8 @@ class AppRepository constructor(
                         "numeroCiclo": ${cicloFinalizado.numeroCiclo},
                         "rotaId": ${cicloFinalizado.rotaId},
                         "ano": ${cicloFinalizado.ano},
-                        "dataInicio": ${cicloFinalizado.dataInicio?.time ?: 0},
-                        "dataFim": ${cicloFinalizado.dataFim?.time ?: 0},
+                        "dataInicio": ${cicloFinalizado.dataInicio.time},
+                        "dataFim": ${cicloFinalizado.dataFim.time},
                         "status": "${cicloFinalizado.status.name}",
                         "totalClientes": ${cicloFinalizado.totalClientes},
                         "clientesAcertados": ${cicloFinalizado.clientesAcertados},
@@ -2864,91 +1996,58 @@ class AppRepository constructor(
     
     // ==================== META COLABORADOR ====================
     
-    fun obterMetasPorColaborador(colaboradorId: Long) = colaboradorDao.obterMetasPorColaborador(colaboradorId)
-    suspend fun obterMetaAtual(colaboradorId: Long, tipoMeta: TipoMeta) = colaboradorDao.obterMetaAtual(colaboradorId, tipoMeta)
-    suspend fun inserirMeta(meta: MetaColaborador): Long {
-        logDbInsertStart("META", "ColaboradorID=${meta.colaboradorId}, Tipo=${meta.tipoMeta}, Valor=${meta.valorMeta}")
-        return try {
-            val id = colaboradorDao.inserirMeta(meta)
-            logDbInsertSuccess("META", "ColaboradorID=${meta.colaboradorId}, ID=$id")
-            // ✅ SINCRONIZAÇÃO: Enfileirar CREATE de MetaColaborador
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "colaboradorId": ${meta.colaboradorId},
-                        "rotaId": ${if (meta.rotaId != null) meta.rotaId else "null"},
-                        "cicloId": ${meta.cicloId},
-                        "tipoMeta": "${meta.tipoMeta}",
-                        "valorMeta": ${meta.valorMeta},
-                        "valorAtual": ${meta.valorAtual},
-                        "ativo": ${meta.ativo},
-                        "dataCriacao": ${meta.dataCriacao.time}
-                    }
-                """.trimIndent()
-                adicionarOperacaoSync("MetaColaborador", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("MetaColaborador", id, "CREATE", "PENDING", null, payload)
-            } catch (e: Exception) {
-                Log.w("AppRepository", "Erro ao enfileirar META: ${e.message}")
-            }
-            id
-        } catch (e: Exception) {
-            logDbInsertError("META", "ColaboradorID=${meta.colaboradorId}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarMeta(meta: MetaColaborador) {
-        colaboradorDao.atualizarMeta(meta)
-        // ✅ SINCRONIZAÇÃO: UPDATE
-        try {
-            val payload = """
-                {
-                    "id": ${meta.id},
-                    "colaboradorId": ${meta.colaboradorId},
-                    "rotaId": ${if (meta.rotaId != null) meta.rotaId else "null"},
-                    "cicloId": ${meta.cicloId},
-                    "tipoMeta": "${meta.tipoMeta}",
-                    "valorMeta": ${meta.valorMeta},
-                    "valorAtual": ${meta.valorAtual},
-                    "ativo": ${meta.ativo},
-                    "dataCriacao": ${meta.dataCriacao.time}
-                }
-            """.trimIndent()
-            adicionarOperacaoSync("MetaColaborador", meta.id, "UPDATE", payload, priority = 1)
-            logarOperacaoSync("MetaColaborador", meta.id, "UPDATE", "PENDING", null, payload)
-        } catch (e: Exception) {
-            Log.w("AppRepository", "Erro ao enfileirar UPDATE META: ${e.message}")
-        }
-    }
-    suspend fun deletarMeta(meta: MetaColaborador) {
-        colaboradorDao.deletarMeta(meta)
-        // ✅ SINCRONIZAÇÃO: DELETE
-        try {
-            val payload = """{ "id": ${meta.id} }"""
-            adicionarOperacaoSync("MetaColaborador", meta.id, "DELETE", payload, priority = 1)
-            logarOperacaoSync("MetaColaborador", meta.id, "DELETE", "PENDING", null, payload)
-        } catch (e: Exception) {
-            Log.w("AppRepository", "Erro ao enfileirar DELETE META: ${e.message}")
-        }
-    }
-    suspend fun atualizarValorAtualMeta(metaId: Long, valorAtual: Double) = colaboradorDao.atualizarValorAtualMeta(metaId, valorAtual)
+    // ✅ FASE 12.14 Etapa 6: Delegado para MetaRepositoryInternal
+    fun obterMetasPorColaborador(colaboradorId: Long) = metaRepositoryInternal.obterMetasPorColaborador(colaboradorId)
+    suspend fun obterMetaAtual(colaboradorId: Long, tipoMeta: TipoMeta) = metaRepositoryInternal.obterMetaAtual(colaboradorId, tipoMeta)
+    
+    suspend fun inserirMeta(meta: MetaColaborador): Long = 
+        metaRepositoryInternal.inserirMeta(
+            meta = meta,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarMeta(meta: MetaColaborador) = 
+        metaRepositoryInternal.atualizarMeta(
+            meta = meta,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun deletarMeta(meta: MetaColaborador) = 
+        metaRepositoryInternal.deletarMeta(
+            meta = meta,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
+    
+    suspend fun atualizarValorAtualMeta(metaId: Long, valorAtual: Double) = 
+        metaRepositoryInternal.atualizarValorAtualMeta(metaId, valorAtual)
     
     // ==================== METAS POR ROTA ====================
     
-    fun obterMetasPorRota(rotaId: Long) = colaboradorDao.obterMetasPorRota(0L, rotaId)
-    fun obterMetasPorColaboradorECiclo(colaboradorId: Long, cicloId: Long) = colaboradorDao.obterMetasPorCiclo(colaboradorId, cicloId)
-    fun obterMetasPorColaboradorERota(colaboradorId: Long, rotaId: Long) = colaboradorDao.obterMetasPorRota(colaboradorId, rotaId)
-    fun obterMetasPorColaboradorCicloERota(colaboradorId: Long, cicloId: Long, rotaId: Long) = colaboradorDao.obterMetasPorCicloERota(colaboradorId, cicloId, rotaId)
-    suspend fun desativarMetasColaborador(colaboradorId: Long) = colaboradorDao.desativarMetasColaborador(colaboradorId)
+    // ✅ FASE 12.14 Etapa 6: Delegado para MetaRepositoryInternal
+    fun obterMetasPorRota(rotaId: Long) = metaRepositoryInternal.obterMetasPorRota(rotaId)
+    fun obterMetasPorColaboradorECiclo(colaboradorId: Long, cicloId: Long) = 
+        metaRepositoryInternal.obterMetasPorColaboradorECiclo(colaboradorId, cicloId)
+    fun obterMetasPorColaboradorERota(colaboradorId: Long, rotaId: Long) = 
+        metaRepositoryInternal.obterMetasPorColaboradorERota(colaboradorId, rotaId)
+    fun obterMetasPorColaboradorCicloERota(colaboradorId: Long, cicloId: Long, rotaId: Long) = 
+        metaRepositoryInternal.obterMetasPorColaboradorCicloERota(colaboradorId, cicloId, rotaId)
+    suspend fun desativarMetasColaborador(colaboradorId: Long) = 
+        metaRepositoryInternal.desativarMetasColaborador(colaboradorId)
     
     // Métodos para metas
-    suspend fun buscarMetasPorColaboradorECiclo(colaboradorId: Long, cicloId: Long) = colaboradorDao.buscarMetasPorColaboradorECiclo(colaboradorId, cicloId)
-    suspend fun buscarMetasPorRotaECiclo(rotaId: Long, cicloId: Long) = colaboradorDao.buscarMetasPorRotaECiclo(rotaId, cicloId)
-
-    suspend fun existeMetaDuplicada(rotaId: Long, cicloId: Long, tipoMeta: TipoMeta): Boolean {
-        val count = colaboradorDao.contarMetasPorRotaCicloETipo(rotaId, cicloId, tipoMeta)
-        return count > 0
-    }
+    suspend fun buscarMetasPorColaboradorECiclo(colaboradorId: Long, cicloId: Long) = 
+        metaRepositoryInternal.buscarMetasPorColaboradorECiclo(colaboradorId, cicloId)
+    suspend fun buscarMetasPorRotaECiclo(rotaId: Long, cicloId: Long) = 
+        metaRepositoryInternal.buscarMetasPorRotaECiclo(rotaId, cicloId)
+    
+    suspend fun existeMetaDuplicada(rotaId: Long, cicloId: Long, tipoMeta: TipoMeta): Boolean = 
+        metaRepositoryInternal.existeMetaDuplicada(rotaId, cicloId, tipoMeta)
     
     // ==================== FUNÇÕES PARA SISTEMA DE METAS ====================
     
@@ -2994,8 +2093,9 @@ class AppRepository constructor(
     }
     
     
-    fun buscarMetasAtivasPorColaborador(colaboradorId: Long) = colaboradorDao.buscarMetasAtivasPorColaborador(colaboradorId)
-    suspend fun buscarMetasPorTipoECiclo(tipoMeta: TipoMeta, cicloId: Long) = colaboradorDao.buscarMetasPorTipoECiclo(tipoMeta, cicloId)
+    // ✅ FASE 12.14 Etapa 6: Delegado para MetaRepositoryInternal
+    fun buscarMetasAtivasPorColaborador(colaboradorId: Long) = metaRepositoryInternal.buscarMetasAtivasPorColaborador(colaboradorId)
+    suspend fun buscarMetasPorTipoECiclo(tipoMeta: TipoMeta, cicloId: Long) = metaRepositoryInternal.buscarMetasPorTipoECiclo(tipoMeta, cicloId)
     
     // ==================== COLABORADOR ROTA ====================
     
@@ -3162,7 +2262,11 @@ class AppRepository constructor(
         return try {
             // Buscar todos os ciclos do mesmo número no ano
             val ciclos = cicloAcertoDao.listarTodos().first()
-                .filter { it.numeroCiclo == numeroCiclo && it.dataInicio.year + 1900 == ano }
+                .filter { ciclo ->
+                    if (ciclo.numeroCiclo != numeroCiclo) return@filter false
+                    val calendar = java.util.Calendar.getInstance().apply { time = ciclo.dataInicio }
+                    calendar.get(java.util.Calendar.YEAR) == ano
+                }
             
             val despesas = mutableListOf<DespesaRelatorio>()
             
@@ -3274,584 +2378,207 @@ class AppRepository constructor(
     
     // ==================== CONTRATOS DE LOCAÇÃO ====================
     
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    fun buscarContratosPorCliente(clienteId: Long) = contratoLocacaoDao.buscarContratosPorCliente(clienteId).map { contratos ->
-        contratos.map { decryptContratoLocacao(it) ?: it }
-    }
-    suspend fun buscarContratoPorNumero(numeroContrato: String) = decryptContratoLocacao(contratoLocacaoDao.buscarContratoPorNumero(numeroContrato))
-    fun buscarContratosAtivos() = contratoLocacaoDao.buscarContratosAtivos().map { contratos ->
-        contratos.map { decryptContratoLocacao(it) ?: it }
-    }
-    fun buscarTodosContratos() = contratoLocacaoDao.buscarTodosContratos().map { contratos ->
-        contratos.map { decryptContratoLocacao(it) ?: it }
-    }
-    // ✅ FASE 2: Converter ano (String) para timestamps de início e fim do ano usando função centralizada
-    suspend fun contarContratosPorAno(ano: String): Int {
-        val (inicioAno, fimAno) = DateUtils.calcularRangeAno(ano)
-        return contratoLocacaoDao.contarContratosPorAno(inicioAno, fimAno)
-    }
-    suspend fun contarContratosGerados() = contratoLocacaoDao.contarContratosGerados()
-    suspend fun contarContratosAssinados() = contratoLocacaoDao.contarContratosAssinados()
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    suspend fun obterContratosAssinados() = contratoLocacaoDao.obterContratosAssinados().map { contrato ->
-        decryptContratoLocacao(contrato) ?: contrato
-    }
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
+    fun buscarContratosPorCliente(clienteId: Long) = contratoRepositoryInternal.buscarContratosPorCliente(clienteId, ::decryptContratoLocacao)
+    suspend fun buscarContratoPorNumero(numeroContrato: String) = contratoRepositoryInternal.buscarContratoPorNumero(numeroContrato, ::decryptContratoLocacao)
+    fun buscarContratosAtivos() = contratoRepositoryInternal.buscarContratosAtivos(::decryptContratoLocacao)
+    fun buscarTodosContratos() = contratoRepositoryInternal.buscarTodosContratos(::decryptContratoLocacao)
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
+    suspend fun contarContratosPorAno(ano: String): Int = contratoRepositoryInternal.contarContratosPorAno(ano)
+    suspend fun contarContratosGerados() = contratoRepositoryInternal.contarContratosGerados()
+    suspend fun contarContratosAssinados() = contratoRepositoryInternal.contarContratosAssinados()
+    suspend fun obterContratosAssinados() = contratoRepositoryInternal.obterContratosAssinados(::decryptContratoLocacao)
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
     suspend fun inserirContrato(contrato: ContratoLocacao): Long {
-        logDbInsertStart("CONTRATO", "Numero=${contrato.numeroContrato}, ClienteID=${contrato.clienteId}")
-        return try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val contratoEncrypted = encryptContratoLocacao(contrato)
-            val id = contratoLocacaoDao.inserirContrato(contratoEncrypted)
-            logDbInsertSuccess("CONTRATO", "Numero=${contrato.numeroContrato}, ID=$id")
-            // Enfileirar PUSH para Firestore
-            try {
-                // ✅ SELO 1: Garantir que a assinatura do representante (locador) vá junto no contrato
-                val assinaturaAtiva = try { assinaturaRepresentanteLegalDao.obterAssinaturaAtiva() } catch (_: Exception) { null }
-                val assinaturaLocadorFinal = contrato.assinaturaLocador ?: assinaturaAtiva?.assinaturaBase64
-                if (assinaturaLocadorFinal != null && contrato.assinaturaLocador == null) {
-                    // Atualiza o registro recém-criado com a assinatura do representante
-                    val atualizado = contrato.copy(id = id, assinaturaLocador = assinaturaLocadorFinal, dataAtualizacao = java.util.Date())
-                    try { contratoLocacaoDao.atualizarContrato(atualizado) } catch (_: Exception) {}
-                }
-                val payload = """
-                    {
-                        "id": $id,
-                        "numeroContrato": "${contrato.numeroContrato}",
-                        "clienteId": ${contrato.clienteId},
-                        "locadorNome": "${contrato.locadorNome}",
-                        "locadorCnpj": "${contrato.locadorCnpj}",
-                        "locadorEndereco": "${contrato.locadorEndereco}",
-                        "locadorCep": "${contrato.locadorCep}",
-                        "locatarioNome": "${contrato.locatarioNome}",
-                        "locatarioCpf": "${contrato.locatarioCpf}",
-                        "locatarioEndereco": "${contrato.locatarioEndereco}",
-                        "locatarioTelefone": "${contrato.locatarioTelefone}",
-                        "locatarioEmail": "${contrato.locatarioEmail}",
-                        "valorMensal": ${contrato.valorMensal},
-                        "diaVencimento": ${contrato.diaVencimento},
-                        "tipoPagamento": "${contrato.tipoPagamento}",
-                        "percentualReceita": ${contrato.percentualReceita ?: 0.0},
-                        "dataContrato": ${contrato.dataContrato.time},
-                        "dataInicio": ${contrato.dataInicio.time},
-                        "status": "${contrato.status}",
-                        "dataEncerramento": ${contrato.dataEncerramento?.time ?: "null"},
-                        "assinaturaLocador": ${if (assinaturaLocadorFinal != null) "\"$assinaturaLocadorFinal\"" else "null"},
-                        "assinaturaLocatario": ${if (contrato.assinaturaLocatario != null) "\"${contrato.assinaturaLocatario}\"" else "null"},
-                        "distratoAssinaturaLocador": ${if (contrato.distratoAssinaturaLocador != null) "\"${contrato.distratoAssinaturaLocador}\"" else "null"},
-                        "distratoAssinaturaLocatario": ${if (contrato.distratoAssinaturaLocatario != null) "\"${contrato.distratoAssinaturaLocatario}\"" else "null"},
-                        "distratoDataAssinatura": ${contrato.distratoDataAssinatura?.time ?: "null"},
-                        "dataCriacao": ${contrato.dataCriacao.time},
-                        "dataAtualizacao": ${contrato.dataAtualizacao.time},
-                        "locatarioAssinaturaHash": ${if (contrato.locatarioAssinaturaHash != null) "\"${contrato.locatarioAssinaturaHash}\"" else "null"},
-                        "locatarioAssinaturaDeviceId": ${if (contrato.locatarioAssinaturaDeviceId != null) "\"${contrato.locatarioAssinaturaDeviceId}\"" else "null"},
-                        "locatarioAssinaturaIpAddress": ${if (contrato.locatarioAssinaturaIpAddress != null) "\"${contrato.locatarioAssinaturaIpAddress}\"" else "null"},
-                        "locatarioAssinaturaTimestamp": ${contrato.locatarioAssinaturaTimestamp ?: "null"},
-                        "locatarioAssinaturaPressaoMedia": ${contrato.locatarioAssinaturaPressaoMedia ?: "null"},
-                        "locatarioAssinaturaVelocidadeMedia": ${contrato.locatarioAssinaturaVelocidadeMedia ?: "null"},
-                        "locatarioAssinaturaDuracao": ${contrato.locatarioAssinaturaDuracao ?: "null"},
-                        "locatarioAssinaturaTotalPontos": ${contrato.locatarioAssinaturaTotalPontos ?: "null"},
-                        "locadorAssinaturaHash": ${if (contrato.locadorAssinaturaHash != null) "\"${contrato.locadorAssinaturaHash}\"" else "null"},
-                        "locadorAssinaturaDeviceId": ${if (contrato.locadorAssinaturaDeviceId != null) "\"${contrato.locadorAssinaturaDeviceId}\"" else "null"},
-                        "locadorAssinaturaTimestamp": ${contrato.locadorAssinaturaTimestamp ?: "null"},
-                        "documentoHash": ${if (contrato.documentoHash != null) "\"${contrato.documentoHash}\"" else "null"},
-                        "presencaFisicaConfirmada": ${contrato.presencaFisicaConfirmada},
-                        "presencaFisicaConfirmadaPor": ${if (contrato.presencaFisicaConfirmadaPor != null) "\"${contrato.presencaFisicaConfirmadaPor}\"" else "null"},
-                        "presencaFisicaConfirmadaCpf": ${if (contrato.presencaFisicaConfirmadaCpf != null) "\"${contrato.presencaFisicaConfirmadaCpf}\"" else "null"},
-                        "presencaFisicaConfirmadaTimestamp": ${contrato.presencaFisicaConfirmadaTimestamp ?: "null"}
-                    }
-                """.trimIndent()
-                adicionarOperacaoSync("ContratoLocacao", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("ContratoLocacao", id, "CREATE", "PENDING", null, payload)
-            } catch (syncError: Exception) {
-                android.util.Log.w("AppRepository", "Erro ao enfileirar ContratoLocacao CREATE: ${syncError.message}")
-            }
-            id
-        } catch (e: Exception) {
-            logDbInsertError("CONTRATO", "Numero=${contrato.numeroContrato}", e)
-            throw e
+        val obterAssinaturaAtiva: suspend () -> AssinaturaRepresentanteLegal? = {
+            try { 
+                decryptAssinaturaRepresentanteLegal(assinaturaRepresentanteLegalDao.obterAssinaturaAtiva())
+            } catch (_: Exception) { null }
         }
+        return contratoRepositoryInternal.inserirContrato(
+            contrato = contrato,
+            encryptContrato = ::encryptContratoLocacao,
+            obterAssinaturaAtiva = obterAssinaturaAtiva,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
     }
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
     suspend fun atualizarContrato(contrato: ContratoLocacao) {
-        try {
-            Log.d("RepoUpdate", "Atualizando contrato id=${contrato.id} cliente=${contrato.clienteId} status=${contrato.status} encerramento=${contrato.dataEncerramento}")
-            // ✅ SELO 2: Preencher assinatura do representante no contrato, se houver ativa e ainda não setada
-            val assinaturaAtiva = try { assinaturaRepresentanteLegalDao.obterAssinaturaAtiva() } catch (_: Exception) { null }
-            val assinaturaLocadorFinal = contrato.assinaturaLocador ?: assinaturaAtiva?.assinaturaBase64
-            val contratoComAssinatura = if (assinaturaLocadorFinal != null && contrato.assinaturaLocador == null) {
-                contrato.copy(assinaturaLocador = assinaturaLocadorFinal, dataAtualizacao = java.util.Date())
-            } else contrato
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val contratoParaSalvar = encryptContratoLocacao(contratoComAssinatura)
-            contratoLocacaoDao.atualizarContrato(contratoParaSalvar)
-            // Leitura de verificação (apenas diagnóstico)
-            try {
-                val apos = contratoLocacaoDao.buscarContratosPorCliente(contratoParaSalvar.clienteId).first()
-                val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
-                Log.d("RepoContracts", "Após atualizar: cliente=${contratoParaSalvar.clienteId} contratos=${apos.size} -> ${'$'}resumo")
-            } catch (e: Exception) {
-                Log.e("RepoContracts", "Falha ao ler contratos após atualizar", e)
-            }
-            // Enfileirar PUSH UPDATE
-            try {
-                val payload = """
-                    {
-                        "id": ${contratoParaSalvar.id},
-                        "numeroContrato": "${contratoParaSalvar.numeroContrato}",
-                        "clienteId": ${contratoParaSalvar.clienteId},
-                        "locadorNome": "${contratoParaSalvar.locadorNome}",
-                        "locadorCnpj": "${contratoParaSalvar.locadorCnpj}",
-                        "locadorEndereco": "${contratoParaSalvar.locadorEndereco}",
-                        "locadorCep": "${contratoParaSalvar.locadorCep}",
-                        "locatarioNome": "${contratoParaSalvar.locatarioNome}",
-                        "locatarioCpf": "${contratoParaSalvar.locatarioCpf}",
-                        "locatarioEndereco": "${contratoParaSalvar.locatarioEndereco}",
-                        "locatarioTelefone": "${contratoParaSalvar.locatarioTelefone}",
-                        "locatarioEmail": "${contratoParaSalvar.locatarioEmail}",
-                        "valorMensal": ${contratoParaSalvar.valorMensal},
-                        "diaVencimento": ${contratoParaSalvar.diaVencimento},
-                        "tipoPagamento": "${contratoParaSalvar.tipoPagamento}",
-                        "percentualReceita": ${contratoParaSalvar.percentualReceita ?: 0.0},
-                        "dataContrato": ${contratoParaSalvar.dataContrato.time},
-                        "dataInicio": ${contratoParaSalvar.dataInicio.time},
-                        "status": "${contratoParaSalvar.status}",
-                        "dataEncerramento": ${contratoParaSalvar.dataEncerramento?.time ?: "null"},
-                        "assinaturaLocador": ${if (assinaturaLocadorFinal != null) "\"$assinaturaLocadorFinal\"" else "null"},
-                        "assinaturaLocatario": ${if (contratoParaSalvar.assinaturaLocatario != null) "\"${contratoParaSalvar.assinaturaLocatario}\"" else "null"},
-                        "distratoAssinaturaLocador": ${if (contratoParaSalvar.distratoAssinaturaLocador != null) "\"${contratoParaSalvar.distratoAssinaturaLocador}\"" else "null"},
-                        "distratoAssinaturaLocatario": ${if (contratoParaSalvar.distratoAssinaturaLocatario != null) "\"${contratoParaSalvar.distratoAssinaturaLocatario}\"" else "null"},
-                        "distratoDataAssinatura": ${contratoParaSalvar.distratoDataAssinatura?.time ?: "null"},
-                        "dataCriacao": ${contratoParaSalvar.dataCriacao.time},
-                        "dataAtualizacao": ${contratoParaSalvar.dataAtualizacao.time},
-                        "locatarioAssinaturaHash": ${if (contratoParaSalvar.locatarioAssinaturaHash != null) "\"${contratoParaSalvar.locatarioAssinaturaHash}\"" else "null"},
-                        "locatarioAssinaturaDeviceId": ${if (contratoParaSalvar.locatarioAssinaturaDeviceId != null) "\"${contratoParaSalvar.locatarioAssinaturaDeviceId}\"" else "null"},
-                        "locatarioAssinaturaIpAddress": ${if (contratoParaSalvar.locatarioAssinaturaIpAddress != null) "\"${contratoParaSalvar.locatarioAssinaturaIpAddress}\"" else "null"},
-                        "locatarioAssinaturaTimestamp": ${contratoParaSalvar.locatarioAssinaturaTimestamp ?: "null"},
-                        "locatarioAssinaturaPressaoMedia": ${contratoParaSalvar.locatarioAssinaturaPressaoMedia ?: "null"},
-                        "locatarioAssinaturaVelocidadeMedia": ${contratoParaSalvar.locatarioAssinaturaVelocidadeMedia ?: "null"},
-                        "locatarioAssinaturaDuracao": ${contratoParaSalvar.locatarioAssinaturaDuracao ?: "null"},
-                        "locatarioAssinaturaTotalPontos": ${contratoParaSalvar.locatarioAssinaturaTotalPontos ?: "null"},
-                        "locadorAssinaturaHash": ${if (contratoParaSalvar.locadorAssinaturaHash != null) "\"${contratoParaSalvar.locadorAssinaturaHash}\"" else "null"},
-                        "locadorAssinaturaDeviceId": ${if (contratoParaSalvar.locadorAssinaturaDeviceId != null) "\"${contratoParaSalvar.locadorAssinaturaDeviceId}\"" else "null"},
-                        "locadorAssinaturaTimestamp": ${contratoParaSalvar.locadorAssinaturaTimestamp ?: "null"},
-                        "documentoHash": ${if (contratoParaSalvar.documentoHash != null) "\"${contratoParaSalvar.documentoHash}\"" else "null"},
-                        "presencaFisicaConfirmada": ${contratoParaSalvar.presencaFisicaConfirmada},
-                        "presencaFisicaConfirmadaPor": ${if (contratoParaSalvar.presencaFisicaConfirmadaPor != null) "\"${contratoParaSalvar.presencaFisicaConfirmadaPor}\"" else "null"},
-                        "presencaFisicaConfirmadaCpf": ${if (contratoParaSalvar.presencaFisicaConfirmadaCpf != null) "\"${contratoParaSalvar.presencaFisicaConfirmadaCpf}\"" else "null"},
-                        "presencaFisicaConfirmadaTimestamp": ${contratoParaSalvar.presencaFisicaConfirmadaTimestamp ?: "null"}
-                    }
-                """.trimIndent()
-                adicionarOperacaoSync("ContratoLocacao", contratoParaSalvar.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("ContratoLocacao", contratoParaSalvar.id, "UPDATE", "PENDING", null, payload)
-            } catch (syncError: Exception) {
-                android.util.Log.w("AppRepository", "Erro ao enfileirar ContratoLocacao UPDATE: ${syncError.message}")
-            }
-        } catch (e: Exception) {
-            Log.e("RepoUpdate", "Erro ao atualizar contrato id=${contrato.id}", e)
-            throw e
+        val obterAssinaturaAtiva: suspend () -> AssinaturaRepresentanteLegal? = {
+            try { 
+                decryptAssinaturaRepresentanteLegal(assinaturaRepresentanteLegalDao.obterAssinaturaAtiva())
+            } catch (_: Exception) { null }
         }
+        contratoRepositoryInternal.atualizarContrato(
+            contrato = contrato,
+            encryptContrato = ::encryptContratoLocacao,
+            obterAssinaturaAtiva = obterAssinaturaAtiva,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
     }
 
-    // ✅ NOVO: Encerrar contrato (UPDATE direto)
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
     suspend fun encerrarContrato(contratoId: Long, clienteId: Long, status: String) {
-        val agora = java.util.Date()
-        Log.d("RepoUpdate", "Encerrar direto contrato id=${contratoId} status=${status} em ${agora}")
-        contratoLocacaoDao.encerrarContrato(contratoId, status, agora, agora)
-        val apos = contratoLocacaoDao.buscarContratosPorCliente(clienteId).first()
-        val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
-        Log.d("RepoContracts", "Após encerrar direto: cliente=${clienteId} contratos=${apos.size} -> ${'$'}resumo")
-        // ✅ SINCRONIZAÇÃO: Enfileirar UPDATE do contrato encerrado (inclui distrato/assinaturas)
-        try {
-            val contrato = contratoLocacaoDao.buscarContratoPorId(contratoId)
-            if (contrato != null) {
-                val payload = """
-                    {
-                        "id": ${contrato.id},
-                        "numeroContrato": "${contrato.numeroContrato}",
-                        "clienteId": ${contrato.clienteId},
-                        "locadorNome": "${contrato.locadorNome}",
-                        "locadorCnpj": "${contrato.locadorCnpj}",
-                        "locadorEndereco": "${contrato.locadorEndereco}",
-                        "locadorCep": "${contrato.locadorCep}",
-                        "locatarioNome": "${contrato.locatarioNome}",
-                        "locatarioCpf": "${contrato.locatarioCpf}",
-                        "locatarioEndereco": "${contrato.locatarioEndereco}",
-                        "locatarioTelefone": "${contrato.locatarioTelefone}",
-                        "locatarioEmail": "${contrato.locatarioEmail}",
-                        "valorMensal": ${contrato.valorMensal},
-                        "diaVencimento": ${contrato.diaVencimento},
-                        "tipoPagamento": "${contrato.tipoPagamento}",
-                        "percentualReceita": ${contrato.percentualReceita ?: 0.0},
-                        "dataContrato": ${contrato.dataContrato.time},
-                        "dataInicio": ${contrato.dataInicio.time},
-                        "status": "${contrato.status}",
-                        "dataEncerramento": ${contrato.dataEncerramento?.time ?: "null"},
-                        "assinaturaLocador": ${if (contrato.assinaturaLocador != null) "\"${contrato.assinaturaLocador}\"" else "null"},
-                        "assinaturaLocatario": ${if (contrato.assinaturaLocatario != null) "\"${contrato.assinaturaLocatario}\"" else "null"},
-                        "distratoAssinaturaLocador": ${if (contrato.distratoAssinaturaLocador != null) "\"${contrato.distratoAssinaturaLocador}\"" else "null"},
-                        "distratoAssinaturaLocatario": ${if (contrato.distratoAssinaturaLocatario != null) "\"${contrato.distratoAssinaturaLocatario}\"" else "null"},
-                        "distratoDataAssinatura": ${contrato.distratoDataAssinatura?.time ?: "null"},
-                        "dataCriacao": ${contrato.dataCriacao.time},
-                        "dataAtualizacao": ${contrato.dataAtualizacao.time}
-                    }
-                """.trimIndent()
-                adicionarOperacaoSync("ContratoLocacao", contrato.id, "UPDATE", payload, priority = 1)
-                logarOperacaoSync("ContratoLocacao", contrato.id, "UPDATE", "PENDING", null, payload)
-            }
-        } catch (e: Exception) {
-            Log.w("RepoUpdate", "Falha ao enfileirar UPDATE após encerrar contrato ${contratoId}: ${e.message}")
-        }
+        contratoRepositoryInternal.encerrarContrato(
+            contratoId = contratoId,
+            clienteId = clienteId,
+            status = status,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
     }
+    
     suspend fun excluirContrato(contrato: ContratoLocacao) {
-        contratoLocacaoDao.excluirContrato(contrato)
-        // Enfileirar PUSH DELETE
-        try {
-            adicionarOperacaoSync("ContratoLocacao", contrato.id, "DELETE", payload = "{}", priority = 1)
-            logarOperacaoSync("ContratoLocacao", contrato.id, "DELETE", "PENDING", null, null)
-        } catch (syncError: Exception) {
-            android.util.Log.w("AppRepository", "Erro ao enfileirar ContratoLocacao DELETE: ${syncError.message}")
-        }
+        contratoRepositoryInternal.excluirContrato(
+            contrato = contrato,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
     }
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    suspend fun buscarContratoPorId(contratoId: Long) = decryptContratoLocacao(contratoLocacaoDao.buscarContratoPorId(contratoId))
-    suspend fun buscarMesasPorContrato(contratoId: Long) = contratoLocacaoDao.buscarMesasPorContrato(contratoId)
-    suspend fun inserirContratoMesa(contratoMesa: ContratoMesa): Long {
-        logDbInsertStart("CONTRATO_MESA", "ContratoID=${contratoMesa.contratoId}, MesaID=${contratoMesa.mesaId}")
-        return try {
-            val id = contratoLocacaoDao.inserirContratoMesa(contratoMesa)
-            logDbInsertSuccess("CONTRATO_MESA", "ContratoID=${contratoMesa.contratoId}, ID=$id")
-            // ✅ SINCRONIZAÇÃO: CREATE ContratoMesa
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "contratoId": ${contratoMesa.contratoId},
-                        "mesaId": ${contratoMesa.mesaId},
-                        "tipoEquipamento": "${contratoMesa.tipoEquipamento}",
-                        "numeroSerie": "${contratoMesa.numeroSerie}",
-                        "valorFicha": ${contratoMesa.valorFicha ?: 0.0},
-                        "valorFixo": ${contratoMesa.valorFixo ?: 0.0}
-                    }
-                """.trimIndent()
-                adicionarOperacaoSync("ContratoMesa", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("ContratoMesa", id, "CREATE", "PENDING", null, payload)
-            } catch (e: Exception) {
-                Log.w("AppRepository", "Erro ao enfileirar ContratoMesa: ${e.message}")
-            }
-            id
-        } catch (e: Exception) {
-            logDbInsertError("CONTRATO_MESA", "ContratoID=${contratoMesa.contratoId}", e)
-            throw e
-        }
-    }
-    suspend fun inserirContratoMesas(contratoMesas: List<ContratoMesa>): List<Long> {
-        logDbInsertStart("CONTRATO_MESAS", "Quantidade=${contratoMesas.size}")
-        return try {
-            val ids = contratoLocacaoDao.inserirContratoMesas(contratoMesas)
-            logDbInsertSuccess("CONTRATO_MESAS", "IDs=${ids.joinToString()}")
-            // ✅ SINCRONIZAÇÃO: CREATE em lote
-            try {
-                contratoMesas.zip(ids).forEach { (cm, id) ->
-                    val payload = """
-                        {
-                            "id": $id,
-                            "contratoId": ${cm.contratoId},
-                            "mesaId": ${cm.mesaId},
-                            "tipoEquipamento": "${cm.tipoEquipamento}",
-                            "numeroSerie": "${cm.numeroSerie}",
-                            "valorFicha": ${cm.valorFicha ?: 0.0},
-                            "valorFixo": ${cm.valorFixo ?: 0.0}
-                        }
-                    """.trimIndent()
-                    adicionarOperacaoSync("ContratoMesa", id, "CREATE", payload, priority = 1)
-                    logarOperacaoSync("ContratoMesa", id, "CREATE", "PENDING", null, payload)
-                }
-            } catch (e: Exception) {
-                Log.w("AppRepository", "Erro ao enfileirar lote ContratoMesas: ${e.message}")
-            }
-            ids
-        } catch (e: Exception) {
-            logDbInsertError("CONTRATO_MESAS", "Quantidade=${contratoMesas.size}", e)
-            throw e
-        }
-    }
-    suspend fun excluirContratoMesa(contratoMesa: ContratoMesa) {
-        contratoLocacaoDao.excluirContratoMesa(contratoMesa)
-        // ✅ SINCRONIZAÇÃO: DELETE
-        try {
-            val payload = """{ "id": ${contratoMesa.id} }"""
-            adicionarOperacaoSync("ContratoMesa", contratoMesa.id, "DELETE", payload, priority = 1)
-            logarOperacaoSync("ContratoMesa", contratoMesa.id, "DELETE", "PENDING", null, payload)
-        } catch (e: Exception) {
-            Log.w("AppRepository", "Erro ao enfileirar DELETE ContratoMesa: ${e.message}")
-        }
-    }
-    suspend fun excluirMesasPorContrato(contratoId: Long) = contratoLocacaoDao.excluirMesasPorContrato(contratoId)
+    
+    suspend fun buscarContratoPorId(contratoId: Long) = contratoRepositoryInternal.buscarContratoPorId(contratoId, ::decryptContratoLocacao)
+    suspend fun buscarMesasPorContrato(contratoId: Long) = contratoRepositoryInternal.buscarMesasPorContrato(contratoId)
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
+    suspend fun inserirContratoMesa(contratoMesa: ContratoMesa): Long = contratoRepositoryInternal.inserirContratoMesa(
+        contratoMesa = contratoMesa,
+        logDbInsertStart = ::logDbInsertStart,
+        logDbInsertSuccess = ::logDbInsertSuccess,
+        logDbInsertError = ::logDbInsertError,
+        adicionarOperacaoSync = ::adicionarOperacaoSync,
+        logarOperacaoSync = ::logarOperacaoSync
+    )
+    
+    suspend fun inserirContratoMesas(contratoMesas: List<ContratoMesa>): List<Long> = contratoRepositoryInternal.inserirContratoMesas(
+        contratoMesas = contratoMesas,
+        logDbInsertStart = ::logDbInsertStart,
+        logDbInsertSuccess = ::logDbInsertSuccess,
+        logDbInsertError = ::logDbInsertError,
+        adicionarOperacaoSync = ::adicionarOperacaoSync,
+        logarOperacaoSync = ::logarOperacaoSync
+    )
+    
+    suspend fun excluirContratoMesa(contratoMesa: ContratoMesa) = contratoRepositoryInternal.excluirContratoMesa(
+        contratoMesa = contratoMesa,
+        adicionarOperacaoSync = ::adicionarOperacaoSync,
+        logarOperacaoSync = ::logarOperacaoSync
+    )
+    
+    suspend fun excluirMesasPorContrato(contratoId: Long) = contratoRepositoryInternal.excluirMesasPorContrato(contratoId)
     
     // ==================== ADITIVO CONTRATO ====================
     
-    fun buscarAditivosPorContrato(contratoId: Long) = aditivoContratoDao.buscarAditivosPorContrato(contratoId)
-    suspend fun buscarAditivoPorNumero(numeroAditivo: String) = aditivoContratoDao.buscarAditivoPorNumero(numeroAditivo)
-    suspend fun buscarAditivoPorId(aditivoId: Long) = aditivoContratoDao.buscarAditivoPorId(aditivoId)
-    fun buscarTodosAditivos() = aditivoContratoDao.buscarTodosAditivos()
-    // ✅ FASE 2: Converter ano (String) para timestamps de início e fim do ano usando função centralizada
-    suspend fun contarAditivosPorAno(ano: String): Int {
-        val (inicioAno, fimAno) = DateUtils.calcularRangeAno(ano)
-        return aditivoContratoDao.contarAditivosPorAno(inicioAno, fimAno)
-    }
-    suspend fun contarAditivosGerados() = aditivoContratoDao.contarAditivosGerados()
-    suspend fun contarAditivosAssinados() = aditivoContratoDao.contarAditivosAssinados()
-    suspend fun inserirAditivo(aditivo: AditivoContrato): Long {
-        logDbInsertStart("ADITIVO", "ContratoID=${aditivo.contratoId}, Numero=${aditivo.numeroAditivo}")
-        return try {
-            val id = aditivoContratoDao.inserirAditivo(aditivo)
-            logDbInsertSuccess("ADITIVO", "ContratoID=${aditivo.contratoId}, ID=$id")
-            // ✅ SINCRONIZAÇÃO: Enfileirar CREATE de AditivoContrato
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "numeroAditivo": "${aditivo.numeroAditivo}",
-                        "contratoId": ${aditivo.contratoId},
-                        "dataAditivo": ${aditivo.dataAditivo.time},
-                        "observacoes": "${aditivo.observacoes ?: ""}",
-                        "tipo": "${aditivo.tipo}",
-                        "assinaturaLocador": ${aditivo.assinaturaLocador?.let { "\"$it\"" } ?: "null"},
-                        "assinaturaLocatario": ${aditivo.assinaturaLocatario?.let { "\"$it\"" } ?: "null"},
-                        "dataCriacao": ${aditivo.dataCriacao.time},
-                        "dataAtualizacao": ${aditivo.dataAtualizacao.time}
-                    }
-                """.trimIndent()
-                adicionarOperacaoSync("AditivoContrato", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("AditivoContrato", id, "CREATE", "PENDING", null, payload)
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao adicionar AditivoContrato à fila de sync: ${syncError.message}")
-            }
-            id
-        } catch (e: Exception) {
-            logDbInsertError("ADITIVO", "ContratoID=${aditivo.contratoId}", e)
-            throw e
-        }
-    }
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
+    fun buscarAditivosPorContrato(contratoId: Long) = contratoRepositoryInternal.buscarAditivosPorContrato(contratoId)
+    suspend fun buscarAditivoPorNumero(numeroAditivo: String) = contratoRepositoryInternal.buscarAditivoPorNumero(numeroAditivo)
+    suspend fun buscarAditivoPorId(aditivoId: Long) = contratoRepositoryInternal.buscarAditivoPorId(aditivoId)
+    fun buscarTodosAditivos() = contratoRepositoryInternal.buscarTodosAditivos()
+    suspend fun contarAditivosPorAno(ano: String): Int = contratoRepositoryInternal.contarAditivosPorAno(ano)
+    suspend fun contarAditivosGerados() = contratoRepositoryInternal.contarAditivosGerados()
+    suspend fun contarAditivosAssinados() = contratoRepositoryInternal.contarAditivosAssinados()
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
+    suspend fun inserirAditivo(aditivo: AditivoContrato): Long = contratoRepositoryInternal.inserirAditivo(
+        aditivo = aditivo,
+        logDbInsertStart = ::logDbInsertStart,
+        logDbInsertSuccess = ::logDbInsertSuccess,
+        logDbInsertError = ::logDbInsertError,
+        adicionarOperacaoSync = ::adicionarOperacaoSync,
+        logarOperacaoSync = ::logarOperacaoSync
+    )
 
-    suspend fun inserirAditivoMesas(aditivoMesas: List<AditivoMesa>): List<Long> {
-        logDbInsertStart("ADITIVO_MESAS", "Quantidade=${aditivoMesas.size}")
-        return try {
-            val ids = aditivoContratoDao.inserirAditivoMesas(aditivoMesas)
-            logDbInsertSuccess("ADITIVO_MESAS", "IDs=${ids.joinToString()}")
-            // ✅ SINCRONIZAÇÃO: Enfileirar CREATE para cada AditivoMesa
-            try {
-                aditivoMesas.zip(ids).forEach { (mesa, id) ->
-                    val payload = """
-                        {
-                            "id": $id,
-                            "aditivoId": ${mesa.aditivoId},
-                            "mesaId": ${mesa.mesaId},
-                            "tipoEquipamento": "${mesa.tipoEquipamento}",
-                            "numeroSerie": "${mesa.numeroSerie}",
-                            "valorFicha": ${mesa.valorFicha ?: 0.0},
-                            "valorFixo": ${mesa.valorFixo ?: 0.0}
-                        }
-                    """.trimIndent()
-                    adicionarOperacaoSync("AditivoMesa", id, "CREATE", payload, priority = 1)
-                    logarOperacaoSync("AditivoMesa", id, "CREATE", "PENDING", null, payload)
-                }
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao enfileirar AditivoMesa: ${syncError.message}")
-            }
-            ids
-        } catch (e: Exception) {
-            logDbInsertError("ADITIVO_MESAS", "Quantidade=${aditivoMesas.size}", e)
-            throw e
-        }
-    }
+    suspend fun inserirAditivoMesas(aditivoMesas: List<AditivoMesa>): List<Long> = contratoRepositoryInternal.inserirAditivoMesas(
+        aditivoMesas = aditivoMesas,
+        logDbInsertStart = ::logDbInsertStart,
+        logDbInsertSuccess = ::logDbInsertSuccess,
+        logDbInsertError = ::logDbInsertError,
+        adicionarOperacaoSync = ::adicionarOperacaoSync,
+        logarOperacaoSync = ::logarOperacaoSync
+    )
 
-    suspend fun inserirAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal): Long {
-        logDbInsertStart(
-            "ASSINATURA",
-            "Representante=${assinatura.nomeRepresentante}, NumeroProcuração=${assinatura.numeroProcuração}"
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
+    suspend fun inserirAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal): Long = 
+        contratoRepositoryInternal.inserirAssinaturaRepresentanteLegal(
+            assinatura = assinatura,
+            encryptAssinatura = ::encryptAssinaturaRepresentanteLegal,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
         )
-        return try {
-            // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-            val assinaturaEncrypted = encryptAssinaturaRepresentanteLegal(assinatura)
-            val id = assinaturaRepresentanteLegalDao.inserirAssinatura(assinaturaEncrypted)
-            logDbInsertSuccess(
-                "ASSINATURA",
-                "Representante=${assinatura.nomeRepresentante}, ID=$id"
-            )
-            // ✅ SINCRONIZAÇÃO: Enfileirar CREATE da assinatura do representante legal (espelhamento 1:1)
-            try {
-                val payload = """
-                    {
-                        "id": $id,
-                        "nomeRepresentante": "${assinatura.nomeRepresentante}",
-                        "cpfRepresentante": "${assinatura.cpfRepresentante}",
-                        "cargoRepresentante": "${assinatura.cargoRepresentante}",
-                        "assinaturaBase64": "${assinatura.assinaturaBase64}",
-                        "timestampCriacao": ${assinatura.timestampCriacao},
-                        "deviceId": "${assinatura.deviceId}",
-                        "hashIntegridade": "${assinatura.hashIntegridade}",
-                        "versaoSistema": "${assinatura.versaoSistema}",
-                        "dataCriacao": ${assinatura.dataCriacao.time},
-                        "criadoPor": "${assinatura.criadoPor}",
-                        "ativo": ${assinatura.ativo},
-                        "numeroProcuração": "${assinatura.numeroProcuração}",
-                        "dataProcuração": ${assinatura.dataProcuração.time},
-                        "poderesDelegados": "${assinatura.poderesDelegados}",
-                        "validadeProcuração": ${assinatura.validadeProcuração?.time ?: "null"},
-                        "totalUsos": ${assinatura.totalUsos},
-                        "ultimoUso": ${assinatura.ultimoUso?.time ?: "null"},
-                        "contratosAssinados": "${assinatura.contratosAssinados}",
-                        "validadaJuridicamente": ${assinatura.validadaJuridicamente},
-                        "dataValidacao": ${assinatura.dataValidacao?.time ?: "null"},
-                        "validadoPor": ${assinatura.validadoPor?.let { "\"$it\"" } ?: "null"}
-                    }
-                """.trimIndent()
-                adicionarOperacaoSync("AssinaturaRepresentanteLegal", id, "CREATE", payload, priority = 1)
-                logarOperacaoSync("AssinaturaRepresentanteLegal", id, "CREATE", "PENDING", null, payload)
-            } catch (syncError: Exception) {
-                Log.w("AppRepository", "Erro ao enfileirar AssinaturaRepresentanteLegal: ${syncError.message}")
-            }
-            id
-        } catch (e: Exception) {
-            logDbInsertError(
-                "ASSINATURA",
-                "Representante=${assinatura.nomeRepresentante}",
-                e
-            )
-            throw e
-        }
-    }
 
-    suspend fun inserirLogAuditoriaAssinatura(log: LogAuditoriaAssinatura): Long = inserirLogAuditoriaAssinaturaSync(log)
+    suspend fun inserirLogAuditoriaAssinatura(log: LogAuditoriaAssinatura): Long = 
+        contratoRepositoryInternal.inserirLogAuditoriaAssinatura(
+            log = log,
+            encryptLog = ::encryptLogAuditoriaAssinatura,
+            logDbInsertStart = ::logDbInsertStart,
+            logDbInsertSuccess = ::logDbInsertSuccess,
+            logDbInsertError = ::logDbInsertError,
+            adicionarOperacaoSync = ::adicionarOperacaoSync,
+            logarOperacaoSync = ::logarOperacaoSync
+        )
 
-    suspend fun atualizarAditivo(aditivo: AditivoContrato) {
-        aditivoContratoDao.atualizarAditivo(aditivo)
-        // ✅ SINCRONIZAÇÃO: Enfileirar UPDATE
-        try {
-            val payload = """
-                {
-                    "id": ${aditivo.id},
-                    "numeroAditivo": "${aditivo.numeroAditivo}",
-                    "contratoId": ${aditivo.contratoId},
-                    "dataAditivo": ${aditivo.dataAditivo.time},
-                    "observacoes": "${aditivo.observacoes ?: ""}",
-                    "tipo": "${aditivo.tipo}",
-                    "assinaturaLocador": ${aditivo.assinaturaLocador?.let { "\"$it\"" } ?: "null"},
-                    "assinaturaLocatario": ${aditivo.assinaturaLocatario?.let { "\"$it\"" } ?: "null"},
-                    "dataCriacao": ${aditivo.dataCriacao.time},
-                    "dataAtualizacao": ${aditivo.dataAtualizacao.time}
-                }
-            """.trimIndent()
-            adicionarOperacaoSync("AditivoContrato", aditivo.id, "UPDATE", payload, priority = 1)
-            logarOperacaoSync("AditivoContrato", aditivo.id, "UPDATE", "PENDING", null, payload)
-        } catch (e: Exception) {
-            Log.w("AppRepository", "Erro ao enfileirar UPDATE AditivoContrato: ${e.message}")
-        }
-    }
-    suspend fun excluirAditivo(aditivo: AditivoContrato) {
-        aditivoContratoDao.excluirAditivo(aditivo)
-        // ✅ SINCRONIZAÇÃO: Enfileirar DELETE
-        try {
-            val payload = """{ "id": ${aditivo.id} }"""
-            adicionarOperacaoSync("AditivoContrato", aditivo.id, "DELETE", payload, priority = 1)
-            logarOperacaoSync("AditivoContrato", aditivo.id, "DELETE", "PENDING", null, payload)
-        } catch (e: Exception) {
-            Log.w("AppRepository", "Erro ao enfileirar DELETE AditivoContrato: ${e.message}")
-        }
-    }
-    suspend fun buscarMesasPorAditivo(aditivoId: Long) = aditivoContratoDao.buscarMesasPorAditivo(aditivoId)
-    suspend fun excluirAditivoMesa(aditivoMesa: AditivoMesa) {
-        aditivoContratoDao.excluirAditivoMesa(aditivoMesa)
-        // ✅ SINCRONIZAÇÃO: Enfileirar DELETE
-        try {
-            val payload = """{ "id": ${aditivoMesa.id} }"""
-            adicionarOperacaoSync("AditivoMesa", aditivoMesa.id, "DELETE", payload, priority = 1)
-            logarOperacaoSync("AditivoMesa", aditivoMesa.id, "DELETE", "PENDING", null, payload)
-        } catch (e: Exception) {
-            Log.w("AppRepository", "Erro ao enfileirar DELETE AditivoMesa: ${e.message}")
-        }
-    }
-    suspend fun excluirTodasMesasDoAditivo(aditivoId: Long) {
-        // Enfileirar DELETE para todas as mesas do aditivo
-        try {
-            val mesas = aditivoContratoDao.buscarMesasPorAditivo(aditivoId)
-            mesas.forEach { mesa ->
-                val payload = """{ "id": ${mesa.id} }"""
-                adicionarOperacaoSync("AditivoMesa", mesa.id, "DELETE", payload, priority = 1)
-                logarOperacaoSync("AditivoMesa", mesa.id, "DELETE", "PENDING", null, payload)
-            }
-        } catch (e: Exception) {
-            Log.w("AppRepository", "Erro ao preparar DELETE das AditivoMesas: ${e.message}")
-        }
-        aditivoContratoDao.excluirTodasMesasDoAditivo(aditivoId)
-    }
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
+    suspend fun atualizarAditivo(aditivo: AditivoContrato) = contratoRepositoryInternal.atualizarAditivo(
+        aditivo = aditivo,
+        adicionarOperacaoSync = ::adicionarOperacaoSync,
+        logarOperacaoSync = ::logarOperacaoSync
+    )
+    
+    suspend fun excluirAditivo(aditivo: AditivoContrato) = contratoRepositoryInternal.excluirAditivo(
+        aditivo = aditivo,
+        adicionarOperacaoSync = ::adicionarOperacaoSync,
+        logarOperacaoSync = ::logarOperacaoSync
+    )
+    
+    suspend fun buscarMesasPorAditivo(aditivoId: Long) = contratoRepositoryInternal.buscarMesasPorAditivo(aditivoId)
+    
+    suspend fun excluirAditivoMesa(aditivoMesa: AditivoMesa) = contratoRepositoryInternal.excluirAditivoMesa(
+        aditivoMesa = aditivoMesa,
+        adicionarOperacaoSync = ::adicionarOperacaoSync,
+        logarOperacaoSync = ::logarOperacaoSync
+    )
+    
+    suspend fun excluirTodasMesasDoAditivo(aditivoId: Long) = contratoRepositoryInternal.excluirTodasMesasDoAditivo(
+        aditivoId = aditivoId,
+        adicionarOperacaoSync = ::adicionarOperacaoSync,
+        logarOperacaoSync = ::logarOperacaoSync
+    )
     
     // ==================== ASSINATURA REPRESENTANTE LEGAL ====================
     
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    suspend fun obterAssinaturaRepresentanteLegalAtiva() = decryptAssinaturaRepresentanteLegal(assinaturaRepresentanteLegalDao.obterAssinaturaAtiva())
-    fun obterAssinaturaRepresentanteLegalAtivaFlow() = assinaturaRepresentanteLegalDao.obterAssinaturaAtivaFlow().map { assinatura ->
-        decryptAssinaturaRepresentanteLegal(assinatura) ?: assinatura
-    }
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    suspend fun obterTodasAssinaturasRepresentanteLegal() = assinaturaRepresentanteLegalDao.obterTodasAssinaturas().map { assinatura ->
-        decryptAssinaturaRepresentanteLegal(assinatura) ?: assinatura
-    }
-    fun obterTodasAssinaturasRepresentanteLegalFlow() = assinaturaRepresentanteLegalDao.obterTodasAssinaturasFlow().map { lista ->
-        lista.map { assinatura ->
-            decryptAssinaturaRepresentanteLegal(assinatura) ?: assinatura
-        }
-    }
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    suspend fun obterAssinaturaRepresentanteLegalPorId(id: Long) = decryptAssinaturaRepresentanteLegal(assinaturaRepresentanteLegalDao.obterAssinaturaPorId(id))
-    suspend fun atualizarAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal) {
-        // ✅ FASE 12.3: Criptografar dados sensíveis antes de salvar
-        val assinaturaEncrypted = encryptAssinaturaRepresentanteLegal(assinatura)
-        assinaturaRepresentanteLegalDao.atualizarAssinatura(assinaturaEncrypted)
-    }
-    suspend fun desativarAssinaturaRepresentanteLegal(id: Long) = assinaturaRepresentanteLegalDao.desativarAssinatura(id)
-    suspend fun incrementarUsoAssinatura(id: Long, dataUso: java.util.Date) = assinaturaRepresentanteLegalDao.incrementarUso(id, dataUso)
-    suspend fun contarAssinaturasRepresentanteLegalAtivas() = assinaturaRepresentanteLegalDao.contarAssinaturasAtivas()
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    suspend fun obterAssinaturasRepresentanteLegalValidadas() = assinaturaRepresentanteLegalDao.obterAssinaturasValidadas().map { assinatura ->
-        decryptAssinaturaRepresentanteLegal(assinatura) ?: assinatura
-    }
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
+    suspend fun obterAssinaturaRepresentanteLegalAtiva() = contratoRepositoryInternal.obterAssinaturaRepresentanteLegalAtiva(::decryptAssinaturaRepresentanteLegal)
+    fun obterAssinaturaRepresentanteLegalAtivaFlow() = contratoRepositoryInternal.obterAssinaturaRepresentanteLegalAtivaFlow(::decryptAssinaturaRepresentanteLegal)
+    suspend fun obterTodasAssinaturasRepresentanteLegal() = contratoRepositoryInternal.obterTodasAssinaturasRepresentanteLegal(::decryptAssinaturaRepresentanteLegal)
+    fun obterTodasAssinaturasRepresentanteLegalFlow() = contratoRepositoryInternal.obterTodasAssinaturasRepresentanteLegalFlow(::decryptAssinaturaRepresentanteLegal)
+    suspend fun obterAssinaturaRepresentanteLegalPorId(id: Long) = contratoRepositoryInternal.obterAssinaturaRepresentanteLegalPorId(id, ::decryptAssinaturaRepresentanteLegal)
+    suspend fun atualizarAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal) = 
+        contratoRepositoryInternal.atualizarAssinaturaRepresentanteLegal(assinatura, ::encryptAssinaturaRepresentanteLegal)
+    suspend fun desativarAssinaturaRepresentanteLegal(id: Long) = contratoRepositoryInternal.desativarAssinaturaRepresentanteLegal(id)
+    suspend fun incrementarUsoAssinatura(id: Long, dataUso: java.util.Date) = contratoRepositoryInternal.incrementarUsoAssinatura(id, dataUso)
+    suspend fun contarAssinaturasRepresentanteLegalAtivas() = contratoRepositoryInternal.contarAssinaturasRepresentanteLegalAtivas()
+    suspend fun obterAssinaturasRepresentanteLegalValidadas() = contratoRepositoryInternal.obterAssinaturasRepresentanteLegalValidadas(::decryptAssinaturaRepresentanteLegal)
     
     // ==================== LOGS DE AUDITORIA ====================
     
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    suspend fun obterTodosLogsAuditoria() = logAuditoriaAssinaturaDao.obterTodosLogs().map { log ->
-        decryptLogAuditoriaAssinatura(log) ?: log
-    }
-    fun obterTodosLogsAuditoriaFlow() = logAuditoriaAssinaturaDao.obterTodosLogsFlow().map { lista ->
-        lista.map { log ->
-            decryptLogAuditoriaAssinatura(log) ?: log
-        }
-    }
-    suspend fun obterLogsAuditoriaPorAssinatura(idAssinatura: Long) = logAuditoriaAssinaturaDao.obterLogsPorAssinatura(idAssinatura).map { log ->
-        decryptLogAuditoriaAssinatura(log) ?: log
-    }
-    suspend fun obterLogsAuditoriaPorContrato(idContrato: Long) = logAuditoriaAssinaturaDao.obterLogsPorContrato(idContrato).map { log ->
-        decryptLogAuditoriaAssinatura(log) ?: log
-    }
-    suspend fun obterLogsAuditoriaPorTipoOperacao(tipoOperacao: String) = logAuditoriaAssinaturaDao.obterLogsPorTipoOperacao(tipoOperacao).map { log ->
-        decryptLogAuditoriaAssinatura(log) ?: log
-    }
-    suspend fun obterLogsAuditoriaPorPeriodo(dataInicio: java.util.Date, dataFim: java.util.Date) = logAuditoriaAssinaturaDao.obterLogsPorPeriodo(dataInicio, dataFim).map { log ->
-        decryptLogAuditoriaAssinatura(log) ?: log
-    }
-    suspend fun obterLogsAuditoriaPorUsuario(usuario: String) = logAuditoriaAssinaturaDao.obterLogsPorUsuario(usuario).map { log ->
-        decryptLogAuditoriaAssinatura(log) ?: log
-    }
-    suspend fun obterLogsAuditoriaComErro() = logAuditoriaAssinaturaDao.obterLogsComErro().map { log ->
-        decryptLogAuditoriaAssinatura(log) ?: log
-    }
-    suspend fun contarLogsAuditoriaDesde(dataInicio: java.util.Date) = logAuditoriaAssinaturaDao.contarLogsDesde(dataInicio)
-    suspend fun contarUsosAssinaturaAuditoria(idAssinatura: Long) = logAuditoriaAssinaturaDao.contarUsosAssinatura(idAssinatura)
-    suspend fun obterLogsAuditoriaNaoValidados() = logAuditoriaAssinaturaDao.obterLogsNaoValidados().map { log ->
-        decryptLogAuditoriaAssinatura(log) ?: log
-    }
-    suspend fun validarLogAuditoria(id: Long, dataValidacao: java.util.Date, validadoPor: String) = logAuditoriaAssinaturaDao.validarLog(id, dataValidacao, validadoPor)
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
+    suspend fun obterTodosLogsAuditoria() = contratoRepositoryInternal.obterTodosLogsAuditoria(::decryptLogAuditoriaAssinatura)
+    fun obterTodosLogsAuditoriaFlow() = contratoRepositoryInternal.obterTodosLogsAuditoriaFlow(::decryptLogAuditoriaAssinatura)
+    suspend fun obterLogsAuditoriaPorAssinatura(idAssinatura: Long) = contratoRepositoryInternal.obterLogsAuditoriaPorAssinatura(idAssinatura, ::decryptLogAuditoriaAssinatura)
+    suspend fun obterLogsAuditoriaPorContrato(idContrato: Long) = contratoRepositoryInternal.obterLogsAuditoriaPorContrato(idContrato, ::decryptLogAuditoriaAssinatura)
+    suspend fun obterLogsAuditoriaPorTipoOperacao(tipoOperacao: String) = contratoRepositoryInternal.obterLogsAuditoriaPorTipoOperacao(tipoOperacao, ::decryptLogAuditoriaAssinatura)
+    suspend fun obterLogsAuditoriaPorPeriodo(dataInicio: java.util.Date, dataFim: java.util.Date) = contratoRepositoryInternal.obterLogsAuditoriaPorPeriodo(dataInicio, dataFim, ::decryptLogAuditoriaAssinatura)
+    suspend fun obterLogsAuditoriaPorUsuario(usuario: String) = contratoRepositoryInternal.obterLogsAuditoriaPorUsuario(usuario, ::decryptLogAuditoriaAssinatura)
+    suspend fun obterLogsAuditoriaComErro() = contratoRepositoryInternal.obterLogsAuditoriaComErro(::decryptLogAuditoriaAssinatura)
+    suspend fun contarLogsAuditoriaDesde(dataInicio: java.util.Date) = contratoRepositoryInternal.contarLogsAuditoriaDesde(dataInicio)
+    suspend fun contarUsosAssinaturaAuditoria(idAssinatura: Long) = contratoRepositoryInternal.contarUsosAssinaturaAuditoria(idAssinatura)
+    suspend fun obterLogsAuditoriaNaoValidados() = contratoRepositoryInternal.obterLogsAuditoriaNaoValidados(::decryptLogAuditoriaAssinatura)
+    suspend fun validarLogAuditoria(id: Long, dataValidacao: java.util.Date, validadoPor: String) = contratoRepositoryInternal.validarLogAuditoria(id, dataValidacao, validadoPor)
     
     // ==================== MÉTODOS PARA CÁLCULO DE METAS ====================
     
@@ -3910,7 +2637,7 @@ class AppRepository constructor(
         return try {
             val ciclo = cicloAcertoDao.buscarPorId(cicloId) ?: return 0
             val inicio = ciclo.dataInicio
-            val fim = ciclo.dataFim ?: java.util.Date()
+            val fim = ciclo.dataFim
             mesaDao.contarNovasMesasInstaladas(rotaId, inicio, fim)
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao contar novas mesas no ciclo: ${e.message}", e)
@@ -4177,6 +2904,7 @@ class AppRepository constructor(
             Log.d("AppRepository", "📷 ========================================")
             Log.d("AppRepository", "📷 PAYLOAD FINAL DO ACERTO PRONTO PARA SYNC:")
             Log.d("AppRepository", "📷   Acerto ID: $acertoId")
+            @Suppress("UNCHECKED_CAST")
             val acertoMesasPayload = payloadMap["acertoMesas"] as? List<Map<String, Any?>>
             acertoMesasPayload?.forEachIndexed { index, mesa ->
                 val fotoUrl = mesa["fotoRelogioFinal"] as? String
@@ -4325,8 +3053,8 @@ class AppRepository constructor(
             android.util.Log.e("AppRepository", "❌ Erro na correção de acertos PENDENTE: ${e.message}")
         }
     }
-    // ✅ FASE 12.3: Descriptografa dados sensíveis após ler
-    suspend fun buscarContratoAtivoPorCliente(clienteId: Long) = decryptContratoLocacao(contratoLocacaoDao.buscarContratoAtivoPorCliente(clienteId))
+    // ✅ FASE 12.14 Etapa 3: Delegado para ContratoRepositoryInternal
+    suspend fun buscarContratoAtivoPorCliente(clienteId: Long) = contratoRepositoryInternal.buscarContratoAtivoPorCliente(clienteId, ::decryptContratoLocacao)
     suspend fun inserirHistoricoManutencaoMesa(historico: HistoricoManutencaoMesa): Long = inserirHistoricoManutencaoMesaSync(historico)
 
     // ========================================
@@ -5372,9 +4100,6 @@ class AppRepository constructor(
                 "dataFoto" to (acertoMesaComId.dataFoto?.time ?: "null")
             )
             
-            // ✅ Usar acertoMesaComId (que mantém o caminho local) como retorno
-            val acertoMesaAtualizado = acertoMesaComId
-            
             // ✅ NOTA: O payload individual de ACERTOMESA é usado apenas para sincronização individual
             // O payload completo do ACERTO (com mesas aninhadas) é criado em adicionarAcertoComMesasParaSync()
             // e tem prioridade sobre o payload individual
@@ -5463,69 +4188,14 @@ class AppRepository constructor(
     /**
      * Atualizar MesaReformada com sincronização (método já existe, apenas adicionando sync)
      */
-    suspend fun atualizarMesaReformadaSync(mesaReformada: MesaReformada) {
-        mesaReformadaDao.atualizar(mesaReformada)
-        
-        try {
-            // ✅ NOVO: Upload de foto para Firebase Storage antes de sincronizar
-            val empresaId = obterEmpresaId()
-            Log.d("AppRepository", "📷 Processando foto de reforma para MesaReformada ${mesaReformada.id} (UPDATE): foto='${mesaReformada.fotoReforma}'")
-            
-            val fotoUrl = uploadFotoSeNecessario(
-                caminhoLocal = mesaReformada.fotoReforma,
-                tipo = "foto_reforma",
-                empresaId = empresaId,
-                entityId = mesaReformada.id
-            )
-            
-            Log.d("AppRepository", "📷 Resultado upload MesaReformada (UPDATE): fotoUrl='$fotoUrl' (original: '${mesaReformada.fotoReforma}')")
-            
-            // ✅ ESTRATÉGIA DEFINITIVA: MANTER CAMINHO LOCAL NO BANCO SEMPRE
-            // - O banco local SEMPRE mantém o caminho local (para uso da UI local)
-            // - A URL do Firebase é usada apenas no payload de sincronização
-            // - Isso garante que a visualização local funcione corretamente
-            
-            val mesaReformadaAtualizada = mesaReformada
-            
-            // ✅ Se upload falhou e havia foto, remover do banco para não sincronizar caminho inválido
-            if (fotoUrl == null && !mesaReformada.fotoReforma.isNullOrBlank()) {
-                Log.w("AppRepository", "⚠️ Upload falhou - removendo foto do banco para não sincronizar caminho inválido")
-                val mesaSemFoto = mesaReformadaAtualizada.copy(fotoReforma = null)
-                mesaReformadaDao.atualizar(mesaSemFoto)
-                // Usar mesaSemFoto para o payload
-            }
-            
-            // ✅ Usar URL do Firebase no payload (se upload foi bem-sucedido), senão string vazia
-            val fotoUrlParaPayload = if (fotoUrl != null && com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrl)) {
-                fotoUrl // URL do Firebase para sincronização
-            } else {
-                "" // String vazia - foto não será sincronizada
-            }
-            
-            // Criar payload com URL da foto
-            val payloadMap = mutableMapOf<String, Any?>(
-                "id" to mesaReformadaAtualizada.id,
-                "mesaId" to mesaReformadaAtualizada.mesaId,
-                "numeroMesa" to mesaReformadaAtualizada.numeroMesa,
-                "tipoMesa" to mesaReformadaAtualizada.tipoMesa,
-                "tamanhoMesa" to mesaReformadaAtualizada.tamanhoMesa,
-                "pintura" to mesaReformadaAtualizada.pintura,
-                "tabela" to mesaReformadaAtualizada.tabela,
-                "panos" to mesaReformadaAtualizada.panos,
-                "numeroPanos" to (mesaReformadaAtualizada.numeroPanos ?: ""),
-                "outros" to mesaReformadaAtualizada.outros,
-                "observacoes" to (mesaReformadaAtualizada.observacoes ?: ""),
-                "fotoReforma" to fotoUrlParaPayload,
-                "dataReforma" to mesaReformadaAtualizada.dataReforma.time
-            )
-            
-            adicionarOperacaoSync("MESAREFORMADA", mesaReformadaAtualizada.id, "UPDATE", Gson().toJson(payloadMap))
-            logarOperacaoSync("MESAREFORMADA", mesaReformadaAtualizada.id, "UPDATE", "Adicionado à fila de sync")
-            
-        } catch (e: Exception) {
-            Log.e("AppRepository", "Erro ao adicionar atualização de MesaReformada à fila de sync: ${e.message}")
-        }
-    }
+    // ✅ FASE 12.14 Etapa 5: Delegado para EstoqueRepositoryInternal
+    suspend fun atualizarMesaReformadaSync(mesaReformada: MesaReformada) = 
+        estoqueRepositoryInternal.atualizarMesaReformada(
+            mesaReformada = mesaReformada,
+            obterEmpresaId = ::obterEmpresaId,
+            uploadFotoSeNecessario = ::uploadFotoSeNecessario,
+            adicionarOperacaoSync = ::adicionarOperacaoSync
+        )
 
     /**
      * Limpa todas as otimizações de banco
