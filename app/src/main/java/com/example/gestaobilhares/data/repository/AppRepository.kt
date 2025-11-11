@@ -3430,8 +3430,7 @@ class AppRepository constructor(
             .build()
         
         val syncWork = PeriodicWorkRequestBuilder<SyncWorker>(
-            15, TimeUnit.MINUTES,
-            5, TimeUnit.MINUTES
+            15, TimeUnit.MINUTES
         )
             .setConstraints(constraints)
             .setBackoffCriteria(

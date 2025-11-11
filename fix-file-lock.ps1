@@ -11,18 +11,20 @@ Get-Process | Where-Object {$_.ProcessName -like "*java*" -or $_.ProcessName -li
 Write-Host "Aguardando 2 segundos..." -ForegroundColor Yellow
 Start-Sleep -Seconds 2
 
-Write-Host "Removendo diretorio build do modulo core..." -ForegroundColor Yellow
-$coreBuildDir = "core\build"
-if (Test-Path $coreBuildDir) {
-    try {
-        Remove-Item -Path $coreBuildDir -Recurse -Force -ErrorAction Stop
-        Write-Host "Diretorio build removido com sucesso" -ForegroundColor Green
-    } catch {
-        Write-Host "Erro ao remover diretorio: $_" -ForegroundColor Red
-        Write-Host "Tente fechar o Android Studio/IDE e executar novamente" -ForegroundColor Yellow
+Write-Host "Removendo diretorios build dos modulos..." -ForegroundColor Yellow
+$buildDirs = @("core\build", "data\build", "app\build", "sync\build", "ui\build")
+foreach ($buildDir in $buildDirs) {
+    if (Test-Path $buildDir) {
+        try {
+            Remove-Item -Path $buildDir -Recurse -Force -ErrorAction Stop
+            Write-Host "Removido: $buildDir" -ForegroundColor Green
+        } catch {
+            Write-Host "Erro ao remover $buildDir : $_" -ForegroundColor Red
+            Write-Host "Tente fechar o Android Studio/IDE e executar novamente" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "Nao existe: $buildDir" -ForegroundColor DarkGray
     }
-} else {
-    Write-Host "Diretorio build nao existe" -ForegroundColor Green
 }
 
 Write-Host "Limpando build..." -ForegroundColor Yellow
