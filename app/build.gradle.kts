@@ -160,10 +160,9 @@ ksp {
 dependencies {
     // ✅ FASE 12.8: Módulos do projeto
     implementation(project(":core")) // ✅ Migração concluída
-    implementation(project(":data")) // ✅ Migração iniciada
-    // TODO: Descomentar após migração do código para os módulos
-    // implementation(project(":ui"))
-    // implementation(project(":sync"))
+    implementation(project(":data")) // ✅ Migração concluída
+    implementation(project(":sync")) // ✅ Migração concluída
+    implementation(project(":ui"))   // ✅ Migração concluída
     
     // Android Core
     implementation("androidx.core:core-ktx:1.12.0")
