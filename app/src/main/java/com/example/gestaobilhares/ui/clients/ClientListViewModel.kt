@@ -11,7 +11,7 @@ import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.data.entities.Despesa
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.AppLogger
-import com.example.gestaobilhares.utils.PaginationManager
+import com.example.gestaobilhares.core.utils.PaginationManager
 import android.util.Log
 import com.example.gestaobilhares.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -449,7 +449,7 @@ class ClientListViewModel constructor(
                     rotaId = rota.id,
                     numeroCiclo = proximoCiclo,
                     ano = anoAtual,
-                    dataInicio = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
+                    dataInicio = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual(),
                     dataFim = Date(), // Será atualizado quando finalizar
                     status = StatusCicloAcerto.EM_ANDAMENTO,
                     criadoPor = criadoPor
@@ -713,12 +713,12 @@ class ClientListViewModel constructor(
      * ✅ FASE 9B: Aplica filtro à lista de clientes com filtros combinados
      */
     private suspend fun aplicarFiltrosCombinados() {
-        val query = com.example.gestaobilhares.utils.StringUtils.removerEspacosExtras(_buscaAtual.value)
+        val query = com.example.gestaobilhares.core.utils.StringUtils.removerEspacosExtras(_buscaAtual.value)
         val filtro = _filtroAtual.value
         val todos = _clientesTodos.value
         val isAdvancedSearch = _isAdvancedSearch.value
         val searchType = _searchType.value
-        val searchCriteria = com.example.gestaobilhares.utils.StringUtils.removerEspacosExtras(_searchCriteria.value)
+        val searchCriteria = com.example.gestaobilhares.core.utils.StringUtils.removerEspacosExtras(_searchCriteria.value)
         
         // ✅ CORREÇÃO: Filtro PENDENCIAS agora é inclusivo - mostra todos os clientes com pendências
         val filtradosPorStatus = when (filtro) {
@@ -801,7 +801,7 @@ class ClientListViewModel constructor(
         
         for (cliente in clientes) {
             // ✅ DEBUG: Log para verificar o débito de cada cliente
-            android.util.Log.d("ClientListViewModel", "Verificando cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
+            android.util.Log.d("ClientListViewModel", "Verificando cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
             
             // ✅ CRITÉRIO INCLUSIVO: Se o cliente tem pendências, incluir independente do status de acerto
             if (clienteTemPendencias(cliente.id)) {
@@ -845,7 +845,7 @@ class ClientListViewModel constructor(
             val cliente = appRepository.obterClientePorId(clienteId) ?: return false
             
             // ✅ DEBUG: Log para verificar o débito do cliente
-            android.util.Log.d("ClientListViewModel", "Verificando pendências - Cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
+            android.util.Log.d("ClientListViewModel", "Verificando pendências - Cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
             
             // ✅ CRITÉRIO 1: Débito > R$300
             val temDebitoAlto = cliente.debitoAtual > 300.0
@@ -868,7 +868,7 @@ class ClientListViewModel constructor(
             android.util.Log.d("ClientListViewModel", "Cliente ${cliente.nome}: temDebitoAlto=$temDebitoAlto, semAcertoRecente=$semAcertoRecente, temPendencia=$temPendencia")
             
             if (temPendencia) {
-                android.util.Log.d("ClientListViewModel", "✅ Cliente ${cliente.nome} tem pendência: Débito=${com.example.gestaobilhares.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}, SemAcertoRecente=$semAcertoRecente")
+                android.util.Log.d("ClientListViewModel", "✅ Cliente ${cliente.nome} tem pendência: Débito=${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}, SemAcertoRecente=$semAcertoRecente")
             }
             
             temPendencia
@@ -920,7 +920,7 @@ class ClientListViewModel constructor(
             }
             SearchType.CPF -> {
                 clientes.filter { cliente ->
-                    val cpfFormatado = com.example.gestaobilhares.utils.StringUtils.formatarCPF(cliente.cpfCnpj)
+                    val cpfFormatado = com.example.gestaobilhares.core.utils.StringUtils.formatarCPF(cliente.cpfCnpj)
                     cpfFormatado.contains(criteria, ignoreCase = true) || 
                     cliente.cpfCnpj?.contains(criteria, ignoreCase = true) == true
                 }

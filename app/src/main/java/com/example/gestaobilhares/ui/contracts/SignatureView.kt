@@ -8,7 +8,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.example.gestaobilhares.utils.SignaturePoint
-import com.example.gestaobilhares.utils.SignatureStatistics
+import com.example.gestaobilhares.core.utils.SignatureStatistics
 import java.io.ByteArrayOutputStream
 
 class SignatureView @JvmOverloads constructor(

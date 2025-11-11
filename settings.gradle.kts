@@ -22,3 +22,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "GestaoBilhares"
 include(":app")
+include(":core")
+include(":data")
+include(":ui")
+include(":sync")

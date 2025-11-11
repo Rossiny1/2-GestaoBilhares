@@ -5,7 +5,7 @@ import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.utils.PasswordHasher
+import com.example.gestaobilhares.core.utils.PasswordHasher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

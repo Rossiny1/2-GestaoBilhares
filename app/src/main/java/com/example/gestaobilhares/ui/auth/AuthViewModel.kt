@@ -13,7 +13,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import com.example.gestaobilhares.utils.NetworkUtils
 import com.example.gestaobilhares.utils.UserSessionManager
-import com.example.gestaobilhares.utils.PasswordHasher
+import com.example.gestaobilhares.core.utils.PasswordHasher
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider

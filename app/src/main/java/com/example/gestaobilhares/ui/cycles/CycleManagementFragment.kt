@@ -24,8 +24,8 @@ import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
-import com.example.gestaobilhares.utils.DateUtils
-import com.example.gestaobilhares.utils.StringUtils
+import com.example.gestaobilhares.core.utils.DateUtils
+import com.example.gestaobilhares.core.utils.StringUtils
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.view.Gravity

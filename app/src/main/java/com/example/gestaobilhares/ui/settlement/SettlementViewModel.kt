@@ -452,7 +452,7 @@ class SettlementViewModel constructor(
                         valorRecebido = valorRecebido,
                         debitoAtual = debitoAtual,
                         observacoes = observacaoParaSalvar,
-                        dataFinalizacao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
+                        dataFinalizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual(),
                         metodosPagamentoJson = metodosPagamentoJson,
                         representante = dadosAcerto.representante,
                         tipoAcerto = dadosAcerto.tipoAcerto,
@@ -472,8 +472,8 @@ class SettlementViewModel constructor(
                     val acerto = Acerto(
                         clienteId = clienteId,
                         colaboradorId = null,
-                        periodoInicio = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
-                        periodoFim = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
+                        periodoInicio = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual(),
+                        periodoFim = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual(),
                         totalMesas = dadosAcerto.mesas.size.toDouble(),
                         debitoAnterior = debitoAnterior,
                         valorTotal = valorTotal,
@@ -483,7 +483,7 @@ class SettlementViewModel constructor(
                         debitoAtual = debitoAtual,
                         status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
                         observacoes = observacaoParaSalvar,
-                        dataFinalizacao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
+                        dataFinalizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual(),
                         metodosPagamentoJson = metodosPagamentoJson,
                         representante = dadosAcerto.representante,
                         tipoAcerto = dadosAcerto.tipoAcerto,
@@ -612,7 +612,7 @@ class SettlementViewModel constructor(
                 viewModelScope.launch {
                     try {
                         // ✅ NOVO: Registrar troca de pano no histórico de manutenção (background)
-                        if (dadosAcerto.panoTrocado && com.example.gestaobilhares.utils.StringUtils.isNaoVazia(dadosAcerto.numeroPano)) {
+                        if (dadosAcerto.panoTrocado && com.example.gestaobilhares.core.utils.StringUtils.isNaoVazia(dadosAcerto.numeroPano)) {
                             registrarTrocaPanoNoHistorico(dadosAcerto.mesas.map { mesa ->
                                 com.example.gestaobilhares.ui.settlement.MesaDTO(
                                     id = mesa.id,
@@ -679,7 +679,7 @@ class SettlementViewModel constructor(
                     descricao = "Troca de pano durante acerto - Número: $numeroPano",
                     responsavel = "Sistema de Acerto",
                     observacoes = "Troca de pano registrada automaticamente durante o acerto",
-                    dataManutencao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
+                    dataManutencao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
                 )
                 
                 appRepository.inserirHistoricoManutencaoMesa(historico)
@@ -863,7 +863,7 @@ class SettlementViewModel constructor(
                 
                 // ✅ CORREÇÃO: Usar data atual de forma segura
                 val dataAtual = try {
-                    com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
+                    com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
                 } catch (e: Exception) {
                     Log.w("SettlementViewModel", "Erro ao obter data atual, usando data padrão: ${e.message}")
                     java.util.Date() // Fallback para data atual do sistema

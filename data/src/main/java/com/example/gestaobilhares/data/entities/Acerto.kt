@@ -1,0 +1,145 @@
+package com.example.gestaobilhares.data.entities
+
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
+import java.util.Date
+
+/**
+ * Entidade que representa um Acerto no banco de dados.
+ * Acertos são registros financeiros periódicos por cliente.
+ */
+@Entity(
+    tableName = "acertos",
+    foreignKeys = [
+        ForeignKey(
+            entity = Cliente::class,
+            parentColumns = ["id"],
+            childColumns = ["cliente_id"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Colaborador::class,
+            parentColumns = ["id"],
+            childColumns = ["colaborador_id"],
+            onDelete = ForeignKey.SET_NULL
+        ),
+        // ✅ FASE 8A: FOREIGN KEY PARA ROTA
+        ForeignKey(
+            entity = Rota::class,
+            parentColumns = ["id"],
+            childColumns = ["rota_id"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ],
+    indices = [
+        androidx.room.Index(value = ["cliente_id"]),
+        androidx.room.Index(value = ["colaborador_id"]),
+        // Novo: índices para rota e cicloId
+        androidx.room.Index(value = ["rota_id"]),
+        androidx.room.Index(value = ["ciclo_id"]),
+        androidx.room.Index(value = ["rota_id", "ciclo_id"]), // Índice composto para queries eficientes
+        // ✅ FASE 1: Índice essencial para ORDER BY data_acerto (baixo risco)
+        androidx.room.Index(value = ["data_acerto"]),
+        // ✅ FASE 2A: Índice composto para query otimizada (cliente_id + data_acerto)
+        androidx.room.Index(value = ["cliente_id", "data_acerto"])
+    ]
+)
+data class Acerto(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    
+    @ColumnInfo(name = "cliente_id")
+    val clienteId: Long,
+    
+    @ColumnInfo(name = "colaborador_id")
+    val colaboradorId: Long? = null,
+    
+    @ColumnInfo(name = "data_acerto")
+    val dataAcerto: Date = Date(),
+    
+    @ColumnInfo(name = "periodo_inicio")
+    val periodoInicio: Date,
+    
+    @ColumnInfo(name = "periodo_fim")
+    val periodoFim: Date,
+    
+    @ColumnInfo(name = "total_mesas")
+    val totalMesas: Double = 0.0,
+    
+    @ColumnInfo(name = "debito_anterior")
+    val debitoAnterior: Double = 0.0,
+    
+    @ColumnInfo(name = "valor_total")
+    val valorTotal: Double = 0.0,
+    
+    @ColumnInfo(name = "desconto")
+    val desconto: Double = 0.0,
+    
+    @ColumnInfo(name = "valor_com_desconto")
+    val valorComDesconto: Double = 0.0,
+    
+    @ColumnInfo(name = "valor_recebido")
+    val valorRecebido: Double = 0.0,
+    
+    @ColumnInfo(name = "debito_atual")
+    val debitoAtual: Double = 0.0,
+    
+    @ColumnInfo(name = "status")
+    val status: StatusAcerto = StatusAcerto.PENDENTE,
+    
+    @ColumnInfo(name = "observacoes")
+    val observacoes: String? = null,
+    
+    @ColumnInfo(name = "data_criacao")
+    val dataCriacao: Date = Date(),
+    
+    @ColumnInfo(name = "data_finalizacao")
+    val dataFinalizacao: Date? = null,
+    
+    @ColumnInfo(name = "metodos_pagamento_json")
+    val metodosPagamentoJson: String? = null,
+    
+    // ✅ NOVOS CAMPOS: Para resolver problema de dados perdidos
+    @ColumnInfo(name = "representante")
+    val representante: String? = null,
+    
+    @ColumnInfo(name = "tipo_acerto")
+    val tipoAcerto: String? = null,
+    
+    @ColumnInfo(name = "pano_trocado")
+    val panoTrocado: Boolean = false,
+    
+    @ColumnInfo(name = "numero_pano")
+    val numeroPano: String? = null,
+    
+    @ColumnInfo(name = "dados_extras_json")
+    val dadosExtrasJson: String? = null,
+    
+    // NOVO: VÍNCULO COM CICLO DE ACERTO (id do ciclo)
+    @ColumnInfo(name = "rota_id")
+    val rotaId: Long? = null,
+    
+    @ColumnInfo(name = "ciclo_id")
+    val cicloId: Long? = null,
+    
+    // ✅ FASE 3A: Campos de sincronização (opcionais para compatibilidade)
+    @ColumnInfo(name = "sync_timestamp")
+    val syncTimestamp: Long = System.currentTimeMillis(),
+    
+    @ColumnInfo(name = "sync_version")
+    val syncVersion: Int = 1,
+    
+    @ColumnInfo(name = "sync_status")
+    val syncStatus: com.example.gestaobilhares.data.entities.SyncStatus = com.example.gestaobilhares.data.entities.SyncStatus.PENDING
+)
+
+/**
+ * Enum para status do acerto
+ */
+enum class StatusAcerto {
+    PENDENTE,    // Acerto criado mas não finalizado
+    FINALIZADO,  // Acerto finalizado
+    CANCELADO    // Acerto cancelado
+} 
