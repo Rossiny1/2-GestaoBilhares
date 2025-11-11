@@ -532,7 +532,7 @@ class MesasAcertoAdapter(
             val mesa = currentList.find { it.id == state.mesaId }
             
             // ✅ FASE 2: Usar DataValidator centralizado
-            val resultadoValidacao = com.example.gestaobilhares.utils.DataValidator.validarDadosMesa(
+            val resultadoValidacao = com.example.gestaobilhares.core.utils.DataValidator.validarDadosMesa(
                 relogioInicial = state.relogioInicial,
                 relogioFinal = state.relogioFinal,
                 comDefeito = state.comDefeito,

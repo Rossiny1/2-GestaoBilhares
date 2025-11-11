@@ -146,7 +146,7 @@ class MetasViewModel constructor() : BaseViewModel() {
                     metas = emptyList(),
                     dataInicioCiclo = cicloAtual.dataInicio,
                     dataFimCiclo = cicloAtual.dataFim,
-                    ultimaAtualizacao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
+                    ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
                 )
             }
 
@@ -163,7 +163,7 @@ class MetasViewModel constructor() : BaseViewModel() {
                 metas = metasComProgresso,
                 dataInicioCiclo = cicloAtual.dataInicio,
                 dataFimCiclo = cicloAtual.dataFim,
-                ultimaAtualizacao = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
+                ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
             )
 
             Timber.d("MetaRotaResumo criado para %s", rota.nome)
@@ -495,7 +495,7 @@ enum class StatusFiltroMeta {
     val meta: String,
     val progresso: Double,
     val mensagem: String,
-    val timestamp: Date = com.example.gestaobilhares.utils.DateUtils.obterDataAtual()
+    val timestamp: Date = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
 )
 
 /**

@@ -101,6 +101,10 @@ android {
         checkReleaseBuilds = false
         checkAllWarnings = false
         abortOnError = false
+        // ✅ OTIMIZAÇÃO CRÍTICA: Desabilitar completamente lint em debug
+        checkDependencies = false
+        checkGeneratedSources = false
+        ignoreTestSources = true
         // Desabilitar todas as verificações em debug (economiza 1-2 minutos)
         disable += setOf("MissingTranslation", "ExtraTranslation", "UnusedResources", "IconDensities", "IconDuplicates")
     }
@@ -118,10 +122,16 @@ tasks.whenTaskAdded {
         name.contains("test") || 
         name.contains("Test") ||
         name.contains("androidTest") ||
-        name.contains("unitTest")) {
-        enabled = false
+        name.contains("unitTest") ||
+        name.contains("kapt") ||
+        name.contains("kaptDebug") ||
+        name.contains("kaptRelease")) {
+        if (name.contains("Debug")) {
+            enabled = false
+        }
     }
 }
+
 
 // ✅ OTIMIZAÇÃO: Desabilitar geração de relatórios em debug
 tasks.named("check").configure {
@@ -143,9 +153,19 @@ ksp {
     arg("ksp.incremental.intermodule", "true")
     // ✅ OTIMIZAÇÃO ADICIONAL: Desabilitar verificações de compatibilidade em debug
     arg("ksp.verify", "false")
+    // ✅ OTIMIZAÇÃO CRÍTICA: Desabilitar processamento paralelo de anotações (mais rápido em debug)
+    arg("ksp.parallel", "false")
 }
 
 dependencies {
+    // ✅ FASE 12.8: Módulos do projeto
+    implementation(project(":core")) // ✅ Migração concluída
+    implementation(project(":data")) // ✅ Migração iniciada
+    // TODO: Descomentar após migração do código para os módulos
+    // implementation(project(":ui"))
+    // implementation(project(":sync"))
+    
+    // Android Core
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
@@ -171,8 +191,6 @@ dependencies {
     // ✅ NOVO: Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     
-    // Dependencies removidas - Hilt não é mais usado
-    
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
@@ -192,10 +210,6 @@ dependencies {
     // ✅ NOVO: Gráficos (MPAndroidChart)
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     
-    // ✅ REMOVIDO: SignaturePad problemático - implementação nativa será usada
-    
-    // ✅ REMOVIDO: Dependências Compose não utilizadas
-
     // DataStore (Preferences)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("com.jakewharton.timber:timber:5.0.1")

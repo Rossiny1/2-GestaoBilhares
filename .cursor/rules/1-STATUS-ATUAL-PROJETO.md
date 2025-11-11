@@ -166,9 +166,13 @@
    - Reduzir AppRepository para ~2000-3000 linhas
    - **Tempo**: 1-2 semanas
 
-2. **Fase 12.8: Modularização do Projeto**
-   - Dividir em módulos: `core`, `ui`, `data`, `sync`
-   - Facilita manutenção e testes
+2. **Fase 12.8: Modularização do Projeto** 🔄 **EM ANDAMENTO**
+   - ✅ Estrutura de módulos criada (`core`, `data`, `ui`, `sync`)
+   - ✅ Build files configurados para todos os módulos
+   - ✅ Settings.gradle.kts atualizado
+   - ✅ Build validado e funcionando
+   - 📋 Plano detalhado criado (ver `PLANO-MODULARIZACAO-FASE-12.8.md`)
+   - ⏳ Pronto para iniciar migração do código (começar por `:core`)
    - **Tempo**: 2-3 semanas
 
 ### Prioridade Média (Próximos 2-3 Meses)

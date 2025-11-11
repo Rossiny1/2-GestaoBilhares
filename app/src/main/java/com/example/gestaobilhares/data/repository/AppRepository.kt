@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import android.util.Log
-import com.example.gestaobilhares.BuildConfig
 import com.google.gson.Gson
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
@@ -40,7 +39,7 @@ import com.example.gestaobilhares.network.BatchOperationsManager
 import com.example.gestaobilhares.network.RetryLogicManager
 import com.example.gestaobilhares.network.NetworkCacheManager
 // ✅ FASE 2: Utilitários de data centralizados
-import com.example.gestaobilhares.utils.DateUtils
+import com.example.gestaobilhares.core.utils.DateUtils
 // ✅ FASE 12.3: Criptografia de dados sensíveis
 import com.example.gestaobilhares.utils.DataEncryption
 import kotlinx.coroutines.Deferred

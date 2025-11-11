@@ -24,8 +24,8 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.databinding.FragmentSettlementDetailBinding
 import com.example.gestaobilhares.utils.AppLogger
 import com.example.gestaobilhares.utils.ReciboPrinterHelper
-import com.example.gestaobilhares.utils.StringUtils
-import com.example.gestaobilhares.utils.DateUtils
+import com.example.gestaobilhares.core.utils.StringUtils
+import com.example.gestaobilhares.core.utils.DateUtils
 import com.example.gestaobilhares.R
 import kotlinx.coroutines.launch
 import java.text.NumberFormat

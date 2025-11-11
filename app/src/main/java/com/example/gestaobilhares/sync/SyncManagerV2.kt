@@ -1265,7 +1265,7 @@ class SyncManagerV2(
                             is com.google.firebase.Timestamp -> timestamp.toDate()
                             is Long -> java.util.Date(timestamp)
                             is String -> try {
-                                com.example.gestaobilhares.utils.DateUtils.parseDataISO(timestamp)
+                                com.example.gestaobilhares.core.utils.DateUtils.parseDataISO(timestamp)
                             } catch (e: Exception) {
                                 null
                             }
