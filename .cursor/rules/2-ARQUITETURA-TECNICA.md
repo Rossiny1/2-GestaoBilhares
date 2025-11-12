@@ -1,120 +1,51 @@
 # 2. ARQUITETURA TÉCNICA
 
-> **Documento técnico** - Padrões de desenvolvimento, arquitetura MVVM, banco de dados, sincronização, segurança e componentes UI.
-
 ## 🏗️ PADRÕES DE DESENVOLVIMENTO
 
-### Linguagem e Framework (Modernizado 2025)
+### **Linguagem e Framework (Modernizado 2025)**
 
 - **Kotlin** como linguagem principal
 - **Android Architecture Components** (ViewModel, StateFlow, Room)
 - **Navigation Component** para navegação
 - **Hilt** para injeção de dependência
-- **Material Design 3** para UI
+- **Material Design** para UI
 - **StateFlow** para observação reativa moderna
 - **BaseViewModel** para centralização de funcionalidades
+- **Jetpack Compose** para UI moderna (implementado 2025)
 
-### Arquitetura MVVM Modernizada e Centralizada
+### **Arquitetura MVVM Modernizada e Centralizada (Híbrida)**
 
 - **Model**: Room Database (Entities, DAOs)
-- **View**: Fragments com DataBinding + StateFlow
+- **View**: Fragments com DataBinding + StateFlow + wrappers `ComposeView`; telas Compose modernas
 - **ViewModel**: Lógica de negócio com StateFlow
 - **Repository**: AppRepository centralizado (único ponto de acesso)
 - **BaseViewModel**: Funcionalidades comuns centralizadas
 - **repeatOnLifecycle**: Observação moderna de StateFlow
-
-**🎯 REGRA PRINCIPAL**: Centralização e simplificação sempre que possível
+- **Compose Integration**: Telas modernas com Jetpack Compose
+- **🎯 REGRA**: Centralização e simplificação sempre que possível
 
 ## 🗄️ BANCO DE DADOS
 
-### Arquitetura Offline-First com Sincronização Bidirecional (100% Completo)
-
-- **Estratégia**: App funciona 100% offline com sincronização automática
-- **Sincronização**: Bidirecional App ↔ Firestore funcionando perfeitamente
-- **Performance**: Otimizações incrementais implementadas
-- **Versionamento**: Resolução de conflitos por timestamp implementada
-- **Espelhamento 1:1**: **Todas as 27 entidades de negócio sincronizadas (100%)**
-- **PUSH Implementado**: CREATE/INSERT, UPDATE, DELETE para todas as entidades
-- **PULL Implementado**: Importação completa do Firestore na ordem correta
-
-### Entidades Principais
+### **Entidades Principais**
 
 - `Cliente`: Dados dos clientes
 - `Mesa`: Mesas de bilhar disponíveis
 - `Rota`: Rotas de entrega
 - `Acerto`: Transações de acerto
 - `Despesa`: Despesas por rota/ciclo
-- `ContratoLocacao`: Contratos de locação (com metadados jurídicos completos - Database Version 46)
+- `ContratoLocacao`: Contratos de locação
 - `SignaturePoint`: Pontos de assinatura
-- `SignatureStatistics`: Estatísticas biométricas da assinatura
-- `CicloAcertoEntity`: Ciclos de acerto por rota
-- `AditivoMesa`: Aditivos de mesa
-- `Veiculo`: Dados dos veículos
-- `Colaborador`: Dados dos colaboradores
-- `Meta`: Metas de desempenho
-- `EstoqueItem`: Itens do estoque
-- `Pano`: Panos de mesa
-- E mais 13 entidades...
 
-### Otimizações de Banco (CONCLUÍDAS)
-
-#### Fase 6.1: Índices Essenciais ✅
-
-- ✅ 12 novos índices estratégicos em 5 entidades
-- ✅ Migration 44→45 aplicada
-- ✅ Database Version 45
-
-#### Fase 6.2: Otimização de Queries ✅
-
-- ✅ 8 queries otimizadas (strftime → range queries, subquery → JOIN)
-- ✅ DateUtils.calcularRangeAno centralizado
-- ✅ Repositories atualizados
-
-#### Fase 6.3: Transações Atômicas ✅
-
-- ✅ @Transaction em 5 métodos de operações em lote
-- ✅ Garantia de atomicidade para inserções/atualizações múltiplas
-
-**Impacto**: 30-80% de melhoria de performance em queries frequentes
-
-### Sincronização Bidirecional (CONCLUÍDA - 100%)
-
-- ✅ **SyncManagerV2**: Processamento robusto de operações CREATE/UPDATE/DELETE
-- ✅ **Documento ID = roomId**: Evita duplicação de dados no Firestore
-- ✅ **Payload Seguro**: Gson para serialização de dados complexos
-- ✅ **Vinculação Automática**: Mesa-Cliente sincroniza corretamente
-- ✅ **Espelhamento 1:1**: **Todas as 27 entidades de negócio sincronizadas**
-- ✅ **Resolução de Conflitos**: Timestamp mais recente vence
-- ✅ **Estrutura Hierárquica**: /empresas/{empresaId}/dados/ implementada
-- ✅ **PULL Completo**: Todas as entidades importadas na ordem correta
-- ✅ **PUSH Completo**: Todas as operações enfileiradas
-
-### Relacionamentos
+### **Relacionamentos**
 
 - Cliente → Mesa (1:N)
 - Rota → Cliente (1:N)
 - Cliente → Acerto (1:N)
 - Contrato → Mesa (1:N)
-- Rota → CicloAcerto (1:N)
-- CicloAcerto → Acerto (1:N)
-- CicloAcerto → Despesa (1:N)
-- Cliente → ContratoLocacao (1:N)
-- E mais relacionamentos...
 
 ## 🔐 SEGURANÇA E VALIDAÇÃO
 
-### Autenticação e Segurança de Senhas ✅
-
-- **PasswordHasher**: Utilitário para hash seguro de senhas
-  - **Algoritmo**: PBKDF2 com SHA-256
-  - **Configurações**: 10.000 iterações, salt aleatório de 16 bytes, hash de 256 bits
-  - **Métodos**: `hashPassword()`, `verifyPassword()`, `isValidHashFormat()`
-  - **Segurança**: Comparação timing-safe, previne timing attacks
-- **AuthViewModel**: Autenticação híbrida (online/offline)
-  - **Online**: Firebase Auth (sem mudanças)
-  - **Offline**: Validação usando hash de senha (PBKDF2)
-
-### Assinatura Eletrônica
+### **Assinatura Eletrônica**
 
 - **SignatureView**: Captura de assinatura manual
 - **SignatureStatistics**: Validação biométrica
@@ -122,30 +53,17 @@
 - **LegalLogger**: Logs jurídicos para auditoria
 - **SignatureMetadataCollector**: Metadados do dispositivo
 
-### Validação Jurídica (Lei 14.063/2020 - 100% Conforme Cláusula 9.3)
+### **Validação Jurídica (Lei 14.063/2020)**
 
-- ✅ **Metadados Completos**: Timestamp, device ID, IP, pressão média, velocidade média, duração, total de pontos
-- ✅ **Hash SHA-256**: Integridade do documento e assinaturas (locatário e locador)
-- ✅ **Logs Jurídicos**: Sistema completo de auditoria (LegalLogger)
-- ✅ **Validação Biométrica**: Características da assinatura (SignatureStatistics)
-- ✅ **Presença Física**: Estrutura de campos implementada
-- ✅ **Documento Hash**: Hash SHA-256 do PDF final gerado automaticamente
-- ✅ **Database Version 46**: Migration 45→46 com todos os campos de conformidade
-
-### Criptografia de Dados Sensíveis ✅
-
-- ✅ **Android Keystore**: Chaves protegidas pelo sistema operacional (hardware quando disponível)
-- ✅ **Algoritmo**: AES-GCM (256 bits) - recomendado pelo Android
-- ✅ **Dados Criptografados**:
-  - CPF/CNPJ em Cliente, Colaborador, MesaVendida, ContratoLocacao
-  - Assinaturas (Base64) em ContratoLocacao e AssinaturaRepresentanteLegal
-  - CPF em LogAuditoriaAssinatura
-- ✅ **Implementação**: Criptografia automática no Repository antes de salvar, descriptografia após ler
-- ✅ **Compatibilidade**: Suporta dados legados (não criptografados) - migração gradual
+- Captura de metadados (timestamp, device ID, IP, pressão, velocidade)
+- Geração de hash SHA-256 para integridade
+- Logs jurídicos completos para auditoria
+- Validação de características biométricas
+- Confirmação de presença física do locatário
 
 ## 📱 COMPONENTES UI
 
-### Fragments Principais
+### **Fragments Principais (View System)**
 
 - `RoutesFragment`: Listagem de rotas
 - `ClientListFragment`: Clientes por rota
@@ -153,77 +71,145 @@
 - `SettlementFragment`: Tela de acerto
 - `ContractGenerationFragment`: Geração de contrato
 - `SignatureCaptureFragment`: Captura de assinatura
-- E mais 20+ fragments...
+- `VehicleDetailFragment`: Histórico de veículos
+- `MetaCadastroFragment`: Cadastro de metas
+- `RepresentanteLegalSignatureFragment`: Assinatura do representante legal
 
-### Adapters
+### **Compose Screens (Modernas) - Status Parcial**
+
+- `DashboardScreen`: Tela principal com estatísticas
+- `ClientDetailScreen`: Detalhes do cliente (Compose)
+- `SettlementScreen`: Tela de acerto (Compose)
+- `VehicleDetailScreen`: Histórico de veículos (Compose)
+- `StockScreen`: Controle de estoque (Compose)
+- `RoutesScreen`: Listagem de rotas (Compose)
+- `ClientListScreen`: Clientes por rota (Compose)
+- `ClosureReportScreen`: Relatórios de fechamento (Compose)
+- `VehiclesScreen`: Listagem de veículos (Compose)
+- `ContractManagementScreen`: Gerenciamento de contratos (Compose)
+- `MetasScreen`: Gestão de metas (Compose)
+- `ColaboradoresScreen`: Gestão de colaboradores (Compose)
+- `CiclosScreen`: Gestão de ciclos (Compose)
+- `ExpenseRegisterScreen`: Registro de despesas (Compose)
+- `MesasDepositoScreen`: Gestão de mesas (Compose)
+- `MetaCadastroScreen`: Cadastro de metas (Compose)
+- `NovaReformaScreen`: Nova reforma (Compose)
+
+### **Adapters (View System)**
 
 - `ClientListAdapter`: Lista de clientes
 - `MesasAcertoAdapter`: Mesas no acerto
 - `RoutesAdapter`: Lista de rotas
-- `SettlementHistoryAdapter`: Histórico de acertos
-- E mais adapters...
 
-### Dialogs
+### **Compose Components (Modernos)**
+
+- `GestaoBilharesButton`: Botão customizado reutilizável
+- `GestaoBilharesTextField`: Campo de texto customizado
+- `GestaoBilharesCard`: Card customizado
+- `GestaoBilharesLoadingIndicator`: Indicador de carregamento
+- `ButtonVariant`: Enum para variantes de botão
+- `ComposeIntegration`: Integração centralizada de telas Compose
+
+### **Dialogs**
 
 - `ContractFinalizationDialog`: Finalização de contrato
 - `SettlementSummaryDialog`: Resumo do acerto
+- `ClientSelectionDialog`: Seleção de cliente para transferência
+- `TransferClientDialog`: Transferência de cliente entre rotas
 - `PanoSelectionDialog`: Seleção de pano para troca
-- E mais dialogs...
+- `AddEditStockItemDialog`: Adicionar/editar item do estoque
+- `AddPanosLoteDialog`: Adicionar panos em lote
 
 ## 🔄 FLUXO DE DADOS
 
-### Estados e Navegação
+### **Estados e Navegação**
 
 - SafeArgs para passagem de parâmetros
 - SharedPreferences para configurações
 - Flow para dados reativos
 - Coroutines para operações assíncronas
 
-### PDF e Relatórios
+### **PDF e Relatórios**
 
 - **iText7** para geração de PDFs
 - **ContractPdfGenerator**: Contratos de locação
 - **PdfReportGenerator**: Relatórios de acerto
 - **ClosureReportPdfGenerator**: Relatórios de fechamento
 
-### Utilitários Principais
+## 🛠️ FERRAMENTAS DE DESENVOLVIMENTO
 
-- **PasswordHasher**: Hash seguro de senhas (PBKDF2-SHA256) ✅
-- **DataEncryption**: Criptografia de dados sensíveis (AES-GCM 256 bits, Android Keystore) ✅
-- **DateUtils**: Utilitários de data
-- **BluetoothPrinterHelper**: Comunicação com impressoras térmicas
-- **NetworkUtils**: Verificação de conectividade
-- **UserSessionManager**: Gerenciamento de sessão do usuário
-- **DocumentIntegrityManager**: Hash SHA-256 para documentos
-- **SignatureMetadataCollector**: Coleta de metadados de assinatura
-- **ImageCompressionUtils**: Compressão de imagens
-- **FinancialCalculator**: Cálculos financeiros
-- **DataValidator**: Validação de dados
+### **Build e Deploy**
+
+- Gradle para build
+- APK de debug para testes
+- Logcat para debugging
+- ADB para conexão com dispositivo
+
+### **Logs e Debug**
+
+- Logs detalhados em componentes críticos
+- Sistema de auditoria jurídica
+- Validação de integridade de dados
 
 ## 🚀 MODERNIZAÇÕES IMPLEMENTADAS (2025)
 
-### StateFlow Migration
+### **Jetpack Compose Migration (2025)**
+
+- **DashboardScreen**: Tela principal com estatísticas modernas
+- **ClientDetailScreen**: Detalhes do cliente com UI moderna
+- **SettlementScreen**: Tela de acerto com componentes Compose
+- **VehicleDetailScreen**: Histórico de veículos modernizado
+- **StockScreen**: Controle de estoque com UI fluida
+- **RoutesScreen**: Listagem de rotas com Material 3
+- **ClientListScreen**: Clientes com design moderno
+- **ClosureReportScreen**: Relatórios com interface intuitiva
+- **VehiclesScreen**: Gestão de veículos modernizada
+- **ContractManagementScreen**: Contratos com UX melhorada
+- **MetasScreen**: Metas com componentes reutilizáveis
+- **ColaboradoresScreen**: Colaboradores com design consistente
+- **CiclosScreen**: Ciclos com interface moderna
+- **ExpenseRegisterScreen**: Despesas com formulários otimizados
+- **MesasDepositoScreen**: Mesas com componentes customizados
+- **MetaCadastroScreen**: Cadastro com validação visual
+- **NovaReformaScreen**: Reformas com UX aprimorada
+
+### **StateFlow Migration**
 
 - **AuthViewModel**: Convertido de LiveData para StateFlow
 - **RoutesViewModel**: Convertido de LiveData para StateFlow
 - **LoginFragment**: Convertido de observe para collect + repeatOnLifecycle
 - **RoutesFragment**: Convertido de observe para collect + repeatOnLifecycle
 
-### ViewModel Initialization Fix
+### **ViewModel Initialization Fix (2025)**
 
 - **Problema Identificado**: Crashes por `by viewModels()` sem inicialização manual
 - **Solução Aplicada**: Inicialização manual de ViewModels em todos os fragments
 - **Padrão Implementado**: `lateinit var viewModel` + inicialização em `onViewCreated`
+- **Fragments Corrigidos**: VehicleDetailFragment, MetaCadastroFragment, RepresentanteLegalSignatureFragment
+- **Dialogs Corrigidos**: ClientSelectionDialog, TransferClientDialog, PanoSelectionDialog, AddEditStockItemDialog, AddPanosLoteDialog
 - **Resultado**: Zero crashes - todas as telas funcionando perfeitamente
 
-### BaseViewModel Centralizada
+### **BaseViewModel Centralizada**
 
 - **Funcionalidades Comuns**: Loading, error, message states
 - **Métodos Utilitários**: showLoading(), hideLoading(), showError(), showMessage()
 - **Logging Centralizado**: Timber para logs consistentes
 - **Eliminação de Duplicação**: ~200 linhas de código reduzidas
 
-### Padrões Implementados
+### **Benefícios Técnicos**
+
+- **Performance**: StateFlow é mais eficiente que LiveData
+- **Coroutines**: Integração nativa com Kotlin Coroutines
+- **Lifecycle**: repeatOnLifecycle garante observação segura
+- **Manutenibilidade**: Código mais limpo e organizado
+- **Modernidade**: Seguindo melhores práticas Android 2025
+- **UI Declarativa**: Compose oferece UI mais fluida e responsiva
+- **Componentes Reutilizáveis**: Redução de código duplicado
+- **Material 3**: Design system moderno e consistente
+- **Testabilidade**: Compose facilita testes de UI
+- **Performance UI**: Compose otimiza renderização automaticamente
+
+### **Padrões Implementados**
 
 ```kotlin
 // ✅ PADRÃO MODERNO: StateFlow + collect
@@ -251,20 +237,76 @@ class MyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ SEMPRE inicializar manualmente
+        // Inicialização manual do ViewModel
         val database = AppDatabase.getDatabase(requireContext())
         val repository = Repository(database.dao())
         viewModel = MyViewModel(repository)
         
+        // Configurar UI e observers
         setupUI()
         observeViewModel()
+    }
+}
+
+// ✅ PADRÃO COMPOSE: Screen Moderna (sem alterar aparência)
+@Composable
+fun MyScreen(
+    onNavigateBack: () -> Unit,
+    viewModel: MyViewModel
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Título") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // Conteúdo da tela
+        }
+    }
+}
+
+// ✅ PADRÃO COMPOSE: Componente Reutilizável
+@Composable
+fun GestaoBilharesButton(
+    text: String,
+    onClick: () -> Unit,
+    variant: ButtonVariant = ButtonVariant.Primary,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = when (variant) {
+                ButtonVariant.Primary -> Color(0xFF2C3E50)
+                ButtonVariant.Secondary -> Color(0xFF7F8C8D)
+                ButtonVariant.Success -> Color(0xFF27AE60)
+                ButtonVariant.Danger -> Color(0xFFE74C3C)
+                ButtonVariant.Error -> Color(0xFFE74C3C)
+            }
+        )
+    ) {
+        Text(text = text, color = Color.White)
     }
 }
 ```
 
 ## 🎯 REGRA PRINCIPAL: CENTRALIZAÇÃO E SIMPLIFICAÇÃO
 
-### Princípios Arquiteturais
+### **Princípios Arquiteturais**
 
 1. **UM REPOSITORY CENTRALIZADO**: AppRepository como único ponto de acesso aos dados
 2. **BASEVIEWMODEL CENTRALIZADA**: Funcionalidades comuns em um local
@@ -272,7 +314,7 @@ class MyFragment : Fragment() {
 4. **FACILITAR MANUTENÇÃO**: Código organizado e acessível
 5. **REUTILIZAR CÓDIGO**: Eliminar duplicação sempre que possível
 
-### Benefícios da Centralização
+### **Benefícios da Centralização**
 
 - **Manutenibilidade**: Código em um local facilita manutenção
 - **Performance**: Cache centralizado otimiza consultas
@@ -280,17 +322,12 @@ class MyFragment : Fragment() {
 - **Simplicidade**: Menos arquivos, menos complexidade
 - **Debugging**: Logs centralizados facilitam diagnóstico
 
-### Estrutura Centralizada
+### **Estrutura Centralizada**
 
 ```
 📁 data/
   └── repository/
       └── AppRepository.kt (✅ ÚNICO REPOSITORY)
-      └── internal/
-          ├── ClienteRepositoryInternal.kt
-          ├── AcertoRepositoryInternal.kt
-          ├── MesaRepositoryInternal.kt
-          └── ... (repositories especializados)
 
 📁 ui/
   └── common/
@@ -301,55 +338,3 @@ class MyFragment : Fragment() {
       ├── [Module]ViewModel.kt (✅ HERDA DE BASEVIEWMODEL)
       └── [Module]Fragment.kt (✅ USA STATEFLOW + COLLECT)
 ```
-
-## 🛠️ FERRAMENTAS DE DESENVOLVIMENTO
-
-### Build e Deploy
-
-- Gradle para build (otimizado - ~1-2 minutos)
-- APK de debug para testes
-- Logcat para debugging
-- ADB para conexão com dispositivo
-
-### Logs e Debug
-
-- Logs detalhados em componentes críticos
-- Sistema de auditoria jurídica
-- Validação de integridade de dados
-- **AppLogger**: Sistema de logging condicional com sanitização
-
-## ⚡ OTIMIZAÇÕES AVANÇADAS IMPLEMENTADAS
-
-### Otimização de Memória ✅
-
-- ✅ **MemoryOptimizer**: LruCache para bitmaps, object pooling, garbage collection
-- ✅ **WeakReferenceManager**: Gerenciamento de referências fracas
-- ✅ **ObjectPool**: Pool de objetos reutilizáveis
-- ✅ **Monitoramento Automático**: Estatísticas de memória em tempo real
-
-### Otimização de Rede ✅
-
-- ✅ **NetworkCompressionManager**: Compressão GZIP inteligente
-- ✅ **BatchOperationsManager**: Operações em lote com prioridades
-- ✅ **RetryLogicManager**: Retry automático com circuit breaker
-- ✅ **NetworkCacheManager**: Cache inteligente com TTL
-
-### Otimização de UI ✅
-
-- ✅ **ViewStubManager**: Carregamento lazy de layouts pesados
-- ✅ **OptimizedViewHolder**: Pool de ViewHolders reutilizáveis
-- ✅ **LayoutOptimizer**: Otimização de hierarquia de views
-- ✅ **RecyclerViewOptimizer**: Performance otimizada de listas
-
-### Processamento em Background ✅
-
-- ✅ **SyncWorker**: Sincronização automática a cada 15 minutos
-- ✅ **CleanupWorker**: Limpeza de dados antigos diariamente às 2:00
-- ✅ **CoroutineWorker**: Uso de coroutines nativas Android 2025
-- ✅ **Constraints Inteligentes**: NetworkType.CONNECTED, BatteryNotLow
-- ✅ **BackoffPolicy.EXPONENTIAL**: Retry inteligente
-
----
-
-**Última atualização**: 2025-01-09
-
