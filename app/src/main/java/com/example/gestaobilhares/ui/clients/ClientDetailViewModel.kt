@@ -109,14 +109,16 @@ class ClientDetailViewModel(
                     Log.d("ClientDetailViewModel", "Comissão ficha: ${it.comissaoFicha}")
                     
                     // ✅ CORREÇÃO: Garantir que campos do cliente sejam exibidos
+                    val endereco = it.endereco
                     val enderecoExibir = when {
-                        it.endereco.isNullOrBlank() -> "Endereço não informado"
-                        else -> it.endereco.trim()
+                        endereco.isNullOrBlank() -> "Endereço não informado"
+                        else -> endereco.trim()
                     }
                     
+                    val telefone = it.telefone
                     val telefoneExibir = when {
-                        it.telefone.isNullOrBlank() -> "Telefone não informado"
-                        else -> it.telefone.trim()
+                        telefone.isNullOrBlank() -> "Telefone não informado"
+                        else -> telefone.trim()
                     }
                     
                     Log.d("ClientDetailViewModel", "Endereço que será exibido: '$enderecoExibir'")
@@ -302,9 +304,10 @@ class ClientDetailViewModel(
                         Log.d("ClientDetailViewModel", "  - Observação é vazia? ${acerto.observacoes?.isEmpty()}")
                         
                         // ✅ CORREÇÃO: Garantir que observação seja exibida corretamente
+                        val observacoes = acerto.observacoes
                         val observacaoExibir = when {
-                            acerto.observacoes.isNullOrBlank() -> "Sem observações"
-                            else -> acerto.observacoes.trim()
+                            observacoes.isNullOrBlank() -> "Sem observações"
+                            else -> observacoes.trim()
                         }
                         
                         Log.d("ClientDetailViewModel", "  - Observação que será exibida: '$observacaoExibir'")

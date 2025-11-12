@@ -64,8 +64,9 @@ class HistoricoManutencaoMesaAdapter : ListAdapter<HistoricoManutencaoMesa, Hist
             }
 
             // Custo
-            if (historico.custo != null && historico.custo > 0) {
-                binding.tvCusto.text = "R$ ${String.format("%.2f", historico.custo)}"
+            val custo = historico.custo
+            if (custo != null && custo > 0) {
+                binding.tvCusto.text = "R$ ${String.format("%.2f", custo)}"
                 binding.layoutCusto.visibility = View.VISIBLE
             } else {
                 binding.layoutCusto.visibility = View.GONE

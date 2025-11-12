@@ -80,37 +80,19 @@ class UIOptimizationFragment : Fragment() {
         // Botão de estatísticas de ViewStub
         binding.btnViewStubStats.setOnClickListener {
             val stats = appRepository.obterEstatisticasViewStub()
-            binding.tvViewStubStats.text = """
-                📊 ViewStub Statistics:
-                • Total Inflated: ${stats.totalInflatedViews}
-                • Inflating: ${stats.inflatingViews}
-                • Cache Keys: ${stats.cacheKeys.size}
-            """.trimIndent()
+            binding.tvViewStubStats.text = stats
         }
 
         // Botão de estatísticas de ViewHolder
         binding.btnViewHolderStats.setOnClickListener {
             val stats = appRepository.obterEstatisticasViewHolder()
-            binding.tvViewHolderStats.text = """
-                🏗️ ViewHolder Statistics:
-                • Total Pools: ${stats.totalPools}
-                • Cached Views: ${stats.totalCachedViews}
-                • Cache Entries: ${stats.totalCacheEntries}
-            """.trimIndent()
+            binding.tvViewHolderStats.text = stats
         }
 
         // Botão de estatísticas de Layout
         binding.btnLayoutStats.setOnClickListener {
             val stats = appRepository.obterEstatisticasLayout()
-            val totalOptimizationTime = stats.sumOf { it.optimizationTime }
-            val totalViews = stats.sumOf { it.viewCount }
-            
-            binding.tvLayoutStats.text = """
-                📐 Layout Statistics:
-                • Total Optimization Time: ${totalOptimizationTime}ms
-                • Total Views: $totalViews
-                • Optimized Layouts: ${stats.size}
-            """.trimIndent()
+            binding.tvLayoutStats.text = stats
         }
 
         // Botão de limpeza

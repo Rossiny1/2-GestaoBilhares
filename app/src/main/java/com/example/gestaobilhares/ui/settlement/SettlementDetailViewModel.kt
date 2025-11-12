@@ -86,9 +86,10 @@ class SettlementDetailViewModel(
                     AppLogger.log("SettlementDetail", "Observação é vazia? ${acerto.observacoes?.isEmpty()}")
                     
                     // ✅ CORREÇÃO: Garantir que observação seja exibida corretamente
+                    val observacoes = acerto.observacoes
                     val observacaoParaExibir = when {
-                        acerto.observacoes.isNullOrBlank() -> "Nenhuma observação registrada."
-                        else -> acerto.observacoes.trim()
+                        observacoes.isNullOrBlank() -> "Nenhuma observação registrada."
+                        else -> observacoes.trim()
                     }
                     
                     AppLogger.log("SettlementDetail", "Observação que será exibida: '$observacaoParaExibir'")

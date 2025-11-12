@@ -54,23 +54,22 @@ class SyncManagerV2(
     private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private val gson: Gson by lazy { Gson() }
     
-    // TODO: Handlers de pull especializados - foram comentados temporariamente durante modularização
-    // Os handlers precisam ser migrados para o módulo :sync
-    // private val rotaPullHandler by lazy { 
-    //     com.example.gestaobilhares.sync.handlers.RotaPullHandler(appRepository, database, firestore, context) 
-    // }
-    // private val clientePullHandler by lazy { 
-    //     com.example.gestaobilhares.sync.handlers.ClientePullHandler(appRepository, database, firestore, context) 
-    // }
-    // private val mesaPullHandler by lazy { 
-    //     com.example.gestaobilhares.sync.handlers.MesaPullHandler(appRepository, database, firestore, context) 
-    // }
-    // private val acertoPullHandler by lazy { 
-    //     com.example.gestaobilhares.sync.handlers.AcertoPullHandler(appRepository, database, firestore, context) 
-    // }
-    // private val cicloPullHandler by lazy { 
-    //     com.example.gestaobilhares.sync.handlers.CicloPullHandler(appRepository, database, firestore, context) 
-    // }
+    // ✅ Handlers de pull especializados migrados para o módulo :sync
+    private val rotaPullHandler by lazy { 
+        com.example.gestaobilhares.sync.handlers.RotaPullHandler(appRepository, database, firestore, context) 
+    }
+    private val clientePullHandler by lazy { 
+        com.example.gestaobilhares.sync.handlers.ClientePullHandler(appRepository, database, firestore, context) 
+    }
+    private val mesaPullHandler by lazy { 
+        com.example.gestaobilhares.sync.handlers.MesaPullHandler(appRepository, database, firestore, context) 
+    }
+    private val acertoPullHandler by lazy { 
+        com.example.gestaobilhares.sync.handlers.AcertoPullHandler(appRepository, database, firestore, context) 
+    }
+    private val cicloPullHandler by lazy { 
+        com.example.gestaobilhares.sync.handlers.CicloPullHandler(appRepository, database, firestore, context) 
+    }
 
     init {
         syncScope.launch {
@@ -567,11 +566,10 @@ class SyncManagerV2(
             val empresaId = getEmpresaId()
             android.util.Log.d("SyncManagerV2", "🏢 Empresa ID para PULL: $empresaId")
             
-        // TODO: Handlers especializados foram comentados temporariamente durante modularização
+        // ✅ Handlers especializados migrados para o módulo :sync
         // 1. PRIMEIRO: Baixar rotas do Firestore (dependência dos clientes)
         android.util.Log.d("SyncManagerV2", "🔄 Fase 1: Sincronizando ROTAS...")
-        // rotaPullHandler.pull(empresaId)
-        android.util.Log.w("SyncManagerV2", "⚠️ Handlers de pull comentados temporariamente")
+        rotaPullHandler.pull(empresaId)
         delay(500) // Aguardar rotas serem inseridas
 
         // 2. SEGUNDO: Baixar clientes do Firestore (dependem das rotas)
@@ -583,22 +581,22 @@ class SyncManagerV2(
             android.util.Log.w("SyncManagerV2", "⚠️ Nenhuma rota encontrada no Room. Os clientes precisam de uma rota para serem sincronizados.")
         }
         
-        // clientePullHandler.pull(empresaId)
+        clientePullHandler.pull(empresaId)
         delay(500) // Aguardar clientes serem inseridos
 
         // 3. TERCEIRO: Baixar mesas do Firestore (dependem dos clientes)
         android.util.Log.d("SyncManagerV2", "🔄 Fase 3: Sincronizando MESAS...")
-        // mesaPullHandler.pull(empresaId)
+        mesaPullHandler.pull(empresaId)
         delay(500) // Aguardar mesas serem inseridas
 
         // 4. QUARTO: Baixar acertos do Firestore (dependem dos clientes)
         android.util.Log.d("SyncManagerV2", "🔄 Fase 4: Sincronizando ACERTOS...")
-        // acertoPullHandler.pull(empresaId)
+        acertoPullHandler.pull(empresaId)
         delay(500) // Aguardar acertos serem inseridos
 
         // 5. QUINTO: Baixar ciclos do Firestore (dependem dos acertos)
         android.util.Log.d("SyncManagerV2", "🔄 Fase 5: Sincronizando CICLOS...")
-        // cicloPullHandler.pull(empresaId)
+        cicloPullHandler.pull(empresaId)
         delay(500) // Aguardar ciclos serem inseridos
         
         // 5.1. ATUALIZAR ROTAS: Alinhar status das rotas com os ciclos importados

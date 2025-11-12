@@ -183,10 +183,11 @@ class ExpenseRegisterFragment : Fragment() {
             updateTypeDisplay()
             
             // ✅ NOVO: Carregar foto do comprovante se existir
-            if (!despesa.fotoComprovante.isNullOrEmpty()) {
-                fotoComprovantePath = despesa.fotoComprovante
+            val fotoComprovante = despesa.fotoComprovante
+            if (!fotoComprovante.isNullOrEmpty()) {
+                fotoComprovantePath = fotoComprovante
                 dataFotoComprovante = despesa.dataFotoComprovante
-                mostrarFotoComprovante(despesa.fotoComprovante, despesa.dataFotoComprovante)
+                mostrarFotoComprovante(fotoComprovante, despesa.dataFotoComprovante)
             }
         }
     }
