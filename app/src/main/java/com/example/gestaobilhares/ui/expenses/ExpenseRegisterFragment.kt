@@ -123,7 +123,6 @@ class ExpenseRegisterFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar ViewModel
-        val database = AppDatabase.getDatabase(requireContext())
         val appRepository = RepositoryFactory.getAppRepository(requireContext())
         viewModel = ExpenseRegisterViewModel(appRepository)
         
@@ -212,7 +211,7 @@ class ExpenseRegisterFragment : Fragment() {
                 s?.toString()?.let { text ->
                     if (text.isNotEmpty()) {
                         try {
-                            val value = text.toDouble()
+                            text.toDouble()
                             binding.tilValorDespesa.prefixText = "R$ "
                         } catch (e: NumberFormatException) {
                             binding.tilValorDespesa.prefixText = ""
@@ -298,7 +297,7 @@ class ExpenseRegisterFragment : Fragment() {
 
         lifecycleScope.launch {
             viewModel.message.collect { message ->
-                val binding = _binding ?: return@collect
+                _binding ?: return@collect
                 message?.let {
                     Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
                     viewModel.clearMessage()
@@ -308,7 +307,7 @@ class ExpenseRegisterFragment : Fragment() {
 
         lifecycleScope.launch {
             viewModel.success.collect { success ->
-                val binding = _binding ?: return@collect
+                _binding ?: return@collect
                 if (success) {
                     Toast.makeText(requireContext(), "Despesa salva com sucesso!", Toast.LENGTH_SHORT).show()
                     findNavController().popBackStack()
@@ -318,8 +317,8 @@ class ExpenseRegisterFragment : Fragment() {
         }
 
         lifecycleScope.launch {
-            viewModel.selectedDate.collect { date ->
-                val binding = _binding ?: return@collect
+            viewModel.selectedDate.collect { _ ->
+                _binding ?: return@collect
                 updateDateDisplay()
             }
         }
@@ -337,7 +336,6 @@ class ExpenseRegisterFragment : Fragment() {
                 val binding = _binding ?: return@collect
                 binding.etTipoDespesa.setText(type?.nome ?: "")
                 // ✅ Mostrar campos de viagem conforme categoria/tipo
-                val categoria = viewModel.selectedCategory.value?.nome ?: ""
                 val tipoNome = type?.nome ?: ""
                 val isCombustivel = tipoNome.equals("Combustível", ignoreCase = true) || tipoNome.equals("Gasolina", ignoreCase = true)
                 val isManutencao = tipoNome.equals("Manutenção", ignoreCase = true)
@@ -757,7 +755,6 @@ class ExpenseRegisterFragment : Fragment() {
         }
 
         // Regras de validação para Viagem
-        val categoria = viewModel.selectedCategory.value?.nome ?: ""
         val tipoNome = viewModel.selectedType.value?.nome ?: ""
         val isCombustivel = tipoNome.equals("Combustível", ignoreCase = true) || tipoNome.equals("Gasolina", ignoreCase = true)
         val isManutencao = tipoNome.equals("Manutenção", ignoreCase = true)

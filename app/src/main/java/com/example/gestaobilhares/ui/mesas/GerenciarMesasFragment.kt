@@ -32,7 +32,6 @@ class GerenciarMesasFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = GerenciarMesasViewModel(appRepository)
         
@@ -157,7 +156,7 @@ class GerenciarMesasFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.loading.collect { loading ->
+            viewModel.loading.collect { _ ->
                 // TODO: Implementar loading indicator se necessário
             }
         }

@@ -54,9 +54,8 @@ class GerenciarMesasViewModel constructor(
                 // Carregar todas as mesas
                 val todasMesas = repository.obterTodasMesas().first()
 
-                // Separar mesas do depósito (sem clienteId) e mesas locadas (com clienteId)
+                // Separar mesas do depósito (sem clienteId)
                 val mesasDeposito = todasMesas.filter { mesa: Mesa -> mesa.clienteId == null }
-                val mesasLocadas = todasMesas.filter { mesa: Mesa -> mesa.clienteId != null }
 
                 // Calcular estatísticas gerais
                 val statsGerais = EstatisticasGerais(
