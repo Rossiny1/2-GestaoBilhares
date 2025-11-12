@@ -172,8 +172,9 @@ class DetalhesMesaReformadaComHistoricoDialog : DialogFragment() {
                 if (!historico.responsavel.isNullOrBlank()) {
                     append("\n  Responsável: ${historico.responsavel}")
                 }
-                if (historico.custo != null && historico.custo > 0) {
-                    append("\n  Custo: R$ ${String.format("%.2f", historico.custo)}")
+                val custo = historico.custo
+                if (custo != null && custo > 0) {
+                    append("\n  Custo: R$ ${String.format("%.2f", custo)}")
                 }
             }
         }

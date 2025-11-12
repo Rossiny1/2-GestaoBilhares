@@ -126,7 +126,7 @@ class DatabaseOptimizationFragment : Fragment() {
                 val sampleQuery = "SELECT * FROM clientes WHERE ativo = 1"
                 val optimizedQuery = appRepository.otimizarQuery(sampleQuery)
                 
-                Toast.makeText(context, "Query otimizada: ${optimizedQuery.optimizedQuery}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Query otimizada: $optimizedQuery", Toast.LENGTH_LONG).show()
                 
                 // Registrar execução
                 appRepository.registrarExecucaoQuery(sampleQuery, 150L)
@@ -159,14 +159,7 @@ class DatabaseOptimizationFragment : Fragment() {
             try {
                 val stats = appRepository.obterEstatisticasTransacoes()
                 
-                val message = """
-                    Transações: ${stats.totalTransactions}
-                    Sucessos: ${stats.successfulTransactions}
-                    Taxa de Sucesso: ${String.format("%.1f", stats.successRate)}%
-                    Tempo Médio: ${String.format("%.1f", stats.averageExecutionTime)}ms
-                """.trimIndent()
-                
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, stats, Toast.LENGTH_LONG).show()
                 
             } catch (e: Exception) {
                 Log.e("DatabaseOptimization", "Erro nas estatísticas: ${e.message}", e)
@@ -207,19 +200,19 @@ class DatabaseOptimizationFragment : Fragment() {
         }
     }
 
-    private fun updatePoolStats(view: View, stats: com.example.gestaobilhares.database.DatabaseConnectionPool.ConnectionPoolStats) {
+    private fun updatePoolStats(view: View, stats: String) {
         // Atualizar UI com estatísticas do pool
         // Implementação simplificada para demonstração
         Log.d("DatabaseOptimization", "Pool Stats: $stats")
     }
 
-    private fun updateQueryStats(view: View, stats: com.example.gestaobilhares.database.QueryOptimizationManager.QueryOptimizationStats) {
+    private fun updateQueryStats(view: View, stats: String) {
         // Atualizar UI com estatísticas de queries
         // Implementação simplificada para demonstração
         Log.d("DatabaseOptimization", "Query Stats: $stats")
     }
 
-    private fun updateTransactionStats(view: View, stats: com.example.gestaobilhares.database.TransactionOptimizationManager.TransactionStats) {
+    private fun updateTransactionStats(view: View, stats: String) {
         // Atualizar UI com estatísticas de transações
         // Implementação simplificada para demonstração
         Log.d("DatabaseOptimization", "Transaction Stats: $stats")

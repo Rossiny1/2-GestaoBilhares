@@ -446,11 +446,14 @@ class ClientRegisterFragment : Fragment() {
                 locationCaptureTime = cliente.dataCapturaGps
                 
                 // Simular localização para atualizar UI
+                val latitude = cliente.latitude
+                val longitude = cliente.longitude
+                val precisaoGps = cliente.precisaoGps
                 val mockLocation = android.location.Location("saved").apply {
-                    latitude = cliente.latitude
-                    longitude = cliente.longitude
-                    if (cliente.precisaoGps != null) {
-                        accuracy = cliente.precisaoGps
+                    if (latitude != null) this.latitude = latitude
+                    if (longitude != null) this.longitude = longitude
+                    if (precisaoGps != null) {
+                        accuracy = precisaoGps
                     }
                 }
                 atualizarUILocalizacao(mockLocation)

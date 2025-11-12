@@ -892,15 +892,16 @@ class SettlementViewModel constructor(
         return try {
             // 1. Buscar a mesa
             val mesa = appRepository.obterMesaPorId(mesaId)
-            if (mesa?.panoAtualId == null) {
+            val panoAtualId = mesa?.panoAtualId
+            if (panoAtualId == null) {
                 logOperation("SETTLEMENT", "Mesa $mesaId não possui pano atual")
                 return null
             }
             
             // 2. Buscar o pano atual
-            val pano = appRepository.obterPanoPorId(mesa.panoAtualId)
+            val pano = appRepository.obterPanoPorId(panoAtualId)
             if (pano == null) {
-                logError("SETTLEMENT", "Pano ${mesa.panoAtualId} não encontrado no estoque")
+                logError("SETTLEMENT", "Pano $panoAtualId não encontrado no estoque")
                 return null
             }
             

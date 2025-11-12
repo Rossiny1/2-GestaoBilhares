@@ -78,12 +78,9 @@ class MemoryOptimizationFragment : Fragment() {
                 val memoryStats = appRepository.obterEstatisticasMemoria()
                 val referenceStats = appRepository.obterEstatisticasReferencias()
                 
-                // Formatar e exibir estatísticas
-                val memoryText = formatMemoryStats(memoryStats)
-                val referenceText = formatReferenceStats(referenceStats)
-                
-                tvMemoryStats.text = memoryText
-                tvReferenceStats.text = referenceText
+                // Exibir estatísticas (já retornam String formatada)
+                tvMemoryStats.text = memoryStats
+                tvReferenceStats.text = referenceStats
                 
             } catch (e: Exception) {
                 tvMemoryStats.text = "Erro ao obter estatísticas: ${e.message}"

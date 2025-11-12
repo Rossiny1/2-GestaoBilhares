@@ -141,10 +141,10 @@ class AcertoPullHandler(
                                         val fotoUrlFirebaseMesa = mesaData["fotoRelogioFinal"] as? String
                                         val fotoRelogioLocalMesa = if (!fotoUrlFirebaseMesa.isNullOrBlank()) {
                                             try {
-                                                val isUrlFirebase = com.example.gestaobilhares.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrlFirebaseMesa)
+                                                val isUrlFirebase = com.example.gestaobilhares.core.utils.FirebaseStorageManager.isFirebaseStorageUrl(fotoUrlFirebaseMesa)
                                                 if (isUrlFirebase) {
                                                     android.util.Log.d("AcertoPullHandler", "📥 Iniciando download de foto do Firebase Storage: $fotoUrlFirebaseMesa")
-                                                    val caminhoLocal = com.example.gestaobilhares.utils.FirebaseStorageManager.downloadFoto(
+                                                    val caminhoLocal = com.example.gestaobilhares.core.utils.FirebaseStorageManager.downloadFoto(
                                                         context = context,
                                                         urlFirebase = fotoUrlFirebaseMesa,
                                                         tipoFoto = "relogio_final"
