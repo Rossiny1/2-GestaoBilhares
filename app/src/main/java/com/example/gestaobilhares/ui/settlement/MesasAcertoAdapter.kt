@@ -231,7 +231,7 @@ class MesasAcertoAdapter(
                         // Recalcular subtotal
                         state.subtotal = calcularSubtotalMesa(state, mesa)
                         onDataChanged()
-                        safeNotifyItemChanged(adapterPosition)
+                        safeNotifyItemChanged(bindingAdapterPosition)
                     }
                 }
             }
@@ -245,7 +245,7 @@ class MesasAcertoAdapter(
                         // Recalcular subtotal
                         state.subtotal = calcularSubtotalMesa(state, mesa)
                         onDataChanged()
-                        safeNotifyItemChanged(adapterPosition)
+                        safeNotifyItemChanged(bindingAdapterPosition)
                     }
                 }
             }
@@ -264,7 +264,7 @@ class MesasAcertoAdapter(
                         binding.cbRelogioReiniciou.isChecked = false
                         state.relogioReiniciou = false
                         // Reconfigurar listener
-                        setupRelogioReiniciouListener(binding, mesa, state, adapterPosition)
+                        setupRelogioReiniciouListener(binding, mesa, state, bindingAdapterPosition)
                     }
                     
                     state.comDefeito = isChecked
@@ -283,11 +283,11 @@ class MesasAcertoAdapter(
                     // Recalcular subtotal
                     state.subtotal = calcularSubtotalMesa(state, mesa)
                     onDataChanged()
-                    safeNotifyItemChanged(adapterPosition)
+                    safeNotifyItemChanged(bindingAdapterPosition)
                 }
             }
             
-            setupRelogioReiniciouListener(binding, mesa, state, adapterPosition)
+            setupRelogioReiniciouListener(binding, mesa, state, bindingAdapterPosition)
 
             // Layouts e textos
             // ✅ NOVO: Usar o tipo da mesa como título principal
@@ -370,7 +370,7 @@ class MesasAcertoAdapter(
                 it.dataFoto = null
                 binding.layoutFotoRelogio.visibility = View.GONE
                 onDataChanged()
-                safeNotifyItemChanged(adapterPosition)
+                safeNotifyItemChanged(bindingAdapterPosition)
             }
         }
         
@@ -400,7 +400,7 @@ class MesasAcertoAdapter(
         }
 
         private fun updateSubtotal(state: MesaAcertoState) {
-            val mesa = getItem(adapterPosition)
+            val mesa = getItem(bindingAdapterPosition)
             if (mesa.valorFixo > 0) {
                 // Mesa de valor fixo
                 state.subtotal = mesa.valorFixo
@@ -478,7 +478,7 @@ class MesasAcertoAdapter(
         binding: ItemMesaAcertoBinding,
         mesa: MesaDTO,
         state: MesaAcertoState,
-        adapterPosition: Int
+        bindingAdapterPosition: Int
     ) {
         binding.cbRelogioReiniciou.setOnCheckedChangeListener { _, isChecked ->
             Log.d("MesasAcertoAdapter", "=== CHECKBOX RELÓGIO REINICIOU ===")
@@ -498,7 +498,7 @@ class MesasAcertoAdapter(
                                 binding.cbRelogioReiniciou.setOnCheckedChangeListener(null)
                                 binding.cbRelogioReiniciou.isChecked = false
                                 state.relogioReiniciou = false
-                                setupRelogioReiniciouListener(binding, mesa, state, adapterPosition)
+                                setupRelogioReiniciouListener(binding, mesa, state, bindingAdapterPosition)
                             }
                             
                             state.comDefeito = isChecked2
@@ -513,7 +513,7 @@ class MesasAcertoAdapter(
                             // Recalcular subtotal
                             state.subtotal = calcularSubtotalMesa(state, mesa)
                             onDataChanged()
-                            safeNotifyItemChanged(adapterPosition)
+                            safeNotifyItemChanged(bindingAdapterPosition)
                         }
                     }
                 }
@@ -522,7 +522,7 @@ class MesasAcertoAdapter(
                 // Recalcular subtotal
                 state.subtotal = calcularSubtotalMesa(state, mesa)
                 onDataChanged()
-                safeNotifyItemChanged(adapterPosition)
+                safeNotifyItemChanged(bindingAdapterPosition)
             }
         }
     }

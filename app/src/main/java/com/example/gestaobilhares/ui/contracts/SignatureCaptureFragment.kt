@@ -79,10 +79,22 @@ class SignatureCaptureFragment : Fragment() {
             val contratoId = arguments?.getLong("contrato_id") ?: 0L
             assinaturaContexto = arguments?.getString("assinatura_contexto")
             
-            viewModel.carregarContrato(contratoId)
-            setupObservers()
-            setupSignatureView()
-            setupClickListeners()
+            // ✅ CORREÇÃO CRÍTICA: Validar contratoId antes de carregar (evita carregar contrato inexistente)
+            if (contratoId != 0L) {
+                viewModel.carregarContrato(contratoId)
+                setupObservers()
+                setupSignatureView()
+                setupClickListeners()
+            } else {
+                // Mostrar erro se contratoId não foi fornecido
+                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Erro")
+                    .setMessage("ID do contrato não fornecido. Não é possível carregar os dados.")
+                    .setPositiveButton("OK") { _, _ ->
+                        findNavController().popBackStack()
+                    }
+                    .show()
+            }
         } catch (e: Exception) {
             android.util.Log.e("SignatureCaptureFragment", "Erro ao inicializar ViewModel: ${e.message}")
             // Mostrar erro para o usuário

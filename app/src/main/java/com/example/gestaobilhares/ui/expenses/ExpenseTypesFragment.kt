@@ -86,8 +86,8 @@ class ExpenseTypesFragment : Fragment() {
                 viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
                 target: androidx.recyclerview.widget.RecyclerView.ViewHolder
             ): Boolean {
-                val fromPos = viewHolder.adapterPosition
-                val toPos = target.adapterPosition
+                val fromPos = viewHolder.bindingAdapterPosition
+                val toPos = target.bindingAdapterPosition
                 typeAdapter.moveItem(fromPos, toPos)
                 return true
             }
@@ -96,7 +96,7 @@ class ExpenseTypesFragment : Fragment() {
                 viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
                 direction: Int
             ) {
-                val position = viewHolder.adapterPosition
+                val position = viewHolder.bindingAdapterPosition
                 val type = types[position]
                 deleteType(type)
             }
