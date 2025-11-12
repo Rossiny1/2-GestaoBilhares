@@ -9,18 +9,10 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
-**/build/
 /captures
 .externalNativeBuild
 .cxx
 local.properties
-
-# Build directories dos módulos
-core/build/
-data/build/
-app/build/
-sync/build/
-ui/build/
 
 # Arquivos temporários do Google Drive
 .tmp.driveupload/
