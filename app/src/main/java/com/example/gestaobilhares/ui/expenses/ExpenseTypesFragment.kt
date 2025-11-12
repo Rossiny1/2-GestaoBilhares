@@ -179,6 +179,7 @@ class ExpenseTypesFragment : Fragment() {
                     criadoPor = ""
                 )
                 
+                @Suppress("UNUSED_VARIABLE")
                 val tipoId = tipoRepository.criarTipo(novoTipo)
                 
                 if (isAdded && context != null) {

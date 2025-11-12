@@ -53,7 +53,7 @@ class ExpenseAdapter(
         init {
             // Configura clique no item
             binding.root.setOnClickListener {
-                val position = adapterPosition
+                val position = bindingAdapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     onExpenseClick(getItem(position))
                 }

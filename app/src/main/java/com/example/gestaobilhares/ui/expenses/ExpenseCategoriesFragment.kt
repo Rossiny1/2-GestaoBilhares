@@ -160,6 +160,7 @@ class ExpenseCategoriesFragment : Fragment() {
                     criadoPor = ""
                 )
                 
+                @Suppress("UNUSED_VARIABLE")
                 val categoriaId = categoriaRepository.criarCategoria(novaCategoria)
                 
                 if (isAdded && context != null) {

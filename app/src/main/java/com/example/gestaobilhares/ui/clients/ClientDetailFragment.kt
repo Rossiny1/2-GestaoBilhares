@@ -349,7 +349,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         }
     }
 
-    private fun animateFabContainer(container: View, _index: Int, startDelay: Long, show: Boolean = true, onEndAction: (() -> Unit)? = null) {
+    private fun animateFabContainer(container: View, @Suppress("UNUSED_PARAMETER") _index: Int, startDelay: Long, show: Boolean = true, onEndAction: (() -> Unit)? = null) {
         if (_binding == null) return // Verificar se o binding ainda existe
         
         val translationY = if (show) 0f else 100f
@@ -420,7 +420,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         Log.d("ClientDetailFragment", "Observação adicionada: $textoObservacao")
     }
 
-    private suspend fun gerarDistratoAposRetiradaMesa(contrato: ContratoLocacao, _mesaRemovida: Mesa) {
+    private suspend fun gerarDistratoAposRetiradaMesa(contrato: ContratoLocacao, @Suppress("UNUSED_PARAMETER") _mesaRemovida: Mesa) {
         try {
             // Buscar último acerto do cliente usando AppRepository
             val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
