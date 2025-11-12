@@ -34,7 +34,7 @@ class TypeSelectionAdapter(
 
         init {
             binding.root.setOnClickListener {
-                val position = adapterPosition
+                val position = bindingAdapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     onTypeClick(getItem(position))
                 }

@@ -82,8 +82,8 @@ class ExpenseCategoriesFragment : Fragment() {
                 viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
                 target: androidx.recyclerview.widget.RecyclerView.ViewHolder
             ): Boolean {
-                val fromPos = viewHolder.adapterPosition
-                val toPos = target.adapterPosition
+                val fromPos = viewHolder.bindingAdapterPosition
+                val toPos = target.bindingAdapterPosition
                 categoryAdapter.moveItem(fromPos, toPos)
                 return true
             }
@@ -92,7 +92,7 @@ class ExpenseCategoriesFragment : Fragment() {
                 viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
                 direction: Int
             ) {
-                val position = viewHolder.adapterPosition
+                val position = viewHolder.bindingAdapterPosition
                 val category = categories[position]
                 deleteCategory(category)
             }

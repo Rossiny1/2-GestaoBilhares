@@ -62,6 +62,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
     private var isFabMenuOpen = false
     private lateinit var appRepository: AppRepository
     private var mesaParaRemover: Mesa? = null
+    private val clientId: Long get() = args.clienteId
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -182,14 +183,30 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
             Log.d("ClientDetailFragment", "=== NAVEGAÇÃO PARA EDIÇÃO ===")
             Log.d("ClientDetailFragment", "clientId sendo passado: $clientId")
             
-            // ✅ CORREÇÃO: Passar ambos os argumentos (rotaId e clienteId)
-            val action = ClientDetailFragmentDirections.actionClientDetailFragmentToClientRegisterFragment(
-                rotaId = viewModel.cliente.value?.rotaId ?: 1L,
-                clienteId = clientId
-            )
-            Log.d("ClientDetailFragment", "Action criada com rotaId: ${viewModel.cliente.value?.rotaId ?: 1L}, clienteId: $clientId")
-            findNavController().navigate(action)
-            recolherFabMenu()
+            // ✅ CORREÇÃO CRÍTICA: Buscar rotaId diretamente do banco para evitar fallback hardcoded
+            // Se o usuário clicar antes de loadClientDetails completar, viewModel.cliente.value será null
+            lifecycleScope.launch {
+                try {
+                    val rotaId = viewModel.buscarRotaIdPorCliente(clientId)
+                    if (rotaId == null) {
+                        Toast.makeText(requireContext(), "Erro: Cliente não encontrado ou não associado a uma rota.", Toast.LENGTH_SHORT).show()
+                        recolherFabMenu()
+                        return@launch
+                    }
+                    
+                    val action = ClientDetailFragmentDirections.actionClientDetailFragmentToClientRegisterFragment(
+                        rotaId = rotaId,
+                        clienteId = clientId
+                    )
+                    Log.d("ClientDetailFragment", "Action criada com rotaId: $rotaId, clienteId: $clientId")
+                    findNavController().navigate(action)
+                    recolherFabMenu()
+                } catch (e: Exception) {
+                    Log.e("ClientDetailFragment", "Erro ao buscar rotaId do cliente: ${e.message}", e)
+                    Toast.makeText(requireContext(), "Erro ao carregar dados do cliente.", Toast.LENGTH_SHORT).show()
+                    recolherFabMenu()
+                }
+            }
         }
 
         binding.fabAddTableContainer.setOnClickListener {
@@ -536,18 +553,28 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 // Sempre navegar para ClientListFragment, ignorando o stack atual
-                try {
-                    // ✅ CORREÇÃO: Obter rotaId do cliente e passar como argumento
-                    val rotaId = viewModel.cliente.value?.rotaId ?: 1L
-                    val action = ClientDetailFragmentDirections
-                        .actionClientDetailFragmentToClientListFragment(rotaId = rotaId)
-                    findNavController().navigate(action)
-                } catch (e: Exception) {
-                    // Se a ação não existir, usar popUpTo para limpar o stack
-                    findNavController().popBackStack(
-                        com.example.gestaobilhares.R.id.clientListFragment, 
-                        false
-                    )
+                // ✅ CORREÇÃO CRÍTICA: Buscar rotaId diretamente do banco para evitar fallback hardcoded
+                lifecycleScope.launch {
+                    try {
+                        val rotaId = viewModel.buscarRotaIdPorCliente(clientId)
+                        if (rotaId != null) {
+                            val action = ClientDetailFragmentDirections
+                                .actionClientDetailFragmentToClientListFragment(rotaId = rotaId)
+                            findNavController().navigate(action)
+                        } else {
+                            // Se não encontrar rotaId, usar popUpTo para limpar o stack
+                            findNavController().popBackStack(
+                                com.example.gestaobilhares.R.id.clientListFragment, 
+                                false
+                            )
+                        }
+                    } catch (e: Exception) {
+                        // Se a ação não existir, usar popUpTo para limpar o stack
+                        findNavController().popBackStack(
+                            com.example.gestaobilhares.R.id.clientListFragment, 
+                            false
+                        )
+                    }
                 }
             }
         }

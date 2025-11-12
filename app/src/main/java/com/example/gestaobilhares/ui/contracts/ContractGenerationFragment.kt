@@ -69,10 +69,22 @@ class ContractGenerationFragment : Fragment() {
             val tipoFixo = arguments?.getBoolean("tipo_fixo") ?: false
             val valorFixo = arguments?.getDouble("valor_fixo") ?: 0.0
             
-            viewModel.carregarDados(clienteId, mesasVinculadas, tipoFixo, valorFixo)
-            setupObservers()
-            setupClickListeners()
-            preencherCamposAutomaticamente(tipoFixo, valorFixo)
+            // ✅ CORREÇÃO CRÍTICA: Validar clienteId antes de carregar (evita carregar cliente inexistente)
+            if (clienteId != 0L) {
+                viewModel.carregarDados(clienteId, mesasVinculadas, tipoFixo, valorFixo)
+                setupObservers()
+                setupClickListeners()
+                preencherCamposAutomaticamente(tipoFixo, valorFixo)
+            } else {
+                // Mostrar erro se clienteId não foi fornecido
+                androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Erro")
+                    .setMessage("ID do cliente não fornecido. Não é possível carregar os dados.")
+                    .setPositiveButton("OK") { _, _ ->
+                        findNavController().popBackStack()
+                    }
+                    .show()
+            }
         } catch (e: Exception) {
             android.util.Log.e("ContractGenerationFragment", "Erro ao inicializar ViewModel: ${e.message}")
             // Mostrar erro para o usuário

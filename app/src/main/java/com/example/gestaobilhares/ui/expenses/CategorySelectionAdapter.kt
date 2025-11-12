@@ -36,7 +36,7 @@ class CategorySelectionAdapter(
 
         init {
             binding.root.setOnClickListener {
-                val position = adapterPosition
+                val position = bindingAdapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     onCategoryClick(getItem(position))
                 }
