@@ -218,7 +218,7 @@ class ExpenseRegisterViewModel constructor(
                     criadoPor = "Sistema" // TODO: Pegar usuário atual
                 )
 
-                val categoriaId = appRepository.criarCategoria(novaCategoria)
+                appRepository.criarCategoria(novaCategoria)
                 showMessage("Categoria criada com sucesso")
                 
                 // Recarregar categorias
@@ -252,7 +252,7 @@ class ExpenseRegisterViewModel constructor(
                     criadoPor = "Sistema" // TODO: Pegar usuário atual
                 )
 
-                val tipoId = appRepository.criarTipo(novoTipo)
+                appRepository.criarTipo(novoTipo)
                 showMessage("Tipo criado com sucesso")
                 
                 // Recarregar tipos da categoria

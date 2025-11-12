@@ -21,6 +21,7 @@ import com.example.gestaobilhares.ui.expenses.adapter.ExpenseCategoryAdapter
 import com.example.gestaobilhares.ui.expenses.dialog.AddEditCategoryDialog
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
+import androidx.navigation.fragment.findNavController
 
 class ExpenseCategoriesFragment : Fragment() {
 
@@ -48,7 +49,7 @@ class ExpenseCategoriesFragment : Fragment() {
     private fun setupUI() {
         // Configurar botão voltar
         binding.btnBack.setOnClickListener {
-            requireActivity().onBackPressed()
+            findNavController().popBackStack()
         }
 
         // Configurar botão adicionar
