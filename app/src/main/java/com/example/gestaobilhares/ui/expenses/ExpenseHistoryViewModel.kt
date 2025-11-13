@@ -8,7 +8,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.DespesaResumo
 import com.example.gestaobilhares.data.entities.EstatisticasDespesas
-import com.example.gestaobilhares.data.repository.DespesaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,9 +18,10 @@ import kotlinx.coroutines.launch
 /**
  * ViewModel para a tela de histórico de despesas.
  * Gerencia dados de despesas, filtros e estados da UI.
+ * ✅ MIGRADO: Usa AppRepository centralizado
  */
 class ExpenseHistoryViewModel(
-    private val despesaRepository: DespesaRepository
+    private val appRepository: AppRepository
 ) : BaseViewModel() {
 
     // Estado de carregamento
@@ -46,7 +47,8 @@ class ExpenseHistoryViewModel(
     // val statistics: LiveData<EstatisticasDespesas> = despesaRepository.obterEstatisticas().asLiveData()
 
     // Lista completa de despesas (sem filtro)
-    private val allExpenses = despesaRepository.buscarTodasComRota()
+    // ✅ MIGRADO: Usa AppRepository
+    private val allExpenses = appRepository.obterTodasDespesas()
 
     init {
         loadExpenses()
@@ -108,7 +110,8 @@ class ExpenseHistoryViewModel(
         viewModelScope.launch {
             try {
                 showLoading()
-                despesaRepository.deletar(despesaResumo.despesa)
+                // ✅ MIGRADO: Usa AppRepository
+                appRepository.deletarDespesa(despesaResumo.despesa)
                 _successMessage.value = "Despesa deletada com sucesso"
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao deletar despesa: ${e.message}"

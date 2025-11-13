@@ -304,30 +304,45 @@ fun GestaoBilharesButton(
 }
 ```
 
-## 🎯 REGRA PRINCIPAL: CENTRALIZAÇÃO E SIMPLIFICAÇÃO
+## 🎯 REGRA PRINCIPAL: ARQUITETURA HÍBRIDA MODULAR (2025)
 
-### **Princípios Arquiteturais**
+### **Decisão Arquitetural: Estrutura Híbrida para Trabalho Paralelo**
 
-1. **UM REPOSITORY CENTRALIZADO**: AppRepository como único ponto de acesso aos dados
-2. **BASEVIEWMODEL CENTRALIZADA**: Funcionalidades comuns em um local
-3. **ELIMINAR FRAGMENTAÇÃO**: Evitar múltiplos arquivos desnecessários
-4. **FACILITAR MANUTENÇÃO**: Código organizado e acessível
-5. **REUTILIZAR CÓDIGO**: Eliminar duplicação sempre que possível
+**Análise realizada (Janeiro 2025):**
+- AppRepository atual: ~1.430 linhas, 264 métodos, 17+ DAOs
+- Contexto: 4 agents trabalhando simultaneamente
+- Necessidade: Evitar conflitos de merge e permitir trabalho paralelo
 
-### **Benefícios da Centralização**
+**Decisão: Arquitetura Híbrida Modular**
+- **AppRepository** mantém-se como **Facade/Coordinator** centralizado
+- **Repositories especializados** por domínio (ClientRepository, AcertoRepository, etc.)
+- **AppRepository delega** para repositories especializados
+- **Benefício**: Agents podem trabalhar em domínios diferentes sem conflitos
 
-- **Manutenibilidade**: Código em um local facilita manutenção
-- **Performance**: Cache centralizado otimiza consultas
-- **Consistência**: Padrões unificados em toda aplicação
-- **Simplicidade**: Menos arquivos, menos complexidade
-- **Debugging**: Logs centralizados facilitam diagnóstico
+### **Princípios Arquiteturais (Atualizados 2025)**
 
-### **Estrutura Centralizada**
+1. **FACADE CENTRALIZADO**: AppRepository como ponto único de acesso (mantém compatibilidade)
+2. **REPOSITORIES ESPECIALIZADOS**: Um repository por domínio de negócio
+3. **DELEGAÇÃO**: AppRepository delega para repositories especializados
+4. **BASEVIEWMODEL CENTRALIZADA**: Funcionalidades comuns em um local
+5. **MODULARIDADE**: Separação por domínio facilita trabalho paralelo
+6. **COMPATIBILIDADE**: ViewModels continuam usando AppRepository (sem breaking changes)
+
+### **Estrutura Modular Híbrida (2025)**
 
 ```
 📁 data/
   └── repository/
-      └── AppRepository.kt (✅ ÚNICO REPOSITORY)
+      ├── AppRepository.kt (✅ FACADE - delega para especializados)
+      ├── domain/
+      │   ├── ClientRepository.kt (✅ Domínio: Clientes)
+      │   ├── AcertoRepository.kt (✅ Domínio: Acertos)
+      │   ├── MesaRepository.kt (✅ Domínio: Mesas)
+      │   ├── RotaRepository.kt (✅ Domínio: Rotas)
+      │   ├── DespesaRepository.kt (✅ Domínio: Despesas)
+      │   ├── ColaboradorRepository.kt (✅ Domínio: Colaboradores)
+      │   ├── ContratoRepository.kt (✅ Domínio: Contratos)
+      │   └── CicloRepository.kt (✅ Domínio: Ciclos)
 
 📁 ui/
   └── common/
@@ -335,6 +350,16 @@ fun GestaoBilharesButton(
 
 📁 ui/
   └── [module]/
-      ├── [Module]ViewModel.kt (✅ HERDA DE BASEVIEWMODEL)
+      ├── [Module]ViewModel.kt (✅ USA AppRepository - sem mudanças)
       └── [Module]Fragment.kt (✅ USA STATEFLOW + COLLECT)
 ```
+
+### **Benefícios da Arquitetura Híbrida**
+
+- **Trabalho Paralelo**: 4 agents podem trabalhar em domínios diferentes sem conflitos
+- **Manutenibilidade**: Código organizado por domínio, fácil de localizar
+- **Performance**: Cache centralizado no AppRepository
+- **Consistência**: Padrões unificados via AppRepository
+- **Compatibilidade**: ViewModels não precisam mudar (usam AppRepository)
+- **Escalabilidade**: Fácil adicionar novos domínios sem afetar existentes
+- **Testabilidade**: Repositories especializados são mais fáceis de testar

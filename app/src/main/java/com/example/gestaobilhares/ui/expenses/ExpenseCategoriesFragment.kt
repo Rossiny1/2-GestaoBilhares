@@ -11,11 +11,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentExpenseCategoriesBinding
-import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.entities.CategoriaDespesa
 import com.example.gestaobilhares.data.entities.NovaCategoriaDespesa
 import com.example.gestaobilhares.data.entities.EdicaoCategoriaDespesa
-import com.example.gestaobilhares.data.repository.CategoriaDespesaRepository
 import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.expenses.adapter.ExpenseCategoryAdapter
 import com.example.gestaobilhares.ui.expenses.dialog.AddEditCategoryDialog
@@ -107,11 +105,9 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val database = AppDatabase.getDatabase(requireContext())
                 val appRepository = RepositoryFactory.getAppRepository(requireContext())
-                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao(), appRepository)
                 
-                categoriaRepository.buscarAtivas().collect { categorias ->
+                appRepository.buscarCategoriasAtivas().collect { categorias ->
                     if (!isAdded) return@collect
                     categories.clear()
                     categories.addAll(categorias)
@@ -151,9 +147,7 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val database = AppDatabase.getDatabase(requireContext())
                 val appRepository = RepositoryFactory.getAppRepository(requireContext())
-                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao(), appRepository)
                 
                 val novaCategoria = NovaCategoriaDespesa(
                     nome = name,
@@ -162,7 +156,7 @@ class ExpenseCategoriesFragment : Fragment() {
                 )
                 
                 @Suppress("UNUSED_VARIABLE")
-                val categoriaId = categoriaRepository.criarCategoria(novaCategoria)
+                val categoriaId = appRepository.criarCategoria(novaCategoria)
                 
                 if (isAdded && context != null) {
                     Snackbar.make(
@@ -188,9 +182,7 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val database = AppDatabase.getDatabase(requireContext())
                 val appRepository = RepositoryFactory.getAppRepository(requireContext())
-                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao(), appRepository)
                 
                 val edicaoCategoria = EdicaoCategoriaDespesa(
                     id = category.id,
@@ -199,7 +191,7 @@ class ExpenseCategoriesFragment : Fragment() {
                     ativa = category.ativa
                 )
                 
-                categoriaRepository.editarCategoria(edicaoCategoria)
+                appRepository.editarCategoria(edicaoCategoria)
                 
                 if (isAdded && context != null) {
                     Snackbar.make(
@@ -225,11 +217,9 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val database = AppDatabase.getDatabase(requireContext())
                 val appRepository = RepositoryFactory.getAppRepository(requireContext())
-                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao(), appRepository)
                 
-                categoriaRepository.deletar(category)
+                appRepository.deletarCategoria(category)
                 
                 if (isAdded && context != null) {
                     Snackbar.make(

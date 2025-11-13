@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.clients
+﻿package com.example.gestaobilhares.ui.clients
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -16,9 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.databinding.FragmentClientRegisterBinding
-import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.ClienteRepository
-import com.example.gestaobilhares.core.utils.DataValidator
+import com.example.gestaobilhares.utils.DataValidator
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -75,9 +73,8 @@ class ClientRegisterFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar ViewModel aqui onde o contexto está disponível
-        val database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = ClientRegisterViewModel(ClienteRepository(database.clienteDao(), appRepository))
+        viewModel = ClientRegisterViewModel(appRepository)
         
         // ✅ NOVO: Inicializar cliente de localização
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
@@ -276,7 +273,7 @@ class ClientRegisterFragment : Fragment() {
             android.util.Log.d("ClientRegister", "Valores obtidos: nome=$name, endereco=$address")
             
             // ✅ FASE 2: Usar DataValidator centralizado
-            val resultadoValidacao = com.example.gestaobilhares.core.utils.DataValidator.validarCliente(
+            val resultadoValidacao = com.example.gestaobilhares.utils.DataValidator.validarCliente(
                 nome = name,
                 endereco = address,
                 comissaoFicha = comissaoFicha,
@@ -470,7 +467,7 @@ class ClientRegisterFragment : Fragment() {
     private fun setupEstadoCidadeDropdowns() {
         try {
             // Carregar dados dos estados e cidades
-            val estadosCidades = com.example.gestaobilhares.core.model.EstadosCidades.carregarDados(requireContext())
+            val estadosCidades = com.example.gestaobilhares.data.model.EstadosCidades.carregarDados(requireContext())
             
             // Configurar adapter para estados
             val estados = estadosCidades.estados.map { it.nome }.toTypedArray()

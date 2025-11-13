@@ -14,7 +14,6 @@ import com.example.gestaobilhares.databinding.FragmentCycleHistoryBinding
 import com.example.gestaobilhares.ui.clients.adapter.CycleHistoryAdapter
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.AppRepository
@@ -40,11 +39,10 @@ class CycleHistoryFragment : Fragment() {
         CycleHistoryViewModelFactory(
             CicloAcertoRepository(
                 database.cicloAcertoDao(),
-                DespesaRepository(database.despesaDao()),
-                AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
+                database.despesaDao(), // ✅ CORRIGIDO: Passar DespesaDao diretamente
+                AcertoRepository(database.acertoDao(), database.clienteDao()),
                 ClienteRepository(database.clienteDao(), appRepository),
-                database.rotaDao(),
-                appRepository
+                database.rotaDao()
             ),
             appRepository
         )

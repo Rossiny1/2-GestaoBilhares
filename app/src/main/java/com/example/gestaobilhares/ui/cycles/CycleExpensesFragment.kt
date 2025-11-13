@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.cycles
+package com.example.gestaobilhares.ui.cycles
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,13 +11,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentCycleExpensesBinding
-import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.DespesaRepository
-import com.example.gestaobilhares.data.repository.AcertoRepository
-import com.example.gestaobilhares.data.repository.ClienteRepository
-import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.cycles.adapter.CycleExpensesAdapter
+import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.util.Date
@@ -67,19 +62,9 @@ class CycleExpensesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        val cicloAcertoRepository = CicloAcertoRepository(
-            database.cicloAcertoDao(),
-            DespesaRepository(database.despesaDao()),
-            AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
-            ClienteRepository(database.clienteDao(), appRepository),
-            database.rotaDao(),
-            appRepository
-        )
-        val despesaRepository = DespesaRepository(database.despesaDao())
-        viewModel = CycleExpensesViewModel(cicloAcertoRepository, despesaRepository)
+        // ✅ MIGRADO: Usa AppRepository centralizado
+        val appRepository = RepositoryFactory.getAppRepository(requireContext())
+        viewModel = CycleExpensesViewModel(appRepository)
         
         setupRecyclerView()
         setupObservers()

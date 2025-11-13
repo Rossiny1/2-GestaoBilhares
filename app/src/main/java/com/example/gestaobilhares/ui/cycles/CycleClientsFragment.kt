@@ -12,10 +12,10 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentCycleClientsBinding
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.cycles.adapter.CycleClientsAdapter
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
@@ -55,14 +55,13 @@ class CycleClientsFragment : Fragment() {
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        val appRepository = RepositoryFactory.getAppRepository(requireContext())
         val cicloAcertoRepository = CicloAcertoRepository(
             database.cicloAcertoDao(),
-            DespesaRepository(database.despesaDao()),
-            AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
+            database.despesaDao(), // ✅ CORRIGIDO: Passar DespesaDao diretamente
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
             ClienteRepository(database.clienteDao(), appRepository),
-            database.rotaDao(),
-            appRepository
+            database.rotaDao()
         )
         viewModel = CycleClientsViewModel(cicloAcertoRepository)
         

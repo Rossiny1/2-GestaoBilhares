@@ -10,9 +10,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentVehicleDetailBinding
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.VeiculoRepository
-import com.example.gestaobilhares.data.repository.HistoricoManutencaoVeiculoRepository
-import com.example.gestaobilhares.data.repository.HistoricoCombustivelVeiculoRepository
+// TODO: Repositories de veículos não existem mais - comentado temporariamente
+// import com.example.gestaobilhares.data.repository.VeiculoRepository
+// import com.example.gestaobilhares.data.repository.HistoricoManutencaoVeiculoRepository
+// import com.example.gestaobilhares.data.repository.HistoricoCombustivelVeiculoRepository
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -21,8 +22,9 @@ class VehicleDetailFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var viewModel: VehicleDetailViewModel
-    private lateinit var maintenanceAdapter: MaintenanceHistoryAdapter
-    private lateinit var fuelAdapter: FuelHistoryAdapter
+    // TODO: Criar adapters quando necessário
+    // private lateinit var maintenanceAdapter: MaintenanceHistoryAdapter
+    // private lateinit var fuelAdapter: FuelHistoryAdapter
 
     private var vehicleId: Long = 0L
 
@@ -100,22 +102,23 @@ class VehicleDetailFragment : Fragment() {
     }
 
     private fun setupRecyclerViews() {
+        // TODO: Implementar adapters quando necessário
         // Adapter de manutenção
-        maintenanceAdapter = MaintenanceHistoryAdapter { maintenance ->
-            // TODO: Implementar navegação para detalhes da manutenção
-        }
-        binding.rvMaintenanceHistory.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvMaintenanceHistory.adapter = maintenanceAdapter
+        // maintenanceAdapter = MaintenanceHistoryAdapter { maintenance ->
+        //     // TODO: Implementar navegação para detalhes da manutenção
+        // }
+        // binding.rvMaintenanceHistory.layoutManager = LinearLayoutManager(requireContext())
+        // binding.rvMaintenanceHistory.adapter = maintenanceAdapter
 
         // Adapter de abastecimento
-        fuelAdapter = FuelHistoryAdapter(
-            onFuelClick = { fuel ->
-                // TODO: Implementar navegação para detalhes do abastecimento
-            },
-            vehicleInitialMileage = viewModel.vehicle.value?.mileage ?: 0.0
-        )
-        binding.rvFuelHistory.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvFuelHistory.adapter = fuelAdapter
+        // fuelAdapter = FuelHistoryAdapter(
+        //     onFuelClick = { fuel ->
+        //         // TODO: Implementar navegação para detalhes do abastecimento
+        //     },
+        //     vehicleInitialMileage = viewModel.vehicle.value?.mileage ?: 0.0
+        // )
+        // binding.rvFuelHistory.layoutManager = LinearLayoutManager(requireContext())
+        // binding.rvFuelHistory.adapter = fuelAdapter
     }
 
     private fun setupClickListeners() {
@@ -141,6 +144,8 @@ class VehicleDetailFragment : Fragment() {
             }
         }
 
+        // TODO: Adapters de veículos não existem - código comentado temporariamente
+        /*
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.maintenanceHistory.collect { maintenanceList ->
                 maintenanceAdapter.submitList(maintenanceList)
@@ -158,6 +163,7 @@ class VehicleDetailFragment : Fragment() {
                 updateFuelSummary()
             }
         }
+        */
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.summaryData.collect { summary ->

@@ -12,8 +12,8 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentMesasDepositoBinding
 import com.example.gestaobilhares.data.entities.Mesa
-import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.utils.UserSessionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -43,9 +43,8 @@ class MesasDepositoFragment : Fragment() {
         // Inicializar gerenciador de sessão
         userSessionManager = UserSessionManager.getInstance(requireContext())
         
-        val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = MesasDepositoViewModel(MesaRepository(database.mesaDao(), appRepository), appRepository)
+        val appRepository = RepositoryFactory.getAppRepository(requireContext())
+        viewModel = MesasDepositoViewModel(appRepository)
         setupRecyclerView()
         setupListeners()
         setupAccessControl()
@@ -343,9 +342,11 @@ class MesasDepositoFragment : Fragment() {
                                 // Executar vinculação de forma síncrona
                                 try {
                                     if (tipoFixo && valorFixo != null) {
-                                        viewModel.mesaRepository.vincularMesaComValorFixo(mesa.id, clienteId, valorFixo)
+                                        val appRepo = RepositoryFactory.getAppRepository(requireContext())
+                                        appRepo.vincularMesaComValorFixo(mesa.id, clienteId, valorFixo)
                                     } else {
-                                        viewModel.mesaRepository.vincularMesa(mesa.id, clienteId)
+                                        val appRepo = RepositoryFactory.getAppRepository(requireContext())
+                                        appRepo.vincularMesaACliente(mesa.id, clienteId)
                                     }
                                     android.util.Log.d("MesasDepositoFragment", "Mesa vinculada com sucesso")
                                     

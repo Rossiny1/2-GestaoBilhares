@@ -11,14 +11,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentExpenseTypesBinding
-import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.entities.CategoriaDespesa
 import com.example.gestaobilhares.data.entities.TipoDespesa
 import com.example.gestaobilhares.data.entities.TipoDespesaComCategoria
 import com.example.gestaobilhares.data.entities.NovoTipoDespesa
 import com.example.gestaobilhares.data.entities.EdicaoTipoDespesa
-import com.example.gestaobilhares.data.repository.CategoriaDespesaRepository
-import com.example.gestaobilhares.data.repository.TipoDespesaRepository
 import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.expenses.adapter.ExpenseTypeAdapter
 import com.example.gestaobilhares.ui.expenses.dialog.AddEditTypeDialog
@@ -111,14 +108,11 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val database = AppDatabase.getDatabase(requireContext())
                 val appRepository = RepositoryFactory.getAppRepository(requireContext())
-                val categoriaRepository = CategoriaDespesaRepository(database.categoriaDespesaDao(), appRepository)
-                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao(), appRepository)
                 
                 // Carregar categorias e tipos em paralelo
                 launch {
-                    categoriaRepository.buscarAtivas().collect { categorias ->
+                    appRepository.buscarCategoriasAtivas().collect { categorias ->
                         if (!isAdded) return@collect
                         categories.clear()
                         categories.addAll(categorias)
@@ -126,7 +120,7 @@ class ExpenseTypesFragment : Fragment() {
                 }
                 
                 launch {
-                    tipoRepository.buscarAtivosComCategoria().collect { tipos ->
+                    appRepository.buscarTiposAtivosComCategoria().collect { tipos ->
                         if (!isAdded) return@collect
                         types.clear()
                         types.addAll(tipos)
@@ -169,9 +163,7 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val database = AppDatabase.getDatabase(requireContext())
                 val appRepository = RepositoryFactory.getAppRepository(requireContext())
-                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao(), appRepository)
                 
                 val novoTipo = NovoTipoDespesa(
                     categoriaId = categoryId,
@@ -181,7 +173,7 @@ class ExpenseTypesFragment : Fragment() {
                 )
                 
                 @Suppress("UNUSED_VARIABLE")
-                val tipoId = tipoRepository.criarTipo(novoTipo)
+                val tipoId = appRepository.criarTipo(novoTipo)
                 
                 if (isAdded && context != null) {
                     Snackbar.make(
@@ -207,9 +199,7 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val database = AppDatabase.getDatabase(requireContext())
                 val appRepository = RepositoryFactory.getAppRepository(requireContext())
-                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao(), appRepository)
                 
                 val edicaoTipo = EdicaoTipoDespesa(
                     id = type.id,
@@ -219,7 +209,7 @@ class ExpenseTypesFragment : Fragment() {
                     ativo = type.ativo
                 )
                 
-                tipoRepository.editarTipo(edicaoTipo)
+                appRepository.editarTipo(edicaoTipo)
                 
                 if (isAdded && context != null) {
                     Snackbar.make(
@@ -245,11 +235,9 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val database = AppDatabase.getDatabase(requireContext())
                 val appRepository = RepositoryFactory.getAppRepository(requireContext())
-                val tipoRepository = TipoDespesaRepository(database.tipoDespesaDao(), appRepository)
                 
-                tipoRepository.deletar(type.tipoDespesa)
+                appRepository.deletarTipo(type.tipoDespesa)
                 
                 if (isAdded && context != null) {
                     Snackbar.make(

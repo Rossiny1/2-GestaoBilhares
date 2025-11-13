@@ -3,16 +3,15 @@ package com.example.gestaobilhares.ui.cycles
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.gestaobilhares.data.repository.CicloAcertoRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Date
 import java.time.ZoneId
-import com.example.gestaobilhares.data.repository.DespesaRepository
-import com.example.gestaobilhares.data.database.AppDatabase
 
 /**
  * Extensão para converter LocalDateTime para Date
@@ -37,10 +36,10 @@ data class CycleExpenseItem(
 
 /**
  * ViewModel para gerenciar despesas do ciclo
+ * ✅ MIGRADO: Usa AppRepository centralizado
  */
 class CycleExpensesViewModel(
-    private val cicloAcertoRepository: CicloAcertoRepository,
-    private val despesaRepository: DespesaRepository
+    private val appRepository: AppRepository
 ) : BaseViewModel() {
 
     private val _despesas = MutableStateFlow<List<CycleExpenseItem>>(emptyList())
@@ -65,7 +64,8 @@ class CycleExpensesViewModel(
                 _errorMessage.value = null
 
                 // Buscar despesas reais do ciclo
-                val despesasReais = cicloAcertoRepository.buscarDespesasPorCiclo(cicloId)
+                // ✅ MIGRADO: Usa AppRepository
+                val despesasReais = appRepository.buscarDespesasPorCicloId(cicloId).first()
                 
                 // Mapear para o formato de exibição
                 val despesasDTO = despesasReais.map { despesa ->
@@ -103,11 +103,12 @@ class CycleExpensesViewModel(
                 _errorMessage.value = null
 
                 // ✅ CORREÇÃO: Buscar despesa real no banco e remover
-                val despesaExistente = despesaRepository.buscarPorId(despesaId)
+                // ✅ MIGRADO: Usa AppRepository
+                val despesaExistente = appRepository.obterDespesaPorId(despesaId)
                 
                 if (despesaExistente != null) {
                     // Remover despesa do banco
-                    despesaRepository.deletar(despesaExistente)
+                    appRepository.deletarDespesa(despesaExistente)
                     
                     // Recarregar lista de despesas
                     carregarDespesas(despesaExistente.cicloId ?: 0L)
@@ -137,7 +138,8 @@ class CycleExpensesViewModel(
                 _errorMessage.value = null
 
                 // ✅ CORREÇÃO: Buscar despesa real no banco e atualizar
-                val despesaExistente = despesaRepository.buscarPorId(despesaId)
+                // ✅ MIGRADO: Usa AppRepository
+                val despesaExistente = appRepository.obterDespesaPorId(despesaId)
                 
                 if (despesaExistente != null) {
                     // Atualizar despesa no banco
@@ -148,7 +150,7 @@ class CycleExpensesViewModel(
                         observacoes = observacoes
                     )
                     
-                    despesaRepository.atualizar(despesaAtualizada)
+                    appRepository.atualizarDespesa(despesaAtualizada)
                     
                     // Recarregar lista de despesas
                     carregarDespesas(despesaExistente.cicloId ?: 0L)
@@ -172,7 +174,9 @@ class CycleExpensesViewModel(
      */
     suspend fun buscarCicloPorId(cicloId: Long): com.example.gestaobilhares.data.entities.CicloAcertoEntity? {
         return try {
-            cicloAcertoRepository.buscarCicloPorId(cicloId)
+            // ✅ MIGRADO: Usa AppRepository - tipo explícito no retorno para evitar ambiguidade
+            val resultado: com.example.gestaobilhares.data.entities.CicloAcertoEntity? = appRepository.buscarCicloPorId(cicloId)
+            resultado
         } catch (e: Exception) {
             android.util.Log.e("CycleExpensesViewModel", "Erro ao buscar ciclo por ID: ${e.message}")
             null
@@ -196,15 +200,15 @@ class CycleExpensesViewModel(
 
 /**
  * Factory para o ViewModel
+ * ✅ MIGRADO: Usa AppRepository centralizado
  */
 class CycleExpensesViewModelFactory(
-    private val cicloAcertoRepository: CicloAcertoRepository,
-    private val despesaRepository: DespesaRepository
+    private val appRepository: AppRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(CycleExpensesViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return CycleExpensesViewModel(cicloAcertoRepository, despesaRepository) as T
+            return CycleExpensesViewModel(appRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

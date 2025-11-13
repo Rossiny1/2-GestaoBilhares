@@ -15,22 +15,21 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.core.content.ContextCompat
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.AcertoMesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
-import com.example.gestaobilhares.data.repository.MesaRepository
+// MesaRepository não existe - usar AppRepository diretamente
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.databinding.FragmentSettlementDetailBinding
 import com.example.gestaobilhares.utils.AppLogger
 import com.example.gestaobilhares.utils.ReciboPrinterHelper
-import com.example.gestaobilhares.core.utils.StringUtils
-import com.example.gestaobilhares.core.utils.DateUtils
+import com.example.gestaobilhares.utils.StringUtils
+import com.example.gestaobilhares.utils.DateUtils
 import com.example.gestaobilhares.R
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
-import com.example.gestaobilhares.utils.BluetoothPrinterHelper
+// BluetoothPrinterHelper removido - usar ReciboPrinterHelper
 import androidx.core.app.ActivityCompat
 import java.io.File
 
@@ -76,8 +75,8 @@ class SettlementDetailFragment : Fragment() {
         val database = AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = SettlementDetailViewModel(
-            AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
-            AcertoMesaRepository(database.acertoMesaDao()),
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
+            appRepository,
             com.example.gestaobilhares.data.repository.ClienteRepository(
                 database.clienteDao(),
                 appRepository
@@ -209,13 +208,12 @@ class SettlementDetailFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-                val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao(), appRepository)
                 val mesasCompletas = mutableMapOf<Long, AcertoMesaDetailAdapter.MesaCompleta>()
                 
                 AppLogger.log("SettlementDetailFragment", "=== BUSCANDO DADOS COMPLETOS DAS MESAS ===")
                 for (acertoMesa in settlement.acertoMesas) {
                     AppLogger.log("SettlementDetailFragment", "Buscando mesa ID: ${acertoMesa.mesaId}")
-                    val mesaCompleta = mesaRepository.buscarPorId(acertoMesa.mesaId)
+                    val mesaCompleta = appRepository.obterMesaPorId(acertoMesa.mesaId)
                     if (mesaCompleta != null) {
                         AppLogger.log("SettlementDetailFragment", "Mesa encontrada: ${mesaCompleta.numero} (${mesaCompleta.tipoMesa.name})")
                         mesasCompletas[acertoMesa.mesaId] = AcertoMesaDetailAdapter.MesaCompleta(
@@ -403,7 +401,6 @@ class SettlementDetailFragment : Fragment() {
      */
     private suspend fun obterMesasCompletas(settlement: SettlementDetailViewModel.SettlementDetail): List<Mesa> {
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao(), appRepository)
         val mesasCompletas = mutableListOf<Mesa>()
         
         AppLogger.log("SettlementDetailFragment", "=== BUSCANDO MESAS COMPLETAS ===")
@@ -411,7 +408,7 @@ class SettlementDetailFragment : Fragment() {
         
         for (acertoMesa in settlement.acertoMesas) {
             AppLogger.log("SettlementDetailFragment", "Buscando mesa ID: ${acertoMesa.mesaId}")
-            val mesaCompleta = mesaRepository.buscarPorId(acertoMesa.mesaId)
+            val mesaCompleta = appRepository.obterMesaPorId(acertoMesa.mesaId)
             if (mesaCompleta != null) {
                 AppLogger.log("SettlementDetailFragment", "Mesa encontrada: ${mesaCompleta.numero} (${mesaCompleta.tipoMesa})")
                 val mesaComAcerto = mesaCompleta.copy(
@@ -453,8 +450,7 @@ class SettlementDetailFragment : Fragment() {
     private suspend fun buscarMesaCompleta(mesaId: Long): Mesa? {
         return try {
             val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-            val mesaRepository = MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao(), appRepository)
-            mesaRepository.buscarPorId(mesaId)
+            appRepository.obterMesaPorId(mesaId)
         } catch (e: Exception) {
             Log.e("SettlementDetailFragment", "Erro ao buscar mesa: ${e.message}")
             null
@@ -480,23 +476,18 @@ class SettlementDetailFragment : Fragment() {
                 val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
                 val acertoRepo = AcertoRepository(
                     database.acertoDao(),
-                    database.clienteDao(),
-                    appRepository
+                    database.clienteDao()
                 )
                 val clienteRepo = com.example.gestaobilhares.data.repository.ClienteRepository(
                     database.clienteDao(),
                     appRepository
                 )
-                val despesaRepo = com.example.gestaobilhares.data.repository.DespesaRepository(
-                    AppDatabase.getDatabase(requireContext()).despesaDao()
-                )
                 val cicloAcertoRepository = CicloAcertoRepository(
-                    AppDatabase.getDatabase(requireContext()).cicloAcertoDao(),
-                    despesaRepo,
+                    database.cicloAcertoDao(),
+                    database.despesaDao(), // ✅ CORRIGIDO: Passar DespesaDao diretamente
                     acertoRepo,
                     clienteRepo,
-                    AppDatabase.getDatabase(requireContext()).rotaDao(),
-                    appRepository
+                    database.rotaDao()
                 )
                 
                 // Verificar permissão

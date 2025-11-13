@@ -182,17 +182,20 @@ class SignatureCaptureFragment : Fragment() {
         }
         
         val statistics = binding.signatureView.getSignatureStatistics()
-        Log.d(TAG, "Assinatura válida: ${statistics.isValidSignature()}")
-        Log.d(TAG, "Total points: ${statistics.totalPoints}, duration: ${statistics.duration}")
+        val totalPoints = statistics["totalPoints"] as? Int ?: 0
+        val duration = statistics["duration"] as? Long ?: 0L
+        val isValid = totalPoints >= 1
+        Log.d(TAG, "Assinatura válida: $isValid")
+        Log.d(TAG, "Total points: $totalPoints, duration: $duration")
         
         // ✅ CORREÇÃO: Validação mais permissiva
-        if (statistics.totalPoints < 1) {
+        if (totalPoints < 1) {
             Toast.makeText(requireContext(), "Por favor, assine", Toast.LENGTH_SHORT).show()
             return
         }
         
         // Validação mínima: apenas verificar se não está vazia
-        if (statistics.totalPoints < 3) {
+        if (totalPoints < 3) {
             Toast.makeText(requireContext(), "Assinatura muito simples. Por favor, assine novamente.", Toast.LENGTH_LONG).show()
             return
         }
@@ -213,6 +216,11 @@ class SignatureCaptureFragment : Fragment() {
             userAgent = "fallback_agent",
             screenResolution = "fallback_resolution"
         )
+        
+        // ✅ CORREÇÃO: Extrair valores de statistics usando Map
+        val averagePressure = statistics["averagePressure"] as? Double ?: 0.0
+        val averageVelocity = statistics["averageVelocity"] as? Double ?: 0.0
+        val statisticsDuration = statistics["duration"] as? Long ?: 0L
         
         if (contrato != null) {
             viewLifecycleOwner.lifecycleScope.launch {
@@ -264,10 +272,10 @@ class SignatureCaptureFragment : Fragment() {
                 deviceId = metadata.deviceId,
                 ipAddress = metadata.ipAddress,
                 timestamp = metadata.timestamp,
-                pressaoMedia = statistics.averagePressure,
-                velocidadeMedia = statistics.averageVelocity,
-                duracao = statistics.duration,
-                totalPontos = statistics.totalPoints
+                pressaoMedia = averagePressure.toFloat(),
+                velocidadeMedia = averageVelocity.toFloat(),
+                duracao = statisticsDuration,
+                totalPontos = totalPoints
             )
         }
     }

@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.cycles
+﻿package com.example.gestaobilhares.ui.cycles
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -261,7 +261,7 @@ class CycleManagementViewModel(
      */
     private fun processarMetodosPagamento(metodosPagamentoJson: String?): Map<String, Double> {
         return try {
-            if (com.example.gestaobilhares.core.utils.StringUtils.isVazia(metodosPagamentoJson)) {
+            if (com.example.gestaobilhares.utils.StringUtils.isVazia(metodosPagamentoJson)) {
                 mapOf("Dinheiro" to 0.0)
             } else {
                 val tipo = object : TypeToken<Map<String, Double>>() {}.type

@@ -21,12 +21,12 @@ import kotlinx.coroutines.launch
 import androidx.core.view.children
 import java.text.NumberFormat
 import java.util.*
-import com.example.gestaobilhares.data.repository.DespesaRepository
-import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.factory.RepositoryFactory
 
 /**
  * Fragment para exibir o histórico de despesas.
  * Implementa funcionalidades de listagem, filtros e estatísticas.
+ * ✅ MIGRADO: Usa AppRepository centralizado
  */
 class ExpenseHistoryFragment : Fragment() {
 
@@ -54,7 +54,9 @@ class ExpenseHistoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel = ExpenseHistoryViewModel(DespesaRepository(AppDatabase.getDatabase(requireContext()).despesaDao()))
+        // ✅ MIGRADO: Usa AppRepository centralizado
+        val appRepository = RepositoryFactory.getAppRepository(requireContext())
+        viewModel = ExpenseHistoryViewModel(appRepository)
         
         setupRecyclerView()
         setupClickListeners()

@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Cliente
-import com.example.gestaobilhares.data.repository.ClienteRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
  * ViewModel para ClientRegisterFragment
  */
 class ClientRegisterViewModel(
-    private val clienteRepository: ClienteRepository
+    private val appRepository: AppRepository
 ) : BaseViewModel() {
     private val _novoClienteId = MutableStateFlow<Long?>(null)
     val novoClienteId: StateFlow<Long?> = _novoClienteId.asStateFlow()
@@ -37,7 +37,7 @@ class ClientRegisterViewModel(
         
         viewModelScope.launch {
             try {
-                val debito = clienteRepository.obterDebitoAtual(clienteId)
+                val debito = appRepository.obterDebitoAtual(clienteId)
                 _debitoAtual.value = debito
             } catch (e: Exception) {
                 _debitoAtual.value = 0.0
@@ -67,10 +67,10 @@ class ClientRegisterViewModel(
                     )
                     
                     android.util.Log.d("ClientRegisterViewModel", "Cliente atualizado preparado: ${clienteAtualizado.nome}")
-                    clienteRepository.atualizar(clienteAtualizado)
+                    appRepository.atualizarCliente(clienteAtualizado)
                     
                     // Verificar se a atualização foi bem-sucedida
-                    val clienteVerificado = clienteRepository.obterPorId(clienteExistente.id)
+                    val clienteVerificado = appRepository.obterClientePorId(clienteExistente.id)
                     android.util.Log.d("ClientRegisterViewModel", "Cliente após atualização: ${clienteVerificado?.nome}")
                     
                     _clienteAtualizado.value = true
@@ -78,7 +78,7 @@ class ClientRegisterViewModel(
                 } else {
                     // MODO NOVO CADASTRO
                     android.util.Log.d("ClientRegisterViewModel", "Modo NOVO CADASTRO - Inserindo cliente")
-                    val id = clienteRepository.inserir(cliente)
+                    val id = appRepository.inserirCliente(cliente)
                     _novoClienteId.value = id
                     android.util.Log.d("ClientRegisterViewModel", "Cliente inserido com sucesso, ID: $id")
                 }
@@ -108,7 +108,7 @@ class ClientRegisterViewModel(
                 android.util.Log.d("ClientRegisterViewModel", "Carregando cliente para edição: $clienteId")
                 showLoading()
                 
-                val cliente = clienteRepository.obterPorId(clienteId)
+                val cliente = appRepository.obterClientePorId(clienteId)
                 _clienteParaEdicao.value = cliente
                 
                 // Carregar débito atual também

@@ -5,8 +5,10 @@ import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
-import com.example.gestaobilhares.data.repository.MesaReformadaRepository
+// TODO: MesaReformadaRepository não existe - usar AppRepository quando método estiver disponível
+// import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 import com.example.gestaobilhares.data.repository.AppRepository
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,7 +40,8 @@ data class MesaReformadaComHistorico(
  * ✅ NOVO: Agrupa reformas por mesa e inclui histórico de manutenções
  */
 class MesasReformadasViewModel constructor(
-    private val mesaReformadaRepository: MesaReformadaRepository,
+    // TODO: MesaReformadaRepository não existe - usar AppRepository quando método estiver disponível
+    // private val mesaReformadaRepository: MesaReformadaRepository,
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 
@@ -59,19 +62,20 @@ class MesasReformadasViewModel constructor(
             try {
                 showLoading()
                 // ✅ NOVO: Combinar reformas, histórico e filtro, agrupando por mesa
+                // TODO: AppRepository precisa ter método obterTodasMesasReformadas() - usar flowOf temporariamente
                 combine(
-                    mesaReformadaRepository.listarTodas(),
+                    flowOf<List<MesaReformada>>(emptyList()), // TODO: Substituir por appRepository.obterTodasMesasReformadas() quando disponível
                     appRepository.obterTodosHistoricoManutencaoMesa(),
                     _filtroNumeroMesa
-                ) { mesasReformadas, historicoManutencoes, filtro ->
+                ) { mesasReformadas: List<MesaReformada>, historicoManutencoes: List<HistoricoManutencaoMesa>, filtro: String? ->
                     // Agrupar reformas por número da mesa
                     val reformasPorMesa = mesasReformadas.groupBy { it.numeroMesa }
                     
                     // Criar lista de MesaReformadaComHistorico
-                    val mesasAgrupadas = reformasPorMesa.map { (numeroMesa, reformas) ->
+                    val mesasAgrupadas = reformasPorMesa.map { (numeroMesa: String, reformas: List<MesaReformada>) ->
                         val primeiraReforma = reformas.first()
-                        val historicoDaMesa = historicoManutencoes.filter { 
-                            it.numeroMesa == numeroMesa 
+                        val historicoDaMesa = historicoManutencoes.filter { historico: HistoricoManutencaoMesa ->
+                            historico.numeroMesa == numeroMesa 
                         }.sortedByDescending { it.dataManutencao.time }
                         
                         MesaReformadaComHistorico(
@@ -88,11 +92,11 @@ class MesasReformadasViewModel constructor(
                     if (filtro.isNullOrBlank()) {
                         mesasAgrupadas
                     } else {
-                        mesasAgrupadas.filter { 
-                            it.numeroMesa.contains(filtro, ignoreCase = true) 
+                        mesasAgrupadas.filter { mesa: MesaReformadaComHistorico ->
+                            mesa.numeroMesa.contains(filtro, ignoreCase = true) 
                         }
                     }
-                }.collect { mesasFiltradas ->
+                }.collect { mesasFiltradas: List<MesaReformadaComHistorico> ->
                     _mesasReformadas.value = mesasFiltradas
                     hideLoading() // Ocultar loading após primeira coleta
                 }

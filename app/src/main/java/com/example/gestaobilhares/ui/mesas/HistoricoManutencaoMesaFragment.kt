@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentHistoricoManutencaoMesaBinding
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
 
 /**
  * Fragment que exibe o histórico completo de manutenção de uma mesa.

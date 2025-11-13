@@ -3,12 +3,12 @@ package com.example.gestaobilhares.ui.mesas
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Mesa
-import com.example.gestaobilhares.data.repository.MesaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class CadastroMesaViewModel(
-    private val mesaRepository: MesaRepository
+    private val appRepository: AppRepository
 ) : ViewModel() {
     
     /**
@@ -19,7 +19,7 @@ class CadastroMesaViewModel(
             android.util.Log.d("CadastroMesaViewModel", "🔍 Verificando se número de mesa '$numero' já existe...")
             
             // Buscar todas as mesas (disponíveis e em uso)
-            val todasMesas = mesaRepository.obterTodasMesas().first()
+            val todasMesas = appRepository.obterTodasMesas().first()
             val numeroExiste = todasMesas.any { it.numero.equals(numero, ignoreCase = true) }
             
             android.util.Log.d("CadastroMesaViewModel", "Resultado da verificação: $numeroExiste")
@@ -51,12 +51,12 @@ class CadastroMesaViewModel(
             android.util.Log.d("CadastroMesaViewModel", "Tamanho: ${mesa.tamanho}")
             
             try {
-                val mesaId = mesaRepository.inserir(mesa)
+                val mesaId = appRepository.inserirMesa(mesa)
                 android.util.Log.d("CadastroMesaViewModel", "✅ Mesa salva com sucesso! ID: $mesaId")
                 
                 // Verificar se a mesa aparece na lista de disponíveis
                 android.util.Log.d("CadastroMesaViewModel", "Verificando se mesa aparece na lista de disponíveis...")
-                val mesas = mesaRepository.obterMesasDisponiveis().first()
+                val mesas = appRepository.obterMesasDisponiveis().first()
                 android.util.Log.d("CadastroMesaViewModel", "Mesas disponíveis após salvar: ${mesas.size}")
                 mesas.forEach { m ->
                     android.util.Log.d("CadastroMesaViewModel", "Mesa disponível: ${m.numero} (ID: ${m.id})")

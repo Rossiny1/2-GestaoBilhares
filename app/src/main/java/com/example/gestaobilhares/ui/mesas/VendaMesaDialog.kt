@@ -15,7 +15,6 @@ import com.example.gestaobilhares.data.entities.MesaVendida
 import com.example.gestaobilhares.databinding.DialogVendaMesaBinding
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.data.repository.MesaVendidaRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.room.withTransaction
 import kotlinx.coroutines.launch
@@ -34,8 +33,6 @@ class VendaMesaDialog : DialogFragment() {
 
     // ✅ SIMPLIFICADO: Usar instâncias diretas ao invés de injeção
     private lateinit var appRepository: AppRepository
-    private lateinit var mesaVendidaRepository: MesaVendidaRepository
-    private lateinit var database: AppDatabase
 
     private var onVendaRealizada: ((MesaVendida) -> Unit)? = null
     private var mesasDisponiveis: List<Mesa> = emptyList()
@@ -76,9 +73,7 @@ class VendaMesaDialog : DialogFragment() {
         // onViewCreated normalmente NÃO é chamado. Portanto, inicializamos aqui.
         try {
             android.util.Log.d(TAG, "onCreateDialog() - inicializando dependencias e UI")
-            database = AppDatabase.getDatabase(requireContext())
             appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-            mesaVendidaRepository = MesaVendidaRepository(database.mesaVendidaDao(), appRepository)
 
             setupUI()
             setupClickListeners()
@@ -306,15 +301,16 @@ class VendaMesaDialog : DialogFragment() {
 
                 // ✅ Transação atômica: inserir venda + remover mesa do depósito
                 var vendaId = 0L
+                val database = AppDatabase.getDatabase(requireContext())
                 database.withTransaction {
-                    vendaId = mesaVendidaRepository.inserir(novaVenda)
+                    vendaId = appRepository.inserirMesaVendida(novaVenda)
                     appRepository.deletarMesa(mesa)
                 }
                 android.util.Log.d(TAG, "Transação concluída - vendaId=${vendaId}")
 
                 // Verificações pós-transação para diagnóstico
-                val vendaRetornada = mesaVendidaRepository.buscarPorId(vendaId)
-                val mesaAindaExiste = database.mesaDao().obterMesaPorId(mesa.id) != null
+                val vendaRetornada = appRepository.buscarMesaVendidaPorId(vendaId)
+                val mesaAindaExiste = appRepository.obterMesaPorId(mesa.id) != null
                 android.util.Log.d(TAG, "Pós-transação: vendaRetornadaNull=${vendaRetornada==null} mesaAindaExiste=${mesaAindaExiste}")
                 if (vendaRetornada == null || mesaAindaExiste) {
                     android.util.Log.e(TAG, "Inconsistência pós-transação - venda nula ou mesa ainda presente")
