@@ -138,7 +138,6 @@ class RoutesFragment : Fragment() {
      */
     private fun setupNavigationDrawer() {
         // ✅ NOVO: Controlar visibilidade do menu baseado no nível do usuário
-        val menu = binding.navigationView.menu
         val hasMenuAccess = userSessionManager.hasMenuAccess()
         
         // Ocultar menu completo para usuários USER
@@ -596,57 +595,33 @@ class RoutesFragment : Fragment() {
             // Executar sincronização em background
             viewLifecycleOwner.lifecycleScope.launch {
                 try {
-                    // TODO: Implementar sincronização quando SyncManagerV2 estiver disponível
-                    // Forçar sincronização através do SyncManagerV2
-                    // val syncManager = com.example.gestaobilhares.sync.SyncManagerV2(
-                    //     requireContext(),
-                    //     viewModel.getAppRepository(),
-                    //     AppDatabase.getDatabase(requireContext())
-                    // )
-                    // 
-                    // // Debug: Mostrar fila antes da sincronização
-                    // syncManager.debugSyncQueue()
-                    // 
-                    // syncManager.forceSync()
+                    val syncRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getSyncRepository(requireContext())
                     
-                    // ✅ CORREÇÃO: Aguardar mais tempo para garantir que a sincronização seja processada
-                    kotlinx.coroutines.delay(3000)
+                    // Executar sincronização bidirecional
+                    val result = syncRepository.syncBidirectional()
                     
-                    // TODO: Implementar verificação de status quando SyncManagerV2 estiver disponível
-                    // Verificar status
-                    // val stats = syncManager.getSyncStats()
-                    // 
-                    // if (stats.isOnline) {
-                    //     Toast.makeText(requireContext(), 
-                    //         "✅ Sincronização concluída!\n" +
-                    //         "Pendentes: ${stats.pendingOperations}\n" +
-                    //         "Falhas: ${stats.failedOperations}", 
-                    //         Toast.LENGTH_LONG).show()
-                    //     
-                    //     // ✅ CORREÇÃO CRÍTICA: Forçar atualização completa dos dados das rotas após sincronização
-                    //     android.util.Log.d("RoutesFragment", "🔄 Sincronização concluída - Forçando atualização completa dos dados das rotas")
-                    //     
-                    //     // Aguardar um pouco mais para garantir que todos os dados sejam processados
-                    //     kotlinx.coroutines.delay(2000)
-                    //     
-                    //     // Forçar refresh múltiplas vezes para garantir atualização completa
-                    //     viewModel.refresh()
-                    //     
-                    //     // Aguardar e forçar refresh novamente
-                    //     kotlinx.coroutines.delay(1000)
-                    //     viewModel.refresh()
-                    //     
-                    //     android.util.Log.d("RoutesFragment", "✅ Refresh completo das rotas executado")
-                    // } else {
-                    //     Toast.makeText(requireContext(), 
-                    //         "⚠️ Sem conexão com internet", 
-                    //         Toast.LENGTH_SHORT).show()
-                    // }
-                    
-                    // ✅ TEMPORÁRIO: Mostrar mensagem genérica até SyncManagerV2 estar disponível
-                    Toast.makeText(requireContext(), 
-                        "⚠️ Sincronização temporariamente desabilitada", 
-                        Toast.LENGTH_SHORT).show()
+                    if (result.isSuccess) {
+                        val status = syncRepository.getSyncStatus()
+                        Toast.makeText(requireContext(), 
+                            "✅ Sincronização concluída!\n" +
+                            "Pendentes: ${status.pendingOperations}\n" +
+                            "Falhas: ${status.failedOperations}", 
+                            Toast.LENGTH_LONG).show()
+                        
+                        // Forçar atualização completa dos dados das rotas após sincronização
+                        android.util.Log.d("RoutesFragment", "🔄 Sincronização concluída - Forçando atualização completa dos dados das rotas")
+                        
+                        // Aguardar um pouco mais para garantir que todos os dados sejam processados
+                        kotlinx.coroutines.delay(2000)
+                        
+                        // Forçar refresh múltiplas vezes para garantir atualização completa
+                        viewModel.refresh()
+                    } else {
+                        val status = syncRepository.getSyncStatus()
+                        Toast.makeText(requireContext(), 
+                            "⚠️ Sincronização falhou: ${status.error ?: "Erro desconhecido"}", 
+                            Toast.LENGTH_LONG).show()
+                    }
                     
                 } catch (e: Exception) {
                     Log.e("RoutesFragment", "Erro na sincronização: ${e.message}", e)

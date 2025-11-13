@@ -11,6 +11,7 @@ import com.example.gestaobilhares.data.dao.ClienteDao
 import com.example.gestaobilhares.data.dao.DespesaDao
 import com.example.gestaobilhares.data.dao.PanoMesaDao
 import com.example.gestaobilhares.data.dao.MetaDao // Importar o novo DAO
+import com.example.gestaobilhares.data.dao.SyncOperationDao
 import com.example.gestaobilhares.data.entities.*
 import java.util.Date
 
@@ -48,9 +49,10 @@ import java.util.Date
         HistoricoCombustivelVeiculo::class, // ✅ NOVO: HISTÓRICO DE COMBUSTÍVEL DE VEÍCULOS
         PanoMesa::class, // ✅ NOVO: VINCULAÇÃO PANO-MESA
         com.example.gestaobilhares.data.entities.StockItem::class, // ✅ NOVO: ITENS GENÉRICOS DO ESTOQUE
-        Meta::class // Adicionar a nova entidade
+        Meta::class, // Adicionar a nova entidade
+        SyncOperationEntity::class // ✅ NOVO: FILA DE SINCRONIZAÇÃO OFFLINE-FIRST
     ],
-    version = 3, // ✅ MIGRATION: inclusão de itens genéricos do estoque
+    version = 4, // ✅ MIGRATION: inclusão de fila de sincronização
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -181,6 +183,9 @@ abstract class AppDatabase : RoomDatabase() {
 
     // ✅ NOVO: DAO de metas
     abstract fun metaDao(): MetaDao
+    
+    // ✅ NOVO: DAO de fila de sincronização
+    abstract fun syncOperationDao(): SyncOperationDao
 
     companion object {
         
@@ -806,6 +811,64 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
                 
+                val MIGRATION_30_31 = object : androidx.room.migration.Migration(30, 31) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            // Criar tabela de fila de sincronização
+                            database.execSQL("""
+                                CREATE TABLE IF NOT EXISTS sync_operations (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    operation_type TEXT NOT NULL,
+                                    entity_type TEXT NOT NULL,
+                                    entity_id TEXT NOT NULL,
+                                    entity_data TEXT NOT NULL,
+                                    timestamp INTEGER NOT NULL,
+                                    retry_count INTEGER NOT NULL DEFAULT 0,
+                                    max_retries INTEGER NOT NULL DEFAULT 3,
+                                    status TEXT NOT NULL DEFAULT 'PENDING'
+                                )
+                            """)
+                            
+                            // Criar índice para melhor performance
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_sync_operations_status ON sync_operations (status)")
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_sync_operations_timestamp ON sync_operations (timestamp)")
+                            
+                            android.util.Log.d("Migration", "Migration 30_31 executada com sucesso - Tabela sync_operations criada")
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 30_31: ${e.message}")
+                        }
+                    }
+                }
+                
+                // Migration para versão 3 -> 4 (pular versões intermediárias se necessário)
+                val MIGRATION_3_4 = object : androidx.room.migration.Migration(3, 4) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            // Criar tabela de fila de sincronização
+                            database.execSQL("""
+                                CREATE TABLE IF NOT EXISTS sync_operations (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                    operation_type TEXT NOT NULL,
+                                    entity_type TEXT NOT NULL,
+                                    entity_id TEXT NOT NULL,
+                                    entity_data TEXT NOT NULL,
+                                    timestamp INTEGER NOT NULL,
+                                    retry_count INTEGER NOT NULL DEFAULT 0,
+                                    max_retries INTEGER NOT NULL DEFAULT 3,
+                                    status TEXT NOT NULL DEFAULT 'PENDING'
+                                )
+                            """)
+                            
+                            // Criar índices para melhor performance
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_sync_operations_status ON sync_operations (status)")
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_sync_operations_timestamp ON sync_operations (timestamp)")
+                            
+                            android.util.Log.d("Migration", "Migration 3_4 executada com sucesso - Tabela sync_operations criada")
+                        } catch (e: Exception) {
+                            android.util.Log.w("Migration", "Erro na migration 3_4: ${e.message}")
+                        }
+                    }
+                }
                 
                 try {
                     val builder = Room.databaseBuilder(
@@ -813,7 +876,7 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         DATABASE_NAME
                     )
-                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
+                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_3_4)
                         .addCallback(object : RoomDatabase.Callback() {
                             override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                                 super.onOpen(db)

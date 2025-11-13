@@ -30,5 +30,14 @@ class GestaoBilharesApplication : Application() {
             Timber.plant(Timber.DebugTree())
         }
         Timber.d("Aplicacao iniciada com sucesso")
+        
+        // Agendar sincronização periódica em background
+        try {
+            com.example.gestaobilhares.utils.SyncManager.schedulePeriodicSync(this)
+            Timber.d("Sincronização periódica agendada")
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao agendar sincronização periódica: ${e.message}")
+            // Continuar mesmo se falhar (modo offline)
+        }
     }
 } 
