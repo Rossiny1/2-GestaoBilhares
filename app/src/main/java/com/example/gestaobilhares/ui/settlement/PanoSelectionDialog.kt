@@ -14,7 +14,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.flow.first
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.PanoEstoque
-import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
+import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.example.gestaobilhares.databinding.DialogSelectPanoBinding
 import com.example.gestaobilhares.databinding.ItemPanoSelectionBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder

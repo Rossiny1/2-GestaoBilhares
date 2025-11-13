@@ -15,8 +15,8 @@ import com.example.gestaobilhares.data.entities.TipoMesa
 import com.example.gestaobilhares.data.entities.TamanhoMesa
 import com.example.gestaobilhares.data.entities.EstadoConservacao
 import com.example.gestaobilhares.databinding.FragmentCadastroMesaBinding
-import com.example.gestaobilhares.data.repository.MesaRepository
-import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.data.factory.RepositoryFactory
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -35,8 +35,8 @@ class CadastroMesaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = CadastroMesaViewModel(MesaRepository(AppDatabase.getDatabase(requireContext()).mesaDao(), appRepository))
+        val appRepository = RepositoryFactory.getAppRepository(requireContext())
+        viewModel = CadastroMesaViewModel(appRepository)
         setupUI()
     }
 

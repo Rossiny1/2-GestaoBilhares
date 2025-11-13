@@ -20,7 +20,7 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.example.gestaobilhares.BuildConfig
-import com.example.gestaobilhares.core.utils.DataValidator
+import com.example.gestaobilhares.utils.DataValidator
 import com.example.gestaobilhares.data.entities.CategoriaDespesa
 import com.example.gestaobilhares.data.entities.TipoDespesa
 import com.example.gestaobilhares.data.repository.AppRepository
@@ -729,7 +729,7 @@ class ExpenseRegisterFragment : Fragment() {
             return
         }
 
-        val resultadoValidacao = com.example.gestaobilhares.core.utils.DataValidator.validarDespesa(
+        val resultadoValidacao = com.example.gestaobilhares.utils.DataValidator.validarDespesa(
             valor = valor,
             quantidade = quantidade,
             categoria = viewModel.selectedCategory.value?.nome,

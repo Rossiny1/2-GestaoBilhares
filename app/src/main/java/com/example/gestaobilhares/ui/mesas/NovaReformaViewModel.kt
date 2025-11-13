@@ -74,7 +74,7 @@ class NovaReformaViewModel constructor(
         viewModelScope.launch {
             try {
                 Log.d("NovaReformaViewModel", "Marcando pano $panoId como usado: $motivo")
-                appRepository.marcarPanoComoUsado(panoId, motivo)
+                appRepository.marcarPanoComoUsado(panoId)
                 Log.d("NovaReformaViewModel", "Pano $panoId marcado como usado com sucesso")
             } catch (e: Exception) {
                 Log.e("NovaReformaViewModel", "Erro ao marcar pano como usado: ${e.message}", e)

@@ -7,7 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.LiveData
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AcertoRepository
-import com.example.gestaobilhares.data.repository.AcertoMesaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.AppLogger
 import kotlinx.coroutines.launch
 import java.util.Date
@@ -18,7 +18,7 @@ import com.google.gson.reflect.TypeToken
 
 class SettlementDetailViewModel(
     private val acertoRepository: AcertoRepository,
-    private val acertoMesaRepository: AcertoMesaRepository,
+    private val appRepository: AppRepository,
     private val clienteRepository: com.example.gestaobilhares.data.repository.ClienteRepository
 ) : BaseViewModel() {
 
@@ -42,7 +42,7 @@ class SettlementDetailViewModel(
                     
                     // ✅ CORREÇÃO CRÍTICA: Buscar dados detalhados por mesa com logs extensos
                     AppLogger.log("SettlementDetail", "=== INICIANDO BUSCA DAS MESAS ===")
-                    val acertoMesas = acertoMesaRepository.buscarPorAcertoId(acertoId)
+                    val acertoMesas = appRepository.buscarAcertoMesasPorAcerto(acertoId)
                     
                     AppLogger.log("SettlementDetail", "=== RESULTADO DA BUSCA ===")
                     AppLogger.log("SettlementDetail", "Acerto ID pesquisado: $acertoId")

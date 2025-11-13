@@ -8,7 +8,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.example.gestaobilhares.utils.SignaturePoint
-import com.example.gestaobilhares.core.utils.SignatureStatistics
+// import com.example.gestaobilhares.core.utils.SignatureStatistics // TODO: Classe removida
 import java.io.ByteArrayOutputStream
 
 class SignatureView @JvmOverloads constructor(
@@ -201,8 +201,9 @@ class SignatureView @JvmOverloads constructor(
     
     /**
      * Obtém estatísticas da assinatura para análise de autenticidade
+     * TODO: Retornar objeto SignatureStatistics quando classe for recriada
      */
-    fun getSignatureStatistics(): SignatureStatistics {
+    fun getSignatureStatistics(): Map<String, Any> {
         val totalPoints = signaturePoints.size
         val duration = getSignatureDuration()
         val averagePressure = if (totalPoints > 0) {
@@ -214,13 +215,19 @@ class SignatureView @JvmOverloads constructor(
         
         Log.d(TAG, "Estatísticas calculadas: pontos=$totalPoints, duração=${duration}ms, pressão=${averagePressure}, velocidade=${averageVelocity}")
         
-        return SignatureStatistics(
-            totalPoints = totalPoints,
-            duration = duration,
-            averagePressure = averagePressure.toFloat(),
-            averageVelocity = averageVelocity.toFloat(),
-            startTime = startTime
+        return mapOf(
+            "totalPoints" to totalPoints,
+            "duration" to duration,
+            "averagePressure" to averagePressure.toFloat(),
+            "averageVelocity" to averageVelocity.toFloat(),
+            "startTime" to startTime
         )
+    }
+    
+    // Helper para compatibilidade
+    private fun Map<String, Any>.isValidSignature(): Boolean {
+        val totalPoints = this["totalPoints"] as? Int ?: 0
+        return totalPoints >= 1
     }
     
     /**

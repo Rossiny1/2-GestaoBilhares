@@ -9,8 +9,6 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.example.gestaobilhares.databinding.DialogAddEditStockItemBinding
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
-import com.example.gestaobilhares.data.repository.StockItemRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 class AddEditStockItemDialog : DialogFragment() {
     

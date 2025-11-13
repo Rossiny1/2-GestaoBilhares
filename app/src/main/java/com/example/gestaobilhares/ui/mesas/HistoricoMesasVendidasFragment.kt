@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentHistoricoMesasVendidasBinding
 import com.example.gestaobilhares.ui.mesas.adapter.MesasVendidasAdapter
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.MesaVendidaRepository
 import kotlinx.coroutines.launch
 
 /**

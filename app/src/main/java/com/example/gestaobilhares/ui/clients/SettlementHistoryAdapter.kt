@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.clients
+﻿package com.example.gestaobilhares.ui.clients
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -55,7 +55,7 @@ class SettlementHistoryAdapter(
                 tvSettlementDate.text = acerto.data
                 
                 // Valor formatado em Real usando StringUtils
-                tvSettlementValue.text = com.example.gestaobilhares.core.utils.StringUtils.formatarMoedaComSeparadores(acerto.valorTotal)
+                tvSettlementValue.text = com.example.gestaobilhares.utils.StringUtils.formatarMoedaComSeparadores(acerto.valorTotal)
                 
                 // Status com cores
                 tvSettlementStatus.text = acerto.status.uppercase()
@@ -74,17 +74,17 @@ class SettlementHistoryAdapter(
                 tvSettlementId.text = "#${acerto.id.toString().padStart(4, '0')}"
                 
                 // Débito atual usando StringUtils
-                tvDebitoAtual.text = com.example.gestaobilhares.core.utils.StringUtils.formatarMoedaComSeparadores(acerto.debitoAtual)
+                tvDebitoAtual.text = com.example.gestaobilhares.utils.StringUtils.formatarMoedaComSeparadores(acerto.debitoAtual)
                 
                 // ✅ CORREÇÃO: Observação do acerto com logs detalhados
                 android.util.Log.d("SettlementHistoryAdapter", "=== EXIBINDO OBSERVAÇÃO NO HISTÓRICO ===")
                 android.util.Log.d("SettlementHistoryAdapter", "Acerto ID: ${acerto.id}")
                 android.util.Log.d("SettlementHistoryAdapter", "Observação recebida: '${acerto.observacao}'")
                 android.util.Log.d("SettlementHistoryAdapter", "Observação é nula? ${acerto.observacao == null}")
-                android.util.Log.d("SettlementHistoryAdapter", "Observação é vazia? ${com.example.gestaobilhares.core.utils.StringUtils.isVazia(acerto.observacao)}")
-                android.util.Log.d("SettlementHistoryAdapter", "Observação é blank? ${com.example.gestaobilhares.core.utils.StringUtils.isVazia(acerto.observacao)}")
+                android.util.Log.d("SettlementHistoryAdapter", "Observação é vazia? ${com.example.gestaobilhares.utils.StringUtils.isVazia(acerto.observacao)}")
+                android.util.Log.d("SettlementHistoryAdapter", "Observação é blank? ${com.example.gestaobilhares.utils.StringUtils.isVazia(acerto.observacao)}")
                 
-                if (com.example.gestaobilhares.core.utils.StringUtils.isNaoVazia(acerto.observacao)) {
+                if (com.example.gestaobilhares.utils.StringUtils.isNaoVazia(acerto.observacao)) {
                     tvObservacaoAcerto.visibility = android.view.View.VISIBLE
                     tvObservacaoAcerto.text = "📝 ${acerto.observacao}"
                     android.util.Log.d("SettlementHistoryAdapter", "✅ Observação EXIBIDA: '${acerto.observacao}'")

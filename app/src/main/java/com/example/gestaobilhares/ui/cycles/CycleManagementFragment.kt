@@ -13,10 +13,10 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.databinding.FragmentCycleManagementBinding
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.utils.PdfReportGenerator
 import com.example.gestaobilhares.ui.clients.CycleReportDialog
@@ -24,8 +24,8 @@ import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
-import com.example.gestaobilhares.core.utils.DateUtils
-import com.example.gestaobilhares.core.utils.StringUtils
+import com.example.gestaobilhares.utils.DateUtils
+import com.example.gestaobilhares.utils.StringUtils
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.view.Gravity
@@ -70,14 +70,13 @@ class CycleManagementFragment : Fragment() {
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        val appRepository = RepositoryFactory.getAppRepository(requireContext())
         val cicloAcertoRepository = CicloAcertoRepository(
             database.cicloAcertoDao(),
-            DespesaRepository(database.despesaDao()),
-            AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
+            database.despesaDao(), // ✅ CORRIGIDO: Passar DespesaDao diretamente
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
             ClienteRepository(database.clienteDao(), appRepository),
-            database.rotaDao(),
-            appRepository
+            database.rotaDao()
         )
         viewModel = CycleManagementViewModel(cicloAcertoRepository, appRepository)
         

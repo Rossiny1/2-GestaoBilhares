@@ -32,9 +32,6 @@ import com.example.gestaobilhares.ui.settlement.PanoSelectionDialog
 import com.example.gestaobilhares.utils.ImageCompressionUtils
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.data.repository.MesaReformadaRepository
-import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
-import com.example.gestaobilhares.data.repository.HistoricoManutencaoMesaRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.File
 import java.text.SimpleDateFormat

@@ -381,8 +381,10 @@ object ReciboPrinterHelper {
         Thread {
             var erro: String? = null
             try {
-                val printerHelper = com.example.gestaobilhares.utils.BluetoothPrinterHelper(printerDevice)
-                if (printerHelper.connect()) {
+                // TODO: Implementar BluetoothPrinterHelper quando necessário
+                // val printerHelper = com.example.gestaobilhares.utils.BluetoothPrinterHelper(printerDevice)
+                // if (printerHelper.connect()) {
+                if (false) { // Temporariamente desabilitado
                     // Inflar o layout do recibo
                     val inflater = android.view.LayoutInflater.from(context)
                     val reciboView = inflater.inflate(com.example.gestaobilhares.R.layout.layout_recibo_impressao, null) as android.view.ViewGroup
@@ -406,8 +408,10 @@ object ReciboPrinterHelper {
                     )
                     
                     // Imprimir
-                    printerHelper.printReciboLayoutBitmap(reciboView)
-                    printerHelper.disconnect()
+                    // TODO: Implementar quando BluetoothPrinterHelper estiver disponível
+                    // printerHelper.printReciboLayoutBitmap(reciboView)
+                    // printerHelper.disconnect()
+                    erro = "Impressão Bluetooth não implementada ainda"
                 } else {
                     erro = "Falha ao conectar à impressora"
                 }

@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.expenses
+package com.example.gestaobilhares.ui.expenses
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -52,19 +52,9 @@ class GlobalExpensesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
+        // ✅ MIGRADO: Usa AppRepository centralizado
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        val despesaRepository = com.example.gestaobilhares.data.repository.DespesaRepository(database.despesaDao())
-        val cicloAcertoRepository = com.example.gestaobilhares.data.repository.CicloAcertoRepository(
-            database.cicloAcertoDao(),
-            despesaRepository,
-            com.example.gestaobilhares.data.repository.AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
-            com.example.gestaobilhares.data.repository.ClienteRepository(database.clienteDao(), appRepository),
-            database.rotaDao(),
-            appRepository
-        )
-        viewModel = GlobalExpensesViewModel(despesaRepository, cicloAcertoRepository)
+        viewModel = GlobalExpensesViewModel(appRepository)
         
         setupUI()
         setupRecyclerView()

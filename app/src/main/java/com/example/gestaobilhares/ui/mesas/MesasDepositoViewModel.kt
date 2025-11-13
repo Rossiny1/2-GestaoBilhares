@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.TipoMesa
 import com.example.gestaobilhares.data.entities.TamanhoMesa
-import com.example.gestaobilhares.data.repository.MesaRepository
 import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +25,6 @@ data class EstatisticasDeposito(
 )
 
 class MesasDepositoViewModel(
-    val mesaRepository: MesaRepository, // ✅ Tornar público para acesso direto
     private val appRepository: AppRepository
 ) : ViewModel() {
     private val _mesasDisponiveis = MutableStateFlow<List<Mesa>>(emptyList())
@@ -53,7 +51,7 @@ class MesasDepositoViewModel(
     fun loadMesasDisponiveis() {
         viewModelScope.launch {
             try {
-                mesaRepository.obterMesasDisponiveis().collect { mesas ->
+                appRepository.obterMesasDisponiveis().collect { mesas ->
                     _mesasDisponiveis.value = mesas
                     calcularEstatisticas(mesas)
                 }
@@ -86,9 +84,9 @@ class MesasDepositoViewModel(
         viewModelScope.launch {
             try {
                 if (tipoFixo && valorFixo != null) {
-                    mesaRepository.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
+                    appRepository.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
                 } else {
-                    mesaRepository.vincularMesa(mesaId, clienteId)
+                    appRepository.vincularMesaACliente(mesaId, clienteId)
                 }
                 loadMesasDisponiveis()
             } catch (e: Exception) {
@@ -99,7 +97,7 @@ class MesasDepositoViewModel(
     
     suspend fun obterTodasMesasVinculadasAoCliente(clienteId: Long): List<Mesa> {
         return try {
-            mesaRepository.obterMesasPorClienteDireto(clienteId)
+            appRepository.obterMesasPorClienteDireto(clienteId)
         } catch (e: Exception) {
             emptyList()
         }

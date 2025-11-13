@@ -11,8 +11,6 @@ import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.databinding.DialogAddPanosLoteBinding
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.PanoEstoqueRepository
-import com.example.gestaobilhares.data.repository.StockItemRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.Date
 

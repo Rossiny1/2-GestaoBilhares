@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -18,8 +19,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.databinding.FragmentMesasReformadasBinding
-import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.MesaReformadaRepository
+// TODO: MesaReformadaRepository não existe - usar AppRepository quando método estiver disponível
+// import com.example.gestaobilhares.data.database.AppDatabase
+// import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 
 /**
  * Fragment que exibe a lista de mesas reformadas.
@@ -46,10 +48,9 @@ class MesasReformadasFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = AppDatabase.getDatabase(requireContext())
-        val mesaReformadaRepository = MesaReformadaRepository(database.mesaReformadaDao())
+        // TODO: MesaReformadaRepository não existe - usar AppRepository quando método estiver disponível
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = MesasReformadasViewModel(mesaReformadaRepository, appRepository)
+        viewModel = MesasReformadasViewModel(appRepository)
         
         setupRecyclerView()
         setupClickListeners()
@@ -171,12 +172,16 @@ class MesasReformadasFragment : Fragment() {
      * ✅ NOVO: Mostra diálogo com detalhes da mesa e histórico completo
      */
     private fun mostrarDetalhesMesaComHistorico(mesaComHistorico: MesaReformadaComHistorico) {
+        // TODO: DetalhesMesaReformadaComHistoricoDialog não existe - usar Toast temporariamente
+        Toast.makeText(requireContext(), "Detalhes da mesa: ${mesaComHistorico.numeroMesa}", Toast.LENGTH_SHORT).show()
+        /*
         try {
             val dialog = DetalhesMesaReformadaComHistoricoDialog.newInstance(mesaComHistorico)
             dialog.show(parentFragmentManager, "DetalhesMesaReformadaComHistoricoDialog")
         } catch (e: Exception) {
             // Log do erro se necessário
         }
+        */
     }
 
     override fun onDestroyView() {

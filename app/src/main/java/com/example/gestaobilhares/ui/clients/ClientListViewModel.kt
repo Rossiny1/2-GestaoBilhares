@@ -11,7 +11,8 @@ import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.data.entities.Despesa
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.AppLogger
-import com.example.gestaobilhares.core.utils.PaginationManager
+// TODO: PaginationManager não existe - comentar referências temporariamente
+// import com.example.gestaobilhares.utils.PaginationManager
 import android.util.Log
 import com.example.gestaobilhares.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,7 +51,8 @@ class ClientListViewModel constructor(
     
     // ✅ FASE 4B: Pagination Manager para lazy loading
     // ✅ FASE 12.10: Paginação mais agressiva (reduzido de 20 para 15 para melhor performance)
-    private val paginationManager = PaginationManager<Cliente>(pageSize = 15, preloadThreshold = 3)
+    // TODO: PaginationManager não existe - comentar temporariamente
+    // private val paginationManager = PaginationManager<Cliente>(pageSize = 15, preloadThreshold = 3)
 
     private val _rotaInfo = MutableStateFlow<Rota?>(null)
     val rotaInfo: StateFlow<Rota?> = _rotaInfo.asStateFlow()
@@ -449,7 +451,7 @@ class ClientListViewModel constructor(
                     rotaId = rota.id,
                     numeroCiclo = proximoCiclo,
                     ano = anoAtual,
-                    dataInicio = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual(),
+                    dataInicio = com.example.gestaobilhares.utils.DateUtils.obterDataAtual(),
                     dataFim = Date(), // Será atualizado quando finalizar
                     status = StatusCicloAcerto.EM_ANDAMENTO,
                     criadoPor = criadoPor
@@ -713,12 +715,12 @@ class ClientListViewModel constructor(
      * ✅ FASE 9B: Aplica filtro à lista de clientes com filtros combinados
      */
     private suspend fun aplicarFiltrosCombinados() {
-        val query = com.example.gestaobilhares.core.utils.StringUtils.removerEspacosExtras(_buscaAtual.value)
+        val query = com.example.gestaobilhares.utils.StringUtils.removerEspacosExtras(_buscaAtual.value)
         val filtro = _filtroAtual.value
         val todos = _clientesTodos.value
         val isAdvancedSearch = _isAdvancedSearch.value
         val searchType = _searchType.value
-        val searchCriteria = com.example.gestaobilhares.core.utils.StringUtils.removerEspacosExtras(_searchCriteria.value)
+        val searchCriteria = com.example.gestaobilhares.utils.StringUtils.removerEspacosExtras(_searchCriteria.value)
         
         // ✅ CORREÇÃO: Filtro PENDENCIAS agora é inclusivo - mostra todos os clientes com pendências
         val filtradosPorStatus = when (filtro) {
@@ -801,7 +803,7 @@ class ClientListViewModel constructor(
         
         for (cliente in clientes) {
             // ✅ DEBUG: Log para verificar o débito de cada cliente
-            android.util.Log.d("ClientListViewModel", "Verificando cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
+            android.util.Log.d("ClientListViewModel", "Verificando cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
             
             // ✅ CRITÉRIO INCLUSIVO: Se o cliente tem pendências, incluir independente do status de acerto
             if (clienteTemPendencias(cliente.id)) {
@@ -845,7 +847,7 @@ class ClientListViewModel constructor(
             val cliente = appRepository.obterClientePorId(clienteId) ?: return false
             
             // ✅ DEBUG: Log para verificar o débito do cliente
-            android.util.Log.d("ClientListViewModel", "Verificando pendências - Cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
+            android.util.Log.d("ClientListViewModel", "Verificando pendências - Cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
             
             // ✅ CRITÉRIO 1: Débito > R$300
             val temDebitoAlto = cliente.debitoAtual > 300.0
@@ -868,7 +870,7 @@ class ClientListViewModel constructor(
             android.util.Log.d("ClientListViewModel", "Cliente ${cliente.nome}: temDebitoAlto=$temDebitoAlto, semAcertoRecente=$semAcertoRecente, temPendencia=$temPendencia")
             
             if (temPendencia) {
-                android.util.Log.d("ClientListViewModel", "✅ Cliente ${cliente.nome} tem pendência: Débito=${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}, SemAcertoRecente=$semAcertoRecente")
+                android.util.Log.d("ClientListViewModel", "✅ Cliente ${cliente.nome} tem pendência: Débito=${com.example.gestaobilhares.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}, SemAcertoRecente=$semAcertoRecente")
             }
             
             temPendencia
@@ -920,7 +922,7 @@ class ClientListViewModel constructor(
             }
             SearchType.CPF -> {
                 clientes.filter { cliente ->
-                    val cpfFormatado = com.example.gestaobilhares.core.utils.StringUtils.formatarCPF(cliente.cpfCnpj)
+                    val cpfFormatado = com.example.gestaobilhares.utils.StringUtils.formatarCPF(cliente.cpfCnpj)
                     cpfFormatado.contains(criteria, ignoreCase = true) || 
                     cliente.cpfCnpj?.contains(criteria, ignoreCase = true) == true
                 }
@@ -1132,16 +1134,24 @@ class ClientListViewModel constructor(
     
     /**
      * ✅ FASE 4B: Carregar clientes com lazy loading
+     * TODO: PaginationManager não existe - comentar temporariamente
      */
     fun carregarClientesComLazyLoading(rotaId: Long) {
         viewModelScope.launch {
             try {
                 showLoading()
                 
+                // TODO: PaginationManager não existe - usar carregamento direto temporariamente
+                val clientes = appRepository.buscarClientesPorRotaComCache(rotaId).first()
+                _clientesTodos.value = clientes
+                
+                Log.d("ClientListViewModel", "✅ Carregamento direto: ${clientes.size} clientes carregados")
+                
+                /*
                 // Configurar callback de carregamento
                 // ✅ FASE 12.5: Callback precisa ser suspend para remover runBlocking
                 // Nota: Se o PaginationManager não suportar suspend, pode ser necessário ajustar
-                paginationManager.setLoadDataCallback { offset, limit ->
+                paginationManager.setLoadDataCallback { offset: Int, limit: Int ->
                     kotlinx.coroutines.runBlocking {
                         appRepository.buscarClientesPorRotaComCache(rotaId).first()
                             .drop(offset)
@@ -1154,6 +1164,7 @@ class ClientListViewModel constructor(
                 _clientesTodos.value = initialData
                 
                 Log.d("ClientListViewModel", "✅ Lazy loading: ${initialData.size} clientes carregados")
+                */
                 
             } catch (e: Exception) {
                 Log.e("ClientListViewModel", "❌ Erro no lazy loading: ${e.message}")
@@ -1166,8 +1177,12 @@ class ClientListViewModel constructor(
     
     /**
      * ✅ FASE 4B: Carregar próxima página
+     * TODO: PaginationManager não existe - comentar temporariamente
      */
     fun carregarProximaPagina() {
+        // TODO: PaginationManager não existe - não fazer nada temporariamente
+        Log.d("ClientListViewModel", "⚠️ PaginationManager não implementado - carregarProximaPagina ignorado")
+        /*
         viewModelScope.launch {
             try {
                 if (paginationManager.hasMoreData.value && !paginationManager.isLoading.value) {
@@ -1182,28 +1197,38 @@ class ClientListViewModel constructor(
                 Log.e("ClientListViewModel", "❌ Erro ao carregar próxima página: ${e.message}")
             }
         }
+        */
     }
     
     /**
      * ✅ FASE 4B: Obter estatísticas de paginação
+     * TODO: PaginationManager não existe - comentar temporariamente
      */
     fun obterEstatisticasPaginacao(): String {
-        return paginationManager.getStats()
+        // TODO: PaginationManager não existe - retornar string vazia temporariamente
+        return "PaginationManager não implementado"
+        // return paginationManager.getStats()
     }
     
     /**
      * ✅ FASE 4B: Verificar se deve pré-carregar
+     * TODO: PaginationManager não existe - comentar temporariamente
      */
     fun devePrecarregarProximaPagina(posicaoAtual: Int): Boolean {
-        return paginationManager.shouldPreloadNextPage(posicaoAtual)
+        // TODO: PaginationManager não existe - retornar false temporariamente
+        return false
+        // return paginationManager.shouldPreloadNextPage(posicaoAtual)
     }
     
     /**
      * ✅ FASE 4B: Limpar cache de paginação
+     * TODO: PaginationManager não existe - comentar temporariamente
      */
     fun limparCachePaginacao() {
-        paginationManager.clearCache()
-        Log.d("ClientListViewModel", "🧹 Cache de paginação limpo")
+        // TODO: PaginationManager não existe - não fazer nada temporariamente
+        Log.d("ClientListViewModel", "⚠️ PaginationManager não implementado - limparCachePaginacao ignorado")
+        // paginationManager.clearCache()
+        // Log.d("ClientListViewModel", "🧹 Cache de paginação limpo")
     }
 } 
 

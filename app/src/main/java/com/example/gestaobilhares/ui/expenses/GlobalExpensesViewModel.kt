@@ -1,12 +1,11 @@
-﻿package com.example.gestaobilhares.ui.expenses
+package com.example.gestaobilhares.ui.expenses
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.Despesa
-import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.DespesaRepository
+import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,10 +14,10 @@ import java.util.Calendar
 /**
  * ViewModel para gerenciar despesas globais
  * Controla listagem, filtros por ciclo e resumos
+ * ✅ MIGRADO: Usa AppRepository centralizado
  */
 class GlobalExpensesViewModel constructor(
-    private val despesaRepository: DespesaRepository,
-    private val cicloAcertoRepository: CicloAcertoRepository
+    private val appRepository: AppRepository
 ) : BaseViewModel() {
 
     // Estados da UI
@@ -110,8 +109,9 @@ class GlobalExpensesViewModel constructor(
                 val allExpenses = mutableListOf<Despesa>()
                 
                 // Buscar despesas de todos os ciclos do ano atual
+                // ✅ MIGRADO: Usa AppRepository
                 for (numeroCiclo in 1..12) {
-                    val expenses = despesaRepository.buscarGlobaisPorCiclo(currentYear, numeroCiclo)
+                    val expenses = appRepository.buscarDespesasGlobaisPorCiclo(currentYear, numeroCiclo)
                     allExpenses.addAll(expenses)
                 }
                 
@@ -134,7 +134,8 @@ class GlobalExpensesViewModel constructor(
                 showLoading()
                 _selectedCycle.value = cycle
                 
-                val expenses = despesaRepository.buscarGlobaisPorCiclo(cycle.ano, cycle.numeroCiclo)
+                // ✅ MIGRADO: Usa AppRepository
+                val expenses = appRepository.buscarDespesasGlobaisPorCiclo(cycle.ano, cycle.numeroCiclo)
                 
                 _globalExpenses.value = expenses
                 updateSummary(expenses)
@@ -163,7 +164,8 @@ class GlobalExpensesViewModel constructor(
     fun deleteGlobalExpense(expense: Despesa) {
         viewModelScope.launch {
             try {
-                despesaRepository.deletar(expense)
+                // ✅ MIGRADO: Usa AppRepository
+                appRepository.deletarDespesa(expense)
                 
                 // Recarregar dados após exclusão
                 if (_selectedCycle.value != null) {

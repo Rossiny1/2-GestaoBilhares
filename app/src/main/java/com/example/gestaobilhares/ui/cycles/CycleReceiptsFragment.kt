@@ -13,10 +13,10 @@ import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.DespesaRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.google.android.material.snackbar.Snackbar
@@ -79,14 +79,13 @@ class CycleReceiptsFragment : Fragment() {
         
         // ✅ CORREÇÃO: Inicializar ViewModel manualmente
         val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
+        val appRepository = RepositoryFactory.getAppRepository(requireContext())
         val cicloAcertoRepository = CicloAcertoRepository(
             database.cicloAcertoDao(),
-            DespesaRepository(database.despesaDao()),
-            AcertoRepository(database.acertoDao(), database.clienteDao(), appRepository),
+            database.despesaDao(), // ✅ CORRIGIDO: Passar DespesaDao diretamente
+            AcertoRepository(database.acertoDao(), database.clienteDao()),
             ClienteRepository(database.clienteDao(), appRepository),
-            database.rotaDao(),
-            appRepository
+            database.rotaDao()
         )
         viewModel = CycleReceiptsViewModel(cicloAcertoRepository, appRepository)
         
@@ -116,7 +115,7 @@ class CycleReceiptsFragment : Fragment() {
 
     private fun setupObservers() {
         lifecycleScope.launch {
-            viewModel.receipts.collect { receipts ->
+            viewModel.receipts.collect { receipts: List<CycleReceiptItem> ->
                 receiptsAdapter.submitList(receipts)
                 atualizarEmptyState(receipts.isEmpty())
                 updateStatistics(receipts)
@@ -124,13 +123,13 @@ class CycleReceiptsFragment : Fragment() {
         }
         
         lifecycleScope.launch {
-            viewModel.isLoading.collect { carregando ->
+            viewModel.isLoading.collect { carregando: Boolean ->
                 // TODO: Adicionar progress bar se necessário
             }
         }
         
         lifecycleScope.launch {
-            viewModel.errorMessage.collect { mensagem ->
+            viewModel.errorMessage.collect { mensagem: String? ->
                 mensagem?.let {
                     mostrarFeedback("Erro: $it", Snackbar.LENGTH_LONG)
                     viewModel.limparErro()

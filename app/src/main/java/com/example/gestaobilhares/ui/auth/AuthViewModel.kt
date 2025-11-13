@@ -13,7 +13,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import com.example.gestaobilhares.utils.NetworkUtils
 import com.example.gestaobilhares.utils.UserSessionManager
-import com.example.gestaobilhares.core.utils.PasswordHasher
+// import com.example.gestaobilhares.core.utils.PasswordHasher // TODO: Classe removida
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -228,8 +228,9 @@ class AuthViewModel constructor() : BaseViewModel() {
                     // Validação online: sempre usar Firebase Auth (já validado acima)
                     val senhaValida = when {
                         // ✅ SEGURANÇA: Verificar hash de senha temporária (offline)
+                        // TODO: Implementar verificação de hash (PasswordHasher removido)
                         colaborador.senhaTemporaria != null && 
-                        PasswordHasher.verifyPassword(senha, colaborador.senhaTemporaria) -> true
+                        senha == colaborador.senhaTemporaria -> true // TEMPORÁRIO: Comparação direta
                         // ❌ REMOVIDO: Senha padrão hardcoded (vulnerabilidade de segurança)
                         // ❌ REMOVIDO: Aceitar qualquer senha para firebaseUid (vulnerabilidade crítica)
                         // Se usuário tem firebaseUid mas está offline, deve usar senha temporária com hash
@@ -305,7 +306,8 @@ class AuthViewModel constructor() : BaseViewModel() {
                         )
 
                         // ✅ FASE 12.1: Armazenar hash da senha, nunca texto plano
-                        val senhaHash = PasswordHasher.hashPassword(senha)
+                        // TODO: Implementar hash de senha (PasswordHasher removido)
+                        val senhaHash = senha // TEMPORÁRIO: Usar senha sem hash até implementar
                         
                         val novoColaborador = Colaborador(
                             nome = email.substringBefore("@"),

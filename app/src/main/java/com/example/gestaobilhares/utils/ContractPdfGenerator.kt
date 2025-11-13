@@ -26,12 +26,13 @@ class ContractPdfGenerator(private val context: Context) {
     suspend fun salvarHashDocumento(contrato: ContratoLocacao, documentoHash: String) {
         try {
             val repository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(context)
+            // TODO: Adicionar campo documentoHash na entidade ContratoLocacao se necessário
+            // Por enquanto, apenas atualizamos a data de atualização
             val contratoAtualizado = contrato.copy(
-                documentoHash = documentoHash,
                 dataAtualizacao = Date()
             )
             repository.atualizarContrato(contratoAtualizado)
-            android.util.Log.d("ContractPdfGenerator", "Hash do documento gerado e salvo: ${documentoHash.take(20)}...")
+            android.util.Log.d("ContractPdfGenerator", "Hash do documento gerado: ${documentoHash.take(20)}... (não salvo - campo não existe na entidade)")
         } catch (e: Exception) {
             android.util.Log.e("ContractPdfGenerator", "Erro ao salvar hash do documento: ${e.message}", e)
         }

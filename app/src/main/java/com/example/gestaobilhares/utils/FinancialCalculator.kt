@@ -201,24 +201,24 @@ object FinancialCalculator {
         val erros = mutableListOf<String>()
         
         // ✅ FASE 2: Usar DataValidator centralizado
-        val validacaoDebitoAnterior = com.example.gestaobilhares.core.utils.DataValidator.validarValorNaoNegativo(debitoAnterior, "Débito anterior")
+        val validacaoDebitoAnterior = com.example.gestaobilhares.utils.DataValidator.validarValorNaoNegativo(debitoAnterior, "Débito anterior")
         if (validacaoDebitoAnterior.isErro()) {
-            erros.addAll((validacaoDebitoAnterior as com.example.gestaobilhares.core.utils.DataValidator.ResultadoValidacao.Erro).mensagens)
+            erros.addAll((validacaoDebitoAnterior as com.example.gestaobilhares.utils.DataValidator.ResultadoValidacao.Erro).mensagens)
         }
         
-        val validacaoValorTotal = com.example.gestaobilhares.core.utils.DataValidator.validarValorNaoNegativo(valorTotal, "Valor total")
+        val validacaoValorTotal = com.example.gestaobilhares.utils.DataValidator.validarValorNaoNegativo(valorTotal, "Valor total")
         if (validacaoValorTotal.isErro()) {
-            erros.addAll((validacaoValorTotal as com.example.gestaobilhares.core.utils.DataValidator.ResultadoValidacao.Erro).mensagens)
+            erros.addAll((validacaoValorTotal as com.example.gestaobilhares.utils.DataValidator.ResultadoValidacao.Erro).mensagens)
         }
         
-        val validacaoDesconto = com.example.gestaobilhares.core.utils.DataValidator.validarValorNaoNegativo(desconto, "Desconto")
+        val validacaoDesconto = com.example.gestaobilhares.utils.DataValidator.validarValorNaoNegativo(desconto, "Desconto")
         if (validacaoDesconto.isErro()) {
-            erros.addAll((validacaoDesconto as com.example.gestaobilhares.core.utils.DataValidator.ResultadoValidacao.Erro).mensagens)
+            erros.addAll((validacaoDesconto as com.example.gestaobilhares.utils.DataValidator.ResultadoValidacao.Erro).mensagens)
         }
         
-        val validacaoValorRecebido = com.example.gestaobilhares.core.utils.DataValidator.validarValorNaoNegativo(valorRecebido, "Valor recebido")
+        val validacaoValorRecebido = com.example.gestaobilhares.utils.DataValidator.validarValorNaoNegativo(valorRecebido, "Valor recebido")
         if (validacaoValorRecebido.isErro()) {
-            erros.addAll((validacaoValorRecebido as com.example.gestaobilhares.core.utils.DataValidator.ResultadoValidacao.Erro).mensagens)
+            erros.addAll((validacaoValorRecebido as com.example.gestaobilhares.utils.DataValidator.ResultadoValidacao.Erro).mensagens)
         }
         
         // Validação específica: desconto não pode ser maior que valor total
