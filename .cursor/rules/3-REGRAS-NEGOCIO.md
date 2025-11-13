@@ -1,148 +1,207 @@
 # 3. REGRAS DE NEGÓCIO
 
-## 💰 SISTEMA DE ACERTOS
+## 🎯 PRINCÍPIOS FUNDAMENTAIS
 
-### **Ciclos de Acerto**
+### **1. Offline-first**
+- App deve funcionar 100% offline
+- Dados sempre disponíveis localmente (Room Database)
+- Sincronização é complementar, não bloqueante
 
-- **Por Rota**: Cada rota tem seus próprios ciclos
-- **Numeração Anual**: 1º ao 12º acerto por ano
-- **Geração Automática**: Novo ciclo criado ao clicar "Iniciar Rota"
-- **Estado Padrão**: Primeiro acerto do ano selecionado automaticamente
+### **2. Centralização e Simplificação**
+- **AppRepository como Facade**: Ponto único de acesso para ViewModels
+- **Repositories Especializados**: Organizados por domínio de negócio
+- **BaseViewModel**: Funcionalidades comuns centralizadas
+- **StateFlow Unificado**: Padrão consistente em toda aplicação
 
-### **Tipos de Pagamento**
+### **3. Arquitetura Híbrida Modular**
+- AppRepository delega para repositories especializados
+- ViewModels usam apenas AppRepository (compatibilidade preservada)
+- Trabalho paralelo possível sem conflitos
 
-- **Fichas Jogadas**: Percentual da receita (padrão 40%)
-- **Valor Fixo**: Valor mensal definido
-- **Múltiplos Pagamentos**: Dialog para discriminar valores por método
+## 📋 REGRAS DE NEGÓCIO POR DOMÍNIO
 
-### **Cálculos e Validações**
+### **Clientes**
 
-- **Relógio com Defeito**: Usa média de fichas dos últimos acertos válidos
-- **Débitos**: Soma dos débitos pendentes da rota no período
-- **Pendências**: Clientes com débito >R$400 OU sem acerto há 4+ meses
+1. **Cadastro**:
+   - Nome obrigatório
+   - CPF/CNPJ único
+   - Endereço completo obrigatório
 
-## 🎯 FILTROS E DESTAQUES
+2. **Débitos**:
+   - Cálculo automático baseado em acertos
+   - Destaque visual para débitos > R$ 300
+   - Alertas para clientes sem acerto há 4+ meses
 
-### **Filtros de Clientes**
+3. **Mesas**:
+   - Cliente pode ter múltiplas mesas
+   - Cada mesa tem relógio inicial/final
+   - Valores calculados automaticamente
 
-- **Débito Alto**: >R$300 (linha vermelha)
-- **Sem Acerto**: 4+ meses (linha amarela)
-- **Demais Casos**: Linha verde
-- **Exibição Padrão**: Clientes com mesas locadas OU débitos pendentes
+### **Acertos**
 
-### **Filtros de Rotas**
+1. **Criação**:
+   - Vinculado a um cliente
+   - Pode incluir múltiplas mesas
+   - Valores calculados automaticamente
 
-- **Por Ciclo**: Filtro horizontal de acertos
-- **Por Usuário**: Representantes veem apenas suas rotas
-- **Status**: Em Andamento / Finalizada
+2. **Cálculos**:
+   - Total recebido
+   - Despesas de viagem
+   - Comissões (3% motorista, 2% Iltair)
+   - Total geral
 
-## 🏢 GESTÃO DE MESAS
+3. **Métodos de Pagamento**:
+   - PIX, Cartão, Cheque, Dinheiro
+   - Discriminação por método
+   - Validação de valores
 
-### **Estados das Mesas**
+### **Rotas**
 
-- **Depósito**: Mesas disponíveis para locação
-- **Locada**: Mesa vinculada a um cliente
-- **Inativa**: Mesa retirada ou com problema
+1. **Gestão**:
+   - Rotas ativas/inativas
+   - Clientes vinculados por rota
+   - Status de rota (iniciada/finalizada)
 
-### **Movimentação**
+2. **Ciclos**:
+   - Acertos numerados por rota (1º ao 12º)
+   - Numeração anual
+   - Estado padrão: Primeiro acerto do ano
 
-- **Vincular**: Mesa sai do depósito → vai para cliente
-- **Retirar**: Mesa volta para depósito
+3. **Filtros**:
+   - Por ciclo de acerto
+   - Por status de rota
+   - Por representante (se aplicável)
 
-## 🚗 GESTÃO DE VEÍCULOS
+### **Despesas**
 
-### **Histórico de Manutenção**
+1. **Categorias**:
+   - Categorias pré-definidas
+   - Tipos por categoria
+   - Validação de valores
 
-- **Registro Completo**: Data, descrição, valor, quilometragem, tipo
-- **Filtros por Ano**: Visualização por período específico
-- **Resumo Financeiro**: Total gasto em manutenções
-- **Tipos de Manutenção**: Preventiva, corretiva, revisão
+2. **Associação**:
+   - Despesas por rota
+   - Despesas por ciclo
+   - Despesas globais
 
-### **Histórico de Abastecimento**
+3. **Cálculos**:
+   - Total por categoria
+   - Total por rota/ciclo
+   - Total geral
 
-- **Registro de Combustível**: Data, valor, litros, quilometragem
-- **Cálculo de Consumo**: Km/litro automático
-- **Filtros por Ano**: Visualização por período específico
-- **Resumo Financeiro**: Total gasto em combustível
+### **Colaboradores**
 
-## 👥 GESTÃO DE COLABORADORES
+1. **Aprovação**:
+   - Colaboradores pendentes de aprovação
+   - Aprovação por administrador
+   - Níveis de acesso (ADMIN, USER)
 
-### **Transferência de Clientes**
+2. **Metas**:
+   - Metas por colaborador
+   - Acompanhamento de desempenho
+   - Relatórios
 
-- **Entre Rotas**: Cliente pode ser transferido de uma rota para outra
-- **Preservação de Dados**: Histórico e mesas mantidos
-- **Validação**: Apenas rotas diferentes permitidas
-- **Log de Auditoria**: Registro de todas as transferências
+### **Contratos**
 
-### **Sistema de Metas**
+1. **Geração**:
+   - Contratos de locação
+   - Aditivos contratuais
+   - Validação jurídica
 
-- **Vinculação**: Ciclo de acerto + rota + colaborador
-- **Métricas**: % clientes cobrados, faturamento, novas mesas, média por mesa
-- **Acompanhamento**: Progresso em tempo real
-- **Relatórios**: Performance por colaborador
-- **Cadastro**: Todas as mesas criadas no depósito
+2. **Assinaturas**:
+   - Assinatura do locatário
+   - Assinatura do representante legal
+   - Validação biométrica (Lei 14.063/2020)
 
-### **Tipos de Mesa**
+3. **Integridade**:
+   - Hash SHA-256
+   - Logs de auditoria
+   - Metadados do dispositivo
 
-- **Sinuca**: Mesa de sinuca
-- **Pembolim**: Mesa de pembolim
-- **Jukebox**: Mesa de jukebox
-- **Pool/Snooker**: Outros tipos
+## 🔐 VALIDAÇÕES E SEGURANÇA
 
-## 📋 CONTRATOS DE LOCAÇÃO
+### **Assinatura Eletrônica (Lei 14.063/2020)**
 
-### **Geração Automática**
+1. **Metadados Obrigatórios**:
+   - Timestamp
+   - Device ID
+   - IP (se disponível)
+   - Pressão do traçado
+   - Velocidade do traçado
 
-- **Trigger**: Após vincular mesa ao cliente
-- **Numeração**: Formato "2025-0002"
-- **Dados**: Preenchimento automático do cliente e equipamentos
+2. **Validação Biométrica**:
+   - Características do traçado
+   - Validação de presença física
+   - Logs de auditoria
 
-### **Tipos de Contrato**
+3. **Integridade**:
+   - Hash SHA-256
+   - Verificação de alterações
+   - Logs jurídicos
 
-- **Valor Fixo**: Valor mensal definido
-- **Percentual**: % da receita (padrão 40%)
-- **Múltiplos Equipamentos**: Suporte a várias mesas
+### **Acesso e Permissões**
 
-### **Validação Jurídica**
+1. **Níveis de Acesso**:
+   - **ADMIN**: Acesso completo
+   - **USER**: Acesso limitado
+   - **Super Admin**: `rossinys@gmail.com` (acesso total)
 
-- **Assinatura Eletrônica Simples**: Conforme Lei 14.063/2020
-- **Metadados**: Timestamp, device ID, IP, pressão, velocidade
-- **Integridade**: Hash SHA-256 do documento e assinatura
-- **Auditoria**: Logs jurídicos completos
+2. **Menu Principal**:
+   - Visível para ADMIN aprovado
+   - Visível para super admin
+   - Lógica centralizada em `UserSessionManager`
 
 ## 📊 RELATÓRIOS E IMPRESSÃO
 
 ### **Relatórios de Acerto**
 
-- **PDF**: Geração automática após salvar
-- **WhatsApp**: Compartilhamento via mensagem
-- **Impressão**: Impressora térmica 58mm
+1. **Conteúdo**:
+   - Dados do cliente
+   - Mesas incluídas
+   - Valores financeiros
+   - Métodos de pagamento
+   - Observações
+
+2. **Formato**:
+   - PDF gerado com iTextPDF
+   - Compartilhamento via WhatsApp
+   - Impressão direta
 
 ### **Relatórios de Fechamento**
 
-- **Por Ciclo**: Dados de um acerto específico
-- **Anual**: Consolidação de todos os acertos do ano
-- **Gráficos**: Pizza de receitas por rota e despesas por tipo
+1. **Conteúdo**:
+   - Resumo por modalidade (PIX, Cartão, etc.)
+   - Total recebido
+   - Despesas de viagem
+   - Comissões
+   - Total geral
 
-## 🎯 METAS DE DESEMPENHO
+2. **Cálculos**:
+   - Total geral = Total recebido - Despesas - Comissões
+   - Validação de valores
+   - Discriminação por método de pagamento
 
-### **Estrutura**
+## 🚫 RESTRIÇÕES E VALIDAÇÕES
 
-- **Vínculo**: Ciclo de acerto + rota + colaborador
-- **Métricas**: % clientes cobrados, faturamento, novas mesas, média por mesa
-- **Acompanhamento**: Comparação com metas definidas
+1. **Dados Obrigatórios**:
+   - Nome do cliente
+   - CPF/CNPJ
+   - Endereço completo
+   - Valores numéricos válidos
 
-## 🔐 SEGURANÇA E AUDITORIA
+2. **Validações Financeiras**:
+   - Valores não podem ser negativos
+   - Total deve bater com métodos de pagamento
+   - Comissões calculadas automaticamente
 
-### **Logs Jurídicos**
+3. **Validações de Estado**:
+   - Rota deve estar iniciada para criar acerto
+   - Cliente deve existir para vincular mesa
+   - Ciclo deve estar ativo para acertos
 
-- **Eventos**: Assinatura, geração de contrato, alterações
-- **Metadados**: Device ID, IP, timestamp, pressão, velocidade
-- **Integridade**: Hash SHA-256 para verificação
-- **Auditoria**: Trilha completa de eventos
+## 📝 OBSERVAÇÕES IMPORTANTES
 
-### **Validações**
-
-- **Assinatura**: Características biométricas válidas
-- **Documento**: Integridade verificada por hash
-- **Presença**: Confirmação de presença física do locatário
+1. **Offline-first**: Todas as operações funcionam offline
+2. **Sincronização**: Será implementada ao final (não bloqueia uso)
+3. **Compatibilidade**: ViewModels não precisam mudar (AppRepository como Facade)
+4. **Modularização**: Código organizado por domínio facilita manutenção
