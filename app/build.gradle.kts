@@ -128,6 +128,9 @@ dependencies {
     // DataStore (Preferences)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("com.jakewharton.timber:timber:5.0.1")
+    
+    // WorkManager (para sincronização em background)
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 
     // ✅ REMOVIDO: Hilt (pode causar conflito com Compose)
     // implementation("com.google.dagger:hilt-android:2.51")

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import android.util.Log
 import java.util.concurrent.TimeUnit
+import java.util.Date
 import kotlinx.coroutines.runBlocking
 // import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
 // import javax.inject.Singleton // REMOVIDO: Hilt nao e mais usado
@@ -45,6 +46,7 @@ class AppRepository constructor(
     private val mesaReformadaDao: com.example.gestaobilhares.data.dao.MesaReformadaDao? = null,
     private val mesaVendidaDao: com.example.gestaobilhares.data.dao.MesaVendidaDao? = null,
     private val historicoManutencaoMesaDao: com.example.gestaobilhares.data.dao.HistoricoManutencaoMesaDao? = null,
+    private val syncOperationDao: SyncOperationDao? = null,
     // private val  // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
 ) {
     
@@ -69,7 +71,8 @@ class AppRepository constructor(
                 database.stockItemDao(),
                 database.mesaReformadaDao(),
                 database.mesaVendidaDao(),
-                database.historicoManutencaoMesaDao()
+                database.historicoManutencaoMesaDao(),
+                database.syncOperationDao()
             )
         }
     }
@@ -262,7 +265,7 @@ class AppRepository constructor(
             rotas.map { rota ->
                 // Calcular dados reais para cada rota
                 val clientesAtivos = calcularClientesAtivosPorRota(rota.id)
-                val (cicloAtualNumero, cicloAtualId, dataCicloInicio) = obterCicloAtualRota(rota.id)
+                val (cicloAtualNumero, cicloAtualId, _) = obterCicloAtualRota(rota.id)
                 val pendencias = calcularPendenciasReaisPorRota(rota.id)
                 val quantidadeMesas = calcularQuantidadeMesasPorRota(rota.id)
                 val percentualAcertados = calcularPercentualClientesAcertados(rota.id, cicloAtualId, clientesAtivos)
@@ -693,7 +696,7 @@ class AppRepository constructor(
      */
     suspend fun buscarColaboradorResponsavelPrincipal(rotaId: Long): Colaborador? {
         return try {
-            colaboradorDao?.buscarColaboradorResponsavelPrincipal(rotaId)
+            colaboradorDao.buscarColaboradorResponsavelPrincipal(rotaId)
         } catch (e: Exception) {
             Log.e("AppRepository", "Erro ao buscar colaborador responsável: ${e.message}", e)
             null
@@ -841,8 +844,12 @@ class AppRepository constructor(
     suspend fun getDespesasConsolidadasCiclos(numeroCiclo: Int, ano: Int, rotaId: Long): List<DespesaRelatorio> {
         return try {
             // Buscar todos os ciclos do mesmo número no ano
+            val calendar = java.util.Calendar.getInstance()
             val ciclos = cicloAcertoDao.listarTodos().first()
-                .filter { it.numeroCiclo == numeroCiclo && it.dataInicio.year + 1900 == ano }
+                .filter { ciclo ->
+                    calendar.time = ciclo.dataInicio
+                    ciclo.numeroCiclo == numeroCiclo && calendar.get(java.util.Calendar.YEAR) == ano
+                }
             
             val despesas = mutableListOf<DespesaRelatorio>()
             
@@ -977,8 +984,8 @@ class AppRepository constructor(
             // Leitura de verificação (apenas diagnóstico)
             try {
                 val apos = contratoLocacaoDao.buscarContratosPorCliente(contrato.clienteId).first()
-                val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
-                Log.d("RepoContracts", "Após atualizar: cliente=${contrato.clienteId} contratos=${apos.size} -> ${'$'}resumo")
+                val resumo = apos.joinToString { _ -> "id=${'$'}{it.id},status=${'$'}{it.status},enc=${'$'}{it.dataEncerramento}" }
+                Log.d("RepoContracts", "Após atualizar: cliente=${contrato.clienteId} contratos=${apos.size} -> $resumo")
             } catch (e: Exception) {
                 Log.e("RepoContracts", "Falha ao ler contratos após atualizar", e)
             }
@@ -994,8 +1001,8 @@ class AppRepository constructor(
         Log.d("RepoUpdate", "Encerrar direto contrato id=${contratoId} status=${status} em ${agora}")
         contratoLocacaoDao.encerrarContrato(contratoId, status, agora, agora)
         val apos = contratoLocacaoDao.buscarContratosPorCliente(clienteId).first()
-        val resumo = apos.joinToString { c -> "id=${'$'}{c.id},status=${'$'}{c.status},enc=${'$'}{c.dataEncerramento}" }
-        Log.d("RepoContracts", "Após encerrar direto: cliente=${clienteId} contratos=${apos.size} -> ${'$'}resumo")
+        val resumo = apos.joinToString { _ -> "id=${'$'}{it.id},status=${'$'}{it.status},enc=${'$'}{it.dataEncerramento}" }
+        Log.d("RepoContracts", "Após encerrar direto: cliente=${clienteId} contratos=${apos.size} -> $resumo")
     }
     suspend fun excluirContrato(contrato: ContratoLocacao) = contratoLocacaoDao.excluirContrato(contrato)
     suspend fun buscarContratoPorId(contratoId: Long) = contratoLocacaoDao.buscarContratoPorId(contratoId)
@@ -1227,7 +1234,7 @@ class AppRepository constructor(
         return try {
             val ciclo = cicloAcertoDao.buscarPorId(cicloId) ?: return 0
             val inicio = ciclo.dataInicio
-            val fim = ciclo.dataFim ?: java.util.Date()
+            val fim = ciclo.dataFim ?: Date()
             mesaDao.contarNovasMesasInstaladas(rotaId, inicio, fim)
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao contar novas mesas no ciclo: ${e.message}", e)
@@ -1390,7 +1397,7 @@ class AppRepository constructor(
     fun buscarAcertosPorClienteECicloId(clienteId: Long, cicloId: Long) = acertoDao.buscarPorClienteECicloId(clienteId, cicloId)
     suspend fun buscarPorRotaECicloId(rotaId: Long, cicloId: Long) = acertoDao.buscarPorRotaECicloId(rotaId, cicloId).first()
     suspend fun buscarPorId(acertoId: Long) = acertoDao.buscarPorId(acertoId)
-    suspend fun atualizarValoresCiclo(cicloId: Long) {
+    suspend fun atualizarValoresCiclo(_cicloId: Long) {
         // TODO: Implementar lógica de atualização de valores do ciclo
     }
     
@@ -1462,17 +1469,76 @@ class AppRepository constructor(
     
     // ==================== HISTÓRICO COMBUSTÍVEL E MANUTENÇÃO VEÍCULO ====================
     
-    suspend fun inserirHistoricoCombustivel(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo): Long {
+    suspend fun inserirHistoricoCombustivel(_historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo): Long {
         // TODO: Implementar quando DAO estiver disponível
         return 0L
     }
     
-    suspend fun inserirHistoricoManutencao(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo): Long {
+    suspend fun inserirHistoricoManutencao(_historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo): Long {
         // TODO: Implementar quando DAO estiver disponível
         return 0L
     }
     
     // ==================== STOCK ITEM ====================
+    
+    // ==================== FILA DE SINCRONIZAÇÃO ====================
+    
+    /**
+     * Insere uma operação na fila de sincronização
+     */
+    suspend fun inserirOperacaoSync(operation: SyncOperationEntity): Long {
+        return syncOperationDao?.inserir(operation) ?: throw IllegalStateException("SyncOperationDao não inicializado")
+    }
+    
+    /**
+     * Obtém todas as operações pendentes como Flow
+     */
+    fun obterOperacoesSyncPendentes(): Flow<List<SyncOperationEntity>> {
+        return syncOperationDao?.obterOperacoesPendentes() ?: flowOf(emptyList())
+    }
+    
+    /**
+     * Obtém operações pendentes limitadas (para processamento em lotes)
+     */
+    suspend fun obterOperacoesSyncPendentesLimitadas(limit: Int): List<SyncOperationEntity> {
+        return syncOperationDao?.obterOperacoesPendentesLimitadas(limit) ?: emptyList()
+    }
+    
+    /**
+     * Atualiza uma operação de sincronização
+     */
+    suspend fun atualizarOperacaoSync(operation: SyncOperationEntity) {
+        syncOperationDao?.atualizar(operation) ?: throw IllegalStateException("SyncOperationDao não inicializado")
+    }
+    
+    /**
+     * Deleta uma operação de sincronização
+     */
+    suspend fun deletarOperacaoSync(operation: SyncOperationEntity) {
+        syncOperationDao?.deletar(operation) ?: throw IllegalStateException("SyncOperationDao não inicializado")
+    }
+    
+    /**
+     * Conta operações pendentes
+     */
+    suspend fun contarOperacoesSyncPendentes(): Int {
+        return syncOperationDao?.contarOperacoesPendentes() ?: 0
+    }
+    
+    /**
+     * Conta operações falhadas
+     */
+    suspend fun contarOperacoesSyncFalhadas(): Int {
+        return syncOperationDao?.contarOperacoesFalhadas() ?: 0
+    }
+    
+    /**
+     * Limpa operações completadas antigas (após X dias)
+     */
+    suspend fun limparOperacoesSyncCompletadas(dias: Int = 7) {
+        val beforeTimestamp = System.currentTimeMillis() - (dias * 24 * 60 * 60 * 1000L)
+        syncOperationDao?.limparOperacoesCompletadas(beforeTimestamp)
+    }
     
     fun obterTodosStockItems() = stockItemDao?.listarTodos() ?: flowOf(emptyList())
     suspend fun inserirStockItem(item: com.example.gestaobilhares.data.entities.StockItem): Long = stockItemDao?.inserir(item) ?: 0L
@@ -1483,14 +1549,17 @@ class AppRepository constructor(
     // suspend fun inserirEquipment(equipment: Equipment): Long = 0L
     
     // ==================== SYNC ====================
+    // TODO: SyncRepository será integrado via delegação quando implementado
+    // Por enquanto, métodos mantidos para compatibilidade
     
-    suspend fun adicionarAcertoComMesasParaSync(acerto: Acerto, mesas: List<com.example.gestaobilhares.data.entities.AcertoMesa>) {
-        // TODO: Implementar quando SyncManager estiver disponível
+    suspend fun adicionarAcertoComMesasParaSync(_acerto: Acerto, _mesas: List<com.example.gestaobilhares.data.entities.AcertoMesa>) {
+        // TODO: Implementar quando SyncRepository estiver disponível
+        // syncRepository.enqueueOperation(SyncOperation(...))
     }
     
     // ==================== CÁLCULOS ====================
     
-    suspend fun calcularMediaFichasJogadas(mesaId: Long, periodoDias: Int): Double {
+    suspend fun calcularMediaFichasJogadas(_mesaId: Long, _periodoDias: Int): Double {
         // TODO: Implementar cálculo de média de fichas jogadas
         return 0.0
     }
