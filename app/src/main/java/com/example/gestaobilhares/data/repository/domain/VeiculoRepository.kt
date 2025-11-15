@@ -68,6 +68,22 @@ class VeiculoRepository(
     }
     
     /**
+     * ✅ NOVO: Obtém todos os históricos de manutenção como Flow reativo
+     * Baseado no código antigo que funcionava - retorna todos e filtra no ViewModel
+     */
+    fun obterTodosHistoricoManutencaoVeiculoFlow(): Flow<List<HistoricoManutencaoVeiculo>> {
+        return historicoManutencaoVeiculoDao?.listarTodos() ?: flowOf(emptyList())
+    }
+    
+    /**
+     * ✅ NOVO: Obtém todos os históricos de combustível como Flow reativo
+     * Baseado no código antigo que funcionava - retorna todos e filtra no ViewModel
+     */
+    fun obterTodosHistoricoCombustivelVeiculoFlow(): Flow<List<HistoricoCombustivelVeiculo>> {
+        return historicoCombustivelVeiculoDao?.listarTodos() ?: flowOf(emptyList())
+    }
+    
+    /**
      * ✅ NOVO: Obtém histórico de manutenção por veículo como Flow reativo
      * Para uso em ViewModels que precisam observar mudanças automaticamente
      */

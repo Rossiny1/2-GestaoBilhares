@@ -456,7 +456,11 @@ class AppRepository constructor(
     // ==================== DESPESA ====================
     // ✅ DELEGAÇÃO: Usa DespesaRepository especializado
     
-    fun obterTodasDespesas() = despesaRepository.obterTodas()
+    // ✅ CORRIGIDO: Método para sincronização (retorna Despesa diretamente)
+    fun obterTodasDespesas() = despesaRepository.obterTodasDespesas()
+    
+    // Método para exibição (retorna DespesaResumo com JOIN)
+    fun obterTodasDespesasComRota() = despesaRepository.obterTodas()
     fun obterDespesasPorRota(rotaId: Long) = despesaRepository.obterPorRota(rotaId)
     suspend fun obterDespesaPorId(id: Long) = despesaRepository.obterPorId(id)
     suspend fun inserirDespesa(despesa: Despesa): Long = despesaRepository.inserir(despesa)
@@ -1444,6 +1448,10 @@ class AppRepository constructor(
     }
     
     // ✅ NOVO: Métodos Flow reativos para observação automática em ViewModels
+    // Baseado no código antigo que funcionava - retorna todos e filtra no ViewModel
+    fun obterTodosHistoricoManutencaoVeiculoFlow() = veiculoRepository.obterTodosHistoricoManutencaoVeiculoFlow()
+    fun obterTodosHistoricoCombustivelVeiculoFlow() = veiculoRepository.obterTodosHistoricoCombustivelVeiculoFlow()
+    
     fun obterHistoricoManutencaoPorVeiculo(veiculoId: Long) = veiculoRepository.obterHistoricoManutencaoPorVeiculo(veiculoId)
     fun obterHistoricoCombustivelPorVeiculo(veiculoId: Long) = veiculoRepository.obterHistoricoCombustivelPorVeiculo(veiculoId)
     fun obterHistoricoManutencaoPorVeiculoEAno(veiculoId: Long, ano: String) = veiculoRepository.obterHistoricoManutencaoPorVeiculoEAno(veiculoId, ano)

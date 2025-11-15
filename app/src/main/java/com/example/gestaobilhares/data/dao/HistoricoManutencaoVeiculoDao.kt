@@ -7,6 +7,10 @@ import java.util.Date
 
 @Dao
 interface HistoricoManutencaoVeiculoDao {
+    // ✅ NOVO: Listar todos os históricos (para uso no ViewModel como no código antigo)
+    @Query("SELECT * FROM historico_manutencao_veiculo ORDER BY data_manutencao DESC")
+    fun listarTodos(): Flow<List<HistoricoManutencaoVeiculo>>
+    
     @Query("SELECT * FROM historico_manutencao_veiculo WHERE veiculo_id = :veiculoId ORDER BY data_manutencao DESC")
     fun listarPorVeiculo(veiculoId: Long): Flow<List<HistoricoManutencaoVeiculo>>
     

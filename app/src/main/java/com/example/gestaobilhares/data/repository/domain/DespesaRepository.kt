@@ -13,6 +13,11 @@ class DespesaRepository(
     private val despesaDao: DespesaDao
 ) {
     
+    // ✅ NOVO: Método para obter todas as despesas diretamente (para sincronização)
+    // Retorna Despesa (sem JOIN) - necessário para push/pull
+    fun obterTodasDespesas() = despesaDao.buscarTodas()
+    
+    // Método que retorna DespesaResumo (com JOIN) - para exibição
     fun obterTodas() = despesaDao.buscarTodasComRota()
     fun obterPorRota(rotaId: Long) = despesaDao.buscarPorRota(rotaId)
     suspend fun obterPorId(id: Long) = despesaDao.buscarPorId(id)

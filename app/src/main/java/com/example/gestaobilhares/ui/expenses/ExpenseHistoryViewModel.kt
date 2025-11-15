@@ -47,8 +47,8 @@ class ExpenseHistoryViewModel(
     // val statistics: LiveData<EstatisticasDespesas> = despesaRepository.obterEstatisticas().asLiveData()
 
     // Lista completa de despesas (sem filtro)
-    // ✅ MIGRADO: Usa AppRepository
-    private val allExpenses = appRepository.obterTodasDespesas()
+    // ✅ CORRIGIDO: Usa obterTodasDespesasComRota() para ter nomeRota (DespesaResumo)
+    private val allExpenses = appRepository.obterTodasDespesasComRota()
 
     init {
         loadExpenses()
