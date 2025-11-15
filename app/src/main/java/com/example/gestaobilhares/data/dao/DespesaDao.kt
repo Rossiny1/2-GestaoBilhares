@@ -54,6 +54,13 @@ interface DespesaDao {
     fun buscarPorRota(rotaId: Long): Flow<List<Despesa>>
 
     /**
+     * Busca todas as despesas diretamente (sem JOIN) - para sincronização
+     * @return Flow com lista de Despesa
+     */
+    @Query("SELECT * FROM despesas ORDER BY dataHora DESC")
+    fun buscarTodas(): Flow<List<Despesa>>
+
+    /**
      * Busca todas as despesas com informações da rota (join).
      * @return Flow com lista de DespesaResumo
      */

@@ -1075,6 +1075,34 @@ class SyncRepository(
     }
     
     /**
+     * ✅ NOVO: Converte timestamp do Firestore para LocalDateTime
+     * Necessário para campos dataHora da entidade Despesa
+     */
+    private fun converterTimestampParaLocalDateTime(value: Any?): java.time.LocalDateTime? {
+        return when (value) {
+            is com.google.firebase.Timestamp -> {
+                value.toDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+            }
+            is Long -> {
+                Date(value).toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+            }
+            is String -> {
+                try {
+                    // Tentar parsear como ISO string ou timestamp
+                    if (value.contains("T") || value.contains("-")) {
+                        java.time.LocalDateTime.parse(value, java.time.format.DateTimeFormatter.ISO_DATE_TIME)
+                    } else {
+                        Date(value.toLong()).toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+                    }
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            else -> null
+        }
+    }
+    
+    /**
      * Pull Rotas: Sincroniza rotas do Firestore para o Room
      */
     private suspend fun pullRotas(): Result<Int> {
@@ -1472,33 +1500,70 @@ class SyncRepository(
                         return@forEach
                     }
                     
-                    val despesaJson = gson.toJson(despesaData)
-                    val despesaFirestore = gson.fromJson(despesaJson, Despesa::class.java)
-                        ?.copy(id = despesaId) ?: run {
-                        Log.w(TAG, "⚠️ Erro ao converter despesa ${doc.id} - pulando")
+                    // ✅ CORRIGIDO: Converter manualmente os campos do Firestore para Despesa
+                    // Gson não converte LocalDateTime automaticamente, então fazemos manualmente
+                    val dataHora = converterTimestampParaLocalDateTime(despesaData["dataHora"])
+                        ?: converterTimestampParaLocalDateTime(despesaData["data_hora"])
+                        ?: java.time.LocalDateTime.now()
+                    
+                    val despesaFirestore = Despesa(
+                        id = despesaId,
+                        rotaId = (despesaData["rotaId"] as? Number)?.toLong() ?: (despesaData["rota_id"] as? Number)?.toLong() ?: 0L,
+                        descricao = (despesaData["descricao"] as? String) ?: "",
+                        valor = (despesaData["valor"] as? Number)?.toDouble() ?: 0.0,
+                        categoria = (despesaData["categoria"] as? String) ?: "",
+                        tipoDespesa = (despesaData["tipoDespesa"] as? String) ?: (despesaData["tipo_despesa"] as? String) ?: "",
+                        dataHora = dataHora,
+                        observacoes = (despesaData["observacoes"] as? String) ?: "",
+                        criadoPor = (despesaData["criadoPor"] as? String) ?: (despesaData["criado_por"] as? String) ?: "",
+                        cicloId = (despesaData["cicloId"] as? Number)?.toLong() ?: (despesaData["ciclo_id"] as? Number)?.toLong(),
+                        origemLancamento = (despesaData["origemLancamento"] as? String) ?: (despesaData["origem_lancamento"] as? String) ?: "ROTA",
+                        cicloAno = (despesaData["cicloAno"] as? Number)?.toInt() ?: (despesaData["ciclo_ano"] as? Number)?.toInt(),
+                        cicloNumero = (despesaData["cicloNumero"] as? Number)?.toInt() ?: (despesaData["ciclo_numero"] as? Number)?.toInt(),
+                        fotoComprovante = (despesaData["fotoComprovante"] as? String) ?: (despesaData["foto_comprovante"] as? String),
+                        dataFotoComprovante = converterTimestampParaDate(despesaData["dataFotoComprovante"]) ?: converterTimestampParaDate(despesaData["data_foto_comprovante"]),
+                        veiculoId = (despesaData["veiculoId"] as? Number)?.toLong() ?: (despesaData["veiculo_id"] as? Number)?.toLong(),
+                        kmRodado = (despesaData["kmRodado"] as? Number)?.toLong() ?: (despesaData["km_rodado"] as? Number)?.toLong(),
+                        litrosAbastecidos = (despesaData["litrosAbastecidos"] as? Number)?.toDouble() ?: (despesaData["litros_abastecidos"] as? Number)?.toDouble()
+                    )
+                    
+                    if (despesaFirestore.descricao.isBlank() || despesaFirestore.rotaId == 0L) {
+                        Log.w(TAG, "⚠️ Despesa ${doc.id} com dados inválidos - pulando")
                         skipCount++
                         return@forEach
                     }
                     
                     val despesaLocal = appRepository.obterDespesaPorId(despesaId)
                     
+                    // ✅ CORRIGIDO: Comparação de timestamp mais robusta
+                    // Converter timestamp do servidor para milissegundos
                     val serverTimestamp = (despesaData["lastModified"] as? com.google.firebase.Timestamp)?.toDate()?.time
-                        ?: despesaFirestore.dataHora.toEpochSecond(java.time.ZoneOffset.UTC) * 1000
+                        ?: (despesaData["syncTimestamp"] as? com.google.firebase.Timestamp)?.toDate()?.time
+                        ?: dataHora.toEpochSecond(java.time.ZoneOffset.UTC) * 1000
+                    
+                    // Converter LocalDateTime local para milissegundos
                     val localTimestamp = despesaLocal?.dataHora?.toEpochSecond(java.time.ZoneOffset.UTC)?.times(1000) ?: 0L
                     
+                    // ✅ CORRIGIDO: Lógica de conflito mais conservadora
+                    // Só sobrescrever se o servidor for significativamente mais recente (mais de 1 segundo)
+                    // Isso evita sobrescrever dados locais recém-salvos
                     when {
                         despesaLocal == null -> {
+                            // Despesa não existe localmente, inserir
                             appRepository.inserirDespesa(despesaFirestore)
                             syncCount++
-                            Log.d(TAG, "✅ Despesa inserida: ID=$despesaId")
+                            Log.d(TAG, "✅ Despesa inserida: ID=$despesaId, Descrição=${despesaFirestore.descricao}, CicloId=${despesaFirestore.cicloId}")
                         }
-                        serverTimestamp > localTimestamp -> {
+                        serverTimestamp > (localTimestamp + 1000) -> {
+                            // Servidor é mais recente (com margem de 1 segundo para evitar race conditions)
                             appRepository.atualizarDespesa(despesaFirestore)
                             syncCount++
-                            Log.d(TAG, "✅ Despesa atualizada: ID=$despesaId")
+                            Log.d(TAG, "✅ Despesa atualizada: ID=$despesaId (servidor: $serverTimestamp, local: $localTimestamp)")
                         }
                         else -> {
-                            Log.d(TAG, "⏭️ Despesa local mais recente, mantendo: ID=$despesaId")
+                            // Local é mais recente ou igual, manter dados locais
+                            skipCount++
+                            Log.d(TAG, "⏭️ Despesa local mais recente ou igual, mantendo: ID=$despesaId (servidor: $serverTimestamp, local: $localTimestamp)")
                         }
                     }
                 } catch (e: Exception) {
@@ -2489,12 +2554,18 @@ class SyncRepository(
      */
     private suspend fun pushDespesas(): Result<Int> {
         return try {
-            Log.d(TAG, "Iniciando push de despesas...")
+            Log.d(TAG, "🔵 Iniciando push de despesas...")
+            // ✅ CORRIGIDO: obterTodasDespesas() agora retorna Despesa diretamente (sem JOIN)
             val despesasLocais = appRepository.obterTodasDespesas().first()
+            Log.d(TAG, "📥 Total de despesas locais encontradas: ${despesasLocais.size}")
             
             var syncCount = 0
+            var errorCount = 0
+            
             despesasLocais.forEach { despesa ->
                 try {
+                    Log.d(TAG, "📄 Processando despesa: ID=${despesa.id}, Descrição=${despesa.descricao}, CicloId=${despesa.cicloId}")
+                    
                     val despesaMap = entityToMap(despesa)
                     // ✅ CRÍTICO: Adicionar roomId para compatibilidade com pull
                     despesaMap["roomId"] = despesa.id
@@ -2508,15 +2579,26 @@ class SyncRepository(
                         .set(despesaMap)
                         .await()
                     
+                    // ✅ CRÍTICO: Atualizar timestamp local após push bem-sucedido
+                    // Isso evita que o pull sobrescreva os dados locais na próxima sincronização
+                    // Como Despesa usa LocalDateTime, precisamos atualizar o dataHora
+                    val despesaAtualizada = despesa.copy(
+                        dataHora = java.time.LocalDateTime.now()
+                    )
+                    appRepository.atualizarDespesa(despesaAtualizada)
+                    
                     syncCount++
+                    Log.d(TAG, "✅ Despesa enviada para nuvem: ${despesa.descricao} (ID: ${despesa.id}) - Timestamp local atualizado")
                 } catch (e: Exception) {
-                    Log.e(TAG, "Erro ao enviar despesa ${despesa.id}: ${e.message}", e)
+                    errorCount++
+                    Log.e(TAG, "❌ Erro ao enviar despesa ${despesa.id}: ${e.message}", e)
                 }
             }
             
+            Log.d(TAG, "✅ Push de despesas concluído: $syncCount enviadas, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no push de despesas: ${e.message}", e)
+            Log.e(TAG, "❌ Erro no push de despesas: ${e.message}", e)
             Result.failure(e)
         }
     }
