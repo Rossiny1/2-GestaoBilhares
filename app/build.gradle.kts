@@ -59,6 +59,25 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"
     }
+    
+    // ✅ OTIMIZAÇÃO: Desabilitar tarefas desnecessárias no debug
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/INDEX.LIST"
+            excludes += "/META-INF/DEPENDENCIES"
+        }
+    }
+    
+    // ✅ OTIMIZAÇÃO: Compilação paralela de módulos
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions {
+            freeCompilerArgs += listOf(
+                "-opt-in=kotlin.RequiresOptIn",
+                "-Xjvm-default=all"
+            )
+        }
+    }
 }
 
 // ✅ CORREÇÃO: KSP para Room (compatível com Java 11+)

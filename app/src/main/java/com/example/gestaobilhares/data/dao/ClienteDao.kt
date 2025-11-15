@@ -13,7 +13,7 @@ interface ClienteDao {
     @Query("SELECT * FROM clientes WHERE rota_id = :rotaId ORDER BY nome ASC")
     fun obterClientesPorRota(rotaId: Long): Flow<List<Cliente>>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserir(cliente: Cliente): Long
 
     @Update

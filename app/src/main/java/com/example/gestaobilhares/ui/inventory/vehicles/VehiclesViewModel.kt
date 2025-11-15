@@ -14,23 +14,28 @@ class VehiclesViewModel constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
 
-    // TODO: Implementar quando métodos de veículos estiverem disponíveis no AppRepository
-    val vehicles: StateFlow<List<Veiculo>> = flowOf(emptyList<Veiculo>())
+    // ✅ CORRIGIDO: Observar veículos do banco de dados usando Flow
+    val vehicles: StateFlow<List<Veiculo>> = appRepository.obterTodosVeiculos()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun addVehicle(nome: String, placa: String, marca: String, modelo: String, anoModelo: Int, kmAtual: Long) {
         viewModelScope.launch {
-            // TODO: Implementar quando métodos de veículos estiverem disponíveis
-            // appRepository.inserirVeiculo(
-            //     Veiculo(
-            //         nome = nome.trim(),
-            //         placa = placa.trim(),
-            //         marca = marca.trim(),
-            //         modelo = modelo.trim(),
-            //         anoModelo = anoModelo,
-            //         kmAtual = kmAtual
-            //     )
-            // )
+            try {
+                android.util.Log.d("VehiclesViewModel", "Adicionando veículo: $nome - $placa")
+                val veiculo = Veiculo(
+                    nome = nome.trim(),
+                    placa = placa.trim(),
+                    marca = marca.trim(),
+                    modelo = modelo.trim(),
+                    anoModelo = anoModelo,
+                    kmAtual = kmAtual
+                )
+                val id = appRepository.inserirVeiculo(veiculo)
+                android.util.Log.d("VehiclesViewModel", "Veículo inserido com ID: $id")
+                // O Flow do banco de dados já irá notificar automaticamente
+            } catch (e: Exception) {
+                android.util.Log.e("VehiclesViewModel", "Erro ao adicionar veículo: ${e.message}", e)
+            }
         }
     }
 }

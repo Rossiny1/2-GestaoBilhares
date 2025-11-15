@@ -598,10 +598,15 @@ class RoutesFragment : Fragment() {
                     val syncRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getSyncRepository(requireContext())
                     
                     // Executar sincronização bidirecional
+                    android.util.Log.d("RoutesFragment", "🔄 Iniciando sincronização bidirecional...")
                     val result = syncRepository.syncBidirectional()
                     
                     if (result.isSuccess) {
                         val status = syncRepository.getSyncStatus()
+                        android.util.Log.d("RoutesFragment", "✅ Sincronização concluída com sucesso")
+                        android.util.Log.d("RoutesFragment", "   Pendentes: ${status.pendingOperations}")
+                        android.util.Log.d("RoutesFragment", "   Falhas: ${status.failedOperations}")
+                        
                         Toast.makeText(requireContext(), 
                             "✅ Sincronização concluída!\n" +
                             "Pendentes: ${status.pendingOperations}\n" +
@@ -609,17 +614,26 @@ class RoutesFragment : Fragment() {
                             Toast.LENGTH_LONG).show()
                         
                         // Forçar atualização completa dos dados das rotas após sincronização
-                        android.util.Log.d("RoutesFragment", "🔄 Sincronização concluída - Forçando atualização completa dos dados das rotas")
+                        android.util.Log.d("RoutesFragment", "🔄 Aguardando processamento dos dados...")
                         
                         // Aguardar um pouco mais para garantir que todos os dados sejam processados
                         kotlinx.coroutines.delay(2000)
                         
                         // Forçar refresh múltiplas vezes para garantir atualização completa
+                        android.util.Log.d("RoutesFragment", "🔄 Forçando refresh dos dados...")
                         viewModel.refresh()
+                        
+                        // Aguardar mais um pouco e forçar refresh novamente
+                        kotlinx.coroutines.delay(1000)
+                        viewModel.refresh()
+                        
+                        android.util.Log.d("RoutesFragment", "✅ Refresh concluído")
                     } else {
                         val status = syncRepository.getSyncStatus()
+                        android.util.Log.e("RoutesFragment", "❌ Sincronização falhou: ${status.error ?: "Erro desconhecido"}")
                         Toast.makeText(requireContext(), 
-                            "⚠️ Sincronização falhou: ${status.error ?: "Erro desconhecido"}", 
+                            "⚠️ Sincronização falhou: ${status.error ?: "Erro desconhecido"}\n" +
+                            "Verifique os logs para mais detalhes", 
                             Toast.LENGTH_LONG).show()
                     }
                     

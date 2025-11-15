@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.util.Date
 import com.google.gson.Gson
@@ -67,6 +70,10 @@ class CycleManagementViewModel(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 
+    // ✅ NOVO: Flow para cicloId e rotaId atual para observação reativa
+    private val _cicloIdFlow = MutableStateFlow<Long?>(null)
+    private val _rotaIdFlow = MutableStateFlow<Long?>(null)
+
     private val _dadosCiclo = MutableStateFlow<CycleManagementData?>(null)
     val dadosCiclo: StateFlow<CycleManagementData?> = _dadosCiclo.asStateFlow()
 
@@ -77,42 +84,99 @@ class CycleManagementViewModel(
     val estatisticasModalidade: StateFlow<PaymentMethodStats> = _estatisticasModalidade.asStateFlow()
 
     // Estados de loading e error já estão no BaseViewModel
+    
+    init {
+        // ✅ NOVO: Observar mudanças em despesas e acertos para atualização automática
+        viewModelScope.launch {
+            combine(
+                _cicloIdFlow,
+                _rotaIdFlow
+            ) { cicloId, rotaId ->
+                Pair(cicloId, rotaId)
+            }
+            .flatMapLatest { (cicloId, rotaId) ->
+                if (cicloId == null || rotaId == null) {
+                    return@flatMapLatest flowOf(Unit)
+                }
+                
+                // Observar despesas e acertos simultaneamente
+                combine(
+                    appRepository.buscarDespesasPorCicloId(cicloId),
+                    appRepository.buscarAcertosPorCicloId(cicloId)
+                ) { despesas, acertos ->
+                    // Buscar ciclo e rota (são suspend, então buscamos uma vez)
+                    val ciclo = cicloAcertoRepository.buscarCicloPorId(cicloId)
+                    val rota = appRepository.buscarRotaPorId(rotaId)
+                    
+                    if (ciclo != null && rota != null) {
+                        // Atualizar dados do ciclo
+                        _dadosCiclo.value = CycleManagementData(
+                            id = ciclo.id,
+                            rotaId = ciclo.rotaId,
+                            titulo = "${ciclo.numeroCiclo}º Acerto - ${rota.nome}",
+                            dataInicio = ciclo.dataInicio,
+                            dataFim = ciclo.dataFim,
+                            status = ciclo.status
+                        )
+                        
+                        // Recalcular estatísticas
+                        calcularEstatisticasFinanceirasReativo(acertos, despesas)
+                    }
+                    Unit
+                }
+            }
+            .collect { }
+        }
+    }
+    
+    // ✅ NOVO: Método para calcular estatísticas de forma reativa
+    private fun calcularEstatisticasFinanceirasReativo(acertos: List<Acerto>, despesas: List<Despesa>) {
+        try {
+            val estatisticas = com.example.gestaobilhares.utils.FinancialCalculator.calcularEstatisticasCiclo(
+                acertos = acertos,
+                despesas = despesas
+            )
+            
+            _estatisticas.value = CycleFinancialStats(
+                totalRecebido = estatisticas.totalRecebido,
+                despesasViagem = estatisticas.despesasViagem,
+                subtotal = estatisticas.subtotal,
+                comissaoMotorista = estatisticas.comissaoMotorista,
+                comissaoIltair = estatisticas.comissaoIltair,
+                somaPix = estatisticas.somaPix,
+                somaDespesas = estatisticas.somaDespesas,
+                cheques = estatisticas.cheques,
+                totalGeral = estatisticas.totalGeral
+            )
+            
+            _estatisticasModalidade.value = PaymentMethodStats(
+                pix = estatisticas.somaPix,
+                cartao = estatisticas.somaCartao,
+                cheque = estatisticas.cheques,
+                dinheiro = 0.0,
+                totalRecebido = estatisticas.totalRecebido
+            )
+        } catch (e: Exception) {
+            logError("STATS_CALC_REACTIVE", "Erro ao calcular estatísticas: ${e.message}", e)
+        }
+    }
 
     /**
      * Carrega dados do ciclo
+     * ✅ CORRIGIDO: Agora apenas atualiza os Flows, o init observa automaticamente
      */
     fun carregarDadosCiclo(cicloId: Long, rotaId: Long) {
+        _cicloIdFlow.value = cicloId
+        _rotaIdFlow.value = rotaId
         viewModelScope.launch {
             try {
                 showLoading()
-                clearError()
-
-                // Buscar dados do ciclo
-                val ciclo = cicloAcertoRepository.buscarCicloPorId(cicloId)
-                val rota = cicloAcertoRepository.buscarRotaPorId(rotaId)
-
-                if (ciclo != null && rota != null) {
-                    // Mapear para DTO
-                    val dadosCiclo = CycleManagementData(
-                        id = ciclo.id,
-                        rotaId = ciclo.rotaId,
-                        titulo = "${ciclo.numeroCiclo}º Acerto - ${rota.nome}",
-                        dataInicio = ciclo.dataInicio,
-                        dataFim = ciclo.dataFim,
-                        status = ciclo.status
-                    )
-                    _dadosCiclo.value = dadosCiclo
-
-                    // Calcular estatísticas financeiras
-                    calcularEstatisticasFinanceiras(cicloId, rotaId)
-                } else {
-                    showError("Ciclo não encontrado")
-                }
-
+                // Aguardar um pouco para os dados carregarem
+                kotlinx.coroutines.delay(100)
+                hideLoading()
             } catch (e: Exception) {
                 logError("CYCLE_LOAD", "Erro ao carregar dados do ciclo: ${e.message}", e)
                 showError("Erro ao carregar dados: ${e.message}", e)
-            } finally {
                 hideLoading()
             }
         }
@@ -275,12 +339,17 @@ class CycleManagementViewModel(
 
     /**
      * Recarrega estatísticas
+     * ✅ CORRIGIDO: Não precisa fazer nada, os Flows já observam automaticamente
      */
     fun recarregarEstatisticas() {
         val dadosAtuais = _dadosCiclo.value
         if (dadosAtuais != null) {
-            viewModelScope.launch {
-                calcularEstatisticasFinanceiras(dadosAtuais.id, dadosAtuais.rotaId)
+            // Os Flows já observam automaticamente, apenas garantir que os IDs estão corretos
+            if (_cicloIdFlow.value != dadosAtuais.id) {
+                _cicloIdFlow.value = dadosAtuais.id
+            }
+            if (_rotaIdFlow.value != dadosAtuais.rotaId) {
+                _rotaIdFlow.value = dadosAtuais.rotaId
             }
         }
     }

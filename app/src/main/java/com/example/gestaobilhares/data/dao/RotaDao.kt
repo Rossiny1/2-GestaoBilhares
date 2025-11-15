@@ -46,13 +46,13 @@ interface RotaDao {
      * Insere uma nova rota no banco de dados.
      * @return O ID da rota inserida
      */
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRota(rota: Rota): Long
     
     /**
      * Insere múltiplas rotas de uma vez.
      */
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRotas(rotas: List<Rota>): List<Long>
     
     /**

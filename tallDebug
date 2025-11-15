@@ -1,0 +1,708 @@
+package com.example.gestaobilhares.sync
+
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.example.gestaobilhares.data.database.AppDatabase
+import com.example.gestaobilhares.data.entities.*
+import com.example.gestaobilhares.data.repository.AppRepository
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
+import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
+// Firestore/Auth/Coroutines
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.tasks.await
+// JSON
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+
+/**
+ * ✅ FASE 3C: Gerenciador de Sincronização V2
+ * Utiliza as novas entidades SyncLog, SyncQueue e SyncConfig
+ * Seguindo melhores práticas Android 2025
+ */
+class SyncManagerV2(
+    private val context: Context,
+    private val appRepository: AppRepository,
+    private val database: AppDatabase
+) {
+    
+    private val syncScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val isSyncing = AtomicBoolean(false)
+    
+    // DAOs das novas entidades
+    private val syncLogDao = database.syncLogDao()
+    private val syncQueueDao = database.syncQueueDao()
+    private val syncConfigDao = database.syncConfigDao()
+    
+    // LiveData para status
+    private val _syncStatus = MutableLiveData<SyncStatus>()
+    val syncStatus: LiveData<SyncStatus> = _syncStatus
+    
+    private val _pendingOperationsCount = MutableLiveData<Int>()
+    val pendingOperationsCount: LiveData<Int> = _pendingOperationsCount
+    
+    private val _lastSyncTime = MutableLiveData<Long>()
+    val lastSyncTime: LiveData<Long> = _lastSyncTime
+
+    // Firebase Firestore e utilitários
+    private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+    private val gson: Gson by lazy { Gson() }
+    
+    // ✅ FASE 12.14: Handlers de pull especializados
+    private val rotaPullHandler by lazy { 
+        com.example.gestaobilhares.sync.handlers.RotaPullHandler(appRepository, database, firestore, context) 
+    }
+    private val clientePullHandler by lazy { 
+        com.example.gestaobilhares.sync.handlers.ClientePullHandler(appRepository, database, firestore, context) 
+    }
+    private val mesaPullHandler by lazy { 
+        com.example.gestaobilhares.sync.handlers.MesaPullHandler(appRepository, database, firestore, context) 
+    }
+    private val acertoPullHandler by lazy { 
+        com.example.gestaobilhares.sync.handlers.AcertoPullHandler(appRepository, database, firestore, context) 
+    }
+    private val cicloPullHandler by lazy { 
+        com.example.gestaobilhares.sync.handlers.CicloPullHandler(appRepository, database, firestore, context) 
+    }
+
+    init {
+        syncScope.launch {
+            initializeSyncConfig()
+        }
+        startPeriodicSync()
+        observePendingOperations()
+    }
+
+    /**
+     * Inicializar configurações padrão de sincronização
+     */
+    private suspend fun initializeSyncConfig() {
+        try {
+            syncConfigDao.inicializarConfiguracoesPadrao(System.currentTimeMillis())
+            
+            // Garantir que exista um empresa_id padrão
+            val empresaConfig = syncConfigDao.buscarSyncConfigPorChave("empresa_id")
+            if (empresaConfig == null) {
+                val now = System.currentTimeMillis()
+                // empresa_001 é o padrão visto no console do Firestore
+                syncConfigDao.atualizarValorConfig("empresa_id", "empresa_001", now)
+                android.util.Log.d("SyncManagerV2", "✅ empresa_id configurado como 'empresa_001'")
+            } else {
+                android.util.Log.d("SyncManagerV2", "✅ empresa_id já configurado: ${empresaConfig.value}")
+            }
+            
+            android.util.Log.d("SyncManagerV2", "Configurações de sincronização inicializadas")
+        } catch (e: Exception) {
+            android.util.Log.w("SyncManagerV2", "Erro ao inicializar configurações: ${e.message}")
+        }
+    }
+
+    /**
+     * Observar contagem de operações pendentes
+     */
+    private fun observePendingOperations() {
+        syncScope.launch {
+            syncQueueDao.contarOperacoesPendentes().let { count ->
+                _pendingOperationsCount.postValue(count)
+            }
+        }
+    }
+
+    /**
+     * Adicionar operação à fila de sincronização
+     */
+    suspend fun addToSyncQueue(
+        entityType: String,
+        entityId: Long,
+        operation: String,
+        payload: String,
+        priority: Int = 0
+    ) {
+        try {
+            val syncQueue = SyncQueue(
+                entityType = entityType,
+                entityId = entityId,
+                operation = operation,
+                payload = payload,
+                createdAt = Date(),
+                scheduledFor = Date(), // Processar imediatamente
+                retryCount = 0,
+                status = "PENDING",
+                priority = priority
+            )
+            
+            syncQueueDao.inserirSyncQueue(syncQueue)
+            
+            // Log da operação
+            logSyncOperation(entityType, entityId, operation, "PENDING", null, payload)
+            
+            // Atualizar contagem
+            observePendingOperations()
+            
+            android.util.Log.d("SyncManagerV2", "Operação adicionada à fila: $entityType:$entityId")
+            
+            // Tentar sincronizar se online
+            if (isOnline()) {
+                processSyncQueue()
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "Erro ao adicionar à fila: ${e.message}")
+        }
+    }
+
+    /**
+     * Processar fila de sincronização
+     */
+    suspend fun processSyncQueue() {
+        if (isSyncing.get() || !isOnline()) return
+        if (!isAuthenticated()) {
+            android.util.Log.w("SyncManagerV2", "Ignorando sync: usuário não autenticado no Firebase")
+            return
+        }
+        
+        isSyncing.set(true)
+        _syncStatus.postValue(SyncStatus.SYNCING)
+        
+        try {
+            val currentTime = System.currentTimeMillis()
+            val operations = syncQueueDao.buscarOperacoesAgendadas(currentTime).first()
+            
+            android.util.Log.d("SyncManagerV2", "📋 Processando ${operations.size} operações")
+            if (operations.isEmpty()) {
+                android.util.Log.w("SyncManagerV2", "⚠️ Nenhuma operação pendente na fila de sincronização")
+                return
+            }
+            
+            operations.forEachIndexed { index, op ->
+                android.util.Log.d("SyncManagerV2", "   [$index] ${op.entityType}:${op.entityId} - ${op.operation} (${op.status})")
+            }
+            
+            for (operation in operations) {
+                try {
+                    // Marcar como processando
+                    syncQueueDao.marcarComoProcessando(operation.id)
+                    
+                    // Aplicar operação real no Firestore
+                    val success = applyOperationToFirestore(operation)
+                    
+                    if (success) {
+                        // Marcar como concluída
+                        syncQueueDao.marcarComoConcluida(operation.id)
+                        logSyncOperation(
+                            operation.entityType,
+                            operation.entityId,
+                            operation.operation,
+                            "SUCCESS",
+                            null,
+                            operation.payload
+                        )
+                    } else {
+                        // Marcar como falhou e agendar retry
+                        val nextRetry = currentTime + (30000 * (operation.retryCount + 1)) // 30s, 60s, 90s
+                        syncQueueDao.marcarComoFalhou(operation.id, nextRetry)
+                        logSyncOperation(
+                            operation.entityType,
+                            operation.entityId,
+                            operation.operation,
+                            "FAILED",
+                            "Falha ao aplicar operação no Firestore",
+                            operation.payload
+                        )
+                    }
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("SyncManagerV2", "Erro ao processar operação ${operation.id}: ${e.message}")
+                    syncQueueDao.marcarComoFalhou(operation.id, currentTime + 60000)
+                }
+            }
+            
+            // Atualizar timestamp da última sincronização
+            updateLastSyncTimestamp()
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "Erro ao processar fila: ${e.message}")
+            _syncStatus.postValue(SyncStatus.ERROR)
+        } finally {
+            isSyncing.set(false)
+            _syncStatus.postValue(SyncStatus.SYNCED)
+            observePendingOperations()
+        }
+    }
+
+    /**
+     * Aplicar operação no Firestore usando payload JSON armazenado na fila.
+     * Mantém o app offline-first: Room continua fonte da verdade, Firestore é o espelho.
+     */
+    private suspend fun applyOperationToFirestore(operation: SyncQueue): Boolean {
+        return try {
+            val empresaId = getEmpresaId()
+            val collection = getCollectionName(operation.entityType)
+            val docId = operation.entityId.toString()
+
+            android.util.Log.d("SyncManagerV2", "🔄 Aplicando operação no Firestore:")
+            android.util.Log.d("SyncManagerV2", "   Empresa ID: $empresaId")
+            android.util.Log.d("SyncManagerV2", "   Collection: $collection")
+            android.util.Log.d("SyncManagerV2", "   Document ID: $docId")
+            android.util.Log.d("SyncManagerV2", "   Operation: ${operation.operation}")
+            android.util.Log.d("SyncManagerV2", "   Payload: ${operation.payload}")
+
+            // Converter o payload JSON em Map<String, Any?> para enviar ao Firestore
+            val mapType = object : TypeToken<Map<String, Any?>>() {}.type
+            val payloadMap: Map<String, Any?> = try {
+                gson.fromJson(operation.payload, mapType) ?: emptyMap()
+            } catch (e: Exception) {
+                android.util.Log.w("SyncManagerV2", "Payload inválido para ${operation.entityType}:${operation.entityId} -> ${e.message}")
+                emptyMap()
+            }
+
+            android.util.Log.d("SyncManagerV2", "   Payload Map: $payloadMap")
+            
+            // ✅ VALIDAÇÃO CRÍTICA: Verificar se o payload não está vazio
+            if (payloadMap.isEmpty()) {
+                android.util.Log.e("SyncManagerV2", "❌ Payload vazio para ${operation.entityType}:${operation.entityId} - Operação cancelada")
+                return false
+            }
+            
+            // ✅ VALIDAÇÃO ESPECÍFICA POR TIPO DE ENTIDADE (MAIS FLEXÍVEL)
+            when (operation.entityType.lowercase()) {
+                "cliente" -> {
+                    val nome = payloadMap["nome"]?.toString()
+                    if (nome.isNullOrBlank()) {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Cliente sem nome - Usando nome padrão")
+                        // Não cancelar, usar nome padrão
+                    }
+                }
+                "mesa" -> {
+                    val numero = payloadMap["numero"]?.toString()
+                    if (numero.isNullOrBlank()) {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Mesa sem número - Usando número padrão")
+                        // Não cancelar, usar número padrão
+                    }
+                }
+                "acerto" -> {
+                    val valor = payloadMap["valorRecebido"]
+                    val clienteId = payloadMap["clienteId"]
+                    if (valor == null) {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Acerto sem valor - Usando valor padrão")
+                        // Não cancelar, usar valor padrão
+                    }
+                    if (clienteId == null) {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Acerto sem clienteId - Usando cliente padrão")
+                        // Não cancelar, usar cliente padrão
+                    }
+                    // ✅ CRÍTICO: Verificar fotos nas mesas do acerto
+                    val acertoMesas = payloadMap["acertoMesas"] as? List<Map<String, Any?>>
+                    if (acertoMesas != null) {
+                        android.util.Log.d("SyncManagerV2", "📷 Verificando fotos em ${acertoMesas.size} mesas do acerto...")
+                        acertoMesas.forEachIndexed { index, mesa ->
+                            val fotoUrl = mesa["fotoRelogioFinal"] as? String
+                            val temUrl = !fotoUrl.isNullOrBlank()
+                            val isFirebaseUrl = temUrl && fotoUrl?.startsWith("https://firebasestorage.googleapis.com") == true
+                            android.util.Log.d("SyncManagerV2", "📷   Mesa ${index + 1}: fotoUrl='$fotoUrl'")
+                            android.util.Log.d("SyncManagerV2", "📷     Tem URL? $temUrl | É URL Firebase? $isFirebaseUrl")
+                            if (!temUrl || !isFirebaseUrl) {
+                                android.util.Log.e("SyncManagerV2", "📷     ❌ ERRO CRÍTICO: URL da foto não está presente ou é inválida!")
+                            } else {
+                                android.util.Log.d("SyncManagerV2", "📷     ✅ URL válida do Firebase será enviada")
+                            }
+                        }
+                    } else {
+                        android.util.Log.w("SyncManagerV2", "📷 ⚠️ Acerto sem mesas ou campo acertoMesas não encontrado")
+                    }
+                }
+                "rota" -> {
+                    val nome = payloadMap["nome"]?.toString()
+                    if (nome.isNullOrBlank()) {
+                        android.util.Log.w("SyncManagerV2", "⚠️ Rota sem nome - Usando nome padrão")
+                        // Não cancelar, usar nome padrão
+                    }
+                }
+            }
+
+            // ✅ CORREÇÃO: Usar roomId como documento ID para evitar duplicatas
+            val docRef = firestore
+                .collection("empresas")
+                .document(empresaId)
+                .collection(collection)
+                .document(operation.entityId.toString()) // Usar roomId como documento ID
+
+            android.util.Log.d("SyncManagerV2", "   Firestore Path: empresas/$empresaId/$collection/${operation.entityId}")
+
+            when (operation.operation.uppercase(Locale.getDefault())) {
+                "CREATE", "UPDATE" -> {
+                    // ✅ CORREÇÃO: Adicionar roomId ao payload para referência
+                    val payloadWithRoomId = payloadMap.toMutableMap().apply {
+                        put("roomId", operation.entityId)
+                        put("syncTimestamp", System.currentTimeMillis())
+                    }
+                    
+                    // ✅ CRÍTICO: Verificar fotos no payload final antes de enviar
+                    if (operation.entityType.lowercase() == "acerto") {
+                        val acertoMesas = payloadWithRoomId["acertoMesas"] as? List<Map<String, Any?>>
+                        if (acertoMesas != null) {
+                            android.util.Log.d("SyncManagerV2", "📷 ========================================")
+                            android.util.Log.d("SyncManagerV2", "📷 PAYLOAD FINAL ANTES DE ENVIAR AO FIRESTORE:")
+                            acertoMesas.forEachIndexed { index, mesa ->
+                                val fotoUrl = mesa["fotoRelogioFinal"] as? String
+                                android.util.Log.d("SyncManagerV2", "📷   Mesa ${index + 1}: fotoUrl='$fotoUrl'")
+                                if (fotoUrl.isNullOrBlank()) {
+                                    android.util.Log.e("SyncManagerV2", "📷     ❌❌❌ ERRO: URL da foto está VAZIA no payload final!")
+                                } else if (!fotoUrl.startsWith("https://firebasestorage.googleapis.com")) {
+                                    android.util.Log.e("SyncManagerV2", "📷     ❌❌❌ ERRO: URL não é do Firebase Storage: '$fotoUrl'")
+                                } else {
+                                    android.util.Log.d("SyncManagerV2", "📷     ✅ URL válida será enviada ao Firestore")
+                                }
+                            }
+                            android.util.Log.d("SyncManagerV2", "📷 ========================================")
+                        }
+                    }
+                    
+                    // ✅ NOVO: Para operações UPDATE, usar merge para não sobrescrever
+                    // Para operações CREATE, usar set para criar novo documento
+                    if (operation.operation.uppercase(Locale.getDefault()) == "UPDATE") {
+                        android.util.Log.d("SyncManagerV2", "   Executando UPDATE com merge...")
+                        docRef.set(payloadWithRoomId, SetOptions.merge()).await()
+                    } else {
+                        android.util.Log.d("SyncManagerV2", "   Executando CREATE com set...")
+                        docRef.set(payloadWithRoomId).await()
+                    }
+                    android.util.Log.d("SyncManagerV2", "   Payload final: $payloadWithRoomId")
+                    android.util.Log.d("SyncManagerV2", "   ✅ SET executado com sucesso")
+                }
+                "DELETE" -> {
+                    android.util.Log.d("SyncManagerV2", "   Executando DELETE...")
+                    docRef.delete().await()
+                    android.util.Log.d("SyncManagerV2", "   ✅ DELETE executado com sucesso")
+                }
+                else -> {
+                    android.util.Log.w("SyncManagerV2", "Operação desconhecida: ${operation.operation}")
+                    return false
+                }
+            }
+            android.util.Log.d("SyncManagerV2", "✅ Operação ${operation.operation} concluída com sucesso")
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("SyncManagerV2", "❌ Falha no Firestore: ${e.message}", e)
+            android.util.Log.e("SyncManagerV2", "   Stack trace: ${e.stackTraceToString()}")
+            false
+        }
+    }
+
+    /**
+     * Log de operação de sincronização
+     */
+    private suspend fun logSyncOperation(
+        entityType: String,
+        entityId: Long,
+        operation: String,
+        status: String,
+        errorMessage: String?,
+        payload: String?
+    ) {
+        try {
+            val syncLog = SyncLog(
+                entityType = entityType,
+                entityId = entityId,
+                operation = operation,
+                syncStatus = status,
+                timestamp = Date(),
+                errorMessage = errorMessage,
+                payload = payload
+            )
+            
+            syncLogDao.inserirSyncLog(syncLog)
+        } catch (e: Exception) {
+            android.util.Log.w("SyncManagerV2", "Erro ao logar operação: ${e.message}")
+        }
+    }
+
+    /**
+     * Verificar se está online
+     */
+    private fun isOnline(): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+               capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+    }
+
+    /** Verifica se há usuário autenticado no Firebase (regras exigem auth) */
+    private fun isAuthenticated(): Boolean {
+        return try {
+            FirebaseAuth.getInstance().currentUser != null
+        } catch (_: Exception) { false }
+    }
+
+    /** Obtém o ID da empresa para particionar os dados no Firestore */
+    private suspend fun getEmpresaId(): String {
+        return try {
+            val cfg = syncConfigDao.buscarSyncConfigPorChave("empresa_id")
+            val empresaId = cfg?.value ?: "empresa_001"
+            android.util.Log.d("SyncManagerV2", "🏢 Empresa ID obtido: $empresaId (config: ${cfg?.key})")
+            empresaId
+        } catch (e: Exception) { 
+            android.util.Log.w("SyncManagerV2", "Erro ao obter empresa_id: ${e.message}, usando padrão")
+            "empresa_001" 
+        }
+    }
+
+    /** Mapeia tipos de entidades para coleções do Firestore */
+    private fun getCollectionName(entityType: String): String = when (entityType.lowercase(Locale.getDefault())) {
+        "cliente" -> "clientes"
+        "acerto" -> "acertos"
+        "mesa" -> "mesas"
+        "rota" -> "rotas"
+        "colaborador" -> "colaboradores"
+        "despesa" -> "despesas"
+        "panoestoque" -> "panosEstoque"
+        "mesavendida" -> "mesasVendidas"
+        "stockitem" -> "stockItems"
+        "veiculo" -> "veiculos"
+        "historicomanutencaomesa" -> "historicoManutencaoMesa"
+        "historicomanutencaoveiculo" -> "historicoManutencaoVeiculo"
+        "historicocombustivelveiculo" -> "historicoCombustivelVeiculo"
+        "categoriadespesa" -> "categoriasDespesa"
+        "tipodespesa" -> "tiposDespesa"
+        "contratolocacao" -> "contratosLocacao"
+        "contratomesa" -> "contratoMesas"
+        "metacolaborador" -> "metas"
+        "colaboradorrota" -> "colaboradoresRotas"
+        "assinaturarepresentantelegal" -> "assinaturasRepresentanteLegal"
+        "logauditoriaassinatura" -> "logsAuditoriaAssinatura"
+        "acertomesa" -> "acertoMesa"
+        "mesareformada" -> "mesasReformadas"
+        "aditivocontrato" -> "aditivosContrato"
+        "aditivomesa" -> "aditivoMesas"
+        "panomesa" -> "panoMesas"
+        "equipment" -> "equipments"
+        else -> entityType.lowercase(Locale.getDefault()) + "s"
+    }
+
+    /**
+     * Iniciar sincronização periódica
+     */
+    private fun startPeriodicSync() {
+        syncScope.launch {
+            while (isActive) {
+                delay(300000) // 5 minutos
+                
+                if (isOnline() && !isSyncing.get()) {
+                    processSyncQueue()
+                }
+            }
+        }
+    }
+
+    /**
+     * Atualizar timestamp da última sincronização
+     */
+    private suspend fun updateLastSyncTimestamp() {
+        try {
+            val currentTime = System.currentTimeMillis()
+            syncConfigDao.atualizarUltimoTimestampSync("last_sync_timestamp_global", currentTime.toString(), currentTime)
+            _lastSyncTime.postValue(currentTime)
+        } catch (e: Exception) {
+            android.util.Log.w("SyncManagerV2", "Erro ao atualizar timestamp: ${e.message}")
+        }
+    }
+
+    /**
+     * Forçar sincronização manual (PUSH + PULL)
+     */
+    fun forceSync() {
+        syncScope.launch {
+            try {
+                android.util.Log.d("SyncManagerV2", "🚀 INICIANDO SINCRONIZAÇÃO COMPLETA (PUSH + PULL)")
+                
+                // 1. PUSH: Enviar dados pendentes para Firestore
+                android.util.Log.d("SyncManagerV2", "📤 Fase 1: PUSH SYNC (App → Firestore)")
+                processSyncQueue()
+                
+                // Aguardar um pouco para garantir que PUSH termine
+                delay(1000)
+                
+                // 2. PULL: Baixar dados do Firestore para o app
+                android.util.Log.d("SyncManagerV2", "📥 Fase 2: PULL SYNC (Firestore → App)")
+                pullFromFirestore()
+                
+                android.util.Log.d("SyncManagerV2", "✅ SINCRONIZAÇÃO COMPLETA FINALIZADA")
+                
+            } catch (e: Exception) {
+                android.util.Log.e("SyncManagerV2", "❌ Erro na sincronização completa: ${e.message}", e)
+            }
+        }
+    }
+
+    /**
+     * PULL SYNC: Baixar dados do Firestore para o app
+     */
+    private suspend fun pullFromFirestore() {
+        android.util.Log.d("SyncManagerV2", "🔍 Verificando condições para PULL SYNC...")
+        android.util.Log.d("SyncManagerV2", "   Online: ${isOnline()}")
+        android.util.Log.d("SyncManagerV2", "   Autenticado: ${isAuthenticated()}")
+        
+        if (!isOnline()) {
+            android.util.Log.w("SyncManagerV2", "❌ PULL SYNC cancelado: Sem conexão")
+            return
+        }
+        
+        if (!isAuthenticated()) {
+            android.util.Log.w("SyncManagerV2", "❌ PULL SYNC cancelado: Usuário não autenticado")
+            return
+        }
+        
+        try {
+            android.util.Log.d("SyncManagerV2", "🔄 Iniciando PULL SYNC do Firestore")
+            
+            val empresaId = getEmpresaId()
+            android.util.Log.d("SyncManagerV2", "🏢 Empresa ID para PULL: $empresaId")
+            
+        // ✅ FASE 12.14: Usar handlers especializados em vez de métodos privados
+        // 1. PRIMEIRO: Baixar rotas do Firestore (dependência dos clientes)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 1: Sincronizando ROTAS...")
+        rotaPullHandler.pull(empresaId)
+        delay(500) // Aguardar rotas serem inseridas
+
+        // 2. SEGUNDO: Baixar clientes do Firestore (dependem das rotas)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 2: Sincronizando CLIENTES...")
+
+        // Verificar se existe pelo menos uma rota antes de sincronizar clientes
+        val rotasExistentes = appRepository.obterTodasRotas().first()
+        if (rotasExistentes.isEmpty()) {
+            android.util.Log.w("SyncManagerV2", "⚠️ Nenhuma rota encontrada no Room. Os clientes precisam de uma rota para serem sincronizados.")
+        }
+        
+        clientePullHandler.pull(empresaId)
+        delay(500) // Aguardar clientes serem inseridos
+
+        // 3. TERCEIRO: Baixar mesas do Firestore (dependem dos clientes)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 3: Sincronizando MESAS...")
+        mesaPullHandler.pull(empresaId)
+        delay(500) // Aguardar mesas serem inseridas
+
+        // 4. QUARTO: Baixar acertos do Firestore (dependem dos clientes)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 4: Sincronizando ACERTOS...")
+        acertoPullHandler.pull(empresaId)
+        delay(500) // Aguardar acertos serem inseridos
+
+        // 5. QUINTO: Baixar ciclos do Firestore (dependem dos acertos)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 5: Sincronizando CICLOS...")
+        cicloPullHandler.pull(empresaId)
+        delay(500) // Aguardar ciclos serem inseridos
+        
+        // 5.1. ATUALIZAR ROTAS: Alinhar status das rotas com os ciclos importados
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 5.1: Atualizando status das rotas com ciclos importados...")
+        atualizarRotasComCiclosImportados()
+        delay(500) // Aguardar atualizações das rotas
+        
+        // 6. SEXTO: Baixar colaboradores do Firestore
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 6: Sincronizando COLABORADORES...")
+        pullColaboradoresFromFirestore(empresaId)
+        delay(500) // Aguardar colaboradores serem inseridos
+        
+        // 7. SÉTIMO: Baixar despesas do Firestore
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 7: Sincronizando DESPESAS...")
+        pullDespesasFromFirestore(empresaId)
+        delay(500) // Aguardar despesas serem inseridas
+        
+        // 8. OITAVO: Baixar panos estoque do Firestore
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 8: Sincronizando PANOS ESTOQUE...")
+        pullPanoEstoqueFromFirestore(empresaId)
+        delay(500) // Aguardar panos serem inseridos
+        
+        // 9. NONO: Baixar mesas vendidas do Firestore
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 9: Sincronizando MESAS VENDIDAS...")
+        pullMesaVendidaFromFirestore(empresaId)
+        delay(500) // Aguardar mesas vendidas serem inseridas
+        
+        // 10. DÉCIMO: Sincronizar StockItems
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 10: Sincronizando STOCK ITEMS...")
+        pullStockItemsFromFirestore(empresaId)
+        delay(500) // Aguardar stock items serem inseridos
+        
+        // 11. DÉCIMO PRIMEIRO: Sincronizar Veículos
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 11: Sincronizando VEÍCULOS...")
+        pullVeiculosFromFirestore(empresaId)
+        delay(500) // Aguardar veículos serem inseridos
+        
+        // 11.5. DÉCIMO PRIMEIRO E MEIO: Sincronizar Equipamentos
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 11.5: Sincronizando EQUIPAMENTOS...")
+        pullEquipmentFromFirestore(empresaId)
+        delay(500) // Aguardar equipamentos serem inseridos
+        
+        // 12. DÉCIMO SEGUNDO: Sincronizar Histórico Manutenção Mesa
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 12: Sincronizando HISTÓRICO MANUTENÇÃO MESA...")
+        pullHistoricoManutencaoMesaFromFirestore(empresaId)
+        delay(500) // Aguardar histórico mesa serem inseridos
+        
+        // 13. DÉCIMO TERCEIRO: Sincronizar Histórico Manutenção Veículo
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 13: Sincronizando HISTÓRICO MANUTENÇÃO VEÍCULO...")
+        pullHistoricoManutencaoVeiculoFromFirestore(empresaId)
+        delay(500) // Aguardar histórico veículo serem inseridos
+        
+        // 14. DÉCIMO QUARTO: Sincronizar Histórico Combustível Veículo
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 14: Sincronizando HISTÓRICO COMBUSTÍVEL VEÍCULO...")
+        pullHistoricoCombustivelVeiculoFromFirestore(empresaId)
+        delay(500) // Aguardar histórico combustível serem inseridos
+        
+        // 15. DÉCIMO QUINTO: Sincronizar Categorias Despesa
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 15: Sincronizando CATEGORIAS DESPESA...")
+        pullCategoriasDespesaFromFirestore(empresaId)
+        delay(500) // Aguardar categorias serem inseridas
+        
+        // 16. DÉCIMO SEXTO: Sincronizar Tipos Despesa
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 16: Sincronizando TIPOS DESPESA...")
+        pullTiposDespesaFromFirestore(empresaId)
+        delay(500) // Aguardar tipos serem inseridos
+        
+        // 17. DÉCIMO SÉTIMO: Sincronizar Contratos Locação
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17: Sincronizando CONTRATOS LOCAÇÃO...")
+        pullContratosLocacaoFromFirestore(empresaId)
+        delay(500) // Aguardar contratos serem inseridos
+        
+        // 17.0.1: Sincronizar Metas (dependem de colaboradores/rotas e opcionalmente ciclo)
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17.0.1: Sincronizando METAS...")
+        pullMetasFromFirestore(empresaId)
+        delay(300)
+
+        // 17.0.2: Sincronizar ColaboradorRota
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17.0.2: Sincronizando COLABORADOR_ROTA...")
+        pullColaboradoresRotasFromFirestore(empresaId)
+        delay(300)
+
+        // 17.1: Sincronizar Aditivos de Contrato
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17.1: Sincronizando ADITIVOS DE CONTRATO...")
+        pullAditivosContratoFromFirestore(empresaId)
+        delay(300)
+        
+        // 17.2: Sincronizar Aditivo Mesas
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17.2: Sincronizando ADITIVO MESAS...")
+        pullAditivoMesasFromFirestore(empresaId)
+        delay(300)
+
+        // 17.3: Sincronizar Contrato Mesas
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 17.3: Sincronizando CONTRATO MESAS...")
+        pullContratoMesasFromFirestore(empresaId)
+        delay(300)
+        
+        // 18. DÉCIMO OITAVO: Sincronizar Assinaturas Representante Legal
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 18: Sincronizando ASSINATURAS REPRESENTANTE LEGAL...")
+        pullAssinaturasRepresentanteLegalFromFirestore(empresaId)
+        delay(500) // Aguardar assinaturas serem inseridas
+        
+        // 19. DÉCIMO NONO: Sincronizar Logs Auditoria Assinatura
+        android.util.Log.d("SyncManagerV2", "🔄 Fase 19: Sincronizando LOGS AUDITORIA ASSINATURA...")
+        pullLogsAuditoriaAssinaturaFromFirestore(empresaId)
+        delay(500) // Aguardar logs serem inseridos
+        
+        // 20. VIGÉSIMO: Sincronizar AcertoMesa
+        android.util.Log.
