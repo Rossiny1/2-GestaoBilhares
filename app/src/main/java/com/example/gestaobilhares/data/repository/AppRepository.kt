@@ -2,6 +2,17 @@ package com.example.gestaobilhares.data.repository
 
 import com.example.gestaobilhares.data.dao.*
 import com.example.gestaobilhares.data.entities.*
+import com.example.gestaobilhares.data.repository.domain.VeiculoRepository
+import com.example.gestaobilhares.data.repository.domain.MesaRepository
+import com.example.gestaobilhares.data.repository.domain.ContratoRepository
+import com.example.gestaobilhares.data.repository.domain.ColaboradorRepository
+import com.example.gestaobilhares.data.repository.domain.ClienteRepository
+import com.example.gestaobilhares.data.repository.domain.AcertoRepository
+import com.example.gestaobilhares.data.repository.domain.RotaRepository
+import com.example.gestaobilhares.data.repository.domain.DespesaRepository
+import com.example.gestaobilhares.data.repository.domain.CicloRepository
+import com.example.gestaobilhares.data.repository.domain.MetaRepository
+import com.example.gestaobilhares.data.repository.domain.PanoRepository
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
@@ -20,11 +31,11 @@ import kotlinx.coroutines.runBlocking
 /**
  * ✅ REPOSITORY CONSOLIDADO E MODERNIZADO - AppRepository
  * 
- * FASE 2: Modernização com StateFlow e centralização
- * - Combina todos os repositories em um único arquivo
- * - Elimina duplicação e simplifica a arquitetura
- * - Modernizado com StateFlow para melhor performance
+ * FASE 3: Arquitetura Híbrida Modular - AppRepository como Facade
+ * - Delega para repositories especializados em domain/
+ * - Mantém compatibilidade com ViewModels existentes
  * - Centralizado para facilitar manutenção
+ * - Meta: ~200-300 linhas (delegando para especializados)
  */
 class AppRepository constructor(
     private val clienteDao: ClienteDao,
@@ -46,9 +57,75 @@ class AppRepository constructor(
     private val mesaReformadaDao: com.example.gestaobilhares.data.dao.MesaReformadaDao? = null,
     private val mesaVendidaDao: com.example.gestaobilhares.data.dao.MesaVendidaDao? = null,
     private val historicoManutencaoMesaDao: com.example.gestaobilhares.data.dao.HistoricoManutencaoMesaDao? = null,
+    private val veiculoDao: com.example.gestaobilhares.data.dao.VeiculoDao? = null,
+    private val historicoManutencaoVeiculoDao: com.example.gestaobilhares.data.dao.HistoricoManutencaoVeiculoDao? = null,
+    private val historicoCombustivelVeiculoDao: com.example.gestaobilhares.data.dao.HistoricoCombustivelVeiculoDao? = null,
+    private val panoMesaDao: com.example.gestaobilhares.data.dao.PanoMesaDao? = null,
+    private val metaDao: MetaDao? = null,
     private val syncOperationDao: SyncOperationDao? = null,
     // private val  // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
 ) {
+    
+    // ✅ NOVO: Repositories especializados (arquitetura modular)
+    private val clienteRepository: ClienteRepository by lazy {
+        ClienteRepository(clienteDao)
+    }
+    
+    private val acertoRepository: AcertoRepository by lazy {
+        AcertoRepository(acertoDao)
+    }
+    
+    private val mesaRepository: MesaRepository by lazy {
+        MesaRepository(
+            mesaDao,
+            mesaReformadaDao,
+            panoMesaDao
+        )
+    }
+    
+    private val rotaRepository: RotaRepository by lazy {
+        RotaRepository(
+            rotaDao,
+            clienteDao,
+            acertoDao,
+            cicloAcertoDao
+        )
+    }
+    
+    private val despesaRepository: DespesaRepository by lazy {
+        DespesaRepository(despesaDao)
+    }
+    
+    private val cicloRepository: CicloRepository by lazy {
+        CicloRepository(cicloAcertoDao)
+    }
+    
+    private val veiculoRepository: VeiculoRepository by lazy {
+        VeiculoRepository(
+            veiculoDao,
+            historicoManutencaoVeiculoDao,
+            historicoCombustivelVeiculoDao
+        )
+    }
+    
+    private val metaRepository: MetaRepository by lazy {
+        MetaRepository(metaDao)
+    }
+    
+    private val panoRepository: PanoRepository by lazy {
+        PanoRepository(panoEstoqueDao)
+    }
+    
+    private val contratoRepository: ContratoRepository by lazy {
+        ContratoRepository(
+            contratoLocacaoDao,
+            aditivoContratoDao
+        )
+    }
+    
+    private val colaboradorRepository: ColaboradorRepository by lazy {
+        ColaboradorRepository(colaboradorDao)
+    }
     
     companion object {
         fun create(database: com.example.gestaobilhares.data.database.AppDatabase): AppRepository {
@@ -72,6 +149,11 @@ class AppRepository constructor(
                 database.mesaReformadaDao(),
                 database.mesaVendidaDao(),
                 database.historicoManutencaoMesaDao(),
+                database.veiculoDao(),
+                database.historicoManutencaoVeiculoDao(),
+                database.historicoCombustivelVeiculoDao(),
+                database.panoMesaDao(),
+                database.metaDao(),
                 database.syncOperationDao()
             )
         }
@@ -98,200 +180,88 @@ class AppRepository constructor(
     val mesasCache: StateFlow<List<Mesa>> = _mesasCache.asStateFlow()
     
     // ==================== CLIENTE ====================
+    // ✅ DELEGAÇÃO: Usa ClienteRepository especializado
     
-    /**
-     * ✅ MODERNIZADO: Obtém todos os clientes com cache StateFlow
-     */
-    fun obterTodosClientes(): Flow<List<Cliente>> = clienteDao.obterTodos()
+    fun obterTodosClientes(): Flow<List<Cliente>> = clienteRepository.obterTodos()
+    fun obterClientesPorRota(rotaId: Long): Flow<List<Cliente>> = clienteRepository.obterClientesPorRota(rotaId)
+    suspend fun obterClientePorId(id: Long) = clienteRepository.obterPorId(id)
+    suspend fun inserirCliente(cliente: Cliente): Long = clienteRepository.inserir(cliente)
+    suspend fun atualizarCliente(cliente: Cliente) = clienteRepository.atualizar(cliente)
+    suspend fun deletarCliente(cliente: Cliente) = clienteRepository.deletar(cliente)
+    suspend fun obterDebitoAtual(clienteId: Long) = clienteRepository.obterDebitoAtual(clienteId)
+    suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) = clienteRepository.atualizarDebitoAtual(clienteId, novoDebito)
+    suspend fun calcularDebitoAtualEmTempoReal(clienteId: Long) = clienteRepository.calcularDebitoAtualEmTempoReal(clienteId)
+    suspend fun obterClienteComDebitoAtual(clienteId: Long) = clienteRepository.obterClienteComDebitoAtual(clienteId)
+    suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? = clienteRepository.buscarRotaIdPorCliente(clienteId)
+    fun obterClientesPorRotaComDebitoAtual(rotaId: Long): Flow<List<Cliente>> = clienteRepository.obterClientesPorRotaComDebitoAtual(rotaId)
     
-    /**
-     * ✅ MODERNIZADO: Obtém clientes por rota com cache
-     */
-    fun obterClientesPorRota(rotaId: Long): Flow<List<Cliente>> = clienteDao.obterClientesPorRota(rotaId)
-    suspend fun obterClientePorId(id: Long) = clienteDao.obterPorId(id)
-    suspend fun inserirCliente(cliente: Cliente): Long {
-        logDbInsertStart("CLIENTE", "Nome=${cliente.nome}, RotaID=${cliente.rotaId}")
-        return try {
-            val id = clienteDao.inserir(cliente)
-            logDbInsertSuccess("CLIENTE", "Nome=${cliente.nome}, ID=$id")
-            id
-        } catch (e: Exception) {
-            logDbInsertError("CLIENTE", "Nome=${cliente.nome}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarCliente(cliente: Cliente) = clienteDao.atualizar(cliente)
-    suspend fun deletarCliente(cliente: Cliente) = clienteDao.deletar(cliente)
-    suspend fun obterDebitoAtual(clienteId: Long) = clienteDao.obterDebitoAtual(clienteId)
-    suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) = 
-        clienteDao.atualizarDebitoAtual(clienteId, novoDebito)
-    suspend fun calcularDebitoAtualEmTempoReal(clienteId: Long) = 
-        clienteDao.calcularDebitoAtualEmTempoReal(clienteId)
-    suspend fun obterClienteComDebitoAtual(clienteId: Long) = 
-        clienteDao.obterClienteComDebitoAtual(clienteId)
-    
-    /**
-     * ✅ NOVO: Busca o ID da rota associada a um cliente
-     */
-    suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? {
-        return try {
-            val cliente = obterClientePorId(clienteId)
-            cliente?.rotaId
-        } catch (e: Exception) {
-            Log.e("AppRepository", "Erro ao buscar rota ID por cliente: ${e.message}")
-            null
-        }
-    }
-    
-    /**
-     * ✅ NOVO: Obtém clientes por rota com débito atual (mesmo que obterClientesPorRota, pois Cliente já tem debitoAtual)
-     */
-    fun obterClientesPorRotaComDebitoAtual(rotaId: Long): Flow<List<Cliente>> = 
-        clienteDao.obterClientesPorRota(rotaId)
-    
-    /**
-     * ✅ NOVO: Busca clientes por rota usando cache
-     */
     fun buscarClientesPorRotaComCache(rotaId: Long): Flow<List<Cliente>> {
-        // Usar cache se disponível, senão buscar do DAO
         return _clientesCache.map { cache ->
             cache.filter { it.rotaId == rotaId }
         }
     }
     
     // ==================== ACERTO ====================
+    // ✅ DELEGAÇÃO: Usa AcertoRepository especializado
     
-    fun obterAcertosPorCliente(clienteId: Long) = acertoDao.buscarPorCliente(clienteId)
-    suspend fun obterAcertoPorId(id: Long) = acertoDao.buscarPorId(id)
-    suspend fun buscarUltimoAcertoPorCliente(clienteId: Long) = 
-        acertoDao.buscarUltimoAcertoPorCliente(clienteId)
-    fun obterTodosAcertos() = acertoDao.listarTodos()
-    fun buscarAcertosPorCicloId(cicloId: Long) = acertoDao.buscarPorCicloId(cicloId)
-    fun buscarAcertosPorRotaECicloId(rotaId: Long, cicloId: Long) = acertoDao.buscarPorRotaECicloId(rotaId, cicloId)
-    fun buscarClientesPorRota(rotaId: Long) = clienteDao.obterClientesPorRota(rotaId)
-    suspend fun buscarRotaPorId(rotaId: Long) = rotaDao.getRotaById(rotaId)
-    suspend fun inserirAcerto(acerto: Acerto): Long {
-        logDbInsertStart("ACERTO", "ClienteID=${acerto.clienteId}, RotaID=${acerto.rotaId}, Valor=${acerto.valorRecebido}")
-        return try {
-            val id = acertoDao.inserir(acerto)
-            logDbInsertSuccess("ACERTO", "ClienteID=${acerto.clienteId}, ID=$id")
-            id
-        } catch (e: Exception) {
-            logDbInsertError("ACERTO", "ClienteID=${acerto.clienteId}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarAcerto(acerto: Acerto) = acertoDao.atualizar(acerto)
-    suspend fun deletarAcerto(acerto: Acerto) = acertoDao.deletar(acerto)
-    suspend fun buscarUltimoAcertoPorMesa(mesaId: Long) = 
-        acertoDao.buscarUltimoAcertoPorMesa(mesaId)
-    suspend fun buscarObservacaoUltimoAcerto(clienteId: Long) = 
-        acertoDao.buscarObservacaoUltimoAcerto(clienteId)
-    suspend fun buscarUltimosAcertosPorClientes(clienteIds: List<Long>) =
-        acertoDao.buscarUltimosAcertosPorClientes(clienteIds)
+    fun obterAcertosPorCliente(clienteId: Long) = acertoRepository.obterPorCliente(clienteId)
+    suspend fun obterAcertoPorId(id: Long) = acertoRepository.obterPorId(id)
+    suspend fun buscarUltimoAcertoPorCliente(clienteId: Long) = acertoRepository.buscarUltimoPorCliente(clienteId)
+    fun obterTodosAcertos() = acertoRepository.obterTodos()
+    fun buscarAcertosPorCicloId(cicloId: Long) = acertoRepository.buscarPorCicloId(cicloId)
+    fun buscarAcertosPorRotaECicloId(rotaId: Long, cicloId: Long) = acertoRepository.buscarPorRotaECicloId(rotaId, cicloId)
+    fun buscarClientesPorRota(rotaId: Long) = clienteRepository.obterClientesPorRota(rotaId)
+    suspend fun buscarRotaPorId(rotaId: Long) = rotaRepository.obterPorId(rotaId)
+    suspend fun inserirAcerto(acerto: Acerto): Long = acertoRepository.inserir(acerto)
+    suspend fun atualizarAcerto(acerto: Acerto) = acertoRepository.atualizar(acerto)
+    suspend fun deletarAcerto(acerto: Acerto) = acertoRepository.deletar(acerto)
+    suspend fun buscarUltimoAcertoPorMesa(mesaId: Long) = acertoRepository.buscarUltimoPorMesa(mesaId)
+    suspend fun buscarObservacaoUltimoAcerto(clienteId: Long) = acertoRepository.buscarObservacaoUltimoAcerto(clienteId)
+    suspend fun buscarUltimosAcertosPorClientes(clienteIds: List<Long>) = acertoRepository.buscarUltimosPorClientes(clienteIds)
     
     // ==================== MESA ====================
+    // ✅ DELEGAÇÃO: Usa MesaRepository especializado
     
-    suspend fun obterMesaPorId(id: Long) = mesaDao.obterMesaPorId(id)
-    fun obterMesasPorCliente(clienteId: Long) = mesaDao.obterMesasPorCliente(clienteId)
-    fun obterMesasDisponiveis() = mesaDao.obterMesasDisponiveis()
-    suspend fun inserirMesa(mesa: Mesa): Long {
-        logDbInsertStart("MESA", "Numero=${mesa.numero}, ClienteID=${mesa.clienteId}")
-        return try {
-            val id = mesaDao.inserir(mesa)
-            logDbInsertSuccess("MESA", "Numero=${mesa.numero}, ID=$id")
-            id
-        } catch (e: Exception) {
-            logDbInsertError("MESA", "Numero=${mesa.numero}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarMesa(mesa: Mesa) = mesaDao.atualizar(mesa)
-    suspend fun deletarMesa(mesa: Mesa) = mesaDao.deletar(mesa)
-    suspend fun vincularMesaACliente(mesaId: Long, clienteId: Long) = 
-        mesaDao.vincularMesa(mesaId, clienteId)
-    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double) = 
-        mesaDao.vincularMesaComValorFixo(mesaId, clienteId, valorFixo)
-    suspend fun desvincularMesaDeCliente(mesaId: Long) = mesaDao.desvincularMesa(mesaId)
-    suspend fun retirarMesa(mesaId: Long) = mesaDao.retirarMesa(mesaId)
+    suspend fun obterMesaPorId(id: Long) = mesaRepository.obterPorId(id)
+    fun obterMesasPorCliente(clienteId: Long) = mesaRepository.obterPorCliente(clienteId)
+    fun obterMesasDisponiveis() = mesaRepository.obterDisponiveis()
+    suspend fun inserirMesa(mesa: Mesa): Long = mesaRepository.inserir(mesa)
+    suspend fun atualizarMesa(mesa: Mesa) = mesaRepository.atualizar(mesa)
+    suspend fun deletarMesa(mesa: Mesa) = mesaRepository.deletar(mesa)
+    suspend fun vincularMesaACliente(mesaId: Long, clienteId: Long) = mesaRepository.vincularACliente(mesaId, clienteId)
+    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double) = mesaRepository.vincularComValorFixo(mesaId, clienteId, valorFixo)
+    suspend fun desvincularMesaDeCliente(mesaId: Long) = mesaRepository.desvincularDeCliente(mesaId)
+    suspend fun retirarMesa(mesaId: Long) = mesaRepository.retirar(mesaId)
     suspend fun atualizarRelogioMesa(mesaId: Long, relogioInicial: Int, relogioFinal: Int, fichasInicial: Int, fichasFinal: Int) = 
-        mesaDao.atualizarRelogioMesa(mesaId, relogioInicial, relogioFinal, fichasInicial, fichasFinal)
-    suspend fun atualizarRelogioFinal(mesaId: Long, relogioFinal: Int) = 
-        mesaDao.atualizarRelogioFinal(mesaId, relogioFinal)
-    suspend fun obterMesasPorClienteDireto(clienteId: Long) = 
-        mesaDao.obterMesasPorClienteDireto(clienteId)
-    fun buscarMesasPorRota(rotaId: Long) = mesaDao.buscarMesasPorRota(rotaId).also {
+        mesaRepository.atualizarRelogio(mesaId, relogioInicial, relogioFinal, fichasInicial, fichasFinal)
+    suspend fun atualizarRelogioFinal(mesaId: Long, relogioFinal: Int) = mesaRepository.atualizarRelogioFinal(mesaId, relogioFinal)
+    suspend fun obterMesasPorClienteDireto(clienteId: Long) = mesaRepository.obterPorClienteDireto(clienteId)
+    fun buscarMesasPorRota(rotaId: Long) = mesaRepository.buscarPorRota(rotaId).also {
         android.util.Log.d("AppRepository", "Buscando mesas para rota $rotaId")
     }
-    suspend fun contarMesasAtivasPorClientes(clienteIds: List<Long>) =
-        mesaDao.contarMesasAtivasPorClientes(clienteIds)
-    fun obterTodasMesas() = mesaDao.obterTodasMesas()
+    suspend fun contarMesasAtivasPorClientes(clienteIds: List<Long>) = mesaRepository.contarAtivasPorClientes(clienteIds)
+    fun obterTodasMesas() = mesaRepository.obterTodas()
     
     // ==================== ROTA ====================
+    // ✅ DELEGAÇÃO: Usa RotaRepository especializado
     
-    fun obterTodasRotas() = rotaDao.getAllRotas()
-    fun obterRotasAtivas() = rotaDao.getAllRotasAtivas()
+    fun obterTodasRotas() = rotaRepository.obterTodas()
+    fun obterRotasAtivas() = rotaRepository.obterAtivas()
     
     // ✅ NOVO: Método para obter resumo de rotas com atualização em tempo real
     fun getRotasResumoComAtualizacaoTempoReal(): Flow<List<RotaResumo>> {
-        // ✅ CORREÇÃO: Combinar Flow de rotas com Flow de ciclos para atualização em tempo real
-        return kotlinx.coroutines.flow.combine(
-            rotaDao.getAllRotasAtivas(),
-            cicloAcertoDao.listarTodos()
-        ) { rotas, ciclos ->
-            android.util.Log.d("AppRepository", "🔄 Atualizando resumo de rotas: ${rotas.size} rotas, ${ciclos.size} ciclos")
-
-            // 🔍 DEBUG: Identificar origem dos dados
-            android.util.Log.d("AppRepository", "🔍 DEBUG - Origem dos dados:")
-            android.util.Log.d("AppRepository", "   Rotas carregadas de: rotaDao.getAllRotasAtivas()")
-            android.util.Log.d("AppRepository", "   Ciclos carregados de: cicloAcertoDao.listarTodos()")
-
-            // Listar primeiras rotas para debug
-            if (rotas.isNotEmpty()) {
-                android.util.Log.d("AppRepository", "   Primeiras rotas encontradas:")
-                rotas.take(3).forEach { rota ->
-                    android.util.Log.d("AppRepository", "     - Rota: ${rota.nome} (ID: ${rota.id})")
-                }
-            }
-
-            // Listar ciclos para debug
-            if (ciclos.isNotEmpty()) {
-                android.util.Log.d("AppRepository", "   Ciclos encontrados:")
-                ciclos.take(3).forEach { ciclo ->
-                    android.util.Log.d("AppRepository", "     - Ciclo: ${ciclo.numeroCiclo}º (ID: ${ciclo.id}, Status: ${ciclo.status})")
-                }
-            }
-            
-            rotas.map { rota ->
-                // Calcular dados reais para cada rota
-                val clientesAtivos = calcularClientesAtivosPorRota(rota.id)
-                val (cicloAtualNumero, cicloAtualId, _) = obterCicloAtualRota(rota.id)
-                val pendencias = calcularPendenciasReaisPorRota(rota.id)
-                val quantidadeMesas = calcularQuantidadeMesasPorRota(rota.id)
-                val percentualAcertados = calcularPercentualClientesAcertados(rota.id, cicloAtualId, clientesAtivos)
-                val valorAcertado = calcularValorAcertadoPorRotaECiclo(rota.id, cicloAtualId)
-                val statusAtual = determinarStatusRotaEmTempoReal(rota.id)
-                
-                // ✅ NOVO: Obter datas de início e fim do ciclo
-                val (dataInicio, dataFim) = obterDatasCicloRota(rota.id)
-
-                val resumo = RotaResumo(
-                    rota = rota,
-                    clientesAtivos = clientesAtivos,
-                    pendencias = pendencias,
-                    valorAcertado = valorAcertado,
-                    quantidadeMesas = quantidadeMesas,
-                    percentualAcertados = percentualAcertados,
-                    status = statusAtual,
-                    cicloAtual = cicloAtualNumero,
-                    dataInicioCiclo = dataInicio,  // ✅ NOVO: Data de início
-                    dataFimCiclo = dataFim        // ✅ NOVO: Data de fim
-                )
-                
-                android.util.Log.d("AppRepository", "📊 Rota ${rota.nome}: Ciclo ${cicloAtualNumero}, Status ${statusAtual}")
-                resumo
-            }
-        }
+        return rotaRepository.getRotasResumoComAtualizacaoTempoReal(
+            calcularClientesAtivos = { calcularClientesAtivosPorRota(it) },
+            obterCicloAtualRota = { obterCicloAtualRota(it) },
+            calcularPendenciasReais = { calcularPendenciasReaisPorRota(it) },
+            calcularQuantidadeMesas = { calcularQuantidadeMesasPorRota(it) },
+            calcularPercentualAcertados = { rotaId, cicloId, clientesAtivos -> 
+                calcularPercentualClientesAcertados(rotaId, cicloId, clientesAtivos) 
+            },
+            calcularValorAcertado = { rotaId, cicloId -> calcularValorAcertadoPorRotaECiclo(rotaId, cicloId) },
+            determinarStatus = { determinarStatusRotaEmTempoReal(it) },
+            obterDatasCiclo = { obterDatasCicloRota(it) }
+        )
     }
     
     // ✅ NOVO: Métodos auxiliares para calcular dados reais das rotas
@@ -484,33 +454,22 @@ class AppRepository constructor(
     suspend fun contarRotasAtivas() = rotaDao.contarRotasAtivas()
     
     // ==================== DESPESA ====================
+    // ✅ DELEGAÇÃO: Usa DespesaRepository especializado
     
-    fun obterTodasDespesas() = despesaDao.buscarTodasComRota()
-    fun obterDespesasPorRota(rotaId: Long) = despesaDao.buscarPorRota(rotaId)
-    suspend fun obterDespesaPorId(id: Long) = despesaDao.buscarPorId(id)
-    suspend fun inserirDespesa(despesa: Despesa): Long {
-        logDbInsertStart("DESPESA", "Descricao=${despesa.descricao}, RotaID=${despesa.rotaId}")
-        return try {
-            val id = despesaDao.inserir(despesa)
-            logDbInsertSuccess("DESPESA", "Descricao=${despesa.descricao}, ID=$id")
-            id
-        } catch (e: Exception) {
-            logDbInsertError("DESPESA", "Descricao=${despesa.descricao}", e)
-            throw e
-        }
-    }
-    suspend fun atualizarDespesa(despesa: Despesa) = despesaDao.atualizar(despesa)
-    suspend fun deletarDespesa(despesa: Despesa) = despesaDao.deletar(despesa)
-    suspend fun calcularTotalPorRota(rotaId: Long) = despesaDao.calcularTotalPorRota(rotaId)
-    suspend fun calcularTotalGeral() = despesaDao.calcularTotalGeral()
-    suspend fun contarDespesasPorRota(rotaId: Long) = despesaDao.contarPorRota(rotaId)
-    suspend fun deletarDespesasPorRota(rotaId: Long) = despesaDao.deletarPorRota(rotaId)
-    fun buscarDespesasPorCicloId(cicloId: Long) = despesaDao.buscarPorCicloId(cicloId)
-    fun buscarDespesasPorRotaECicloId(rotaId: Long, cicloId: Long) = despesaDao.buscarPorRotaECicloId(rotaId, cicloId)
-
-    // ✅ NOVO: despesas globais
-    suspend fun buscarDespesasGlobaisPorCiclo(ano: Int, numero: Int): List<Despesa> = despesaDao.buscarGlobaisPorCiclo(ano, numero)
-    suspend fun somarDespesasGlobaisPorCiclo(ano: Int, numero: Int): Double = despesaDao.somarGlobaisPorCiclo(ano, numero)
+    fun obterTodasDespesas() = despesaRepository.obterTodas()
+    fun obterDespesasPorRota(rotaId: Long) = despesaRepository.obterPorRota(rotaId)
+    suspend fun obterDespesaPorId(id: Long) = despesaRepository.obterPorId(id)
+    suspend fun inserirDespesa(despesa: Despesa): Long = despesaRepository.inserir(despesa)
+    suspend fun atualizarDespesa(despesa: Despesa) = despesaRepository.atualizar(despesa)
+    suspend fun deletarDespesa(despesa: Despesa) = despesaRepository.deletar(despesa)
+    suspend fun calcularTotalPorRota(rotaId: Long) = despesaRepository.calcularTotalPorRota(rotaId)
+    suspend fun calcularTotalGeral() = despesaRepository.calcularTotalGeral()
+    suspend fun contarDespesasPorRota(rotaId: Long) = despesaRepository.contarPorRota(rotaId)
+    suspend fun deletarDespesasPorRota(rotaId: Long) = despesaRepository.deletarPorRota(rotaId)
+    fun buscarDespesasPorCicloId(cicloId: Long) = despesaRepository.buscarPorCicloId(cicloId)
+    fun buscarDespesasPorRotaECicloId(rotaId: Long, cicloId: Long) = despesaRepository.buscarPorRotaECicloId(rotaId, cicloId)
+    suspend fun buscarDespesasGlobaisPorCiclo(ano: Int, numero: Int): List<Despesa> = despesaRepository.buscarGlobaisPorCiclo(ano, numero)
+    suspend fun somarDespesasGlobaisPorCiclo(ano: Int, numero: Int): Double = despesaRepository.somarGlobaisPorCiclo(ano, numero)
 
     // ✅ NOVO: obter mesas por ciclo (a partir dos acertos do ciclo)
     suspend fun contarMesasPorCiclo(cicloId: Long): Int {
@@ -777,39 +736,15 @@ class AppRepository constructor(
     
     
     // ==================== CICLO ACERTO ====================
+    // ✅ DELEGAÇÃO: Usa CicloRepository especializado
     
-    fun obterTodosCiclos() = cicloAcertoDao.listarTodos()
-    
-    suspend fun buscarUltimoCicloFinalizadoPorRota(rotaId: Long) = cicloAcertoDao.buscarUltimoCicloFinalizadoPorRota(rotaId)
-    suspend fun buscarCiclosPorRotaEAno(rotaId: Long, ano: Int) = cicloAcertoDao.buscarCiclosPorRotaEAno(rotaId, ano)
-    
-    suspend fun buscarCiclosPorRota(rotaId: Long) = cicloAcertoDao.buscarCiclosPorRota(rotaId)
-    suspend fun buscarProximoNumeroCiclo(rotaId: Long, ano: Int) = cicloAcertoDao.buscarProximoNumeroCiclo(rotaId, ano)
-    suspend fun inserirCicloAcerto(ciclo: CicloAcertoEntity): Long {
-        logDbInsertStart("CICLO", "RotaID=${ciclo.rotaId}, Numero=${ciclo.numeroCiclo}, Status=${ciclo.status}")
-        return try {
-            val id = cicloAcertoDao.inserir(ciclo)
-            logDbInsertSuccess("CICLO", "ID=$id, RotaID=${ciclo.rotaId}")
-            id
-        } catch (e: Exception) {
-            logDbInsertError("CICLO", "RotaID=${ciclo.rotaId}", e)
-            throw e
-        }
-    }
-
-    /**
-     * Busca ciclos que podem ter metas definidas (em andamento ou planejados)
-     */
-    suspend fun buscarCiclosParaMetas(rotaId: Long): List<CicloAcertoEntity> {
-        val cicloEmAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
-        val ciclosFuturos = cicloAcertoDao.buscarCiclosFuturosPorRota(rotaId)
-        
-        val listaCombinada = mutableListOf<CicloAcertoEntity>()
-        cicloEmAndamento?.let { listaCombinada.add(it) }
-        listaCombinada.addAll(ciclosFuturos)
-        
-        return listaCombinada
-    }
+    fun obterTodosCiclos() = cicloRepository.obterTodos()
+    suspend fun buscarUltimoCicloFinalizadoPorRota(rotaId: Long) = cicloRepository.buscarUltimoFinalizadoPorRota(rotaId)
+    suspend fun buscarCiclosPorRotaEAno(rotaId: Long, ano: Int) = cicloRepository.buscarPorRotaEAno(rotaId, ano)
+    suspend fun buscarCiclosPorRota(rotaId: Long) = cicloRepository.buscarPorRota(rotaId)
+    suspend fun buscarProximoNumeroCiclo(rotaId: Long, ano: Int) = cicloRepository.buscarProximoNumero(rotaId, ano)
+    suspend fun inserirCicloAcerto(ciclo: CicloAcertoEntity): Long = cicloRepository.inserir(ciclo)
+    suspend fun buscarCiclosParaMetas(rotaId: Long): List<CicloAcertoEntity> = cicloRepository.buscarParaMetas(rotaId)
     
     // ==================== MÉTODOS PARA RELATÓRIOS ====================
     
@@ -935,21 +870,25 @@ class AppRepository constructor(
     )
     
     // Métodos stub para sincronização - BLOQUEADOS para evitar população automática
+    @Suppress("UNUSED_PARAMETER")
     suspend fun syncRotas(_rotas: List<Rota>) {
         // BLOQUEADO: Sincronização de rotas desabilitada para evitar população automática
         android.util.Log.d("AppRepository", "SYNC ROTAS BLOQUEADO - Evitando população automática")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     suspend fun syncClientes(_clientes: List<Cliente>) {
         // BLOQUEADO: Sincronização de clientes desabilitada para evitar população automática
         android.util.Log.d("AppRepository", "SYNC CLIENTES BLOQUEADO - Evitando população automática")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     suspend fun syncAcertos(_acertos: List<Acerto>) {
         // BLOQUEADO: Sincronização de acertos desabilitada para evitar população automática
         android.util.Log.d("AppRepository", "SYNC ACERTOS BLOQUEADO - Evitando população automática")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     suspend fun syncColaboradores(_colaboradores: List<Colaborador>) {
         // BLOQUEADO: Sincronização de colaboradores desabilitada para evitar população automática
         android.util.Log.d("AppRepository", "SYNC COLABORADORES BLOQUEADO - Evitando população automática")
@@ -1234,7 +1173,7 @@ class AppRepository constructor(
         return try {
             val ciclo = cicloAcertoDao.buscarPorId(cicloId) ?: return 0
             val inicio = ciclo.dataInicio
-            val fim = ciclo.dataFim ?: Date()
+            val fim = ciclo.dataFim // dataFim é não-nullable em CicloAcertoEntity
             mesaDao.contarNovasMesasInstaladas(rotaId, inicio, fim)
         } catch (e: Exception) {
             android.util.Log.e("AppRepository", "Erro ao contar novas mesas no ciclo: ${e.message}", e)
@@ -1390,13 +1329,15 @@ class AppRepository constructor(
     suspend fun inserirAcertoMesa(acertoMesa: com.example.gestaobilhares.data.entities.AcertoMesa): Long = acertoMesaDao.inserir(acertoMesa)
     
     // ==================== CICLO ====================
+    // ✅ DELEGAÇÃO: Usa repositories especializados
     
-    suspend fun buscarCicloAtivo(rotaId: Long) = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
-    suspend fun buscarCicloPorId(cicloId: Long) = cicloAcertoDao.buscarPorId(cicloId)
-    suspend fun obterCicloAtualIdPorRota(rotaId: Long): Long? = cicloAcertoDao.buscarCicloEmAndamento(rotaId)?.id
-    fun buscarAcertosPorClienteECicloId(clienteId: Long, cicloId: Long) = acertoDao.buscarPorClienteECicloId(clienteId, cicloId)
-    suspend fun buscarPorRotaECicloId(rotaId: Long, cicloId: Long) = acertoDao.buscarPorRotaECicloId(rotaId, cicloId).first()
-    suspend fun buscarPorId(acertoId: Long) = acertoDao.buscarPorId(acertoId)
+    suspend fun buscarCicloAtivo(rotaId: Long) = cicloRepository.buscarAtivo(rotaId)
+    suspend fun buscarCicloPorId(cicloId: Long) = cicloRepository.buscarPorId(cicloId)
+    suspend fun obterCicloAtualIdPorRota(rotaId: Long): Long? = cicloRepository.buscarAtivo(rotaId)?.id
+    fun buscarAcertosPorClienteECicloId(clienteId: Long, cicloId: Long) = acertoRepository.buscarPorClienteECicloId(clienteId, cicloId)
+    suspend fun buscarPorRotaECicloId(rotaId: Long, cicloId: Long) = acertoRepository.buscarPorRotaECicloId(rotaId, cicloId).first()
+    suspend fun buscarPorId(acertoId: Long) = acertoRepository.obterPorId(acertoId)
+    @Suppress("UNUSED_PARAMETER")
     suspend fun atualizarValoresCiclo(_cicloId: Long) {
         // TODO: Implementar lógica de atualização de valores do ciclo
     }
@@ -1433,25 +1374,21 @@ class AppRepository constructor(
     }
     
     // ==================== PANO ESTOQUE ====================
+    // ✅ DELEGAÇÃO: Usa PanoRepository especializado
     
-    fun obterPanosDisponiveis() = panoEstoqueDao?.listarDisponiveis() ?: flowOf(emptyList())
-    fun obterTodosPanosEstoque() = panoEstoqueDao?.listarTodos() ?: flowOf(emptyList())
-    suspend fun buscarPorNumero(numero: String) = panoEstoqueDao?.buscarPorNumero(numero)
-    suspend fun obterPanoPorId(id: Long) = panoEstoqueDao?.buscarPorId(id)
-    suspend fun inserirPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque): Long {
-        return panoEstoqueDao?.inserir(pano) ?: 0L
-    }
-    suspend fun marcarPanoComoUsado(id: Long) {
-        panoEstoqueDao?.atualizarDisponibilidade(id, false)
-    }
-    suspend fun marcarPanoComoUsadoPorNumero(numero: String) {
-        val pano = buscarPorNumero(numero)
-        pano?.let { marcarPanoComoUsado(it.id) }
-    }
+    fun obterPanosDisponiveis() = panoRepository.obterDisponiveis()
+    fun obterTodosPanosEstoque() = panoRepository.obterTodos()
+    suspend fun buscarPorNumero(numero: String) = panoRepository.buscarPorNumero(numero)
+    suspend fun obterPanoPorId(id: Long) = panoRepository.obterPorId(id)
+    suspend fun inserirPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque): Long = panoRepository.inserir(pano)
+    suspend fun marcarPanoComoUsado(id: Long) = panoRepository.marcarComoUsado(id)
+    suspend fun marcarPanoComoUsadoPorNumero(numero: String) = panoRepository.marcarComoUsadoPorNumero(numero)
     
     // ==================== MESA REFORMADA ====================
+    // ✅ DELEGAÇÃO: Usa MesaRepository especializado
     
-    suspend fun inserirMesaReformada(mesaReformada: com.example.gestaobilhares.data.entities.MesaReformada): Long = mesaReformadaDao?.inserir(mesaReformada) ?: 0L
+    fun obterTodasMesasReformadas() = mesaRepository.obterTodasMesasReformadas()
+    suspend fun inserirMesaReformada(mesaReformada: com.example.gestaobilhares.data.entities.MesaReformada): Long = mesaRepository.inserirMesaReformada(mesaReformada)
     
     // ==================== MESA VENDIDA ====================
     
@@ -1467,16 +1404,75 @@ class AppRepository constructor(
     suspend fun inserirHistoricoManutencaoMesa(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa): Long = historicoManutencaoMesaDao?.inserir(historico) ?: 0L
     suspend fun inserirHistoricoManutencaoMesaSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa): Long = inserirHistoricoManutencaoMesa(historico)
     
+    // ==================== VEÍCULOS ====================
+    
+    fun obterTodosVeiculos() = veiculoDao?.listar() ?: flowOf(emptyList())
+    suspend fun inserirVeiculo(veiculo: Veiculo): Long = veiculoDao?.inserir(veiculo) ?: 0L
+    suspend fun atualizarVeiculo(veiculo: Veiculo) = veiculoDao?.atualizar(veiculo)
+    suspend fun deletarVeiculo(veiculo: Veiculo) = veiculoDao?.deletar(veiculo)
+    @Suppress("UNUSED_PARAMETER")
+    suspend fun obterVeiculoPorId(id: Long) = veiculoDao?.let { 
+        // VeiculoDao não tem método obterPorId, precisamos criar ou usar listar().first()
+        null // TODO: Adicionar método obterPorId no VeiculoDao se necessário
+    }
+    
+    // ==================== METAS ====================
+    // ✅ DELEGAÇÃO: Usa MetaRepository especializado
+    
+    fun obterTodasMetas() = metaRepository.obterTodas()
+    suspend fun inserirMeta(meta: Meta): Long = metaRepository.inserir(meta)
+    suspend fun atualizarMeta(meta: Meta) = metaRepository.atualizar(meta)
+    suspend fun obterMetaPorId(id: Long) = metaRepository.obterPorId(id)
+    
     // ==================== HISTÓRICO COMBUSTÍVEL E MANUTENÇÃO VEÍCULO ====================
+    // ✅ DELEGAÇÃO: Usa VeiculoRepository especializado
+    
+    suspend fun obterTodosHistoricoManutencaoVeiculo(): List<com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo> {
+        return veiculoRepository.obterTodosHistoricoManutencaoVeiculo()
+    }
+    
+    suspend fun obterTodosHistoricoCombustivelVeiculo(): List<com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo> {
+        return veiculoRepository.obterTodosHistoricoCombustivelVeiculo()
+    }
     
     suspend fun inserirHistoricoCombustivel(_historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo): Long {
-        // TODO: Implementar quando DAO estiver disponível
-        return 0L
+        return veiculoRepository.inserirHistoricoCombustivel(_historico)
     }
     
     suspend fun inserirHistoricoManutencao(_historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo): Long {
-        // TODO: Implementar quando DAO estiver disponível
-        return 0L
+        return veiculoRepository.inserirHistoricoManutencao(_historico)
+    }
+    
+    // ==================== PANO MESA ====================
+    // ✅ DELEGAÇÃO: Usa MesaRepository especializado
+    
+    suspend fun obterTodosPanoMesa(): List<com.example.gestaobilhares.data.entities.PanoMesa> {
+        return mesaRepository.obterTodosPanoMesa()
+    }
+    
+    suspend fun inserirPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa): Long {
+        return mesaRepository.inserirPanoMesa(panoMesa)
+    }
+    
+    // ==================== COLABORADOR ROTA ====================
+    // ✅ DELEGAÇÃO: Usa ColaboradorRepository especializado
+    
+    suspend fun obterTodosColaboradorRotas(): List<ColaboradorRota> {
+        return colaboradorRepository.obterTodosColaboradorRotas()
+    }
+    
+    // ==================== ADITIVO MESA ====================
+    // ✅ DELEGAÇÃO: Usa ContratoRepository especializado
+    
+    suspend fun obterTodosAditivoMesas(): List<AditivoMesa> {
+        return contratoRepository.obterTodosAditivoMesas()
+    }
+    
+    // ==================== CONTRATO MESA ====================
+    // ✅ DELEGAÇÃO: Usa ContratoRepository especializado
+    
+    suspend fun obterTodosContratoMesas(): List<ContratoMesa> {
+        return contratoRepository.obterTodosContratoMesas()
     }
     
     // ==================== STOCK ITEM ====================
@@ -1542,6 +1538,7 @@ class AppRepository constructor(
     
     fun obterTodosStockItems() = stockItemDao?.listarTodos() ?: flowOf(emptyList())
     suspend fun inserirStockItem(item: com.example.gestaobilhares.data.entities.StockItem): Long = stockItemDao?.inserir(item) ?: 0L
+    suspend fun obterStockItemPorId(id: Long) = stockItemDao?.buscarPorId(id)
     
     // ==================== EQUIPMENT ====================
     // TODO: Equipment foi removido - implementar quando necessário
@@ -1552,6 +1549,7 @@ class AppRepository constructor(
     // TODO: SyncRepository será integrado via delegação quando implementado
     // Por enquanto, métodos mantidos para compatibilidade
     
+    @Suppress("UNUSED_PARAMETER")
     suspend fun adicionarAcertoComMesasParaSync(_acerto: Acerto, _mesas: List<com.example.gestaobilhares.data.entities.AcertoMesa>) {
         // TODO: Implementar quando SyncRepository estiver disponível
         // syncRepository.enqueueOperation(SyncOperation(...))
@@ -1559,6 +1557,7 @@ class AppRepository constructor(
     
     // ==================== CÁLCULOS ====================
     
+    @Suppress("UNUSED_PARAMETER")
     suspend fun calcularMediaFichasJogadas(_mesaId: Long, _periodoDias: Int): Double {
         // TODO: Implementar cálculo de média de fichas jogadas
         return 0.0

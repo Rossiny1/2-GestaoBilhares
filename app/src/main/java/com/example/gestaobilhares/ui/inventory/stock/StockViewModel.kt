@@ -8,61 +8,48 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 class StockViewModel constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
     
-    private val _stockItems = MutableStateFlow<List<StockItem>>(emptyList())
-    val stockItems: StateFlow<List<StockItem>> = _stockItems.asStateFlow()
+    // ✅ CORRIGIDO: Observar diretamente o Flow do banco de dados
+    // Isso garante que mudanças no banco sejam refletidas automaticamente na UI
+    val stockItems: StateFlow<List<StockItem>> = appRepository.obterTodosStockItems()
+        .map { itemsFromDb ->
+            android.util.Log.d("StockViewModel", "Mapeando ${itemsFromDb.size} itens do banco")
+            itemsFromDb.map { entity ->
+                StockItem(
+                    id = entity.id,
+                    name = entity.name,
+                    category = entity.category,
+                    quantity = entity.quantity,
+                    unitPrice = entity.unitPrice,
+                    supplier = entity.supplier
+                )
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     
     private val _panosEstoque = MutableStateFlow<List<PanoEstoque>>(emptyList())
     val panosEstoque: StateFlow<List<PanoEstoque>> = _panosEstoque.asStateFlow()
     
-    private val _panoGroups = MutableStateFlow<List<PanoGroup>>(emptyList())
-    val panoGroups: StateFlow<List<PanoGroup>> = _panoGroups.asStateFlow()
+    // ✅ CORRIGIDO: Observar diretamente o Flow do banco e agrupar panos
+    val panoGroups: StateFlow<List<PanoGroup>> = appRepository.obterTodosPanosEstoque()
+        .map { panos ->
+            android.util.Log.d("StockViewModel", "Agrupando ${panos.size} panos")
+            agruparPanos(panos)
+        }
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     init {
-        loadStockItems()
-        loadPanosEstoque()
-    }
-
-    private fun loadStockItems() {
+        // ✅ CORRIGIDO: Observar panos em background para manter _panosEstoque atualizado
         viewModelScope.launch {
-            try {
-                // ✅ CORREÇÃO: Usar collect() em vez de first() para observar mudanças
-                appRepository.obterTodosStockItems().collect { itemsFromDb ->
-                    android.util.Log.d("StockViewModel", "Carregando ${itemsFromDb.size} itens do banco")
-                    _stockItems.value = itemsFromDb.map { entity ->
-                        StockItem(
-                            id = entity.id,
-                            name = entity.name,
-                            category = entity.category,
-                            quantity = entity.quantity,
-                            unitPrice = entity.unitPrice,
-                            supplier = entity.supplier
-                        )
-                    }
-                    android.util.Log.d("StockViewModel", "Lista atualizada com ${_stockItems.value.size} itens")
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("StockViewModel", "Erro ao carregar itens do estoque: ${e.message}", e)
-                _stockItems.value = emptyList()
-            }
-        }
-    }
-    
-    private fun loadPanosEstoque() {
-        viewModelScope.launch {
-            try {
-                appRepository.obterTodosPanosEstoque().collect { panos ->
-                    _panosEstoque.value = panos
-                    // Agrupar panos por características
-                    _panoGroups.value = agruparPanos(panos)
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("StockViewModel", "Erro ao carregar panos: ${e.message}", e)
+            appRepository.obterTodosPanosEstoque().collect { panos ->
+                _panosEstoque.value = panos
             }
         }
     }
@@ -114,8 +101,9 @@ class StockViewModel constructor(
                 panos.forEach { pano ->
                     appRepository.inserirPanoEstoque(pano)
                 }
-                // Recarregar panos do estoque
-                loadPanosEstoque()
+                // ✅ CORREÇÃO: O Flow do banco de dados já atualiza automaticamente
+                // Não precisamos recarregar manualmente
+                android.util.Log.d("StockViewModel", "Panos adicionados em lote - Flow irá atualizar automaticamente")
             } catch (e: Exception) {
                 android.util.Log.e("StockViewModel", "Erro ao adicionar panos em lote: ${e.message}", e)
             }
@@ -123,13 +111,9 @@ class StockViewModel constructor(
     }
     
     /**
-     * ✅ NOVO: Recarrega todos os dados do estoque
+     * ✅ REMOVIDO: refreshData() não é mais necessário
+     * O Flow do banco de dados já atualiza automaticamente quando há mudanças
      */
-    fun refreshData() {
-        android.util.Log.d("StockViewModel", "Recarregando dados do estoque...")
-        loadStockItems()
-        loadPanosEstoque()
-    }
     
     /**
      * ✅ NOVO: Adiciona um item genérico ao estoque

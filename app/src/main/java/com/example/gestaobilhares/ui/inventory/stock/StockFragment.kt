@@ -97,12 +97,10 @@ class StockFragment : Fragment() {
             .setTitle("Adicionar ao Estoque")
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> {
-                        // ✅ CORREÇÃO: Usar callback para recarregar dados após salvar
-                        AddEditStockItemDialog.newInstance {
-                            android.util.Log.d("StockFragment", "Item salvo - recarregando dados...")
-                            viewModel.refreshData()
-                        }.show(childFragmentManager, "add_stock_item")
+                     0 -> {
+                        // ✅ CORREÇÃO: O Flow do banco de dados já atualiza automaticamente
+                        // Não precisamos de callback, o ViewModel já está observando
+                        AddEditStockItemDialog.newInstance(null).show(childFragmentManager, "add_stock_item")
                     }
                     1 -> AddPanosLoteDialog().show(childFragmentManager, "add_panos_lote")
                 }

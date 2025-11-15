@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.util.Date
 import kotlinx.coroutines.runBlocking
@@ -74,7 +77,8 @@ class CycleHistoryViewModel(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
     
-
+    // ✅ NOVO: Flow para rotaId atual para observação reativa
+    private val _rotaIdFlow = MutableStateFlow<Long?>(null)
 
     private val _ciclos = MutableStateFlow<List<CycleHistoryItem>>(emptyList())
     val ciclos: StateFlow<List<CycleHistoryItem>> = _ciclos.asStateFlow()
@@ -86,70 +90,117 @@ class CycleHistoryViewModel(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    
+    init {
+        // ✅ NOVO: Observar mudanças em ciclos, despesas e acertos para atualização automática
+        viewModelScope.launch {
+            _rotaIdFlow
+                .flatMapLatest { rotaId ->
+                    if (rotaId == null) {
+                        return@flatMapLatest flowOf(emptyList<CycleHistoryItem>())
+                    }
+                    
+                    // Observar ciclos da rota
+                    cicloAcertoRepository.buscarCiclosPorRotaFlow(rotaId)
+                        .flatMapLatest { ciclosEntity ->
+                            if (ciclosEntity.isEmpty()) {
+                                return@flatMapLatest flowOf(emptyList<CycleHistoryItem>())
+                            }
+                            
+                            // Para cada ciclo, observar despesas e acertos
+                            val flows = ciclosEntity.map { ciclo ->
+                                combine(
+                                    appRepository.buscarDespesasPorCicloId(ciclo.id),
+                                    appRepository.buscarAcertosPorCicloId(ciclo.id),
+                                    appRepository.obterTodosClientes()
+                                ) { despesas, acertos, clientes ->
+                                    processarCicloItem(ciclo, despesas, acertos, clientes.filter { it.rotaId == rotaId }, rotaId)
+                                }
+                            }
+                            
+                            // Combinar todos os flows em um único
+                            combine(flows) { resultados ->
+                                resultados.toList()
+                            }
+                        }
+                }
+                .collect { ciclosAtualizados ->
+                    _ciclos.value = ciclosAtualizados
+                    // Recalcular estatísticas
+                    if (ciclosAtualizados.isNotEmpty() && _rotaIdFlow.value != null) {
+                        viewModelScope.launch {
+                            try {
+                                val ciclosEntity = cicloAcertoRepository.buscarCiclosPorRota(_rotaIdFlow.value!!)
+                                calcularEstatisticas(ciclosEntity)
+                            } catch (e: Exception) {
+                                android.util.Log.e("CycleHistoryViewModel", "Erro ao recalcular estatísticas: ${e.message}")
+                            }
+                        }
+                    }
+                }
+        }
+    }
+    
+    // ✅ NOVO: Método auxiliar para processar item de ciclo
+    private suspend fun processarCicloItem(
+        ciclo: CicloAcertoEntity,
+        despesas: List<com.example.gestaobilhares.data.entities.Despesa>,
+        acertos: List<com.example.gestaobilhares.data.entities.Acerto>,
+        clientes: List<com.example.gestaobilhares.data.entities.Cliente>,
+        rotaId: Long
+    ): CycleHistoryItem {
+        val debitoTotal = if (ciclo.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
+            ciclo.debitoTotal
+        } else {
+            clientes.sumOf { it.debitoAtual }
+        }
+        
+        val valorTotalDespesas = despesas.sumOf { it.valor }
+        val totalDescontos = appRepository.calcularTotalDescontosPorCiclo(ciclo.id)
+        
+        val (clientesAcertados, totalClientes) = if (ciclo.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
+            Pair(ciclo.clientesAcertados, ciclo.totalClientes)
+        } else {
+            val clientesAcertadosReal = acertos
+                .filter { it.status == com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO }
+                .map { it.clienteId }
+                .distinct()
+                .size
+            Pair(clientesAcertadosReal, clientes.size)
+        }
+        
+        return CycleHistoryItem(
+            id = ciclo.id,
+            rotaId = ciclo.rotaId,
+            titulo = ciclo.titulo,
+            dataInicio = ciclo.dataInicio,
+            dataFim = ciclo.dataFim ?: Date(),
+            valorTotalAcertado = ciclo.valorTotalAcertado,
+            valorTotalDespesas = valorTotalDespesas,
+            totalDescontos = totalDescontos,
+            lucroLiquido = ciclo.valorTotalAcertado - valorTotalDespesas,
+            debitoTotal = debitoTotal,
+            clientesAcertados = clientesAcertados,
+            totalClientes = totalClientes,
+            status = ciclo.status
+        )
+    }
 
     /**
      * Carrega histórico de ciclos de uma rota
+     * ✅ CORRIGIDO: Agora apenas atualiza o rotaId, o init observa os Flows automaticamente
      */
     fun carregarHistoricoCiclos(rotaId: Long) {
+        _rotaIdFlow.value = rotaId
         viewModelScope.launch {
             try {
                 showLoading()
-
-                // Buscar os dados brutos do repositório
-                val ciclosEntity = cicloAcertoRepository.buscarCiclosPorRota(rotaId)
-                val clientes = cicloAcertoRepository.buscarClientesPorRota(rotaId)
-
-                // Mapear para o DTO, aplicando a lógica correta para débito total
-                val ciclosDTO = ciclosEntity.map { ciclo ->
-                    val debitoTotal = if (ciclo.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
-                        ciclo.debitoTotal // Usa o valor salvo e imutável
-                    } else {
-                        clientes.sumOf { it.debitoAtual } // Calcula ao vivo apenas para o ciclo em andamento
-                    }
-
-                    // ✅ CORRIGIDO: Calcular despesas reais do ciclo
-                    val despesasCiclo = appRepository.buscarDespesasPorCicloId(ciclo.id).first()
-                    val valorTotalDespesas = despesasCiclo.sumOf { despesa -> despesa.valor }
-
-                    // ✅ NOVO: Calcular total de descontos do ciclo
-                    val totalDescontos = appRepository.calcularTotalDescontosPorCiclo(ciclo.id)
-
-                    // ✅ CORREÇÃO: Calcular clientes acertados e total em tempo real para ciclos em andamento
-                    val (clientesAcertados, totalClientes) = if (ciclo.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
-                        // Para ciclos finalizados, usar dados salvos
-                        Pair(ciclo.clientesAcertados, ciclo.totalClientes)
-                    } else {
-                        // Para ciclos em andamento, calcular em tempo real
-                        val clientesAcertadosReal = calcularClientesAcertadosEmTempoReal(ciclo.id, rotaId)
-                        val totalClientesReal = clientes.size
-                        Pair(clientesAcertadosReal, totalClientesReal)
-                    }
-
-                    CycleHistoryItem(
-                        id = ciclo.id,
-                        rotaId = ciclo.rotaId,
-                        titulo = ciclo.titulo,
-                        dataInicio = ciclo.dataInicio,
-                        dataFim = ciclo.dataFim ?: Date(), // Usar data atual se for nula
-                        valorTotalAcertado = ciclo.valorTotalAcertado,
-                        valorTotalDespesas = valorTotalDespesas, // ✅ Usar valor real calculado
-                        totalDescontos = totalDescontos, // ✅ NOVO: Total de descontos do ciclo
-                        lucroLiquido = ciclo.valorTotalAcertado - valorTotalDespesas, // ✅ Recalcular lucro
-                        debitoTotal = debitoTotal,
-                        clientesAcertados = clientesAcertados, // ✅ Usar dados calculados em tempo real
-                        totalClientes = totalClientes,       // ✅ Usar dados calculados em tempo real
-                        status = ciclo.status
-                    )
-                }
-                _ciclos.value = ciclosDTO
-
-                // Calcular estatísticas com os dados já carregados
-                calcularEstatisticas(ciclosEntity)
-
+                // Aguardar um pouco para os dados carregarem
+                kotlinx.coroutines.delay(100)
+                hideLoading()
             } catch (e: Exception) {
                 android.util.Log.e("CycleHistoryViewModel", "Erro ao carregar histórico: ${e.message}")
                 _errorMessage.value = "Erro ao carregar histórico: ${e.message}"
-            } finally {
                 hideLoading()
             }
         }
@@ -252,10 +303,14 @@ class CycleHistoryViewModel(
 
     /**
      * ✅ NOVA FUNÇÃO: Recarrega dados em tempo real (útil após salvar acertos)
+     * ✅ CORRIGIDO: Não precisa fazer nada, os Flows já observam automaticamente
      */
     fun recarregarDadosTempoReal(rotaId: Long) {
         android.util.Log.d("CycleHistoryViewModel", "🔄 Recarregando dados em tempo real para rotaId: $rotaId")
-        carregarHistoricoCiclos(rotaId)
+        // Os Flows já observam automaticamente, apenas garantir que o rotaId está correto
+        if (_rotaIdFlow.value != rotaId) {
+            _rotaIdFlow.value = rotaId
+        }
     }
 
     /**

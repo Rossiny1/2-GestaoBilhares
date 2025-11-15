@@ -99,9 +99,8 @@ class AddEditStockItemDialog : DialogFragment() {
             // Mostrar sucesso e fechar diálogo
             Toast.makeText(requireContext(), "Item adicionado ao estoque com sucesso!", Toast.LENGTH_SHORT).show()
             
-            // ✅ CORREÇÃO: Notificar callback para atualizar a lista
-            onItemSaved?.invoke()
-            
+            // ✅ CORREÇÃO: O Flow do banco de dados já atualiza automaticamente
+            // Não precisamos de callback, o ViewModel já está observando
             dismiss()
             
         } catch (e: NumberFormatException) {

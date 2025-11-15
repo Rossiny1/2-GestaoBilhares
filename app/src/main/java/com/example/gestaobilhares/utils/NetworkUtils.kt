@@ -36,8 +36,10 @@ class NetworkUtils(private val context: Context) {
     }
     
     init {
+        android.util.Log.d("NetworkUtils", "NetworkUtils inicializando...")
         registerNetworkCallback()
         checkInitialConnectivity()
+        android.util.Log.d("NetworkUtils", "NetworkUtils inicializado - isConnected = ${_isNetworkAvailable.value}")
     }
     
     /**
@@ -66,9 +68,24 @@ class NetworkUtils(private val context: Context) {
     
     /**
      * Verifica se há conectividade ativa
+     * Verifica em tempo real, não apenas o StateFlow
      */
     fun isConnected(): Boolean {
-        return _isNetworkAvailable.value
+        // Verificar em tempo real para garantir precisão
+        val network = connectivityManager.activeNetwork
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+        
+        val hasInternet = networkCapabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false
+        val isValidated = networkCapabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) ?: false
+        
+        val isConnected = hasInternet && isValidated
+        
+        // Atualizar StateFlow se mudou
+        if (_isNetworkAvailable.value != isConnected) {
+            _isNetworkAvailable.value = isConnected
+        }
+        
+        return isConnected
     }
     
     /**
