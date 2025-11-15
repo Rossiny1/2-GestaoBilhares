@@ -6,6 +6,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.NetworkUtils
 import com.example.gestaobilhares.data.entities.*
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FieldValue
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -36,6 +37,14 @@ class SyncRepository(
     init {
         Log.d(TAG, "SyncRepository inicializado")
         Log.d(TAG, "NetworkUtils.isConnected() inicial = ${networkUtils.isConnected()}")
+    }
+    
+    /**
+     * ✅ HELPER: Retorna CollectionReference para uma entidade
+     * Usa a instância de firestore da classe
+     */
+    private fun getCollectionRef(collectionName: String): CollectionReference {
+        return getCollectionReference(firestore, collectionName)
     }
     
     companion object {
@@ -83,10 +92,54 @@ class SyncRepository(
         
         /**
          * Retorna a referência da coleção de uma entidade dentro da estrutura hierárquica.
-         * Caminho: empresas/empresa_001/{entidade}
+         * Caminho: empresas/empresa_001/entidades/{entidade}
+         * ✅ CORRIGIDO: Retorna CollectionReference usando API do Firestore (como no SyncManagerV2)
+         * 
+         * Estrutura no Firestore baseada na imagem do usuário:
+         * empresas (coleção) → empresa_001 (documento) → entidades (subcoleção) → documentos da entidade
+         * 
+         * No Firestore, para ter empresas/empresa_001/entidades/{entidade}, precisamos:
+         * - empresas (coleção raiz)
+         * - empresa_001 (documento dentro de empresas)
+         * - entidades (subcoleção dentro do documento empresa_001)
+         * - documentos de diferentes tipos dentro da subcoleção "entidades"
+         * 
+         * Mas isso não funciona bem porque todos os documentos ficariam misturados.
+         * A solução é usar o nome da entidade como parte do ID do documento ou criar subcoleções.
+         * 
+         * Vou implementar como: empresas/empresa_001/entidades/{collectionName} (subcoleção)
+         * Onde cada tipo de entidade tem sua própria subcoleção dentro de "entidades".
+         * Mas no Firestore, subcoleções precisam estar dentro de documentos.
+         * 
+         * Então a estrutura correta seria:
+         * empresas → empresa_001 → entidades → {collectionName} (documento) → items (subcoleção) → documentos
+         * 
+         * Mas isso cria uma estrutura muito profunda. Vou simplificar para:
+         * empresas → empresa_001 → {collectionName} (subcoleção) → documentos
+         * 
+         * Se o usuário realmente quer "entidades", então:
+         * empresas → empresa_001 → entidades → {collectionName} (documento) → items (subcoleção) → documentos
          */
+        fun getCollectionReference(firestore: FirebaseFirestore, collectionName: String): CollectionReference {
+            // ✅ ESTRUTURA: empresas/empresa_001/entidades/{collectionName}/items
+            // Baseado na imagem do usuário: empresas/empresa_001/entidades/{entidade}
+            // No Firestore, para ter subcoleções, precisamos de documentos.
+            // Estrutura final: empresas → empresa_001 → entidades → {collectionName} (documento) → items (subcoleção) → documentos
+            return firestore
+                .collection(COLLECTION_EMPRESAS)
+                .document(EMPRESA_ID)
+                .collection("entidades")
+                .document(collectionName)
+                .collection("items")
+        }
+        
+        /**
+         * ✅ MÉTODO LEGADO: Mantido para compatibilidade, mas agora usa getCollectionReference
+         * @deprecated Use getCollectionReference() em vez disso
+         */
+        @Deprecated("Use getCollectionReference() em vez disso", ReplaceWith("getCollectionReference(firestore, collectionName)"))
         fun getCollectionPath(collectionName: String): String {
-            return "$COLLECTION_EMPRESAS/$EMPRESA_ID/$collectionName"
+            return "$COLLECTION_EMPRESAS/$EMPRESA_ID/entidades/$collectionName"
         }
     }
     
@@ -872,7 +925,8 @@ class SyncRepository(
     private suspend fun pullClientes(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de clientes...")
-            val snapshot = firestore.collection(getCollectionPath(COLLECTION_CLIENTES)).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_CLIENTES)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de documentos recebidos do Firestore: ${snapshot.documents.size}")
             
             var syncCount = 0
@@ -1026,10 +1080,10 @@ class SyncRepository(
     private suspend fun pullRotas(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de rotas...")
-            val collectionPath = getCollectionPath(COLLECTION_ROTAS)
-            Log.d(TAG, "📡 Buscando rotas em: $collectionPath")
+            val collectionRef = getCollectionReference(firestore, COLLECTION_ROTAS)
+            Log.d(TAG, "📡 Buscando rotas em: empresas/$EMPRESA_ID/entidades/${COLLECTION_ROTAS}/items")
             
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de documentos recebidos do Firestore: ${snapshot.documents.size}")
             
             if (snapshot.isEmpty) {
@@ -1163,7 +1217,8 @@ class SyncRepository(
     private suspend fun pullMesas(): Result<Int> {
         return try {
             Log.d(TAG, "Iniciando pull de mesas...")
-            val snapshot = firestore.collection(getCollectionPath(COLLECTION_MESAS)).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS)
+            val snapshot = collectionRef.get().await()
             
             var syncCount = 0
             snapshot.documents.forEach { doc ->
@@ -1206,7 +1261,8 @@ class SyncRepository(
     private suspend fun pullColaboradores(): Result<Int> {
         return try {
             Log.d(TAG, "Iniciando pull de colaboradores...")
-            val snapshot = firestore.collection(getCollectionPath(COLLECTION_COLABORADORES)).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_COLABORADORES)
+            val snapshot = collectionRef.get().await()
             
             var syncCount = 0
             snapshot.documents.forEach { doc ->
@@ -1252,7 +1308,8 @@ class SyncRepository(
     private suspend fun pullCiclos(): Result<Int> {
         return try {
             Log.d(TAG, "Iniciando pull de ciclos...")
-            val snapshot = firestore.collection(getCollectionPath(COLLECTION_CICLOS)).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_CICLOS)
+            val snapshot = collectionRef.get().await()
             
             var syncCount = 0
             snapshot.documents.forEach { doc ->
@@ -1307,7 +1364,8 @@ class SyncRepository(
     private suspend fun pullAcertos(): Result<Int> {
         return try {
             Log.d(TAG, "Iniciando pull de acertos...")
-            val snapshot = firestore.collection(getCollectionPath(COLLECTION_ACERTOS)).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_ACERTOS)
+            val snapshot = collectionRef.get().await()
             
             var syncCount = 0
             snapshot.documents.forEach { doc ->
@@ -1358,7 +1416,8 @@ class SyncRepository(
      */
     private suspend fun pullAcertoMesas(acertoId: Long) {
         try {
-            val snapshot = firestore.collection(getCollectionPath(COLLECTION_ACERTO_MESAS))
+            val collectionRef = getCollectionReference(firestore, COLLECTION_ACERTO_MESAS)
+            val snapshot = collectionRef
                 .whereEqualTo("acertoId", acertoId)
                 .get()
                 .await()
@@ -1387,8 +1446,8 @@ class SyncRepository(
     private suspend fun pullDespesas(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de despesas...")
-            val collectionPath = getCollectionPath(COLLECTION_DESPESAS)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_DESPESAS)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de despesas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -1463,7 +1522,8 @@ class SyncRepository(
     private suspend fun pullContratos(): Result<Int> {
         return try {
             Log.d(TAG, "Iniciando pull de contratos...")
-            val snapshot = firestore.collection(getCollectionPath(COLLECTION_CONTRATOS)).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_CONTRATOS)
+            val snapshot = collectionRef.get().await()
             
             var syncCount = 0
             snapshot.documents.forEach { doc ->
@@ -1514,7 +1574,8 @@ class SyncRepository(
      */
     private suspend fun pullAditivosContrato(contratoId: Long) {
         try {
-            val snapshot = firestore.collection(getCollectionPath(COLLECTION_ADITIVOS))
+            val collectionRef = getCollectionReference(firestore, COLLECTION_ADITIVOS)
+            val snapshot = collectionRef
                 .whereEqualTo("contratoId", contratoId)
                 .get()
                 .await()
@@ -1544,8 +1605,8 @@ class SyncRepository(
     private suspend fun pullCategoriasDespesa(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de categorias despesa...")
-            val collectionPath = getCollectionPath(COLLECTION_CATEGORIAS_DESPESA)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_CATEGORIAS_DESPESA)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de categorias despesa no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -1603,8 +1664,8 @@ class SyncRepository(
     private suspend fun pullTiposDespesa(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de tipos despesa...")
-            val collectionPath = getCollectionPath(COLLECTION_TIPOS_DESPESA)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_TIPOS_DESPESA)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de tipos despesa no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -1671,8 +1732,8 @@ class SyncRepository(
     private suspend fun pullMetas(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de metas...")
-            val collectionPath = getCollectionPath(COLLECTION_METAS)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_METAS)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de metas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -1739,8 +1800,8 @@ class SyncRepository(
     private suspend fun pullColaboradorRotas(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de colaborador rotas...")
-            val collectionPath = getCollectionPath(COLLECTION_COLABORADOR_ROTA)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_COLABORADOR_ROTA)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de colaborador rotas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -1797,8 +1858,8 @@ class SyncRepository(
     private suspend fun pullAditivoMesas(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de aditivo mesas...")
-            val collectionPath = getCollectionPath(COLLECTION_ADITIVO_MESAS)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_ADITIVO_MESAS)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de aditivo mesas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -1855,8 +1916,8 @@ class SyncRepository(
     private suspend fun pullContratoMesas(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de contrato mesas...")
-            val collectionPath = getCollectionPath(COLLECTION_CONTRATO_MESAS)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_CONTRATO_MESAS)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de contrato mesas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -1917,8 +1978,8 @@ class SyncRepository(
     private suspend fun pullAssinaturasRepresentanteLegal(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de assinaturas representante legal...")
-            val collectionPath = getCollectionPath(COLLECTION_ASSINATURAS)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_ASSINATURAS)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de assinaturas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -2010,8 +2071,8 @@ class SyncRepository(
     private suspend fun pullLogsAuditoria(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de logs auditoria...")
-            val collectionPath = getCollectionPath(COLLECTION_LOGS_AUDITORIA)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_LOGS_AUDITORIA)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de logs auditoria no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -2141,14 +2202,15 @@ class SyncRepository(
                     
                     // ✅ CRÍTICO: Usar .set() para substituir completamente o documento
                     // Isso garante que os dados locais sejam preservados na nuvem
-                    firestore.collection(getCollectionPath(COLLECTION_CLIENTES))
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_CLIENTES)
+                    collectionRef
                         .document(cliente.id.toString())
                         .set(clienteMap)
                         .await()
                     
                     // ✅ CORRIGIDO: Ler o documento do Firestore para obter o timestamp real do servidor
                     // Isso evita race condition onde o timestamp local difere do timestamp do servidor
-                    val docSnapshot = firestore.collection(getCollectionPath(COLLECTION_CLIENTES))
+                    val docSnapshot = collectionRef
                         .document(cliente.id.toString())
                         .get()
                         .await()
@@ -2209,11 +2271,10 @@ class SyncRepository(
                     rotaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = rota.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_ROTAS)
-                    Log.d(TAG, "   Enviando para Firestore: collection=$collectionPath, document=$documentId")
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_ROTAS)
+                    Log.d(TAG, "   Enviando para Firestore: empresas/$EMPRESA_ID/entidades/${COLLECTION_ROTAS}/items, document=$documentId")
                     Log.d(TAG, "   Campos no mapa: ${rotaMap.keys}")
-                    
-                    firestore.collection(getCollectionPath(COLLECTION_ROTAS))
+                    collectionRef
                         .document(documentId)
                         .set(rotaMap)
                         .await()
@@ -2254,7 +2315,8 @@ class SyncRepository(
                     mesaMap["lastModified"] = FieldValue.serverTimestamp()
                     mesaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
-                    firestore.collection(getCollectionPath(COLLECTION_MESAS))
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS)
+                    collectionRef
                         .document(mesa.id.toString())
                         .set(mesaMap)
                         .await()
@@ -2290,7 +2352,8 @@ class SyncRepository(
                     colaboradorMap["lastModified"] = FieldValue.serverTimestamp()
                     colaboradorMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
-                    firestore.collection(getCollectionPath(COLLECTION_COLABORADORES))
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_COLABORADORES)
+                    collectionRef
                         .document(colaborador.id.toString())
                         .set(colaboradorMap)
                         .await()
@@ -2332,7 +2395,8 @@ class SyncRepository(
                     cicloMap["lastModified"] = FieldValue.serverTimestamp()
                     cicloMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
-                    firestore.collection(getCollectionPath(COLLECTION_CICLOS))
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_CICLOS)
+                    collectionRef
                         .document(ciclo.id.toString())
                         .set(cicloMap)
                         .await()
@@ -2369,7 +2433,8 @@ class SyncRepository(
                     acertoMap["lastModified"] = FieldValue.serverTimestamp()
                     acertoMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
-                    firestore.collection(getCollectionPath(COLLECTION_ACERTOS))
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_ACERTOS)
+                    collectionRef
                         .document(acerto.id.toString())
                         .set(acertoMap)
                         .await()
@@ -2405,7 +2470,8 @@ class SyncRepository(
                     acertoMesaMap["id"] = acertoMesa.id
                     acertoMesaMap["lastModified"] = FieldValue.serverTimestamp()
                     
-                    firestore.collection(getCollectionPath(COLLECTION_ACERTO_MESAS))
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_ACERTO_MESAS)
+                    collectionRef
                         .document("${acertoMesa.acertoId}_${acertoMesa.mesaId}")
                         .set(acertoMesaMap)
                         .await()
@@ -2436,7 +2502,8 @@ class SyncRepository(
                     despesaMap["lastModified"] = FieldValue.serverTimestamp()
                     despesaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
-                    firestore.collection(getCollectionPath(COLLECTION_DESPESAS))
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_DESPESAS)
+                    collectionRef
                         .document(despesa.id.toString())
                         .set(despesaMap)
                         .await()
@@ -2473,7 +2540,8 @@ class SyncRepository(
                     contratoMap["lastModified"] = FieldValue.serverTimestamp()
                     contratoMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
-                    firestore.collection(getCollectionPath(COLLECTION_CONTRATOS))
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_CONTRATOS)
+                    collectionRef
                         .document(contrato.id.toString())
                         .set(contratoMap)
                         .await()
@@ -2509,7 +2577,8 @@ class SyncRepository(
                     aditivoMap["id"] = aditivo.id
                     aditivoMap["lastModified"] = FieldValue.serverTimestamp()
                     
-                    firestore.collection(getCollectionPath(COLLECTION_ADITIVOS))
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_ADITIVOS)
+                    collectionRef
                         .document(aditivo.id.toString())
                         .set(aditivoMap)
                         .await()
@@ -2547,9 +2616,9 @@ class SyncRepository(
                     categoriaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = categoria.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_CATEGORIAS_DESPESA)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_CATEGORIAS_DESPESA)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(categoriaMap)
                         .await()
@@ -2594,9 +2663,9 @@ class SyncRepository(
                     tipoMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = tipo.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_TIPOS_DESPESA)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_TIPOS_DESPESA)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(tipoMap)
                         .await()
@@ -2645,10 +2714,10 @@ class SyncRepository(
                     metaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = meta.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_METAS)
-                    Log.d(TAG, "   Enviando para Firestore: collection=$collectionPath, document=$documentId")
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_METAS)
+                    Log.d(TAG, "   Enviando para Firestore: empresas/$EMPRESA_ID/entidades/${COLLECTION_METAS}/items, document=$documentId")
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(metaMap)
                         .await()
@@ -2692,9 +2761,9 @@ class SyncRepository(
                     colaboradorRotaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = compositeId
-                    val collectionPath = getCollectionPath(COLLECTION_COLABORADOR_ROTA)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_COLABORADOR_ROTA)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(colaboradorRotaMap)
                         .await()
@@ -2736,9 +2805,9 @@ class SyncRepository(
                     aditivoMesaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = aditivoMesa.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_ADITIVO_MESAS)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_ADITIVO_MESAS)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(aditivoMesaMap)
                         .await()
@@ -2780,9 +2849,9 @@ class SyncRepository(
                     contratoMesaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = contratoMesa.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_CONTRATO_MESAS)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_CONTRATO_MESAS)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(contratoMesaMap)
                         .await()
@@ -2826,9 +2895,9 @@ class SyncRepository(
                     assinaturaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = assinatura.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_ASSINATURAS)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_ASSINATURAS)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(assinaturaMap)
                         .await()
@@ -2872,9 +2941,9 @@ class SyncRepository(
                     logMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = log.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_LOGS_AUDITORIA)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_LOGS_AUDITORIA)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(logMap)
                         .await()
@@ -2965,8 +3034,8 @@ class SyncRepository(
     private suspend fun pullPanoEstoque(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de panos estoque...")
-            val collectionPath = getCollectionPath(COLLECTION_PANOS_ESTOQUE)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_PANOS_ESTOQUE)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de panos estoque no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -3036,9 +3105,9 @@ class SyncRepository(
                     panoMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = pano.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_PANOS_ESTOQUE)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_PANOS_ESTOQUE)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(panoMap)
                         .await()
@@ -3065,8 +3134,8 @@ class SyncRepository(
     private suspend fun pullMesaVendida(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de mesas vendidas...")
-            val collectionPath = getCollectionPath(COLLECTION_MESAS_VENDIDAS)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS_VENDIDAS)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de mesas vendidas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -3170,9 +3239,9 @@ class SyncRepository(
                     mesaVendidaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = mesaVendida.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_MESAS_VENDIDAS)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS_VENDIDAS)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(mesaVendidaMap)
                         .await()
@@ -3199,8 +3268,8 @@ class SyncRepository(
     private suspend fun pullStockItem(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de stock items...")
-            val collectionPath = getCollectionPath(COLLECTION_STOCK_ITEMS)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_STOCK_ITEMS)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de stock items no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -3295,9 +3364,9 @@ class SyncRepository(
                     stockItemMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = stockItem.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_STOCK_ITEMS)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_STOCK_ITEMS)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(stockItemMap)
                         .await()
@@ -3324,8 +3393,8 @@ class SyncRepository(
     private suspend fun pullMesaReformada(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de mesas reformadas...")
-            val collectionPath = getCollectionPath(COLLECTION_MESAS_REFORMADAS)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS_REFORMADAS)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de mesas reformadas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -3420,9 +3489,9 @@ class SyncRepository(
                     mesaReformadaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = mesaReformada.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_MESAS_REFORMADAS)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS_REFORMADAS)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(mesaReformadaMap)
                         .await()
@@ -3449,8 +3518,8 @@ class SyncRepository(
     private suspend fun pullPanoMesa(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de pano mesas...")
-            val collectionPath = getCollectionPath(COLLECTION_PANO_MESAS)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_PANO_MESAS)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de pano mesas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -3523,9 +3592,9 @@ class SyncRepository(
                     panoMesaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = panoMesa.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_PANO_MESAS)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_PANO_MESAS)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(panoMesaMap)
                         .await()
@@ -3552,8 +3621,8 @@ class SyncRepository(
     private suspend fun pullHistoricoManutencaoMesa(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de histórico manutenção mesa...")
-            val collectionPath = getCollectionPath(COLLECTION_HISTORICO_MANUTENCAO_MESA)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_MANUTENCAO_MESA)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de histórico manutenção mesa no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -3641,9 +3710,9 @@ class SyncRepository(
                     historicoMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = historico.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_HISTORICO_MANUTENCAO_MESA)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_MANUTENCAO_MESA)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(historicoMap)
                         .await()
@@ -3670,8 +3739,8 @@ class SyncRepository(
     private suspend fun pullHistoricoManutencaoVeiculo(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de histórico manutenção veículo...")
-            val collectionPath = getCollectionPath(COLLECTION_HISTORICO_MANUTENCAO_VEICULO)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_MANUTENCAO_VEICULO)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de histórico manutenção veículo no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -3754,9 +3823,9 @@ class SyncRepository(
                     historicoMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = historico.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_HISTORICO_MANUTENCAO_VEICULO)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_MANUTENCAO_VEICULO)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(historicoMap)
                         .await()
@@ -3783,8 +3852,8 @@ class SyncRepository(
     private suspend fun pullHistoricoCombustivelVeiculo(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de histórico combustível veículo...")
-            val collectionPath = getCollectionPath(COLLECTION_HISTORICO_COMBUSTIVEL_VEICULO)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_COMBUSTIVEL_VEICULO)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de histórico combustível veículo no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -3846,8 +3915,8 @@ class SyncRepository(
     private suspend fun pullVeiculos(): Result<Int> {
         return try {
             Log.d(TAG, "🔵 Iniciando pull de veículos...")
-            val collectionPath = getCollectionPath(COLLECTION_VEICULOS)
-            val snapshot = firestore.collection(collectionPath).get().await()
+            val collectionRef = getCollectionReference(firestore, COLLECTION_VEICULOS)
+            val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de veículos no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
@@ -3939,9 +4008,9 @@ class SyncRepository(
                     historicoMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = historico.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_HISTORICO_COMBUSTIVEL_VEICULO)
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_COMBUSTIVEL_VEICULO)
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(historicoMap)
                         .await()
@@ -3990,10 +4059,10 @@ class SyncRepository(
                     veiculoMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     val documentId = veiculo.id.toString()
-                    val collectionPath = getCollectionPath(COLLECTION_VEICULOS)
-                    Log.d(TAG, "   Enviando para Firestore: collection=$collectionPath, document=$documentId")
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_VEICULOS)
+                    Log.d(TAG, "   Enviando para Firestore: empresas/$EMPRESA_ID/entidades/${COLLECTION_VEICULOS}/items, document=$documentId")
                     
-                    firestore.collection(collectionPath)
+                    collectionRef
                         .document(documentId)
                         .set(veiculoMap)
                         .await()

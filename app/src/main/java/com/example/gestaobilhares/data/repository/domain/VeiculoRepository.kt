@@ -66,5 +66,35 @@ class VeiculoRepository(
     suspend fun inserirHistoricoManutencao(historico: HistoricoManutencaoVeiculo): Long {
         return historicoManutencaoVeiculoDao?.inserir(historico) ?: 0L
     }
+    
+    /**
+     * ✅ NOVO: Obtém histórico de manutenção por veículo como Flow reativo
+     * Para uso em ViewModels que precisam observar mudanças automaticamente
+     */
+    fun obterHistoricoManutencaoPorVeiculo(veiculoId: Long): Flow<List<HistoricoManutencaoVeiculo>> {
+        return historicoManutencaoVeiculoDao?.listarPorVeiculo(veiculoId) ?: flowOf(emptyList())
+    }
+    
+    /**
+     * ✅ NOVO: Obtém histórico de combustível por veículo como Flow reativo
+     * Para uso em ViewModels que precisam observar mudanças automaticamente
+     */
+    fun obterHistoricoCombustivelPorVeiculo(veiculoId: Long): Flow<List<HistoricoCombustivelVeiculo>> {
+        return historicoCombustivelVeiculoDao?.listarPorVeiculo(veiculoId) ?: flowOf(emptyList())
+    }
+    
+    /**
+     * ✅ NOVO: Obtém histórico de manutenção por veículo e ano como Flow reativo
+     */
+    fun obterHistoricoManutencaoPorVeiculoEAno(veiculoId: Long, ano: String): Flow<List<HistoricoManutencaoVeiculo>> {
+        return historicoManutencaoVeiculoDao?.listarPorVeiculoEAno(veiculoId, ano) ?: flowOf(emptyList())
+    }
+    
+    /**
+     * ✅ NOVO: Obtém histórico de combustível por veículo e ano como Flow reativo
+     */
+    fun obterHistoricoCombustivelPorVeiculoEAno(veiculoId: Long, ano: String): Flow<List<HistoricoCombustivelVeiculo>> {
+        return historicoCombustivelVeiculoDao?.listarPorVeiculoEAno(veiculoId, ano) ?: flowOf(emptyList())
+    }
 }
 

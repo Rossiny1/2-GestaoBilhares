@@ -9,14 +9,25 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.time.LocalDate
 import java.time.ZoneId
+
+@OptIn(ExperimentalCoroutinesApi::class)
 class VehicleDetailViewModel constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
+    
+    // ✅ NOVO: Flow para vehicleId e currentYear para observação reativa
+    private val _vehicleIdFlow = MutableStateFlow<Long?>(null)
+    private val _currentYearFlow = MutableStateFlow<Int?>(Calendar.getInstance().get(Calendar.YEAR))
     
     private val _vehicle = MutableStateFlow<Vehicle?>(null)
     val vehicle: StateFlow<Vehicle?> = _vehicle.asStateFlow()
@@ -30,140 +41,125 @@ class VehicleDetailViewModel constructor(
     private val _summaryData = MutableStateFlow(VehicleSummary())
     val summaryData: StateFlow<VehicleSummary> = _summaryData.asStateFlow()
     
-    private var currentYear: Int? = Calendar.getInstance().get(Calendar.YEAR)
-    private var vehicleId: Long = 0L
     private var loadJob: Job? = null
 
-    fun loadVehicle(vehicleId: Long) {
-        this.vehicleId = vehicleId
+    init {
+        // ✅ NOVO: Observar mudanças em vehicleId e currentYear para atualização automática
         viewModelScope.launch {
-            // TODO: Implementar quando métodos de veículos estiverem disponíveis no AppRepository
-            // Carregar veículo do banco de dados
-            // appRepository.obterTodosVeiculos().collect { veiculos ->
-            //     val veiculo = veiculos.find { it.id == vehicleId }
-            //     veiculo?.let {
-            //         _vehicle.value = Vehicle(
-            //             id = it.id,
-            //             name = it.nome.ifEmpty { "${it.marca} ${it.modelo}" },
-            //             plate = it.placa,
-            //             model = "${it.marca} ${it.modelo}",
-            //             year = it.anoModelo,
-            //             color = "N/A",
-            //             mileage = it.kmAtual.toDouble()
-            //         )
-            //     }
-            // }
-            // loadHistoryData()
+            combine(
+                _vehicleIdFlow,
+                _currentYearFlow
+            ) { vehicleId, currentYear ->
+                Pair(vehicleId, currentYear)
+            }
+            .flatMapLatest { (vehicleId, currentYear) ->
+                if (vehicleId == null) {
+                    return@flatMapLatest flowOf(Pair(emptyList<HistoricoManutencaoVeiculo>(), emptyList<HistoricoCombustivelVeiculo>()))
+                }
+                
+                // Observar histórico de manutenção e combustível simultaneamente
+                val manutencaoFlow = if (currentYear == null) {
+                    appRepository.obterHistoricoManutencaoPorVeiculo(vehicleId)
+                } else {
+                    appRepository.obterHistoricoManutencaoPorVeiculoEAno(vehicleId, currentYear.toString())
+                }
+                
+                val combustivelFlow = if (currentYear == null) {
+                    appRepository.obterHistoricoCombustivelPorVeiculo(vehicleId)
+                } else {
+                    appRepository.obterHistoricoCombustivelPorVeiculoEAno(vehicleId, currentYear.toString())
+                }
+                
+                combine(manutencaoFlow, combustivelFlow) { manutencoes, combustiveis ->
+                    Pair(manutencoes, combustiveis)
+                }
+            }
+            .collect { (manutencoes, combustiveis) ->
+                // Processar manutenções
+                val maintenanceList = manutencoes.map { manutencao ->
+                    MaintenanceRecord(
+                        id = manutencao.id,
+                        date = manutencao.dataManutencao.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+                        description = manutencao.descricao,
+                        value = manutencao.valor,
+                        mileage = manutencao.kmVeiculo.toDouble(),
+                        type = manutencao.tipoManutencao
+                    )
+                }
+                _maintenanceHistory.value = maintenanceList
+                
+                // Processar combustíveis
+                val kmInicial = _vehicle.value?.mileage ?: 0.0
+                var ultimoHodometro = kmInicial
+                val ordenadosPorData = combustiveis.sortedBy { it.dataAbastecimento }
+                val fuelList = ordenadosPorData.map { combustivel ->
+                    val hodometroAbsoluto = when {
+                        combustivel.kmVeiculo > 0L -> combustivel.kmVeiculo.toDouble()
+                        combustivel.kmRodado > 0.0 -> ultimoHodometro + combustivel.kmRodado
+                        else -> ultimoHodometro
+                    }
+                    ultimoHodometro = hodometroAbsoluto
+                    FuelRecord(
+                        id = combustivel.id,
+                        date = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+                        liters = combustivel.litros,
+                        value = combustivel.valor,
+                        km = hodometroAbsoluto,
+                        gasStation = combustivel.posto ?: "N/A"
+                    )
+                }
+                _fuelHistory.value = fuelList
+                
+                // Atualizar resumo
+                updateSummary(maintenanceList, fuelList)
+            }
+        }
+        
+        // ✅ NOVO: Observar veículos para carregar dados do veículo atual
+        viewModelScope.launch {
+            _vehicleIdFlow
+                .flatMapLatest { vehicleId ->
+                    if (vehicleId == null) {
+                        return@flatMapLatest flowOf(null)
+                    }
+                    appRepository.obterTodosVeiculos()
+                        .map { veiculos ->
+                            veiculos.find { it.id == vehicleId }
+                        }
+                }
+                .collect { veiculo ->
+                    veiculo?.let {
+                        _vehicle.value = Vehicle(
+                            id = it.id,
+                            name = it.nome.ifEmpty { "${it.marca} ${it.modelo}" },
+                            plate = it.placa,
+                            model = "${it.marca} ${it.modelo}",
+                            year = it.anoModelo,
+                            color = "N/A", // Veiculo não tem campo cor
+                            mileage = it.kmAtual.toDouble()
+                        )
+                    }
+                }
         }
     }
 
+    fun loadVehicle(vehicleId: Long) {
+        _vehicleIdFlow.value = vehicleId
+        android.util.Log.d("VehicleDetailViewModel", "Carregando veículo: $vehicleId")
+    }
+
     fun filterByYear(year: Int?) {
-        currentYear = year
-        loadHistoryData()
+        _currentYearFlow.value = year
+        android.util.Log.d("VehicleDetailViewModel", "Filtrando por ano: $year")
     }
     
     // ✅ NOVO: Método para forçar recarregamento dos dados
     fun refreshData() {
         android.util.Log.d("VehicleDetailViewModel", "Forçando recarregamento dos dados")
-        loadHistoryData()
-    }
-    
-    // ✅ NOVO: Método para debug - carregar TODOS os dados sem filtro
-    fun loadAllDataForDebug() {
-        viewModelScope.launch {
-            // TODO: Implementar quando métodos de veículos estiverem disponíveis
-            android.util.Log.d("VehicleDetailViewModel", "=== DEBUG: Métodos de veículos não implementados ===")
-            // appRepository.obterTodosHistoricoCombustivelVeiculo().collect { todosCombustiveis ->
-            //     val combustiveisFiltrados = todosCombustiveis.filter { it.veiculoId == vehicleId }
-            //     android.util.Log.d("VehicleDetailViewModel", "DEBUG: Total de abastecimentos: ${combustiveisFiltrados.size}")
-            //     combustiveisFiltrados.forEach { combustivel ->
-            //         val dataLocal = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-            //         android.util.Log.d("VehicleDetailViewModel", "DEBUG: ID=${combustivel.id}, Data=${combustivel.dataAbastecimento}, DataLocal=${dataLocal}, Ano=${dataLocal.year}")
-            //     }
-            // }
-        }
-    }
-
-    private fun loadHistoryData() {
-        // Cancelar coleta anterior para evitar coletores duplicados
-        loadJob?.cancel()
-        loadJob = viewModelScope.launch {
-            // ✅ LOGS DE DEBUG: Adicionar logs para rastrear o carregamento
-            android.util.Log.d("VehicleDetailViewModel", "Carregando histórico para veículo $vehicleId, ano ${currentYear ?: "TODOS"}")
-            
-            // TODO: Implementar quando métodos de veículos estiverem disponíveis
-            // Coletar manutenção e combustível em paralelo
-            // launch {
-            //     appRepository.obterTodosHistoricoManutencaoVeiculo().collect { todasManutencoes ->
-            //         val manutencoesFiltradas = todasManutencoes.filter { it.veiculoId == vehicleId }
-            //         val manutencoesPorAno = if (currentYear == null) {
-            //             manutencoesFiltradas
-            //         } else {
-            //             manutencoesFiltradas.filter { manutencao ->
-            //                 val anoManutencao = manutencao.dataManutencao.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
-            //                 anoManutencao == currentYear
-            //             }
-            //         }
-            //         android.util.Log.d("VehicleDetailViewModel", "Manutenções encontradas: ${manutencoesPorAno.size} (filtradas de ${manutencoesFiltradas.size} total)")
-            //         val maintenanceList = manutencoesPorAno.map { manutencao ->
-            //             MaintenanceRecord(
-            //                 id = manutencao.id,
-            //                 date = manutencao.dataManutencao.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
-            //                 description = manutencao.descricao,
-            //                 value = manutencao.valor,
-            //                 mileage = manutencao.kmVeiculo.toDouble(),
-            //                 type = manutencao.tipoManutencao
-            //             )
-            //         }
-            //         _maintenanceHistory.value = maintenanceList
-            //         updateSummary(_maintenanceHistory.value, _fuelHistory.value)
-            //     }
-            // }
-
-            // launch {
-            //     appRepository.obterTodosHistoricoCombustivelVeiculo().collect { todosCombustiveis ->
-            //         val combustiveisPorVeiculo = todosCombustiveis.filter { it.veiculoId == vehicleId }
-            //         android.util.Log.d("VehicleDetailViewModel", "TOTAL de abastecimentos no banco: ${combustiveisPorVeiculo.size}")
-            //         combustiveisPorVeiculo.forEach { combustivel ->
-            //             val anoAbastecimento = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
-            //             android.util.Log.d("VehicleDetailViewModel", "Abastecimento ID=${combustivel.id}: Data=${combustivel.dataAbastecimento}, Ano=${anoAbastecimento}, Filtro=${currentYear ?: "TODOS"}, Match=${currentYear == null || anoAbastecimento == currentYear}")
-            //         }
-            //         val combustiveisFiltrados = if (currentYear == null) {
-            //             combustiveisPorVeiculo
-            //         } else {
-            //             combustiveisPorVeiculo.filter { combustivel ->
-            //                 val anoAbastecimento = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
-            //                 anoAbastecimento == currentYear
-            //             }
-            //         }
-            //         android.util.Log.d("VehicleDetailViewModel", "Abastecimentos encontrados: ${combustiveisFiltrados.size} (filtrados de ${combustiveisPorVeiculo.size} total)")
-            //         combustiveisFiltrados.forEach { combustivel ->
-            //             android.util.Log.d("VehicleDetailViewModel", "Abastecimento FILTRADO: ID=${combustivel.id}, Data=${combustivel.dataAbastecimento}, Litros=${combustivel.litros}, Valor=${combustivel.valor}")
-            //         }
-            //         // Construir lista de abastecimentos com hodômetro absoluto consistente
-            //         val kmInicial = _vehicle.value?.mileage ?: 0.0
-            //         var ultimoHodometro = kmInicial
-            //         val ordenadosPorData = combustiveisFiltrados.sortedBy { it.dataAbastecimento }
-            //         val fuelList = ordenadosPorData.map { combustivel ->
-            //             val hodometroAbsoluto = when {
-            //                 (combustivel.kmVeiculo != null && combustivel.kmVeiculo > 0L) -> combustivel.kmVeiculo.toDouble()
-            //                 combustivel.kmRodado > 0.0 -> ultimoHodometro + combustivel.kmRodado
-            //                 else -> ultimoHodometro
-            //             }
-            //             ultimoHodometro = hodometroAbsoluto
-            //             FuelRecord(
-            //                 id = combustivel.id,
-            //                 date = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
-            //                 liters = combustivel.litros,
-            //                 value = combustivel.valor,
-            //                 km = hodometroAbsoluto,
-            //                 gasStation = combustivel.posto ?: "N/A"
-            //             )
-            //         }
-            //         _fuelHistory.value = fuelList
-            //         updateSummary(_maintenanceHistory.value, _fuelHistory.value)
-            //     }
-            // }
+        val vehicleId = _vehicleIdFlow.value
+        if (vehicleId != null) {
+            _vehicleIdFlow.value = null
+            _vehicleIdFlow.value = vehicleId
         }
     }
 
@@ -284,60 +280,6 @@ class VehicleDetailViewModel constructor(
         return ultimoAbastecimento?.kmVeiculo?.toDouble() ?: (_vehicle.value?.mileage ?: 0.0)
     }
     
-    private fun updateSummaryFromRealData() {
-        viewModelScope.launch {
-            // TODO: Implementar quando métodos de veículos estiverem disponíveis
-            // ✅ CORREÇÃO: Calcular totais manualmente para garantir precisão
-            // val todasManutencoes = appRepository.obterTodosHistoricoManutencaoVeiculo()
-            // val todosCombustiveis = appRepository.obterTodosHistoricoCombustivelVeiculo()
-            
-            // TODO: Implementar quando métodos estiverem disponíveis
-            // var totalMaintenance = 0.0
-            // var totalFuel = 0.0
-            // var totalKm = 0.0
-            // var totalLitros = 0.0
-            // 
-            // todasManutencoes.collect { manutencoes ->
-            //     val manutencoesPorVeiculo = manutencoes.filter { it.veiculoId == vehicleId }
-            //     totalMaintenance = if (currentYear == null) {
-            //         manutencoesPorVeiculo.sumOf { it.valor }
-            //     } else {
-            //         manutencoesPorVeiculo.filter { manutencao ->
-            //             val anoManutencao = manutencao.dataManutencao.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
-            //             anoManutencao == currentYear
-            //         }.sumOf { it.valor }
-            //     }
-            // }
-            // 
-            // todosCombustiveis.collect { combustiveis ->
-            //     val combustiveisPorVeiculo = combustiveis.filter { it.veiculoId == vehicleId }
-            //     val combustiveisFiltrados = if (currentYear == null) {
-            //         combustiveisPorVeiculo
-            //     } else {
-            //         combustiveisPorVeiculo.filter { combustivel ->
-            //             val anoAbastecimento = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
-            //             anoAbastecimento == currentYear
-            //         }
-            //     }
-            //     
-            //     totalFuel = combustiveisFiltrados.sumOf { it.valor }
-            //     val totalKmReal = calculateRealKmDrivenFromDatabase(combustiveisFiltrados)
-            //     totalLitros = combustiveisFiltrados.sumOf { it.litros }
-            //     
-            //     val averageKmPerLiter = if (totalLitros > 0) totalKmReal / totalLitros else 0.0
-            //     
-            //     // ✅ NOVO: Obter km atual (último abastecimento)
-            //     val kmAtual = getCurrentMileageFromDatabase(combustiveisFiltrados)
-            //
-            //     _summaryData.value = VehicleSummary(
-            //         totalMaintenance = totalMaintenance,
-            //         totalFuel = totalFuel,
-            //         totalKm = kmAtual, // Agora mostra km atual em vez de total
-            //         averageKmPerLiter = averageKmPerLiter
-            //     )
-            // }
-        }
-    }
 
 }
 

@@ -1443,6 +1443,12 @@ class AppRepository constructor(
         return veiculoRepository.inserirHistoricoManutencao(_historico)
     }
     
+    // ✅ NOVO: Métodos Flow reativos para observação automática em ViewModels
+    fun obterHistoricoManutencaoPorVeiculo(veiculoId: Long) = veiculoRepository.obterHistoricoManutencaoPorVeiculo(veiculoId)
+    fun obterHistoricoCombustivelPorVeiculo(veiculoId: Long) = veiculoRepository.obterHistoricoCombustivelPorVeiculo(veiculoId)
+    fun obterHistoricoManutencaoPorVeiculoEAno(veiculoId: Long, ano: String) = veiculoRepository.obterHistoricoManutencaoPorVeiculoEAno(veiculoId, ano)
+    fun obterHistoricoCombustivelPorVeiculoEAno(veiculoId: Long, ano: String) = veiculoRepository.obterHistoricoCombustivelPorVeiculoEAno(veiculoId, ano)
+    
     // ==================== PANO MESA ====================
     // ✅ DELEGAÇÃO: Usa MesaRepository especializado
     
