@@ -22,9 +22,8 @@ class VehicleDetailFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var viewModel: VehicleDetailViewModel
-    // TODO: Criar adapters quando necessário
-    // private lateinit var maintenanceAdapter: MaintenanceHistoryAdapter
-    // private lateinit var fuelAdapter: FuelHistoryAdapter
+    private lateinit var maintenanceAdapter: MaintenanceHistoryAdapter
+    private lateinit var fuelAdapter: FuelHistoryAdapter
 
     private var vehicleId: Long = 0L
 
@@ -102,23 +101,24 @@ class VehicleDetailFragment : Fragment() {
     }
 
     private fun setupRecyclerViews() {
-        // TODO: Implementar adapters quando necessário
+        // ✅ CORRIGIDO: Implementar adapters
         // Adapter de manutenção
-        // maintenanceAdapter = MaintenanceHistoryAdapter { maintenance ->
-        //     // TODO: Implementar navegação para detalhes da manutenção
-        // }
-        // binding.rvMaintenanceHistory.layoutManager = LinearLayoutManager(requireContext())
-        // binding.rvMaintenanceHistory.adapter = maintenanceAdapter
+        maintenanceAdapter = MaintenanceHistoryAdapter { maintenance ->
+            // TODO: Implementar navegação para detalhes da manutenção
+            android.util.Log.d("VehicleDetailFragment", "Manutenção clicada: ${maintenance.id}")
+        }
+        binding.rvMaintenanceHistory.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvMaintenanceHistory.adapter = maintenanceAdapter
 
         // Adapter de abastecimento
-        // fuelAdapter = FuelHistoryAdapter(
-        //     onFuelClick = { fuel ->
-        //         // TODO: Implementar navegação para detalhes do abastecimento
-        //     },
-        //     vehicleInitialMileage = viewModel.vehicle.value?.mileage ?: 0.0
-        // )
-        // binding.rvFuelHistory.layoutManager = LinearLayoutManager(requireContext())
-        // binding.rvFuelHistory.adapter = fuelAdapter
+        fuelAdapter = FuelHistoryAdapter(
+            onFuelClick = { fuel ->
+                // TODO: Implementar navegação para detalhes do abastecimento
+                android.util.Log.d("VehicleDetailFragment", "Abastecimento clicado: ${fuel.id}")
+            }
+        )
+        binding.rvFuelHistory.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvFuelHistory.adapter = fuelAdapter
     }
 
     private fun setupClickListeners() {
@@ -140,21 +140,25 @@ class VehicleDetailFragment : Fragment() {
                     binding.tvVehicleName.text = it.name
                     binding.tvVehiclePlate.text = it.plate
                     binding.tvVehicleModel.text = it.model
+                    // ✅ NOVO: Atualizar km inicial do adapter quando veículo carregar
+                    fuelAdapter.updateVehicleInitialMileage(it.mileage)
                 }
             }
         }
 
-        // TODO: Adapters de veículos não existem - código comentado temporariamente
-        /*
+        // ✅ CORRIGIDO: Observar histórico de manutenção
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.maintenanceHistory.collect { maintenanceList ->
+                android.util.Log.d("VehicleDetailFragment", "📊 Manutenções recebidas: ${maintenanceList.size}")
                 maintenanceAdapter.submitList(maintenanceList)
                 updateMaintenanceSummary()
             }
         }
 
+        // ✅ CORRIGIDO: Observar histórico de abastecimento
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.fuelHistory.collect { fuelList ->
+                android.util.Log.d("VehicleDetailFragment", "📊 Abastecimentos recebidos: ${fuelList.size}")
                 fuelAdapter.submitList(fuelList)
                 // Atualizar km inicial do adapter quando veículo estiver carregado
                 viewModel.vehicle.value?.let { vehicle ->
@@ -163,7 +167,6 @@ class VehicleDetailFragment : Fragment() {
                 updateFuelSummary()
             }
         }
-        */
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.summaryData.collect { summary ->
