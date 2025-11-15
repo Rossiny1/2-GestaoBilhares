@@ -11,6 +11,7 @@ import com.example.gestaobilhares.data.factory.RepositoryFactory
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -134,8 +135,14 @@ class AddEditFuelDialog : DialogFragment() {
             lifecycleScope.launch {
                 try {
                     val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                    android.util.Log.d("AddEditFuelDialog", "📝 Salvando abastecimento: Veículo=$vehicleId, Litros=$litros, Valor=$valor, KM=$kmVeiculo")
                     val idInserido = appRepository.inserirHistoricoCombustivel(historicoCombustivel)
                     android.util.Log.d("AddEditFuelDialog", "✅ Abastecimento salvo com ID: $idInserido")
+                    
+                    // ✅ NOVO: Verificar se foi salvo corretamente
+                    val historicoSalvo = appRepository.obterHistoricoCombustivelPorVeiculo(vehicleId).first()
+                    android.util.Log.d("AddEditFuelDialog", "📊 Total de abastecimentos após salvar: ${historicoSalvo.size}")
+                    
                     Snackbar.make(binding.root, "Abastecimento salvo com sucesso", Snackbar.LENGTH_SHORT).show()
                     dismiss()
                 } catch (e: Exception) {
