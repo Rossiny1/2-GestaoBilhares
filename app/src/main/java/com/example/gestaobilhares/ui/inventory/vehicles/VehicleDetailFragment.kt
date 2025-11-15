@@ -180,9 +180,6 @@ class VehicleDetailFragment : Fragment() {
         super.onResume()
         // ✅ NOVO: Recarregar dados quando o fragment voltar ao foco
         viewModel.refreshData()
-        
-        // ✅ DEBUG: Carregar todos os dados para debug
-        viewModel.loadAllDataForDebug()
     }
 
     private fun showMaintenanceHistory() {

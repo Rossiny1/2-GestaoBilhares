@@ -155,7 +155,9 @@ class CycleHistoryViewModel(
             clientes.sumOf { it.debitoAtual }
         }
         
+        // ✅ CORRIGIDO: Calcular valores reais dos acertos e despesas (como as despesas já fazem)
         val valorTotalDespesas = despesas.sumOf { it.valor }
+        val valorTotalAcertado = acertos.sumOf { it.valorRecebido } // ✅ CORRIGIDO: Calcular dos acertos reais
         val totalDescontos = appRepository.calcularTotalDescontosPorCiclo(ciclo.id)
         
         val (clientesAcertados, totalClientes) = if (ciclo.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
@@ -175,10 +177,10 @@ class CycleHistoryViewModel(
             titulo = ciclo.titulo,
             dataInicio = ciclo.dataInicio,
             dataFim = ciclo.dataFim ?: Date(),
-            valorTotalAcertado = ciclo.valorTotalAcertado,
+            valorTotalAcertado = valorTotalAcertado, // ✅ CORRIGIDO: Usar valor calculado dos acertos reais
             valorTotalDespesas = valorTotalDespesas,
             totalDescontos = totalDescontos,
-            lucroLiquido = ciclo.valorTotalAcertado - valorTotalDespesas,
+            lucroLiquido = valorTotalAcertado - valorTotalDespesas, // ✅ CORRIGIDO: Usar valor calculado
             debitoTotal = debitoTotal,
             clientesAcertados = clientesAcertados,
             totalClientes = totalClientes,
@@ -216,7 +218,14 @@ class CycleHistoryViewModel(
         }
 
         val totalCiclos = ciclos.size
-        val receitaTotal = ciclos.sumOf { it.valorTotalAcertado }
+        
+        // ✅ CORRIGIDO: Calcular receita total dos acertos reais (como as despesas)
+        val receitaTotal = ciclos.sumOf { ciclo ->
+            kotlinx.coroutines.runBlocking {
+                val acertosCiclo = appRepository.buscarAcertosPorCicloId(ciclo.id).first()
+                acertosCiclo.sumOf { acerto -> acerto.valorRecebido }
+            }
+        }
         
         // ✅ FASE 12.5: Calcular despesas totais reais (removido runBlocking - função já é suspend)
         val despesasTotal = ciclos.sumOf { ciclo ->
