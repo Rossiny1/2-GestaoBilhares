@@ -61,10 +61,10 @@ class MesasReformadasViewModel constructor(
         viewModelScope.launch {
             try {
                 showLoading()
-                // ✅ NOVO: Combinar reformas, histórico e filtro, agrupando por mesa
-                // TODO: AppRepository precisa ter método obterTodasMesasReformadas() - usar flowOf temporariamente
+                // ✅ CORRIGIDO: Usar Flow reativo do banco de dados (igual VehiclesViewModel)
+                // O Flow emite automaticamente quando há mudanças no banco
                 combine(
-                    flowOf<List<MesaReformada>>(emptyList()), // TODO: Substituir por appRepository.obterTodasMesasReformadas() quando disponível
+                    appRepository.obterTodasMesasReformadas(), // ✅ CORRIGIDO: Flow reativo do banco
                     appRepository.obterTodosHistoricoManutencaoMesa(),
                     _filtroNumeroMesa
                 ) { mesasReformadas: List<MesaReformada>, historicoManutencoes: List<HistoricoManutencaoMesa>, filtro: String? ->

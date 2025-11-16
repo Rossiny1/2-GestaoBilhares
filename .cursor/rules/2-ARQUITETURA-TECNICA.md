@@ -75,12 +75,19 @@
 
 **Princípio**: AppRepository como Facade centralizado + Repositories especializados por domínio
 
+**Estrutura**:
+- `AppRepository`: Facade que delega para repositories especializados
+- `domain/`: Repositories especializados (ClienteRepository, DespesaRepository, VeiculoRepository, etc.)
+- Repositories especializados recebem DAOs no construtor
+- ViewModels usam apenas AppRepository (sem acesso direto a DAOs)
+
 **Benefícios**:
 - ✅ Trabalho paralelo sem conflitos (4+ agents)
 - ✅ Código organizado por domínio
 - ✅ Compatibilidade preservada (ViewModels não mudam)
 - ✅ Performance otimizada (cache centralizado)
 - ✅ Escalabilidade (fácil adicionar novos domínios)
+- ✅ Observação reativa com Flows funcionando corretamente
 
 ## 🗄️ BANCO DE DADOS
 
@@ -91,10 +98,15 @@
 - `Mesa`: Mesas de bilhar disponíveis
 - `Rota`: Rotas de entrega
 - `Acerto`: Transações de acerto
-- `Despesa`: Despesas por rota/ciclo
+- `Despesa`: Despesas por rota/ciclo (usa LocalDateTime)
 - `CicloAcerto`: Ciclos de acerto
 - `ContratoLocacao`: Contratos de locação
 - `Colaborador`: Colaboradores do sistema
+- `Veiculo`: Veículos da frota
+- `HistoricoCombustivelVeiculo`: Histórico de abastecimento
+- `HistoricoManutencaoVeiculo`: Histórico de manutenção
+- `Meta`: Metas de colaboradores
+- `PanoEstoque`: Panos em estoque
 - `SignaturePoint`: Pontos de assinatura
 
 **Relacionamentos**:
@@ -122,10 +134,10 @@
 - `ExpenseHistoryFragment`, `GerenciarMesasFragment`
 - E mais 38 telas...
 
-### **Padrão StateFlow**
+### **Padrão StateFlow e Observação Reativa**
 
 ```kotlin
-// ✅ CORRETO: Observação moderna com repeatOnLifecycle
+// ✅ CORRETO: Observação moderna com repeatOnLifecycle (Fragment)
 viewLifecycleOwner.lifecycleScope.launch {
     viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
         viewModel.property.collect { value ->
@@ -133,7 +145,39 @@ viewLifecycleOwner.lifecycleScope.launch {
         }
     }
 }
+
+// ✅ CORRETO: ViewModel usando flatMapLatest para observação reativa
+class MyViewModel(
+    private val appRepository: AppRepository
+) : ViewModel() {
+    private val _idFlow = MutableStateFlow<Long?>(null)
+    private val _data = MutableStateFlow<List<Item>>(emptyList())
+    val data: StateFlow<List<Item>> = _data.asStateFlow()
+    
+    init {
+        viewModelScope.launch {
+            _idFlow
+                .flatMapLatest { id ->
+                    if (id == null) return@flatMapLatest flowOf(emptyList())
+                    appRepository.obterDadosPorId(id) // Flow reativo
+                }
+                .collect { items ->
+                    _data.value = items
+                }
+        }
+    }
+    
+    fun loadData(id: Long) {
+        _idFlow.value = id // Atualiza o Flow, dispara observação automática
+    }
+}
 ```
+
+**Padrão Recomendado para ViewModels**:
+- Usar `flatMapLatest` com `MutableStateFlow` para IDs
+- Observar diretamente Flows do Repository (não filtrar manualmente)
+- Room Flows emitem automaticamente quando há mudanças no banco
+- Exemplo: `CycleExpensesViewModel`, `CycleReceiptsViewModel`, `VehicleDetailViewModel`
 
 ## 🔐 SEGURANÇA E VALIDAÇÃO
 
@@ -152,29 +196,78 @@ viewLifecycleOwner.lifecycleScope.launch {
 - Validação de características biométricas
 - Confirmação de presença física do locatário
 
-## 🔄 SINCRONIZAÇÃO (PENDENTE)
+## 🔄 SINCRONIZAÇÃO (IMPLEMENTADA)
 
 ### **Estratégia Offline-first**
 
 1. **Dados Locais**: Sempre disponíveis (Room Database)
 2. **Fila de Sincronização**: Operações offline enfileiradas
 3. **Sincronização Bidirecional**: Pull (servidor → local) + Push (local → servidor)
-4. **Resolução de Conflitos**: Última escrita vence (pode ser melhorado)
+4. **Resolução de Conflitos**: Comparação de timestamp (última escrita vence)
 5. **WorkManager**: Sincronização periódica em background
 
-### **Implementação Futura**
+### **Implementação Atual**
 
 ```kotlin
-// Estrutura proposta para SyncManagerV2
+// SyncRepository implementado e funcionando
 class SyncRepository(
+    private val context: Context,
     private val appRepository: AppRepository,
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
-    suspend fun syncPull() // Sincronizar do servidor
-    suspend fun syncPush() // Enviar para servidor
-    suspend fun syncBidirectional() // Sincronização completa
+    suspend fun syncPull(): Result<Int> // Sincronizar do servidor
+    suspend fun syncPush(): Result<Int> // Enviar para servidor
+    suspend fun syncBidirectional(): Result<Int> // Sincronização completa (PUSH → PULL)
 }
 ```
+
+### **Estrutura Firestore**
+
+```
+empresas/
+  └── empresa_001/
+      └── entidades/
+          ├── clientes/
+          │   └── items/
+          │       └── {documentId}
+          ├── despesas/
+          │   └── items/
+          │       └── {documentId}
+          └── ... (outras entidades)
+```
+
+### **Padrões de Observação Reativa**
+
+```kotlin
+// ✅ CORRETO: ViewModel usando flatMapLatest (como CycleExpensesViewModel)
+class VehicleDetailViewModel(
+    private val appRepository: AppRepository
+) : ViewModel() {
+    private val _vehicleIdFlow = MutableStateFlow<Long?>(null)
+    
+    init {
+        viewModelScope.launch {
+            _vehicleIdFlow
+                .flatMapLatest { vehicleId ->
+                    if (vehicleId == null) return@flatMapLatest flowOf(emptyList())
+                    appRepository.obterHistoricoCombustivelPorVeiculo(vehicleId)
+                }
+                .collect { fuelList ->
+                    _fuelHistory.value = fuelList
+                }
+        }
+    }
+}
+```
+
+### **Entidades Sincronizadas**
+
+Todas as entidades principais estão sendo sincronizadas:
+- ✅ Clientes, Rotas, Mesas, Acertos
+- ✅ Despesas, Ciclos, Colaboradores
+- ✅ Veículos, Metas, Histórico de Combustível
+- ✅ Histórico de Manutenção, Contratos
+- ✅ Panos, Stock Items, e demais entidades
 
 ## 🎯 MELHORES PRÁTICAS ANDROID 2025
 
