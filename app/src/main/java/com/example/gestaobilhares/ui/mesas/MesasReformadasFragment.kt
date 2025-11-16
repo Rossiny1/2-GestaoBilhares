@@ -172,16 +172,13 @@ class MesasReformadasFragment : Fragment() {
      * ✅ NOVO: Mostra diálogo com detalhes da mesa e histórico completo
      */
     private fun mostrarDetalhesMesaComHistorico(mesaComHistorico: MesaReformadaComHistorico) {
-        // TODO: DetalhesMesaReformadaComHistoricoDialog não existe - usar Toast temporariamente
-        Toast.makeText(requireContext(), "Detalhes da mesa: ${mesaComHistorico.numeroMesa}", Toast.LENGTH_SHORT).show()
-        /*
         try {
             val dialog = DetalhesMesaReformadaComHistoricoDialog.newInstance(mesaComHistorico)
             dialog.show(parentFragmentManager, "DetalhesMesaReformadaComHistoricoDialog")
         } catch (e: Exception) {
-            // Log do erro se necessário
+            android.util.Log.e("MesasReformadasFragment", "Erro ao mostrar detalhes: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao exibir detalhes: ${e.message}", Toast.LENGTH_SHORT).show()
         }
-        */
     }
 
     override fun onDestroyView() {
