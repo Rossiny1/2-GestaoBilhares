@@ -1,6 +1,5 @@
 ﻿package com.example.gestaobilhares.ui.colaboradores
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -21,6 +20,7 @@ import com.example.gestaobilhares.data.entities.Colaborador
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.google.android.material.chip.Chip
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /**
  * Fragment para gerenciamento de colaboradores (CRUD).
@@ -221,54 +221,65 @@ class ColaboradorManagementFragment : Fragment() {
     }
 
     private fun mostrarMenuOpcoes(colaborador: Colaborador) {
-        val options = mutableListOf<String>()
-        
-        // Opções baseadas no status do colaborador
-        if (!colaborador.aprovado) {
-            options.add("Aprovar Colaborador")
-        }
-        
-        if (colaborador.ativo) {
-            options.add("Desativar Colaborador")
-        } else {
-            options.add("Ativar Colaborador")
-        }
-        
-        options.add("Editar Colaborador")
-        options.add("Excluir Colaborador")
+        try {
+            val options = mutableListOf<String>()
+            
+            // Opções baseadas no status do colaborador
+            if (!colaborador.aprovado) {
+                options.add("Aprovar Colaborador")
+            }
+            
+            if (colaborador.ativo) {
+                options.add("Desativar Colaborador")
+            } else {
+                options.add("Ativar Colaborador")
+            }
+            
+            options.add("Editar Colaborador")
+            options.add("Excluir Colaborador")
 
-        AlertDialog.Builder(requireContext(), R.style.DarkDialogTheme)
-            .setTitle("Opções para ${colaborador.nome}")
-            .setItems(options.toTypedArray()) { _, which ->
-                when (options[which]) {
-                    "Aprovar Colaborador" -> {
-                        aprovarColaborador(colaborador)
-                    }
-                    "Ativar Colaborador" -> {
-                        viewModel.alterarStatusColaborador(colaborador.id, true)
-                    }
-                    "Desativar Colaborador" -> {
-                        viewModel.alterarStatusColaborador(colaborador.id, false)
-                    }
-                    "Editar Colaborador" -> {
-                        // ✅ CORREÇÃO: Navegar para edição do colaborador
-                        try {
-                            val bundle = Bundle().apply {
-                                putLong("colaborador_id", colaborador.id)
+            // ✅ CORRIGIDO: Usar MaterialAlertDialogBuilder em vez de AlertDialog.Builder
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Opções para ${colaborador.nome}")
+                .setItems(options.toTypedArray()) { _, which ->
+                    try {
+                        when (options[which]) {
+                            "Aprovar Colaborador" -> {
+                                aprovarColaborador(colaborador)
                             }
-                            findNavController().navigate(R.id.colaboradorRegisterFragment, bundle)
-                        } catch (e: Exception) {
-                            Log.e("ColaboradorManagementFragment", "Erro ao navegar para edição: ${e.message}", e)
-                            Toast.makeText(requireContext(), "Erro ao abrir edição de colaborador", Toast.LENGTH_SHORT).show()
+                            "Ativar Colaborador" -> {
+                                viewModel.alterarStatusColaborador(colaborador.id, true)
+                            }
+                            "Desativar Colaborador" -> {
+                                viewModel.alterarStatusColaborador(colaborador.id, false)
+                            }
+                            "Editar Colaborador" -> {
+                                // ✅ CORREÇÃO: Navegar para edição do colaborador
+                                try {
+                                    val bundle = Bundle().apply {
+                                        putLong("colaborador_id", colaborador.id)
+                                    }
+                                    findNavController().navigate(R.id.colaboradorRegisterFragment, bundle)
+                                } catch (e: Exception) {
+                                    Log.e("ColaboradorManagementFragment", "Erro ao navegar para edição: ${e.message}", e)
+                                    Toast.makeText(requireContext(), "Erro ao abrir edição de colaborador", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                            "Excluir Colaborador" -> {
+                                confirmarExclusao(colaborador)
+                            }
                         }
-                    }
-                    "Excluir Colaborador" -> {
-                        confirmarExclusao(colaborador)
+                    } catch (e: Exception) {
+                        Log.e("ColaboradorManagementFragment", "Erro ao processar opção: ${e.message}", e)
+                        Toast.makeText(requireContext(), "Erro ao processar ação: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
+                .setNegativeButton("Cancelar", null)
+                .show()
+        } catch (e: Exception) {
+            Log.e("ColaboradorManagementFragment", "Erro ao mostrar menu de opções: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao abrir menu de opções: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun aprovarColaborador(colaborador: Colaborador) {
@@ -291,14 +302,20 @@ class ColaboradorManagementFragment : Fragment() {
     }
 
     private fun confirmarExclusao(colaborador: Colaborador) {
-        AlertDialog.Builder(requireContext(), R.style.DarkDialogTheme)
-            .setTitle("Excluir Colaborador")
-            .setMessage("Tem certeza que deseja excluir o colaborador \"${colaborador.nome}\"?\n\nEsta ação não pode ser desfeita.")
-            .setPositiveButton("Excluir") { _, _ ->
-                viewModel.deletarColaborador(colaborador)
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
+        try {
+            // ✅ CORRIGIDO: Usar MaterialAlertDialogBuilder em vez de AlertDialog.Builder
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Excluir Colaborador")
+                .setMessage("Tem certeza que deseja excluir o colaborador \"${colaborador.nome}\"?\n\nEsta ação não pode ser desfeita.")
+                .setPositiveButton("Excluir") { _, _ ->
+                    viewModel.deletarColaborador(colaborador)
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        } catch (e: Exception) {
+            Log.e("ColaboradorManagementFragment", "Erro ao mostrar diálogo de confirmação: ${e.message}", e)
+            Toast.makeText(requireContext(), "Erro ao abrir diálogo: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroyView() {
