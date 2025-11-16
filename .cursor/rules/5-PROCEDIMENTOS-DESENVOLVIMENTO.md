@@ -29,30 +29,35 @@
 - **Offline-first**: Dados sempre locais
 - **Modularização**: Repositories por domínio
 
-### **Exemplo de ViewModel**
+### **Exemplo de ViewModel (Observação Reativa)**
 ```kotlin
+@OptIn(ExperimentalCoroutinesApi::class)
 class MyViewModel(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
-    private val _state = MutableStateFlow(MyState())
-    val state: StateFlow<MyState> = _state.asStateFlow()
+    // ✅ RECOMENDADO: Usar MutableStateFlow para IDs e observar com flatMapLatest
+    private val _idFlow = MutableStateFlow<Long?>(null)
     
-    fun loadData() {
+    private val _data = MutableStateFlow<List<Item>>(emptyList())
+    val data: StateFlow<List<Item>> = _data.asStateFlow()
+    
+    init {
+        // ✅ Observação reativa: atualiza automaticamente quando há mudanças no banco
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            try {
-                val data = appRepository.getData()
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    data = data
-                )
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = e.message
-                )
-            }
+            _idFlow
+                .flatMapLatest { id ->
+                    if (id == null) return@flatMapLatest flowOf(emptyList())
+                    appRepository.obterDadosPorId(id) // Flow reativo do Room
+                }
+                .collect { items ->
+                    _data.value = items
+                }
         }
+    }
+    
+    // ✅ Apenas atualiza o ID, o init observa automaticamente
+    fun loadData(id: Long) {
+        _idFlow.value = id
     }
 }
 ```
@@ -107,11 +112,15 @@ class MyFragment : Fragment() {
 
 ### **2. Refatorar Código Existente**
 1. Identificar domínio
-2. Mover código para Repository especializado
-3. Atualizar AppRepository (delegação)
-4. Manter compatibilidade (ViewModels não mudam)
-5. Testar funcionalidades existentes
-6. Commit e push
+2. Mover código para Repository especializado (em `domain/`)
+3. Repository especializado recebe DAOs no construtor
+4. Atualizar AppRepository (delegação para repository especializado)
+5. Manter compatibilidade (ViewModels não mudam)
+6. Implementar observação reativa com `flatMapLatest` se necessário
+7. Testar funcionalidades existentes
+8. Commit e push
+
+**Importante**: Repositories especializados NÃO devem ser acessados diretamente por ViewModels. Sempre usar AppRepository como Facade.
 
 ### **3. Migrar para Compose**
 1. Criar Screen Compose
@@ -177,14 +186,17 @@ adb logcat -s LOG_CRASH:* RoutesScreen:* UserSessionManager:*
 - Cálculos financeiros
 - Sincronização (quando implementada)
 
-## 🚀 PRÓXIMAS IMPLEMENTAÇÕES
+## 🚀 IMPLEMENTAÇÕES RECENTES
 
-### **Prioridade ALTA: Sincronização**
-1. Implementar `SyncManagerV2`
-2. Criar `SyncRepository` especializado
-3. Integrar com Firebase Firestore
-4. Implementar fila de sincronização
-5. Adicionar WorkManager
+### **✅ Sincronização (CONCLUÍDA)**
+1. ✅ `SyncRepository` especializado implementado
+2. ✅ Integração com Firebase Firestore completa
+3. ✅ Fila de sincronização offline-first implementada
+4. ✅ WorkManager configurado
+5. ✅ Estrutura Firestore corrigida (`empresas/empresa_001/entidades/{collectionName}/items`)
+6. ✅ Conversão de tipos corrigida (Despesa, LocalDateTime)
+7. ✅ Observação reativa implementada em ViewModels
+8. ✅ Histórico de veículos (abastecimento/manutenção) funcionando
 
 ### **Prioridade MÉDIA: Migração Compose**
 1. Migrar Core Business (Settlement, ClientList)

@@ -1841,10 +1841,41 @@ class SyncRepository(
                         cicloId = cicloId
                     )
                     
-                    // Meta precisa ser inserida via DAO direto (não há método no AppRepository ainda)
-                    // Por enquanto, apenas contamos - implementação completa requer verificação do DAO
-                    syncCount++
-                    Log.d(TAG, "✅ Meta sincronizada: ${meta.nome} (ID: ${meta.id})")
+                    if (meta.nome.isBlank() || meta.rotaId == 0L) {
+                        Log.w(TAG, "⚠️ Meta ${doc.id} com dados inválidos - pulando")
+                        skipCount++
+                        return@forEach
+                    }
+                    
+                    // ✅ CORRIGIDO: Verificar se meta já existe localmente e inserir/atualizar
+                    val metaLocal = appRepository.obterMetaPorId(metaId)
+                    
+                    // Verificar conflito de timestamp (se houver campo de atualização)
+                    val serverTimestamp = (data["lastModified"] as? com.google.firebase.Timestamp)?.toDate()?.time
+                        ?: (data["syncTimestamp"] as? com.google.firebase.Timestamp)?.toDate()?.time
+                        ?: dataInicio.time
+                    
+                    val localTimestamp = metaLocal?.dataInicio?.time ?: 0L
+                    
+                    when {
+                        metaLocal == null -> {
+                            // Meta não existe localmente, inserir
+                            appRepository.inserirMeta(meta)
+                            syncCount++
+                            Log.d(TAG, "✅ Meta inserida: ID=$metaId, Nome=${meta.nome}, RotaId=${meta.rotaId}")
+                        }
+                        serverTimestamp > (localTimestamp + 1000) -> {
+                            // Servidor é mais recente (com margem de 1 segundo para evitar race conditions)
+                            appRepository.atualizarMeta(meta)
+                            syncCount++
+                            Log.d(TAG, "✅ Meta atualizada: ID=$metaId (servidor: $serverTimestamp, local: $localTimestamp)")
+                        }
+                        else -> {
+                            // Local é mais recente ou igual, manter dados locais
+                            skipCount++
+                            Log.d(TAG, "⏭️ Meta local mais recente ou igual, mantendo: ID=$metaId (servidor: $serverTimestamp, local: $localTimestamp)")
+                        }
+                    }
                 } catch (e: Exception) {
                     errorCount++
                     Log.e(TAG, "❌ Erro ao processar meta ${doc.id}: ${e.message}", e)
