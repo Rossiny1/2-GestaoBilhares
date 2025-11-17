@@ -86,6 +86,16 @@ class ColaboradorManagementFragment : Fragment() {
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
+        
+        // ✅ CORREÇÃO: Configurar botão voltar do header se existir
+        try {
+            val btnBack = binding.root.findViewById<android.widget.ImageButton>(com.example.gestaobilhares.R.id.btnBack)
+            btnBack?.setOnClickListener {
+                findNavController().navigateUp()
+            }
+        } catch (e: Exception) {
+            // btnBack não existe neste layout, usar apenas toolbar
+        }
 
         // FAB para adicionar colaborador
         binding.fabAddColaborador.setOnClickListener {
@@ -283,9 +293,8 @@ class ColaboradorManagementFragment : Fragment() {
     }
 
     private fun aprovarColaborador(colaborador: Colaborador) {
-        // Usar o novo diálogo de aprovação com credenciais
-        val approvalDialog = ColaboradorApprovalDialog(
-            context = requireContext(),
+        // ✅ CORREÇÃO: Usar DialogFragment com newInstance
+        val approvalDialog = ColaboradorApprovalDialog.newInstance(
             colaborador = colaborador,
             onApprovalConfirmed = { email, senha, nivelAcesso, observacoes ->
                 viewModel.aprovarColaboradorComCredenciais(
@@ -298,7 +307,7 @@ class ColaboradorManagementFragment : Fragment() {
                 )
             }
         )
-        approvalDialog.show()
+        approvalDialog.show(parentFragmentManager, "ColaboradorApprovalDialog")
     }
 
     private fun confirmarExclusao(colaborador: Colaborador) {

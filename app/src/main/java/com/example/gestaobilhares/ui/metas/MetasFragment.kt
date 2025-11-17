@@ -60,6 +60,11 @@ class MetasFragment : Fragment() {
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
+        
+        // ✅ CORREÇÃO: Configurar botão voltar do header se existir
+        binding.btnBack?.setOnClickListener {
+            findNavController().navigateUp()
+        }
 
         binding.btnFilters.setOnClickListener {
             toggleFilters()

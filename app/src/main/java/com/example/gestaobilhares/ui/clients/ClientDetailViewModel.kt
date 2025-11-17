@@ -16,6 +16,7 @@ import com.example.gestaobilhares.data.entities.Acerto
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import android.util.Log
 import com.example.gestaobilhares.BuildConfig
+import kotlinx.coroutines.Job
 
 /**
  * ViewModel para ClientDetailFragment
@@ -45,6 +46,9 @@ class ClientDetailViewModel(
 
     private val _cliente = MutableStateFlow<com.example.gestaobilhares.data.entities.Cliente?>(null)
     val cliente: StateFlow<com.example.gestaobilhares.data.entities.Cliente?> = _cliente.asStateFlow()
+
+    // ✅ CORREÇÃO: Job para cancelar coletor anterior do histórico de acertos
+    private var settlementHistoryJob: Job? = null
 
     init {
         if (BuildConfig.DEBUG) {
@@ -157,18 +161,8 @@ class ClientDetailViewModel(
 
                     Log.d("ClientDetailViewModel", "ClienteResumo criado: ${_clientDetails.value?.nome}")
 
-                    // Tentar carregar mesas reais do banco
-                    appRepository.obterMesasPorCliente(clienteId).collect { mesas: List<Mesa> ->
-                        Log.d("ClientDetailViewModel", "Mesas reais encontradas: ${mesas.size}")
-                        _mesasCliente.value = mesas
-                        _clientDetails.value = _clientDetails.value?.copy(mesasAtivas = mesas.size)
-                        Log.d("ClientDetailViewModel", "Mesas carregadas: ${mesas.size}")
-                        mesas.forEachIndexed { index, mesa ->
-                            Log.d("ClientDetailViewModel", "Mesa $index: ${mesa.numero} (ID: ${mesa.id}, Tipo: ${mesa.tipoMesa})")
-                        }
-                    }
-
-                    // Buscar histórico real
+                    // ✅ CORREÇÃO: Iniciar observação do histórico de acertos em launch separado
+                    // Isso garante que o coletor esteja ativo e receba atualizações quando novos acertos forem salvos
                     loadSettlementHistory(clienteId)
                 }
             } catch (e: Exception) {
@@ -177,6 +171,23 @@ class ClientDetailViewModel(
             } finally {
                 hideLoading()
                 Log.d("ClientDetailViewModel", "=== CARREGAMENTO CONCLUÍDO ===")
+            }
+        }
+        
+        // ✅ CORREÇÃO: Iniciar observação das mesas em launch separado para não bloquear
+        viewModelScope.launch {
+            try {
+                appRepository.obterMesasPorCliente(clienteId).collect { mesas: List<Mesa> ->
+                    Log.d("ClientDetailViewModel", "Mesas reais encontradas: ${mesas.size}")
+                    _mesasCliente.value = mesas
+                    _clientDetails.value = _clientDetails.value?.copy(mesasAtivas = mesas.size)
+                    Log.d("ClientDetailViewModel", "Mesas carregadas: ${mesas.size}")
+                    mesas.forEachIndexed { index, mesa ->
+                        Log.d("ClientDetailViewModel", "Mesa $index: ${mesa.numero} (ID: ${mesa.id}, Tipo: ${mesa.tipoMesa})")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ClientDetailViewModel", "Erro ao carregar mesas do cliente", e)
             }
         }
     }
@@ -290,8 +301,11 @@ class ClientDetailViewModel(
     }
 
     fun loadSettlementHistory(clienteId: Long) {
-        viewModelScope.launch {
-            Log.d("ClientDetailViewModel", "Carregando histórico de acertos para cliente: $clienteId")
+        // ✅ CORREÇÃO: Cancelar coletor anterior antes de criar um novo
+        settlementHistoryJob?.cancel()
+        
+        settlementHistoryJob = viewModelScope.launch {
+            Log.d("ClientDetailViewModel", "🔄 Carregando histórico de acertos para cliente: $clienteId")
             try {
                 appRepository.obterAcertosPorCliente(clienteId).collect { acertos: List<Acerto> ->
                     Log.d("ClientDetailViewModel", "=== CARREGANDO HISTÓRICO - DEBUG OBSERVAÇÕES ===")
@@ -299,6 +313,7 @@ class ClientDetailViewModel(
                     
                     val acertosResumo = acertos.map { acerto: Acerto ->
                         Log.d("ClientDetailViewModel", "🔍 Acerto ID ${acerto.id}:")
+                        Log.d("ClientDetailViewModel", "  - ClienteId: ${acerto.clienteId}")
                         Log.d("ClientDetailViewModel", "  - Observação no banco: '${acerto.observacoes}'")
                         Log.d("ClientDetailViewModel", "  - Observação é nula? ${acerto.observacoes == null}")
                         Log.d("ClientDetailViewModel", "  - Observação é vazia? ${acerto.observacoes?.isEmpty()}")
@@ -331,7 +346,7 @@ class ClientDetailViewModel(
                     }
                 }
             } catch (e: Exception) {
-                Log.e("ClientDetailViewModel", "Erro ao carregar histórico de acertos", e)
+                Log.e("ClientDetailViewModel", "❌ Erro ao carregar histórico de acertos: ${e.message}", e)
                 // Manter dados existentes em caso de erro
                 if (_settlementHistory.value.isEmpty()) {
                     Log.d("ClientDetailViewModel", "Mantendo dados existentes devido a erro")

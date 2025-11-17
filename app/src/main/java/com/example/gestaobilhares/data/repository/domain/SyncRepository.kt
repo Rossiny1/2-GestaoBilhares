@@ -946,6 +946,29 @@ class SyncRepository(
     // ==================== SINCRONIZAÇÃO BIDIRECIONAL ====================
     
     /**
+     * Verifica se há dados na nuvem quando o banco local está vazio.
+     * Retorna true se encontrar pelo menos uma rota no Firestore.
+     */
+    suspend fun hasDataInCloud(): Boolean {
+        return try {
+            if (!networkUtils.isConnected()) {
+                Log.d(TAG, "🔍 Verificando dados na nuvem: dispositivo offline")
+                return false
+            }
+            
+            Log.d(TAG, "🔍 Verificando se há dados na nuvem...")
+            val collectionRef = getCollectionReference(firestore, COLLECTION_ROTAS)
+            val snapshot = collectionRef.limit(1).get().await()
+            val hasData = !snapshot.isEmpty
+            Log.d(TAG, "📡 Dados na nuvem encontrados: $hasData")
+            hasData
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erro ao verificar dados na nuvem: ${e.message}", e)
+            false
+        }
+    }
+    
+    /**
      * Sincronização completa bidirecional (Push + Pull).
      * Offline-first: Push primeiro para preservar dados locais, depois Pull para atualizar.
      * 
@@ -1500,19 +1523,47 @@ class SyncRepository(
      */
     private suspend fun pullAcertos(): Result<Int> {
         return try {
-            Log.d(TAG, "Iniciando pull de acertos...")
+            Log.d(TAG, "🔄 Iniciando pull de acertos...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_ACERTOS)
             val snapshot = collectionRef.get().await()
             
+            Log.d(TAG, "📊 Total de acertos no Firestore: ${snapshot.documents.size}")
+            
             var syncCount = 0
+            var errorCount = 0
+            
             snapshot.documents.forEach { doc ->
                 try {
-                    val acertoData = doc.data ?: return@forEach
-                    val acertoId = doc.id.toLongOrNull() ?: return@forEach
+                    val acertoData = doc.data ?: run {
+                        Log.w(TAG, "⚠️ Acerto ${doc.id} sem dados")
+                        return@forEach
+                    }
                     
+                    val acertoId = doc.id.toLongOrNull() ?: run {
+                        Log.w(TAG, "⚠️ Acerto ${doc.id} com ID inválido")
+                        return@forEach
+                    }
+                    
+                    Log.d(TAG, "🔍 Processando acerto ID: $acertoId")
+                    
+                    // ✅ CORREÇÃO: Voltar à versão simples que funcionava
+                    // O Gson já lida automaticamente com Timestamps do Firestore ao converter para JSON
                     val acertoJson = gson.toJson(acertoData)
                     val acertoFirestore = gson.fromJson(acertoJson, Acerto::class.java)
-                        ?.copy(id = acertoId) ?: return@forEach
+                        ?.copy(id = acertoId) ?: run {
+                        Log.e(TAG, "❌ Falha ao converter acerto $acertoId do JSON")
+                        errorCount++
+                        return@forEach
+                    }
+                    
+                    // ✅ CORREÇÃO: Validar clienteId após conversão
+                    if (acertoFirestore.clienteId <= 0) {
+                        Log.e(TAG, "❌ Acerto $acertoId com clienteId inválido: ${acertoFirestore.clienteId}")
+                        errorCount++
+                        return@forEach
+                    }
+                    
+                    Log.d(TAG, "✅ Acerto convertido: ID=${acertoFirestore.id}, clienteId=${acertoFirestore.clienteId}, valorRecebido=${acertoFirestore.valorRecebido}")
                     
                     val acertoLocal = appRepository.obterAcertoPorId(acertoId)
                     
@@ -1522,6 +1573,7 @@ class SyncRepository(
                     
                     when {
                         acertoLocal == null -> {
+                            Log.d(TAG, "➕ Inserindo novo acerto ID: $acertoId, clienteId: ${acertoFirestore.clienteId}")
                             appRepository.inserirAcerto(acertoFirestore)
                             syncCount++
                             
@@ -1529,21 +1581,28 @@ class SyncRepository(
                             pullAcertoMesas(acertoId)
                         }
                         serverTimestamp > localTimestamp -> {
+                            Log.d(TAG, "🔄 Atualizando acerto existente ID: $acertoId")
                             appRepository.atualizarAcerto(acertoFirestore)
                             syncCount++
                             
                             // Sincronizar AcertoMesa relacionados
                             pullAcertoMesas(acertoId)
                         }
+                        else -> {
+                            Log.d(TAG, "⏭️ Acerto $acertoId já está atualizado")
+                        }
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Erro ao sincronizar acerto ${doc.id}: ${e.message}", e)
+                    errorCount++
+                    Log.e(TAG, "❌ Erro ao sincronizar acerto ${doc.id}: ${e.message}", e)
+                    Log.e(TAG, "❌ Stack trace: ${e.stackTraceToString()}")
                 }
             }
             
+            Log.d(TAG, "✅ Pull de acertos concluído: $syncCount sincronizados, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de acertos: ${e.message}", e)
+            Log.e(TAG, "❌ Erro no pull de acertos: ${e.message}", e)
             Result.failure(e)
         }
     }

@@ -41,6 +41,16 @@ class DashboardFragment : Fragment() {
         viewModel = DashboardViewModel(appRepository)
 
         binding.toolbar.setNavigationOnClickListener { findNavController().popBackStack() }
+        
+        // ✅ CORREÇÃO: Configurar botão voltar do header se existir
+        try {
+            val btnBack = binding.root.findViewById<android.widget.ImageButton>(com.example.gestaobilhares.R.id.btnBack)
+            btnBack?.setOnClickListener {
+                findNavController().popBackStack()
+            }
+        } catch (e: Exception) {
+            // btnBack não existe neste layout, usar apenas toolbar
+        }
 
         setupObservers()
     }

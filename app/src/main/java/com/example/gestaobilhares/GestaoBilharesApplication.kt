@@ -10,8 +10,18 @@ import timber.log.Timber
  */
 class GestaoBilharesApplication : Application() {
     
+    companion object {
+        @Volatile
+        private var INSTANCE: GestaoBilharesApplication? = null
+        
+        fun getInstance(): GestaoBilharesApplication {
+            return INSTANCE ?: throw IllegalStateException("Application não inicializada")
+        }
+    }
+    
     override fun onCreate() {
         super.onCreate()
+        INSTANCE = this
         
         try {
             // Inicializar Firebase de forma segura

@@ -30,6 +30,8 @@ import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.example.gestaobilhares.databinding.FragmentNovaReformaBinding
 import com.example.gestaobilhares.ui.settlement.PanoSelectionDialog
 import com.example.gestaobilhares.utils.ImageCompressionUtils
+import com.example.gestaobilhares.utils.FirebaseImageUploader
+import com.example.gestaobilhares.utils.NetworkUtils
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -56,6 +58,16 @@ class NovaReformaFragment : Fragment() {
     // ✅ NOVO: Inicialização segura do ImageCompressionUtils
     private val imageCompressionUtils: ImageCompressionUtils by lazy {
         ImageCompressionUtils(requireContext())
+    }
+    
+    // ✅ NOVO: Utilitário para upload de imagens ao Firebase Storage
+    private val firebaseImageUploader: FirebaseImageUploader by lazy {
+        FirebaseImageUploader(requireContext())
+    }
+    
+    // ✅ NOVO: Utilitário para verificar conectividade
+    private val networkUtils: NetworkUtils by lazy {
+        NetworkUtils(requireContext())
     }
 
     private val takePictureLauncher = registerForActivityResult(
@@ -381,25 +393,51 @@ class NovaReformaFragment : Fragment() {
 
         val observacoes = binding.etObservacoes.text.toString().trim().takeIf { it.isNotEmpty() }
 
-        val mesaReformada = MesaReformada(
-            mesaId = mesaSelecionada!!.id,
-            numeroMesa = mesaSelecionada!!.numero,
-            tipoMesa = mesaSelecionada!!.tipoMesa,
-            tamanhoMesa = mesaSelecionada!!.tamanho,
-            pintura = pintura,
-            tabela = tabela,
-            panos = panos,
-            numeroPanos = numeroPanos,
-            outros = outros,
-            observacoes = observacoes,
-            fotoReforma = fotoPath, // Usar o caminho real da foto
-            dataReforma = Date()
-        )
+        // ✅ CORREÇÃO: Fazer upload da foto para Firebase Storage antes de salvar
+        lifecycleScope.launch {
+            try {
+                var finalFotoPath = fotoPath
+                
+                // Se há foto e não é URL do Firebase Storage, fazer upload
+                if (finalFotoPath != null && !firebaseImageUploader.isFirebaseStorageUrl(finalFotoPath)) {
+                    if (networkUtils.isConnected()) {
+                        Log.d("NovaReformaFragment", "Fazendo upload da foto para Firebase Storage...")
+                        val uploadedUrl = firebaseImageUploader.uploadMesaReforma(finalFotoPath, mesaSelecionada!!.id)
+                        if (uploadedUrl != null) {
+                            finalFotoPath = uploadedUrl
+                            Log.d("NovaReformaFragment", "✅ Foto enviada para Firebase Storage: $finalFotoPath")
+                        } else {
+                            Log.w("NovaReformaFragment", "⚠️ Falha no upload, usando caminho local")
+                        }
+                    } else {
+                        Log.d("NovaReformaFragment", "📴 Sem conexão, foto será sincronizada depois")
+                    }
+                }
+                
+                val mesaReformada = MesaReformada(
+                    mesaId = mesaSelecionada!!.id,
+                    numeroMesa = mesaSelecionada!!.numero,
+                    tipoMesa = mesaSelecionada!!.tipoMesa,
+                    tamanhoMesa = mesaSelecionada!!.tamanho,
+                    pintura = pintura,
+                    tabela = tabela,
+                    panos = panos,
+                    numeroPanos = numeroPanos,
+                    outros = outros,
+                    observacoes = observacoes,
+                    fotoReforma = finalFotoPath, // Usar URL do Firebase Storage se disponível
+                    dataReforma = Date()
+                )
 
-        viewModel.salvarReforma(mesaReformada)
-        
-        // ✅ NOVO: Registrar no histórico de manutenção
-        registrarManutencoesNoHistorico(mesaReformada)
+                viewModel.salvarReforma(mesaReformada)
+                
+                // ✅ NOVO: Registrar no histórico de manutenção
+                registrarManutencoesNoHistorico(mesaReformada)
+            } catch (e: Exception) {
+                Log.e("NovaReformaFragment", "Erro ao salvar reforma: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao salvar reforma: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     /**

@@ -54,6 +54,8 @@ import kotlinx.coroutines.flow.first
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.example.gestaobilhares.utils.ImageCompressionUtils
+import com.example.gestaobilhares.utils.FirebaseImageUploader
+import com.example.gestaobilhares.utils.NetworkUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.text.NumberFormat
@@ -84,6 +86,16 @@ class SettlementFragment : Fragment() {
     // ✅ CORREÇÃO: Inicialização segura do ImageCompressionUtils
     private val imageCompressionUtils: ImageCompressionUtils by lazy {
         ImageCompressionUtils(requireContext())
+    }
+    
+    // ✅ NOVO: Utilitário para upload de imagens ao Firebase Storage
+    private val firebaseImageUploader: FirebaseImageUploader by lazy {
+        FirebaseImageUploader(requireContext())
+    }
+    
+    // ✅ NOVO: Utilitário para verificar conectividade
+    private val networkUtils: NetworkUtils by lazy {
+        NetworkUtils(requireContext())
     }
     
     // ✅ NOVO: Variáveis para captura de foto
@@ -117,8 +129,37 @@ class SettlementFragment : Fragment() {
                             val caminhoReal = obterCaminhoRealFoto(uri)
                             if (caminhoReal != null) {
                                 Log.d("SettlementFragment", "Caminho real da foto: $caminhoReal")
-                                mesasAcertoAdapter.setFotoRelogio(currentMesaId, caminhoReal)
-                                Toast.makeText(requireContext(), "Foto do relógio capturada com sucesso!", Toast.LENGTH_SHORT).show()
+                                
+                                // ✅ CORREÇÃO: Fazer upload da foto para Firebase Storage antes de definir
+                                lifecycleScope.launch {
+                                    try {
+                                        var finalFotoPath = caminhoReal
+                                        
+                                        // Se não é URL do Firebase Storage, fazer upload
+                                        if (!firebaseImageUploader.isFirebaseStorageUrl(finalFotoPath)) {
+                                            if (networkUtils.isConnected()) {
+                                                Log.d("SettlementFragment", "Fazendo upload da foto para Firebase Storage...")
+                                                val uploadedUrl = firebaseImageUploader.uploadMesaRelogio(finalFotoPath, currentMesaId)
+                                                if (uploadedUrl != null) {
+                                                    finalFotoPath = uploadedUrl
+                                                    Log.d("SettlementFragment", "✅ Foto enviada para Firebase Storage: $finalFotoPath")
+                                                } else {
+                                                    Log.w("SettlementFragment", "⚠️ Falha no upload, usando caminho local")
+                                                }
+                                            } else {
+                                                Log.d("SettlementFragment", "📴 Sem conexão, foto será sincronizada depois")
+                                            }
+                                        }
+                                        
+                                        mesasAcertoAdapter.setFotoRelogio(currentMesaId, finalFotoPath)
+                                        Toast.makeText(requireContext(), "Foto do relógio capturada com sucesso!", Toast.LENGTH_SHORT).show()
+                                    } catch (e: Exception) {
+                                        Log.e("SettlementFragment", "Erro ao fazer upload da foto: ${e.message}", e)
+                                        // Usar caminho local em caso de erro
+                                        mesasAcertoAdapter.setFotoRelogio(currentMesaId, caminhoReal)
+                                        Toast.makeText(requireContext(), "Foto capturada (upload pendente)", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
                             } else {
                                 Log.e("SettlementFragment", "Não foi possível obter o caminho real da foto")
                                 Toast.makeText(requireContext(), "Erro: não foi possível salvar a foto", Toast.LENGTH_SHORT).show()
@@ -1280,6 +1321,13 @@ class SettlementFragment : Fragment() {
                                     apply()
                                 }
                                 // Voltar para tela Detalhes do Cliente
+                                findNavController().popBackStack(R.id.clientDetailFragment, false)
+                            }
+                        }
+                        // ✅ CORREÇÃO: Quando o diálogo é fechado (sem compartilhar), também voltar para ClientDetailFragment
+                        dialog.dialog?.setOnDismissListener {
+                            // Se o diálogo foi fechado sem compartilhar, voltar para ClientDetailFragment
+                            if (findNavController().currentDestination?.id == R.id.settlementFragment) {
                                 findNavController().popBackStack(R.id.clientDetailFragment, false)
                             }
                         }
