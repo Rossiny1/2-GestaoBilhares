@@ -434,27 +434,10 @@ class RoutesFragment : Fragment() {
 
 
 
-        // Botão de reforma de mesas
-        Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Configurando botão de reforma")
-        binding.reformaButton.setOnClickListener {
-            Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Clique no botão de reforma")
-            // Navegar para a tela de mesas reformadas
-            try {
-                Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Navegando para mesas reformadas")
-                findNavController().navigate(R.id.mesasReformadasFragment)
-                Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Navegação para mesas reformadas bem-sucedida")
-            } catch (e: Exception) {
-                Log.e("LOG_CRASH", "RoutesFragment.setupClickListeners - ERRO ao navegar para mesas reformadas: ${e.message}", e)
-                Toast.makeText(requireContext(), "Erro ao abrir reforma de mesas: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
+        // ✅ NOVO: Configurar FAB expansível
+        configurarFabExpandivel()
 
-            // Botão de transferência
-            binding.transferButton.setOnClickListener {
-                showTransferClientDialog()
-            }
-
-            // Botão de sincronização
+        // Botão de sincronização
             binding.syncButton.setOnClickListener {
                 performManualSync()
             }
@@ -679,13 +662,11 @@ class RoutesFragment : Fragment() {
 
                         progressBar.progress = 100
                         progressPercent.text = "100%"
-                        progressStatus.text = getString(R.string.sync_status_completed)
+                        progressStatus.text = getString(R.string.sync_status_completed) + 
+                            "\nPendentes: ${status.pendingOperations}\n" +
+                            "Falhas: ${status.failedOperations}"
                         
-                        Toast.makeText(requireContext(), 
-                            "✅ Sincronização concluída!\n" +
-                            "Pendentes: ${status.pendingOperations}\n" +
-                            "Falhas: ${status.failedOperations}", 
-                            Toast.LENGTH_LONG).show()
+                        // ✅ REMOVIDO: Toast removido - informações já estão no diálogo
                         
                         // Forçar atualização completa dos dados das rotas após sincronização
                         android.util.Log.d("RoutesFragment", "🔄 Aguardando processamento dos dados...")
@@ -701,19 +682,15 @@ class RoutesFragment : Fragment() {
                     } else {
                         val status = syncRepository.getSyncStatus()
                         android.util.Log.e("RoutesFragment", "❌ Sincronização falhou: ${status.error ?: "Erro desconhecido"}")
-                        progressStatus.text = status.error ?: "Erro desconhecido"
-                        Toast.makeText(requireContext(), 
-                            "⚠️ Sincronização falhou: ${status.error ?: "Erro desconhecido"}\n" +
-                            "Verifique os logs para mais detalhes", 
-                            Toast.LENGTH_LONG).show()
+                        progressStatus.text = "⚠️ Sincronização falhou: ${status.error ?: "Erro desconhecido"}\n" +
+                            "Verifique os logs para mais detalhes"
+                        // ✅ REMOVIDO: Toast removido - informações já estão no diálogo
                     }
                     
                 } catch (e: Exception) {
                     Log.e("RoutesFragment", "Erro na sincronização: ${e.message}", e)
-                    progressStatus.text = e.message ?: getString(R.string.sync_status_preparing)
-                    Toast.makeText(requireContext(), 
-                        "❌ Erro na sincronização: ${e.message}", 
-                        Toast.LENGTH_LONG).show()
+                    progressStatus.text = "❌ Erro na sincronização: ${e.message ?: "Erro desconhecido"}"
+                    // ✅ REMOVIDO: Toast removido - informações já estão no diálogo
                 } finally {
                     progressDialog?.dismiss()
                     binding.syncButton.alpha = 1.0f
@@ -724,13 +701,111 @@ class RoutesFragment : Fragment() {
             
         } catch (e: Exception) {
             Log.e("RoutesFragment", "Erro ao iniciar sincronização: ${e.message}", e)
-            Toast.makeText(requireContext(), "Erro ao sincronizar: ${e.message}", Toast.LENGTH_SHORT).show()
+            // ✅ REMOVIDO: Toast removido - erro será mostrado no diálogo se ele existir
             
             // Restaurar botão em caso de erro
             progressDialog?.dismiss()
             binding.syncButton.alpha = 1.0f
             binding.syncButton.isEnabled = true
         }
+    }
+
+    /**
+     * ✅ NOVO: Configura o FAB expandível com animações
+     */
+    private fun configurarFabExpandivel() {
+        var isExpanded = false
+        
+        // FAB Principal
+        binding.fabMain.setOnClickListener {
+            if (isExpanded) {
+                // Recolher FABs
+                recolherFabMenu()
+                isExpanded = false
+            } else {
+                // Expandir FABs
+                expandirFabMenu()
+                isExpanded = true
+            }
+        }
+        
+        // Container Manutenção Mesa
+        binding.fabMaintenanceContainer.setOnClickListener {
+            // Navegar para a tela de mesas reformadas
+            try {
+                findNavController().navigate(R.id.mesasReformadasFragment)
+                // Recolher menu após clicar
+                recolherFabMenu()
+                isExpanded = false
+            } catch (e: Exception) {
+                Log.e("RoutesFragment", "Erro ao navegar para mesas reformadas: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao abrir reforma de mesas: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
+        // Container Transferir Cliente
+        binding.fabTransferContainer.setOnClickListener {
+            showTransferClientDialog()
+            // Recolher menu após clicar
+            recolherFabMenu()
+            isExpanded = false
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Expande o menu FAB com animação
+     */
+    private fun expandirFabMenu() {
+        binding.fabExpandedContainer.visibility = View.VISIBLE
+        
+        // Animar entrada dos containers
+        binding.fabMaintenanceContainer.alpha = 0f
+        binding.fabTransferContainer.alpha = 0f
+        
+        // Animar "Transferir Cliente" primeiro (mais próximo do FAB principal)
+        binding.fabTransferContainer.animate()
+            .alpha(1f)
+            .setDuration(300)
+            .setStartDelay(100)
+            .start()
+            
+        // Animar "Manutenção Mesa" depois (mais afastado do FAB principal)
+        binding.fabMaintenanceContainer.animate()
+            .alpha(1f)
+            .setDuration(300)
+            .setStartDelay(200)
+            .start()
+            
+        // Rotacionar ícone do FAB principal
+        binding.fabMain.animate()
+            .rotation(45f)
+            .setDuration(200)
+            .start()
+    }
+    
+    /**
+     * ✅ NOVO: Recolhe o menu FAB com animação
+     */
+    private fun recolherFabMenu() {
+        // Animar saída dos containers
+        binding.fabMaintenanceContainer.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .start()
+            
+        binding.fabTransferContainer.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                binding.fabExpandedContainer.visibility = View.GONE
+            }
+            .start()
+            
+        // Rotacionar ícone do FAB principal de volta
+        binding.fabMain.animate()
+            .rotation(0f)
+            .setDuration(200)
+            .start()
     }
 
     override fun onDestroyView() {

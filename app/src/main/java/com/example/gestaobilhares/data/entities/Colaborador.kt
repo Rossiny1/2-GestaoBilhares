@@ -3,6 +3,7 @@ package com.example.gestaobilhares.data.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 import java.util.Date
 
 /**
@@ -105,7 +106,7 @@ data class Colaborador(
     
     @ColumnInfo(name = "data_ultima_atualizacao")
     val dataUltimaAtualizacao: Date = Date()
-)
+) : Serializable
 
 /**
  * Enum para níveis de acesso dos colaboradores

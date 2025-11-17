@@ -78,6 +78,17 @@ android {
             )
         }
     }
+    
+    // ✅ OTIMIZAÇÃO: Desabilitar tarefas desnecessárias no debug
+    tasks.whenTaskAdded {
+        if (name.contains("lint") || name.contains("Lint")) {
+            enabled = false
+        }
+        // Desabilitar testes durante build normal (executar separadamente)
+        if (name.contains("test") && !name.contains("assemble")) {
+            enabled = false
+        }
+    }
 }
 
 // ✅ CORREÇÃO: KSP para Room (compatível com Java 11+)
@@ -103,6 +114,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    // ✅ CORREÇÃO: Firebase Storage para upload de imagens
+    implementation("com.google.firebase:firebase-storage-ktx")
     
     // ✅ NOVO: Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")

@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.Spinner
+import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
@@ -17,6 +17,7 @@ import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.AppRepository
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 /**
  * DialogFragment para transferir um cliente de uma rota para outra.
  * Exibe informações do cliente e permite selecionar a rota de destino.
@@ -49,24 +50,14 @@ class TransferClientDialog : DialogFragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = DialogTransferClientBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialog = super.onCreateDialog(savedInstanceState)
-        dialog.setTitle("Transferir Cliente")
-        return dialog
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
+        _binding = DialogTransferClientBinding.inflate(layoutInflater)
+        this.isCancelable = true
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(binding.root)
+            .create()
+        dialog.setCanceledOnTouchOutside(true)
+        
         // Inicializar repositórios e ViewModel
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = TransferClientViewModel(appRepository)
@@ -75,6 +66,8 @@ class TransferClientDialog : DialogFragment() {
         setupClickListeners()
         observeViewModel()
         setupRotaDestinoSpinner()
+        
+        return dialog
     }
 
     private fun setupArguments() {
@@ -98,14 +91,14 @@ class TransferClientDialog : DialogFragment() {
     }
 
     private fun setupRotaDestinoSpinner() {
-        viewModel.rotasDisponiveis.observe(viewLifecycleOwner) { rotas ->
+        viewModel.rotasDisponiveis.observe(this) { rotas ->
+            val routeNames = rotas.map { it.nome }
             val adapter = ArrayAdapter(
                 requireContext(),
-                android.R.layout.simple_spinner_item,
-                rotas.map { it.nome }
+                android.R.layout.simple_dropdown_item_1line,
+                routeNames
             )
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            binding.spinnerRotaDestino.adapter = adapter
+            binding.spinnerRotaDestino.setAdapter(adapter)
         }
     }
 
@@ -119,13 +112,11 @@ class TransferClientDialog : DialogFragment() {
             val rotaOrigem = arguments?.getSerializable(ARG_ROTA_ORIGEM) as? Rota
             val mesas = arguments?.getSerializable(ARG_MESAS) as? Array<Mesa>
             
-            val selectedPosition = binding.spinnerRotaDestino.selectedItemPosition
-            if (selectedPosition == Spinner.INVALID_POSITION) {
+            val rotaDestinoNome = binding.spinnerRotaDestino.text?.toString()?.trim()
+            if (rotaDestinoNome.isNullOrEmpty()) {
                 Toast.makeText(requireContext(), "Selecione uma rota de destino", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            
-            val rotaDestinoNome = binding.spinnerRotaDestino.selectedItem.toString()
 
             if (cliente != null && rotaOrigem != null && mesas != null) {
                 viewModel.transferirCliente(
@@ -139,7 +130,7 @@ class TransferClientDialog : DialogFragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.transferSuccess.observe(viewLifecycleOwner) { success ->
+        viewModel.transferSuccess.observe(this) { success ->
             if (success) {
                 Toast.makeText(
                     requireContext(),
@@ -151,7 +142,7 @@ class TransferClientDialog : DialogFragment() {
             }
         }
 
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+        viewModel.errorMessage.observe(this) { message ->
             message?.let {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
             }

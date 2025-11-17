@@ -43,9 +43,10 @@ class RotaRepository(
     ): Flow<List<RotaResumo>> {
         return combine(
             rotaDao.getAllRotasAtivas(),
-            cicloAcertoDao.listarTodos()
-        ) { rotas, ciclos ->
-            Log.d("RotaRepository", "🔄 Atualizando resumo de rotas: ${rotas.size} rotas, ${ciclos.size} ciclos")
+            cicloAcertoDao.listarTodos(),
+            clienteDao.obterTodos() // ✅ NOVO: Incluir clientes para atualizar quando houver mudanças nos débitos
+        ) { rotas, ciclos, clientes ->
+            Log.d("RotaRepository", "🔄 Atualizando resumo de rotas: ${rotas.size} rotas, ${ciclos.size} ciclos, ${clientes.size} clientes")
             
             rotas.map { rota ->
                 val clientesAtivos = calcularClientesAtivos(rota.id)

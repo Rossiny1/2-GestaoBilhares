@@ -55,24 +55,6 @@
                         android:textStyle="bold" />
 
                     <ImageView
-                        android:id="@+id/reformaButton"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_build"
-                        android:contentDescription="Reforma de Mesas"
-                        app:tint="@color/primary_blue" />
-
-                    <ImageView
-                        android:id="@+id/transferButton"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginEnd="16dp"
-                        android:src="@drawable/ic_transfer"
-                        android:contentDescription="Transferir Cliente"
-                        app:tint="@color/primary_blue" />
-
-                    <ImageView
                         android:id="@+id/syncButton"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
@@ -260,6 +242,111 @@
             </LinearLayout>
 
         </androidx.core.widget.NestedScrollView>
+
+        <!-- FAB Principal -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabMain"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:contentDescription="Menu de ações"
+            android:src="@drawable/ic_add"
+            app:fabSize="normal" />
+
+        <!-- Container para FABs expandidos -->
+        <LinearLayout
+            android:id="@+id/fabExpandedContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="80dp"
+            android:orientation="vertical"
+            android:gravity="end"
+            android:visibility="gone">
+
+            <!-- FAB Manutenção Mesa com Label -->
+            <LinearLayout
+                android:id="@+id/fabMaintenanceContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/rounded_background"
+                android:backgroundTint="?attr/colorSurface"
+                android:elevation="8dp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:alpha="0">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Manutenção Mesa"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="8dp" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabMaintenance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Manutenção Mesa"
+                    android:src="@drawable/ic_build"
+                    app:fabSize="mini"
+                    app:backgroundTint="?attr/colorPrimary"
+                    app:tint="?attr/colorOnPrimary"
+                    android:clickable="false" />
+
+            </LinearLayout>
+
+            <!-- FAB Transferir Cliente com Label -->
+            <LinearLayout
+                android:id="@+id/fabTransferContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="0dp"
+                android:background="@drawable/rounded_background"
+                android:backgroundTint="?attr/colorSurface"
+                android:elevation="8dp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:alpha="0">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Transferir Cliente"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="8dp" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabTransfer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Transferir Cliente"
+                    android:src="@drawable/ic_transfer"
+                    app:fabSize="mini"
+                    app:backgroundTint="?attr/colorSecondary"
+                    app:tint="?attr/colorOnSecondary"
+                    android:clickable="false" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

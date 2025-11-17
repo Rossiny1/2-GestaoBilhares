@@ -26,6 +26,8 @@ import com.example.gestaobilhares.data.entities.TipoDespesa
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.databinding.FragmentExpenseRegisterBinding
 import com.example.gestaobilhares.utils.ImageCompressionUtils
+import com.example.gestaobilhares.utils.FirebaseImageUploader
+import com.example.gestaobilhares.utils.NetworkUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import java.io.File
@@ -50,6 +52,16 @@ class ExpenseRegisterFragment : Fragment() {
     // ✅ CORREÇÃO: Inicialização segura do ImageCompressionUtils
     private val imageCompressionUtils: ImageCompressionUtils by lazy {
         ImageCompressionUtils(requireContext())
+    }
+    
+    // ✅ NOVO: Utilitário para upload de imagens ao Firebase Storage
+    private val firebaseImageUploader: FirebaseImageUploader by lazy {
+        FirebaseImageUploader(requireContext())
+    }
+    
+    // ✅ NOVO: Utilitário para verificar conectividade
+    private val networkUtils: NetworkUtils by lazy {
+        NetworkUtils(requireContext())
     }
 
     // Formatador de moeda brasileiro
@@ -794,21 +806,47 @@ class ExpenseRegisterFragment : Fragment() {
         binding.tilValorDespesa.error = null
         binding.tilQuantidade.error = null
 
-        // Salvar despesa
-        viewModel.saveExpense(
-            rotaId = args.rotaId,
-            descricao = descricao,
-            valor = valor,
-            quantidade = quantidade,
-            observacoes = "", // TODO: Adicionar campo de observações se necessário
-            despesaId = args.despesaId,
-            modoEdicao = args.modoEdicao,
-            fotoComprovante = fotoComprovantePath,
-            dataFotoComprovante = dataFotoComprovante,
-            veiculoId = if (isVeiculoRequired) selectedVehicleId else null,
-            kmRodado = if (isVeiculoRequired) kmValue else null,
-            litrosAbastecidos = if (isCombustivel) litrosValue else null
-        )
+        // ✅ CORREÇÃO: Fazer upload da foto para Firebase Storage antes de salvar
+        lifecycleScope.launch {
+            try {
+                var finalFotoPath = fotoComprovantePath
+                
+                // Se há foto e não é URL do Firebase Storage, fazer upload
+                if (finalFotoPath != null && !firebaseImageUploader.isFirebaseStorageUrl(finalFotoPath)) {
+                    if (networkUtils.isConnected()) {
+                        Log.d("ExpenseRegisterFragment", "Fazendo upload da foto para Firebase Storage...")
+                        val uploadedUrl = firebaseImageUploader.uploadDespesaComprovante(finalFotoPath)
+                        if (uploadedUrl != null) {
+                            finalFotoPath = uploadedUrl
+                            Log.d("ExpenseRegisterFragment", "✅ Foto enviada para Firebase Storage: $finalFotoPath")
+                        } else {
+                            Log.w("ExpenseRegisterFragment", "⚠️ Falha no upload, usando caminho local")
+                        }
+                    } else {
+                        Log.d("ExpenseRegisterFragment", "📴 Sem conexão, foto será sincronizada depois")
+                    }
+                }
+                
+                // Salvar despesa
+                viewModel.saveExpense(
+                    rotaId = args.rotaId,
+                    descricao = descricao,
+                    valor = valor,
+                    quantidade = quantidade,
+                    observacoes = "", // TODO: Adicionar campo de observações se necessário
+                    despesaId = args.despesaId,
+                    modoEdicao = args.modoEdicao,
+                    fotoComprovante = finalFotoPath,
+                    dataFotoComprovante = dataFotoComprovante,
+                    veiculoId = if (isVeiculoRequired) selectedVehicleId else null,
+                    kmRodado = if (isVeiculoRequired) kmValue else null,
+                    litrosAbastecidos = if (isCombustivel) litrosValue else null
+                )
+            } catch (e: Exception) {
+                Log.e("ExpenseRegisterFragment", "Erro ao salvar despesa: ${e.message}", e)
+                Toast.makeText(requireContext(), "Erro ao salvar despesa: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
     
     // ✅ NOVO: Métodos para captura de foto do comprovante

@@ -1,12 +1,10 @@
 package com.example.gestaobilhares.ui.colaboradores
 
 import android.app.Dialog
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
 import android.widget.ArrayAdapter
-import android.widget.Toast
+import androidx.fragment.app.DialogFragment
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.data.entities.Colaborador
 import com.example.gestaobilhares.data.entities.NivelAcesso
@@ -17,35 +15,60 @@ import java.util.*
 /**
  * Diálogo para aprovação de colaboradores com configuração de credenciais.
  * Permite definir email, senha temporária e nível de acesso.
+ * ✅ CORREÇÃO: Convertido para DialogFragment para evitar erros de recursos XML
  */
-class ColaboradorApprovalDialog(
-    context: Context,
-    private val colaborador: Colaborador,
-    private val onApprovalConfirmed: (email: String, senha: String, nivelAcesso: NivelAcesso, observacoes: String) -> Unit
-) : Dialog(context, R.style.DarkDialogTheme) {
+class ColaboradorApprovalDialog : DialogFragment() {
 
-    private lateinit var binding: DialogApproveColaboradorBinding
+    private var _binding: DialogApproveColaboradorBinding? = null
+    private val binding get() = _binding!!
+
+    private lateinit var colaborador: Colaborador
+    private var onApprovalConfirmed: ((email: String, senha: String, nivelAcesso: NivelAcesso, observacoes: String) -> Unit)? = null
+
+    companion object {
+        private const val ARG_COLABORADOR = "colaborador"
+
+        fun newInstance(
+            colaborador: Colaborador,
+            onApprovalConfirmed: (email: String, senha: String, nivelAcesso: NivelAcesso, observacoes: String) -> Unit
+        ): ColaboradorApprovalDialog {
+            return ColaboradorApprovalDialog().apply {
+                arguments = Bundle().apply {
+                    putSerializable(ARG_COLABORADOR, colaborador)
+                }
+                this.onApprovalConfirmed = onApprovalConfirmed
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        binding = DialogApproveColaboradorBinding.inflate(LayoutInflater.from(context))
-        setContentView(binding.root)
-        
-        setupDialog()
-        setupDropdowns()
-        setupClickListeners()
-        preencherDadosIniciais()
+        arguments?.let {
+            colaborador = it.getSerializable(ARG_COLABORADOR) as? Colaborador
+                ?: throw IllegalStateException("Colaborador não fornecido")
+        }
     }
 
-    private fun setupDialog() {
-        // Configurar diálogo
-        setCancelable(false)
-        setCanceledOnTouchOutside(false)
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        _binding = DialogApproveColaboradorBinding.inflate(layoutInflater)
         
         // Definir título dinâmico
         val title = "Aprovar ${colaborador.nome}"
         binding.root.findViewById<android.widget.TextView>(R.id.tvTitle)?.text = title
+        
+        setupDropdowns()
+        setupClickListeners()
+        preencherDadosIniciais()
+        
+        return MaterialAlertDialogBuilder(requireContext())
+            .setView(binding.root)
+            .setCancelable(false)
+            .create()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private fun setupDropdowns() {
@@ -57,7 +80,7 @@ class ColaboradorApprovalDialog(
             }
         }
 
-        val adapter = ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line, niveisAcesso)
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, niveisAcesso)
         binding.spinnerNivelAcesso.setAdapter(adapter)
         binding.spinnerNivelAcesso.setText("Colaborador", false) // Padrão
     }
@@ -76,7 +99,7 @@ class ColaboradorApprovalDialog(
                 val nivelAcesso = obterNivelAcessoSelecionado()
                 val observacoes = binding.etObservacoes.text.toString().trim()
                 
-                onApprovalConfirmed(email, senha, nivelAcesso, observacoes)
+                onApprovalConfirmed?.invoke(email, senha, nivelAcesso, observacoes)
                 dismiss()
             }
         }

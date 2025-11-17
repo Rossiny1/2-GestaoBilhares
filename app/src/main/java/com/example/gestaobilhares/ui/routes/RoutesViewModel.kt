@@ -101,6 +101,7 @@ class RoutesViewModel constructor(
 
     /**
      * ✅ NOVO: Verifica operações pendentes de sincronização
+     * Também verifica se há dados na nuvem quando o banco local está vazio
      */
     fun checkSyncPendencies() {
         if (syncDialogDismissed) return
@@ -108,6 +109,26 @@ class RoutesViewModel constructor(
             try {
                 val pending = appRepository.contarOperacoesSyncPendentes()
                 android.util.Log.d("RoutesViewModel", "📡 Pendências de sincronização: $pending")
+                
+                // Se não há pendências locais, verificar se há dados na nuvem quando banco local está vazio
+                if (pending == 0) {
+                    val rotasLocais = appRepository.obterTodasRotas().first()
+                    if (rotasLocais.isEmpty()) {
+                        android.util.Log.d("RoutesViewModel", "🔍 Banco local vazio - verificando dados na nuvem...")
+                        val syncRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getSyncRepository(
+                            com.example.gestaobilhares.GestaoBilharesApplication.getInstance()
+                        )
+                        val hasCloudData = syncRepository.hasDataInCloud()
+                        android.util.Log.d("RoutesViewModel", "📡 Dados na nuvem: $hasCloudData")
+                        
+                        if (hasCloudData && !syncDialogDismissed) {
+                            // Simular 1 pendência para mostrar o diálogo
+                            _syncDialogState.value = SyncDialogState(1)
+                            return@launch
+                        }
+                    }
+                }
+                
                 if (pending > 0 && !syncDialogDismissed) {
                     _syncDialogState.value = SyncDialogState(pending)
                 } else {

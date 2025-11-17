@@ -95,8 +95,9 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
 
     override fun onResume() {
         super.onResume()
-        // Recarregar apenas o histórico de acertos quando retornar de outras telas
-        viewModel.loadSettlementHistory(args.clienteId)
+        // ✅ CORREÇÃO: Recarregar detalhes completos do cliente para atualizar "Última visita"
+        // quando voltar de outras telas (especialmente após salvar um acerto)
+        viewModel.loadClientDetails(args.clienteId)
     }
 
     private fun setupRecyclerView() {
@@ -181,6 +182,11 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
     }
 
     private fun setupListeners(clientId: Long) {
+        // ✅ CORREÇÃO: Configurar botão voltar do header
+        binding.btnBack.setOnClickListener {
+            findNavController().popBackStack()
+        }
+        
         binding.fabMain.setOnClickListener { toggleFabMenu() }
 
         binding.fabEdit.setOnClickListener {
@@ -586,33 +592,53 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
     }
 
     /**
-     * ✅ NOVO: Configura o botão de retorno para sempre voltar para ClientListFragment
+     * ✅ CORREÇÃO: Configura o botão de retorno para voltar para ClientListFragment
+     * Só intercepta quando não há fragmentos filhos no stack (ex: SettlementDetailFragment)
      */
     private fun setupBackButtonHandler() {
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // Sempre navegar para ClientListFragment, ignorando o stack atual
-                // ✅ CORREÇÃO CRÍTICA: Buscar rotaId diretamente do banco para evitar fallback hardcoded
-                lifecycleScope.launch {
-                    try {
-                        val rotaId = viewModel.buscarRotaIdPorCliente(clientId)
-                        if (rotaId != null) {
-                            val action = ClientDetailFragmentDirections
-                                .actionClientDetailFragmentToClientListFragment(rotaId = rotaId)
-                            findNavController().navigate(action)
-                        } else {
-                            // Se não encontrar rotaId, usar popUpTo para limpar o stack
-                            findNavController().popBackStack(
+                // ✅ CORREÇÃO: Verificar se há fragmentos filhos no stack antes de interceptar
+                val navController = findNavController()
+                val currentDestination = navController.currentDestination
+                
+                // Verificar se o destino atual é este fragment e se há um fragment anterior no stack
+                // Se há um fragment anterior que não é ClientListFragment, deixar o Navigation Component lidar
+                val previousEntry = navController.previousBackStackEntry
+                val isFromChildFragment = previousEntry?.destination?.id?.let { previousId ->
+                    previousId != com.example.gestaobilhares.R.id.clientListFragment &&
+                    previousId != com.example.gestaobilhares.R.id.routesFragment
+                } ?: false
+                
+                // Se estamos vindo de um fragment filho (como SettlementDetailFragment), deixar o Navigation Component lidar
+                if (isFromChildFragment && currentDestination?.id == com.example.gestaobilhares.R.id.clientDetailFragment) {
+                    // Há fragmentos filhos, deixar o Navigation Component lidar normalmente
+                    isEnabled = false
+                    navController.popBackStack()
+                    isEnabled = true
+                } else {
+                    // Sem fragmentos filhos, navegar para ClientListFragment
+                    lifecycleScope.launch {
+                        try {
+                            val rotaId = viewModel.buscarRotaIdPorCliente(clientId)
+                            if (rotaId != null) {
+                                val action = ClientDetailFragmentDirections
+                                    .actionClientDetailFragmentToClientListFragment(rotaId = rotaId)
+                                navController.navigate(action)
+                            } else {
+                                // Se não encontrar rotaId, usar popUpTo para limpar o stack
+                                navController.popBackStack(
+                                    com.example.gestaobilhares.R.id.clientListFragment, 
+                                    false
+                                )
+                            }
+                        } catch (e: Exception) {
+                            // Se a ação não existir, usar popUpTo para limpar o stack
+                            navController.popBackStack(
                                 com.example.gestaobilhares.R.id.clientListFragment, 
                                 false
                             )
                         }
-                    } catch (e: Exception) {
-                        // Se a ação não existir, usar popUpTo para limpar o stack
-                        findNavController().popBackStack(
-                            com.example.gestaobilhares.R.id.clientListFragment, 
-                            false
-                        )
                     }
                 }
             }

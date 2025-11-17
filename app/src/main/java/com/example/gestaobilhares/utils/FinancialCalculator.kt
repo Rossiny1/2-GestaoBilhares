@@ -87,9 +87,11 @@ object FinancialCalculator {
 
         // Calcular totais por modalidade
         val totaisPorModalidade = calcularTotaisPorModalidade(acertos)
+        AppLogger.log("FinancialCalculator", "📊 Totais por modalidade calculados: $totaisPorModalidade")
         val somaPix = totaisPorModalidade["PIX"] ?: 0.0
         val somaCartao = totaisPorModalidade["Cartão"] ?: 0.0
         val totalCheques = totaisPorModalidade["Cheque"] ?: 0.0
+        AppLogger.log("FinancialCalculator", "💰 Valores extraídos: PIX=$somaPix, Cartão=$somaCartao, Cheque=$totalCheques")
 
         // Soma despesas = Total geral das despesas - despesas de viagem
         val totalGeralDespesas = despesas.sumOf { it.valor }
@@ -113,6 +115,7 @@ object FinancialCalculator {
     
     /**
      * Calcula totais por modalidade de pagamento dos acertos
+     * ✅ CORREÇÃO: Normaliza nomes dos métodos de pagamento para agrupar corretamente
      */
     private fun calcularTotaisPorModalidade(acertos: List<Acerto>): Map<String, Double> {
         val totais = mutableMapOf<String, Double>()
@@ -128,11 +131,40 @@ object FinancialCalculator {
             } ?: emptyMap()
             
             metodosPagamento.forEach { (metodo, valor) ->
-                totais[metodo] = (totais[metodo] ?: 0.0) + valor
+                // ✅ CORREÇÃO: Normalizar nome do método para agrupar corretamente
+                val metodoNormalizado = normalizarNomeMetodoPagamento(metodo)
+                AppLogger.log("FinancialCalculator", "🔄 Método: '$metodo' -> Normalizado: '$metodoNormalizado' -> Valor: R$ $valor")
+                totais[metodoNormalizado] = (totais[metodoNormalizado] ?: 0.0) + valor
             }
         }
         
         return totais
+    }
+    
+    /**
+     * ✅ CORREÇÃO: Normaliza nome do método de pagamento para garantir agrupamento correto
+     * Independente de como está escrito no JSON (PIX, Pix, pix, etc.)
+     * Agrupa "Cartão Débito" e "Cartão Crédito" como "Cartão"
+     */
+    private fun normalizarNomeMetodoPagamento(metodo: String): String {
+        val metodoUpper = metodo.trim().uppercase()
+        return when {
+            metodoUpper.contains("PIX") -> "PIX"
+            // ✅ CORREÇÃO: Agrupar "Cartão Débito" e "Cartão Crédito" como "Cartão"
+            metodoUpper.contains("CART") || metodoUpper.contains("CARTAO") -> "Cartão"
+            metodoUpper.contains("CHEQUE") -> "Cheque"
+            metodoUpper.contains("DINHEIRO") || metodoUpper.contains("ESPECIE") -> "Dinheiro"
+            else -> {
+                // Se não reconhecer, tentar mapear por similaridade
+                when {
+                    metodoUpper.startsWith("P") -> "PIX"
+                    metodoUpper.startsWith("C") -> "Cartão"
+                    metodoUpper.startsWith("CH") -> "Cheque"
+                    metodoUpper.startsWith("D") || metodoUpper.startsWith("E") -> "Dinheiro"
+                    else -> metodo // Manter nome original se não conseguir normalizar
+                }
+            }
+        }
     }
     
     // ==================== CÁLCULOS DE METAS ====================

@@ -1,126 +1,247 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:fillViewport="true">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Transferir Cliente"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_primary"
-        android:gravity="center"
-        android:layout_marginBottom="24dp" />
-
-    <!-- Cliente Selecionado -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:hint="Cliente"
-        app:startIconDrawable="@drawable/ic_person">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etClienteNome"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textPersonName"
-            android:enabled="false" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <!-- CPF -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:hint="CPF"
-        app:startIconDrawable="@drawable/ic_id_card">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etClienteCpf"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:enabled="false" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <!-- Mesas Vinculadas -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:hint="Mesas Vinculadas"
-        app:startIconDrawable="@drawable/ic_table">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etMesasVinculadas"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textMultiLine"
-            android:enabled="false"
-            android:minLines="2" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <!-- Rota de Origem -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:hint="Rota de Origem"
-        app:startIconDrawable="@drawable/ic_route">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etRotaOrigem"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:enabled="false" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <!-- Rota de Destino -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Rota de Destino"
-        android:textSize="16sp"
-        android:textColor="@color/text_primary"
-        android:layout_marginBottom="8dp" />
-
-    <Spinner
-        android:id="@+id/spinnerRotaDestino"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp" />
-
-    <!-- Botões -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="end">
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:minWidth="320dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCancelar"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
+        <!-- Header com Ícone -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="Cancelar" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="24dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnTransferir"
-            android:layout_width="wrap_content"
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_transfer"
+                app:tint="?attr/colorPrimary"
+                android:contentDescription="Transferir Cliente"
+                android:layout_marginEnd="12dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Transferir Cliente"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Card de Informações do Cliente -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Transferir" />
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Informações do Cliente"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Cliente Selecionado -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:hint="Cliente"
+                    app:startIconDrawable="@drawable/ic_person"
+                    app:startIconTint="?attr/colorPrimary"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:boxStrokeColor="?attr/colorOutline"
+                    app:hintTextColor="?attr/colorPrimary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etClienteNome"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPersonName"
+                        android:enabled="false"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- CPF -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:hint="CPF/CNPJ"
+                    app:startIconDrawable="@drawable/ic_id_card"
+                    app:startIconTint="?attr/colorPrimary"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:boxStrokeColor="?attr/colorOutline"
+                    app:hintTextColor="?attr/colorPrimary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etClienteCpf"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:enabled="false"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Mesas Vinculadas -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="0dp"
+                    android:hint="Mesas Vinculadas"
+                    app:startIconDrawable="@drawable/ic_table"
+                    app:startIconTint="?attr/colorPrimary"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:boxStrokeColor="?attr/colorOutline"
+                    app:hintTextColor="?attr/colorPrimary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etMesasVinculadas"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine"
+                        android:enabled="false"
+                        android:minLines="2"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card de Rotas -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Rotas"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Rota de Origem -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:hint="Rota de Origem"
+                    app:startIconDrawable="@drawable/ic_route"
+                    app:startIconTint="?attr/colorPrimary"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:boxStrokeColor="?attr/colorOutline"
+                    app:hintTextColor="?attr/colorPrimary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etRotaOrigem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:enabled="false"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Rota de Destino -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Rota de Destino"
+                    app:startIconDrawable="@drawable/ic_route_destination"
+                    app:startIconTint="?attr/colorPrimary"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    app:boxStrokeColor="?attr/colorOutline"
+                    app:hintTextColor="?attr/colorPrimary">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/spinnerRotaDestino"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp"
+                        android:minHeight="56dp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Botões -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="8dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancelar"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Cancelar"
+                android:textColor="?attr/colorOnSurface" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTransferir"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Transferir"
+                app:backgroundTint="?attr/colorPrimary"
+                android:textColor="?attr/colorOnPrimary" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
-</LinearLayout>
+</ScrollView>

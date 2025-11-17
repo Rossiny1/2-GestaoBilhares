@@ -79,6 +79,16 @@ class ColaboradorMetasFragment : Fragment() {
             findNavController().navigateUp()
         }
         
+        // ✅ CORREÇÃO: Configurar botão voltar do header se existir
+        try {
+            val btnBack = binding.root.findViewById<android.widget.ImageButton>(com.example.gestaobilhares.R.id.btnBack)
+            btnBack?.setOnClickListener {
+                findNavController().navigateUp()
+            }
+        } catch (e: Exception) {
+            // btnBack não existe neste layout, usar apenas toolbar
+        }
+        
         // Atualizar título se for edição
         if (colaboradorId != null) {
             binding.toolbar.title = "Editar Metas"
