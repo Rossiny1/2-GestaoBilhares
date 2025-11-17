@@ -46,6 +46,11 @@ class RoutesViewModel constructor(
     private val _navigateToClients = MutableStateFlow<Long?>(null)
     val navigateToClients: StateFlow<Long?> = _navigateToClients.asStateFlow()
 
+    // ✅ NOVO: StateFlow para diálogo de sincronização pendente
+    private val _syncDialogState = MutableStateFlow<SyncDialogState?>(null)
+    val syncDialogState: StateFlow<SyncDialogState?> = _syncDialogState.asStateFlow()
+    private var syncDialogDismissed = false
+
 
 
 
@@ -92,6 +97,40 @@ class RoutesViewModel constructor(
         }
         
         // Banco de dados limpo - sem inserção automática de dados
+    }
+
+    /**
+     * ✅ NOVO: Verifica operações pendentes de sincronização
+     */
+    fun checkSyncPendencies() {
+        if (syncDialogDismissed) return
+        viewModelScope.launch {
+            try {
+                val pending = appRepository.contarOperacoesSyncPendentes()
+                android.util.Log.d("RoutesViewModel", "📡 Pendências de sincronização: $pending")
+                if (pending > 0 && !syncDialogDismissed) {
+                    _syncDialogState.value = SyncDialogState(pending)
+                } else {
+                    // Quando zerar pendências, resetar supressão
+                    if (pending == 0) {
+                        syncDialogDismissed = false
+                    }
+                    _syncDialogState.value = null
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("RoutesViewModel", "Erro ao verificar pendências de sync: ${e.message}", e)
+            }
+        }
+    }
+
+    /**
+     * ✅ NOVO: Marca diálogo de sincronização como manipulado
+     */
+    fun dismissSyncDialog(permanently: Boolean = true) {
+        if (permanently) {
+            syncDialogDismissed = true
+        }
+        _syncDialogState.value = null
     }
 
     /**
@@ -321,4 +360,8 @@ class RoutesViewModel constructor(
         val valorTotalAcertado: Double,
         val valorAcertadoNaoFinalizado: Double // FASE 3: Valores não finalizados
     )
-} 
+}
+
+data class SyncDialogState(
+    val pendingCount: Int
+)

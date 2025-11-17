@@ -195,8 +195,11 @@ adb logcat -s LOG_CRASH:* RoutesScreen:* UserSessionManager:*
 4. ✅ WorkManager configurado
 5. ✅ Estrutura Firestore corrigida (`empresas/empresa_001/entidades/{collectionName}/items`)
 6. ✅ Conversão de tipos corrigida (Despesa, LocalDateTime)
-7. ✅ Observação reativa implementada em ViewModels
+7. ✅ Observação reativa implementada em ViewModels (flatMapLatest, stateIn)
 8. ✅ Histórico de veículos (abastecimento/manutenção) funcionando
+9. ✅ Equipment: Entidade completa com sincronização push/pull
+10. ✅ MetaColaborador: Sincronização push/pull implementada
+11. ✅ EquipmentsViewModel: Usando Flow reativo corretamente
 
 ### **Prioridade MÉDIA: Migração Compose**
 1. Migrar Core Business (Settlement, ClientList)

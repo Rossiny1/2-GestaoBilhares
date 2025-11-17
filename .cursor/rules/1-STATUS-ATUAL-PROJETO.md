@@ -30,8 +30,11 @@
   - ✅ Corrigida ordem de sincronização (PUSH antes de PULL)
   - ✅ Corrigida conversão de tipos (DespesaResumo → Despesa)
   - ✅ Corrigida estrutura de paths do Firestore
-  - ✅ Implementada observação reativa em ViewModels (flatMapLatest)
+  - ✅ Implementada observação reativa em ViewModels (flatMapLatest, stateIn)
   - ✅ Histórico de abastecimento e manutenção funcionando corretamente
+  - ✅ Equipment: Entidade completa implementada com sincronização
+  - ✅ MetaColaborador: Sincronização push/pull implementada
+  - ✅ Botão de telefone: Funcionalidade de discador implementada
 
 ### **2. Migração Compose (PRIORIDADE MÉDIA)**
 - **Status**: 🔄 **35.8% COMPLETO** (24 telas de 67)
@@ -54,7 +57,7 @@
 - **StateFlow**: Observação reativa moderna
 - **Navigation Component**: Navegação type-safe
 - **WorkManager**: Background tasks (para sincronização)
-- **Firebase Firestore**: Backend (configurado, aguardando SyncManagerV2)
+- **Firebase Firestore**: Backend (configurado e funcionando com SyncRepository)
 
 ### **Padrões de Desenvolvimento**
 - **MVVM**: ViewModel + StateFlow + repeatOnLifecycle
@@ -71,11 +74,12 @@
 - **Total**: 67 telas
 
 ### **Modularização**
-- ✅ **AppRepository**: Facade centralizado (~1582 linhas, delegando para repositories especializados)
+- ✅ **AppRepository**: Facade centralizado (~1590 linhas, delegando para repositories especializados)
 - ✅ **Repositories Especializados**: 11 domínios (Client, Acerto, Mesa, Rota, Despesa, Colaborador, Contrato, Ciclo, Veiculo, Meta, Pano)
-- ✅ **ViewModels**: Compatíveis (sem breaking changes), usando observação reativa com flatMapLatest
+- ✅ **ViewModels**: Compatíveis (sem breaking changes), usando observação reativa com flatMapLatest e stateIn
 - ✅ **Build**: Estável e funcional
 - ✅ **Adapters**: Criados para histórico de veículos (FuelHistoryAdapter, MaintenanceHistoryAdapter)
+- ✅ **Equipment**: Entidade completa implementada (EquipmentEntity, EquipmentDao, sincronização push/pull)
 
 ## 🎯 PRÓXIMOS PASSOS (ORDEM DE PRIORIDADE)
 
@@ -109,8 +113,10 @@
 - ✅ **Build**: Estável e funcional
 - ✅ **Offline**: Funciona completamente offline
 - ✅ **Modularização**: Completa e testada
-- ✅ **Sincronização**: Implementada, testada e funcionando corretamente
-- ✅ **Observação Reativa**: ViewModels usando flatMapLatest para atualização automática
+- ✅ **Sincronização**: Implementada, testada e funcionando corretamente (todas as entidades incluindo Equipment e MetaColaborador)
+- ✅ **Observação Reativa**: ViewModels usando flatMapLatest e stateIn para atualização automática
+- ✅ **Equipment**: Entidade completa implementada com sincronização
+- ✅ **MetaColaborador**: Sincronização completa implementada
 - 🔄 **Compose**: Migração em andamento
 
 ## 📝 NOTAS IMPORTANTES

@@ -6,6 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -24,6 +26,7 @@ import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.utils.UserSessionManager
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.example.gestaobilhares.data.entities.Cliente
@@ -33,6 +36,8 @@ import java.text.NumberFormat
 import java.util.Locale
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Fragment que exibe a tela de rotas.
@@ -46,6 +51,7 @@ class RoutesFragment : Fragment() {
     // ViewBinding para acessar as views de forma type-safe
     private var _binding: FragmentRoutesBinding? = null
     private val binding get() = _binding!!
+    private var syncDialog: androidx.appcompat.app.AlertDialog? = null
 
     // ✅ CORREÇÃO: ViewModel com Factory customizada
     private val viewModel: RoutesViewModel by viewModels {
@@ -104,6 +110,9 @@ class RoutesFragment : Fragment() {
 
         // Submenu de despesas começa recolhido
         collapseExpenseSubmenu()
+
+        // Verificar pendências de sincronização na abertura
+        viewModel.checkSyncPendencies()
     }
 
     override fun onResume() {
@@ -111,6 +120,7 @@ class RoutesFragment : Fragment() {
         // ✅ CORREÇÃO: Atualizar dados das rotas quando retorna de outras telas
         android.util.Log.d("RoutesFragment", "🔄 onResume - Forçando atualização dos dados das rotas")
         viewModel.refresh()
+        viewModel.checkSyncPendencies()
     }
 
 
@@ -539,6 +549,42 @@ class RoutesFragment : Fragment() {
                 }
             }
         }
+
+        // Observa estado do diálogo de sincronização
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.syncDialogState.collect { state ->
+                    if (state == null) {
+                        syncDialog?.dismiss()
+                        syncDialog = null
+                    } else {
+                        if (syncDialog?.isShowing == true) {
+                            syncDialog?.dismiss()
+                        }
+                        syncDialog = MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Sincronização pendente")
+                            .setMessage(
+                                resources.getQuantityString(
+                                    R.plurals.sync_pending_message,
+                                    state.pendingCount,
+                                    state.pendingCount
+                                )
+                            )
+                            .setPositiveButton("Sincronizar agora") { _, _ ->
+                                viewModel.dismissSyncDialog()
+                                performManualSync()
+                            }
+                            .setNegativeButton("Agora não") { dialog, _ ->
+                                viewModel.dismissSyncDialog()
+                                dialog.dismiss()
+                            }
+                            .setCancelable(false)
+                            .create()
+                        syncDialog?.show()
+                    }
+                }
+            }
+        }
     }
 
 
@@ -576,6 +622,7 @@ class RoutesFragment : Fragment() {
      * Mostra feedback visual e status da operação.
      */
     private fun performManualSync() {
+        var progressDialog: androidx.appcompat.app.AlertDialog? = null
         try {
             Log.d("RoutesFragment", "🔄 Iniciando sincronização manual")
             
@@ -589,8 +636,23 @@ class RoutesFragment : Fragment() {
             // Mostrar feedback visual
             binding.syncButton.alpha = 0.5f
             binding.syncButton.isEnabled = false
-            
-            Toast.makeText(requireContext(), "🔄 Sincronizando dados...", Toast.LENGTH_SHORT).show()
+
+            val progressView = layoutInflater.inflate(R.layout.dialog_sync_progress, null)
+            val progressBar = progressView.findViewById<ProgressBar>(R.id.syncProgressBar)
+            val progressPercent = progressView.findViewById<TextView>(R.id.tvSyncProgressPercent)
+            val progressStatus = progressView.findViewById<TextView>(R.id.tvSyncProgressStatus)
+            progressBar.progress = 0
+            progressPercent.text = "0%"
+            progressStatus.text = getString(R.string.sync_status_preparing)
+
+            progressDialog = MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.sync_progress_title)
+                .setView(progressView)
+                .setCancelable(false)
+                .create()
+            progressDialog?.show()
+
+            val uiScope = viewLifecycleOwner.lifecycleScope
 
             // Executar sincronização em background
             viewLifecycleOwner.lifecycleScope.launch {
@@ -599,13 +661,25 @@ class RoutesFragment : Fragment() {
                     
                     // Executar sincronização bidirecional
                     android.util.Log.d("RoutesFragment", "🔄 Iniciando sincronização bidirecional...")
-                    val result = syncRepository.syncBidirectional()
+                    val result = withContext(Dispatchers.IO) {
+                        syncRepository.syncBidirectional { progress ->
+                            uiScope.launch {
+                                progressBar.progress = progress.percent
+                                progressPercent.text = "${progress.percent}%"
+                                progressStatus.text = progress.message
+                            }
+                        }
+                    }
                     
                     if (result.isSuccess) {
                         val status = syncRepository.getSyncStatus()
                         android.util.Log.d("RoutesFragment", "✅ Sincronização concluída com sucesso")
                         android.util.Log.d("RoutesFragment", "   Pendentes: ${status.pendingOperations}")
                         android.util.Log.d("RoutesFragment", "   Falhas: ${status.failedOperations}")
+
+                        progressBar.progress = 100
+                        progressPercent.text = "100%"
+                        progressStatus.text = getString(R.string.sync_status_completed)
                         
                         Toast.makeText(requireContext(), 
                             "✅ Sincronização concluída!\n" +
@@ -615,15 +689,11 @@ class RoutesFragment : Fragment() {
                         
                         // Forçar atualização completa dos dados das rotas após sincronização
                         android.util.Log.d("RoutesFragment", "🔄 Aguardando processamento dos dados...")
-                        
-                        // Aguardar um pouco mais para garantir que todos os dados sejam processados
                         kotlinx.coroutines.delay(2000)
                         
-                        // Forçar refresh múltiplas vezes para garantir atualização completa
                         android.util.Log.d("RoutesFragment", "🔄 Forçando refresh dos dados...")
                         viewModel.refresh()
                         
-                        // Aguardar mais um pouco e forçar refresh novamente
                         kotlinx.coroutines.delay(1000)
                         viewModel.refresh()
                         
@@ -631,6 +701,7 @@ class RoutesFragment : Fragment() {
                     } else {
                         val status = syncRepository.getSyncStatus()
                         android.util.Log.e("RoutesFragment", "❌ Sincronização falhou: ${status.error ?: "Erro desconhecido"}")
+                        progressStatus.text = status.error ?: "Erro desconhecido"
                         Toast.makeText(requireContext(), 
                             "⚠️ Sincronização falhou: ${status.error ?: "Erro desconhecido"}\n" +
                             "Verifique os logs para mais detalhes", 
@@ -639,13 +710,15 @@ class RoutesFragment : Fragment() {
                     
                 } catch (e: Exception) {
                     Log.e("RoutesFragment", "Erro na sincronização: ${e.message}", e)
+                    progressStatus.text = e.message ?: getString(R.string.sync_status_preparing)
                     Toast.makeText(requireContext(), 
                         "❌ Erro na sincronização: ${e.message}", 
                         Toast.LENGTH_LONG).show()
                 } finally {
-                    // Restaurar botão
+                    progressDialog?.dismiss()
                     binding.syncButton.alpha = 1.0f
                     binding.syncButton.isEnabled = true
+                    viewModel.checkSyncPendencies()
                 }
             }
             
@@ -654,6 +727,7 @@ class RoutesFragment : Fragment() {
             Toast.makeText(requireContext(), "Erro ao sincronizar: ${e.message}", Toast.LENGTH_SHORT).show()
             
             // Restaurar botão em caso de erro
+            progressDialog?.dismiss()
             binding.syncButton.alpha = 1.0f
             binding.syncButton.isEnabled = true
         }
@@ -661,6 +735,8 @@ class RoutesFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        syncDialog?.dismiss()
+        syncDialog = null
         _binding = null
     }
 } 

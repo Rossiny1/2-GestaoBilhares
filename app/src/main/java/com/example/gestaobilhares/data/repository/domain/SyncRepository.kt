@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import java.util.Date
+import kotlin.math.roundToInt
 
 /**
  * Repository especializado para sincronização de dados.
@@ -86,6 +87,10 @@ class SyncRepository(
         private const val COLLECTION_VEICULOS = "veiculos"
         private const val COLLECTION_EQUIPMENTS = "equipments"
         private const val COLLECTION_META_COLABORADOR = "meta_colaborador"
+
+        private const val PUSH_OPERATION_COUNT = 27
+        private const val PULL_OPERATION_COUNT = 27
+        private const val TOTAL_SYNC_OPERATIONS = PUSH_OPERATION_COUNT + PULL_OPERATION_COUNT
         
         // Gson para serialização/deserialização
         private val gson: Gson = GsonBuilder()
@@ -96,7 +101,7 @@ class SyncRepository(
          * Retorna a referência da coleção de uma entidade dentro da estrutura hierárquica.
          * Caminho: empresas/empresa_001/entidades/{entidade}
          * ✅ CORRIGIDO: Retorna CollectionReference usando API do Firestore (como no SyncManagerV2)
-         * 
+         *
          * Estrutura no Firestore baseada na imagem do usuário:
          * empresas (coleção) → empresa_001 (documento) → entidades (subcoleção) → documentos da entidade
          * 
@@ -168,7 +173,7 @@ class SyncRepository(
      * Sincroniza dados do servidor para o local (Pull).
      * Offline-first: Funciona apenas quando online.
      */
-    suspend fun syncPull(): Result<Unit> {
+    suspend fun syncPull(progressTracker: ProgressTracker? = null): Result<Unit> {
         Log.d(TAG, "🔄 syncPull() CHAMADO - INÍCIO")
         return try {
             Log.d(TAG, "🔄 ========== INICIANDO SINCRONIZAÇÃO PULL ==========")
@@ -212,6 +217,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Rotas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando rotas...")
             
             pullClientes().fold(
                 onSuccess = { count -> 
@@ -223,6 +229,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Clientes falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando clientes...")
             
             pullMesas().fold(
                 onSuccess = { count -> 
@@ -234,6 +241,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Mesas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando mesas...")
             
             pullColaboradores().fold(
                 onSuccess = { count -> 
@@ -245,6 +253,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Colaboradores falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando colaboradores...")
             
             pullCiclos().fold(
                 onSuccess = { count -> 
@@ -256,6 +265,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Ciclos falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando ciclos...")
             
             pullAcertos().fold(
                 onSuccess = { count -> 
@@ -267,6 +277,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Acertos falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando acertos...")
             
             pullDespesas().fold(
                 onSuccess = { count -> 
@@ -278,6 +289,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Despesas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando despesas...")
             
             pullContratos().fold(
                 onSuccess = { count -> 
@@ -289,6 +301,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Contratos falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando contratos...")
             
             // Pull de entidades faltantes (prioridade ALTA)
             pullCategoriasDespesa().fold(
@@ -301,6 +314,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Categorias Despesa falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando categorias de despesa...")
             
             pullTiposDespesa().fold(
                 onSuccess = { count -> 
@@ -312,6 +326,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Tipos Despesa falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando tipos de despesa...")
             
             pullMetas().fold(
                 onSuccess = { count -> 
@@ -323,6 +338,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Metas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando metas...")
             
             pullMetaColaborador().fold(
                 onSuccess = { count -> 
@@ -334,6 +350,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Meta Colaborador falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando metas por colaborador...")
             
             pullEquipments().fold(
                 onSuccess = { count -> 
@@ -345,6 +362,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Equipments falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando equipamentos...")
             
             pullColaboradorRotas().fold(
                 onSuccess = { count -> 
@@ -356,6 +374,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Colaborador Rotas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando colaborador rotas...")
             
             pullAditivoMesas().fold(
                 onSuccess = { count -> 
@@ -367,6 +386,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Aditivo Mesas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando aditivos de mesa...")
             
             pullContratoMesas().fold(
                 onSuccess = { count -> 
@@ -378,6 +398,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Contrato Mesas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando contratos de mesa...")
             
             pullAssinaturasRepresentanteLegal().fold(
                 onSuccess = { count -> 
@@ -389,6 +410,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Assinaturas Representante Legal falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando assinaturas do representante legal...")
             
             pullLogsAuditoria().fold(
                 onSuccess = { count -> 
@@ -400,6 +422,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Logs Auditoria falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando logs de auditoria...")
             
             // ✅ NOVO: Pull de entidades faltantes (AGENTE PARALELO)
             pullPanoEstoque().fold(
@@ -412,6 +435,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull PanoEstoque falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando panos em estoque...")
             
             pullMesaVendida().fold(
                 onSuccess = { count -> 
@@ -423,6 +447,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull MesaVendida falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando mesas vendidas...")
             
             pullStockItem().fold(
                 onSuccess = { count -> 
@@ -434,6 +459,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull StockItem falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando itens de estoque...")
             
             pullMesaReformada().fold(
                 onSuccess = { count -> 
@@ -445,6 +471,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull MesaReformada falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando mesas reformadas...")
             
             pullPanoMesa().fold(
                 onSuccess = { count -> 
@@ -456,6 +483,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull PanoMesa falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando panos de mesa...")
             
             pullHistoricoManutencaoMesa().fold(
                 onSuccess = { count -> 
@@ -467,6 +495,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull HistoricoManutencaoMesa falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando histórico de manutenção das mesas...")
             
             pullHistoricoManutencaoVeiculo().fold(
                 onSuccess = { count -> 
@@ -478,6 +507,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull HistoricoManutencaoVeiculo falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando histórico de manutenção de veículos...")
             
             pullHistoricoCombustivelVeiculo().fold(
                 onSuccess = { count -> 
@@ -489,6 +519,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull HistoricoCombustivelVeiculo falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando histórico de combustível dos veículos...")
             
             pullVeiculos().fold(
                 onSuccess = { count -> 
@@ -500,6 +531,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Pull Veiculos falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Importando veículos...")
             
             _syncStatus.value = _syncStatus.value.copy(
                 isSyncing = false,
@@ -530,7 +562,7 @@ class SyncRepository(
      * Sincroniza dados do local para o servidor (Push).
      * Offline-first: Enfileira operações quando offline.
      */
-    suspend fun syncPush(): Result<Unit> {
+    suspend fun syncPush(progressTracker: ProgressTracker? = null): Result<Unit> {
         Log.d(TAG, "🔄 ========== INICIANDO SINCRONIZAÇÃO PUSH ==========")
         return try {
             if (!networkUtils.isConnected()) {
@@ -571,6 +603,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Clientes falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando clientes...")
             
             pushRotas().fold(
                 onSuccess = { count -> 
@@ -582,6 +615,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Rotas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando rotas...")
             
             pushMesas().fold(
                 onSuccess = { count -> 
@@ -593,6 +627,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Mesas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando mesas...")
             
             pushColaboradores().fold(
                 onSuccess = { count -> 
@@ -604,6 +639,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Colaboradores falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando colaboradores...")
             
             pushCiclos().fold(
                 onSuccess = { count -> 
@@ -615,6 +651,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Ciclos falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando ciclos...")
             
             pushAcertos().fold(
                 onSuccess = { count -> 
@@ -626,6 +663,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Acertos falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando acertos...")
             
             pushDespesas().fold(
                 onSuccess = { count -> 
@@ -637,6 +675,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Despesas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando despesas...")
             
             pushContratos().fold(
                 onSuccess = { count -> 
@@ -648,6 +687,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Contratos falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando contratos...")
             
             // Push de entidades faltantes (prioridade ALTA)
             pushCategoriasDespesa().fold(
@@ -660,6 +700,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Categorias Despesa falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando categorias de despesa...")
             
             pushTiposDespesa().fold(
                 onSuccess = { count -> 
@@ -671,6 +712,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Tipos Despesa falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando tipos de despesa...")
             
             pushMetas().fold(
                 onSuccess = { count -> 
@@ -682,6 +724,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Metas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando metas...")
             
             pushColaboradorRotas().fold(
                 onSuccess = { count -> 
@@ -693,6 +736,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Colaborador Rotas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando colaborador rotas...")
             
             pushAditivoMesas().fold(
                 onSuccess = { count -> 
@@ -704,6 +748,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Aditivo Mesas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando aditivos de mesa...")
             
             pushContratoMesas().fold(
                 onSuccess = { count -> 
@@ -715,6 +760,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Contrato Mesas falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando contratos de mesa...")
             
             pushAssinaturasRepresentanteLegal().fold(
                 onSuccess = { count -> 
@@ -726,6 +772,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Assinaturas Representante Legal falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando assinaturas do representante legal...")
             
             pushLogsAuditoria().fold(
                 onSuccess = { count -> 
@@ -737,6 +784,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Logs Auditoria falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando logs de auditoria...")
             
             // ✅ NOVO: Push de entidades faltantes (AGENTE PARALELO)
             pushPanoEstoque().fold(
@@ -749,6 +797,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push PanoEstoque falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando panos em estoque...")
             
             pushMesaVendida().fold(
                 onSuccess = { count -> 
@@ -760,6 +809,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push MesaVendida falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando mesas vendidas...")
             
             pushStockItem().fold(
                 onSuccess = { count -> 
@@ -771,6 +821,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push StockItem falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando itens de estoque...")
             
             pushMesaReformada().fold(
                 onSuccess = { count -> 
@@ -782,6 +833,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push MesaReformada falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando mesas reformadas...")
             
             pushPanoMesa().fold(
                 onSuccess = { count -> 
@@ -793,6 +845,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push PanoMesa falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando panos de mesa...")
             
             pushHistoricoManutencaoMesa().fold(
                 onSuccess = { count -> 
@@ -804,6 +857,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push HistoricoManutencaoMesa falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando histórico de manutenção das mesas...")
             
             pushHistoricoManutencaoVeiculo().fold(
                 onSuccess = { count -> 
@@ -815,6 +869,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push HistoricoManutencaoVeiculo falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando histórico de manutenção de veículos...")
             
             pushHistoricoCombustivelVeiculo().fold(
                 onSuccess = { count -> 
@@ -826,6 +881,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push HistoricoCombustivelVeiculo falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando histórico de combustível dos veículos...")
             
             pushVeiculos().fold(
                 onSuccess = { count -> 
@@ -837,6 +893,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Veiculos falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando veículos...")
             
             pushMetaColaborador().fold(
                 onSuccess = { count -> 
@@ -848,6 +905,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Meta Colaborador falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando metas por colaborador...")
             
             pushEquipments().fold(
                 onSuccess = { count -> 
@@ -859,6 +917,7 @@ class SyncRepository(
                     Log.e(TAG, "❌ Push Equipments falhou: ${e.message}", e)
                 }
             )
+            progressTracker?.advance("Enviando equipamentos...")
             
             _syncStatus.value = _syncStatus.value.copy(
                 isSyncing = false,
@@ -894,16 +953,17 @@ class SyncRepository(
      * - PUSH primeiro: Envia dados locais para a nuvem (preserva dados novos)
      * - PULL depois: Baixa atualizações da nuvem (não sobrescreve se local for mais recente)
      */
-    suspend fun syncBidirectional(): Result<Unit> {
+    suspend fun syncBidirectional(onProgress: ((SyncProgress) -> Unit)? = null): Result<Unit> {
         Log.d(TAG, "🔄 syncBidirectional() CHAMADO - INÍCIO")
         return try {
             Log.d(TAG, "🔄 ========== INICIANDO SINCRONIZAÇÃO BIDIRECIONAL ==========")
             Log.d(TAG, "Iniciando sincronização bidirecional...")
+            val progressTracker = onProgress?.let { ProgressTracker(TOTAL_SYNC_OPERATIONS, it).apply { start() } }
             
             // ✅ CORRIGIDO: 1. PUSH primeiro (enviar dados locais para preservar)
             // Isso garante que dados novos locais sejam enviados antes de baixar da nuvem
             Log.d(TAG, "📤 Passo 1: Executando PUSH (enviar dados locais para nuvem)...")
-            val pushResult = syncPush()
+            val pushResult = syncPush(progressTracker)
             if (pushResult.isFailure) {
                 Log.w(TAG, "⚠️ Push falhou: ${pushResult.exceptionOrNull()?.message}")
                 Log.w(TAG, "⚠️ Continuando com Pull mesmo assim...")
@@ -914,7 +974,7 @@ class SyncRepository(
             // ✅ CORRIGIDO: 2. PULL depois (atualizar dados locais da nuvem)
             // O pull não sobrescreve dados locais mais recentes (verificação de timestamp)
             Log.d(TAG, "📥 Passo 2: Executando PULL (importar atualizações da nuvem)...")
-            val pullResult = syncPull()
+            val pullResult = syncPull(progressTracker)
             if (pullResult.isFailure) {
                 Log.w(TAG, "⚠️ Pull falhou: ${pullResult.exceptionOrNull()?.message}")
                 Log.w(TAG, "⚠️ Mas Push pode ter sido bem-sucedido")
@@ -924,16 +984,19 @@ class SyncRepository(
             
             if (pullResult.isSuccess && pushResult.isSuccess) {
                 Log.d(TAG, "✅ ========== SINCRONIZAÇÃO BIDIRECIONAL CONCLUÍDA COM SUCESSO ==========")
+                progressTracker?.complete()
                 Result.success(Unit)
             } else {
                 val errorMsg = "Sincronização parcial: Push=${pushResult.isSuccess}, Pull=${pullResult.isSuccess}"
                 Log.w(TAG, "⚠️ $errorMsg")
+                progressTracker?.completeWithMessage("Sincronização parcial concluída")
                 Result.failure(Exception(errorMsg))
             }
             
         } catch (e: Exception) {
             Log.e(TAG, "❌ Erro na sincronização bidirecional: ${e.message}", e)
             Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
+            onProgress?.invoke(SyncProgress(100, "Sincronização falhou"))
             Result.failure(e)
         }
     }
@@ -1907,7 +1970,7 @@ class SyncRepository(
                         metaLocal == null -> {
                             // Meta não existe localmente, inserir
                             appRepository.inserirMeta(meta)
-                            syncCount++
+                    syncCount++
                             Log.d(TAG, "✅ Meta inserida: ID=$metaId, Nome=${meta.nome}, RotaId=${meta.rotaId}")
                         }
                         serverTimestamp > (localTimestamp + 1000) -> {
@@ -3472,8 +3535,8 @@ class SyncRepository(
                     
                     when {
                         stockItemLocal == null -> {
-                            appRepository.inserirStockItem(stockItem)
-                            syncCount++
+                    appRepository.inserirStockItem(stockItem)
+                    syncCount++
                             Log.d(TAG, "✅ StockItem inserido: ${stockItem.name} (ID: $stockItemId)")
                         }
                         serverTimestamp > localTimestamp -> {
@@ -4501,5 +4564,39 @@ enum class SyncOperationType {
     CREATE,
     UPDATE,
     DELETE
+}
+
+data class SyncProgress(
+    val percent: Int,
+    val message: String
+)
+
+/**
+ * Classe utilitária para rastrear o progresso da sincronização.
+ */
+class ProgressTracker(
+    private val totalSteps: Int,
+    private val listener: ((SyncProgress) -> Unit)?
+) {
+    private var completedSteps = 0
+
+    fun start() {
+        listener?.invoke(SyncProgress(0, "Preparando sincronização..."))
+    }
+
+    fun advance(message: String) {
+        if (totalSteps == 0) return
+        completedSteps++
+        val percent = ((completedSteps.toDouble() / totalSteps) * 100).roundToInt().coerceIn(0, 100)
+        listener?.invoke(SyncProgress(percent, message))
+    }
+
+    fun complete() {
+        listener?.invoke(SyncProgress(100, "Sincronização concluída"))
+    }
+
+    fun completeWithMessage(message: String) {
+        listener?.invoke(SyncProgress(100, message))
+    }
 }
 
