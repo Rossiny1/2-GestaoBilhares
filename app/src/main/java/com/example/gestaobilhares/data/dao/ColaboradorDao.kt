@@ -77,6 +77,9 @@ interface ColaboradorDao {
     
     // ==================== META COLABORADOR ====================
     
+    @Query("SELECT * FROM metas_colaborador ORDER BY data_criacao DESC")
+    fun obterTodasMetaColaborador(): Flow<List<MetaColaborador>>
+    
     @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND ativo = 1 ORDER BY data_criacao DESC")
     fun obterMetasPorColaborador(colaboradorId: Long): Flow<List<MetaColaborador>>
     

@@ -50,6 +50,7 @@ import java.util.Date
         PanoMesa::class, // ✅ NOVO: VINCULAÇÃO PANO-MESA
         com.example.gestaobilhares.data.entities.StockItem::class, // ✅ NOVO: ITENS GENÉRICOS DO ESTOQUE
         Meta::class, // Adicionar a nova entidade
+        com.example.gestaobilhares.data.entities.Equipment::class, // ✅ NOVO: EQUIPAMENTOS
         SyncOperationEntity::class // ✅ NOVO: FILA DE SINCRONIZAÇÃO OFFLINE-FIRST
     ],
     version = 4, // ✅ MIGRATION: inclusão de fila de sincronização
@@ -183,6 +184,9 @@ abstract class AppDatabase : RoomDatabase() {
 
     // ✅ NOVO: DAO de metas
     abstract fun metaDao(): MetaDao
+    
+    // ✅ NOVO: DAO de equipamentos
+    abstract fun equipmentDao(): com.example.gestaobilhares.data.dao.EquipmentDao
     
     // ✅ NOVO: DAO de fila de sincronização
     abstract fun syncOperationDao(): SyncOperationDao

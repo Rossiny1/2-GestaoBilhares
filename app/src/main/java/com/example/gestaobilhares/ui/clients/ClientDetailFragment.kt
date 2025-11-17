@@ -308,6 +308,11 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
             recolherFabMenu()
         }
 
+        binding.fabPhone.setOnClickListener {
+            abrirTelefone()
+            recolherFabMenu()
+        }
+
         // ✅ NOVO: Listener para ícone de localização
         binding.ivLocationIcon.setOnClickListener {
             abrirNavegacaoParaLocalizacao()
@@ -550,6 +555,30 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
                 startActivity(intent)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Não foi possível abrir o WhatsApp.", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(requireContext(), "Cliente não possui número de telefone cadastrado.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Abre o discador do Android com o número de telefone do cliente.
+     * Usa Intent.ACTION_DIAL para abrir o discador sem fazer a chamada automaticamente.
+     */
+    private fun abrirTelefone() {
+        val cliente = viewModel.cliente.value
+        val telefone = cliente?.telefone
+        if (!telefone.isNullOrBlank()) {
+            // Limpar formatação do telefone (remover espaços, parênteses, hífens, etc)
+            val numeroLimpo = telefone.filter { it.isDigit() }
+            
+            try {
+                val intent = Intent(Intent.ACTION_DIAL)
+                intent.data = Uri.parse("tel:$numeroLimpo")
+                startActivity(intent)
+            } catch (e: Exception) {
+                android.util.Log.e("ClientDetailFragment", "Erro ao abrir discador: ${e.message}", e)
+                Toast.makeText(requireContext(), "Não foi possível abrir o discador.", Toast.LENGTH_SHORT).show()
             }
         } else {
             Toast.makeText(requireContext(), "Cliente não possui número de telefone cadastrado.", Toast.LENGTH_SHORT).show()

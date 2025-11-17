@@ -62,6 +62,7 @@ class AppRepository constructor(
     private val historicoCombustivelVeiculoDao: com.example.gestaobilhares.data.dao.HistoricoCombustivelVeiculoDao? = null,
     private val panoMesaDao: com.example.gestaobilhares.data.dao.PanoMesaDao? = null,
     private val metaDao: MetaDao? = null,
+    private val equipmentDao: com.example.gestaobilhares.data.dao.EquipmentDao? = null,
     private val syncOperationDao: SyncOperationDao? = null,
     // private val  // ✅ TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
 ) {
@@ -154,6 +155,7 @@ class AppRepository constructor(
                 database.historicoCombustivelVeiculoDao(),
                 database.panoMesaDao(),
                 database.metaDao(),
+                database.equipmentDao(),
                 database.syncOperationDao()
             )
         }
@@ -1555,9 +1557,15 @@ class AppRepository constructor(
     suspend fun obterStockItemPorId(id: Long) = stockItemDao?.buscarPorId(id)
     
     // ==================== EQUIPMENT ====================
-    // TODO: Equipment foi removido - implementar quando necessário
-    // fun obterTodosEquipments() = flowOf<List<Equipment>>(emptyList())
-    // suspend fun inserirEquipment(equipment: Equipment): Long = 0L
+    
+    fun obterTodosEquipments() = equipmentDao?.listar() ?: flowOf(emptyList())
+    suspend fun inserirEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment): Long = equipmentDao?.inserir(equipment) ?: 0L
+    suspend fun atualizarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) = equipmentDao?.atualizar(equipment)
+    suspend fun deletarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) = equipmentDao?.deletar(equipment)
+    
+    // ==================== META COLABORADOR (TODAS) ====================
+    
+    fun obterTodasMetaColaborador() = colaboradorDao.obterTodasMetaColaborador()
     
     // ==================== SYNC ====================
     // TODO: SyncRepository será integrado via delegação quando implementado

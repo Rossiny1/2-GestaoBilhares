@@ -17,20 +17,17 @@ class AddEditEquipmentDialog : DialogFragment() {
     private val binding get() = _binding!!
     
     private lateinit var viewModel: EquipmentsViewModel
-    private var onItemSaved: (() -> Unit)? = null
 
     companion object {
-        fun newInstance(onItemSaved: (() -> Unit)? = null): AddEditEquipmentDialog {
-            val dialog = AddEditEquipmentDialog()
-            dialog.onItemSaved = onItemSaved
-            return dialog
+        fun newInstance(): AddEditEquipmentDialog {
+            return AddEditEquipmentDialog()
         }
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddEditEquipmentBinding.inflate(layoutInflater)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        // ✅ CORRIGIDO: Criar nova instância do ViewModel (compartilha lista via companion object)
         val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = EquipmentsViewModel(appRepository)
         
@@ -86,15 +83,13 @@ class AddEditEquipmentDialog : DialogFragment() {
                 location = location
             )
             
-            // Salvar no banco de dados via ViewModel
+            // ✅ CORRIGIDO: Salvar via ViewModel (StateFlow compartilhado atualiza automaticamente)
             viewModel.adicionarEquipment(equipment)
             
             // Mostrar sucesso e fechar diálogo
             Toast.makeText(requireContext(), "Equipamento adicionado com sucesso!", Toast.LENGTH_SHORT).show()
             
-            // ✅ CORREÇÃO: Notificar callback para atualizar a lista
-            onItemSaved?.invoke()
-            
+            // ✅ CORRIGIDO: O StateFlow já atualiza automaticamente, não precisa de callback
             dismiss()
             
         } catch (e: Exception) {
