@@ -12,7 +12,7 @@
 - **Room Database**: Persistência local offline-first
 - **StateFlow**: Observação reativa moderna (substitui LiveData)
 - **WorkManager**: Background tasks (sincronização)
-- **Firebase Firestore**: Backend (configurado, aguardando SyncManagerV2)
+- **Firebase Firestore**: Backend (configurado e funcionando com SyncRepository)
 - **RepositoryFactory**: Injeção de dependência simples (Hilt pode ser adicionado futuramente)
 
 ### **Arquitetura MVVM Modernizada (Híbrida)**
@@ -106,7 +106,10 @@
 - `HistoricoCombustivelVeiculo`: Histórico de abastecimento
 - `HistoricoManutencaoVeiculo`: Histórico de manutenção
 - `Meta`: Metas de colaboradores
+- `MetaColaborador`: Metas por colaborador/rota
+- `Equipment`: Equipamentos do estoque
 - `PanoEstoque`: Panos em estoque
+- `StockItem`: Itens genéricos do estoque
 - `SignaturePoint`: Pontos de assinatura
 
 **Relacionamentos**:
@@ -265,9 +268,9 @@ class VehicleDetailViewModel(
 Todas as entidades principais estão sendo sincronizadas:
 - ✅ Clientes, Rotas, Mesas, Acertos
 - ✅ Despesas, Ciclos, Colaboradores
-- ✅ Veículos, Metas, Histórico de Combustível
+- ✅ Veículos, Metas, MetaColaborador, Histórico de Combustível
 - ✅ Histórico de Manutenção, Contratos
-- ✅ Panos, Stock Items, e demais entidades
+- ✅ Panos, Stock Items, Equipment, e demais entidades
 
 ## 🎯 MELHORES PRÁTICAS ANDROID 2025
 

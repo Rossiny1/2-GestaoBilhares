@@ -58,4 +58,11 @@
         <item>PEMBOLIM</item>
         <item>OUTROS</item>
     </string-array>
+    <plurals name="sync_pending_message">
+        <item quantity="one">Existe %d operação pendente de sincronização. Deseja sincronizar agora?</item>
+        <item quantity="other">Existem %d operações pendentes de sincronização. Deseja sincronizar agora?</item>
+    </plurals>
+    <string name="sync_progress_title">Sincronizando dados</string>
+    <string name="sync_status_preparing">Preparando sincronização...</string>
+    <string name="sync_status_completed">Sincronização concluída!</string>
 </resources>
