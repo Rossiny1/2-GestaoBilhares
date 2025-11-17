@@ -84,6 +84,8 @@ class SyncRepository(
         private const val COLLECTION_HISTORICO_MANUTENCAO_VEICULO = "historico_manutencao_veiculo"
         private const val COLLECTION_HISTORICO_COMBUSTIVEL_VEICULO = "historico_combustivel_veiculo"
         private const val COLLECTION_VEICULOS = "veiculos"
+        private const val COLLECTION_EQUIPMENTS = "equipments"
+        private const val COLLECTION_META_COLABORADOR = "meta_colaborador"
         
         // Gson para serialização/deserialização
         private val gson: Gson = GsonBuilder()
@@ -319,6 +321,28 @@ class SyncRepository(
                 onFailure = { e ->
                     failedCount++
                     Log.e(TAG, "❌ Pull Metas falhou: ${e.message}", e)
+                }
+            )
+            
+            pullMetaColaborador().fold(
+                onSuccess = { count -> 
+                    totalSyncCount += count
+                    Log.d(TAG, "✅ Pull Meta Colaborador: $count sincronizadas")
+                },
+                onFailure = { e ->
+                    failedCount++
+                    Log.e(TAG, "❌ Pull Meta Colaborador falhou: ${e.message}", e)
+                }
+            )
+            
+            pullEquipments().fold(
+                onSuccess = { count -> 
+                    totalSyncCount += count
+                    Log.d(TAG, "✅ Pull Equipments: $count sincronizados")
+                },
+                onFailure = { e ->
+                    failedCount++
+                    Log.e(TAG, "❌ Pull Equipments falhou: ${e.message}", e)
                 }
             )
             
@@ -811,6 +835,28 @@ class SyncRepository(
                 onFailure = { e ->
                     failedCount++
                     Log.e(TAG, "❌ Push Veiculos falhou: ${e.message}", e)
+                }
+            )
+            
+            pushMetaColaborador().fold(
+                onSuccess = { count -> 
+                    totalSyncCount += count
+                    Log.d(TAG, "✅ Push Meta Colaborador: $count sincronizadas")
+                },
+                onFailure = { e ->
+                    failedCount++
+                    Log.e(TAG, "❌ Push Meta Colaborador falhou: ${e.message}", e)
+                }
+            )
+            
+            pushEquipments().fold(
+                onSuccess = { count -> 
+                    totalSyncCount += count
+                    Log.d(TAG, "✅ Push Equipments: $count sincronizados")
+                },
+                onFailure = { e ->
+                    failedCount++
+                    Log.e(TAG, "❌ Push Equipments falhou: ${e.message}", e)
                 }
             )
             
@@ -4192,6 +4238,244 @@ class SyncRepository(
             Result.success(syncCount)
         } catch (e: Exception) {
             Log.e(TAG, "❌ Erro no push de veículos: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Push Meta Colaborador: Envia metas de colaborador do Room para o Firestore
+     */
+    private suspend fun pushMetaColaborador(): Result<Int> {
+        return try {
+            Log.d(TAG, "🔵 Iniciando push de meta colaborador...")
+            val metasLocais = appRepository.obterTodasMetaColaborador().first()
+            Log.d(TAG, "📥 Total de meta colaborador locais encontradas: ${metasLocais.size}")
+            
+            var syncCount = 0
+            var errorCount = 0
+            
+            metasLocais.forEach { meta ->
+                try {
+                    Log.d(TAG, "📄 Processando meta colaborador: ID=${meta.id}, Tipo=${meta.tipoMeta}, ColaboradorId=${meta.colaboradorId}")
+                    
+                    val metaMap = entityToMap(meta)
+                    Log.d(TAG, "   Mapa criado com ${metaMap.size} campos")
+                    
+                    // ✅ CRÍTICO: Adicionar roomId para compatibilidade com pull
+                    metaMap["roomId"] = meta.id
+                    metaMap["id"] = meta.id
+                    
+                    // Adicionar metadados de sincronização
+                    metaMap["lastModified"] = FieldValue.serverTimestamp()
+                    metaMap["syncTimestamp"] = FieldValue.serverTimestamp()
+                    
+                    val documentId = meta.id.toString()
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_META_COLABORADOR)
+                    Log.d(TAG, "   Enviando para Firestore: empresas/$EMPRESA_ID/entidades/${COLLECTION_META_COLABORADOR}/items, document=$documentId")
+                    
+                    collectionRef
+                        .document(documentId)
+                        .set(metaMap)
+                        .await()
+                    
+                    syncCount++
+                    Log.d(TAG, "✅ Meta colaborador enviada com sucesso: ${meta.tipoMeta} (ID: ${meta.id})")
+                } catch (e: Exception) {
+                    errorCount++
+                    Log.e(TAG, "❌ Erro ao enviar meta colaborador ${meta.id} (${meta.tipoMeta}): ${e.message}", e)
+                }
+            }
+            
+            Log.d(TAG, "✅ Push de meta colaborador concluído: $syncCount enviadas, $errorCount erros")
+            Result.success(syncCount)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erro no push de meta colaborador: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Pull Meta Colaborador: Sincroniza metas de colaborador do Firestore para o Room
+     */
+    private suspend fun pullMetaColaborador(): Result<Int> {
+        return try {
+            Log.d(TAG, "🔵 Iniciando pull de meta colaborador...")
+            val collectionRef = getCollectionReference(firestore, COLLECTION_META_COLABORADOR)
+            val snapshot = collectionRef.get().await()
+            Log.d(TAG, "📥 Total de meta colaborador no Firestore: ${snapshot.size()}")
+            
+            var syncCount = 0
+            var skipCount = 0
+            var errorCount = 0
+            
+            snapshot.documents.forEach { doc ->
+                try {
+                    val data = doc.data ?: emptyMap()
+                    Log.d(TAG, "📄 Processando meta colaborador: ID=${doc.id}, Tipo=${data["tipoMeta"]}")
+                    
+                    val metaId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
+                    if (metaId == 0L) {
+                        Log.w(TAG, "⚠️ ID inválido para meta colaborador ${doc.id} - pulando")
+                        skipCount++
+                        return@forEach
+                    }
+                    
+                    val colaboradorId = (data["colaboradorId"] as? Number)?.toLong()
+                        ?: (data["colaborador_id"] as? Number)?.toLong() ?: 0L
+                    val cicloId = (data["cicloId"] as? Number)?.toLong()
+                        ?: (data["ciclo_id"] as? Number)?.toLong() ?: 0L
+                    val rotaId = (data["rotaId"] as? Number)?.toLong()
+                        ?: (data["rota_id"] as? Number)?.toLong()
+                    
+                    val tipoMetaStr = data["tipoMeta"] as? String
+                        ?: data["tipo_meta"] as? String ?: ""
+                    val tipoMeta = try {
+                        com.example.gestaobilhares.data.entities.TipoMeta.valueOf(tipoMetaStr)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "⚠️ TipoMeta inválido: $tipoMetaStr - pulando")
+                        skipCount++
+                        return@forEach
+                    }
+                    
+                    val dataCriacao = converterTimestampParaDate(data["dataCriacao"])
+                        ?: converterTimestampParaDate(data["data_criacao"]) ?: Date()
+                    
+                    val meta = com.example.gestaobilhares.data.entities.MetaColaborador(
+                        id = metaId,
+                        colaboradorId = colaboradorId,
+                        tipoMeta = tipoMeta,
+                        valorMeta = (data["valorMeta"] as? Number)?.toDouble()
+                            ?: (data["valor_meta"] as? Number)?.toDouble() ?: 0.0,
+                        cicloId = cicloId,
+                        rotaId = rotaId,
+                        valorAtual = (data["valorAtual"] as? Number)?.toDouble()
+                            ?: (data["valor_atual"] as? Number)?.toDouble() ?: 0.0,
+                        ativo = data["ativo"] as? Boolean ?: true,
+                        dataCriacao = dataCriacao
+                    )
+                    
+                    appRepository.inserirMeta(meta)
+                    syncCount++
+                    Log.d(TAG, "✅ Meta colaborador sincronizada: ${meta.tipoMeta} (ID: ${meta.id})")
+                } catch (e: Exception) {
+                    errorCount++
+                    Log.e(TAG, "❌ Erro ao processar meta colaborador ${doc.id}: ${e.message}", e)
+                }
+            }
+            
+            Log.d(TAG, "✅ Pull de meta colaborador concluído: $syncCount sincronizadas, $skipCount ignoradas, $errorCount erros")
+            Result.success(syncCount)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erro no pull de meta colaborador: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Push Equipments: Envia equipamentos do Room para o Firestore
+     */
+    private suspend fun pushEquipments(): Result<Int> {
+        return try {
+            Log.d(TAG, "🔵 Iniciando push de equipamentos...")
+            val equipmentsLocais = appRepository.obterTodosEquipments().first()
+            Log.d(TAG, "📥 Total de equipamentos locais encontrados: ${equipmentsLocais.size}")
+            
+            var syncCount = 0
+            var errorCount = 0
+            
+            equipmentsLocais.forEach { equipment ->
+                try {
+                    Log.d(TAG, "📄 Processando equipamento: ID=${equipment.id}, Nome=${equipment.name}")
+                    
+                    val equipmentMap = entityToMap(equipment)
+                    Log.d(TAG, "   Mapa criado com ${equipmentMap.size} campos")
+                    
+                    // ✅ CRÍTICO: Adicionar roomId para compatibilidade com pull
+                    equipmentMap["roomId"] = equipment.id
+                    equipmentMap["id"] = equipment.id
+                    
+                    // Adicionar metadados de sincronização
+                    equipmentMap["lastModified"] = FieldValue.serverTimestamp()
+                    equipmentMap["syncTimestamp"] = FieldValue.serverTimestamp()
+                    
+                    val documentId = equipment.id.toString()
+                    val collectionRef = getCollectionReference(firestore, COLLECTION_EQUIPMENTS)
+                    Log.d(TAG, "   Enviando para Firestore: empresas/$EMPRESA_ID/entidades/${COLLECTION_EQUIPMENTS}/items, document=$documentId")
+                    
+                    collectionRef
+                        .document(documentId)
+                        .set(equipmentMap)
+                        .await()
+                    
+                    syncCount++
+                    Log.d(TAG, "✅ Equipamento enviado com sucesso: ${equipment.name} (ID: ${equipment.id})")
+                } catch (e: Exception) {
+                    errorCount++
+                    Log.e(TAG, "❌ Erro ao enviar equipamento ${equipment.id} (${equipment.name}): ${e.message}", e)
+                }
+            }
+            
+            Log.d(TAG, "✅ Push de equipamentos concluído: $syncCount enviados, $errorCount erros")
+            Result.success(syncCount)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erro no push de equipamentos: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Pull Equipments: Sincroniza equipamentos do Firestore para o Room
+     */
+    private suspend fun pullEquipments(): Result<Int> {
+        return try {
+            Log.d(TAG, "🔵 Iniciando pull de equipamentos...")
+            val collectionRef = getCollectionReference(firestore, COLLECTION_EQUIPMENTS)
+            val snapshot = collectionRef.get().await()
+            Log.d(TAG, "📥 Total de equipamentos no Firestore: ${snapshot.size()}")
+            
+            var syncCount = 0
+            var skipCount = 0
+            var errorCount = 0
+            
+            snapshot.documents.forEach { doc ->
+                try {
+                    val data = doc.data ?: emptyMap()
+                    Log.d(TAG, "📄 Processando equipamento: ID=${doc.id}, Nome=${data["name"]}")
+                    
+                    val equipmentId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
+                    if (equipmentId == 0L) {
+                        Log.w(TAG, "⚠️ ID inválido para equipamento ${doc.id} - pulando")
+                        skipCount++
+                        return@forEach
+                    }
+                    
+                    val equipment = com.example.gestaobilhares.data.entities.Equipment(
+                        id = equipmentId,
+                        name = data["name"] as? String ?: "",
+                        description = data["description"] as? String,
+                        quantity = (data["quantity"] as? Number)?.toInt() ?: 0,
+                        location = data["location"] as? String
+                    )
+                    
+                    if (equipment.name.isBlank()) {
+                        Log.w(TAG, "⚠️ Equipamento ${doc.id} com nome vazio - pulando")
+                        skipCount++
+                        return@forEach
+                    }
+                    
+                    appRepository.inserirEquipment(equipment)
+                    syncCount++
+                    Log.d(TAG, "✅ Equipamento sincronizado: ${equipment.name} (ID: ${equipment.id})")
+                } catch (e: Exception) {
+                    errorCount++
+                    Log.e(TAG, "❌ Erro ao processar equipamento ${doc.id}: ${e.message}", e)
+                }
+            }
+            
+            Log.d(TAG, "✅ Pull de equipamentos concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            Result.success(syncCount)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erro no pull de equipamentos: ${e.message}", e)
             Result.failure(e)
         }
     }

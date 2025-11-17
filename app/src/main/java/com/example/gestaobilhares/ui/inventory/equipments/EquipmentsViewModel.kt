@@ -2,86 +2,60 @@
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-// TODO: Equipment e EquipmentEntity não existem - implementar quando estiverem disponíveis
-// import com.example.gestaobilhares.data.entities.Equipment as EquipmentEntity
 import com.example.gestaobilhares.data.repository.AppRepository
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 
 /**
  * ViewModel para gerenciar a lista de equipamentos.
  * Carrega equipamentos do banco de dados e permite adicionar novos.
+ * 
+ * ✅ CORRIGIDO: Agora usa banco de dados Room com Flow reativo
  */
 class EquipmentsViewModel constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
     
-    private val _equipments = MutableStateFlow<List<Equipment>>(emptyList())
-    val equipments: StateFlow<List<Equipment>> = _equipments.asStateFlow()
-
-    init {
-        loadEquipments()
-    }
-
-    /**
-     * Carrega todos os equipamentos do banco de dados.
-     * Observa mudanças automaticamente através do Flow.
-     * TODO: Implementar quando Equipment e EquipmentEntity estiverem disponíveis
-     */
-    private fun loadEquipments() {
-        viewModelScope.launch {
-            try {
-                // TODO: Equipment e EquipmentEntity não existem - retornar lista vazia temporariamente
-                _equipments.value = emptyList()
-                android.util.Log.d("EquipmentsViewModel", "Equipment não implementado - retornando lista vazia")
-                /*
-                appRepository.obterTodosEquipments().collect { equipmentsFromDb: List<EquipmentEntity> ->
-                    android.util.Log.d("EquipmentsViewModel", "Carregando ${equipmentsFromDb.size} equipamentos do banco")
-                    _equipments.value = equipmentsFromDb.map { entity: EquipmentEntity ->
-                        Equipment(
-                            id = entity.id,
-                            name = entity.name,
-                            description = entity.description ?: "",
-                            quantity = entity.quantity,
-                            location = entity.location ?: ""
-                        )
-                    }
-                    android.util.Log.d("EquipmentsViewModel", "Lista atualizada com ${_equipments.value.size} equipamentos")
-                }
-                */
-            } catch (e: Exception) {
-                android.util.Log.e("EquipmentsViewModel", "Erro ao carregar equipamentos: ${e.message}", e)
-                _equipments.value = emptyList()
+    // ✅ CORRIGIDO: Observar Flow reativo do banco de dados
+    val equipments: StateFlow<List<Equipment>> = appRepository.obterTodosEquipments()
+        .map { entities ->
+            entities.map { entity ->
+                Equipment(
+                    id = entity.id,
+                    name = entity.name,
+                    description = entity.description ?: "",
+                    quantity = entity.quantity,
+                    location = entity.location ?: ""
+                )
             }
         }
-    }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = emptyList()
+        )
 
     /**
      * Adiciona um novo equipamento ao banco de dados.
-     * O Flow irá atualizar automaticamente a lista.
-     * TODO: Implementar quando Equipment e EquipmentEntity estiverem disponíveis
+     * ✅ CORRIGIDO: Salva no banco e o Flow atualiza automaticamente
      */
     fun adicionarEquipment(equipment: Equipment) {
         viewModelScope.launch {
             try {
-                // TODO: Equipment e EquipmentEntity não existem - não fazer nada temporariamente
-                android.util.Log.w("EquipmentsViewModel", "Equipment não implementado - não é possível adicionar equipamento")
-                /*
                 android.util.Log.d("EquipmentsViewModel", "Adicionando equipamento: ${equipment.name}")
-                val entity = EquipmentEntity(
+                
+                val entity = com.example.gestaobilhares.data.entities.Equipment(
                     name = equipment.name,
                     description = equipment.description.ifEmpty { null },
                     quantity = equipment.quantity,
                     location = equipment.location.ifEmpty { null }
                 )
                 val id = appRepository.inserirEquipment(entity)
-                android.util.Log.d("EquipmentsViewModel", "Equipamento inserido com ID: $id")
-                // O Flow do banco de dados já irá notificar automaticamente
-                android.util.Log.d("EquipmentsViewModel", "Equipamento adicionado com sucesso - Flow irá atualizar automaticamente")
-                */
+                android.util.Log.d("EquipmentsViewModel", "Equipamento salvo com ID: $id")
+                
             } catch (e: Exception) {
                 android.util.Log.e("EquipmentsViewModel", "Erro ao adicionar equipamento: ${e.message}", e)
             }
@@ -89,11 +63,11 @@ class EquipmentsViewModel constructor(
     }
 
     /**
-     * Recarrega todos os equipamentos do banco de dados.
+     * Recarrega todos os equipamentos.
+     * Não precisa fazer nada, pois o Flow já atualiza automaticamente
      */
     fun refreshData() {
-        android.util.Log.d("EquipmentsViewModel", "Recarregando dados dos equipamentos...")
-        loadEquipments()
+        android.util.Log.d("EquipmentsViewModel", "refreshData chamado - Flow já atualiza automaticamente")
     }
 }
 

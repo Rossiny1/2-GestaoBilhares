@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.databinding.FragmentEquipmentsBinding
 import kotlinx.coroutines.launch
@@ -47,20 +49,22 @@ class EquipmentsFragment : Fragment() {
     }
 
     private fun observeData() {
+        // ✅ CORRIGIDO: Observar StateFlow com repeatOnLifecycle (igual outras telas)
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.equipments.collect { equipments ->
-                adapter.submitList(equipments)
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.equipments.collect { equipments ->
+                    android.util.Log.d("EquipmentsFragment", "Equipamentos atualizados: ${equipments.size}")
+                    adapter.submitList(equipments)
+                }
             }
         }
     }
 
     private fun setupClickListeners() {
         binding.fabAddEquipment.setOnClickListener {
-            // ✅ CORREÇÃO: Usar callback para recarregar dados após salvar
-            AddEditEquipmentDialog.newInstance {
-                android.util.Log.d("EquipmentsFragment", "Equipamento salvo - recarregando dados...")
-                viewModel.refreshData()
-            }.show(childFragmentManager, "add_equipment")
+            // ✅ CORRIGIDO: O companion object do ViewModel compartilha a lista entre instâncias
+            // Então o dialog pode criar sua própria instância e ainda compartilhar os dados
+            AddEditEquipmentDialog.newInstance().show(childFragmentManager, "add_equipment")
         }
     }
 
