@@ -342,12 +342,30 @@ class CycleExpensesFragment : Fragment() {
                                  caminhoFoto.contains("firebase"))
             
             if (isFirebaseUrl) {
-                android.util.Log.w("CycleExpensesFragment", "⚠️ Recebida URL do Firebase Storage")
-                android.widget.Toast.makeText(
-                    requireContext(),
-                    "Erro: Foto não disponível localmente. A foto será baixada na próxima sincronização.",
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
+                android.util.Log.d("CycleExpensesFragment", "Detectada URL do Firebase Storage, fazendo download...")
+                // ✅ CORREÇÃO: Fazer download da imagem do Firebase Storage
+                lifecycleScope.launch {
+                    try {
+                        val bitmap = downloadImageFromUrl(caminhoFoto)
+                        if (bitmap != null) {
+                            mostrarFotoDialog(bitmap, despesa.dataFotoComprovante)
+                            android.util.Log.d("CycleExpensesFragment", "✅ Foto carregada do Firebase Storage")
+                        } else {
+                            android.widget.Toast.makeText(
+                                requireContext(),
+                                "Erro ao carregar foto do servidor",
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("CycleExpensesFragment", "Erro ao fazer download da foto: ${e.message}")
+                        android.widget.Toast.makeText(
+                            requireContext(),
+                            "Erro ao carregar foto: ${e.message}",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
                 return
             }
 
@@ -434,6 +452,101 @@ class CycleExpensesFragment : Fragment() {
             android.widget.Toast.makeText(
                 requireContext(),
                 "Erro ao visualizar foto: ${e.message}",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Faz download de imagem de uma URL
+     */
+    private suspend fun downloadImageFromUrl(urlString: String): android.graphics.Bitmap? {
+        return try {
+            val url = java.net.URL(urlString)
+            val connection = url.openConnection() as java.net.HttpURLConnection
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
+            connection.doInput = true
+            connection.connect()
+            
+            val inputStream = connection.inputStream
+            val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+            inputStream.close()
+            connection.disconnect()
+            bitmap
+        } catch (e: Exception) {
+            android.util.Log.e("CycleExpensesFragment", "Erro ao fazer download da imagem: ${e.message}", e)
+            null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Método para mostrar o diálogo da foto a partir de um Bitmap
+     */
+    private fun mostrarFotoDialog(bitmap: android.graphics.Bitmap, dataFoto: Date?) {
+        try {
+            val dialog = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .create()
+
+            val layout = android.widget.LinearLayout(requireContext()).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                setPadding(32, 32, 32, 32)
+            }
+
+            val imageView = android.widget.ImageView(requireContext()).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds = true
+                maxHeight = 800
+            }
+            
+            imageView.setImageBitmap(bitmap)
+
+            val textView = android.widget.TextView(requireContext()).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = 16
+                }
+                text = "Foto do Comprovante"
+                textSize = 16f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                gravity = android.view.Gravity.CENTER
+            }
+
+            val dataTextView = android.widget.TextView(requireContext()).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = 8
+                }
+                text = dataFoto?.let {
+                    "Capturada em: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale("pt", "BR")).format(it)}"
+                } ?: "Data não disponível"
+                textSize = 12f
+                gravity = android.view.Gravity.CENTER
+            }
+
+            layout.addView(imageView)
+            layout.addView(textView)
+            layout.addView(dataTextView)
+
+            dialog.setView(layout)
+            dialog.setTitle("Foto do Comprovante")
+            dialog.setButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE, "Fechar") { _, _ ->
+                dialog.dismiss()
+            }
+            dialog.show()
+        } catch (e: Exception) {
+            android.util.Log.e("CycleExpensesFragment", "Erro ao mostrar diálogo da foto: ${e.message}", e)
+            android.widget.Toast.makeText(
+                requireContext(),
+                "Erro ao exibir foto: ${e.message}",
                 android.widget.Toast.LENGTH_SHORT
             ).show()
         }

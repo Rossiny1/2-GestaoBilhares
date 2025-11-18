@@ -130,34 +130,32 @@ class SettlementFragment : Fragment() {
                             if (caminhoReal != null) {
                                 Log.d("SettlementFragment", "Caminho real da foto: $caminhoReal")
                                 
-                                // ✅ CORREÇÃO: Fazer upload da foto para Firebase Storage antes de definir
+                                // ✅ CORREÇÃO: Exibir foto localmente imediatamente
+                                mesasAcertoAdapter.setFotoRelogio(currentMesaId, caminhoReal)
+                                Toast.makeText(requireContext(), "Foto do relógio capturada com sucesso!", Toast.LENGTH_SHORT).show()
+                                
+                                // ✅ CORREÇÃO: Fazer upload da foto para Firebase Storage em background
                                 lifecycleScope.launch {
                                     try {
-                                        var finalFotoPath = caminhoReal
-                                        
                                         // Se não é URL do Firebase Storage, fazer upload
-                                        if (!firebaseImageUploader.isFirebaseStorageUrl(finalFotoPath)) {
+                                        if (!firebaseImageUploader.isFirebaseStorageUrl(caminhoReal)) {
                                             if (networkUtils.isConnected()) {
                                                 Log.d("SettlementFragment", "Fazendo upload da foto para Firebase Storage...")
-                                                val uploadedUrl = firebaseImageUploader.uploadMesaRelogio(finalFotoPath, currentMesaId)
+                                                val uploadedUrl = firebaseImageUploader.uploadMesaRelogio(caminhoReal, currentMesaId)
                                                 if (uploadedUrl != null) {
-                                                    finalFotoPath = uploadedUrl
-                                                    Log.d("SettlementFragment", "✅ Foto enviada para Firebase Storage: $finalFotoPath")
+                                                    // Salvar URL Firebase separadamente para sincronização
+                                                    mesasAcertoAdapter.setFotoRelogioFirebaseUrl(currentMesaId, uploadedUrl)
+                                                    Log.d("SettlementFragment", "✅ Foto enviada para Firebase Storage: $uploadedUrl")
                                                 } else {
-                                                    Log.w("SettlementFragment", "⚠️ Falha no upload, usando caminho local")
+                                                    Log.w("SettlementFragment", "⚠️ Falha no upload, foto será sincronizada depois")
                                                 }
                                             } else {
                                                 Log.d("SettlementFragment", "📴 Sem conexão, foto será sincronizada depois")
                                             }
                                         }
-                                        
-                                        mesasAcertoAdapter.setFotoRelogio(currentMesaId, finalFotoPath)
-                                        Toast.makeText(requireContext(), "Foto do relógio capturada com sucesso!", Toast.LENGTH_SHORT).show()
                                     } catch (e: Exception) {
                                         Log.e("SettlementFragment", "Erro ao fazer upload da foto: ${e.message}", e)
-                                        // Usar caminho local em caso de erro
-                                        mesasAcertoAdapter.setFotoRelogio(currentMesaId, caminhoReal)
-                                        Toast.makeText(requireContext(), "Foto capturada (upload pendente)", Toast.LENGTH_SHORT).show()
+                                        // Foto local já está sendo exibida, upload pode ser feito depois
                                     }
                                 }
                             } else {
