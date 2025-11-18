@@ -31,6 +31,10 @@ import java.io.FileOutputStream
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MesasAcertoAdapter(
     private val onDataChanged: () -> Unit,
@@ -376,26 +380,90 @@ class MesasAcertoAdapter(
         
         /**
          * Mostra foto do relógio final da mesa
+         * ✅ CORREÇÃO: Detecta URLs Firebase e faz download quando necessário
          */
         private fun mostrarFotoRelogio(caminhoFoto: String, dataFoto: Date?) {
             try {
-                val file = File(caminhoFoto)
-                if (file.exists()) {
-                    val bitmap = BitmapFactory.decodeFile(caminhoFoto)
-                    binding.ivFotoRelogio.setImageBitmap(bitmap)
+                // ✅ NOVO: Verificar se é URL do Firebase Storage
+                val isFirebaseUrl = caminhoFoto.startsWith("https://") && 
+                                    (caminhoFoto.contains("firebasestorage.googleapis.com") || 
+                                     caminhoFoto.contains("firebase"))
+                
+                if (isFirebaseUrl) {
+                    // ✅ NOVO: Fazer download da imagem do Firebase Storage
+                    Log.d("MesasAcertoAdapter", "Detectada URL Firebase, fazendo download...")
                     binding.layoutFotoRelogio.visibility = View.VISIBLE
+                    binding.ivFotoRelogio.setImageResource(android.R.drawable.ic_menu_gallery) // Placeholder enquanto carrega
                     
-                    // Mostrar data da foto
-                    dataFoto?.let {
-                        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
-                        binding.tvDataFoto.text = "Capturada em: ${dateFormat.format(it)}"
+                    // Usar corrotina para download assíncrono
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val bitmap = downloadImageFromUrl(caminhoFoto)
+                            withContext(Dispatchers.Main) {
+                                if (bitmap != null) {
+                                    binding.ivFotoRelogio.setImageBitmap(bitmap)
+                                    Log.d("MesasAcertoAdapter", "✅ Foto carregada do Firebase Storage")
+                                    
+                                    // Mostrar data da foto
+                                    dataFoto?.let {
+                                        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
+                                        binding.tvDataFoto.text = "Capturada em: ${dateFormat.format(it)}"
+                                    }
+                                } else {
+                                    Log.e("MesasAcertoAdapter", "Erro ao baixar foto do Firebase")
+                                    binding.layoutFotoRelogio.visibility = View.GONE
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.e("MesasAcertoAdapter", "Erro ao fazer download da foto: ${e.message}", e)
+                            withContext(Dispatchers.Main) {
+                                binding.layoutFotoRelogio.visibility = View.GONE
+                            }
+                        }
                     }
                 } else {
-                    binding.layoutFotoRelogio.visibility = View.GONE
+                    // ✅ CORREÇÃO: Carregar foto local normalmente
+                    val file = File(caminhoFoto)
+                    if (file.exists()) {
+                        val bitmap = BitmapFactory.decodeFile(caminhoFoto)
+                        binding.ivFotoRelogio.setImageBitmap(bitmap)
+                        binding.layoutFotoRelogio.visibility = View.VISIBLE
+                        
+                        // Mostrar data da foto
+                        dataFoto?.let {
+                            val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
+                            binding.tvDataFoto.text = "Capturada em: ${dateFormat.format(it)}"
+                        }
+                    } else {
+                        binding.layoutFotoRelogio.visibility = View.GONE
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("MesasAcertoAdapter", "Erro ao carregar foto: ${e.message}")
                 binding.layoutFotoRelogio.visibility = View.GONE
+            }
+        }
+        
+        /**
+         * ✅ NOVO: Faz download de imagem de uma URL
+         */
+        private suspend fun downloadImageFromUrl(urlString: String): Bitmap? {
+            return try {
+                val url = java.net.URL(urlString)
+                val connection = url.openConnection() as java.net.HttpURLConnection
+                connection.connectTimeout = 10000
+                connection.readTimeout = 10000
+                connection.doInput = true
+                connection.connect()
+                
+                val inputStream = connection.inputStream
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream.close()
+                connection.disconnect()
+                bitmap
+            } catch (e: Exception) {
+                Log.e("MesasAcertoAdapter", "Erro ao fazer download da imagem: ${e.message}", e)
+                null
             }
         }
 
@@ -627,6 +695,22 @@ class MesasAcertoAdapter(
             }
         } catch (e: Exception) {
             Log.e("MesasAcertoAdapter", "Erro crítico ao definir foto: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Define a URL Firebase da foto do relógio para uma mesa específica
+     */
+    fun setFotoRelogioFirebaseUrl(mesaId: Long, firebaseUrl: String) {
+        try {
+            Log.d("MesasAcertoAdapter", "Definindo URL Firebase para mesa $mesaId: $firebaseUrl")
+            val mesaState = mesaStates[mesaId]
+            mesaState?.let {
+                it.fotoRelogioFirebaseUrl = firebaseUrl
+                Log.d("MesasAcertoAdapter", "✅ URL Firebase salva para mesa $mesaId")
+            }
+        } catch (e: Exception) {
+            Log.e("MesasAcertoAdapter", "Erro ao definir URL Firebase: ${e.message}", e)
         }
     }
     

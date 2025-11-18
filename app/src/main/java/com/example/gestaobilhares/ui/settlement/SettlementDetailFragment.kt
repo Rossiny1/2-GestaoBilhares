@@ -606,13 +606,30 @@ class SettlementDetailFragment : Fragment() {
                                  caminhoFoto.contains("firebase"))
             
             if (isFirebaseUrl) {
-                AppLogger.log("SettlementDetailFragment", "⚠️ Recebida URL do Firebase Storage - isso não deveria acontecer")
-                AppLogger.log("SettlementDetailFragment", "   O banco deveria ter caminho local, não URL do Firebase")
-                android.widget.Toast.makeText(
-                    requireContext(),
-                    "Erro: Foto não disponível localmente. A foto será baixada na próxima sincronização.",
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
+                AppLogger.log("SettlementDetailFragment", "Detectada URL do Firebase Storage, fazendo download...")
+                // ✅ CORREÇÃO: Fazer download da imagem do Firebase Storage
+                lifecycleScope.launch {
+                    try {
+                        val bitmap = downloadImageFromUrl(caminhoFoto)
+                        if (bitmap != null) {
+                            mostrarFotoDialog(bitmap, dataFoto)
+                            AppLogger.log("SettlementDetailFragment", "✅ Foto carregada do Firebase Storage")
+                        } else {
+                            android.widget.Toast.makeText(
+                                requireContext(),
+                                "Erro ao carregar foto do servidor",
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } catch (e: Exception) {
+                        AppLogger.log("SettlementDetailFragment", "Erro ao fazer download da foto: ${e.message}")
+                        android.widget.Toast.makeText(
+                            requireContext(),
+                            "Erro ao carregar foto: ${e.message}",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
                 return
             }
 
@@ -706,6 +723,110 @@ class SettlementDetailFragment : Fragment() {
             android.widget.Toast.makeText(
                 requireContext(),
                 "Erro ao visualizar foto: ${e.message}",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Faz download de imagem de uma URL
+     */
+    private suspend fun downloadImageFromUrl(urlString: String): android.graphics.Bitmap? {
+        return try {
+            val url = java.net.URL(urlString)
+            val connection = url.openConnection() as java.net.HttpURLConnection
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
+            connection.doInput = true
+            connection.connect()
+            
+            val inputStream = connection.inputStream
+            val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+            inputStream.close()
+            connection.disconnect()
+            bitmap
+        } catch (e: Exception) {
+            AppLogger.log("SettlementDetailFragment", "Erro ao fazer download da imagem: ${e.message}")
+            null
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Método separado para mostrar o diálogo da foto (sobrecarga com Bitmap)
+     */
+    private fun mostrarFotoDialog(bitmap: android.graphics.Bitmap, dataFoto: Date?) {
+        try {
+            // Criar diálogo para exibir a foto
+            val dialog = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .create()
+
+            // Layout para o diálogo
+            val layout = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(32, 32, 32, 32)
+            }
+
+            // ImageView para a foto
+            val imageView = android.widget.ImageView(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds = true
+                maxHeight = 800
+            }
+            
+            imageView.setImageBitmap(bitmap)
+
+            // TextView para informações da foto
+            val textView = TextView(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = 16
+                }
+                text = "Foto do Relógio Final"
+                textSize = 16f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                gravity = android.view.Gravity.CENTER
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.colorOnSurface))
+            }
+
+            // TextView para data da foto
+            val dataTextView = TextView(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = 8
+                }
+                text = dataFoto?.let {
+                    "Capturada em: ${DateUtils.formatarDataBrasileiraComHora(it)}"
+                } ?: "Data não disponível"
+                textSize = 12f
+                gravity = android.view.Gravity.CENTER
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.colorOnSurface))
+            }
+
+            // Adicionar views ao layout
+            layout.addView(imageView)
+            layout.addView(textView)
+            layout.addView(dataTextView)
+
+            // Configurar diálogo
+            dialog.setView(layout)
+            dialog.setTitle("Foto do Relógio")
+            dialog.setButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE, "Fechar") { _, _ ->
+                dialog.dismiss()
+            }
+            dialog.show()
+        } catch (e: Exception) {
+            AppLogger.log("SettlementDetailFragment", "Erro ao mostrar diálogo da foto: ${e.message}")
+            android.widget.Toast.makeText(
+                requireContext(),
+                "Erro ao exibir foto: ${e.message}",
                 android.widget.Toast.LENGTH_SHORT
             ).show()
         }

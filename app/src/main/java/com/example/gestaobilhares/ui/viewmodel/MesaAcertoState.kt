@@ -22,5 +22,6 @@ data class MesaAcertoState(
     var fichasJogadas: Int = 0,
     var mediaFichasJogadas: Double = 0.0,
     var fotoRelogioFinal: String? = null,
+    var fotoRelogioFirebaseUrl: String? = null,
     var dataFoto: Date? = null
 ) : Parcelable 
