@@ -1,5 +1,0 @@
-[33mf686bd0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m fix: Corrigir crash no login - Problemas de Room Database e Firebase
-[33m1880d31[m Corrigido sistema de fotos do relógio final - Implementadas proteções contra crash e melhorada visualização de fotos
-[33m65cfbeb[m feat: Implementa funcionalidade completa de captura de foto do relógio final
-[33me3281f0[m feat: Expande significativamente cidades de MG e BA com foco regional
-[33mfecae5a[m feat: Simplifica seleção para apenas MG e BA com cidades expandidas
