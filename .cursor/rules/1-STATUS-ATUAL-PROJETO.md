@@ -31,6 +31,8 @@
   - ✅ **SyncMetadata**: Entidade e DAO para rastrear última sincronização por entidade
   - ✅ **Paginação**: Suporte a queries paginadas para grandes volumes de dados
   - ✅ **Cache In-Memory**: Otimização para evitar múltiplas queries ao banco durante sincronização
+  - ✅ **Fallback Robusto**: Sistema funciona sem índices Firestore (busca sem orderBy e ordena em memória)
+  - ⏳ **Índices Firestore**: Arquivos preparados para criação futura (`firestore.indexes.json`, `deploy-indices-firestore.ps1`, `GUIA-CRIACAO-INDICES-FIRESTORE.md`)
 - **Correções Recentes (Janeiro 2025)**:
   - ✅ Corrigida ordem de sincronização (PUSH antes de PULL)
   - ✅ Corrigida conversão de tipos (DespesaResumo → Despesa)
@@ -44,6 +46,7 @@
   - ✅ **Otimização de Performance**: Cache in-memory para reduzir queries ao banco durante sync
   - ✅ **Histórico de Acertos**: Limitado a 3 acertos por cliente com opção de buscar período maior
   - ✅ **ClientDetailFragment**: Corrigido crash por views faltantes no layout
+  - ✅ **Busca de Acertos**: Implementada estratégia de fallback robusta (4 níveis) para buscar acertos mesmo sem índices Firestore
 
 ### **2. Migração Compose (PRIORIDADE MÉDIA)**
 - **Status**: 🔄 **35.8% COMPLETO** (24 telas de 67)
@@ -137,6 +140,13 @@
 - Performance
 - Testes automatizados
 - Documentação final
+
+### **FASE 4: Melhorias de Performance (FUTURO)**
+- ⏳ **Índices Compostos do Firestore**: Criar índices para otimizar queries
+  - Arquivos preparados: `firestore.indexes.json`, `deploy-indices-firestore.ps1`, `GUIA-CRIACAO-INDICES-FIRESTORE.md`
+  - Benefício: Queries até 10x mais rápidas, redução de custos
+  - Status: Sistema funciona sem índices (fallback robusto), mas performance melhora com eles
+  - Prioridade: Baixa (otimização opcional)
 
 ## 🧪 QUALIDADE E ESTABILIDADE
 

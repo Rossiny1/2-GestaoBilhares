@@ -248,7 +248,8 @@ class SyncRepository(
 **Otimizações de Performance**:
 - **Cache In-Memory**: Carrega todos os registros locais uma vez antes de processar documentos do Firestore
 - **Paginação**: Processa documentos em lotes de 500 para evitar limite de 1MB do Firestore
-- **Queries Eficientes**: Usa índices compostos no Firestore para queries incrementais
+- **Queries Eficientes**: Usa índices compostos no Firestore para queries incrementais (quando disponíveis)
+- **Fallback Robusto**: Se índice não existir, busca sem orderBy e ordena em memória (funciona sem índices)
 
 **Exemplo de Uso**:
 ```kotlin
@@ -280,6 +281,49 @@ empresas/
           │       └── {documentId}
           └── ... (outras entidades)
 ```
+
+### **Índices Compostos do Firestore (MELHORIA FUTURA)**
+
+**Status**: ⏳ **PENDENTE** - Sistema funciona sem índices, mas performance melhora significativamente com eles
+
+**Objetivo**: Criar índices compostos no Firestore para otimizar queries de busca de acertos por cliente e sincronização incremental.
+
+**Arquivos Preparados**:
+- ✅ `firestore.indexes.json`: Configuração de todos os índices necessários
+- ✅ `deploy-indices-firestore.ps1`: Script PowerShell para deploy automático via Firebase CLI
+- ✅ `GUIA-CRIACAO-INDICES-FIRESTORE.md`: Guia completo com 3 opções de criação
+
+**Índices Necessários**:
+1. **Busca de Acertos por Cliente**:
+   - `items_clienteId_dataAcerto`: `clienteId` (ASC) + `dataAcerto` (DESC)
+   - `items_cliente_id_dataAcerto`: Fallback para formato antigo
+   - `items_clienteID_dataAcerto`: Fallback para formato alternativo
+
+2. **Sincronização Incremental**:
+   - `items_lastModified`: `lastModified` (ASC) - Aplica a todas as entidades
+
+**Benefícios Esperados**:
+- ⚡ **Performance**: Queries até 10x mais rápidas com índices
+- 📉 **Custo**: Redução de leituras do Firestore (menos custo)
+- 🚀 **Escalabilidade**: Suporta grandes volumes de dados sem degradação
+
+**Como Implementar**:
+1. **Opção 1 (Recomendada)**: Deploy via Firebase CLI
+   ```powershell
+   npm install -g firebase-tools
+   .\deploy-indices-firestore.ps1
+   ```
+
+2. **Opção 2**: Criação manual no Firebase Console
+   - Acesse: https://console.firebase.google.com/project/gestaobilhares/firestore/indexes
+   - Siga o guia: `GUIA-CRIACAO-INDICES-FIRESTORE.md`
+
+3. **Opção 3**: Usar links dos logs (quando app tentar query sem índice)
+
+**Nota Importante**: 
+- O sistema **já funciona sem índices** usando fallback robusto (busca sem orderBy e ordena em memória)
+- Os índices são uma **otimização opcional** que melhora performance, mas não é obrigatória
+- Consulte `GUIA-CRIACAO-INDICES-FIRESTORE.md` para detalhes completos
 
 ### **Padrões de Observação Reativa**
 
