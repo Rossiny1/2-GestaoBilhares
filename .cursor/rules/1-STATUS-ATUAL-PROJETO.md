@@ -8,13 +8,13 @@
 - **Sessão e Acesso**: `UserSessionManager` com fallback a `SharedPreferences` e `StateFlow` reativo
 - **Modularização Arquitetural**: ✅ **COMPLETA** - AppRepository como Facade + Repositories especializados por domínio
 - **Modularização Gradle**: ✅ **COMPLETA** - Todos os módulos criados, código migrado, dependências configuradas e funcionando
-- **Sincronização**: ✅ **IMPLEMENTADA** - Sistema completo pronto para testes
+- **Sincronização**: ✅ **IMPLEMENTADA E OTIMIZADA** - Sistema completo com sincronização incremental
 
 ## 🚨 PENDÊNCIAS CRÍTICAS
 
 ### **1. Sincronização (PRIORIDADE ALTA)**
-- **Status**: ✅ **IMPLEMENTADA E FUNCIONANDO**
-- **Situação**: Sistema completo de sincronização implementado, testado e funcionando corretamente
+- **Status**: ✅ **IMPLEMENTADA, OTIMIZADA E FUNCIONANDO**
+- **Situação**: Sistema completo de sincronização implementado, testado e funcionando corretamente com otimizações de performance
 - **Componentes**:
   - ✅ `SyncRepository` especializado criado
   - ✅ Handlers de pull/push para todas as entidades implementados
@@ -27,6 +27,10 @@
   - ✅ Estrutura Firestore corrigida: `empresas/empresa_001/entidades/{collectionName}/items`
   - ✅ Conversão de `LocalDateTime` corrigida no pull de despesas
   - ✅ Timestamp local atualizado após push bem-sucedido
+  - ✅ **Sincronização Incremental**: Implementada para reduzir uso de dados e melhorar performance
+  - ✅ **SyncMetadata**: Entidade e DAO para rastrear última sincronização por entidade
+  - ✅ **Paginação**: Suporte a queries paginadas para grandes volumes de dados
+  - ✅ **Cache In-Memory**: Otimização para evitar múltiplas queries ao banco durante sincronização
 - **Correções Recentes (Janeiro 2025)**:
   - ✅ Corrigida ordem de sincronização (PUSH antes de PULL)
   - ✅ Corrigida conversão de tipos (DespesaResumo → Despesa)
@@ -36,6 +40,10 @@
   - ✅ Equipment: Entidade completa implementada com sincronização
   - ✅ MetaColaborador: Sincronização push/pull implementada
   - ✅ Botão de telefone: Funcionalidade de discador implementada
+  - ✅ **Sincronização Incremental de Clientes**: Implementada com fallback seguro para sync completo
+  - ✅ **Otimização de Performance**: Cache in-memory para reduzir queries ao banco durante sync
+  - ✅ **Histórico de Acertos**: Limitado a 3 acertos por cliente com opção de buscar período maior
+  - ✅ **ClientDetailFragment**: Corrigido crash por views faltantes no layout
 
 ### **2. Migração Compose (PRIORIDADE MÉDIA)**
 - **Status**: 🔄 **35.8% COMPLETO** (24 telas de 67)

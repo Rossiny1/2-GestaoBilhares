@@ -111,6 +111,7 @@
 - `PanoEstoque`: Panos em estoque
 - `StockItem`: Itens genéricos do estoque
 - `SignaturePoint`: Pontos de assinatura
+- `SyncMetadata`: Metadados de sincronização (último timestamp por entidade)
 
 **Relacionamentos**:
 - Cliente → Mesa (1:N)
@@ -199,7 +200,7 @@ class MyViewModel(
 - Validação de características biométricas
 - Confirmação de presença física do locatário
 
-## 🔄 SINCRONIZAÇÃO (IMPLEMENTADA)
+## 🔄 SINCRONIZAÇÃO (IMPLEMENTADA E OTIMIZADA)
 
 ### **Estratégia Offline-first**
 
@@ -208,19 +209,60 @@ class MyViewModel(
 3. **Sincronização Bidirecional**: Pull (servidor → local) + Push (local → servidor)
 4. **Resolução de Conflitos**: Comparação de timestamp (última escrita vence)
 5. **WorkManager**: Sincronização periódica em background
+6. **Sincronização Incremental**: Busca apenas dados novos/atualizados desde última sync
+7. **Paginação**: Processa dados em lotes para evitar limites do Firestore
+8. **Cache In-Memory**: Reduz queries ao banco durante processamento
 
 ### **Implementação Atual**
 
 ```kotlin
-// SyncRepository implementado e funcionando
+// SyncRepository implementado e funcionando com sincronização incremental
 class SyncRepository(
     private val context: Context,
     private val appRepository: AppRepository,
+    private val syncMetadataDao: SyncMetadataDao,
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
     suspend fun syncPull(): Result<Int> // Sincronizar do servidor
     suspend fun syncPush(): Result<Int> // Enviar para servidor
     suspend fun syncBidirectional(): Result<Int> // Sincronização completa (PUSH → PULL)
+    
+    // Métodos auxiliares para sincronização incremental
+    private suspend fun getLastSyncTimestamp(entityType: String): Long
+    private suspend fun saveSyncMetadata(entityType: String, ...)
+    private suspend fun executePaginatedQuery(query: Query, ...): Int
+    private fun createIncrementalQuery(collectionRef: CollectionReference, ...): Query
+}
+```
+
+### **Sincronização Incremental**
+
+**Objetivo**: Reduzir uso de dados móveis e melhorar performance (98.6% de redução estimada)
+
+**Implementação**:
+- **SyncMetadata**: Entidade Room para armazenar último timestamp de sincronização por entidade
+- **Queries Incrementais**: Usa `whereGreaterThan("lastModified", lastSyncTimestamp)` no Firestore
+- **Fallback Seguro**: Se índice Firestore não existir ou query falhar, faz sync completo
+- **Primeira Sincronização**: Sempre faz sync completo (quando `lastSyncTimestamp == 0L`)
+
+**Otimizações de Performance**:
+- **Cache In-Memory**: Carrega todos os registros locais uma vez antes de processar documentos do Firestore
+- **Paginação**: Processa documentos em lotes de 500 para evitar limite de 1MB do Firestore
+- **Queries Eficientes**: Usa índices compostos no Firestore para queries incrementais
+
+**Exemplo de Uso**:
+```kotlin
+// pullClientes() verifica se é primeira sync ou se há timestamp
+val lastSync = getLastSyncTimestamp("clientes")
+if (lastSync == 0L) {
+    // Primeira sync: busca tudo
+    pullClientesFullSync()
+} else {
+    // Sync incremental: busca apenas novos/atualizados
+    val query = createIncrementalQuery(collectionRef, "clientes")
+    executePaginatedQuery(query) { batch ->
+        // Processa lote de documentos
+    }
 }
 ```
 
