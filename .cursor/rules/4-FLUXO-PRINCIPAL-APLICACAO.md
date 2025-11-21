@@ -56,9 +56,13 @@ Login → Rotas → Clientes da Rota → Detalhes do Cliente → Acerto → Impr
 - Ação: Editar mesa
 
 **Card 4: Histórico de Acertos**
-- Lista de acertos anteriores
+- Lista de acertos anteriores (últimos 3 por padrão)
 - Exibe: Data, valor, status
 - Ação: Ver detalhes do acerto
+- **Botões de Filtro**:
+  - "Recentes": Mostra últimos 3 acertos (padrão)
+  - "Período Personalizado": Permite selecionar intervalo de datas para buscar acertos mais antigos do Firestore
+- **Otimização**: Mantém apenas 3 acertos localmente para economizar espaço; busca históricos maiores sob demanda
 
 ### **4. TELA "ACERTO" (SettlementScreen - Compose)**
 

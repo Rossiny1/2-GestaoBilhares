@@ -55,6 +55,12 @@
    - Discriminação por método
    - Validação de valores
 
+4. **Histórico de Acertos**:
+   - **Retenção Local**: Mantém apenas os últimos 3 acertos por cliente localmente
+   - **Busca por Período**: Botão no card "Histórico de Acertos" permite buscar período maior do Firestore
+   - **Otimização de Armazenamento**: Reduz uso de espaço no dispositivo mantendo apenas dados recentes
+   - **Sincronização Sob Demanda**: Busca históricos mais antigos apenas quando solicitado pelo usuário
+
 ### **Rotas**
 
 1. **Gestão**:

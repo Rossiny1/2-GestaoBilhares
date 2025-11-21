@@ -327,44 +327,79 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="16dp">
 
-            <!-- Título do histórico -->
+            <!-- Cabeçalho: Título -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Histórico de Acertos"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Linha de controles: Label de status + Botões de ação -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="16dp">
+                android:layout_marginBottom="12dp">
 
                 <TextView
+                    android:id="@+id/tvHistoryRangeLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Histórico de Acertos"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:text="Últimos 3 acertos"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp"
+                    android:ellipsize="end"
+                    android:maxLines="1" />
 
-                <!-- Navegação do histórico -->
-                <ImageButton
-                    android:id="@+id/btnHistoryPrevious"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                <ProgressBar
+                    android:id="@+id/historyProgress"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:layout_marginEnd="8dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_chevron_left"
-                    android:contentDescription="Acerto anterior"
-                    app:tint="?attr/colorOnSurfaceVariant" />
+                    android:visibility="gone"
+                    android:indeterminateTint="?attr/colorPrimary" />
 
-                <ImageButton
-                    android:id="@+id/btnHistoryNext"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_chevron_right"
-                    android:contentDescription="Próximo acerto"
-                    app:tint="?attr/colorOnSurfaceVariant" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnHistoryRecent"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:text="Recentes"
+                    android:textSize="12sp"
+                    app:icon="@drawable/ic_refresh"
+                    app:iconSize="16dp"
+                    app:iconPadding="4dp"
+                    app:iconTint="?attr/colorPrimary"
+                    android:textColor="?attr/colorPrimary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnHistoryLimit"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:text="Mais"
+                    android:textSize="12sp"
+                    app:icon="@drawable/ic_history"
+                    app:iconSize="16dp"
+                    app:iconPadding="4dp"
+                    app:iconTint="?attr/colorPrimary"
+                    android:textColor="?attr/colorPrimary" />
 
             </LinearLayout>
 
@@ -372,13 +407,13 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvSettlementHistory"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
+                android:layout_height="wrap_content"
+                android:maxHeight="400dp"
                 android:nestedScrollingEnabled="true"
                 android:visibility="visible"
                 android:clipToPadding="false"
-                android:paddingBottom="8dp"
                 tools:listitem="@layout/item_settlement_history"
-                tools:itemCount="6" />
+                tools:itemCount="3" />
 
         </LinearLayout>
 
