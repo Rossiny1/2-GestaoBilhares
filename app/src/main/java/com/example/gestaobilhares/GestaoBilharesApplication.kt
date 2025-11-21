@@ -1,4 +1,4 @@
-package com.example.gestaobilhares
+﻿package com.example.gestaobilhares
 
 import android.app.Application
 import com.google.firebase.FirebaseApp
@@ -43,7 +43,7 @@ class GestaoBilharesApplication : Application() {
         
         // Agendar sincronização periódica em background
         try {
-            com.example.gestaobilhares.utils.SyncManager.schedulePeriodicSync(this)
+            com.example.gestaobilhares.sync.SyncManager.schedulePeriodicSync(this)
             Timber.d("Sincronização periódica agendada")
         } catch (e: Exception) {
             Timber.e(e, "Erro ao agendar sincronização periódica: ${e.message}")

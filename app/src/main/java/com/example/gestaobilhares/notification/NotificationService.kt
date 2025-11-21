@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.notification
+﻿package com.example.gestaobilhares.notification
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -11,7 +11,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.gestaobilhares.R
 import com.example.gestaobilhares.MainActivity
-import com.example.gestaobilhares.ui.colaboradores.ColaboradorManagementFragment
 
 class NotificationService(private val context: Context) {
 
@@ -181,3 +180,4 @@ class NotificationActionReceiver : BroadcastReceiver() {
         android.util.Log.d("NotificationActionReceiver", "Ação recebida: ${intent?.action}")
     }
 }
+

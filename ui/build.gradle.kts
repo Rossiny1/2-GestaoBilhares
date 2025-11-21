@@ -31,6 +31,7 @@ android {
     buildFeatures {
         viewBinding = true
         compose = true
+        buildConfig = true // Necessário para gerar BuildConfig (mas não será usado)
     }
     
     composeOptions {
@@ -42,6 +43,7 @@ dependencies {
     // Módulos
     implementation(project(":core"))
     implementation(project(":data"))
+    implementation(project(":sync"))
     
     // Android
     implementation("androidx.core:core-ktx:1.12.0")
@@ -67,6 +69,28 @@ dependencies {
     
     // Gson
     implementation("com.google.code.gson:gson:2.10.1")
+    
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    
+    // Timber (para logging)
+    implementation("com.jakewharton.timber:timber:5.0.1")
+    
+    // iTextPDF (para ClosureReportPdfGenerator)
+    implementation("com.itextpdf:kernel:7.1.16")
+    implementation("com.itextpdf:io:7.1.16")
+    implementation("com.itextpdf:layout:7.1.16")
+    
+    // Gráficos (para ChartGenerator)
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    
+    // Google Play Services Location (para FusedLocationProviderClient)
+    implementation("com.google.android.gms:play-services-location:21.0.1")
     
     // Jetpack Compose
     implementation("androidx.compose.ui:ui:1.5.4")

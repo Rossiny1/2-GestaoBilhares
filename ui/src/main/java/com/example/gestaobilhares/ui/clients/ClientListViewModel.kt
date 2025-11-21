@@ -1,7 +1,6 @@
 ﻿package com.example.gestaobilhares.ui.clients
 
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
@@ -17,11 +16,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.Calendar
 import java.util.Date
 import kotlinx.coroutines.flow.flatMapLatest
@@ -40,8 +36,12 @@ enum class FiltroCliente {
 /**
  * Tipos de pesquisa avançada disponíveis
  */
-enum class SearchType {
-    NOME_CLIENTE, NUMERO_MESA, TELEFONE, ENDERECO, CPF_CNPJ
+enum class SearchType(val label: String, val hint: String) {
+    NOME_CLIENTE("Nome do Cliente", "Digite o nome do cliente"),
+    NUMERO_MESA("Número da Mesa", "Digite o número da mesa"),
+    TELEFONE("Telefone", "Digite o telefone"),
+    ENDERECO("Endereço / Cidade", "Digite o endereço ou cidade"),
+    CPF_CNPJ("CPF/CNPJ", "Digite o CPF ou CNPJ")
 }
 
 /**
@@ -229,7 +229,7 @@ class ClientListViewModel constructor(
                     carregarStatusRota()
                 }
             } catch (e: Exception) {
-                logError("ROTA_LOAD", "Erro ao carregar rota: ${e.message}", e)
+                android.util.Log.e("ClientListViewModel", "Erro ao carregar rota: ${e.message}", e)
                 showError("Erro ao carregar informações da rota: ${e.message}", e)
                 // Definir valores padrão para evitar crash
                 _rotaInfo.value = Rota(id = rotaId, nome = "Rota $rotaId", ativa = true)
@@ -290,9 +290,7 @@ class ClientListViewModel constructor(
      * ✅ CORREÇÃO: Usar query com débito atual para garantir dados atualizados imediatamente
      */
     fun carregarClientes(rotaId: Long) {
-        if (true // BuildConfig nÃ£o disponÃ­vel em mÃ³dulos de biblioteca) {
-            android.util.Log.d("ClientListVM", "carregarClientes chamado para rotaId: $rotaId")
-        }
+        android.util.Log.d("ClientListVM", "carregarClientes chamado para rotaId: $rotaId")
         
         // Atualizar o rotaId no fluxo se necessário
         if (_rotaIdFlow.value != rotaId) {
@@ -339,9 +337,7 @@ class ClientListViewModel constructor(
      * ✅ FASE 2D: Teste de performance - compara query original vs otimizada
      */
     fun testarPerformanceQueries(rotaId: Long) {
-        if (true // BuildConfig nÃ£o disponÃ­vel em mÃ³dulos de biblioteca) {
-            android.util.Log.d("ClientListVM", "testarPerformanceQueries iniciado para rotaId: $rotaId")
-        }
+        android.util.Log.d("ClientListVM", "testarPerformanceQueries iniciado para rotaId: $rotaId")
         
         viewModelScope.launch {
             try {
@@ -375,9 +371,7 @@ class ClientListViewModel constructor(
      * ✅ FASE 2D: Força recarregamento com query otimizada
      */
     fun forcarRecarregamentoClientesOtimizado(rotaId: Long) {
-        if (true // BuildConfig nÃ£o disponÃ­vel em mÃ³dulos de biblioteca) {
-            android.util.Log.d("ClientListVM", "forcarRecarregamentoClientesOtimizado chamado para rotaId: $rotaId")
-        }
+        android.util.Log.d("ClientListVM", "forcarRecarregamentoClientesOtimizado chamado para rotaId: $rotaId")
         
         viewModelScope.launch {
             try {
@@ -395,9 +389,7 @@ class ClientListViewModel constructor(
     }
 
     fun forcarRecarregamentoClientes(rotaId: Long) {
-        if (true // BuildConfig nÃ£o disponÃ­vel em mÃ³dulos de biblioteca) {
-            android.util.Log.d("ClientListVM", "forcarRecarregamentoClientes chamado para rotaId: $rotaId")
-        }
+        android.util.Log.d("ClientListVM", "forcarRecarregamentoClientes chamado para rotaId: $rotaId")
         
         viewModelScope.launch {
             try {
@@ -409,7 +401,7 @@ class ClientListViewModel constructor(
                 
                 android.util.Log.d("ClientListViewModel", "✅ Dados forçados recarregados: ${clientes.size} clientes")
             } catch (e: Exception) {
-                logError("FORCE_RELOAD", "Erro ao forçar recarregamento: ${e.message}", e)
+                android.util.Log.e("ClientListViewModel", "Erro ao forçar recarregamento: ${e.message}", e)
                 showError("Erro ao recarregar clientes: ${e.message}", e)
             }
         }
@@ -527,11 +519,11 @@ class ClientListViewModel constructor(
         viewModelScope.launch {
             try {
                 showLoading()
-                
+
                 val cicloAtual = _cicloAcertoEntity.value ?: return@launch
                 val rota = _rotaInfo.value ?: return@launch
                 
-                logState("CICLO_FINALIZAR", "Iniciando finalização da rota ${rota.nome} - Ciclo ${cicloAtual.numeroCiclo}")
+                android.util.Log.d("ClientListViewModel", "Iniciando finalização da rota ${rota.nome} - Ciclo ${cicloAtual.numeroCiclo}")
                 
                 // ✅ Centralizar a lógica de finalização completa (consolidação + status FINALIZADO)
                 appRepository.finalizarCicloAtualComDados(rota.id)
@@ -545,8 +537,8 @@ class ClientListViewModel constructor(
                 _statusCiclo.value = StatusCicloAcerto.FINALIZADO
                 _statusRota.value = StatusRota.FINALIZADA
                 
-                logState("CICLO_FINALIZAR", "Ciclo ${cicloAtual.numeroCiclo} finalizado com sucesso via repositório")
-                logState("CICLO_FINALIZAR", "Status da rota atualizado para: ${_statusRota.value}")
+                android.util.Log.d("ClientListViewModel", "Ciclo finalizado com sucesso via repositório")
+                android.util.Log.d("ClientListViewModel", "Status da rota atualizado para: ${_statusRota.value}")
                 
                 // ✅ CORREÇÃO: Não recarregar rota inteira, apenas atualizar status
                 // carregarRota(rota.id) // REMOVIDO para evitar loop
@@ -555,7 +547,7 @@ class ClientListViewModel constructor(
                 notificarMudancaStatusRota(rota.id)
                 
             } catch (e: Exception) {
-                logError("CICLO_FINALIZAR", "Erro ao finalizar rota: ${e.message}", e)
+                android.util.Log.e("ClientListViewModel", "Erro ao finalizar rota: ${e.message}", e)
                 showError("Erro ao finalizar rota: ${e.message}", e)
             } finally {
                 hideLoading()
@@ -638,6 +630,7 @@ class ClientListViewModel constructor(
             StatusCicloAcerto.FINALIZADO -> _statusRota.value = StatusRota.FINALIZADA
             StatusCicloAcerto.CANCELADO -> _statusRota.value = StatusRota.PAUSADA
             StatusCicloAcerto.PLANEJADO -> _statusRota.value = StatusRota.PAUSADA
+            else -> _statusRota.value = StatusRota.PAUSADA // ✅ Adicionando else para tornar o when exhaustive
         }
     }
 
@@ -662,7 +655,7 @@ class ClientListViewModel constructor(
                 _searchCriteria.value = ""
                 aplicarFiltrosCombinados()
             } catch (e: Exception) {
-                logError("BUSCA", "Erro na busca: ${e.message}", e)
+                android.util.Log.e("ClientListViewModel", "Erro na busca: ${e.message}", e)
                 showError("Erro na busca: ${e.message}", e)
             }
         }
@@ -680,7 +673,7 @@ class ClientListViewModel constructor(
                 _buscaAtual.value = ""
                 aplicarFiltrosCombinados()
             } catch (e: Exception) {
-                logError("PESQUISA_AVANCADA", "Erro na pesquisa avançada: ${e.message}", e)
+                android.util.Log.e("ClientListViewModel", "Erro na pesquisa avançada: ${e.message}", e)
                 showError("Erro na pesquisa avançada: ${e.message}", e)
             }
         }
@@ -710,6 +703,8 @@ class ClientListViewModel constructor(
                 carregarCicloAcertoReal(rota)
             } catch (e: Exception) {
                 android.util.Log.e("ClientListViewModel", "Erro ao atualizar ciclo atual: ${e.message}")
+            } finally {
+                hideLoading()
             }
         }
     }
@@ -919,16 +914,23 @@ class ClientListViewModel constructor(
                 }
                 clientesComMesas
             }
-            SearchType.CIDADE -> {
+            SearchType.TELEFONE -> {
                 clientes.filter { cliente ->
-                    cliente.cidade?.contains(criteria, ignoreCase = true) == true
+                    cliente.telefone?.contains(criteria, ignoreCase = true) == true
                 }
             }
-            SearchType.CPF -> {
+            SearchType.ENDERECO -> {
                 clientes.filter { cliente ->
-                    val cpfFormatado = com.example.gestaobilhares.core.utils.StringUtils.formatarCPF(cliente.cpfCnpj)
-                    cpfFormatado.contains(criteria, ignoreCase = true) || 
-                    cliente.cpfCnpj?.contains(criteria, ignoreCase = true) == true
+                    val enderecoMatch = cliente.endereco?.contains(criteria, ignoreCase = true) == true
+                    val cidadeMatch = cliente.cidade?.contains(criteria, ignoreCase = true) == true
+                    enderecoMatch || cidadeMatch
+                }
+            }
+            SearchType.CPF_CNPJ -> {
+                val criterioNumerico = criteria.filter { it.isDigit() }
+                clientes.filter { cliente ->
+                    val documento = cliente.cpfCnpj?.filter { it.isDigit() } ?: ""
+                    documento.contains(criterioNumerico)
                 }
             }
         }
@@ -964,12 +966,7 @@ class ClientListViewModel constructor(
      */
     fun limparErro() {
         clearError()
-    }
-
-    // ✅ CORREÇÃO: Adicionando função clearError que estava faltando
-    fun clearError() {
-        _error.value = null
-        logState("ERROR", "Limpo")
+        android.util.Log.d("ClientListViewModel", "Erro limpo")
     }
 
     /**
@@ -1114,7 +1111,7 @@ class ClientListViewModel constructor(
 
                 android.util.Log.d("ClientListViewModel", "=== DADOS MESAS CARREGADOS ===")
                 android.util.Log.d("ClientListViewModel", "Mesas encontradas: $totalMesas")
-                mesasDaRota.forEach { mesa: com.example.gestaobilhares.data.entities.Mesa ->
+                mesasDaRota.forEach { mesa ->
                     android.util.Log.d("ClientListViewModel", "Mesa: ${mesa.numero} (ID: ${mesa.id}, ClienteId: ${mesa.clienteId})")
                 }
 
@@ -1172,11 +1169,11 @@ class ClientListViewModel constructor(
                 val initialData = paginationManager.loadInitialPage()
                 _clientesTodos.value = initialData
                 
-                Log.d("ClientListViewModel", "✅ Lazy loading: ${initialData.size} clientes carregados")
+                android.util.Log.d("ClientListViewModel", "✅ Lazy loading: ${initialData.size} clientes carregados")
                 */
                 
             } catch (e: Exception) {
-                Log.e("ClientListViewModel", "❌ Erro no lazy loading: ${e.message}")
+                android.util.Log.e("ClientListViewModel", "❌ Erro no lazy loading: ${e.message}")
                 showError("Erro ao carregar clientes: ${e.message}", e)
             } finally {
                 hideLoading()
@@ -1190,7 +1187,7 @@ class ClientListViewModel constructor(
      */
     fun carregarProximaPagina() {
         // TODO: PaginationManager não existe - não fazer nada temporariamente
-        Log.d("ClientListViewModel", "⚠️ PaginationManager não implementado - carregarProximaPagina ignorado")
+                android.util.Log.d("ClientListViewModel", "⚠️ PaginationManager não implementado - carregarProximaPagina ignorado")
         /*
         viewModelScope.launch {
             try {

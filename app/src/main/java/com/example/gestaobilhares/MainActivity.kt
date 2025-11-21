@@ -9,7 +9,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.lifecycleScope
 import com.example.gestaobilhares.databinding.ActivityMainBinding
-import com.example.gestaobilhares.utils.NetworkUtils
+import com.example.gestaobilhares.core.utils.NetworkUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -40,18 +40,23 @@ class MainActivity : AppCompatActivity() {
         // (ou seja, quando não há fragmentos no stack de navegação)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val navHostFragment = supportFragmentManager.findFragmentById(com.example.gestaobilhares.R.id.nav_host_fragment) as? NavHostFragment
-                val navController = navHostFragment?.navController
+                val navHostFragment = supportFragmentManager.findFragmentById(
+                    com.example.gestaobilhares.R.id.nav_host_fragment
+                ) as? NavHostFragment ?: run {
+                    finish()
+                    return
+                }
+                val navController = navHostFragment.navController
                 
                 // ✅ CORREÇÃO: Só interceptar se estamos na tela Rotas (ou seja, back stack está vazio)
                 // Se há fragmentos no stack, deixar o Navigation Component lidar normalmente
-                if (navController?.previousBackStackEntry == null) {
+                if (navController.previousBackStackEntry == null) {
                     // Estamos na tela inicial (Rotas), verificar sincronização antes de sair
                     checkPendingSyncBeforeExit()
                 } else {
                     // Há fragmentos no stack, deixar o Navigation Component lidar normalmente
                     isEnabled = false
-                    navController?.navigateUp()
+                    navController.navigateUp()
                     isEnabled = true
                 }
             }
@@ -69,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         
         lifecycleScope.launch {
             try {
-                val appRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getAppRepository(this@MainActivity)
+                val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(this@MainActivity)
                 val networkUtils = NetworkUtils(this@MainActivity)
                 
                 // Verificar se está online
@@ -119,7 +124,10 @@ class MainActivity : AppCompatActivity() {
         
         lifecycleScope.launch {
             try {
-                val syncRepository = com.example.gestaobilhares.data.factory.RepositoryFactory.getSyncRepository(this@MainActivity)
+                // Criar SyncRepository diretamente (sem usar RepositoryFactory para evitar dependência circular)
+                val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(this@MainActivity)
+                val appRepository = com.example.gestaobilhares.data.repository.AppRepository.create(database)
+                val syncRepository = com.example.gestaobilhares.sync.SyncRepository(this@MainActivity, appRepository)
                 
                 // Mostrar diálogo de progresso
                 val progressView = layoutInflater.inflate(com.example.gestaobilhares.R.layout.dialog_sync_progress, null)

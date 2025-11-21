@@ -6,7 +6,8 @@
 - **Arquitetura**: MVVM + Room + Navigation; migração parcial para Jetpack Compose (híbrida View + Compose)
 - **Offline-first**: ✅ **IMPLEMENTADO** - App funciona completamente offline
 - **Sessão e Acesso**: `UserSessionManager` com fallback a `SharedPreferences` e `StateFlow` reativo
-- **Modularização**: ✅ **COMPLETA** - AppRepository como Facade + Repositories especializados por domínio
+- **Modularização Arquitetural**: ✅ **COMPLETA** - AppRepository como Facade + Repositories especializados por domínio
+- **Modularização Gradle**: ✅ **COMPLETA** - Todos os módulos criados, código migrado, dependências configuradas e funcionando
 - **Sincronização**: ✅ **IMPLEMENTADA** - Sistema completo pronto para testes
 
 ## 🚨 PENDÊNCIAS CRÍTICAS
@@ -73,7 +74,7 @@
 - 🔄 **Híbridos (Wrapper)**: 3 telas
 - **Total**: 67 telas
 
-### **Modularização**
+### **Modularização Arquitetural**
 - ✅ **AppRepository**: Facade centralizado (~1590 linhas, delegando para repositories especializados)
 - ✅ **Repositories Especializados**: 11 domínios (Client, Acerto, Mesa, Rota, Despesa, Colaborador, Contrato, Ciclo, Veiculo, Meta, Pano)
 - ✅ **ViewModels**: Compatíveis (sem breaking changes), usando observação reativa com flatMapLatest e stateIn
@@ -81,7 +82,28 @@
 - ✅ **Adapters**: Criados para histórico de veículos (FuelHistoryAdapter, MaintenanceHistoryAdapter)
 - ✅ **Equipment**: Entidade completa implementada (EquipmentEntity, EquipmentDao, sincronização push/pull)
 
+### **Modularização Gradle**
+- ✅ **Módulos Criados**: `:core`, `:data`, `:ui`, `:sync` existem no `settings.gradle.kts` e têm `build.gradle.kts` configurados
+- ✅ **Código Migrado**: Todo código foi migrado para os módulos apropriados
+  - `:core`: ~22 arquivos (utilitários + RepositoryFactory)
+  - `:data`: ~80 arquivos (entities, DAOs, repositories)
+  - `:ui`: ~170 arquivos Kotlin + layouts XML (fragments, viewmodels, adapters)
+  - `:sync`: ~5 arquivos (SyncRepository, SyncManager, SyncWorker)
+  - `:app`: Apenas MainActivity, Application, NotificationService
+- ✅ **Dependências Configuradas**: Módulo `:app` depende de todos os outros módulos (`implementation(project(":core"))`, `:data`, `:ui`, `:sync`)
+- ✅ **Build Funcionando**: Build estável e passando com todos os módulos
+
 ## 🎯 PRÓXIMOS PASSOS (ORDEM DE PRIORIDADE)
+
+### **FASE 0: Modularização Gradle (CONCLUÍDA)**
+1. ✅ **Migração Completa**: Todo código migrado para módulos apropriados
+   - ✅ `:core`: Utilitários e RepositoryFactory
+   - ✅ `:data`: Entities, DAOs, Database, Repositories
+   - ✅ `:ui`: Fragments, ViewModels, Adapters, Layouts
+   - ✅ `:sync`: SyncRepository, SyncManager, SyncWorker
+   - ✅ `:app`: Apenas Application, MainActivity, NotificationService
+2. ✅ **Dependências Configuradas**: Todos os módulos interconectados corretamente
+3. ✅ **Build Funcionando**: Build estável e passando
 
 ### **FASE 1: Sincronização (CONCLUÍDA)**
 1. ✅ **Implementação Completa**:
@@ -112,7 +134,8 @@
 
 - ✅ **Build**: Estável e funcional
 - ✅ **Offline**: Funciona completamente offline
-- ✅ **Modularização**: Completa e testada
+- ✅ **Modularização Arquitetural**: Completa e testada (AppRepository + Repositories especializados)
+- ✅ **Modularização Gradle**: Completa e funcionando (código migrado, dependências configuradas)
 - ✅ **Sincronização**: Implementada, testada e funcionando corretamente (todas as entidades incluindo Equipment e MetaColaborador)
 - ✅ **Observação Reativa**: ViewModels usando flatMapLatest e stateIn para atualização automática
 - ✅ **Equipment**: Entidade completa implementada com sincronização
@@ -122,9 +145,10 @@
 ## 📝 NOTAS IMPORTANTES
 
 1. **Offline-first**: App deve funcionar 100% offline; sincronização é complementar
-2. **Modularização**: Trabalho paralelo possível sem conflitos
-3. **Compatibilidade**: ViewModels não precisam mudar (AppRepository como Facade)
-4. **Melhores Práticas Android 2025**: Seguir diretrizes oficiais do Android Developer
+2. **Modularização Arquitetural**: Trabalho paralelo possível sem conflitos (AppRepository como Facade)
+3. **Modularização Gradle**: ✅ Completa - Código migrado para módulos apropriados, dependências configuradas, build funcionando
+4. **Compatibilidade**: ViewModels não precisam mudar (AppRepository como Facade)
+5. **Melhores Práticas Android 2025**: Seguir diretrizes oficiais do Android Developer
 
 ## 🔗 REFERÊNCIAS
 

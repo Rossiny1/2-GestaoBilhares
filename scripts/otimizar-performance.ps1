@@ -48,8 +48,8 @@ if ($defenderExclusions -notcontains $projectPath) {
 Write-Host "`n6. Verificando espaço em disco..." -ForegroundColor Yellow
 $drive = (Get-Location).Drive.Name
 $disk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='$drive`:'"
-$freeSpaceGB = [math]::Round($disk.FreeSpace / 1GB, 2)
-$totalSpaceGB = [math]::Round($disk.Size / 1GB, 2)
+$freeSpaceGB = [math]::Round($disk.FreeSpace / 1073741824, 2)
+$totalSpaceGB = [math]::Round($disk.Size / 1073741824, 2)
 Write-Host "   Espaço livre: $freeSpaceGB GB de $totalSpaceGB GB" -ForegroundColor Cyan
 if ($freeSpaceGB -lt 5) {
     Write-Host "   AVISO: Pouco espaço em disco pode afetar performance" -ForegroundColor Red
@@ -59,7 +59,7 @@ if ($freeSpaceGB -lt 5) {
 Write-Host "`n7. Verificando cache do Gradle..." -ForegroundColor Yellow
 $gradleCache = "$env:USERPROFILE\.gradle\caches"
 if (Test-Path $gradleCache) {
-    $cacheSize = (Get-ChildItem -Path $gradleCache -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1GB
+    $cacheSize = (Get-ChildItem -Path $gradleCache -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1073741824
     Write-Host "   Tamanho do cache: $([math]::Round($cacheSize, 2)) GB" -ForegroundColor Cyan
     if ($cacheSize -gt 10) {
         Write-Host "   AVISO: Cache muito grande. Considere limpar com: .\gradlew cleanBuildCache" -ForegroundColor Yellow

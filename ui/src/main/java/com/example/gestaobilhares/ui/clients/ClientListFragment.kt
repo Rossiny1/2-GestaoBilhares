@@ -63,7 +63,7 @@ class ClientListFragment : Fragment() {
         })
         
         // ✅ FASE 8C: Inicializar ViewModel com todos os repositórios necessários
-        val appRepository = com.example.gestaobilhares.core.factory.RepositoryFactory.getAppRepository(requireContext())
+        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
         val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
         viewModel = ClientListViewModel(appRepository, userSessionManager)
         
@@ -304,7 +304,7 @@ class ClientListFragment : Fragment() {
         // lifecycleScope.launch { viewModel.percentualAcertados.collect { ... } }
         // lifecycleScope.launch { viewModel.totalClientes.collect { ... } }
 
-        
+
         // ✅ FASE 9A: Observar clientes com empty state melhorado
         lifecycleScope.launch {
             viewModel.clientes.collect { clientes ->
@@ -471,13 +471,8 @@ class ClientListFragment : Fragment() {
             atualizarEstadoFiltros(botaoAtivo)
         }
     }
-    
 
-    
 
-    
-
-    
     // ✅ FASE 9A: Toggle da busca com animação
     private fun toggleBusca() {
         _binding?.let { binding ->
@@ -674,7 +669,7 @@ class ClientListFragment : Fragment() {
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle("Confirmar Finalização do Ciclo")
             .setMessage(mensagem)
-            .setIcon(android.com.example.gestaobilhares.ui.R.drawable.ic_dialog_alert)
+            .setIcon(android.R.drawable.ic_dialog_alert)
             .setPositiveButton("Sim, Finalizar") { _, _ ->
                 viewModel.finalizarRota()
                 mostrarFeedback("Ciclo finalizado com sucesso!", Snackbar.LENGTH_SHORT)
@@ -820,7 +815,7 @@ class ClientListFragment : Fragment() {
                 context = requireContext(),
                 onSearch = { searchType, criteria ->
                     viewModel.pesquisarAvancada(searchType, criteria)
-                    mostrarFeedback("Pesquisa: ${searchType.displayName} - $criteria", Snackbar.LENGTH_SHORT)
+                    mostrarFeedback("Pesquisa: ${searchType.label} - $criteria", Snackbar.LENGTH_SHORT)
                 }
             )
         } catch (e: Exception) {
@@ -861,5 +856,4 @@ class ClientListFragment : Fragment() {
         _binding = null
     }
 } 
-
 
