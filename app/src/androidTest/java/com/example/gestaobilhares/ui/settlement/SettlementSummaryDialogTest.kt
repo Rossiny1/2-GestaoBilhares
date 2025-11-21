@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.ui.settlement
+﻿package com.example.gestaobilhares.ui.settlement
 
 import com.example.gestaobilhares.data.entities.Mesa
 import org.junit.Test

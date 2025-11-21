@@ -302,7 +302,9 @@
                     app:fabSize="mini"
                     app:backgroundTint="?attr/colorPrimary"
                     app:tint="?attr/colorOnPrimary"
-                    android:clickable="false" />
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:duplicateParentState="true" />
 
             </LinearLayout>
 

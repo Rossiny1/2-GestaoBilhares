@@ -24,12 +24,13 @@ android {
     
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs += listOf("-opt-in=kotlin.ExperimentalStdlibApi")
     }
 }
 
 dependencies {
     // Módulos
-    implementation(project(":core"))
+    implementation(project(":core")) // ✅ Adicionado: necessário para FirebaseImageUploader
     implementation(project(":data"))
     
     // WorkManager
