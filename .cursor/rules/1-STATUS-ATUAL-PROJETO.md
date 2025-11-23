@@ -20,9 +20,11 @@
   - ✅ Handlers de pull/push para todas as entidades implementados
   - ✅ Fila de sincronização offline-first implementada
   - ✅ WorkManager configurado para sincronização periódica
+  - ✅ WorkManager executa apenas em condições ideais (Wi‑Fi não-medida, carregando, bateria ok) com janela padrão de 6h
   - ✅ Integração com Firebase Firestore completa
   - ✅ `SyncWorker` implementado para background sync
   - ✅ `SyncManager` para agendamento de sincronização
+  - ✅ Heurística `shouldRunBackgroundSync()` decide quando o worker roda (fila pendente/falha ou última sync global `_global_sync` > 6 h) e registra o timestamp global após cada ciclo
   - ✅ Método `limparOperacoesAntigas()` implementado
   - ✅ Estrutura Firestore corrigida: `empresas/empresa_001/entidades/{collectionName}/items`
   - ✅ Conversão de `LocalDateTime` corrigida no pull de despesas
@@ -44,6 +46,7 @@
   - ✅ Botão de telefone: Funcionalidade de discador implementada
   - ✅ **Sincronização Incremental de Clientes**: Implementada com fallback seguro para sync completo
   - ✅ **Otimização de Performance**: Cache in-memory para reduzir queries ao banco durante sync
+- ✅ **ACL por Rota**: `shouldSyncRouteData` centraliza validação e caches, e agora as queries Firestore já aplicam `rotaId` (chunked em grupos de 10) para clientes, despesas, ciclos, metas, metas de colaborador e vínculos colaborador-rota, reduzindo download para usuários restritos
   - ✅ **Histórico de Acertos**: Limitado a 3 acertos por cliente com opção de buscar período maior
   - ✅ **ClientDetailFragment**: Corrigido crash por views faltantes no layout
   - ✅ **Busca de Acertos**: Implementada estratégia de fallback robusta (4 níveis) para buscar acertos mesmo sem índices Firestore
@@ -167,6 +170,7 @@
 3. **Modularização Gradle**: ✅ Completa - Código migrado para módulos apropriados, dependências configuradas, build funcionando
 4. **Compatibilidade**: ViewModels não precisam mudar (AppRepository como Facade)
 5. **Melhores Práticas Android 2025**: Seguir diretrizes oficiais do Android Developer
+6. **Controle de Acesso por Rotas**: Usuários não-admin só sincronizam dados das rotas atribuídas; `accessibleRouteIdsCache` (Set) é resetado a cada `syncPull` e `shouldSyncRouteData` garante consistência entre filtros de consulta e processamento local
 
 ## 🔗 REFERÊNCIAS
 
