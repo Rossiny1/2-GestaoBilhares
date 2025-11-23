@@ -212,6 +212,10 @@ class MyViewModel(
 6. **Sincronização Incremental**: Busca apenas dados novos/atualizados desde última sync
 7. **Paginação**: Processa dados em lotes para evitar limites do Firestore
 8. **Cache In-Memory**: Reduz queries ao banco durante processamento
+9. **Heurística de Background**: `SyncRepository.shouldRunBackgroundSync()` só dispara WorkManager se houver pendências/falhas na fila ou se a última sync global `_global_sync` ocorreu há mais de 6 h, evitando execuções desnecessárias
+10. **ACL por Rota**: `shouldSyncRouteData` e `accessibleRouteIdsCache` (Set) garantem que apenas as rotas permitidas sejam sincronizadas; usuários restritos têm queries Firestore filtradas por `rotaId`/`whereIn`
+
+> **Nota**: O `SyncManager` agenda o WorkManager apenas quando o dispositivo está carregando, com bateria saudável e em rede não medida (Wi‑Fi). Isso reduz impacto em bateria/dados mantendo o comportamento offline-first.
 
 ### **Implementação Atual**
 
@@ -266,6 +270,15 @@ if (lastSync == 0L) {
     }
 }
 ```
+
+### **Controle de Acesso por Rotas**
+
+- `UserSessionManager.getInstance(context)` expõe o nível de acesso e as rotas permitidas do colaborador; o cache (`accessibleRouteIdsCache`) agora é um `Set<Long>` resetado a cada `syncPull`
+- `shouldSyncRouteData(...)` centraliza toda a validação de ACL, reutilizando caches de cliente/mesa para descobrir `rotaId` sem reconsultar o banco
+- As consultas Firestore aplicam o filtro de rota sempre que o usuário não é admin:
+  - Clientes, Despesas, Ciclos, Metas, MetaColaborador e ColaboradorRotas executam `whereEqualTo/whereIn("rotaId", chunk)` em grupos de até 10 IDs
+  - Quando o colaborador não tem rotas atribuídas, nenhuma query é executada e apenas os dados locais permanecem disponíveis (offline-first)
+- O processamento local continua validando `shouldSyncRouteData` para garantir consistência caso documentos cheguem sem o campo `rotaId`
 
 ### **Estrutura Firestore**
 
