@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="impressao_sucesso">Recibo enviado para impressão!</string>
+    <string name="impressao_erro_tentar_novamente">Tentar novamente</string>
+    <string name="impressao_erro_cancelar">Cancelar</string>
+    <string name="impressao_erro_titulo">Erro na impressão</string>
+    <string name="impressao_permissao_necessaria">Permissão Bluetooth necessária para imprimir.</string>
+    <plurals name="sync_pending_message">
+        <item quantity="zero">Nenhuma sincronização pendente</item>
+        <item quantity="one">%d sincronização pendente</item>
+        <item quantity="other">%d sincronizações pendentes</item>
+    </plurals>
+    <string name="sync_progress_title">Sincronizando dados</string>
+    <string name="sync_status_preparing">Preparando sincronização...</string>
+    <string name="sync_status_completed">Sincronização concluída!</string>
+</resources>
+

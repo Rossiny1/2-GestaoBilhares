@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="4dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:strokeColor="?attr/colorPrimary"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header com número da mesa e data -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tvNumeroMesa"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Mesa 701"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                tools:text="Mesa 701" />
+
+            <TextView
+                android:id="@+id/tvDataReforma"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="22/09/2024"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="12sp"
+                tools:text="22/09/2024" />
+
+        </LinearLayout>
+
+        <!-- Tipo da mesa -->
+        <TextView
+            android:id="@+id/tvTipoMesa"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sinuca - Grande"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="14sp"
+            android:layout_marginBottom="4dp"
+            tools:text="Sinuca - Grande" />
+
+        <!-- Total de reformas (se houver mais de 1) -->
+        <TextView
+            android:id="@+id/tvTotalReformas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="2 reformas realizadas"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            tools:text="2 reformas realizadas"
+            tools:visibility="visible" />
+
+        <!-- Itens reformados -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔨 "
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvItensReformados"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Pintura, Tabela, Panos (P001, P002)"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                tools:text="Pintura, Tabela, Panos (P001, P002)" />
+
+        </LinearLayout>
+
+        <!-- Observações (se houver) -->
+        <TextView
+            android:id="@+id/tvObservacoes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Observações: Mesa estava com desgaste na pintura..."
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:visibility="gone"
+            tools:text="Observações: Mesa estava com desgaste na pintura..."
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

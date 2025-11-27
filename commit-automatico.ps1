@@ -36,23 +36,21 @@ git reset HEAD -- "ui/build/" 2>$null
 git reset HEAD -- "data/build/" 2>$null
 git reset HEAD -- "sync/build/" 2>$null
 
-# 3. Adicionar apenas arquivos rastreados (modificados e deletados) - SEM untracked
-Write-Host "Adicionando arquivos modificados e deletados ao staging..." -ForegroundColor Yellow
+# 3. Adicionar arquivos modificados e novos (respeitando .gitignore)
+Write-Host "Adicionando arquivos modificados (trackeados) ao staging..." -ForegroundColor Yellow
 git add -u
 
-# Verificar se o git add funcionou
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERRO ao adicionar arquivos ao staging!" -ForegroundColor Red
-    Write-Host "Tentando adicionar arquivos especificos..." -ForegroundColor Yellow
-    
-    # Tentar adicionar apenas os arquivos modificados e deletados explicitamente
-    git add -u -- "app/" "core/src/" "data/src/" "ui/src/" "sync/src/" "*.gradle.kts" "*.xml" "*.ps1" 2>$null
-    
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "ERRO CRITICO: Nao foi possivel adicionar arquivos ao staging" -ForegroundColor Red
-        Write-Host "Tentando adicionar apenas arquivos modificados..." -ForegroundColor Yellow
-        git add -u
-    }
+    Write-Host "[ERRO] Falha ao adicionar arquivos modificados. Tentando novamente..." -ForegroundColor Red
+    git add -u
+}
+
+Write-Host "Adicionando arquivos novos (untracked) ao staging..." -ForegroundColor Yellow
+git add --all
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[AVISO] Nao foi possivel adicionar todos os arquivos automaticamente. Tentando caminho alternativo..." -ForegroundColor Yellow
+    git ls-files -o --exclude-standard | ForEach-Object { git add $_ }
 }
 
 # 4. Verificar se há arquivos no staging para commitar (usando --cached em vez de --staged)
