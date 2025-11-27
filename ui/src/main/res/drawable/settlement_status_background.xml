@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 💰 BACKGROUND PARA STATUS DE ACERTO -->
+<!-- Design moderno com cores temáticas baseadas no status -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Estado padrão - Pago/Concluído -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#FF10B981"
+                android:endColor="#FF059669"
+                android:angle="90"
+                android:type="linear" />
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+    
+</selector>

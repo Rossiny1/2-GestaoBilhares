@@ -1,0 +1,484 @@
+package com.example.gestaobilhares.ui.clients
+
+import android.os.Parcelable
+import android.util.Log
+import androidx.lifecycle.viewModelScope
+import com.example.gestaobilhares.core.utils.UserSessionManager
+import com.example.gestaobilhares.data.entities.Acerto
+import com.example.gestaobilhares.data.entities.CicloAcertoEntity
+import com.example.gestaobilhares.data.entities.Cliente
+import com.example.gestaobilhares.data.entities.ContratoLocacao
+import com.example.gestaobilhares.data.entities.Mesa
+import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.ui.common.BaseViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import com.example.gestaobilhares.sync.SyncRepository
+
+/**
+ * ViewModel responsável pelos dados da tela de detalhes do cliente.
+ * Mantém o histórico de acertos, mesas vinculadas e informações auxiliares
+ * necessárias para o fluxo offline-first.
+ */
+class ClientDetailViewModel(
+    private val appRepository: AppRepository,
+    private val userSessionManager: UserSessionManager? = null,
+    private val syncRepository: SyncRepository? = null
+) : BaseViewModel() {
+
+    companion object {
+        private const val TAG = "ClientDetailViewModel"
+        private const val DEFAULT_OBSERVACAO = "Nenhuma observação registrada."
+        private const val DEFAULT_ENDERECO = "Endereço não informado"
+        private const val DEFAULT_TELEFONE = "Telefone não informado"
+    }
+
+    private val debugLogsEnabled = true
+    private val defaultHistoryLimit = 3
+
+    private val _clientDetails = MutableStateFlow<ClienteResumo?>(null)
+    val clientDetails: StateFlow<ClienteResumo?> = _clientDetails.asStateFlow()
+
+    private val _settlementHistory = MutableStateFlow<List<AcertoResumo>>(emptyList())
+    val settlementHistory: StateFlow<List<AcertoResumo>> = _settlementHistory.asStateFlow()
+
+    private val _historyFilter = MutableStateFlow<HistoryFilterState>(HistoryFilterState.Recent(defaultHistoryLimit))
+    val historyFilter: StateFlow<HistoryFilterState> = _historyFilter.asStateFlow()
+
+    private val _historyLoading = MutableStateFlow(false)
+    val historyLoading: StateFlow<Boolean> = _historyLoading.asStateFlow()
+
+    private val _historyError = MutableStateFlow<String?>(null)
+    val historyError: StateFlow<String?> = _historyError.asStateFlow()
+
+    private val _mesasCliente = MutableStateFlow<List<Mesa>>(emptyList())
+    val mesasCliente: StateFlow<List<Mesa>> = _mesasCliente.asStateFlow()
+
+    private val _mesasDisponiveis = MutableStateFlow<List<Mesa>>(emptyList())
+    val mesasDisponiveis: StateFlow<List<Mesa>> = _mesasDisponiveis.asStateFlow()
+
+    private val _temContratoAtivo = MutableStateFlow(false)
+    val temContratoAtivo: StateFlow<Boolean> = _temContratoAtivo.asStateFlow()
+
+    private val _cliente = MutableStateFlow<Cliente?>(null)
+    val cliente: StateFlow<Cliente?> = _cliente.asStateFlow()
+
+    private var settlementHistoryJob: Job? = null
+
+    init {
+        logDebug("ViewModel inicializado")
+    }
+
+    fun loadClientDetails(clienteId: Long) {
+        viewModelScope.launch {
+            showLoading()
+            try {
+                logDebug("Carregando cliente $clienteId")
+
+                val cliente = appRepository.obterClientePorId(clienteId) ?: run {
+                    showError("Cliente não encontrado.")
+                    return@launch
+                }
+
+                _cliente.value = cliente
+
+                val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(clienteId)
+                val ultimaVisita = ultimoAcerto?.let { calcularTempoRelativoReal(it.dataAcerto) } ?: "Nunca visitado"
+
+                val observacaoUltimoAcerto = appRepository.buscarObservacaoUltimoAcerto(clienteId)
+                val observacaoExibir = observacaoUltimoAcerto ?: DEFAULT_OBSERVACAO
+
+                val enderecoExibir = cliente.endereco?.takeIf { it.isNotBlank() }?.trim() ?: DEFAULT_ENDERECO
+                val telefoneExibir = cliente.telefone?.takeIf { it.isNotBlank() }?.trim() ?: DEFAULT_TELEFONE
+
+                val diasSemAcerto = ultimoAcerto?.let {
+                    val hoje = LocalDate.now()
+                    val dataUltimoAcerto = it.dataAcerto.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+                    ChronoUnit.DAYS.between(dataUltimoAcerto, hoje).toInt()
+                } ?: 0
+
+                val debitoAtualReal = ultimoAcerto?.debitoAtual ?: 0.0
+
+                _clientDetails.value = ClienteResumo(
+                    id = cliente.id,
+                    nome = cliente.nome,
+                    endereco = enderecoExibir,
+                    telefone = telefoneExibir,
+                    valorFicha = cliente.valorFicha,
+                    comissaoFicha = cliente.comissaoFicha,
+                    mesasAtivas = _mesasCliente.value.size,
+                    ultimaVisita = ultimaVisita,
+                    observacoes = observacaoExibir,
+                    debitoAtual = debitoAtualReal,
+                    latitude = cliente.latitude,
+                    longitude = cliente.longitude,
+                    diasSemAcerto = diasSemAcerto
+                )
+
+                loadSettlementHistory(clienteId)
+                observeMesasDoCliente(clienteId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao carregar detalhes do cliente", e)
+                showError("Erro ao carregar detalhes do cliente: ${e.message}", e)
+            } finally {
+                hideLoading()
+            }
+        }
+    }
+
+    private fun observeMesasDoCliente(clienteId: Long) {
+        viewModelScope.launch {
+            try {
+                appRepository.obterMesasPorCliente(clienteId).collect { mesas ->
+                    _mesasCliente.value = mesas
+                    _clientDetails.value = _clientDetails.value?.copy(mesasAtivas = mesas.size)
+                    logDebug("Mesas atualizadas: ${mesas.size}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao observar mesas do cliente", e)
+            }
+        }
+    }
+
+    fun adicionarMesaAoCliente(mesaId: Long, clienteId: Long) {
+        viewModelScope.launch {
+            try {
+                appRepository.vincularMesaACliente(mesaId, clienteId)
+                loadClientDetails(clienteId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao adicionar mesa ao cliente", e)
+            }
+        }
+    }
+
+    suspend fun verificarSeRetiradaEPermitida(mesaId: Long, clienteId: Long): RetiradaStatus = try {
+        val ultimoAcertoMesa = appRepository.buscarUltimoAcertoPorMesa(mesaId)
+        val hoje = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.time
+
+        if (ultimoAcertoMesa != null && ultimoAcertoMesa.dataAcerto.after(hoje)) {
+            RetiradaStatus.PODE_RETIRAR
+        } else {
+            RetiradaStatus.PRECISA_ACERTO
+        }
+    } catch (e: Exception) {
+        Log.e(TAG, "Erro ao verificar status de retirada", e)
+        RetiradaStatus.PRECISA_ACERTO
+    }
+
+    fun retirarMesaDoCliente(mesaId: Long, clienteId: Long, relogioFinal: Int, valorRecebido: Double) {
+        viewModelScope.launch {
+            try {
+                appRepository.atualizarRelogioFinal(mesaId, relogioFinal)
+                appRepository.retirarMesa(mesaId)
+                logDebug("Mesa $mesaId retirada. Relógio final: $relogioFinal, valor recebido: $valorRecebido")
+                loadClientDetails(clienteId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao retirar mesa", e)
+            }
+        }
+    }
+
+    fun loadMesasDisponiveis() {
+        viewModelScope.launch {
+            try {
+                appRepository.obterMesasDisponiveis().collect { mesas ->
+                    _mesasDisponiveis.value = mesas
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao carregar mesas disponíveis", e)
+            }
+        }
+    }
+
+    fun isAdminUser(): Boolean = userSessionManager?.isAdmin() ?: false
+
+    fun salvarObservacaoCliente(clienteId: Long, observacao: String) {
+        viewModelScope.launch {
+            try {
+                logDebug("Solicitação de salvar observação para cliente $clienteId: $observacao")
+                loadClientDetails(clienteId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao salvar observação do cliente", e)
+            }
+        }
+    }
+
+    fun adicionarAcertoNoHistorico(novoAcerto: AcertoResumo) {
+        val listaAtual = _settlementHistory.value.toMutableList()
+        listaAtual.add(0, novoAcerto)
+        _settlementHistory.value = listaAtual
+        _clientDetails.value?.id?.let { loadSettlementHistory(it) }
+    }
+
+    fun loadSettlementHistory(clienteId: Long) {
+        settlementHistoryJob?.cancel()
+        when (val filter = _historyFilter.value) {
+            is HistoryFilterState.Recent -> observeRecentHistory(clienteId)
+            is HistoryFilterState.CustomLimit -> carregarHistoricoPorQuantidade(clienteId, filter.limit, updateFilter = false)
+        }
+    }
+
+    fun mostrarHistoricoRecentes(clienteId: Long) {
+        if (_historyFilter.value is HistoryFilterState.Recent) return
+        _historyFilter.value = HistoryFilterState.Recent(defaultHistoryLimit)
+        loadSettlementHistory(clienteId)
+    }
+
+    fun carregarHistoricoPorQuantidade(clienteId: Long, quantidadeSolicitada: Int, updateFilter: Boolean = true) {
+        val quantidade = quantidadeSolicitada.coerceIn(defaultHistoryLimit, 100)
+        if (quantidade <= defaultHistoryLimit && updateFilter) {
+            mostrarHistoricoRecentes(clienteId)
+            return
+        }
+
+        settlementHistoryJob?.cancel()
+        settlementHistoryJob = viewModelScope.launch {
+            _historyLoading.value = true
+            try {
+                // 1. Se quantidade > 3, sempre tentar buscar do Firestore primeiro
+                var acertos: List<Acerto>? = null
+                var buscaRemotaFalhou = false
+                
+                try {
+                    acertos = syncRepository?.fetchUltimosAcertos(clienteId, quantidade)
+                    if (acertos.isNullOrEmpty()) {
+                        buscaRemotaFalhou = true
+                        Log.d(TAG, "Busca remota retornou vazio, tentando fallback local...")
+                    } else {
+                        Log.d(TAG, "Histórico remoto carregado: ${acertos.size} itens")
+                    }
+                } catch (e: Exception) {
+                    buscaRemotaFalhou = true
+                    Log.w(TAG, "Busca remota falhou (possível falta de índice Firestore), tentando fallback local: ${e.message}")
+                }
+                
+                // 2. Se remoto falhou, tentar buscar localmente como fallback temporário
+                // (pode ter mais que 3 se ainda não foi feita a limpeza)
+                if (buscaRemotaFalhou) {
+                    Log.d(TAG, "Busca remota falhou, tentando buscar localmente como fallback...")
+                    val acertosLocais = appRepository.obterAcertosRecentesPorCliente(clienteId, quantidade).first()
+                    
+                    if (acertosLocais.isEmpty()) {
+                        _historyError.value = "Não encontramos acertos para este cliente. Verifique sua conexão e sincronize novamente."
+                        return@launch
+                    } else if (acertosLocais.size < quantidade) {
+                        // Encontrou menos que o solicitado localmente
+                        // Isso pode acontecer se a política de retenção já removeu os mais antigos
+                        acertos = acertosLocais
+                        Log.d(TAG, "Histórico local carregado: ${acertosLocais.size} itens (menos que os ${quantidade} solicitados)")
+                        _historyError.value = "Encontrados apenas ${acertosLocais.size} acertos armazenados localmente. A política de retenção mantém apenas os últimos 3 acertos. Para ver mais, sincronize novamente."
+                    } else {
+                        // Encontrou quantidade suficiente localmente (ainda não foi limpo)
+                        acertos = acertosLocais
+                        Log.d(TAG, "Histórico local carregado: ${acertosLocais.size} itens (fallback temporário)")
+                    }
+                }
+                
+                if (acertos == null || acertos.isEmpty()) {
+                    _historyError.value = "Não encontramos acertos para este cliente."
+                    return@launch
+                }
+                
+                if (updateFilter) {
+                    _historyFilter.value = HistoryFilterState.CustomLimit(acertos.size)
+                }
+                _settlementHistory.value = mapAcertosParaResumo(acertos)
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao carregar histórico adicional", e)
+                _historyError.value = "Erro ao buscar acertos adicionais: ${e.message}"
+            } finally {
+                _historyLoading.value = false
+            }
+        }
+    }
+
+    private fun observeRecentHistory(clienteId: Long) {
+        settlementHistoryJob = viewModelScope.launch {
+            try {
+                appRepository.obterAcertosRecentesPorCliente(clienteId, defaultHistoryLimit).collect { acertos ->
+                    _settlementHistory.value = mapAcertosParaResumo(acertos)
+                    logDebug("Histórico recente atualizado: ${_settlementHistory.value.size} itens")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao carregar histórico recente de acertos", e)
+            }
+        }
+    }
+
+    fun obterLimiteHistoricoAtual(): Int {
+        return when (val state = _historyFilter.value) {
+            is HistoryFilterState.Recent -> state.limit
+            is HistoryFilterState.CustomLimit -> state.limit
+        }
+    }
+
+    fun buscarDataUltimoAcerto(clienteId: Long, callback: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(clienteId)
+                val formatter = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
+                callback(ultimoAcerto?.let { formatter.format(it.dataAcerto) } ?: "Nunca")
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao buscar último acerto", e)
+                callback("Nunca")
+            }
+        }
+    }
+
+    private fun calcularTempoRelativoReal(data: Date): String {
+        val agora = Calendar.getInstance().time
+        val diffMillis = agora.time - data.time
+        val diffDias = (diffMillis / (1000 * 60 * 60 * 24)).toInt()
+        return when {
+            diffDias < 1 -> "Hoje"
+            diffDias == 1 -> "Há 1 dia"
+            diffDias < 7 -> "Há $diffDias dias"
+            diffDias < 30 -> "Há ${diffDias / 7} semana(s)"
+            diffDias < 365 -> "Há ${diffDias / 30} mês(es)"
+            else -> "Há ${diffDias / 365} ano(s)"
+        }
+    }
+
+    suspend fun buscarRelogioFinalUltimoAcerto(@Suppress("UNUSED_PARAMETER") mesaId: Long): Int? = try {
+        null
+    } catch (e: Exception) {
+        Log.e(TAG, "Erro ao buscar relógio final do último acerto", e)
+        null
+    }
+
+    suspend fun buscarCicloIdPorAcerto(@Suppress("UNUSED_PARAMETER") acertoId: Long): Long? = try {
+        null
+    } catch (e: Exception) {
+        Log.e(TAG, "Erro ao buscar ciclo do acerto", e)
+        null
+    }
+
+    suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? = try {
+        appRepository.buscarRotaIdPorCliente(clienteId)
+    } catch (e: Exception) {
+        Log.e(TAG, "Erro ao buscar rota do cliente", e)
+        null
+    }
+
+    suspend fun buscarUltimoAcerto(clienteId: Long): Acerto? = try {
+        appRepository.buscarUltimoAcertoPorCliente(clienteId)
+    } catch (e: Exception) {
+        Log.e(TAG, "Erro ao buscar último acerto do cliente", e)
+        null
+    }
+
+    suspend fun buscarCicloAtualPorRota(rotaId: Long): CicloAcertoEntity? = try {
+        appRepository.buscarCicloAtualPorRota(rotaId)
+    } catch (e: Exception) {
+        Log.e(TAG, "Erro ao buscar ciclo atual por rota", e)
+        null
+    }
+
+    fun carregarClienteCompleto(clienteId: Long) {
+        viewModelScope.launch {
+            try {
+                _cliente.value = appRepository.obterClientePorId(clienteId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao carregar cliente completo", e)
+                _cliente.value = null
+            }
+        }
+    }
+
+    fun verificarContratoAtivo(clienteId: Long) {
+        viewModelScope.launch {
+            try {
+                val contratos = appRepository.buscarContratosPorCliente(clienteId).first()
+                val temAtivo = contratos.any { contrato: ContratoLocacao ->
+                    contrato.status.equals("ATIVO", ignoreCase = true)
+                }
+                _temContratoAtivo.value = temAtivo
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao verificar contratos do cliente", e)
+                _temContratoAtivo.value = false
+            }
+        }
+    }
+
+    private fun logDebug(message: String) {
+        if (debugLogsEnabled) {
+            Log.d(TAG, message)
+        }
+    }
+
+    fun consumirHistoryError() {
+        _historyError.value = null
+    }
+
+    private fun mapAcertosParaResumo(acertos: List<Acerto>): List<AcertoResumo> {
+        return acertos.map { acerto ->
+            val observacaoExibir = acerto.observacoes?.takeIf { it.isNotBlank() }?.trim()
+                ?: "Sem observações"
+            AcertoResumo(
+                id = acerto.id,
+                data = android.text.format.DateFormat.format("dd/MM/yyyy HH:mm", acerto.dataAcerto).toString(),
+                valorTotal = acerto.valorRecebido,
+                status = acerto.status.name,
+                mesasAcertadas = acerto.totalMesas.toInt(),
+                debitoAtual = acerto.debitoAtual,
+                observacao = observacaoExibir
+            )
+        }
+    }
+}
+
+data class ClienteResumo(
+    val id: Long,
+    val nome: String,
+    val endereco: String,
+    val telefone: String,
+    val valorFicha: Double,
+    val comissaoFicha: Double,
+    val mesasAtivas: Int,
+    val ultimaVisita: String,
+    val observacoes: String,
+    val debitoAtual: Double = 0.0,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val diasSemAcerto: Int = 0
+)
+
+@Parcelize
+data class AcertoResumo(
+    val id: Long,
+    val data: String,
+    val valorTotal: Double,
+    val status: String,
+    val mesasAcertadas: Int,
+    val debitoAtual: Double = 0.0,
+    val observacao: String? = null
+) : Parcelable
+
+enum class RetiradaStatus {
+    PODE_RETIRAR,
+    PRECISA_ACERTO
+}
+
+sealed class HistoryFilterState {
+    data class Recent(val limit: Int) : HistoryFilterState()
+    data class CustomLimit(val limit: Int) : HistoryFilterState()
+}
+

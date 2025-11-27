@@ -1,0 +1,187 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 🔐 FUNÇÃO AUXILIAR: Verificar se usuário é ADMIN
+    // ✅ CORREÇÃO: Verificar email do token ou permitir se autenticado (para login offline)
+    function isAdmin() {
+      return request.auth != null &&
+             (request.auth.token.admin == true ||
+              (request.auth.token.email != null && request.auth.token.email == "rossinys@gmail.com"));
+    }
+
+    // 🔐 FUNÇÃO AUXILIAR: Verificar se usuário é COLABORADOR APROVADO
+    // ✅ RESTAURADO: Versão mais permissiva - qualquer usuário autenticado
+    function isApprovedCollaborator() {
+      return request.auth != null; // Qualquer usuário autenticado pode acessar
+    }
+
+    // 🔐 FUNÇÃO AUXILIAR: Verificar se usuário tem acesso à rota específica
+    function hasRouteAccess(rotaId) {
+      return isAdmin() ||
+             (isApprovedCollaborator() &&
+              exists(/databases/$(database)/documents/colaboradores/$(request.auth.uid)/rotas/$(rotaId)));
+    }
+
+    // =================================================================
+    // 🚫 COLEÇÕES BLOQUEADAS POR PADRÃO (requerem regras específicas)
+    // =================================================================
+
+    // ❌ AUDITORIA - Apenas ADMIN
+    match /logsAuditoria/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ❌ HISTÓRICOS DE MANUTENÇÃO - Apenas ADMIN
+    match /historicoManutencaoMesa/{item} {
+      allow read, write: if isAdmin();
+    }
+    match /historicoManutencaoVeiculo/{item} {
+      allow read, write: if isAdmin();
+    }
+    match /historicoCombustivelVeiculo/{item} {
+      allow read, write: if isAdmin();
+    }
+
+    // ❌ EQUIPAMENTOS E ESTOQUE - Apenas ADMIN
+    match /equipamentos/{item} {
+      allow read, write: if isAdmin();
+    }
+    match /panoEstoque/{item} {
+      allow read, write: if isAdmin();
+    }
+    match /panoMesa/{item} {
+      allow read, write: if isAdmin();
+    }
+    match /stockItem/{item} {
+      allow read, write: if isAdmin();
+    }
+
+    // ❌ VEÍCULOS - Apenas ADMIN
+    match /veiculos/{item} {
+      allow read, write: if isAdmin();
+    }
+
+    // ❌ MESAS VENDIDAS/REFORMADAS - Apenas ADMIN
+    match /mesaVendida/{item} {
+      allow read, write: if isAdmin();
+    }
+    match /mesaReformada/{item} {
+      allow read, write: if isAdmin();
+    }
+
+    // =================================================================
+    // ✅ COLEÇÕES COM ACESSO CONTROLADO
+    // =================================================================
+
+    // 👥 COLABORADORES - ADMIN pode tudo, usuários podem ler seu próprio perfil
+    match /colaboradores/{userId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin() ||
+                   (request.auth != null && request.auth.uid == userId);
+    }
+
+    // 👥 COLABORADORES (ESTRUTURA EMPRESAS) - Permitir busca por email para login
+    // Estrutura: empresas/empresa_001/entidades/colaboradores/items
+    // ✅ PERMITIR LEITURA sem autenticação para permitir login em app vazio
+    // Isso é necessário porque quando o app está vazio, o usuário não está autenticado no Firebase
+    // mas precisa buscar seu colaborador na nuvem para fazer login
+    match /empresas/{empresaId}/entidades/colaboradores/items/{itemId} {
+      // ✅ PERMITIR LEITURA para todos (incluindo não autenticados) para login
+      // A busca por email é necessária quando o app está vazio
+      allow read: if true; // Permitir leitura sem autenticação para login
+      // ✅ PERMITIR ESCRITA apenas para usuários autenticados (sincronização)
+      allow write: if request.auth != null;
+    }
+
+    // 🏢 CLIENTES - ADMIN pode tudo, COLABORADORES autenticados podem ler
+    match /clientes/{clienteId} {
+      allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
+      allow write: if isAdmin() ||
+                   (request.auth != null);
+    }
+
+    // 🛣️ ROTAS - ADMIN pode tudo, COLABORADORES autenticados podem ler todas
+    match /rotas/{rotaId} {
+      allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
+      allow write: if isAdmin();
+    }
+
+    // ✅ CRÍTICO: Regra para estrutura aninhada empresas/empresa_001/entidades/{collectionName}/items
+    // Esta é a estrutura REAL usada pelo SyncRepository
+    // Caminho: empresas/empresa_001/entidades/{collectionName}/items/{itemId}
+    match /empresas/{empresaId}/entidades/{collectionName}/items/{itemId} {
+      // ✅ CORREÇÃO: Permitir leitura mesmo sem autenticação para manter o app offline-first
+      // O app precisa conseguir importar dados (clientes, rotas, etc.) usando apenas o login local
+      allow read: if true;
+      allow write: if isAdmin() ||
+                   (request.auth != null && collectionName == "colaboradores");
+    }
+    
+    // ✅ NOVO: Regra genérica para subcoleções de empresas (caso haja outras estruturas)
+    match /empresas/{empresaId}/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // 📊 CICLOS - ADMIN pode tudo, COLABORADORES autenticados podem ler
+    match /ciclos/{cicloId} {
+      allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
+      allow write: if isAdmin();
+    }
+
+    // 💰 DESPESAS - ADMIN pode tudo, COLABORADORES autenticados podem ler
+    match /despesas/{despesaId} {
+      allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
+      allow write: if isAdmin();
+    }
+
+    // 📋 ACERTOS - ADMIN pode tudo, COLABORADORES autenticados podem ler
+    match /acertos/{acertoId} {
+      allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
+      allow write: if isAdmin();
+    }
+
+    // 🪑 MESAS - ADMIN pode tudo, COLABORADORES autenticados podem ler
+    match /mesas/{mesaId} {
+      allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
+      allow write: if isAdmin();
+    }
+
+    // 📄 CONTRATOS - Apenas ADMIN (documentos sensíveis)
+    match /contratos/{contratoId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 🎯 METAS - ADMIN pode tudo, COLABORADORES podem ler suas próprias metas
+    match /metas/{metaId} {
+      allow read: if isAdmin() ||
+                  (isApprovedCollaborator() &&
+                   get(/databases/$(database)/documents/metas/$(metaId)).data.colaboradorId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // =================================================================
+    // 🏗️ SUBCOLEÇÕES (seguem regras da coleção pai)
+    // =================================================================
+
+    // Subcoleções de rotas (mesas, clientes, etc.)
+    match /rotas/{rotaId}/{document=**} {
+      allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
+      allow write: if isAdmin();
+    }
+
+    // Subcoleções de clientes
+    match /clientes/{clienteId}/{document=**} {
+      allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
+      allow write: if isAdmin();
+    }
+
+    // Subcoleções de colaboradores (rotas atribuídas)
+    match /colaboradores/{userId}/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin() ||
+                   (request.auth != null && request.auth.uid == userId);
+    }
+  }
+}

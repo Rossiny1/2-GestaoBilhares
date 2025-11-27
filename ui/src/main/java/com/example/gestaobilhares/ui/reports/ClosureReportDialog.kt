@@ -1,0 +1,239 @@
+﻿package com.example.gestaobilhares.ui.reports
+
+import android.app.Dialog
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.content.FileProvider
+import androidx.fragment.app.DialogFragment
+import com.example.gestaobilhares.ui.R
+import com.example.gestaobilhares.ui.databinding.DialogClosureReportBinding
+import com.example.gestaobilhares.ui.reports.ClosureReportPdfGenerator
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.*
+import java.io.File
+
+/**
+ * Diálogo para seleção e geração de relatórios de fechamento
+ */
+class ClosureReportDialog : DialogFragment() {
+
+    private var _binding: DialogClosureReportBinding? = null
+    private val binding get() = _binding!!
+    
+    private var anoSelecionado: Int = 0
+    private var numeroAcerto: Int = 0
+    private var resumo: ClosureReportViewModel.Resumo? = null
+    private var detalhes: List<ClosureReportViewModel.LinhaDetalhe>? = null
+    private var totalMesas: Int = 0
+    private var isAnnualReport: Boolean = false
+    private var chartData: ClosureReportViewModel.ChartData? = null
+
+    companion object {
+        fun newInstance(
+            ano: Int,
+            numeroAcerto: Int,
+            resumo: ClosureReportViewModel.Resumo,
+            detalhes: List<ClosureReportViewModel.LinhaDetalhe>,
+            totalMesas: Int,
+            isAnnualReport: Boolean = false,
+            chartData: ClosureReportViewModel.ChartData? = null
+        ): ClosureReportDialog {
+            val dialog = ClosureReportDialog()
+            val args = Bundle()
+            args.putInt("ano", ano)
+            args.putInt("numeroAcerto", numeroAcerto)
+            args.putSerializable("resumo", resumo)
+            args.putSerializable("detalhes", ArrayList(detalhes))
+            args.putInt("totalMesas", totalMesas)
+            args.putBoolean("isAnnualReport", isAnnualReport)
+            chartData?.let { args.putSerializable("chartData", it) }
+            dialog.arguments = args
+            return dialog
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(STYLE_NORMAL, android.R.style.Theme_Material_Light_Dialog)
+        
+        arguments?.let {
+            anoSelecionado = it.getInt("ano")
+            numeroAcerto = it.getInt("numeroAcerto")
+            resumo = it.getSerializable("resumo") as? ClosureReportViewModel.Resumo
+            detalhes = it.getSerializable("detalhes") as? ArrayList<ClosureReportViewModel.LinhaDetalhe>
+            totalMesas = it.getInt("totalMesas")
+            isAnnualReport = it.getBoolean("isAnnualReport")
+            chartData = it.getSerializable("chartData") as? ClosureReportViewModel.ChartData
+        }
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = DialogClosureReportBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        
+        setupUI()
+        setupClickListeners()
+    }
+    
+    override fun onStart() {
+        super.onStart()
+        // ✅ CORREÇÃO: Configurar largura do diálogo para ocupar mais espaço
+        dialog?.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.9).toInt(), // 90% da largura da tela
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    }
+
+    private fun setupUI() {
+                val title = if (isAnnualReport) {
+                    "Relatório Anual - $anoSelecionado"
+                } else {
+                    "Relatório do ${numeroAcerto}º Acerto - $anoSelecionado"
+                }
+        
+        binding.tvTitle.text = title
+        
+        // Mostrar informações do resumo
+        resumo?.let { resumo ->
+            binding.tvFaturamento.text = "Faturamento: ${formatCurrency(resumo.faturamentoTotal)}"
+            binding.tvDespesas.text = "Despesas: ${formatCurrency(resumo.despesasTotal)}"
+            binding.tvLucro.text = "Lucro: ${formatCurrency(resumo.lucroLiquido)}"
+            binding.tvMesas.text = "Mesas: $totalMesas"
+            
+            // Calcular descontos totais de todas as rotas do ciclo
+            val descontosTotais = calcularDescontosTotais()
+            binding.tvDescontosTotais.text = "Descontos Totais: ${formatCurrency(descontosTotais)}"
+        }
+    }
+
+    private fun setupClickListeners() {
+        binding.btnGeneratePdf.setOnClickListener {
+            generatePdfReport()
+        }
+        
+        binding.btnCancel.setOnClickListener {
+            dismiss()
+        }
+    }
+
+    private fun generatePdfReport() {
+        if (resumo == null || detalhes == null) {
+            Toast.makeText(requireContext(), "Erro: Dados não disponíveis", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Mostrar loading
+        binding.btnGeneratePdf.isEnabled = false
+        binding.btnGeneratePdf.text = "Gerando..."
+        binding.progressIndicator.visibility = View.VISIBLE
+
+        // Gerar PDF em background
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val pdfGenerator = ClosureReportPdfGenerator(requireContext())
+                val pdfFile = if (isAnnualReport) {
+                    pdfGenerator.generateAnnualClosureReport(
+                        anoSelecionado,
+                        resumo!!,
+                        detalhes!!,
+                        totalMesas,
+                        chartData
+                    )
+                } else {
+                    pdfGenerator.generateAcertoClosureReport(
+                        anoSelecionado,
+                        numeroAcerto,
+                        resumo!!,
+                        detalhes!!,
+                        totalMesas,
+                        chartData
+                    )
+                }
+
+                // Voltar para UI thread para compartilhar
+                withContext(Dispatchers.Main) {
+                    sharePdfFile(pdfFile)
+                }
+
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Erro ao gerar PDF: ${e.message}", Toast.LENGTH_LONG).show()
+                    resetButton()
+                }
+            }
+        }
+    }
+
+    private fun sharePdfFile(pdfFile: File) {
+        try {
+            val uri = FileProvider.getUriForFile(
+                requireContext(),
+                "${requireContext().packageName}.fileprovider",
+                pdfFile
+            )
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "Relatório de Fechamento")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            // Tentar abrir WhatsApp primeiro
+            val whatsappIntent = Intent(Intent.ACTION_SEND).apply {
+                setPackage("com.whatsapp")
+                type = "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "Relatório de Fechamento")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            try {
+                startActivity(whatsappIntent)
+            } catch (e: Exception) {
+                // Se WhatsApp não estiver disponível, usar intent genérico
+                startActivity(Intent.createChooser(shareIntent, "Compartilhar Relatório"))
+            }
+
+            dismiss()
+
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Erro ao compartilhar PDF: ${e.message}", Toast.LENGTH_LONG).show()
+            resetButton()
+        }
+    }
+
+    private fun resetButton() {
+        binding.btnGeneratePdf.isEnabled = true
+        binding.btnGeneratePdf.text = "Gerar PDF"
+        binding.progressIndicator.visibility = View.GONE
+    }
+
+    private fun calcularDescontosTotais(): Double {
+        // Por enquanto, retorna 0.0 pois a classe LinhaDetalhe não possui campo desconto
+        // TODO: Implementar cálculo de descontos quando a estrutura de dados for atualizada
+        return 0.0
+    }
+
+    private fun formatCurrency(value: Double): String {
+        return java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR")).format(value)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}

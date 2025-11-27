@@ -1,0 +1,24 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- Taco de bilhar -->
+    <path
+        android:strokeColor="@color/secondary_slate"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M3,21 L21,3" />
+    
+    <!-- Ponta do taco (usando path) -->
+    <path
+        android:fillColor="@color/accent_teal"
+        android:pathData="M19.5,3 A1.5,1.5 0 1,1 22.5,3 A1.5,1.5 0 1,1 19.5,3" />
+    
+    <!-- Base do taco -->
+    <path
+        android:fillColor="@color/secondary_slate_light"
+        android:pathData="M2,20 L4,22 L4,20 Z" />
+        
+</vector>
