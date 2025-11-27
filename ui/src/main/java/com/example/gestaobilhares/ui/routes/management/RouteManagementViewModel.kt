@@ -95,7 +95,7 @@ class RouteManagementViewModel(
                     dataAtualizacao = System.currentTimeMillis()
                 )
 
-                val _rotaId = appRepository.inserirRota(novaRota)
+                appRepository.inserirRota(novaRota)
                 
                 _successMessage.value = "Rota \"$nome\" criada com sucesso"
                 // ✅ NOVO: Recarregar lista de rotas após criação

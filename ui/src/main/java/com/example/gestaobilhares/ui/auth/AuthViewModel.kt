@@ -86,7 +86,7 @@ class AuthViewModel constructor() : BaseViewModel() {
             
             // Inicializar banco de dados de forma segura
             android.util.Log.d("AuthViewModel", "🔧 CRIANDO APPDATABASE...")
-            val database = AppDatabase.getDatabase(context)
+            AppDatabase.getDatabase(context)
             android.util.Log.d("AuthViewModel", "✅ AppDatabase inicializado")
             
             appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(context)
@@ -118,7 +118,6 @@ class AuthViewModel constructor() : BaseViewModel() {
             viewModelScope.launch {
                 try {
                     networkUtils.isNetworkAvailable.collect { isAvailable ->
-                        val wasOffline = _isOnline.value == false
                         _isOnline.value = isAvailable
                         
                         // ✅ FASE 1: SyncManager antigo removido
@@ -193,14 +192,11 @@ class AuthViewModel constructor() : BaseViewModel() {
                 if (online) {
                     // Tentar login online primeiro
                     android.util.Log.d("AuthViewModel", "Tentando login online...")
-                    var loginOnlineSucesso = false
-                    var erroLoginOnline: Exception? = null
                     try {
                         val result = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
                         
                         if (result.user != null) {
                             android.util.Log.d("AuthViewModel", "✅ LOGIN ONLINE SUCESSO!")
-                            loginOnlineSucesso = true
 
                             // ✅ NOVO: Emitir log específico para criação automática de dados após login
                             android.util.Log.w(
@@ -241,7 +237,7 @@ class AuthViewModel constructor() : BaseViewModel() {
                             android.util.Log.d("AuthViewModel", "   ID na sessão: $idSessao")
                             
                             // ✅ CORREÇÃO: Se a sessão não foi iniciada, iniciar agora
-                            if (idSessao == null || idSessao == 0L) {
+                            if (idSessao == 0L) {
                                 android.util.Log.w("AuthViewModel", "⚠️ Sessão não iniciada após criarOuAtualizarColaboradorOnline - iniciando agora")
                                 userSessionManager.startSession(colaborador)
                             }
@@ -258,7 +254,6 @@ class AuthViewModel constructor() : BaseViewModel() {
                             return@launch
                         }
                     } catch (e: Exception) {
-                        erroLoginOnline = e
                         android.util.Log.w("AuthViewModel", "Login online falhou: ${e.message}")
                         android.util.Log.w("AuthViewModel", "Tipo de erro: ${e.javaClass.simpleName}")
                         
@@ -641,14 +636,14 @@ class AuthViewModel constructor() : BaseViewModel() {
                     // ✅ SUPERADMIN: Se não existe colaborador local, criar automaticamente para rossinys@gmail.com
                     if (email == "rossinys@gmail.com") {
                         android.util.Log.d("AuthViewModel", "🔧 Criando SUPERADMIN automaticamente (offline) para: $email")
-                        val colaborador = criarSuperAdminAutomatico(email, null, senha)
+                        val colaboradorSuperAdmin = criarSuperAdminAutomatico(email, null, senha)
                         
-                        if (colaborador != null) {
+                        if (colaboradorSuperAdmin != null) {
                             val localUser = LocalUser(
-                                uid = colaborador.id.toString(),
-                                email = colaborador.email,
-                                displayName = colaborador.nome,
-                                nivelAcesso = colaborador.nivelAcesso
+                                uid = colaboradorSuperAdmin.id.toString(),
+                                email = colaboradorSuperAdmin.email,
+                                displayName = colaboradorSuperAdmin.nome,
+                                nivelAcesso = colaboradorSuperAdmin.nivelAcesso
                             )
                             _authState.value = AuthState.Authenticated(localUser, false)
                             return@launch
@@ -1391,7 +1386,6 @@ class AuthViewModel constructor() : BaseViewModel() {
     private suspend fun criarOuAtualizarColaboradorOnline(firebaseUser: FirebaseUser): Colaborador? {
         try {
             val email = firebaseUser.email ?: return null
-            val nome = firebaseUser.displayName ?: email.substringBefore("@")
             
             // Verificar se já existe colaborador com este email
             val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
@@ -1501,7 +1495,7 @@ class AuthViewModel constructor() : BaseViewModel() {
                 // ✅ CORREÇÃO: Usar sessão local em vez de Firebase Auth
                 // Quando o login online falha, não há usuário no Firebase, mas há sessão local
                 val colaboradorId = userSessionManager.getCurrentUserId()
-                if (colaboradorId == null || colaboradorId == 0L) {
+                if (colaboradorId == 0L) {
                     android.util.Log.w("AuthViewModel", "⚠️ Nenhum colaborador na sessão local (ID: $colaboradorId)")
                     _errorMessage.value = "Sessão expirada. Faça login novamente."
                     _authState.value = AuthState.Unauthenticated
@@ -1515,8 +1509,6 @@ class AuthViewModel constructor() : BaseViewModel() {
                     _authState.value = AuthState.Unauthenticated
                     return@launch
                 }
-                
-                val email = colaborador.email
                 
                 // ✅ CORREÇÃO: Tentar autenticar no Firebase se não estiver autenticado
                 // Isso é necessário para atualizar a senha no Firebase

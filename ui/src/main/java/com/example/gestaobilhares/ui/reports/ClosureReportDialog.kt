@@ -64,10 +64,13 @@ class ClosureReportDialog : DialogFragment() {
         arguments?.let {
             anoSelecionado = it.getInt("ano")
             numeroAcerto = it.getInt("numeroAcerto")
+            @Suppress("DEPRECATION")
             resumo = it.getSerializable("resumo") as? ClosureReportViewModel.Resumo
+            @Suppress("DEPRECATION", "UNCHECKED_CAST")
             detalhes = it.getSerializable("detalhes") as? ArrayList<ClosureReportViewModel.LinhaDetalhe>
             totalMesas = it.getInt("totalMesas")
             isAnnualReport = it.getBoolean("isAnnualReport")
+            @Suppress("DEPRECATION")
             chartData = it.getSerializable("chartData") as? ClosureReportViewModel.ChartData
         }
     }

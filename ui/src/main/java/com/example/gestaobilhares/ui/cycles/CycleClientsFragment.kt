@@ -76,7 +76,7 @@ class CycleClientsFragment : Fragment() {
         binding.rvClients.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = CycleClientsAdapter(
-                onClientClick = { cliente ->
+                onClientClick = { _ ->
                     // TODO: Implementar navegação para detalhes do cliente
                     mostrarFeedback("Detalhes do cliente serão implementados em breve", Snackbar.LENGTH_SHORT)
                 }

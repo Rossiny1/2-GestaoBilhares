@@ -55,7 +55,7 @@ class ClosureReportFragment : Fragment() {
 
         // Garantir clique tanto no card de filtros quanto no card de dados
         binding.cardResumo.setOnClickListener { mostrarDialogoResumoDetalhe() }
-        binding.cardResumoDados?.setOnClickListener { mostrarDialogoResumoDetalhe() }
+        binding.cardResumoDados.setOnClickListener { mostrarDialogoResumoDetalhe() }
     }
 
     private fun setupObservers() {
@@ -165,7 +165,7 @@ class ClosureReportFragment : Fragment() {
 
     private fun mostrarDialogoResumoDetalhe() {
         val resumo = viewModel.resumo.value ?: return
-        viewModel.detalhes.value?.let { linhas ->
+        viewModel.detalhes.value?.let { _ ->
             val totalMesas = viewModel.totalMesasLocadas.value ?: 0
             val faturamentoTotal = resumo.faturamentoTotal
             val despesasTotal = resumo.despesasTotal
@@ -215,7 +215,6 @@ class ClosureReportFragment : Fragment() {
             itens.clear(); itens.addAll(novos); notifyDataSetChanged()
         }
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetalheVH {
-            val inflater = LayoutInflater.from(parent.context)
             val view = com.google.android.material.card.MaterialCardView(parent.context).apply {
                 layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                     topMargin = (8 * parent.resources.displayMetrics.density).toInt()

@@ -148,7 +148,7 @@ class GlobalExpensesFragment : Fragment() {
         // Observar estado de carregamento
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.isLoading.collect { isLoading ->
+                viewModel.isLoading.collect { _ ->
                     // Aqui você pode mostrar/esconder um progress indicator se necessário
                 }
             }

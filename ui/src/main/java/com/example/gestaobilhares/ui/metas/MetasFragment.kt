@@ -39,7 +39,6 @@ class MetasFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Inicializar ViewModel
-        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = MetasViewModel()
         viewModel.initializeRepository(appRepository)
@@ -62,7 +61,7 @@ class MetasFragment : Fragment() {
         }
         
         // ✅ CORREÇÃO: Configurar botão voltar do header se existir
-        binding.btnBack?.setOnClickListener {
+        binding.btnBack.setOnClickListener {
             findNavController().navigateUp()
         }
 

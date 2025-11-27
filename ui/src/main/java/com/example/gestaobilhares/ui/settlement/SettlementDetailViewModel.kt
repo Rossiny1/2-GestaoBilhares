@@ -15,6 +15,7 @@ import java.util.*
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
+@Suppress("DEPRECATION")
 class SettlementDetailViewModel(
     private val acertoRepository: AcertoRepository,
     private val appRepository: AppRepository,

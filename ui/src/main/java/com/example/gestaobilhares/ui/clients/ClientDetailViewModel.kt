@@ -164,7 +164,7 @@ class ClientDetailViewModel(
         }
     }
 
-    suspend fun verificarSeRetiradaEPermitida(mesaId: Long, clienteId: Long): RetiradaStatus = try {
+    suspend fun verificarSeRetiradaEPermitida(mesaId: Long, _clienteId: Long): RetiradaStatus = try {
         val ultimoAcertoMesa = appRepository.buscarUltimoAcertoPorMesa(mesaId)
         val hoje = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)

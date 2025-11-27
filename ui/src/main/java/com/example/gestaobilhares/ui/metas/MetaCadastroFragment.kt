@@ -49,7 +49,6 @@ class MetaCadastroFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar ViewModel
-        val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
         val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = MetaCadastroViewModel(appRepository)
         

@@ -49,7 +49,9 @@ class RoutesViewModel constructor(
     // ✅ NOVO: StateFlow para diálogo de sincronização pendente
     private val _syncDialogState = MutableStateFlow<SyncDialogState?>(null)
     val syncDialogState: StateFlow<SyncDialogState?> = _syncDialogState.asStateFlow()
-    private var syncDialogDismissed = false
+    
+    // ✅ NOVO: Timestamp do último login verificado (para evitar verificações repetidas)
+    private var lastCheckedLoginTimestamp: Long = 0L
 
 
     // ✅ MODERNIZADO: Rotas filtradas baseado no acesso do usuário
@@ -95,15 +97,56 @@ class RoutesViewModel constructor(
     }
 
     /**
-     * ✅ NOVO: Verifica operações pendentes de sincronização
-     * Também verifica se há dados na nuvem quando o banco local está vazio
+     * ✅ CORRIGIDO: Verifica operações pendentes de sincronização
+     * Verifica tanto dados para importar (nuvem) quanto para exportar (pendências locais)
+     * ✅ CORREÇÃO: Não mostra diálogo se já foi fechado pelo usuário nesta sessão
+     * ✅ SEGURANÇA: Só mostra diálogo se o app estiver online
+     */
+    /**
+     * ✅ REFATORADO COMPLETO: Verifica operações pendentes de sincronização
+     * Baseado na documentação oficial do Android para gerenciamento de estado
+     * 
+     * Condições para mostrar diálogo:
+     * 1. É um NOVO login (timestamp de login mudou)
+     * 2. App está online
+     * 3. Há dados pendentes (para importar OU exportar)
+     * 4. Diálogo ainda não foi mostrado nesta sessão de login
      */
     fun checkSyncPendencies(context: android.content.Context) {
-        if (syncDialogDismissed) return
-        
         viewModelScope.launch {
             try {
-                android.util.Log.d("RoutesViewModel", "🔍 Verificando pendências de sincronização...")
+                val currentLoginTimestamp = userSessionManager.getLoginTimestamp()
+                
+                // ✅ CONDIÇÃO CRÍTICA 1: Só verificar se é um NOVO login (timestamp mudou)
+                // Isso previne que o diálogo apareça ao retornar de outras telas
+                if (currentLoginTimestamp == lastCheckedLoginTimestamp && lastCheckedLoginTimestamp > 0L) {
+                    android.util.Log.d("RoutesViewModel", "ℹ️ Mesmo login já verificado (timestamp: $currentLoginTimestamp) - ignorando verificação")
+                    _syncDialogState.value = null
+                    return@launch
+                }
+                
+                // ✅ CONDIÇÃO CRÍTICA 2: Verificar se o diálogo já foi mostrado para este login
+                if (hasSyncDialogBeenShown(context)) {
+                    android.util.Log.d("RoutesViewModel", "ℹ️ Diálogo já foi mostrado para este login (timestamp: $currentLoginTimestamp) - não mostrando novamente")
+                    lastCheckedLoginTimestamp = currentLoginTimestamp // Marcar como verificado
+                    _syncDialogState.value = null
+                    return@launch
+                }
+                
+                // ✅ CONDIÇÃO 1: Verificar conectividade primeiro - só mostrar diálogo se estiver online
+                val networkUtils = com.example.gestaobilhares.sync.utils.NetworkUtils(context)
+                val isOnline = networkUtils.isConnected()
+                
+                android.util.Log.d("RoutesViewModel", "🔍 Verificando pendências de sincronização para NOVO login (timestamp: $currentLoginTimestamp)...")
+                android.util.Log.d("RoutesViewModel", "📶 Status de conectividade: ${if (isOnline) "ONLINE" else "OFFLINE"}")
+                
+                // Se estiver offline, não mostrar diálogo
+                if (!isOnline) {
+                    android.util.Log.d("RoutesViewModel", "ℹ️ App offline - não mostrando diálogo de sincronização")
+                    lastCheckedLoginTimestamp = currentLoginTimestamp // Marcar como verificado mesmo offline
+                    _syncDialogState.value = null
+                    return@launch
+                }
                 
                 val syncRepository = com.example.gestaobilhares.sync.SyncRepository(context, appRepository)
                 val lastGlobalSync = runCatching {
@@ -111,72 +154,153 @@ class RoutesViewModel constructor(
                 }.getOrDefault(0L).takeIf { it > 0L }
                 android.util.Log.d("RoutesViewModel", "📅 Última sincronização: $lastGlobalSync")
                 
+                // ✅ CORREÇÃO: Verificar pendências locais (dados para exportar)
                 val pending = appRepository.contarOperacoesSyncPendentes()
-                android.util.Log.d("RoutesViewModel", "📡 Pendências de sincronização: $pending")
-                android.util.Log.d("RoutesViewModel", "🔍 syncDialogDismissed: $syncDialogDismissed")
+                android.util.Log.d("RoutesViewModel", "📡 Pendências de sincronização (exportar): $pending")
                 
-                // Se não há pendências locais, verificar se há dados na nuvem quando banco local está vazio
-                if (pending == 0) {
-                    val rotasLocais = appRepository.obterTodasRotas().first()
-                    android.util.Log.d("RoutesViewModel", "🗂️ Rotas locais: ${rotasLocais.size}")
-                    
-                    if (rotasLocais.isEmpty()) {
-                        android.util.Log.d("RoutesViewModel", "🔍 Banco local vazio - verificando dados na nuvem...")
-                        // Criar SyncRepository para verificar se há dados na nuvem
-                        try {
-                            val hasDataInCloud = syncRepository.hasDataInCloud()
-                            android.util.Log.d("RoutesViewModel", "📡 Dados na nuvem encontrados: $hasDataInCloud")
-                            
-                            if (hasDataInCloud && !syncDialogDismissed) {
-                                // Mostrar diálogo perguntando se quer sincronizar
-                                android.util.Log.d("RoutesViewModel", "✅ Mostrando diálogo de sincronização - dados encontrados na nuvem")
-                                _syncDialogState.value = SyncDialogState(1, isCloudData = true, lastSyncTimestamp = lastGlobalSync)
-                                return@launch
-                            } else {
-                                android.util.Log.d("RoutesViewModel", "⚠️ Não mostrando diálogo: hasDataInCloud=$hasDataInCloud, syncDialogDismissed=$syncDialogDismissed")
-                            }
-                        } catch (e: Exception) {
-                            android.util.Log.e("RoutesViewModel", "❌ Erro ao verificar dados na nuvem: ${e.message}", e)
-                            android.util.Log.e("RoutesViewModel", "Stack trace: ${e.stackTraceToString()}")
-                            // ✅ CORREÇÃO: Mesmo com erro, mostrar diálogo se banco está vazio
-                            // O usuário pode querer tentar sincronizar mesmo assim
-                            if (!syncDialogDismissed) {
-                                android.util.Log.d("RoutesViewModel", "⚠️ Erro ao verificar nuvem, mas mostrando diálogo mesmo assim (banco vazio)")
-                                _syncDialogState.value = SyncDialogState(1, isCloudData = true, lastSyncTimestamp = lastGlobalSync)
-                                return@launch
-                            }
+                // ✅ CORREÇÃO: Verificar se há dados na nuvem (dados para importar)
+                val rotasLocais = appRepository.obterTodasRotas().first()
+                android.util.Log.d("RoutesViewModel", "🗂️ Rotas locais: ${rotasLocais.size}")
+                
+                var hasDataInCloud = false
+                if (rotasLocais.isEmpty() || pending == 0) {
+                    // Se banco está vazio ou não há pendências, verificar se há dados na nuvem
+                    android.util.Log.d("RoutesViewModel", "🔍 Verificando dados na nuvem...")
+                    try {
+                        hasDataInCloud = syncRepository.hasDataInCloud()
+                        android.util.Log.d("RoutesViewModel", "📡 Dados na nuvem encontrados: $hasDataInCloud")
+                    } catch (e: Exception) {
+                        android.util.Log.e("RoutesViewModel", "❌ Erro ao verificar dados na nuvem: ${e.message}", e)
+                        // Se banco está vazio e houve erro, assumir que pode haver dados
+                        if (rotasLocais.isEmpty()) {
+                            hasDataInCloud = true
+                            android.util.Log.d("RoutesViewModel", "⚠️ Banco vazio e erro ao verificar nuvem - assumindo que pode haver dados")
                         }
-                        return@launch
-                    } else {
-                        android.util.Log.d("RoutesViewModel", "ℹ️ Banco local não está vazio (${rotasLocais.size} rotas) - não verificar nuvem")
                     }
                 }
                 
-                if (pending > 0 && !syncDialogDismissed) {
-                    android.util.Log.d("RoutesViewModel", "✅ Mostrando diálogo de sincronização - $pending pendências")
-                    _syncDialogState.value = SyncDialogState(pending, lastSyncTimestamp = lastGlobalSync)
+                // ✅ CONDIÇÃO 3: Verificar se há dados pendentes (para importar OU exportar)
+                val needsSync = pending > 0 || hasDataInCloud
+                
+                if (needsSync) {
+                    val pendingCount = if (pending > 0) pending else 1
+                    
+                    android.util.Log.d("RoutesViewModel", "✅ Todas as condições atendidas - mostrando diálogo de sincronização:")
+                    android.util.Log.d("RoutesViewModel", "   ✓ Novo login detectado (timestamp: $currentLoginTimestamp)")
+                    android.util.Log.d("RoutesViewModel", "   ✓ App online")
+                    android.util.Log.d("RoutesViewModel", "   ✓ Diálogo ainda não foi mostrado")
+                    android.util.Log.d("RoutesViewModel", "   ✓ Pendências para exportar: $pending")
+                    android.util.Log.d("RoutesViewModel", "   ✓ Dados na nuvem para importar: $hasDataInCloud")
+                    android.util.Log.d("RoutesViewModel", "   Total: $pendingCount")
+
+                    _syncDialogState.value = SyncDialogState(
+                        pendingCount = pendingCount,
+                        isCloudData = hasDataInCloud,
+                        hasLocalPending = pending > 0,
+                        lastSyncTimestamp = lastGlobalSync
+                    )
+                    
+                    // Marcar como verificado para este login
+                    lastCheckedLoginTimestamp = currentLoginTimestamp
                 } else {
-                    // Quando zerar pendências, resetar supressão
-                    if (pending == 0) {
-                        syncDialogDismissed = false
-                    }
-                    android.util.Log.d("RoutesViewModel", "ℹ️ Não mostrando diálogo: pending=$pending, syncDialogDismissed=$syncDialogDismissed")
+                    android.util.Log.d("RoutesViewModel", "ℹ️ Nenhuma pendência de sincronização - não mostrando diálogo")
+                    // Marcar como verificado mesmo sem pendências
+                    lastCheckedLoginTimestamp = currentLoginTimestamp
                     _syncDialogState.value = null
                 }
             } catch (e: Exception) {
                 android.util.Log.e("RoutesViewModel", "Erro ao verificar pendências de sync: ${e.message}", e)
+                // Em caso de erro, tentar mostrar diálogo se banco está vazio E estiver online
+                try {
+                    val networkUtils = com.example.gestaobilhares.sync.utils.NetworkUtils(context)
+                    val isOnline = networkUtils.isConnected()
+                    
+                    if (isOnline) {
+                        val rotasLocais = appRepository.obterTodasRotas().first()
+                        // ✅ CORREÇÃO: Só mostrar diálogo fallback se ainda não foi mostrado
+                        if (rotasLocais.isEmpty() && !hasSyncDialogBeenShown(context)) {
+                            android.util.Log.d("RoutesViewModel", "⚠️ Erro na verificação, mas banco vazio e online - mostrando diálogo (fallback)")
+                            _syncDialogState.value = SyncDialogState(
+                                pendingCount = 1,
+                                isCloudData = true,
+                                hasLocalPending = false,
+                                lastSyncTimestamp = null
+                            )
+                        }
+                    } else {
+                        android.util.Log.d("RoutesViewModel", "ℹ️ Erro na verificação, mas app offline - não mostrando diálogo")
+                    }
+                } catch (e2: Exception) {
+                    android.util.Log.e("RoutesViewModel", "Erro ao verificar rotas locais: ${e2.message}", e2)
+                }
             }
         }
     }
 
     /**
-     * ✅ NOVO: Marca diálogo de sincronização como manipulado
+     * ✅ REFATORADO COMPLETO: Marca diálogo de sincronização como mostrado usando SharedPreferences
+     * Baseado na documentação oficial do Android para persistência de estado
+     * Armazena flag, userId e timestamp de login para detectar novos logins de forma confiável
+     * Usa commit() para garantir salvamento imediato (recomendado pela documentação oficial)
      */
-    fun dismissSyncDialog(permanently: Boolean = true) {
-        if (permanently) {
-            syncDialogDismissed = true
+    fun dismissSyncDialog(context: android.content.Context) {
+        val userId = userSessionManager.getCurrentUserId()
+        if (userId != 0L) {
+            val loginTimestamp = userSessionManager.getLoginTimestamp()
+            val prefs = context.getSharedPreferences("sync_dialog_prefs", android.content.Context.MODE_PRIVATE)
+            prefs.edit().apply {
+                putBoolean("sync_dialog_shown_$userId", true)
+                putLong("sync_dialog_login_timestamp_$userId", loginTimestamp) // Armazenar timestamp de login
+                commit() // ✅ CORREÇÃO: Usar commit() para garantir salvamento imediato (documentação oficial)
+            }
+            android.util.Log.d("RoutesViewModel", "🔒 Diálogo marcado como mostrado para usuário $userId (login timestamp: $loginTimestamp)")
         }
         _syncDialogState.value = null
+    }
+
+    /**
+     * ✅ REFATORADO COMPLETO: Verifica se o diálogo já foi mostrado nesta sessão de login
+     * Usa timestamp de login do UserSessionManager para detectar novo login de forma confiável
+     * Baseado na documentação oficial do Android sobre persistência de estado
+     */
+    private fun hasSyncDialogBeenShown(context: android.content.Context): Boolean {
+        val currentUserId = userSessionManager.getCurrentUserId()
+        if (currentUserId == 0L) {
+            android.util.Log.d("RoutesViewModel", "🔍 Usuário não logado - não mostrar diálogo")
+            return true // Não mostrar se não estiver logado
+        }
+        
+        val prefs = context.getSharedPreferences("sync_dialog_prefs", android.content.Context.MODE_PRIVATE)
+        
+        // ✅ NOVA ABORDAGEM: Usar timestamp de login para detectar novo login
+        val currentLoginTimestamp = userSessionManager.getLoginTimestamp()
+        val storedLoginTimestamp = prefs.getLong("sync_dialog_login_timestamp_$currentUserId", 0L)
+        
+        // Se o timestamp de login mudou, é um novo login - permitir que apareça
+        if (currentLoginTimestamp != storedLoginTimestamp && currentLoginTimestamp > 0L) {
+            android.util.Log.d("RoutesViewModel", "🔄 Novo login detectado (timestamp mudou de $storedLoginTimestamp para $currentLoginTimestamp) - permitindo diálogo")
+            // Limpar flag antigo se existir
+            prefs.edit().remove("sync_dialog_shown_$currentUserId").apply()
+            return false // Permitir que apareça
+        }
+        
+        // Verificar se o diálogo foi mostrado para este userId neste login
+        val hasBeenShown = prefs.getBoolean("sync_dialog_shown_$currentUserId", false)
+        android.util.Log.d("RoutesViewModel", "🔍 Diálogo já foi mostrado para usuário $currentUserId (login timestamp: $currentLoginTimestamp): $hasBeenShown")
+        return hasBeenShown
+    }
+
+    /**
+     * ✅ REFATORADO COMPLETO: Reseta flag de diálogo quando há novo login
+     * Usa timestamp de login para detectar novo login de forma confiável
+     * Baseado na documentação oficial do Android sobre detecção de novo login
+     * Esta função NÃO é mais necessária - a detecção é feita automaticamente em hasSyncDialogBeenShown()
+     * Mantida para compatibilidade, mas agora é uma função vazia (lógica movida para hasSyncDialogBeenShown)
+     */
+    fun resetSyncDialogFlag(context: android.content.Context) {
+        // ✅ NOVA ABORDAGEM: A detecção de novo login é feita automaticamente em hasSyncDialogBeenShown()
+        // usando o timestamp de login. Não precisamos mais resetar manualmente.
+        android.util.Log.d("RoutesViewModel", "ℹ️ resetSyncDialogFlag chamado - detecção automática de novo login ativa")
     }
 
     /**
@@ -405,7 +529,8 @@ class RoutesViewModel constructor(
 
 data class SyncDialogState(
     val pendingCount: Int,
-    val isCloudData: Boolean = false, // Indica se o diálogo é para dados na nuvem
+    val isCloudData: Boolean = false, // Indica se há dados na nuvem para importar
+    val hasLocalPending: Boolean = false, // Indica se há dados locais para exportar
     val lastSyncTimestamp: Long? = null
 )
 

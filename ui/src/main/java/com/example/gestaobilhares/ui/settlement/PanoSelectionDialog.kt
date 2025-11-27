@@ -169,9 +169,6 @@ class PanoSelectionDialog : DialogFragment() {
     }
 
     private fun filterPanos() {
-        val corFilter = binding.etFiltroCor.text.toString().lowercase()
-        val numeroFilter = binding.etFiltroNumero.text.toString().lowercase()
-        
         // TODO: Implementar filtro real
         // Por enquanto, apenas recarregar a lista
         loadPanos()
