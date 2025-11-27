@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.activity.OnBackPressedCallback
 import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.core.content.ContextCompat
@@ -103,6 +104,9 @@ class RoutesFragment : Fragment() {
             
             Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando Observers")
             observeViewModel()
+            
+            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando botão voltar")
+            setupBackButtonHandler()
             
             Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - CONFIGURAÇÃO COMPLETA")
         } catch (e: Exception) {
@@ -895,6 +899,50 @@ class RoutesFragment : Fragment() {
         } catch (e: Exception) {
             Log.e("LOG_CRASH", "RoutesFragment.recolherFabMenu - ERRO: ${e.message}", e)
         }
+    }
+
+    /**
+     * ✅ NOVO: Configura o tratamento do botão voltar do Android.
+     * Quando o usuário pressionar o botão voltar na tela de rotas (primeira tela),
+     * mostra um diálogo perguntando se deseja sair do app.
+     */
+    private fun setupBackButtonHandler() {
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // Verificar se há navegação disponível (se não for a primeira tela)
+                    val navController = findNavController()
+                    if (navController.currentBackStackEntry != null && 
+                        navController.previousBackStackEntry != null) {
+                        // Se há tela anterior, navegar normalmente
+                        navController.popBackStack()
+                    } else {
+                        // Se é a primeira tela, mostrar diálogo de confirmação
+                        showExitConfirmationDialog()
+                    }
+                }
+            }
+        )
+    }
+
+    /**
+     * ✅ NOVO: Mostra diálogo de confirmação para sair do app.
+     */
+    private fun showExitConfirmationDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Sair do aplicativo")
+            .setMessage("Deseja realmente sair do aplicativo?")
+            .setPositiveButton("Sair") { _, _ ->
+                // Fechar o app
+                requireActivity().finishAffinity()
+            }
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                // Não fazer nada, apenas fechar o diálogo
+                dialog.dismiss()
+            }
+            .setCancelable(true)
+            .show()
     }
 
     override fun onDestroyView() {
