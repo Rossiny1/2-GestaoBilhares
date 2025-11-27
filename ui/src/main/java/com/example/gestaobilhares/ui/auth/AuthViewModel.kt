@@ -385,18 +385,18 @@ class AuthViewModel constructor() : BaseViewModel() {
                     
                     android.util.Log.d("AuthViewModel", "   Resultado final: $senhaValida")
                     
-                    // ✅ SUPERADMIN: rossinys@gmail.com sempre permite login offline com qualquer senha
+                    // ✅ SEGURANÇA: Superadmin também deve validar senha corretamente
+                    // Seguindo melhores práticas de segurança, não permitir login com qualquer senha
                     val isSuperAdmin = email == "rossinys@gmail.com"
                     
-                    // ✅ CORREÇÃO: Se for superadmin e senha não validar, atualizar senha e permitir login
-                    val senhaValidaFinal = if (isSuperAdmin && !senhaValida) {
-                        android.util.Log.d("AuthViewModel", "🔧 SUPERADMIN: Senha não validou, mas atualizando e permitindo login")
-                        true // Permitir login para superadmin mesmo se senha não bateu
-                    } else {
-                        senhaValida
+                    // ✅ CORREÇÃO DE SEGURANÇA: Superadmin deve ter senha válida como qualquer usuário
+                    if (!senhaValida) {
+                        android.util.Log.w("AuthViewModel", "❌ Senha inválida para ${if (isSuperAdmin) "SUPERADMIN" else "usuário"}")
+                        _errorMessage.value = "Senha incorreta"
+                        return@launch
                     }
                     
-                    if (senhaValidaFinal) {
+                    if (senhaValida) {
                         // ✅ CORREÇÃO: Verificar se é primeiro acesso (usando senha temporária) - exceto superadmin
                         // Usar senha limpa para comparação
                         val isPrimeiroAcesso = !isSuperAdmin && 
@@ -433,16 +433,16 @@ class AuthViewModel constructor() : BaseViewModel() {
                         }
                         
                         // ✅ SUPERADMIN: Garantir que sempre é ADMIN, aprovado, sem primeiro acesso
-                        // ✅ CORREÇÃO: Sempre atualizar senha do superadmin para login offline
+                        // ✅ SEGURANÇA: Atualizar senha apenas se for válida (já validada acima)
                         var colaboradorFinal = if (isSuperAdmin) {
                             colaborador.copy(
                                 nivelAcesso = NivelAcesso.ADMIN,
                                 aprovado = true,
                                 primeiroAcesso = false,
-                                senhaHash = senha // ✅ SEMPRE atualizar senha para login offline
+                                senhaHash = senhaLimpa // ✅ Atualizar com senha válida para login offline
                             ).also {
                                 appRepository.atualizarColaborador(it)
-                                android.util.Log.d("AuthViewModel", "✅ SUPERADMIN: Senha atualizada para login offline")
+                                android.util.Log.d("AuthViewModel", "✅ SUPERADMIN: Dados atualizados (senha válida confirmada)")
                             }
                         } else {
                             colaborador
@@ -561,16 +561,18 @@ class AuthViewModel constructor() : BaseViewModel() {
                                     }
                                 }
                                 
-                                // ✅ SUPERADMIN: rossinys@gmail.com sempre permite login
+                                // ✅ SEGURANÇA: Superadmin também deve validar senha corretamente
+                                // Seguindo melhores práticas de segurança, não permitir login com qualquer senha
                                 val isSuperAdmin = email == "rossinys@gmail.com"
-                                val senhaValidaFinal = if (isSuperAdmin && !senhaValida) {
-                                    android.util.Log.d("AuthViewModel", "🔧 SUPERADMIN: Senha não validou, mas permitindo login")
-                                    true
-                                } else {
-                                    senhaValida
+                                
+                                // ✅ CORREÇÃO DE SEGURANÇA: Superadmin deve ter senha válida como qualquer usuário
+                                if (!senhaValida) {
+                                    android.util.Log.w("AuthViewModel", "❌ Senha inválida para ${if (isSuperAdmin) "SUPERADMIN" else "usuário"} (dados da nuvem)")
+                                    _errorMessage.value = "Senha incorreta"
+                                    return@launch
                                 }
                                 
-                                if (senhaValidaFinal) {
+                                if (senhaValida) {
                                     android.util.Log.d("AuthViewModel", "✅ LOGIN COM DADOS DA NUVEM SUCESSO!")
                                     
                                     // ✅ CORREÇÃO: Verificar se é primeiro acesso (exceto superadmin)
