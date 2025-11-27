@@ -100,7 +100,7 @@ class CycleReceiptsFragment : Fragment() {
     private fun setupRecyclerView() {
         receiptsAdapter = CycleReceiptsAdapter(
             isCicloFinalizado = isCicloFinalizado,
-            onItemClick = { acerto ->
+            onItemClick = { _ ->
                 // Para ciclos finalizados, não permitir edição
                 if (!isCicloFinalizado) {
                     // TODO: Implementar edição de acerto se necessário
@@ -124,7 +124,7 @@ class CycleReceiptsFragment : Fragment() {
         }
         
         lifecycleScope.launch {
-            viewModel.isLoading.collect { carregando: Boolean ->
+            viewModel.isLoading.collect { _ ->
                 // TODO: Adicionar progress bar se necessário
             }
         }

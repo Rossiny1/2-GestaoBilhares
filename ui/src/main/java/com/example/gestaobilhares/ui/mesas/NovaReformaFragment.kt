@@ -200,7 +200,7 @@ class NovaReformaFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.isLoading.collect { isLoading ->
+                viewModel.isLoading.collect { _ ->
                     // TODO: Implementar loading state
                 }
             }

@@ -37,6 +37,7 @@ import java.text.NumberFormat
 import java.util.Locale
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
@@ -117,12 +118,36 @@ class RoutesFragment : Fragment() {
         // Submenu de despesas começa recolhido
         collapseExpenseSubmenu()
 
-        // ✅ CORREÇÃO: Aguardar um pouco antes de verificar sincronização
-        // Isso garante que a sessão esteja totalmente inicializada após login
-        viewLifecycleOwner.lifecycleScope.launch {
-            kotlinx.coroutines.delay(500) // Delay para garantir que tudo esteja inicializado
-            android.util.Log.d("RoutesFragment", "🔍 Verificando sincronização após delay...")
-            viewModel.checkSyncPendencies(requireContext())
+        // ✅ SOLUÇÃO DEFINITIVA: Verificar sincronização APENAS se viemos diretamente do login
+        // Usa Navigation Component para detectar se a tela anterior é o LoginFragment
+        // Isso PROÍBE completamente que o diálogo apareça ao retornar de outras telas
+        try {
+            val navController = findNavController()
+            val previousBackStackEntry = navController.previousBackStackEntry
+            val previousDestinationId = previousBackStackEntry?.destination?.id
+            
+            val isComingFromLogin = previousDestinationId == com.example.gestaobilhares.ui.R.id.loginFragment ||
+                    previousDestinationId == com.example.gestaobilhares.ui.R.id.changePasswordFragment
+            
+            android.util.Log.d("RoutesFragment", "🔍 Verificando origem da navegação:")
+            android.util.Log.d("RoutesFragment", "   Destino anterior: $previousDestinationId")
+            android.util.Log.d("RoutesFragment", "   Vindo do login: $isComingFromLogin")
+            
+            if (isComingFromLogin) {
+                // ✅ APENAS se viemos do login - verificar sincronização
+                android.util.Log.d("RoutesFragment", "✅ Vindo do login - verificando sincronização após delay...")
+                viewLifecycleOwner.lifecycleScope.launch {
+                    kotlinx.coroutines.delay(500) // Delay para garantir que tudo esteja inicializado
+                    viewModel.checkSyncPendencies(requireContext())
+                }
+            } else {
+                // ✅ PROIBIDO: Se não viemos do login, NÃO verificar sincronização
+                android.util.Log.d("RoutesFragment", "🚫 NÃO vindo do login - PROIBIDO verificar sincronização")
+                // O observer do syncDialogState já protege contra diálogos não autorizados
+            }
+        } catch (e: Exception) {
+            // Se não conseguir verificar navegação, não verificar sincronização (seguro)
+            android.util.Log.w("RoutesFragment", "⚠️ Erro ao verificar navegação: ${e.message} - não verificando sincronização")
         }
     }
 
@@ -131,16 +156,15 @@ class RoutesFragment : Fragment() {
         // ✅ CORREÇÃO: Atualizar dados das rotas quando retorna de outras telas
         android.util.Log.d("RoutesFragment", "🔄 onResume - Forçando atualização dos dados das rotas")
         
-        // ✅ CORREÇÃO: Verificar sessão antes de verificar sincronização
+        // ✅ CORREÇÃO: Verificar sessão antes de atualizar
         val userId = userSessionManager.getCurrentUserId()
-        android.util.Log.d("RoutesFragment", "🔍 onResume - Usuário logado: ${userId != null && userId != 0L}")
+        android.util.Log.d("RoutesFragment", "🔍 onResume - Usuário logado: ${userId != 0L}")
         
         viewModel.refresh()
-        // ✅ CORREÇÃO: Aguardar um pouco antes de verificar sincronização no onResume
-        viewLifecycleOwner.lifecycleScope.launch {
-            kotlinx.coroutines.delay(300) // Delay menor no onResume
-            viewModel.checkSyncPendencies(requireContext())
-        }
+        // ✅ CORREÇÃO CRÍTICA: NÃO verificar sincronização no onResume
+        // O diálogo de sincronização só deve aparecer após o login (onViewCreated)
+        // Se aparecer no onResume, fica em loop quando o usuário navega entre telas
+        android.util.Log.d("RoutesFragment", "ℹ️ onResume - Não verificando sincronização (só aparece após login)")
     }
 
 
@@ -544,7 +568,8 @@ class RoutesFragment : Fragment() {
             }
         }
 
-        // Observa estado do diálogo de sincronização
+        // ✅ REFATORADO: Observa estado do diálogo de sincronização
+        // PROIBE que apareça se não viemos do login
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.syncDialogState.collect { state ->
@@ -552,27 +577,60 @@ class RoutesFragment : Fragment() {
                         syncDialog?.dismiss()
                         syncDialog = null
                     } else {
+                        // ✅ PROTEÇÃO ADICIONAL: Verificar se ainda estamos vindo do login
+                        // Se não estivermos, descartar o estado do diálogo
+                        try {
+                            val navController = findNavController()
+                            val previousBackStackEntry = navController.previousBackStackEntry
+                            val previousDestinationId = previousBackStackEntry?.destination?.id
+                            val isComingFromLogin = previousDestinationId == com.example.gestaobilhares.ui.R.id.loginFragment ||
+                                    previousDestinationId == com.example.gestaobilhares.ui.R.id.changePasswordFragment
+                            
+                            if (!isComingFromLogin) {
+                                android.util.Log.d("RoutesFragment", "🚫 Diálogo tentou aparecer mas não viemos do login - PROIBIDO")
+                                viewModel.dismissSyncDialog(requireContext())
+                                return@collect
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.w("RoutesFragment", "⚠️ Erro ao verificar navegação no observer: ${e.message}")
+                            // Em caso de erro, não mostrar diálogo (seguro)
+                            viewModel.dismissSyncDialog(requireContext())
+                            return@collect
+                        }
+                        
                         if (syncDialog?.isShowing == true) {
                             syncDialog?.dismiss()
                         }
-                        val message = if (state.pendingCount == 1 && state.isCloudData) {
-                            "Há dados disponíveis na nuvem que podem ser sincronizados. Deseja sincronizar agora?"
-                        } else {
-                            resources.getQuantityString(
-                                com.example.gestaobilhares.ui.R.plurals.sync_pending_message,
-                                state.pendingCount,
-                                state.pendingCount
-                            )
+                        // ✅ CORREÇÃO: Mensagem mais clara indicando o que precisa ser sincronizado
+                        val message = when {
+                            state.hasLocalPending && state.isCloudData -> {
+                                "Há dados para importar da nuvem e exportar para a nuvem. Deseja sincronizar agora?"
+                            }
+                            state.isCloudData -> {
+                                "Há dados disponíveis na nuvem que podem ser importados. Deseja sincronizar agora?"
+                            }
+                            state.hasLocalPending -> {
+                                resources.getQuantityString(
+                                    com.example.gestaobilhares.ui.R.plurals.sync_pending_message,
+                                    state.pendingCount,
+                                    state.pendingCount
+                                )
+                            }
+                            else -> {
+                                "Há dados pendentes de sincronização. Deseja sincronizar agora?"
+                            }
                         }
                         syncDialog = MaterialAlertDialogBuilder(requireContext())
                             .setTitle("Sincronização pendente")
                             .setMessage(message)
                             .setPositiveButton("Sincronizar agora") { _, _ ->
-                                viewModel.dismissSyncDialog()
+                                // ✅ REFATORADO: Marcar como mostrado usando SharedPreferences
+                                viewModel.dismissSyncDialog(requireContext())
                                 performManualSync()
                             }
                             .setNegativeButton("Agora não") { dialog, _ ->
-                                viewModel.dismissSyncDialog()
+                                // ✅ REFATORADO: Marcar como mostrado usando SharedPreferences
+                                viewModel.dismissSyncDialog(requireContext())
                                 dialog.dismiss()
                             }
                             .setCancelable(false)
@@ -625,7 +683,7 @@ class RoutesFragment : Fragment() {
             // ✅ CORREÇÃO CRÍTICA: Verificar sessão local em vez de Firebase Auth
             // O login híbrido pode funcionar offline sem autenticação Firebase
             val userId = userSessionManager.getCurrentUserId()
-            if (userId == null || userId == 0L) {
+            if (userId == 0L) {
                 Log.w("RoutesFragment", "⚠️ Nenhum usuário logado na sessão local")
                 Toast.makeText(requireContext(), "⚠️ Faça login para sincronizar dados", Toast.LENGTH_LONG).show()
                 return
@@ -650,7 +708,7 @@ class RoutesFragment : Fragment() {
                 .setView(progressView)
                 .setCancelable(false)
                 .create()
-            progressDialog?.show()
+            progressDialog.show()
 
             val uiScope = viewLifecycleOwner.lifecycleScope
 
@@ -708,10 +766,12 @@ class RoutesFragment : Fragment() {
                     Log.e("RoutesFragment", "Erro na sincronização: ${e.message}", e)
                     progressStatus.text = "❌ Erro na sincronização: ${e.message ?: "Erro desconhecido"}"
                 } finally {
-                    progressDialog?.dismiss()
+                    progressDialog.dismiss()
                     binding.syncButton.alpha = 1.0f
                     binding.syncButton.isEnabled = true
-                    viewModel.checkSyncPendencies(requireContext())
+                    // ✅ CORREÇÃO: Não verificar pendências após sincronização manual
+                    // Isso evita que o diálogo reapareça em loop
+                    // O diálogo só aparecerá novamente no próximo login ou se o usuário solicitar
                 }
             }
             
@@ -721,7 +781,8 @@ class RoutesFragment : Fragment() {
             progressDialog?.dismiss()
             binding.syncButton.alpha = 1.0f
             binding.syncButton.isEnabled = true
-            viewModel.checkSyncPendencies(requireContext())
+            // ✅ CORREÇÃO: Não verificar pendências após erro na sincronização
+            // Isso evita que o diálogo reapareça em loop
         }
     }
 
@@ -902,28 +963,58 @@ class RoutesFragment : Fragment() {
     }
 
     /**
-     * ✅ NOVO: Configura o tratamento do botão voltar do Android.
+     * ✅ CORRIGIDO: Configura o tratamento do botão voltar do Android.
      * Quando o usuário pressionar o botão voltar na tela de rotas (primeira tela),
      * mostra um diálogo perguntando se deseja sair do app.
      */
+    private var backPressedCallback: OnBackPressedCallback? = null
+    
     private fun setupBackButtonHandler() {
-        requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    // Verificar se há navegação disponível (se não for a primeira tela)
+        // ✅ CORREÇÃO: Remover callback anterior se existir (evitar duplicação)
+        backPressedCallback?.remove()
+        
+        backPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                android.util.Log.d("RoutesFragment", "🔙 Botão voltar pressionado")
+
+                try {
                     val navController = findNavController()
-                    if (navController.currentBackStackEntry != null && 
-                        navController.previousBackStackEntry != null) {
-                        // Se há tela anterior, navegar normalmente
-                        navController.popBackStack()
-                    } else {
-                        // Se é a primeira tela, mostrar diálogo de confirmação
+                    val currentDestination = navController.currentDestination?.id
+
+                    android.util.Log.d("RoutesFragment", "🔙 Debug navegação:")
+                    android.util.Log.d("RoutesFragment", "   Destino atual: $currentDestination")
+
+                    // ✅ CORREÇÃO: SEMPRE mostrar diálogo de saída quando estiver na tela de rotas
+                    // A tela de rotas é tratada como tela "home" do app
+                    val isRoutesFragment = currentDestination == com.example.gestaobilhares.ui.R.id.routesFragment
+
+                    if (isRoutesFragment) {
+                        // Estamos na tela de rotas - sempre mostrar diálogo de saída
+                        android.util.Log.d("RoutesFragment", "🔙 Estamos na tela de rotas - mostrando diálogo de saída")
                         showExitConfirmationDialog()
+                    } else {
+                        // Não estamos na tela de rotas - permitir navegação normal
+                        android.util.Log.d("RoutesFragment", "🔙 Não estamos na tela de rotas - navegando para trás")
+                        navController.popBackStack()
                     }
+                } catch (e: IllegalStateException) {
+                    // Navigation Controller não disponível - mostrar diálogo de saída
+                    android.util.Log.w("RoutesFragment", "⚠️ NavController não disponível - mostrando diálogo de saída")
+                    showExitConfirmationDialog()
+                } catch (e: Exception) {
+                    // Outro erro - mostrar diálogo de saída
+                    android.util.Log.e("RoutesFragment", "❌ Erro ao verificar navegação: ${e.message}", e)
+                    showExitConfirmationDialog()
                 }
             }
+        }
+        
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            backPressedCallback!!
         )
+        
+        android.util.Log.d("RoutesFragment", "✅ Handler do botão voltar configurado e ativado")
     }
 
     /**
@@ -949,6 +1040,9 @@ class RoutesFragment : Fragment() {
         super.onDestroyView()
         syncDialog?.dismiss()
         syncDialog = null
+        // ✅ CORREÇÃO: Remover callback do botão voltar para evitar vazamentos
+        backPressedCallback?.remove()
+        backPressedCallback = null
         _binding = null
     }
 } 

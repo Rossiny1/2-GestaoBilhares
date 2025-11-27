@@ -96,7 +96,7 @@ class RotaMesasFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.loading.collect { loading ->
+            viewModel.loading.collect { _ ->
                 // TODO: Implementar loading indicator se necessário
             }
         }

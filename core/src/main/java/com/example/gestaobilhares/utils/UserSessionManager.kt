@@ -48,6 +48,7 @@ class UserSessionManager private constructor(context: Context) {
         private const val KEY_USER_NIVEL_ACESSO = "user_nivel_acesso"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_USER_APPROVED = "user_approved"
+        private const val KEY_LOGIN_TIMESTAMP = "login_timestamp" // ✅ NOVO: Timestamp do login para detectar novo login
     }
     
     private val sharedPrefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -88,6 +89,9 @@ class UserSessionManager private constructor(context: Context) {
         _isLoggedIn.value = true
         _userLevel.value = colaborador.nivelAcesso
         
+        // ✅ NOVO: Timestamp do login para detectar novo login
+        val loginTimestamp = System.currentTimeMillis()
+        
         // Escrita dupla: SharedPreferences (legado) + DataStore
         sharedPrefs.edit().apply {
             putLong(KEY_USER_ID, colaborador.id)
@@ -96,7 +100,8 @@ class UserSessionManager private constructor(context: Context) {
             putString(KEY_USER_NIVEL_ACESSO, colaborador.nivelAcesso.name)
             putBoolean(KEY_IS_LOGGED_IN, true)
             putBoolean(KEY_USER_APPROVED, colaborador.aprovado)
-            apply()
+            putLong(KEY_LOGIN_TIMESTAMP, loginTimestamp) // ✅ NOVO: Salvar timestamp do login
+            commit() // ✅ CORREÇÃO: Usar commit() para garantir salvamento imediato
         }
         ioScope.launch {
             try {
@@ -266,6 +271,14 @@ class UserSessionManager private constructor(context: Context) {
      */
     fun getCurrentUserLevel(): NivelAcesso {
         return _userLevel.value
+    }
+    
+    /**
+     * ✅ NOVO: Obtém o timestamp do último login
+     * Usado para detectar se é um novo login (quando o timestamp muda)
+     */
+    fun getLoginTimestamp(): Long {
+        return sharedPrefs.getLong(KEY_LOGIN_TIMESTAMP, 0L)
     }
     
     /**

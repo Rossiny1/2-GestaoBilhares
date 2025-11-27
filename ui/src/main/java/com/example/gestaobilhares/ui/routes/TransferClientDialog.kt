@@ -71,8 +71,11 @@ class TransferClientDialog : DialogFragment() {
     }
 
     private fun setupArguments() {
+        @Suppress("DEPRECATION")
         val cliente = arguments?.getSerializable(ARG_CLIENTE) as? Cliente
+        @Suppress("DEPRECATION")
         val rotaOrigem = arguments?.getSerializable(ARG_ROTA_ORIGEM) as? Rota
+        @Suppress("DEPRECATION", "UNCHECKED_CAST")
         val mesas = arguments?.getSerializable(ARG_MESAS) as? Array<Mesa>
 
         if (cliente != null && rotaOrigem != null && mesas != null) {
@@ -108,8 +111,11 @@ class TransferClientDialog : DialogFragment() {
         }
 
         binding.btnTransferir.setOnClickListener {
+            @Suppress("DEPRECATION")
             val cliente = arguments?.getSerializable(ARG_CLIENTE) as? Cliente
+            @Suppress("DEPRECATION")
             val rotaOrigem = arguments?.getSerializable(ARG_ROTA_ORIGEM) as? Rota
+            @Suppress("DEPRECATION", "UNCHECKED_CAST")
             val mesas = arguments?.getSerializable(ARG_MESAS) as? Array<Mesa>
             
             val rotaDestinoNome = binding.spinnerRotaDestino.text?.toString()?.trim()
