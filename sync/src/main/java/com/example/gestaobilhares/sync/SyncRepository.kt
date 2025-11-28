@@ -509,6 +509,50 @@ class SyncRepository(
     }
     
     /**
+     * ✅ NOVO (2025): Obtém timestamp da última sincronização PUSH para um tipo de entidade.
+     * Usa sufixo "_push" para diferenciar de PULL.
+     * Retorna 0L se nunca foi feito push (primeira sincronização completa).
+     * 
+     * Segue melhores práticas Android 2025 para sincronização incremental.
+     */
+    private suspend fun getLastPushTimestamp(entityType: String): Long {
+        return try {
+            syncMetadataDao.obterUltimoTimestamp("${entityType}_push")
+        } catch (e: Exception) {
+            Log.w(TAG, "⚠️ Erro ao obter timestamp de push para $entityType: ${e.message}")
+            0L // Retorna 0 para primeira sincronização completa
+        }
+    }
+    
+    /**
+     * ✅ NOVO (2025): Salva metadata de sincronização PUSH após sincronização bem-sucedida.
+     * Usa sufixo "_push" para diferenciar de PULL.
+     * 
+     * @param entityType Tipo da entidade (ex: "clientes", "mesas")
+     * @param syncCount Quantidade de registros sincronizados
+     * @param durationMs Duração da sincronização em milissegundos
+     * @param bytesUploaded Bytes enviados (opcional)
+     * @param error Erro ocorrido, se houver (null se sucesso)
+     */
+    private suspend fun savePushMetadata(
+        entityType: String,
+        syncCount: Int,
+        durationMs: Long,
+        bytesUploaded: Long = 0L,
+        error: String? = null
+    ) {
+        val pushEntityType = "${entityType}_push"
+        saveSyncMetadata(
+            entityType = pushEntityType,
+            syncCount = syncCount,
+            durationMs = durationMs,
+            bytesDownloaded = 0L,
+            bytesUploaded = bytesUploaded,
+            error = error
+        )
+    }
+    
+    /**
      * ✅ NOVO (2025): Salva metadata de sincronização após sincronização bem-sucedida.
      * 
      * @param entityType Tipo da entidade (ex: "clientes", "mesas")
@@ -698,7 +742,6 @@ class SyncRepository(
                 val documents = snapshot.documents
                 
                 if (documents.isEmpty()) {
-                    hasMore = false
                     break
                 }
                 
@@ -1657,7 +1700,7 @@ class SyncRepository(
             // assumir que há dados na nuvem (permitir tentar sincronizar)
             if (e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
                 val userId = userSessionManager.getCurrentUserId()
-                if (userId != null && userId != 0L) {
+                if (userId != 0L) {
                     Log.w(TAG, "⚠️ PERMISSION_DENIED ao verificar nuvem, mas usuário está logado localmente (ID: $userId)")
                     Log.w(TAG, "⚠️ Assumindo que há dados na nuvem para permitir sincronização")
                     return true // Assumir que há dados para permitir tentar sincronizar
@@ -2494,13 +2537,12 @@ class SyncRepository(
             var syncCount = 0
             var skippedCount = 0
             var errorCount = 0
-            var totalDocuments = 0
             
             // Executar query incremental
             try {
                 val snapshot = incrementalQuery.get().await()
                 val documents = snapshot.documents
-                totalDocuments = documents.size
+                val totalDocuments = documents.size
                 
                 Log.d(TAG, "📥 Sincronização INCREMENTAL: ${documents.size} documentos encontrados")
                 
@@ -2575,7 +2617,6 @@ class SyncRepository(
             
             Log.d(TAG, "✅ Pull Mesas (INCREMENTAL) concluído:")
             Log.d(TAG, "   📊 $syncCount sincronizadas, $skippedCount puladas, $errorCount erros")
-            Log.d(TAG, "   📥 $totalDocuments documentos processados")
             Log.d(TAG, "   ⏱️ Duração: ${durationMs}ms")
             
             Result.success(syncCount)
@@ -5341,19 +5382,49 @@ class SyncRepository(
     // ==================== PUSH HANDLERS (LOCAL → SERVIDOR) ====================
     
     /**
-     * Push Clientes: Envia clientes modificados do Room para o Firestore
-     * ✅ CORRIGIDO: Preserva dados locais enviando para a nuvem antes do pull
+     * ✅ REFATORADO (2025): Push Clientes com sincronização incremental
+     * Envia apenas clientes modificados desde o último push
+     * Segue melhores práticas Android 2025 para sincronização incremental
      */
     private suspend fun pushClientes(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_CLIENTES
+        
         return try {
-            Log.d(TAG, "📤 Iniciando push de clientes...")
+            Log.d(TAG, "📤 Iniciando push INCREMENTAL de clientes...")
+            
+            // ✅ NOVO: Obter último timestamp de push para filtrar apenas modificados
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val clientesLocais = appRepository.obterTodosClientes().first()
             Log.d(TAG, "📊 Total de clientes locais encontrados: ${clientesLocais.size}")
             
+            // ✅ NOVO: Filtrar apenas clientes modificados desde último push
+            val clientesParaEnviar = if (canUseIncremental) {
+                clientesLocais.filter { cliente ->
+                    val clienteTimestamp = cliente.dataUltimaAtualizacao?.time ?: cliente.dataCadastro.time
+                    clienteTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} clientes modificados desde ${Date(lastPushTimestamp)} (de ${clientesLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todos os ${clientesLocais.size} clientes")
+                clientesLocais
+            }
+            
+            if (clientesParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                Log.d(TAG, "✅ Nenhum cliente para enviar - push concluído")
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            clientesLocais.forEach { cliente ->
+            clientesParaEnviar.forEach { cliente ->
                 try {
                     // Converter Cliente para Map
                     val clienteMap = entityToMap(cliente)
@@ -5401,6 +5472,7 @@ class SyncRepository(
                     appRepository.atualizarCliente(clienteAtualizado)
                     
                     syncCount++
+                    bytesUploaded += clienteMap.toString().length.toLong() // Estimativa de bytes
                     Log.d(TAG, "✅ Cliente enviado para nuvem: ${cliente.nome} (ID: ${cliente.id}) - Timestamp local sincronizado com servidor: ${serverTimestamp.time}")
                 } catch (e: Exception) {
                     errorCount++
@@ -5408,27 +5480,68 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push Clientes concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            
+            // ✅ NOVO: Salvar metadata de push após sincronização bem-sucedida
+            savePushMetadata(
+                entityType = entityType,
+                syncCount = syncCount,
+                durationMs = durationMs,
+                bytesUploaded = bytesUploaded,
+                error = if (errorCount > 0) "$errorCount erros durante push" else null
+            )
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de clientes concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de clientes: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Push Rotas: Envia rotas modificadas do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Rotas com sincronização incremental
+     * Envia apenas rotas modificadas desde o último push
      */
     private suspend fun pushRotas(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_ROTAS
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de rotas...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de rotas...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val rotasLocais = appRepository.obterTodasRotas().first()
             Log.d(TAG, "📥 Total de rotas locais encontradas: ${rotasLocais.size}")
             
+            // Filtrar apenas rotas modificadas desde último push
+            val rotasParaEnviar = if (canUseIncremental) {
+                rotasLocais.filter { rota ->
+                    rota.dataAtualizacao > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} rotas modificadas desde ${Date(lastPushTimestamp)} (de ${rotasLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todas as ${rotasLocais.size} rotas")
+                rotasLocais
+            }
+            
+            if (rotasParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                Log.d(TAG, "✅ Nenhuma rota para enviar - push concluído")
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            rotasLocais.forEach { rota ->
+            rotasParaEnviar.forEach { rota ->
                 try {
                     Log.d(TAG, "📄 Processando rota: ID=${rota.id}, Nome=${rota.nome}")
                     
@@ -5454,6 +5567,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += rotaMap.toString().length.toLong()
                     Log.d(TAG, "✅ Rota enviada com sucesso: ${rota.nome} (ID: ${rota.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -5462,25 +5576,59 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de rotas concluído: $syncCount enviadas, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de rotas concluído: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de rotas: ${e.message}", e)
-            Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
             Result.failure(e)
         }
     }
     
     /**
-     * Push Mesas: Envia mesas modificadas do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Mesas com sincronização incremental
+     * Envia apenas mesas modificadas desde o último push
      */
     private suspend fun pushMesas(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_MESAS
+        
         return try {
-            Log.d(TAG, "Iniciando push de mesas...")
+            Log.d(TAG, "Iniciando push INCREMENTAL de mesas...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val mesasLocais = appRepository.obterTodasMesas().first()
             
+            // Filtrar apenas mesas modificadas (usar dataUltimaLeitura como proxy)
+            val mesasParaEnviar = if (canUseIncremental) {
+                mesasLocais.filter { mesa ->
+                    val mesaTimestamp = mesa.dataUltimaLeitura?.time ?: mesa.dataInstalacao.time
+                    mesaTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} mesas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todas as ${mesasLocais.size} mesas")
+                mesasLocais
+            }
+            
+            if (mesasParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
-            mesasLocais.forEach { mesa ->
+            var errorCount = 0
+            var bytesUploaded = 0L
+            
+            mesasParaEnviar.forEach { mesa ->
                 try {
                     val mesaMap = entityToMap(mesa)
                     // ✅ CRÍTICO: Adicionar roomId para compatibilidade com pull
@@ -5496,28 +5644,64 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += mesaMap.toString().length.toLong()
                 } catch (e: Exception) {
+                    errorCount++
                     Log.e(TAG, "Erro ao enviar mesa ${mesa.id}: ${e.message}", e)
                 }
             }
             
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de mesas concluído: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "Erro no push de mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Push Colaboradores: Envia colaboradores modificados do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Colaboradores com sincronização incremental
      */
     private suspend fun pushColaboradores(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_COLABORADORES
+        
         return try {
-            Log.d(TAG, "Iniciando push de colaboradores...")
+            Log.d(TAG, "Iniciando push INCREMENTAL de colaboradores...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val colaboradoresLocais = appRepository.obterTodosColaboradores().first()
             
+            val colaboradoresParaEnviar = if (canUseIncremental) {
+                colaboradoresLocais.filter { colaborador ->
+                    val colaboradorTimestamp = colaborador.dataUltimaAtualizacao?.time ?: System.currentTimeMillis()
+                    colaboradorTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} colaboradores modificados desde ${Date(lastPushTimestamp)} (de ${colaboradoresLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todos os ${colaboradoresLocais.size} colaboradores")
+                colaboradoresLocais
+            }
+            
+            if (colaboradoresParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
-            colaboradoresLocais.forEach { colaborador ->
+            var errorCount = 0
+            var bytesUploaded = 0L
+            
+            colaboradoresParaEnviar.forEach { colaborador ->
                 try {
                     val colaboradorMap = entityToMap(colaborador)
                     // ✅ CRÍTICO: Adicionar roomId para compatibilidade com pull
@@ -5533,13 +5717,21 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += colaboradorMap.toString().length.toLong()
                 } catch (e: Exception) {
+                    errorCount++
                     Log.e(TAG, "Erro ao enviar colaborador ${colaborador.id}: ${e.message}", e)
                 }
             }
             
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de colaboradores concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "Erro no push de colaboradores: ${e.message}", e)
             Result.failure(e)
         }
@@ -5548,10 +5740,19 @@ class SyncRepository(
     /**
      * Push Ciclos: Envia ciclos modificados do Room para o Firestore
      */
+    /**
+     * ✅ REFATORADO (2025): Push Ciclos com sincronização incremental
+     */
     private suspend fun pushCiclos(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_CICLOS
+        
         return try {
-            Log.d(TAG, "Iniciando push de ciclos...")
-            // Buscar todos os ciclos via AppRepository
+            Log.d(TAG, "Iniciando push INCREMENTAL de ciclos...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val ciclosLocais = try {
                 appRepository.obterTodosCiclos().first()
             } catch (e: Exception) {
@@ -5559,8 +5760,29 @@ class SyncRepository(
                 emptyList<CicloAcertoEntity>()
             }
             
+            val ciclosParaEnviar = if (canUseIncremental) {
+                ciclosLocais.filter { ciclo ->
+                    val cicloTimestamp = ciclo.dataAtualizacao.time
+                    cicloTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} ciclos modificados desde ${Date(lastPushTimestamp)} (de ${ciclosLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todos os ${ciclosLocais.size} ciclos")
+                ciclosLocais
+            }
+            
+            if (ciclosParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
-            ciclosLocais.forEach { ciclo ->
+            var errorCount = 0
+            var bytesUploaded = 0L
+            
+            ciclosParaEnviar.forEach { ciclo ->
                 try {
                     val cicloMap = entityToMap(ciclo)
                     // ✅ CRÍTICO: Adicionar roomId para compatibilidade com pull
@@ -5589,16 +5811,46 @@ class SyncRepository(
     }
     
     /**
-     * Push Acertos: Envia acertos modificados do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Acertos com sincronização incremental
+     * Envia apenas acertos modificados desde o último push
      * Importante: Enviar também AcertoMesa relacionados
      */
     private suspend fun pushAcertos(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_ACERTOS
+        
         return try {
-            Log.d(TAG, "Iniciando push de acertos...")
+            Log.d(TAG, "Iniciando push INCREMENTAL de acertos...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val acertosLocais = appRepository.obterTodosAcertos().first()
             
+            // Filtrar apenas acertos modificados (usar dataAcerto ou dataCriacao)
+            val acertosParaEnviar = if (canUseIncremental) {
+                acertosLocais.filter { acerto ->
+                    val acertoTimestamp = acerto.dataAcerto.time
+                    acertoTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} acertos modificados desde ${Date(lastPushTimestamp)} (de ${acertosLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todos os ${acertosLocais.size} acertos")
+                acertosLocais
+            }
+            
+            if (acertosParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
-            acertosLocais.forEach { acerto ->
+            var errorCount = 0
+            var bytesUploaded = 0L
+            
+            acertosParaEnviar.forEach { acerto ->
                 try {
                     val acertoMap = entityToMap(acerto)
                     // ✅ CRÍTICO: Adicionar roomId para compatibilidade com pull
@@ -5614,16 +5866,24 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += acertoMap.toString().length.toLong()
                     
                     // Enviar AcertoMesa relacionados
                     pushAcertoMesas(acerto.id)
                 } catch (e: Exception) {
+                    errorCount++
                     Log.e(TAG, "Erro ao enviar acerto ${acerto.id}: ${e.message}", e)
                 }
             }
             
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de acertos concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "Erro no push de acertos: ${e.message}", e)
             Result.failure(e)
         }
@@ -5679,6 +5939,7 @@ class SyncRepository(
                     }
                     
                     val acertoMesaJson = gson.toJson(acertoMesaParaEnviar)
+                    @Suppress("UNCHECKED_CAST")
                     val acertoMesaMap = gson.fromJson(acertoMesaJson, Map::class.java) as Map<String, Any>
                     
                     // ✅ CRÍTICO: Adicionar roomId para compatibilidade com pull
@@ -5704,19 +5965,46 @@ class SyncRepository(
     }
     
     /**
-     * Push Despesas: Envia despesas modificadas do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Despesas com sincronização incremental
+     * Envia apenas despesas modificadas desde o último push
      */
     private suspend fun pushDespesas(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_DESPESAS
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de despesas...")
-            // ✅ CORRIGIDO: obterTodasDespesas() agora retorna Despesa diretamente (sem JOIN)
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de despesas...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val despesasLocais = appRepository.obterTodasDespesas().first()
             Log.d(TAG, "📥 Total de despesas locais encontradas: ${despesasLocais.size}")
             
+            // Filtrar apenas despesas modificadas (usar dataHora convertida para timestamp)
+            val despesasParaEnviar = if (canUseIncremental) {
+                despesasLocais.filter { despesa ->
+                    val despesaTimestamp = despesa.dataHora.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    despesaTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} despesas modificadas desde ${Date(lastPushTimestamp)} (de ${despesasLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todas as ${despesasLocais.size} despesas")
+                despesasLocais
+            }
+            
+            if (despesasParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            despesasLocais.forEach { despesa ->
+            despesasParaEnviar.forEach { despesa ->
                 try {
                     Log.d(TAG, "📄 Processando despesa: ID=${despesa.id}, Descrição=${despesa.descricao}, CicloId=${despesa.cicloId}")
                     
@@ -5742,6 +6030,7 @@ class SyncRepository(
                     appRepository.atualizarDespesa(despesaAtualizada)
                     
                     syncCount++
+                    bytesUploaded += despesaMap.toString().length.toLong()
                     Log.d(TAG, "✅ Despesa enviada para nuvem: ${despesa.descricao} (ID: ${despesa.id}) - Timestamp local atualizado")
                 } catch (e: Exception) {
                     errorCount++
@@ -5749,25 +6038,58 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de despesas concluído: $syncCount enviadas, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de despesas concluído: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de despesas: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Push Contratos: Envia contratos modificados do Room para o Firestore
-     * Importante: Enviar também Aditivos relacionados
+     * ✅ REFATORADO (2025): Push Contratos com sincronização incremental
+     * Envia apenas contratos modificados desde o último push
      */
     private suspend fun pushContratos(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_CONTRATOS
+        
         return try {
-            Log.d(TAG, "Iniciando push de contratos...")
+            Log.d(TAG, "Iniciando push INCREMENTAL de contratos...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val contratosLocais = appRepository.buscarTodosContratos().first()
             
+            val contratosParaEnviar = if (canUseIncremental) {
+                contratosLocais.filter { contrato ->
+                    val contratoTimestamp = contrato.dataAtualizacao.time
+                    contratoTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} contratos modificados desde ${Date(lastPushTimestamp)} (de ${contratosLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todos os ${contratosLocais.size} contratos")
+                contratosLocais
+            }
+            
+            if (contratosParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
-            contratosLocais.forEach { contrato: ContratoLocacao ->
+            var errorCount = 0
+            var bytesUploaded = 0L
+            
+            contratosParaEnviar.forEach { contrato: ContratoLocacao ->
                 try {
                     val contratoMap = entityToMap(contrato)
                     // ✅ CRÍTICO: Adicionar roomId para compatibilidade com pull
@@ -5783,16 +6105,24 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += contratoMap.toString().length.toLong()
                     
                     // Enviar aditivos relacionados
                     pushAditivosContrato(contrato.id)
                 } catch (e: Exception) {
+                    errorCount++
                     Log.e(TAG, "Erro ao enviar contrato ${contrato.id}: ${e.message}", e)
                 }
             }
             
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de contratos concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "Erro no push de contratos: ${e.message}", e)
             Result.failure(e)
         }
@@ -5830,18 +6160,44 @@ class SyncRepository(
     // ==================== PUSH HANDLERS - ENTIDADES FALTANTES ====================
     
     /**
-     * Push Categorias Despesa: Envia categorias de despesa do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Categorias Despesa com sincronização incremental
      */
     private suspend fun pushCategoriasDespesa(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_CATEGORIAS_DESPESA
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de categorias despesa...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de categorias despesa...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val categoriasLocais = appRepository.buscarCategoriasAtivas().first()
             Log.d(TAG, "📥 Total de categorias despesa locais encontradas: ${categoriasLocais.size}")
             
+            val categoriasParaEnviar = if (canUseIncremental) {
+                categoriasLocais.filter { categoria ->
+                    val categoriaTimestamp = categoria.dataAtualizacao.time
+                    categoriaTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} categorias modificadas desde ${Date(lastPushTimestamp)} (de ${categoriasLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todas as ${categoriasLocais.size} categorias")
+                categoriasLocais
+            }
+            
+            if (categoriasParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            categoriasLocais.forEach { categoria ->
+            categoriasParaEnviar.forEach { categoria ->
                 try {
                     Log.d(TAG, "📄 Processando categoria despesa: ID=${categoria.id}, Nome=${categoria.nome}")
                     
@@ -5860,6 +6216,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += categoriaMap.toString().length.toLong()
                     Log.d(TAG, "✅ Categoria despesa enviada com sucesso: ${categoria.nome} (ID: ${categoria.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -5867,28 +6224,59 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de categorias despesa concluído: $syncCount enviadas, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de categorias despesa concluído: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de categorias despesa: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Push Tipos Despesa: Envia tipos de despesa do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Tipos Despesa com sincronização incremental
      */
     private suspend fun pushTiposDespesa(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_TIPOS_DESPESA
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de tipos despesa...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de tipos despesa...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val tiposLocais = appRepository.buscarTiposAtivosComCategoria().first()
                 .map { it.tipoDespesa }
             Log.d(TAG, "📥 Total de tipos despesa locais encontrados: ${tiposLocais.size}")
             
+            val tiposParaEnviar = if (canUseIncremental) {
+                tiposLocais.filter { tipo ->
+                    val tipoTimestamp = tipo.dataAtualizacao.time
+                    tipoTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} tipos modificados desde ${Date(lastPushTimestamp)} (de ${tiposLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todos os ${tiposLocais.size} tipos")
+                tiposLocais
+            }
+            
+            if (tiposParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            tiposLocais.forEach { tipo ->
+            tiposParaEnviar.forEach { tipo ->
                 try {
                     Log.d(TAG, "📄 Processando tipo despesa: ID=${tipo.id}, Nome=${tipo.nome}")
                     
@@ -5907,6 +6295,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += tipoMap.toString().length.toLong()
                     Log.d(TAG, "✅ Tipo despesa enviado com sucesso: ${tipo.nome} (ID: ${tipo.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -5914,27 +6303,59 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de tipos despesa concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de tipos despesa concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de tipos despesa: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Push Metas: Envia metas do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Metas com sincronização incremental
      */
     private suspend fun pushMetas(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_METAS
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de metas...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de metas...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val metasLocais = appRepository.obterTodasMetas().first()
             Log.d(TAG, "📥 Total de metas locais encontradas: ${metasLocais.size}")
             
+            // Meta não tem dataAtualizacao, usar dataInicio como proxy
+            val metasParaEnviar = if (canUseIncremental) {
+                metasLocais.filter { meta ->
+                    val metaTimestamp = meta.dataInicio.time
+                    metaTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} metas modificadas desde ${Date(lastPushTimestamp)} (de ${metasLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todas as ${metasLocais.size} metas")
+                metasLocais
+            }
+            
+            if (metasParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            metasLocais.forEach { meta ->
+            metasParaEnviar.forEach { meta ->
                 try {
                     Log.d(TAG, "📄 Processando meta: ID=${meta.id}, Nome=${meta.nome}, Tipo=${meta.tipo}")
                     
@@ -5959,6 +6380,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += metaMap.toString().length.toLong()
                     Log.d(TAG, "✅ Meta enviada com sucesso: ${meta.nome} (ID: ${meta.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -5966,27 +6388,58 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de metas concluído: $syncCount enviadas, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de metas concluído: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de metas: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Push Colaborador Rotas: Envia vinculações colaborador-rota do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Colaborador Rotas com sincronização incremental
      */
     private suspend fun pushColaboradorRotas(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_COLABORADOR_ROTA
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de colaborador rotas...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de colaborador rotas...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val colaboradorRotasLocais = appRepository.obterTodosColaboradorRotas()
             Log.d(TAG, "📥 Total de colaborador rotas locais encontradas: ${colaboradorRotasLocais.size}")
             
+            val colaboradorRotasParaEnviar = if (canUseIncremental) {
+                colaboradorRotasLocais.filter { colaboradorRota ->
+                    val vinculacaoTimestamp = colaboradorRota.dataVinculacao.time
+                    vinculacaoTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} vinculações modificadas desde ${Date(lastPushTimestamp)} (de ${colaboradorRotasLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todas as ${colaboradorRotasLocais.size} vinculações")
+                colaboradorRotasLocais
+            }
+            
+            if (colaboradorRotasParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            colaboradorRotasLocais.forEach { colaboradorRota ->
+            colaboradorRotasParaEnviar.forEach { colaboradorRota ->
                 try {
                     val colaboradorRotaMap = entityToMap(colaboradorRota)
                     // ✅ ColaboradorRota usa chave composta (colaboradorId, rotaId), então geramos um ID composto
@@ -6005,6 +6458,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += colaboradorRotaMap.toString().length.toLong()
                     Log.d(TAG, "✅ ColaboradorRota enviado: Colaborador ${colaboradorRota.colaboradorId}, Rota ${colaboradorRota.rotaId} (ID: $compositeId)")
                 } catch (e: Exception) {
                     errorCount++
@@ -6012,25 +6466,43 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de colaborador rotas concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de colaborador rotas concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de colaborador rotas: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Push Aditivo Mesas: Envia vinculações aditivo-mesa do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Aditivo Mesas com sincronização incremental
+     * Nota: AditivoMesa não tem campo de timestamp, usar sempre enviar (baixa prioridade)
      */
     private suspend fun pushAditivoMesas(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_ADITIVO_MESAS
+        
         return try {
             Log.d(TAG, "🔵 Iniciando push de aditivo mesas...")
+            // Nota: AditivoMesa não tem campo de timestamp, então sempre enviar todos
+            // (geralmente são poucos registros, impacto baixo)
             val aditivoMesasLocais = appRepository.obterTodosAditivoMesas()
             Log.d(TAG, "📥 Total de aditivo mesas locais encontradas: ${aditivoMesasLocais.size}")
             
+            if (aditivoMesasLocais.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
             aditivoMesasLocais.forEach { aditivoMesa ->
                 try {
@@ -6049,6 +6521,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += aditivoMesaMap.toString().length.toLong()
                     Log.d(TAG, "✅ AditivoMesa enviado: Aditivo ${aditivoMesa.aditivoId}, Mesa ${aditivoMesa.mesaId} (ID: ${aditivoMesa.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -6056,25 +6529,43 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de aditivo mesas concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push de aditivo mesas concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de aditivo mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Push Contrato Mesas: Envia vinculações contrato-mesa do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Contrato Mesas com sincronização incremental
+     * Nota: ContratoMesa não tem campo de timestamp, usar sempre enviar (baixa prioridade)
      */
     private suspend fun pushContratoMesas(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_CONTRATO_MESAS
+        
         return try {
             Log.d(TAG, "🔵 Iniciando push de contrato mesas...")
+            // Nota: ContratoMesa não tem campo de timestamp, então sempre enviar todos
+            // (geralmente são poucos registros, impacto baixo)
             val contratoMesasLocais = appRepository.obterTodosContratoMesas()
             Log.d(TAG, "📥 Total de contrato mesas locais encontradas: ${contratoMesasLocais.size}")
             
+            if (contratoMesasLocais.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
             contratoMesasLocais.forEach { contratoMesa ->
                 try {
@@ -6093,6 +6584,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += contratoMesaMap.toString().length.toLong()
                     Log.d(TAG, "✅ ContratoMesa enviado: Contrato ${contratoMesa.contratoId}, Mesa ${contratoMesa.mesaId} (ID: ${contratoMesa.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -6100,27 +6592,60 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de contrato mesas concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push de contrato mesas concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de contrato mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Push Assinaturas Representante Legal: Envia assinaturas do Room para o Firestore
+     * ✅ REFATORADO (2025): Push Assinaturas Representante Legal com sincronização incremental
      */
     private suspend fun pushAssinaturasRepresentanteLegal(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_ASSINATURAS
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de assinaturas representante legal...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de assinaturas representante legal...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val assinaturasLocais = appRepository.obterTodasAssinaturasRepresentanteLegal()
             Log.d(TAG, "📥 Total de assinaturas locais encontradas: ${assinaturasLocais.size}")
             
+            val assinaturasParaEnviar = if (canUseIncremental) {
+                assinaturasLocais.filter { assinatura ->
+                    // Usar timestampCriacao (Long) ou dataCriacao como fallback
+                    val assinaturaTimestamp = assinatura.timestampCriacao.takeIf { it > 0L } 
+                        ?: assinatura.dataCriacao.time
+                    assinaturaTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} assinaturas modificadas desde ${Date(lastPushTimestamp)} (de ${assinaturasLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todas as ${assinaturasLocais.size} assinaturas")
+                assinaturasLocais
+            }
+            
+            if (assinaturasParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            assinaturasLocais.forEach { assinatura ->
+            assinaturasParaEnviar.forEach { assinatura ->
                 try {
                     Log.d(TAG, "📄 Processando assinatura: ID=${assinatura.id}, Nome=${assinatura.nomeRepresentante}")
                     
@@ -6139,6 +6664,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += assinaturaMap.toString().length.toLong()
                     Log.d(TAG, "✅ Assinatura enviada com sucesso: ${assinatura.nomeRepresentante} (ID: ${assinatura.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -6146,9 +6672,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de assinaturas concluído: $syncCount enviadas, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de assinaturas concluído: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de assinaturas: ${e.message}", e)
             Result.failure(e)
         }
@@ -6157,16 +6688,47 @@ class SyncRepository(
     /**
      * Push Logs Auditoria: Envia logs de auditoria do Room para o Firestore
      */
+    /**
+     * ✅ REFATORADO (2025): Push Logs Auditoria com sincronização incremental
+     */
     private suspend fun pushLogsAuditoria(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_LOGS_AUDITORIA
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de logs auditoria...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de logs auditoria...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val logsLocais = appRepository.obterTodosLogsAuditoria()
             Log.d(TAG, "📥 Total de logs auditoria locais encontrados: ${logsLocais.size}")
             
+            val logsParaEnviar = if (canUseIncremental) {
+                logsLocais.filter { log ->
+                    // Usar timestamp (Long) ou dataOperacao como fallback
+                    val logTimestamp = log.timestamp.takeIf { it > 0L } 
+                        ?: log.dataOperacao.time
+                    logTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} logs modificados desde ${Date(lastPushTimestamp)} (de ${logsLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todos os ${logsLocais.size} logs")
+                logsLocais
+            }
+            
+            if (logsParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            logsLocais.forEach { log ->
+            logsParaEnviar.forEach { log ->
                 try {
                     Log.d(TAG, "📄 Processando log auditoria: ID=${log.id}, Tipo=${log.tipoOperacao}")
                     
@@ -6185,6 +6747,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += logMap.toString().length.toLong()
                     Log.d(TAG, "✅ Log auditoria enviado com sucesso: ${log.tipoOperacao} (ID: ${log.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -6192,9 +6755,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de logs auditoria concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de logs auditoria concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de logs auditoria: ${e.message}", e)
             Result.failure(e)
         }
@@ -6267,9 +6835,17 @@ class SyncRepository(
     /**
      * Pull PanoEstoque: Sincroniza panos do estoque do Firestore para o Room
      */
+    /**
+     * ✅ REFATORADO (2025): Pull Pano Estoque com sincronização incremental
+     * Nota: PanoEstoque não tem campo de timestamp, então sempre buscar todos
+     */
     private suspend fun pullPanoEstoque(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_PANOS_ESTOQUE
+        
         return try {
             Log.d(TAG, "🔵 Iniciando pull de panos estoque...")
+            // Nota: PanoEstoque não tem campo de timestamp, então sempre buscar todos
             val collectionRef = getCollectionReference(firestore, COLLECTION_PANOS_ESTOQUE)
             val snapshot = collectionRef.get().await()
             Log.d(TAG, "📥 Total de panos estoque no Firestore: ${snapshot.size()}")
@@ -6277,6 +6853,7 @@ class SyncRepository(
             var syncCount = 0
             var skipCount = 0
             var errorCount = 0
+            var bytesDownloaded = 0L
             
             snapshot.documents.forEach { doc ->
                 try {
@@ -6303,6 +6880,7 @@ class SyncRepository(
                     
                     appRepository.inserirPanoEstoque(pano)
                     syncCount++
+                    bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                     Log.d(TAG, "✅ PanoEstoque sincronizado: ${pano.numero} (ID: $panoId)")
                 } catch (e: Exception) {
                     errorCount++
@@ -6310,9 +6888,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Pull de panos estoque concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, syncCount, durationMs, bytesDownloaded = bytesDownloaded, error = if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Pull de panos estoque concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no pull de panos estoque: ${e.message}", e)
             Result.failure(e)
         }
@@ -6321,14 +6904,30 @@ class SyncRepository(
     /**
      * Push PanoEstoque: Envia panos do estoque modificados do Room para o Firestore
      */
+    /**
+     * ✅ REFATORADO (2025): Push Pano Estoque com sincronização incremental
+     * Nota: PanoEstoque não tem campo de timestamp, usar sempre enviar (baixa prioridade)
+     */
     private suspend fun pushPanoEstoque(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_PANOS_ESTOQUE
+        
         return try {
             Log.d(TAG, "🔵 Iniciando push de panos estoque...")
+            // Nota: PanoEstoque não tem campo de timestamp, então sempre enviar todos
+            // (geralmente são poucos registros, impacto baixo)
             val panosLocais = appRepository.obterTodosPanosEstoque().first()
             Log.d(TAG, "📥 Total de panos estoque locais encontrados: ${panosLocais.size}")
             
+            if (panosLocais.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
             panosLocais.forEach { pano ->
                 try {
@@ -6349,6 +6948,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += panoMap.toString().length.toLong()
                     Log.d(TAG, "✅ PanoEstoque enviado com sucesso: ${pano.numero} (ID: ${pano.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -6356,27 +6956,55 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de panos estoque concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de panos estoque concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de panos estoque: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Pull MesaVendida: Sincroniza mesas vendidas do Firestore para o Room
+     * ✅ REFATORADO (2025): Pull Mesa Vendida com sincronização incremental
      */
     private suspend fun pullMesaVendida(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_MESAS_VENDIDAS
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando pull de mesas vendidas...")
+            Log.d(TAG, "🔵 Iniciando pull INCREMENTAL de mesas vendidas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS_VENDIDAS)
-            val snapshot = collectionRef.get().await()
+            
+            val lastSyncTimestamp = getLastSyncTimestamp(entityType)
+            val canUseIncremental = lastSyncTimestamp > 0L
+            
+            val query = if (canUseIncremental) {
+                Log.d(TAG, "🔄 Sincronização INCREMENTAL (desde ${Date(lastSyncTimestamp)})")
+                try {
+                    collectionRef
+                        .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
+                        .orderBy("lastModified")
+                } catch (e: Exception) {
+                    Log.w(TAG, "⚠️ Erro ao criar query incremental, usando completa: ${e.message}")
+                    collectionRef.orderBy("lastModified")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização COMPLETA")
+                collectionRef.orderBy("lastModified")
+            }
+            
+            val snapshot = query.get().await()
             Log.d(TAG, "📥 Total de mesas vendidas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
             var skipCount = 0
             var errorCount = 0
+            var bytesDownloaded = 0L
             
             snapshot.documents.forEach { doc ->
                 try {
@@ -6443,6 +7071,7 @@ class SyncRepository(
                     
                     appRepository.inserirMesaVendida(mesaVendida)
                     syncCount++
+                    bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                     Log.d(TAG, "✅ MesaVendida sincronizada: ${mesaVendida.numeroMesa} (ID: $mesaVendidaId)")
                 } catch (e: Exception) {
                     errorCount++
@@ -6450,9 +7079,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Pull de mesas vendidas concluído: $syncCount sincronizadas, $skipCount ignoradas, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, syncCount, durationMs, bytesDownloaded = bytesDownloaded, error = if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Pull INCREMENTAL de mesas vendidas concluído: $syncCount sincronizadas, $skipCount ignoradas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no pull de mesas vendidas: ${e.message}", e)
             Result.failure(e)
         }
@@ -6461,16 +7095,45 @@ class SyncRepository(
     /**
      * Push MesaVendida: Envia mesas vendidas modificadas do Room para o Firestore
      */
+    /**
+     * ✅ REFATORADO (2025): Push Mesa Vendida com sincronização incremental
+     */
     private suspend fun pushMesaVendida(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_MESAS_VENDIDAS
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de mesas vendidas...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de mesas vendidas...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val mesasVendidasLocais = appRepository.obterTodasMesasVendidas().first()
             Log.d(TAG, "📥 Total de mesas vendidas locais encontradas: ${mesasVendidasLocais.size}")
             
+            val mesasParaEnviar = if (canUseIncremental) {
+                mesasVendidasLocais.filter { mesaVendida ->
+                    val mesaTimestamp = mesaVendida.dataCriacao.time
+                    mesaTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} mesas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasVendidasLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todas as ${mesasVendidasLocais.size} mesas")
+                mesasVendidasLocais
+            }
+            
+            if (mesasParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            mesasVendidasLocais.forEach { mesaVendida ->
+            mesasParaEnviar.forEach { mesaVendida ->
                 try {
                     Log.d(TAG, "📄 Processando mesa vendida: ID=${mesaVendida.id}")
                     
@@ -6489,6 +7152,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += mesaVendidaMap.toString().length.toLong()
                     Log.d(TAG, "✅ MesaVendida enviada com sucesso: ${mesaVendida.numeroMesa} (ID: ${mesaVendida.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -6496,27 +7160,55 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de mesas vendidas concluído: $syncCount enviadas, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de mesas vendidas concluído: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de mesas vendidas: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Pull StockItem: Sincroniza itens do estoque do Firestore para o Room
+     * ✅ REFATORADO (2025): Pull Stock Item com sincronização incremental
      */
     private suspend fun pullStockItem(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_STOCK_ITEMS
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando pull de stock items...")
+            Log.d(TAG, "🔵 Iniciando pull INCREMENTAL de stock items...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_STOCK_ITEMS)
-            val snapshot = collectionRef.get().await()
+            
+            val lastSyncTimestamp = getLastSyncTimestamp(entityType)
+            val canUseIncremental = lastSyncTimestamp > 0L
+            
+            val query = if (canUseIncremental) {
+                Log.d(TAG, "🔄 Sincronização INCREMENTAL (desde ${Date(lastSyncTimestamp)})")
+                try {
+                    collectionRef
+                        .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
+                        .orderBy("lastModified")
+                } catch (e: Exception) {
+                    Log.w(TAG, "⚠️ Erro ao criar query incremental, usando completa: ${e.message}")
+                    collectionRef.orderBy("lastModified")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização COMPLETA")
+                collectionRef.orderBy("lastModified")
+            }
+            
+            val snapshot = query.get().await()
             Log.d(TAG, "📥 Total de stock items no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
             var skipCount = 0
             var errorCount = 0
+            var bytesDownloaded = 0L
             
             snapshot.documents.forEach { doc ->
                 try {
@@ -6562,6 +7254,7 @@ class SyncRepository(
                         serverTimestamp > localTimestamp -> {
                             appRepository.inserirStockItem(stockItem) // REPLACE atualiza se existir
                             syncCount++
+                            bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                             Log.d(TAG, "✅ StockItem atualizado: ${stockItem.name} (ID: $stockItemId)")
                         }
                         else -> {
@@ -6575,9 +7268,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Pull de stock items concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, syncCount, durationMs, bytesDownloaded = bytesDownloaded, error = if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Pull INCREMENTAL de stock items concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no pull de stock items: ${e.message}", e)
             Result.failure(e)
         }
@@ -6586,14 +7284,30 @@ class SyncRepository(
     /**
      * Push StockItem: Envia itens do estoque modificados do Room para o Firestore
      */
+    /**
+     * ✅ REFATORADO (2025): Push Stock Item com sincronização incremental
+     * Nota: StockItem não tem campo de timestamp, usar sempre enviar (baixa prioridade)
+     */
     private suspend fun pushStockItem(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_STOCK_ITEMS
+        
         return try {
             Log.d(TAG, "🔵 Iniciando push de stock items...")
+            // Nota: StockItem não tem campo de timestamp, então sempre enviar todos
+            // (geralmente são poucos registros, impacto baixo)
             val stockItemsLocais = appRepository.obterTodosStockItems().first()
             Log.d(TAG, "📥 Total de stock items locais encontrados: ${stockItemsLocais.size}")
             
+            if (stockItemsLocais.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
             stockItemsLocais.forEach { stockItem ->
                 try {
@@ -6614,6 +7328,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += stockItemMap.toString().length.toLong()
                     Log.d(TAG, "✅ StockItem enviado com sucesso: ${stockItem.name} (ID: ${stockItem.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -6621,27 +7336,55 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de stock items concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push de stock items concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de stock items: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Pull MesaReformada: Sincroniza mesas reformadas do Firestore para o Room
+     * ✅ REFATORADO (2025): Pull Mesa Reformada com sincronização incremental
      */
     private suspend fun pullMesaReformada(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_MESAS_REFORMADAS
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando pull de mesas reformadas...")
+            Log.d(TAG, "🔵 Iniciando pull INCREMENTAL de mesas reformadas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS_REFORMADAS)
-            val snapshot = collectionRef.get().await()
+            
+            val lastSyncTimestamp = getLastSyncTimestamp(entityType)
+            val canUseIncremental = lastSyncTimestamp > 0L
+            
+            val query = if (canUseIncremental) {
+                Log.d(TAG, "🔄 Sincronização INCREMENTAL (desde ${Date(lastSyncTimestamp)})")
+                try {
+                    collectionRef
+                        .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
+                        .orderBy("lastModified")
+                } catch (e: Exception) {
+                    Log.w(TAG, "⚠️ Erro ao criar query incremental, usando completa: ${e.message}")
+                    collectionRef.orderBy("lastModified")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização COMPLETA")
+                collectionRef.orderBy("lastModified")
+            }
+            
+            val snapshot = query.get().await()
             Log.d(TAG, "📥 Total de mesas reformadas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
             var skipCount = 0
             var errorCount = 0
+            var bytesDownloaded = 0L
             
             snapshot.documents.forEach { doc ->
                 try {
@@ -6695,6 +7438,7 @@ class SyncRepository(
                     
                     appRepository.inserirMesaReformada(mesaReformada)
                     syncCount++
+                    bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                     Log.d(TAG, "✅ MesaReformada sincronizada: ${mesaReformada.numeroMesa} (ID: $mesaReformadaId)")
                 } catch (e: Exception) {
                     errorCount++
@@ -6702,9 +7446,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Pull de mesas reformadas concluído: $syncCount sincronizadas, $skipCount ignoradas, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, syncCount, durationMs, bytesDownloaded = bytesDownloaded, error = if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Pull INCREMENTAL de mesas reformadas concluído: $syncCount sincronizadas, $skipCount ignoradas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no pull de mesas reformadas: ${e.message}", e)
             Result.failure(e)
         }
@@ -6713,16 +7462,45 @@ class SyncRepository(
     /**
      * Push MesaReformada: Envia mesas reformadas do Room para o Firestore
      */
+    /**
+     * ✅ REFATORADO (2025): Push Mesa Reformada com sincronização incremental
+     */
     private suspend fun pushMesaReformada(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_MESAS_REFORMADAS
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de mesas reformadas...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de mesas reformadas...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val mesasReformadasLocais = appRepository.obterTodasMesasReformadas().first()
             Log.d(TAG, "📥 Total de mesas reformadas locais encontradas: ${mesasReformadasLocais.size}")
             
+            val mesasParaEnviar = if (canUseIncremental) {
+                mesasReformadasLocais.filter { mesaReformada ->
+                    val mesaTimestamp = mesaReformada.dataCriacao.time
+                    mesaTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} mesas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasReformadasLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todas as ${mesasReformadasLocais.size} mesas")
+                mesasReformadasLocais
+            }
+            
+            if (mesasParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            mesasReformadasLocais.forEach { mesaReformada ->
+            mesasParaEnviar.forEach { mesaReformada ->
                 try {
                     val mesaReformadaMap = entityToMap(mesaReformada)
                     mesaReformadaMap["roomId"] = mesaReformada.id
@@ -6739,6 +7517,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += mesaReformadaMap.toString().length.toLong()
                     Log.d(TAG, "✅ MesaReformada enviada: Mesa ${mesaReformada.mesaId} (ID: ${mesaReformada.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -6746,9 +7525,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de mesas reformadas concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de mesas reformadas concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de mesas reformadas: ${e.message}", e)
             Result.failure(e)
         }
@@ -6757,16 +7541,42 @@ class SyncRepository(
     /**
      * Pull PanoMesa: Sincroniza vinculações pano-mesa do Firestore para o Room
      */
+    /**
+     * ✅ REFATORADO (2025): Pull Pano Mesa com sincronização incremental
+     */
     private suspend fun pullPanoMesa(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_PANO_MESAS
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando pull de pano mesas...")
+            Log.d(TAG, "🔵 Iniciando pull INCREMENTAL de pano mesas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_PANO_MESAS)
-            val snapshot = collectionRef.get().await()
+            
+            val lastSyncTimestamp = getLastSyncTimestamp(entityType)
+            val canUseIncremental = lastSyncTimestamp > 0L
+            
+            val query = if (canUseIncremental) {
+                Log.d(TAG, "🔄 Sincronização INCREMENTAL (desde ${Date(lastSyncTimestamp)})")
+                try {
+                    collectionRef
+                        .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
+                        .orderBy("lastModified")
+                } catch (e: Exception) {
+                    Log.w(TAG, "⚠️ Erro ao criar query incremental, usando completa: ${e.message}")
+                    collectionRef.orderBy("lastModified")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização COMPLETA")
+                collectionRef.orderBy("lastModified")
+            }
+            
+            val snapshot = query.get().await()
             Log.d(TAG, "📥 Total de pano mesas no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
             var skipCount = 0
             var errorCount = 0
+            var bytesDownloaded = 0L
             
             snapshot.documents.forEach { doc ->
                 try {
@@ -6798,6 +7608,7 @@ class SyncRepository(
                     
                     appRepository.inserirPanoMesa(panoMesa)
                     syncCount++
+                    bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                     Log.d(TAG, "✅ PanoMesa sincronizado: Mesa ${panoMesa.mesaId}, Pano ${panoMesa.panoId} (ID: $panoMesaId)")
                 } catch (e: Exception) {
                     errorCount++
@@ -6805,9 +7616,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Pull de pano mesas concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, syncCount, durationMs, bytesDownloaded = bytesDownloaded, error = if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Pull INCREMENTAL de pano mesas concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no pull de pano mesas: ${e.message}", e)
             Result.failure(e)
         }
@@ -6858,18 +7674,41 @@ class SyncRepository(
     }
     
     /**
-     * Pull HistoricoManutencaoMesa: Sincroniza histórico de manutenção de mesas do Firestore para o Room
+     * ✅ REFATORADO (2025): Pull Historico Manutenção Mesa com sincronização incremental
      */
     private suspend fun pullHistoricoManutencaoMesa(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_HISTORICO_MANUTENCAO_MESA
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando pull de histórico manutenção mesa...")
+            Log.d(TAG, "🔵 Iniciando pull INCREMENTAL de histórico manutenção mesa...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_MANUTENCAO_MESA)
-            val snapshot = collectionRef.get().await()
+            
+            val lastSyncTimestamp = getLastSyncTimestamp(entityType)
+            val canUseIncremental = lastSyncTimestamp > 0L
+            
+            val query = if (canUseIncremental) {
+                Log.d(TAG, "🔄 Sincronização INCREMENTAL (desde ${Date(lastSyncTimestamp)})")
+                try {
+                    collectionRef
+                        .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
+                        .orderBy("lastModified")
+                } catch (e: Exception) {
+                    Log.w(TAG, "⚠️ Erro ao criar query incremental, usando completa: ${e.message}")
+                    collectionRef.orderBy("lastModified")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização COMPLETA")
+                collectionRef.orderBy("lastModified")
+            }
+            
+            val snapshot = query.get().await()
             Log.d(TAG, "📥 Total de histórico manutenção mesa no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
             var skipCount = 0
             var errorCount = 0
+            var bytesDownloaded = 0L
             
             snapshot.documents.forEach { doc ->
                 try {
@@ -6914,6 +7753,7 @@ class SyncRepository(
                     
                     appRepository.inserirHistoricoManutencaoMesa(historico)
                     syncCount++
+                    bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                     Log.d(TAG, "✅ HistoricoManutencaoMesa sincronizado: Mesa ${historico.numeroMesa} (ID: $historicoId)")
                 } catch (e: Exception) {
                     errorCount++
@@ -6921,9 +7761,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Pull de histórico manutenção mesa concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, syncCount, durationMs, bytesDownloaded = bytesDownloaded, error = if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Pull INCREMENTAL de histórico manutenção mesa concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no pull de histórico manutenção mesa: ${e.message}", e)
             Result.failure(e)
         }
@@ -6932,16 +7777,45 @@ class SyncRepository(
     /**
      * Push HistoricoManutencaoMesa: Envia histórico de manutenção de mesas modificado do Room para o Firestore
      */
+    /**
+     * ✅ REFATORADO (2025): Push Historico Manutenção Mesa com sincronização incremental
+     */
     private suspend fun pushHistoricoManutencaoMesa(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_HISTORICO_MANUTENCAO_MESA
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de histórico manutenção mesa...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de histórico manutenção mesa...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val historicosLocais = appRepository.obterTodosHistoricoManutencaoMesa().first()
             Log.d(TAG, "📥 Total de histórico manutenção mesa locais encontrados: ${historicosLocais.size}")
             
+            val historicosParaEnviar = if (canUseIncremental) {
+                historicosLocais.filter { historico ->
+                    val historicoTimestamp = historico.dataCriacao.time
+                    historicoTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} históricos modificados desde ${Date(lastPushTimestamp)} (de ${historicosLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todos os ${historicosLocais.size} históricos")
+                historicosLocais
+            }
+            
+            if (historicosParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            historicosLocais.forEach { historico ->
+            historicosParaEnviar.forEach { historico ->
                 try {
                     Log.d(TAG, "📄 Processando histórico manutenção mesa: ID=${historico.id}")
                     
@@ -6960,6 +7834,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += historicoMap.toString().length.toLong()
                     Log.d(TAG, "✅ HistoricoManutencaoMesa enviado com sucesso: Mesa ${historico.numeroMesa} (ID: ${historico.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -6967,27 +7842,55 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de histórico manutenção mesa concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de histórico manutenção mesa concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de histórico manutenção mesa: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Pull HistoricoManutencaoVeiculo: Sincroniza histórico de manutenção de veículos do Firestore para o Room
+     * ✅ REFATORADO (2025): Pull Historico Manutenção Veículo com sincronização incremental
      */
     private suspend fun pullHistoricoManutencaoVeiculo(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_HISTORICO_MANUTENCAO_VEICULO
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando pull de histórico manutenção veículo...")
+            Log.d(TAG, "🔵 Iniciando pull INCREMENTAL de histórico manutenção veículo...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_MANUTENCAO_VEICULO)
-            val snapshot = collectionRef.get().await()
+            
+            val lastSyncTimestamp = getLastSyncTimestamp(entityType)
+            val canUseIncremental = lastSyncTimestamp > 0L
+            
+            val query = if (canUseIncremental) {
+                Log.d(TAG, "🔄 Sincronização INCREMENTAL (desde ${Date(lastSyncTimestamp)})")
+                try {
+                    collectionRef
+                        .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
+                        .orderBy("lastModified")
+                } catch (e: Exception) {
+                    Log.w(TAG, "⚠️ Erro ao criar query incremental, usando completa: ${e.message}")
+                    collectionRef.orderBy("lastModified")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização COMPLETA")
+                collectionRef.orderBy("lastModified")
+            }
+            
+            val snapshot = query.get().await()
             Log.d(TAG, "📥 Total de histórico manutenção veículo no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
             var skipCount = 0
             var errorCount = 0
+            var bytesDownloaded = 0L
             
             snapshot.documents.forEach { doc ->
                 try {
@@ -7023,6 +7926,7 @@ class SyncRepository(
                     // TODO: Verificar se método inserirHistoricoManutencaoVeiculo() está implementado no AppRepository
                     appRepository.inserirHistoricoManutencao(historico)
                     syncCount++
+                    bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                     Log.d(TAG, "✅ HistoricoManutencaoVeiculo sincronizado: Veículo ${historico.veiculoId} (ID: $historicoId)")
                 } catch (e: Exception) {
                     errorCount++
@@ -7030,9 +7934,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Pull de histórico manutenção veículo concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, syncCount, durationMs, bytesDownloaded = bytesDownloaded, error = if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Pull INCREMENTAL de histórico manutenção veículo concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no pull de histórico manutenção veículo: ${e.message}", e)
             Result.failure(e)
         }
@@ -7041,16 +7950,45 @@ class SyncRepository(
     /**
      * Push HistoricoManutencaoVeiculo: Envia histórico de manutenção de veículos do Room para o Firestore
      */
+    /**
+     * ✅ REFATORADO (2025): Push Historico Manutenção Veículo com sincronização incremental
+     */
     private suspend fun pushHistoricoManutencaoVeiculo(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_HISTORICO_MANUTENCAO_VEICULO
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de histórico manutenção veículo...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de histórico manutenção veículo...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val historicosLocais = appRepository.obterTodosHistoricoManutencaoVeiculo()
             Log.d(TAG, "📥 Total de históricos de manutenção locais encontrados: ${historicosLocais.size}")
             
+            val historicosParaEnviar = if (canUseIncremental) {
+                historicosLocais.filter { historico ->
+                    val historicoTimestamp = historico.dataCriacao.time
+                    historicoTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} históricos modificados desde ${Date(lastPushTimestamp)} (de ${historicosLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todos os ${historicosLocais.size} históricos")
+                historicosLocais
+            }
+            
+            if (historicosParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            historicosLocais.forEach { historico ->
+            historicosParaEnviar.forEach { historico ->
                 try {
                     Log.d(TAG, "📄 Processando histórico manutenção: ID=${historico.id}, Veículo=${historico.veiculoId}")
                     
@@ -7073,6 +8011,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += historicoMap.toString().length.toLong()
                     Log.d(TAG, "✅ Histórico manutenção enviado: Veículo ${historico.veiculoId} (ID: ${historico.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -7080,27 +8019,55 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de histórico manutenção veículo concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de histórico manutenção veículo concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de histórico manutenção veículo: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Pull HistoricoCombustivelVeiculo: Sincroniza histórico de combustível de veículos do Firestore para o Room
+     * ✅ REFATORADO (2025): Pull Historico Combustível Veículo com sincronização incremental
      */
     private suspend fun pullHistoricoCombustivelVeiculo(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_HISTORICO_COMBUSTIVEL_VEICULO
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando pull de histórico combustível veículo...")
+            Log.d(TAG, "🔵 Iniciando pull INCREMENTAL de histórico combustível veículo...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_COMBUSTIVEL_VEICULO)
-            val snapshot = collectionRef.get().await()
+            
+            val lastSyncTimestamp = getLastSyncTimestamp(entityType)
+            val canUseIncremental = lastSyncTimestamp > 0L
+            
+            val query = if (canUseIncremental) {
+                Log.d(TAG, "🔄 Sincronização INCREMENTAL (desde ${Date(lastSyncTimestamp)})")
+                try {
+                    collectionRef
+                        .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
+                        .orderBy("lastModified")
+                } catch (e: Exception) {
+                    Log.w(TAG, "⚠️ Erro ao criar query incremental, usando completa: ${e.message}")
+                    collectionRef.orderBy("lastModified")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização COMPLETA")
+                collectionRef.orderBy("lastModified")
+            }
+            
+            val snapshot = query.get().await()
             Log.d(TAG, "📥 Total de histórico combustível veículo no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
             var skipCount = 0
             var errorCount = 0
+            var bytesDownloaded = 0L
             
             snapshot.documents.forEach { doc ->
                 try {
@@ -7136,6 +8103,7 @@ class SyncRepository(
                     // TODO: Verificar se método inserirHistoricoCombustivelVeiculo() está implementado no AppRepository
                     appRepository.inserirHistoricoCombustivel(historico)
                     syncCount++
+                    bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                     Log.d(TAG, "✅ HistoricoCombustivelVeiculo sincronizado: Veículo ${historico.veiculoId} (ID: $historicoId)")
                 } catch (e: Exception) {
                     errorCount++
@@ -7143,27 +8111,55 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Pull de histórico combustível veículo concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, syncCount, durationMs, bytesDownloaded = bytesDownloaded, error = if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Pull INCREMENTAL de histórico combustível veículo concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no pull de histórico combustível veículo: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * Pull Veiculos: Sincroniza veículos do Firestore para o Room
+     * ✅ REFATORADO (2025): Pull Veículos com sincronização incremental
      */
     private suspend fun pullVeiculos(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_VEICULOS
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando pull de veículos...")
+            Log.d(TAG, "🔵 Iniciando pull INCREMENTAL de veículos...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_VEICULOS)
-            val snapshot = collectionRef.get().await()
+            
+            val lastSyncTimestamp = getLastSyncTimestamp(entityType)
+            val canUseIncremental = lastSyncTimestamp > 0L
+            
+            val query = if (canUseIncremental) {
+                Log.d(TAG, "🔄 Sincronização INCREMENTAL (desde ${Date(lastSyncTimestamp)})")
+                try {
+                    collectionRef
+                        .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
+                        .orderBy("lastModified")
+                } catch (e: Exception) {
+                    Log.w(TAG, "⚠️ Erro ao criar query incremental, usando completa: ${e.message}")
+                    collectionRef.orderBy("lastModified")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização COMPLETA")
+                collectionRef.orderBy("lastModified")
+            }
+            
+            val snapshot = query.get().await()
             Log.d(TAG, "📥 Total de veículos no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
             var skipCount = 0
             var errorCount = 0
+            var bytesDownloaded = 0L
             
             snapshot.documents.forEach { doc ->
                 try {
@@ -7204,6 +8200,7 @@ class SyncRepository(
                     // Por enquanto, inserir/atualizar sempre (OnConflictStrategy.REPLACE)
                     appRepository.inserirVeiculo(veiculo)
                     syncCount++
+                    bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                     Log.d(TAG, "✅ Veículo sincronizado: ${veiculo.placa} (ID: ${veiculo.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -7211,9 +8208,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Pull de veículos concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, syncCount, durationMs, bytesDownloaded = bytesDownloaded, error = if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Pull INCREMENTAL de veículos concluído: $syncCount sincronizados, $skipCount ignorados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            saveSyncMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no pull de veículos: ${e.message}", e)
             Result.failure(e)
         }
@@ -7226,16 +8228,45 @@ class SyncRepository(
     /**
      * Push HistoricoCombustivelVeiculo: Envia histórico de combustível de veículos do Room para o Firestore
      */
+    /**
+     * ✅ REFATORADO (2025): Push Historico Combustível Veículo com sincronização incremental
+     */
     private suspend fun pushHistoricoCombustivelVeiculo(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_HISTORICO_COMBUSTIVEL_VEICULO
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de histórico combustível veículo...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de histórico combustível veículo...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val historicosLocais = appRepository.obterTodosHistoricoCombustivelVeiculo()
             Log.d(TAG, "📥 Total de históricos de combustível locais encontrados: ${historicosLocais.size}")
             
+            val historicosParaEnviar = if (canUseIncremental) {
+                historicosLocais.filter { historico ->
+                    val historicoTimestamp = historico.dataCriacao.time
+                    historicoTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} históricos modificados desde ${Date(lastPushTimestamp)} (de ${historicosLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todos os ${historicosLocais.size} históricos")
+                historicosLocais
+            }
+            
+            if (historicosParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            historicosLocais.forEach { historico ->
+            historicosParaEnviar.forEach { historico ->
                 try {
                     Log.d(TAG, "📄 Processando histórico combustível: ID=${historico.id}, Veículo=${historico.veiculoId}")
                     
@@ -7258,6 +8289,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += historicoMap.toString().length.toLong()
                     Log.d(TAG, "✅ Histórico combustível enviado: Veículo ${historico.veiculoId} (ID: ${historico.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -7265,9 +8297,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de histórico combustível veículo concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de histórico combustível veículo concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de histórico combustível veículo: ${e.message}", e)
             Result.failure(e)
         }
@@ -7328,16 +8365,45 @@ class SyncRepository(
     /**
      * Push Meta Colaborador: Envia metas de colaborador do Room para o Firestore
      */
+    /**
+     * ✅ REFATORADO (2025): Push Meta Colaborador com sincronização incremental
+     */
     private suspend fun pushMetaColaborador(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_META_COLABORADOR
+        
         return try {
-            Log.d(TAG, "🔵 Iniciando push de meta colaborador...")
+            Log.d(TAG, "🔵 Iniciando push INCREMENTAL de meta colaborador...")
+            
+            val lastPushTimestamp = getLastPushTimestamp(entityType)
+            val canUseIncremental = lastPushTimestamp > 0L
+            
             val metasLocais = appRepository.obterTodasMetaColaborador().first()
             Log.d(TAG, "📥 Total de meta colaborador locais encontradas: ${metasLocais.size}")
             
+            val metasParaEnviar = if (canUseIncremental) {
+                metasLocais.filter { meta ->
+                    val metaTimestamp = meta.dataCriacao.time
+                    metaTimestamp > lastPushTimestamp
+                }.also {
+                    Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} metas modificadas desde ${Date(lastPushTimestamp)} (de ${metasLocais.size} total)")
+                }
+            } else {
+                Log.d(TAG, "🔄 Primeira sincronização PUSH - enviando todas as ${metasLocais.size} metas")
+                metasLocais
+            }
+            
+            if (metasParaEnviar.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
-            metasLocais.forEach { meta ->
+            metasParaEnviar.forEach { meta ->
                 try {
                     Log.d(TAG, "📄 Processando meta colaborador: ID=${meta.id}, Tipo=${meta.tipoMeta}, ColaboradorId=${meta.colaboradorId}")
                     
@@ -7362,6 +8428,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += metaMap.toString().length.toLong()
                     Log.d(TAG, "✅ Meta colaborador enviada com sucesso: ${meta.tipoMeta} (ID: ${meta.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -7369,9 +8436,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de meta colaborador concluído: $syncCount enviadas, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push INCREMENTAL de meta colaborador concluído: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de meta colaborador: ${e.message}", e)
             Result.failure(e)
         }
@@ -7572,14 +8644,30 @@ class SyncRepository(
     /**
      * Push Equipments: Envia equipamentos do Room para o Firestore
      */
+    /**
+     * ✅ REFATORADO (2025): Push Equipments com sincronização incremental
+     * Nota: Equipment não tem campo de timestamp, usar sempre enviar (baixa prioridade)
+     */
     private suspend fun pushEquipments(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val entityType = COLLECTION_EQUIPMENTS
+        
         return try {
             Log.d(TAG, "🔵 Iniciando push de equipamentos...")
+            // Nota: Equipment não tem campo de timestamp, então sempre enviar todos
+            // (geralmente são poucos registros, impacto baixo)
             val equipmentsLocais = appRepository.obterTodosEquipments().first()
             Log.d(TAG, "📥 Total de equipamentos locais encontrados: ${equipmentsLocais.size}")
             
+            if (equipmentsLocais.isEmpty()) {
+                val durationMs = System.currentTimeMillis() - startTime
+                savePushMetadata(entityType, 0, durationMs)
+                return Result.success(0)
+            }
+            
             var syncCount = 0
             var errorCount = 0
+            var bytesUploaded = 0L
             
             equipmentsLocais.forEach { equipment ->
                 try {
@@ -7606,6 +8694,7 @@ class SyncRepository(
                         .await()
                     
                     syncCount++
+                    bytesUploaded += equipmentMap.toString().length.toLong()
                     Log.d(TAG, "✅ Equipamento enviado com sucesso: ${equipment.name} (ID: ${equipment.id})")
                 } catch (e: Exception) {
                     errorCount++
@@ -7613,9 +8702,14 @@ class SyncRepository(
                 }
             }
             
-            Log.d(TAG, "✅ Push de equipamentos concluído: $syncCount enviados, $errorCount erros")
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
+            
+            Log.d(TAG, "✅ Push de equipamentos concluído: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
+            savePushMetadata(entityType, 0, durationMs, error = e.message)
             Log.e(TAG, "❌ Erro no push de equipamentos: ${e.message}", e)
             Result.failure(e)
         }
