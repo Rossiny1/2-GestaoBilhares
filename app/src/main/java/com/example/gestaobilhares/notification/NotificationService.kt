@@ -9,7 +9,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.gestaobilhares.R
+import com.example.gestaobilhares.ui.R
 import com.example.gestaobilhares.MainActivity
 
 class NotificationService(private val context: Context) {

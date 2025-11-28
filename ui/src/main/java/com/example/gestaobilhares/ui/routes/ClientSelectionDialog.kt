@@ -4,18 +4,13 @@ import android.app.Dialog
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.gestaobilhares.ui.R
 import com.example.gestaobilhares.ui.databinding.DialogSelectClientBinding
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
-import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.AppRepository
 /**
  * DialogFragment para selecionar um cliente para transferência.
@@ -38,24 +33,20 @@ class ClientSelectionDialog : DialogFragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = DialogSelectClientBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialog = super.onCreateDialog(savedInstanceState)
-        dialog.setTitle("Selecionar Cliente")
-        return dialog
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
+        _binding = DialogSelectClientBinding.inflate(layoutInflater)
+        this.isCancelable = true
+        
+        val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setView(binding.root)
+            .create()
+        dialog.setCanceledOnTouchOutside(true)
+        
+        // ✅ NOVO: Tornar o diálogo mais largo (90% da largura da tela)
+        val displayMetrics = resources.displayMetrics
+        val width = (displayMetrics.widthPixels * 0.90).toInt()
+        dialog.window?.setLayout(width, android.view.WindowManager.LayoutParams.WRAP_CONTENT)
+        
         // Inicializar repositórios e ViewModel
         val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = ClientSelectionViewModel(appRepository)
@@ -67,6 +58,8 @@ class ClientSelectionDialog : DialogFragment() {
 
         // Carregar todos os clientes inicialmente
         viewModel.loadAllClients()
+        
+        return dialog
     }
 
     private fun setupRecyclerView() {
@@ -105,11 +98,34 @@ class ClientSelectionDialog : DialogFragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.clientes.observe(viewLifecycleOwner) { clientes ->
+        viewModel.clientes.observe(this) { clientes ->
             clientAdapter.submitList(clientes)
+            
+            // ✅ NOVO: Mostrar/ocultar estado vazio baseado nos resultados
+            // Usar findViewById como fallback caso o binding não tenha sido atualizado
+            try {
+                if (clientes.isEmpty()) {
+                    binding.rvClientes.visibility = View.GONE
+                    val llEmptyState = binding.root.findViewById<View>(com.example.gestaobilhares.ui.R.id.llEmptyState)
+                    val tvEmptyState = binding.root.findViewById<android.widget.TextView>(com.example.gestaobilhares.ui.R.id.tvEmptyState)
+                    llEmptyState?.visibility = View.VISIBLE
+                    tvEmptyState?.text = if (binding.etBuscarCliente.text.toString().trim().isNotEmpty()) {
+                        "Nenhum cliente encontrado"
+                    } else {
+                        "Digite o nome do cliente para buscar"
+                    }
+                } else {
+                    binding.rvClientes.visibility = View.VISIBLE
+                    val llEmptyState = binding.root.findViewById<View>(com.example.gestaobilhares.ui.R.id.llEmptyState)
+                    llEmptyState?.visibility = View.GONE
+                }
+            } catch (e: Exception) {
+                // Se houver erro ao acessar os views, apenas mostrar/ocultar a lista
+                binding.rvClientes.visibility = if (clientes.isEmpty()) View.GONE else View.VISIBLE
+            }
         }
 
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+        viewModel.errorMessage.observe(this) { message ->
             message?.let {
                 // Mostrar erro se necessário
                 android.util.Log.e("ClientSelectionDialog", it)

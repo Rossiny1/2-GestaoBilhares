@@ -3,11 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
-    app:cardCornerRadius="8dp"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="6dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
-    app:strokeWidth="1dp"
-    app:strokeColor="@color/primary_blue">
+    app:strokeWidth="0dp"
+    app:cardBackgroundColor="?attr/colorSurfaceVariant"
+    app:rippleColor="?attr/colorPrimary">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,45 +19,114 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Nome do Cliente -->
+        <!-- Nome do Cliente (destaque) -->
         <TextView
             android:id="@+id/txtNomeCliente"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Nome do Cliente"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="4dp" />
+            android:textColor="?attr/colorOnSurface"
+            android:layout_marginBottom="8dp" />
 
-        <!-- CPF -->
-        <TextView
-            android:id="@+id/txtCpfCliente"
+        <!-- Informações secundárias -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="CPF: 000.000.000-00"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="4dp" />
+            android:orientation="vertical"
+            android:layout_marginTop="4dp">
 
-        <!-- Rota Atual -->
-        <TextView
-            android:id="@+id/txtRotaAtual"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Rota: Zona Sul"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="4dp" />
+            <!-- CPF -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="6dp">
 
-        <!-- Mesas Vinculadas -->
-        <TextView
-            android:id="@+id/txtMesasVinculadas"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Mesas: Mesa 1, Mesa 2"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CPF:"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    android:alpha="0.7"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:id="@+id/txtCpfCliente"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="000.000.000-00"
+                    android:textSize="14sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:alpha="0.8" />
+
+            </LinearLayout>
+
+            <!-- Rota Atual -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rota:"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    android:alpha="0.7"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:id="@+id/txtRotaAtual"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Zona Sul"
+                    android:textSize="14sp"
+                    android:textColor="?attr/colorPrimary"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- Mesas Vinculadas -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Mesas:"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    android:alpha="0.7"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:id="@+id/txtMesasVinculadas"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Mesa 1, Mesa 2"
+                    android:textSize="14sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:alpha="0.8" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 
