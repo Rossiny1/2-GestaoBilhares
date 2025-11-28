@@ -76,13 +76,13 @@ class ColaboradorApprovalDialog : DialogFragment() {
         val niveisAcesso = NivelAcesso.values().map { nivel ->
             when (nivel) {
                 NivelAcesso.ADMIN -> "Administrador"
-                NivelAcesso.USER -> "Colaborador"
+                NivelAcesso.USER -> "Usuário"
             }
         }
 
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, niveisAcesso)
         binding.spinnerNivelAcesso.setAdapter(adapter)
-        binding.spinnerNivelAcesso.setText("Colaborador", false) // Padrão
+        // ✅ CORREÇÃO: Não definir padrão aqui - será definido em preencherDadosIniciais() com o nível atual do colaborador
     }
 
     private fun setupClickListeners() {
@@ -113,6 +113,13 @@ class ColaboradorApprovalDialog : DialogFragment() {
         // Gerar senha temporária
         val senhaTemporaria = gerarSenhaTemporaria()
         binding.etSenhaTemporaria.setText(senhaTemporaria)
+        
+        // ✅ CORREÇÃO: Preencher nível de acesso atual do colaborador
+        val nivelAcessoAtual = when (colaborador.nivelAcesso) {
+            NivelAcesso.ADMIN -> "Administrador"
+            NivelAcesso.USER -> "Usuário"
+        }
+        binding.spinnerNivelAcesso.setText(nivelAcessoAtual, false)
         
         // Preencher observações padrão
         val observacoesPadrao = "Colaborador aprovado em ${Date()}. Credenciais temporárias geradas automaticamente."
@@ -155,7 +162,8 @@ class ColaboradorApprovalDialog : DialogFragment() {
     private fun obterNivelAcessoSelecionado(): NivelAcesso {
         return when (binding.spinnerNivelAcesso.text.toString()) {
             "Administrador" -> NivelAcesso.ADMIN
-            else -> NivelAcesso.USER
+            "Usuário" -> NivelAcesso.USER
+            else -> NivelAcesso.USER // Fallback seguro
         }
     }
 

@@ -239,15 +239,23 @@ class SyncRepository(
 }
 ```
 
-### **Sincronização Incremental**
+### **Sincronização Incremental (PULL e PUSH)**
 
 **Objetivo**: Reduzir uso de dados móveis e melhorar performance (98.6% de redução estimada)
 
-**Implementação**:
-- **SyncMetadata**: Entidade Room para armazenar último timestamp de sincronização por entidade
+**Implementação PULL**:
+- **SyncMetadata**: Entidade Room para armazenar último timestamp de sincronização PULL por entidade
 - **Queries Incrementais**: Usa `whereGreaterThan("lastModified", lastSyncTimestamp)` no Firestore
 - **Fallback Seguro**: Se índice Firestore não existir ou query falhar, faz sync completo
 - **Primeira Sincronização**: Sempre faz sync completo (quando `lastSyncTimestamp == 0L`)
+- **Entidades Implementadas**: Todas as 27 entidades (Clientes, Rotas, Mesas, Colaboradores, Ciclos, Acertos, Despesas, Contratos, CategoriasDespesa, TiposDespesa, Metas, ColaboradorRotas, AditivoMesas, ContratoMesas, AssinaturasRepresentanteLegal, LogsAuditoria, PanoEstoque, MesaVendida, StockItem, MesaReformada, HistoricoManutencaoMesa, HistoricoManutencaoVeiculo, HistoricoCombustivelVeiculo, Veiculos, PanoMesa, MetaColaborador, Equipments)
+
+**Implementação PUSH**:
+- **SyncMetadata Push**: Usa sufixo `_push` para diferenciar de PULL (`entityType_push`)
+- **Filtro Incremental**: Filtra entidades locais cujo timestamp (`dataUltimaAtualizacao`, `dataAtualizacao`, `dataCriacao`, etc.) é maior que `lastPushTimestamp`
+- **Atualização de Timestamp**: Após push bem-sucedido, atualiza timestamp local com `lastModified` do servidor
+- **Metadata Tracking**: Salva metadata de push (count, duration, bytes uploaded, errors)
+- **Entidades Implementadas**: Todas as 27 entidades com lógica específica por tipo de timestamp disponível
 
 **Otimizações de Performance**:
 - **Cache In-Memory**: Carrega todos os registros locais uma vez antes de processar documentos do Firestore
@@ -255,7 +263,7 @@ class SyncRepository(
 - **Queries Eficientes**: Usa índices compostos no Firestore para queries incrementais (quando disponíveis)
 - **Fallback Robusto**: Se índice não existir, busca sem orderBy e ordena em memória (funciona sem índices)
 
-**Exemplo de Uso**:
+**Exemplo de Uso PULL**:
 ```kotlin
 // pullClientes() verifica se é primeira sync ou se há timestamp
 val lastSync = getLastSyncTimestamp("clientes")
@@ -268,6 +276,22 @@ if (lastSync == 0L) {
     executePaginatedQuery(query) { batch ->
         // Processa lote de documentos
     }
+}
+```
+
+**Exemplo de Uso PUSH**:
+```kotlin
+// pushClientes() filtra apenas entidades modificadas
+val lastPush = getLastPushTimestamp("clientes")
+val clientesParaEnviar = if (lastPush > 0L) {
+    clientesLocais.filter { it.dataUltimaAtualizacao.time > lastPush }
+} else {
+    clientesLocais // Primeira sync: enviar todos
+}
+
+clientesParaEnviar.forEach { cliente ->
+    // Enviar para Firestore
+    // Após sucesso, timestamp local é atualizado com lastModified do servidor
 }
 ```
 
