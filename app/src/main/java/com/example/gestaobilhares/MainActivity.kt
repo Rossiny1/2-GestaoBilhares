@@ -8,7 +8,7 @@ import androidx.core.app.ActivityCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.lifecycleScope
-import com.example.gestaobilhares.databinding.ActivityMainBinding
+import com.example.gestaobilhares.ui.databinding.ActivityMainBinding
 import com.example.gestaobilhares.core.utils.NetworkUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 val navHostFragment = supportFragmentManager.findFragmentById(
-                    com.example.gestaobilhares.R.id.nav_host_fragment
+                    com.example.gestaobilhares.ui.R.id.nav_host_fragment
                 ) as? NavHostFragment ?: run {
                     finish()
                     return
@@ -130,17 +130,17 @@ class MainActivity : AppCompatActivity() {
                 val syncRepository = com.example.gestaobilhares.sync.SyncRepository(this@MainActivity, appRepository)
                 
                 // Mostrar diálogo de progresso
-                val progressView = layoutInflater.inflate(com.example.gestaobilhares.R.layout.dialog_sync_progress, null)
-                val progressBar = progressView.findViewById<android.widget.ProgressBar>(com.example.gestaobilhares.R.id.syncProgressBar)
-                val progressPercent = progressView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.tvSyncProgressPercent)
-                val progressStatus = progressView.findViewById<android.widget.TextView>(com.example.gestaobilhares.R.id.tvSyncProgressStatus)
+                val progressView = layoutInflater.inflate(com.example.gestaobilhares.ui.R.layout.dialog_sync_progress, null)
+                val progressBar = progressView.findViewById<android.widget.ProgressBar>(com.example.gestaobilhares.ui.R.id.syncProgressBar)
+                val progressPercent = progressView.findViewById<android.widget.TextView>(com.example.gestaobilhares.ui.R.id.tvSyncProgressPercent)
+                val progressStatus = progressView.findViewById<android.widget.TextView>(com.example.gestaobilhares.ui.R.id.tvSyncProgressStatus)
                 
                 progressBar.progress = 0
                 progressPercent.text = "0%"
-                progressStatus.text = getString(com.example.gestaobilhares.R.string.sync_status_preparing)
+                progressStatus.text = getString(com.example.gestaobilhares.ui.R.string.sync_status_preparing)
                 
                 val progressDialog = MaterialAlertDialogBuilder(this@MainActivity)
-                    .setTitle(com.example.gestaobilhares.R.string.sync_progress_title)
+                    .setTitle(com.example.gestaobilhares.ui.R.string.sync_progress_title)
                     .setView(progressView)
                     .setCancelable(false)
                     .create()
@@ -193,7 +193,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSupportNavigateUp(): Boolean {
         val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+            .findFragmentById(com.example.gestaobilhares.ui.R.id.nav_host_fragment) as NavHostFragment
         return navHostFragment.navController.navigateUp() || super.onSupportNavigateUp()
     }
 
