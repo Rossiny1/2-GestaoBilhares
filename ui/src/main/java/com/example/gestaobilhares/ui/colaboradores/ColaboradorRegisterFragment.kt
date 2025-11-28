@@ -103,10 +103,25 @@ class ColaboradorRegisterFragment : Fragment() {
         val estadosCivisAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, estadosCivis)
         binding.etEstadoCivil.setAdapter(estadosCivisAdapter)
         
-        // Níveis de acesso
-        val niveisAcesso = NivelAcesso.values().map { it.name }
+        // Níveis de acesso - usar nomes em português para melhor UX
+        val niveisAcesso = NivelAcesso.values().map { nivel ->
+            when (nivel) {
+                NivelAcesso.ADMIN -> "Administrador"
+                NivelAcesso.USER -> "Usuário"
+            }
+        }
         val niveisAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, niveisAcesso)
         binding.etNivelAcesso.setAdapter(niveisAdapter)
+        
+        // Garantir que o campo seja clicável e permita seleção
+        binding.etNivelAcesso.setOnClickListener {
+            binding.etNivelAcesso.showDropDown()
+        }
+        
+        // Definir valor padrão se for novo colaborador
+        if (colaboradorId == null) {
+            binding.etNivelAcesso.setText("Usuário", false)
+        }
     }
 
     private fun setupDatePicker() {
@@ -245,8 +260,12 @@ class ColaboradorRegisterFragment : Fragment() {
                     binding.etNomeMae.setText(col.nomeMae ?: "")
                     binding.etNomePai.setText(col.nomePai ?: "")
                     
-                    // Preencher configurações
-                    binding.etNivelAcesso.setText(col.nivelAcesso.name)
+                    // Preencher configurações - converter enum para nome em português
+                    val nivelAcessoTexto = when (col.nivelAcesso) {
+                        NivelAcesso.ADMIN -> "Administrador"
+                        NivelAcesso.USER -> "Usuário"
+                    }
+                    binding.etNivelAcesso.setText(nivelAcessoTexto, false)
                     
                     // ✅ NOVO: Logs para debug do carregamento
                     android.util.Log.d("ColaboradorRegister", "=== CARREGANDO ROTAS VINCULADAS ===")
@@ -316,7 +335,12 @@ class ColaboradorRegisterFragment : Fragment() {
                     estadoCivil = binding.etEstadoCivil.text.toString().takeIf { it.isNotEmpty() },
                     nomeMae = binding.etNomeMae.text.toString().trim().takeIf { it.isNotEmpty() },
                     nomePai = binding.etNomePai.text.toString().trim().takeIf { it.isNotEmpty() },
-                    nivelAcesso = NivelAcesso.valueOf(binding.etNivelAcesso.text.toString())
+                    // Converter texto em português de volta para enum
+                    nivelAcesso = when (binding.etNivelAcesso.text.toString()) {
+                        "Administrador" -> NivelAcesso.ADMIN
+                        "Usuário" -> NivelAcesso.USER
+                        else -> NivelAcesso.USER // Fallback seguro
+                    }
                 )
                 
                 val idSalvo = withContext(Dispatchers.IO) {

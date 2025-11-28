@@ -8,7 +8,7 @@
 - **Sessão e Acesso**: `UserSessionManager` com fallback a `SharedPreferences` e `StateFlow` reativo
 - **Modularização Arquitetural**: ✅ **COMPLETA** - AppRepository como Facade + Repositories especializados por domínio
 - **Modularização Gradle**: ✅ **COMPLETA** - Todos os módulos criados, código migrado, dependências configuradas e funcionando
-- **Sincronização**: ✅ **IMPLEMENTADA E OTIMIZADA** - Sistema completo com sincronização incremental
+- **Sincronização**: ✅ **IMPLEMENTADA E OTIMIZADA** - Sistema completo com sincronização incremental PULL e PUSH para todas as entidades
 
 ## 🚨 PENDÊNCIAS CRÍTICAS
 
@@ -29,11 +29,13 @@
   - ✅ Estrutura Firestore corrigida: `empresas/empresa_001/entidades/{collectionName}/items`
   - ✅ Conversão de `LocalDateTime` corrigida no pull de despesas
   - ✅ Timestamp local atualizado após push bem-sucedido
-  - ✅ **Sincronização Incremental**: Implementada para reduzir uso de dados e melhorar performance
-  - ✅ **SyncMetadata**: Entidade e DAO para rastrear última sincronização por entidade
+  - ✅ **Sincronização Incremental PULL**: Implementada para todas as entidades (Clientes, Rotas, Mesas, Colaboradores, Ciclos, Acertos, Despesas, Contratos, CategoriasDespesa, TiposDespesa, Metas, ColaboradorRotas, AditivoMesas, ContratoMesas, AssinaturasRepresentanteLegal, LogsAuditoria, PanoEstoque, MesaVendida, StockItem, MesaReformada, HistoricoManutencaoMesa, HistoricoManutencaoVeiculo, HistoricoCombustivelVeiculo, Veiculos, PanoMesa, MetaColaborador, Equipments)
+  - ✅ **Sincronização Incremental PUSH**: Implementada para todas as entidades, enviando apenas dados modificados desde última sincronização
+  - ✅ **SyncMetadata**: Entidade e DAO para rastrear última sincronização PULL e PUSH por entidade
   - ✅ **Paginação**: Suporte a queries paginadas para grandes volumes de dados
   - ✅ **Cache In-Memory**: Otimização para evitar múltiplas queries ao banco durante sincronização
   - ✅ **Fallback Robusto**: Sistema funciona sem índices Firestore (busca sem orderBy e ordena em memória)
+  - ✅ **Metadata Tracking**: Todas as sincronizações salvam metadata (count, duration, bytes, errors) para monitoramento
   - ⏳ **Índices Firestore**: Arquivos preparados para criação futura (`firestore.indexes.json`, `deploy-indices-firestore.ps1`, `GUIA-CRIACAO-INDICES-FIRESTORE.md`)
 - **Correções Recentes (Janeiro 2025)**:
   - ✅ Corrigida ordem de sincronização (PUSH antes de PULL)
@@ -50,6 +52,16 @@
   - ✅ **Histórico de Acertos**: Limitado a 3 acertos por cliente com opção de buscar período maior
   - ✅ **ClientDetailFragment**: Corrigido crash por views faltantes no layout
   - ✅ **Busca de Acertos**: Implementada estratégia de fallback robusta (4 níveis) para buscar acertos mesmo sem índices Firestore
+  - ✅ **Sincronização Incremental Completa (Janeiro 2025)**: 
+    - ✅ PULL incremental implementado para todas as 27 entidades principais e menores
+    - ✅ PUSH incremental implementado para todas as 27 entidades principais e menores
+    - ✅ Sistema usa `lastModified` timestamp para filtrar apenas dados modificados
+    - ✅ Timestamps locais atualizados com timestamps do servidor após push bem-sucedido
+    - ✅ Warnings de compilação corrigidos (safe calls, tipos, parâmetros nomeados)
+    - ✅ Parâmetros nomeados corrigidos em chamadas de `saveSyncMetadata` (bytesDownloaded, error)
+    - ✅ Safe calls corrigidos para campos Date nullable em caches
+    - ✅ Build estável e funcional
+    - ✅ Todas as entidades menores implementadas: PanoEstoque, MesaVendida, StockItem, MesaReformada, HistoricoManutencaoMesa, HistoricoManutencaoVeiculo, HistoricoCombustivelVeiculo, Veiculos, PanoMesa
 
 ### **2. Migração Compose (PRIORIDADE MÉDIA)**
 - **Status**: 🔄 **35.8% COMPLETO** (24 telas de 67)
@@ -109,6 +121,16 @@
 
 ## 🎯 PRÓXIMOS PASSOS (ORDEM DE PRIORIDADE)
 
+### **FASE 0.5: Sincronização Incremental (CONCLUÍDA - Janeiro 2025)**
+1. ✅ **PULL Incremental**: Implementado para todas as 27 entidades (incluindo entidades menores)
+2. ✅ **PUSH Incremental**: Implementado para todas as 27 entidades (incluindo entidades menores)
+3. ✅ **Metadata Tracking**: Sistema completo de rastreamento (bytes, duration, errors)
+4. ✅ **Warnings Corrigidos**: Build limpo sem warnings críticos
+5. ✅ **Erros de Compilação Corrigidos**: Parâmetros nomeados, safe calls, tipos corrigidos
+6. ✅ **Testes de Build**: Build estável e funcional
+
+## 🎯 PRÓXIMOS PASSOS (ORDEM DE PRIORIDADE)
+
 ### **FASE 0: Modularização Gradle (CONCLUÍDA)**
 1. ✅ **Migração Completa**: Todo código migrado para módulos apropriados
    - ✅ `:core`: Utilitários e RepositoryFactory
@@ -128,14 +150,25 @@
    - ✅ Estrutura Firestore corrigida
    - ✅ Conversão de tipos corrigida (Despesa, LocalDateTime)
    - ✅ Observação reativa implementada em ViewModels
+   - ✅ **Sincronização Incremental PULL**: Implementada para todas as 27 entidades
+   - ✅ **Sincronização Incremental PUSH**: Implementada para todas as 27 entidades
+   - ✅ **Metadata Tracking**: Sistema completo de rastreamento de sincronizações
    
 2. ✅ **Correções Aplicadas**:
    - ✅ Ordem de sincronização corrigida (PUSH → PULL)
    - ✅ Timestamp local atualizado após push
    - ✅ Histórico de veículos (abastecimento/manutenção) funcionando
    - ✅ Despesas sincronizando corretamente
+   - ✅ Warnings de compilação corrigidos (Janeiro 2025)
+   - ✅ Parâmetros nomeados corrigidos em chamadas de saveSyncMetadata (bytesDownloaded, error)
+   - ✅ Safe calls corrigidos para campos Date nullable em caches (ciclosCache, contratosCache, etc.)
+   - ✅ Entidades menores com PULL incremental: PanoEstoque, MesaVendida, StockItem, MesaReformada, HistoricoManutencaoMesa, HistoricoManutencaoVeiculo, HistoricoCombustivelVeiculo, Veiculos, PanoMesa
+   - ✅ Build estável após correções de tipos e parâmetros
 
 ### **FASE 2: Migração Compose (MÉDIO - 8-12 semanas)**
+- **Status**: 🔄 **35.8% COMPLETO** (24 telas de 67)
+- **Pendente**: 43 telas ainda em View System
+- **Estratégia**: Migração incremental preservando funcionalidades
 - Seguir plano detalhado em `2-ARQUITETURA-TECNICA.md`
 - Priorizar Core Business (Settlement, ClientList, CycleManagement)
 
@@ -150,6 +183,11 @@
   - Benefício: Queries até 10x mais rápidas, redução de custos
   - Status: Sistema funciona sem índices (fallback robusto), mas performance melhora com eles
   - Prioridade: Baixa (otimização opcional)
+- ⏳ **Testes Automatizados**: Implementar testes unitários e de integração
+  - Unit tests para ViewModels
+  - Integration tests para Repositories
+  - UI tests para telas críticas
+  - Prioridade: Média (melhora qualidade e confiabilidade)
 
 ## 🧪 QUALIDADE E ESTABILIDADE
 
