@@ -1,0 +1,1399 @@
+﻿--------- beginning of main
+12-02 20:33:05.178 D/SyncRepository(18861): SyncRepository inicializado
+12-02 20:33:05.186 D/SyncRepository(18861): NetworkUtils.isConnected() inicial = true
+12-02 20:33:05.401 D/SyncRepository(18861): ÔÅ¡´©Å Primeira instala├º├úo detectada (sem hist├│rico de sync) - N├âO executar sync autom├ítico
+12-02 20:33:05.402 D/SyncRepository(18861): ÔÅ¡´©Å Usu├írio deve solicitar sincroniza├º├úo explicitamente
+12-02 20:33:16.616 D/RoutesFragment(18861): ­ƒöô Menu dispon├¡vel para ADMIN: Super Admin
+12-02 20:33:16.623 D/RoutesFragment(18861): Ô£à Handler do bot├úo voltar configurado e ativado
+12-02 20:33:16.624 D/RoutesFragment(18861): ­ƒöì Verificando origem da navega├º├úo:
+12-02 20:33:16.624 D/RoutesFragment(18861):    Destino anterior: null
+12-02 20:33:16.624 D/RoutesFragment(18861):    Vindo do login: false
+12-02 20:33:16.624 D/RoutesFragment(18861): ­ƒÜ½ N├âO vindo do login - PROIBIDO verificar sincroniza├º├úo
+12-02 20:33:16.663 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:16.663 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:16.663 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:16.663 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:16.663 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:16.663 D/RoutesViewModel(18861):    Total de rotas: 0
+12-02 20:33:16.663 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 0 rotas
+12-02 20:33:16.687 D/RoutesFragment(18861): ­ƒöä onResume - For├ºando atualiza├º├úo dos dados das rotas
+12-02 20:33:16.687 D/RoutesFragment(18861): ­ƒöì onResume - Usu├írio logado: true
+12-02 20:33:16.687 D/RoutesViewModel(18861): ­ƒöä For├ºando refresh dos dados das rotas
+12-02 20:33:16.690 D/RoutesFragment(18861): Ôä╣´©Å onResume - N├úo verificando sincroniza├º├úo (s├│ aparece ap├│s login)
+12-02 20:33:16.906 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:16.906 D/RoutesViewModel(18861):    Total de ciclos no banco: 0
+12-02 20:33:16.906 D/RoutesViewModel(18861):    Rotas sendo exibidas: 0
+12-02 20:33:16.908 D/RoutesViewModel(18861): ­ƒôè Dados atualizados: 0 rotas
+12-02 20:33:16.908 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro completo de rotas:
+12-02 20:33:16.908 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:16.908 D/RoutesViewModel(18861):    Total de rotas: 0
+12-02 20:33:16.908 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 0 rotas
+12-02 20:33:16.908 D/RoutesViewModel(18861): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+12-02 20:33:18.311 D/RoutesFragment(18861): ­ƒöä Iniciando sincroniza├º├úo manual
+12-02 20:33:18.311 D/RoutesFragment(18861): Ô£à Usu├írio logado detectado (ID: 1)
+12-02 20:33:18.455 D/SyncRepository(18861): SyncRepository inicializado
+12-02 20:33:18.458 D/SyncRepository(18861): NetworkUtils.isConnected() inicial = true
+12-02 20:33:18.458 D/RoutesFragment(18861): ­ƒöä Iniciando sincroniza├º├úo bidirecional...
+12-02 20:33:18.459 D/SyncRepository(18861): ­ƒöä syncBidirectional() CHAMADO - IN├ìCIO
+12-02 20:33:18.459 D/SyncRepository(18861): ­ƒöä ========== INICIANDO SINCRONIZA├ç├âO BIDIRECIONAL ==========
+12-02 20:33:18.459 D/SyncRepository(18861): Iniciando sincroniza├º├úo bidirecional...
+12-02 20:33:18.460 D/SyncRepository(18861): ­ƒôñ Passo 1: Executando PUSH (enviar dados locais para nuvem)...
+12-02 20:33:18.460 D/SyncRepository(18861): ­ƒöä ========== INICIANDO SINCRONIZA├ç├âO PUSH ==========
+12-02 20:33:18.460 D/SyncRepository(18861): Ô£à Usu├írio autenticado no Firebase Auth - UID: aNrpdE8HC6UlUI5AtZ3LwXZWnrx1, Email: rossinys@gmail.com
+12-02 20:33:18.463 D/SyncRepository(18861): Ô£à Dispositivo online - prosseguindo com sincroniza├º├úo
+12-02 20:33:18.463 D/SyncRepository(18861): ­ƒôñ Processando fila de sincroniza├º├úo antes do push direto...
+12-02 20:33:18.475 D/SyncRepository(18861): ­ƒô¡ Nenhuma opera├º├úo pendente na fila
+12-02 20:33:18.475 D/SyncRepository(18861): Ô£à Fila de sincroniza├º├úo processada com sucesso.
+12-02 20:33:18.475 D/SyncRepository(18861): Iniciando push de dados locais para o Firestore...
+12-02 20:33:18.475 D/SyncRepository(18861): ­ƒôñ Iniciando push INCREMENTAL de clientes...
+12-02 20:33:18.492 D/SyncRepository(18861): ­ƒôè Total de clientes locais encontrados: 0
+12-02 20:33:18.492 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 clientes
+12-02 20:33:18.495 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para clientes_push: 0 registros em 17ms
+12-02 20:33:18.495 D/SyncRepository(18861): Ô£à Nenhum cliente para enviar - push conclu├¡do
+12-02 20:33:18.495 D/SyncRepository(18861): Ô£à Push Clientes: 0 sincronizados
+12-02 20:33:18.496 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de rotas...
+12-02 20:33:18.508 D/SyncRepository(18861): ­ƒôÑ Total de rotas locais encontradas: 0
+12-02 20:33:18.510 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 rotas
+12-02 20:33:18.516 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para rotas_push: 0 registros em 14ms
+12-02 20:33:18.516 D/SyncRepository(18861): Ô£à Nenhuma rota para enviar - push conclu├¡do
+12-02 20:33:18.516 D/SyncRepository(18861): Ô£à Push Rotas: 0 sincronizadas
+12-02 20:33:18.517 D/SyncRepository(18861): Iniciando push INCREMENTAL de mesas...
+12-02 20:33:18.547 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 mesas
+12-02 20:33:18.552 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas_push: 0 registros em 30ms
+12-02 20:33:18.552 D/SyncRepository(18861): Ô£à Push Mesas: 0 sincronizadas
+12-02 20:33:18.553 D/SyncRepository(18861): Iniciando push INCREMENTAL de colaboradores...
+12-02 20:33:18.602 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 1 colaboradores
+12-02 20:33:19.122 D/SyncRepository(18861): Ô£à Colaborador 1 atualizado no Firestore (email: rossinys@gmail.com)
+12-02 20:33:19.130 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para colaboradores_push: 1 registros em 571ms
+12-02 20:33:19.131 D/SyncRepository(18861): Ô£à Push INCREMENTAL de colaboradores conclu├¡do: 1 enviados, 0 erros, 571ms
+12-02 20:33:19.131 D/SyncRepository(18861): Ô£à Push Colaboradores: 1 sincronizados
+12-02 20:33:19.132 D/SyncRepository(18861): Iniciando push INCREMENTAL de ciclos...
+12-02 20:33:19.145 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 ciclos
+12-02 20:33:19.149 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para ciclos_push: 0 registros em 13ms
+12-02 20:33:19.149 D/SyncRepository(18861): Ô£à Push Ciclos: 0 sincronizados
+12-02 20:33:19.150 D/SyncRepository(18861): Iniciando push INCREMENTAL de acertos...
+12-02 20:33:19.178 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 acertos
+12-02 20:33:19.261 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para acertos_push: 0 registros em 28ms
+12-02 20:33:19.261 D/SyncRepository(18861): Ô£à Push Acertos: 0 sincronizados
+12-02 20:33:19.262 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de despesas...
+12-02 20:33:19.299 D/SyncRepository(18861): ­ƒôÑ Total de despesas locais encontradas: 0
+12-02 20:33:19.299 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 despesas
+12-02 20:33:19.305 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para despesas_push: 0 registros em 37ms
+12-02 20:33:19.305 D/SyncRepository(18861): Ô£à Push Despesas: 0 sincronizadas
+12-02 20:33:19.306 D/SyncRepository(18861): Iniciando push INCREMENTAL de contratos...
+12-02 20:33:19.338 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 contratos
+12-02 20:33:19.341 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para contratos_push: 0 registros em 32ms
+12-02 20:33:19.341 D/SyncRepository(18861): Ô£à Push Contratos: 0 sincronizados
+12-02 20:33:19.342 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de categorias despesa...
+12-02 20:33:19.369 D/SyncRepository(18861): ­ƒôÑ Total de categorias despesa locais encontradas: 0
+12-02 20:33:19.369 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 categorias
+12-02 20:33:19.373 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para categorias_despesa_push: 0 registros em 27ms
+12-02 20:33:19.373 D/SyncRepository(18861): Ô£à Push Categorias Despesa: 0 sincronizadas
+12-02 20:33:19.374 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de tipos despesa...
+12-02 20:33:19.404 D/SyncRepository(18861): ­ƒôÑ Total de tipos despesa locais encontrados: 0
+12-02 20:33:19.404 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 tipos
+12-02 20:33:19.409 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para tipos_despesa_push: 0 registros em 30ms
+12-02 20:33:19.409 D/SyncRepository(18861): Ô£à Push Tipos Despesa: 0 sincronizados
+12-02 20:33:19.410 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de metas...
+12-02 20:33:19.436 D/SyncRepository(18861): ­ƒôÑ Total de metas locais encontradas: 0
+12-02 20:33:19.436 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 metas
+12-02 20:33:19.441 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para metas_push: 0 registros em 26ms
+12-02 20:33:19.441 D/SyncRepository(18861): Ô£à Push Metas: 0 sincronizadas
+12-02 20:33:19.442 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de colaborador rotas...
+12-02 20:33:19.483 D/SyncRepository(18861): ­ƒôÑ Total de colaborador rotas locais encontradas: 0
+12-02 20:33:19.483 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 vincula├º├Áes
+12-02 20:33:19.486 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para colaborador_rota_push: 0 registros em 41ms
+12-02 20:33:19.486 D/SyncRepository(18861): Ô£à Push Colaborador Rotas: 0 sincronizados
+12-02 20:33:19.487 D/SyncRepository(18861): ­ƒöÁ Iniciando push de aditivo mesas...
+12-02 20:33:19.504 D/SyncRepository(18861): ­ƒôÑ Total de aditivo mesas locais encontradas: 0
+12-02 20:33:19.508 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para aditivo_mesas_push: 0 registros em 17ms
+12-02 20:33:19.509 D/SyncRepository(18861): Ô£à Push Aditivo Mesas: 0 sincronizadas
+12-02 20:33:19.510 D/SyncRepository(18861): ­ƒöÁ Iniciando push de contrato mesas...
+12-02 20:33:19.530 D/SyncRepository(18861): ­ƒôÑ Total de contrato mesas locais encontradas: 0
+12-02 20:33:19.535 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para contrato_mesas_push: 0 registros em 20ms
+12-02 20:33:19.535 D/SyncRepository(18861): Ô£à Push Contrato Mesas: 0 sincronizadas
+12-02 20:33:19.536 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de assinaturas representante legal...
+12-02 20:33:19.548 D/SyncRepository(18861): ­ƒôÑ Total de assinaturas locais encontradas: 0
+12-02 20:33:19.548 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 assinaturas
+12-02 20:33:19.551 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para assinaturas_push: 0 registros em 12ms
+12-02 20:33:19.552 D/SyncRepository(18861): Ô£à Push Assinaturas Representante Legal: 0 sincronizadas
+12-02 20:33:19.552 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de logs auditoria...
+12-02 20:33:19.560 D/SyncRepository(18861): ­ƒôÑ Total de logs auditoria locais encontrados: 0
+12-02 20:33:19.560 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 logs
+12-02 20:33:19.564 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para logs_auditoria_assinatura_push: 0 registros em 8ms
+12-02 20:33:19.565 D/SyncRepository(18861): Ô£à Push Logs Auditoria: 0 sincronizados
+12-02 20:33:19.566 D/SyncRepository(18861): ­ƒöÁ Iniciando push de panos estoque...
+12-02 20:33:19.587 D/SyncRepository(18861): ­ƒôÑ Total de panos estoque locais encontrados: 0
+12-02 20:33:19.592 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para panos_estoque_push: 0 registros em 21ms
+12-02 20:33:19.593 D/SyncRepository(18861): Ô£à Push PanoEstoque: 0 sincronizados
+12-02 20:33:19.594 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de mesas vendidas...
+12-02 20:33:19.628 D/SyncRepository(18861): ­ƒôÑ Total de mesas vendidas locais encontradas: 0
+12-02 20:33:19.629 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 mesas
+12-02 20:33:19.634 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas_vendidas_push: 0 registros em 35ms
+12-02 20:33:19.634 D/SyncRepository(18861): Ô£à Push MesaVendida: 0 sincronizadas
+12-02 20:33:19.635 D/SyncRepository(18861): ­ƒöÁ Iniciando push de stock items...
+12-02 20:33:19.658 D/SyncRepository(18861): ­ƒôÑ Total de stock items locais encontrados: 0
+12-02 20:33:19.664 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para stock_items_push: 0 registros em 23ms
+12-02 20:33:19.665 D/SyncRepository(18861): Ô£à Push StockItem: 0 sincronizados
+12-02 20:33:19.667 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de mesas reformadas...
+12-02 20:33:19.720 D/SyncRepository(18861): ­ƒôÑ Total de mesas reformadas locais encontradas: 0
+12-02 20:33:19.720 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 mesas
+12-02 20:33:19.724 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas_reformadas_push: 0 registros em 53ms
+12-02 20:33:19.724 D/SyncRepository(18861): Ô£à Push MesaReformada: 0 sincronizadas
+12-02 20:33:19.725 D/SyncRepository(18861): ­ƒöÁ Iniciando push de pano mesas...
+12-02 20:33:19.747 D/SyncRepository(18861): ­ƒôÑ Total de pano mesas locais encontradas: 0
+12-02 20:33:19.747 D/SyncRepository(18861): Ô£à Push de pano mesas conclu├¡do: 0 enviados, 0 erros
+12-02 20:33:19.747 D/SyncRepository(18861): Ô£à Push PanoMesa: 0 sincronizados
+12-02 20:33:19.748 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de hist├│rico manuten├º├úo mesa...
+12-02 20:33:19.773 D/SyncRepository(18861): ­ƒôÑ Total de hist├│rico manuten├º├úo mesa locais encontrados: 0
+12-02 20:33:19.774 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 hist├│ricos
+12-02 20:33:19.777 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_mesa_push: 0 registros em 26ms
+12-02 20:33:19.777 D/SyncRepository(18861): Ô£à Push HistoricoManutencaoMesa: 0 sincronizados
+12-02 20:33:19.778 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de hist├│rico manuten├º├úo ve├¡culo...
+12-02 20:33:19.806 D/SyncRepository(18861): ­ƒôÑ Total de hist├│ricos de manuten├º├úo locais encontrados: 0
+12-02 20:33:19.806 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 hist├│ricos
+12-02 20:33:19.809 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_veiculo_push: 0 registros em 28ms
+12-02 20:33:19.810 D/SyncRepository(18861): Ô£à Push HistoricoManutencaoVeiculo: 0 sincronizados
+12-02 20:33:19.811 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de hist├│rico combust├¡vel ve├¡culo...
+12-02 20:33:19.837 D/SyncRepository(18861): ­ƒôÑ Total de hist├│ricos de combust├¡vel locais encontrados: 0
+12-02 20:33:19.837 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 hist├│ricos
+12-02 20:33:19.840 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_combustivel_veiculo_push: 0 registros em 27ms
+12-02 20:33:19.840 D/SyncRepository(18861): Ô£à Push HistoricoCombustivelVeiculo: 0 sincronizados
+12-02 20:33:19.841 D/SyncRepository(18861): ­ƒöÁ Iniciando push de ve├¡culos...
+12-02 20:33:19.865 D/SyncRepository(18861): ­ƒôÑ Total de ve├¡culos locais encontrados: 0
+12-02 20:33:19.865 D/SyncRepository(18861): Ô£à Push de ve├¡culos conclu├¡do: 0 enviados, 0 erros
+12-02 20:33:19.865 D/SyncRepository(18861): Ô£à Push Veiculos: 0 sincronizados
+12-02 20:33:19.866 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de meta colaborador...
+12-02 20:33:19.900 D/SyncRepository(18861): ­ƒôÑ Total de meta colaborador locais encontradas: 0
+12-02 20:33:19.900 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 metas
+12-02 20:33:19.904 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para meta_colaborador_push: 0 registros em 34ms
+12-02 20:33:19.905 D/SyncRepository(18861): Ô£à Push Meta Colaborador: 0 sincronizadas
+12-02 20:33:19.906 D/SyncRepository(18861): ­ƒöÁ Iniciando push de equipamentos...
+12-02 20:33:19.929 D/SyncRepository(18861): ­ƒôÑ Total de equipamentos locais encontrados: 0
+12-02 20:33:19.934 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para equipments_push: 0 registros em 24ms
+12-02 20:33:19.935 D/SyncRepository(18861): Ô£à Push Equipments: 0 sincronizados
+12-02 20:33:19.950 D/SyncRepository(18861): Ô£à ========== SINCRONIZA├ç├âO PUSH CONCLU├ìDA ==========
+12-02 20:33:19.950 D/SyncRepository(18861): ­ƒôè Total enviado: 1 itens
+12-02 20:33:19.950 D/SyncRepository(18861): ÔØî Total de falhas: 0 dom├¡nios
+12-02 20:33:19.950 D/SyncRepository(18861): ÔÅ░ Timestamp: 1764718399950
+12-02 20:33:19.951 D/SyncRepository(18861): Ô£à Push conclu├¡do com sucesso - dados locais preservados na nuvem
+12-02 20:33:19.951 D/SyncRepository(18861): ­ƒôÑ Passo 2: Executando PULL (importar atualiza├º├Áes da nuvem)...
+12-02 20:33:19.951 D/SyncRepository(18861): ­ƒöä syncPull() CHAMADO - IN├ìCIO
+12-02 20:33:19.952 D/SyncRepository(18861): Ô£à Usu├írio autenticado no Firebase Auth - UID: aNrpdE8HC6UlUI5AtZ3LwXZWnrx1, Email: rossinys@gmail.com
+12-02 20:33:19.952 D/SyncRepository(18861): ­ƒöä ========== INICIANDO SINCRONIZA├ç├âO PULL ==========
+12-02 20:33:19.952 D/SyncRepository(18861): ­ƒöì Verificando conectividade...
+12-02 20:33:19.953 D/SyncRepository(18861): ­ƒææ ADMIN: Bootstrap desabilitado, acessando todas as rotas
+12-02 20:33:19.953 D/SyncRepository(18861): ­ƒæñ Usu├írio ADMIN - sincronizando todas as rotas dispon├¡veis.
+12-02 20:33:19.956 D/SyncRepository(18861): ­ƒöì NetworkUtils.isConnected() = true
+12-02 20:33:19.956 D/SyncRepository(18861): Ô£à Dispositivo online confirmado
+12-02 20:33:19.956 D/SyncRepository(18861): Ô£à Prosseguindo com sincroniza├º├úo PULL
+12-02 20:33:19.956 D/SyncRepository(18861): ­ƒôí Conectando ao Firestore...
+12-02 20:33:19.956 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de rotas...
+12-02 20:33:19.960 D/SyncRepository(18861): ­ƒôè Rotas: lastSyncTimestamp=0, canUseIncremental=false, allowRouteBootstrap=false
+12-02 20:33:19.960 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de rotas - usando m├®todo COMPLETO
+12-02 20:33:20.411 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de rotas - documentos recebidos: 1
+12-02 20:33:20.431 D/SyncRepository(18861): ­ƒöä Rota sincronizada: Moc (ID=1)
+12-02 20:33:20.436 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para rotas: 1 registros em 476ms
+12-02 20:33:20.436 D/SyncRepository(18861): Ô£à Pull de rotas conclu├¡do (fallback incremental=false): sync=1, skipped=0, errors=0, duration=476ms
+12-02 20:33:20.436 D/SyncRepository(18861): Ô£à Pull Rotas: 1 sincronizadas
+12-02 20:33:20.437 D/SyncRepository(18861): ­ƒöä Cache de rotas invalidado ap├│s pull de rotas
+12-02 20:33:20.437 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de clientes...
+12-02 20:33:20.441 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo - usando m├®todo COMPLETO
+12-02 20:33:20.497 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:20.497 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:20.497 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:20.497 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:20.497 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:20.497 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:20.497 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:20.505 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:20.505 D/RoutesViewModel(18861):    Total de ciclos no banco: 0
+12-02 20:33:20.505 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:20.577 D/SyncRepository(18861): ­ƒôÑ Total de clientes no Firestore (ap├│s filtro de rota): 1
+12-02 20:33:20.586 D/SyncRepository(18861):    ­ƒôª Cache de clientes carregado: 0 clientes (9ms)
+12-02 20:33:20.599 D/SyncRepository(18861):    ÔÅ▒´©Å Processamento de documentos: 12ms
+12-02 20:33:20.603 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para clientes: 1 registros em 162ms
+12-02 20:33:20.603 D/SyncRepository(18861): Ô£à Pull Clientes (COMPLETO) conclu├¡do: 1 sincronizados, 0 pulados, 0 erros
+12-02 20:33:20.603 D/SyncRepository(18861): Ô£à Pull Clientes: 1 sincronizados
+12-02 20:33:20.604 D/SyncRepository(18861): Iniciando pull de mesas...
+12-02 20:33:20.613 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo - usando m├®todo COMPLETO
+12-02 20:33:20.683 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:20.683 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:20.683 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:20.683 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:20.683 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:20.683 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:20.684 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:20.761 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:20.761 D/RoutesViewModel(18861):    Total de ciclos no banco: 0
+12-02 20:33:20.761 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:20.767 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas: 1 registros em 160ms
+12-02 20:33:20.767 D/SyncRepository(18861): Ô£à Pull Mesas (COMPLETO) conclu├¡do: 1 sincronizadas, 0 puladas, 0 erros
+12-02 20:33:20.767 D/SyncRepository(18861): Ô£à Pull Mesas: 1 sincronizadas
+12-02 20:33:20.768 D/SyncRepository(18861): Iniciando pull de colaboradores...
+12-02 20:33:20.772 D/SyncRepository(18861): ­ƒôè Colaboradores: lastSyncTimestamp=0, canUseIncremental=false, allowRouteBootstrap=false
+12-02 20:33:20.772 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de colaboradores - usando m├®todo COMPLETO
+12-02 20:33:20.883 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de colaboradores - documentos recebidos: 1
+12-02 20:33:21.245 D/SyncRepository(18861): ÔÅ¡´©Å Colaborador rossinys@gmail.com (ID=1) n├úo existe no Firebase Authentication - N├âO atualizando (foi exclu├¡do)
+12-02 20:33:21.251 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para colaboradores: 0 registros em 477ms
+12-02 20:33:21.252 D/SyncRepository(18861): Ô£à Pull de colaboradores conclu├¡do (fallback incremental=false): sync=0, skipped=1, errors=0, duration=477ms
+12-02 20:33:21.252 D/SyncRepository(18861): Ô£à Pull Colaboradores: 0 sincronizados
+12-02 20:33:21.253 D/SyncRepository(18861): Iniciando pull de ciclos...
+12-02 20:33:21.266 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de ciclos - usando m├®todo COMPLETO
+12-02 20:33:21.474 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de ciclos - documentos recebidos: 4
+12-02 20:33:21.500 D/SyncRepository(18861): ­ƒôè Documentos ordenados por data de cria├º├úo (do mais antigo para o mais recente)
+12-02 20:33:21.522 D/SyncRepository(18861): ­ƒöä Processando ciclo ID=3, numeroCiclo=3, status=EM_ANDAMENTO, rotaId=1
+12-02 20:33:21.523 D/SyncRepository(18861): Ô×ò Inserindo novo ciclo ID=3, numeroCiclo=3, status=EM_ANDAMENTO
+12-02 20:33:21.538 D/SyncRepository(18861): ­ƒöä Processando ciclo ID=2, numeroCiclo=2, status=FINALIZADO, rotaId=1
+12-02 20:33:21.540 D/SyncRepository(18861): Ô×ò Inserindo novo ciclo ID=2, numeroCiclo=2, status=FINALIZADO
+12-02 20:33:21.552 D/SyncRepository(18861): ­ƒöä Processando ciclo ID=1, numeroCiclo=1, status=FINALIZADO, rotaId=1
+12-02 20:33:21.553 D/SyncRepository(18861): Ô×ò Inserindo novo ciclo ID=1, numeroCiclo=1, status=FINALIZADO
+12-02 20:33:21.563 D/SyncRepository(18861): ­ƒöä Processando ciclo ID=4, numeroCiclo=4, status=EM_ANDAMENTO, rotaId=1
+12-02 20:33:21.564 D/SyncRepository(18861): Ô×ò Inserindo novo ciclo ID=4, numeroCiclo=4, status=EM_ANDAMENTO
+12-02 20:33:21.582 D/SyncRepository(18861): ­ƒôè Total de ciclos ap├│s sincroniza├º├úo: 4
+12-02 20:33:21.583 D/SyncRepository(18861):    - Ciclo ID=4, numeroCiclo=4, status=EM_ANDAMENTO, rotaId=1, dataCriacao=Tue Dec 02 20:20:08 GMT-03:00 2025
+12-02 20:33:21.583 D/SyncRepository(18861):    - Ciclo ID=3, numeroCiclo=3, status=EM_ANDAMENTO, rotaId=1, dataCriacao=Tue Dec 02 17:11:53 GMT-03:00 2025
+12-02 20:33:21.583 D/SyncRepository(18861):    - Ciclo ID=2, numeroCiclo=2, status=FINALIZADO, rotaId=1, dataCriacao=Tue Dec 02 17:11:50 GMT-03:00 2025
+12-02 20:33:21.583 D/SyncRepository(18861):    - Ciclo ID=1, numeroCiclo=1, status=FINALIZADO, rotaId=1, dataCriacao=Tue Dec 02 17:11:46 GMT-03:00 2025
+12-02 20:33:21.593 D/SyncRepository(18861): ­ƒöì DEBUG: Rota 1 - Ciclo selecionado: ID=4, numeroCiclo=4, status=EM_ANDAMENTO
+12-02 20:33:21.593 D/SyncRepository(18861): ­ƒöì DEBUG: Rota 1 - Ciclos em andamento: 2, Total ciclos: 4
+12-02 20:33:21.603 D/SyncRepository(18861): Ô£à Rota ID=1 atualizada com ciclo 4 (status=EM_ANDAMENTO, numeroCiclo=4)
+12-02 20:33:21.608 D/SyncRepository(18861): ­ƒöä DEBUG: Timestamp da rota atualizado para for├ºar refresh dos Flows reativos
+12-02 20:33:21.621 D/SyncRepository(18861): ­ƒöä DEBUG: Terceira atualiza├º├úo da rota para garantir persist├¬ncia
+12-02 20:33:21.632 D/SyncRepository(18861): ­ƒöì DEBUG: Rota verificada ap├│s atualiza├º├úo - ID=1, cicloAcertoAtual=4, statusAtual=EM_ANDAMENTO
+12-02 20:33:21.664 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:21.664 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:21.664 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:21.664 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:21.664 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:21.664 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:21.665 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:21.735 D/SyncRepository(18861): ­ƒöä DEBUG: Pausa de 100ms para processamento das atualiza├º├Áes
+12-02 20:33:21.740 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para ciclos: 4 registros em 482ms
+12-02 20:33:21.740 D/SyncRepository(18861): Ô£à Pull de ciclos conclu├¡do: sync=4, skipped=0, errors=0, duration=482ms
+12-02 20:33:21.741 D/SyncRepository(18861): Ô£à Pull Ciclos: 4 sincronizados
+12-02 20:33:21.742 D/SyncRepository(18861): ­ƒöä Iniciando pull de acertos...
+12-02 20:33:21.750 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de acertos - usando m├®todo COMPLETO
+12-02 20:33:21.854 D/SyncRepository(18861): ­ƒôè Total de acertos no Firestore (ap├│s filtro de rota): 0
+12-02 20:33:21.859 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para acertos: 0 registros em 112ms
+12-02 20:33:21.859 D/SyncRepository(18861): Ô£à Pull Acertos (COMPLETO) conclu├¡do: 0 sincronizados, 0 pulados, 0 erros
+12-02 20:33:21.860 D/SyncRepository(18861): Ô£à Pull Acertos: 0 sincronizados
+12-02 20:33:21.861 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de despesas...
+12-02 20:33:21.872 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo - usando m├®todo COMPLETO
+12-02 20:33:21.976 D/SyncRepository(18861): ­ƒôÑ Total de despesas no Firestore (ap├│s filtro de rota): 0
+12-02 20:33:21.980 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para despesas: 0 registros em 115ms
+12-02 20:33:21.980 D/SyncRepository(18861): Ô£à Pull Despesas: 0 sincronizadas
+12-02 20:33:21.981 D/SyncRepository(18861): Iniciando pull de contratos...
+12-02 20:33:21.991 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de contratos - usando m├®todo COMPLETO
+12-02 20:33:22.061 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:22.061 D/RoutesViewModel(18861):    Total de ciclos no banco: 4
+12-02 20:33:22.061 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:22.063 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:22.063 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:22.063 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:22.063 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:22.063 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:22.063 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:22.065 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:22.175 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de contratos - documentos recebidos: 1
+12-02 20:33:22.350 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:22.351 D/RoutesViewModel(18861):    Total de ciclos no banco: 4
+12-02 20:33:22.351 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:22.395 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para contratos: 1 registros em 409ms
+12-02 20:33:22.395 D/SyncRepository(18861): Ô£à Pull de contratos conclu├¡do: sync=1, skipped=0, errors=0, duration=409ms
+12-02 20:33:22.395 D/SyncRepository(18861): Ô£à Pull Contratos: 1 sincronizados
+12-02 20:33:22.397 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de categorias despesa...
+12-02 20:33:22.401 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de categorias - usando m├®todo COMPLETO
+12-02 20:33:22.483 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de categorias - documentos recebidos: 0
+12-02 20:33:22.487 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para categorias_despesa: 0 registros em 86ms
+12-02 20:33:22.488 D/SyncRepository(18861): Ô£à Pull Categorias Despesa: 0 sincronizadas
+12-02 20:33:22.489 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de tipos despesa...
+12-02 20:33:22.493 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de tipos - usando m├®todo COMPLETO
+12-02 20:33:22.570 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de tipos - documentos recebidos: 0
+12-02 20:33:22.576 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para tipos_despesa: 0 registros em 81ms
+12-02 20:33:22.576 D/SyncRepository(18861): Ô£à Pull Tipos Despesa: 0 sincronizados
+12-02 20:33:22.577 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de metas...
+12-02 20:33:22.582 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de metas - usando m├®todo COMPLETO
+12-02 20:33:22.660 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de metas - documentos recebidos: 0
+12-02 20:33:22.667 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para metas: 0 registros em 84ms
+12-02 20:33:22.667 D/SyncRepository(18861): Ô£à Pull Metas: 0 sincronizadas
+12-02 20:33:22.669 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de meta colaborador...
+12-02 20:33:22.675 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de meta colaborador - usando m├®todo COMPLETO
+12-02 20:33:22.758 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de meta colaborador - documentos recebidos: 0
+12-02 20:33:22.764 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para meta_colaborador: 0 registros em 89ms
+12-02 20:33:22.765 D/SyncRepository(18861): Ô£à Pull Meta Colaborador: 0 sincronizadas
+12-02 20:33:22.767 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de equipamentos...
+12-02 20:33:22.773 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de equipamentos - usando m├®todo COMPLETO
+12-02 20:33:22.873 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de equipamentos - documentos recebidos: 0
+12-02 20:33:22.879 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para equipments: 0 registros em 107ms
+12-02 20:33:22.879 D/SyncRepository(18861): Ô£à Pull Equipments: 0 sincronizados
+12-02 20:33:22.881 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de colaborador rotas...
+12-02 20:33:22.887 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de colaborador rotas - usando m├®todo COMPLETO
+12-02 20:33:23.050 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de colaborador rotas - documentos recebidos: 0
+12-02 20:33:23.056 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para colaborador_rota: 0 registros em 170ms
+12-02 20:33:23.057 D/SyncRepository(18861): Ô£à Pull Colaborador Rotas: 0 sincronizados
+12-02 20:33:23.058 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de aditivo mesas...
+12-02 20:33:23.062 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de aditivo mesas - usando m├®todo COMPLETO
+12-02 20:33:23.144 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de aditivo mesas - documentos recebidos: 0
+12-02 20:33:23.150 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para aditivo_mesas: 0 registros em 86ms
+12-02 20:33:23.151 D/SyncRepository(18861): Ô£à Pull Aditivo Mesas: 0 sincronizadas
+12-02 20:33:23.152 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de contrato mesas...
+12-02 20:33:23.158 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de contrato mesas - usando m├®todo COMPLETO
+12-02 20:33:23.282 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de contrato mesas - documentos recebidos: 1
+12-02 20:33:23.351 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para contrato_mesas: 1 registros em 194ms
+12-02 20:33:23.351 D/SyncRepository(18861): Ô£à Pull de contrato mesas conclu├¡do: sync=1, skipped=0, errors=0, duration=194ms
+12-02 20:33:23.351 D/SyncRepository(18861): Ô£à Pull Contrato Mesas: 1 sincronizadas
+12-02 20:33:23.353 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de assinaturas representante legal...
+12-02 20:33:23.358 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de assinaturas - usando m├®todo COMPLETO
+12-02 20:33:23.445 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de assinaturas - documentos recebidos: 0
+12-02 20:33:23.450 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para assinaturas: 0 registros em 92ms
+12-02 20:33:23.451 D/SyncRepository(18861): Ô£à Pull Assinaturas Representante Legal: 0 sincronizadas
+12-02 20:33:23.452 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de logs auditoria...
+12-02 20:33:23.455 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo de logs auditoria - usando m├®todo COMPLETO
+12-02 20:33:23.547 D/SyncRepository(18861): ­ƒôÑ Pull COMPLETO de logs auditoria - documentos recebidos: 0
+12-02 20:33:23.553 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para logs_auditoria_assinatura: 0 registros em 96ms
+12-02 20:33:23.553 D/SyncRepository(18861): Ô£à Pull de logs auditoria conclu├¡do: sync=0, skipped=0, errors=0, duration=96ms
+12-02 20:33:23.554 D/SyncRepository(18861): Ô£à Pull Logs Auditoria: 0 sincronizados
+12-02 20:33:23.555 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de panos estoque...
+12-02 20:33:23.644 D/SyncRepository(18861): ­ƒôÑ Total de panos estoque no Firestore: 0
+12-02 20:33:23.649 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para panos_estoque: 0 registros em 89ms
+12-02 20:33:23.650 D/SyncRepository(18861): Ô£à Pull de panos estoque conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 89ms
+12-02 20:33:23.650 D/SyncRepository(18861): Ô£à Pull PanoEstoque: 0 sincronizados
+12-02 20:33:23.652 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de mesas vendidas...
+12-02 20:33:23.656 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:33:23.768 D/SyncRepository(18861): ­ƒôÑ Total de mesas vendidas no Firestore: 0
+12-02 20:33:23.774 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas_vendidas: 0 registros em 116ms
+12-02 20:33:23.774 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de mesas vendidas conclu├¡do: 0 sincronizadas, 0 ignoradas, 0 erros, 116ms
+12-02 20:33:23.774 D/SyncRepository(18861): Ô£à Pull MesaVendida: 0 sincronizadas
+12-02 20:33:23.776 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de stock items...
+12-02 20:33:23.780 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:33:23.973 D/SyncRepository(18861): ­ƒôÑ Total de stock items no Firestore: 0
+12-02 20:33:23.979 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para stock_items: 0 registros em 197ms
+12-02 20:33:23.979 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de stock items conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 197ms
+12-02 20:33:23.980 D/SyncRepository(18861): Ô£à Pull StockItem: 0 sincronizados
+12-02 20:33:23.982 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de mesas reformadas...
+12-02 20:33:23.987 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:33:24.166 D/SyncRepository(18861): ­ƒôÑ Total de mesas reformadas no Firestore: 0
+12-02 20:33:24.170 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas_reformadas: 0 registros em 184ms
+12-02 20:33:24.171 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de mesas reformadas conclu├¡do: 0 sincronizadas, 0 ignoradas, 0 erros, 184ms
+12-02 20:33:24.171 D/SyncRepository(18861): Ô£à Pull MesaReformada: 0 sincronizadas
+12-02 20:33:24.173 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de pano mesas...
+12-02 20:33:24.178 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:33:24.264 D/SyncRepository(18861): ­ƒôÑ Total de pano mesas no Firestore: 0
+12-02 20:33:24.269 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para pano_mesas: 0 registros em 91ms
+12-02 20:33:24.269 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de pano mesas conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 91ms
+12-02 20:33:24.269 D/SyncRepository(18861): Ô£à Pull PanoMesa: 0 sincronizados
+12-02 20:33:24.271 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de hist├│rico manuten├º├úo mesa...
+12-02 20:33:24.274 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:33:24.350 D/SyncRepository(18861): ­ƒôÑ Total de hist├│rico manuten├º├úo mesa no Firestore: 0
+12-02 20:33:24.354 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_mesa: 0 registros em 79ms
+12-02 20:33:24.355 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de hist├│rico manuten├º├úo mesa conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 79ms
+12-02 20:33:24.355 D/SyncRepository(18861): Ô£à Pull HistoricoManutencaoMesa: 0 sincronizados
+12-02 20:33:24.356 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de hist├│rico manuten├º├úo ve├¡culo...
+12-02 20:33:24.360 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:33:24.435 D/SyncRepository(18861): ­ƒôÑ Total de hist├│rico manuten├º├úo ve├¡culo no Firestore: 0
+12-02 20:33:24.441 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_veiculo: 0 registros em 79ms
+12-02 20:33:24.441 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de hist├│rico manuten├º├úo ve├¡culo conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 79ms
+12-02 20:33:24.441 D/SyncRepository(18861): Ô£à Pull HistoricoManutencaoVeiculo: 0 sincronizados
+12-02 20:33:24.443 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de hist├│rico combust├¡vel ve├¡culo...
+12-02 20:33:24.448 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:33:24.550 D/SyncRepository(18861): ­ƒôÑ Total de hist├│rico combust├¡vel ve├¡culo no Firestore: 0
+12-02 20:33:24.556 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_combustivel_veiculo: 0 registros em 107ms
+12-02 20:33:24.557 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de hist├│rico combust├¡vel ve├¡culo conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 107ms
+12-02 20:33:24.557 D/SyncRepository(18861): Ô£à Pull HistoricoCombustivelVeiculo: 0 sincronizados
+12-02 20:33:24.559 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de ve├¡culos...
+12-02 20:33:24.564 D/SyncRepository(18861): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:33:24.651 D/SyncRepository(18861): ­ƒôÑ Total de ve├¡culos no Firestore: 0
+12-02 20:33:24.656 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para veiculos: 0 registros em 93ms
+12-02 20:33:24.657 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de ve├¡culos conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 93ms
+12-02 20:33:24.657 D/SyncRepository(18861): Ô£à Pull Veiculos: 0 sincronizados
+12-02 20:33:24.659 D/SyncRepository(18861): Ô£à ========== SINCRONIZA├ç├âO PULL CONCLU├ìDA ==========
+12-02 20:33:24.659 D/SyncRepository(18861): ­ƒôè Total sincronizado: 9 itens
+12-02 20:33:24.659 D/SyncRepository(18861): ÔØî Total de falhas: 0 dom├¡nios
+12-02 20:33:24.659 D/SyncRepository(18861): ÔÅ░ Timestamp: 1764718404659
+12-02 20:33:24.659 D/SyncRepository(18861): Ô£à Pull conclu├¡do com sucesso - dados locais atualizados
+12-02 20:33:24.659 D/SyncRepository(18861): Ô£à ========== SINCRONIZA├ç├âO BIDIRECIONAL CONCLU├ìDA COM SUCESSO ==========
+12-02 20:33:24.663 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para _global_sync: 0 registros em 6200ms
+12-02 20:33:24.668 D/RoutesFragment(18861): Ô£à Sincroniza├º├úo conclu├¡da com sucesso
+12-02 20:33:24.668 D/RoutesFragment(18861):    Pendentes: 0
+12-02 20:33:24.668 D/RoutesFragment(18861):    Falhas: 0
+12-02 20:33:24.676 D/RoutesFragment(18861): ­ƒöä Aguardando processamento dos dados...
+12-02 20:33:26.677 D/RoutesFragment(18861): ­ƒöä For├ºando refresh dos dados...
+12-02 20:33:26.677 D/RoutesViewModel(18861): ­ƒöä For├ºando refresh dos dados das rotas
+12-02 20:33:26.786 D/RoutesViewModel(18861): ­ƒôè Dados atualizados: 1 rotas
+12-02 20:33:26.786 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro completo de rotas:
+12-02 20:33:26.786 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:26.786 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:26.786 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:26.786 D/RoutesViewModel(18861): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas
+12-02 20:33:27.687 D/RoutesViewModel(18861): ­ƒöä For├ºando refresh dos dados das rotas
+12-02 20:33:27.704 D/RoutesFragment(18861): Ô£à Refresh conclu├¡do
+12-02 20:33:27.877 D/RoutesViewModel(18861): ­ƒôè Dados atualizados: 1 rotas
+12-02 20:33:27.877 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro completo de rotas:
+12-02 20:33:27.877 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:27.877 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:27.877 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:27.877 D/RoutesViewModel(18861): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas
+12-02 20:33:31.777 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:31.777 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:31.777 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:31.777 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:31.777 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:31.777 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:31.777 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:32.074 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:32.074 D/RoutesViewModel(18861):    Total de ciclos no banco: 4
+12-02 20:33:32.074 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:32.843 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:32.843 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:32.843 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:32.843 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:32.843 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:32.843 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:32.844 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:32.972 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:32.972 D/RoutesViewModel(18861):    Total de ciclos no banco: 5
+12-02 20:33:32.972 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:33.147 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:33.147 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:33.147 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:33.148 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:33.148 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:33.148 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:33.148 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:33.170 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:33.170 D/RoutesViewModel(18861):    Total de ciclos no banco: 5
+12-02 20:33:33.170 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:35.603 D/RoutesFragment(18861): ­ƒöô Menu dispon├¡vel para ADMIN: Super Admin
+12-02 20:33:35.608 D/RoutesFragment(18861): Ô£à Handler do bot├úo voltar configurado e ativado
+12-02 20:33:35.608 D/RoutesFragment(18861): ­ƒöì Verificando origem da navega├º├úo:
+12-02 20:33:35.608 D/RoutesFragment(18861):    Destino anterior: 2131296585
+12-02 20:33:35.608 D/RoutesFragment(18861):    Vindo do login: false
+12-02 20:33:35.608 D/RoutesFragment(18861): ­ƒÜ½ N├âO vindo do login - PROIBIDO verificar sincroniza├º├úo
+12-02 20:33:35.686 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:35.686 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:35.686 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:35.686 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:35.686 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:35.686 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:35.686 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:35.703 D/RoutesFragment(18861): ­ƒöä onResume - For├ºando atualiza├º├úo dos dados das rotas
+12-02 20:33:35.704 D/RoutesFragment(18861): ­ƒöì onResume - Usu├írio logado: true
+12-02 20:33:35.704 D/RoutesViewModel(18861): ­ƒöä For├ºando refresh dos dados das rotas
+12-02 20:33:35.706 D/RoutesFragment(18861): Ôä╣´©Å onResume - N├úo verificando sincroniza├º├úo (s├│ aparece ap├│s login)
+12-02 20:33:35.965 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:35.965 D/RoutesViewModel(18861):    Total de ciclos no banco: 5
+12-02 20:33:35.965 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:35.968 D/RoutesViewModel(18861): ­ƒôè Dados atualizados: 1 rotas
+12-02 20:33:35.968 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro completo de rotas:
+12-02 20:33:35.968 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:35.968 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:35.968 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:35.968 D/RoutesViewModel(18861): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas
+12-02 20:33:38.390 D/RoutesFragment(18861): ­ƒöä Iniciando sincroniza├º├úo manual
+12-02 20:33:38.390 D/RoutesFragment(18861): Ô£à Usu├írio logado detectado (ID: 1)
+12-02 20:33:38.451 D/SyncRepository(18861): SyncRepository inicializado
+12-02 20:33:38.452 D/SyncRepository(18861): NetworkUtils.isConnected() inicial = true
+12-02 20:33:38.452 D/RoutesFragment(18861): ­ƒöä Iniciando sincroniza├º├úo bidirecional...
+12-02 20:33:38.453 D/SyncRepository(18861): ­ƒöä syncBidirectional() CHAMADO - IN├ìCIO
+12-02 20:33:38.453 D/SyncRepository(18861): ­ƒöä ========== INICIANDO SINCRONIZA├ç├âO BIDIRECIONAL ==========
+12-02 20:33:38.453 D/SyncRepository(18861): Iniciando sincroniza├º├úo bidirecional...
+12-02 20:33:38.453 D/SyncRepository(18861): ­ƒôñ Passo 1: Executando PUSH (enviar dados locais para nuvem)...
+12-02 20:33:38.453 D/SyncRepository(18861): ­ƒöä ========== INICIANDO SINCRONIZA├ç├âO PUSH ==========
+12-02 20:33:38.454 D/SyncRepository(18861): Ô£à Usu├írio autenticado no Firebase Auth - UID: aNrpdE8HC6UlUI5AtZ3LwXZWnrx1, Email: rossinys@gmail.com
+12-02 20:33:38.456 D/SyncRepository(18861): Ô£à Dispositivo online - prosseguindo com sincroniza├º├úo
+12-02 20:33:38.456 D/SyncRepository(18861): ­ƒôñ Processando fila de sincroniza├º├úo antes do push direto...
+12-02 20:33:38.462 D/SyncRepository(18861): ­ƒô¡ Nenhuma opera├º├úo pendente na fila
+12-02 20:33:38.462 D/SyncRepository(18861): Ô£à Fila de sincroniza├º├úo processada com sucesso.
+12-02 20:33:38.462 D/SyncRepository(18861): Iniciando push de dados locais para o Firestore...
+12-02 20:33:38.462 D/SyncRepository(18861): ­ƒôñ Iniciando push INCREMENTAL de clientes...
+12-02 20:33:38.472 D/SyncRepository(18861): ­ƒôè Total de clientes locais encontrados: 1
+12-02 20:33:38.473 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 clientes modificados desde Tue Dec 02 20:33:18 GMT-03:00 2025 (de 1 total)
+12-02 20:33:38.476 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para clientes_push: 0 registros em 11ms
+12-02 20:33:38.476 D/SyncRepository(18861): Ô£à Nenhum cliente para enviar - push conclu├¡do
+12-02 20:33:38.476 D/SyncRepository(18861): Ô£à Push Clientes: 0 sincronizados
+12-02 20:33:38.477 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de rotas...
+12-02 20:33:38.485 D/SyncRepository(18861): ­ƒôÑ Total de rotas locais encontradas: 1
+12-02 20:33:38.485 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 1 rotas modificadas desde Tue Dec 02 20:33:18 GMT-03:00 2025 (de 1 total)
+12-02 20:33:38.485 D/SyncRepository(18861): ­ƒôä Processando rota: ID=1, Nome=Moc
+12-02 20:33:38.490 D/SyncRepository(18861):    Mapa criado com 13 campos
+12-02 20:33:38.491 D/SyncRepository(18861):    Enviando para Firestore: empresas/empresa_001/entidades/rotas/items, document=1
+12-02 20:33:38.491 D/SyncRepository(18861):    Campos no mapa: [anoCiclo, ativa, cicloAcertoAtual, cidades, colaboradorResponsavel, cor, dataAtualizacao, dataCriacao, dataInicioCiclo, descricao, id, nome, statusAtual, roomId, lastModified, syncTimestamp]
+12-02 20:33:38.601 D/SyncRepository(18861): Ô£à Rota enviada com sucesso: Moc (ID: 1)
+12-02 20:33:38.606 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para rotas_push: 1 registros em 124ms
+12-02 20:33:38.606 D/SyncRepository(18861): Ô£à Push INCREMENTAL de rotas conclu├¡do: 1 enviadas, 0 erros, 124ms
+12-02 20:33:38.606 D/SyncRepository(18861): Ô£à Push Rotas: 1 sincronizadas
+12-02 20:33:38.606 D/SyncRepository(18861): Iniciando push INCREMENTAL de mesas...
+12-02 20:33:38.635 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 1 mesas para enviar (0 modificadas, 1 de rotas acess├¡veis) desde Tue Dec 02 20:33:18 GMT-03:00 2025 (de 1 total)
+12-02 20:33:38.741 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas_push: 1 registros em 131ms
+12-02 20:33:38.741 D/SyncRepository(18861): Ô£à Push INCREMENTAL de mesas conclu├¡do: 1 enviadas, 0 erros, 131ms
+12-02 20:33:38.741 D/SyncRepository(18861): Ô£à Push Mesas: 1 sincronizadas
+12-02 20:33:38.742 D/SyncRepository(18861): Iniciando push INCREMENTAL de colaboradores...
+12-02 20:33:38.764 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 colaboradores modificados desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 1 total)
+12-02 20:33:38.767 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para colaboradores_push: 0 registros em 22ms
+12-02 20:33:38.767 D/SyncRepository(18861): Ô£à Push Colaboradores: 0 sincronizados
+12-02 20:33:38.768 D/SyncRepository(18861): Iniciando push INCREMENTAL de ciclos...
+12-02 20:33:38.781 D/SyncRepository(18861): ­ƒöì DEBUG PUSH CICLOS: lastPushTimestamp=1764718399145 (Tue Dec 02 20:33:19 GMT-03:00 2025), vinteQuatroHorasAtras=1764632018780 (Mon Dec 01 20:33:38 GMT-03:00 2025)
+12-02 20:33:38.781 D/SyncRepository(18861): ­ƒöì DEBUG PUSH CICLOS: Lista de todos os ciclos locais:
+12-02 20:33:38.781 D/SyncRepository(18861):    Ciclo ID=5, numeroCiclo=5, rotaId=1
+12-02 20:33:38.781 D/SyncRepository(18861):      dataCriacao=Tue Dec 02 20:33:32 GMT-03:00 2025 (1764718412556), dataAtualizacao=Tue Dec 02 20:33:32 GMT-03:00 2025 (1764718412556)
+12-02 20:33:38.781 D/SyncRepository(18861):      cicloTimestamp=1764718412556 (Tue Dec 02 20:33:32 GMT-03:00 2025), condicao1=true, condicao2=false
+12-02 20:33:38.781 D/SyncRepository(18861):    Ciclo ID=4, numeroCiclo=4, rotaId=1
+12-02 20:33:38.781 D/SyncRepository(18861):      dataCriacao=Tue Dec 02 20:20:08 GMT-03:00 2025 (1764717608449), dataAtualizacao=Tue Dec 02 20:20:08 GMT-03:00 2025 (1764717608449)
+12-02 20:33:38.781 D/SyncRepository(18861):      cicloTimestamp=1764717608449 (Tue Dec 02 20:20:08 GMT-03:00 2025), condicao1=false, condicao2=false
+12-02 20:33:38.781 D/SyncRepository(18861):    Ciclo ID=3, numeroCiclo=3, rotaId=1
+12-02 20:33:38.782 D/SyncRepository(18861):      dataCriacao=Tue Dec 02 17:11:53 GMT-03:00 2025 (1764706313210), dataAtualizacao=Tue Dec 02 17:11:53 GMT-03:00 2025 (1764706313210)
+12-02 20:33:38.782 D/SyncRepository(18861):      cicloTimestamp=1764706313210 (Tue Dec 02 17:11:53 GMT-03:00 2025), condicao1=false, condicao2=false
+12-02 20:33:38.782 D/SyncRepository(18861):    Ciclo ID=2, numeroCiclo=2, rotaId=1
+12-02 20:33:38.782 D/SyncRepository(18861):      dataCriacao=Tue Dec 02 17:11:50 GMT-03:00 2025 (1764706310197), dataAtualizacao=Tue Dec 02 17:11:50 GMT-03:00 2025 (1764706310197)
+12-02 20:33:38.782 D/SyncRepository(18861):      cicloTimestamp=1764706310197 (Tue Dec 02 17:11:50 GMT-03:00 2025), condicao1=false, condicao2=false
+12-02 20:33:38.782 D/SyncRepository(18861):    Ciclo ID=1, numeroCiclo=1, rotaId=1
+12-02 20:33:38.782 D/SyncRepository(18861):      dataCriacao=Tue Dec 02 17:11:46 GMT-03:00 2025 (1764706306964), dataAtualizacao=Tue Dec 02 17:11:46 GMT-03:00 2025 (1764706306964)
+12-02 20:33:38.782 D/SyncRepository(18861):      cicloTimestamp=1764706306964 (Tue Dec 02 17:11:46 GMT-03:00 2025), condicao1=false, condicao2=false
+12-02 20:33:38.782 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 1 ciclos modificados desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 5 total)
+12-02 20:33:38.782 D/SyncRepository(18861):    Ciclos a enviar: ID=5, Ciclo=5, Rota=1, Criado=Tue Dec 02 20:33:32 GMT-03:00 2025, Atualizado=Tue Dec 02 20:33:32 GMT-03:00 2025
+12-02 20:33:38.895 D/SyncRepository(18861): Ô£à Ciclo 5 (Ciclo 5 - Rota 1) enviado com sucesso
+12-02 20:33:38.898 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para ciclos_push: 1 registros em 127ms
+12-02 20:33:38.899 D/SyncRepository(18861): Ô£à Push INCREMENTAL de ciclos conclu├¡do: 1 enviados, 0 erros, 127ms
+12-02 20:33:38.899 D/SyncRepository(18861): Ô£à Push Ciclos: 1 sincronizados
+12-02 20:33:38.900 D/SyncRepository(18861): Iniciando push INCREMENTAL de acertos...
+12-02 20:33:38.915 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 acertos modificados desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:38.918 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para acertos_push: 0 registros em 15ms
+12-02 20:33:38.919 D/SyncRepository(18861): Ô£à Push Acertos: 0 sincronizados
+12-02 20:33:38.919 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de despesas...
+12-02 20:33:38.939 D/SyncRepository(18861): ­ƒôÑ Total de despesas locais encontradas: 0
+12-02 20:33:38.940 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 despesas modificadas desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:38.941 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para despesas_push: 0 registros em 21ms
+12-02 20:33:38.942 D/SyncRepository(18861): Ô£à Push Despesas: 0 sincronizadas
+12-02 20:33:38.942 D/SyncRepository(18861): Iniciando push INCREMENTAL de contratos...
+12-02 20:33:38.965 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 1 contratos para enviar (0 modificados, 1 de rotas acess├¡veis) desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 1 total)
+12-02 20:33:39.221 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para contratos_push: 1 registros em 275ms
+12-02 20:33:39.221 D/SyncRepository(18861): Ô£à Push INCREMENTAL de contratos conclu├¡do: 1 enviados, 0 erros, 275ms
+12-02 20:33:39.222 D/SyncRepository(18861): Ô£à Push Contratos: 1 sincronizados
+12-02 20:33:39.223 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de categorias despesa...
+12-02 20:33:39.257 D/SyncRepository(18861): ­ƒôÑ Total de categorias despesa locais encontradas: 0
+12-02 20:33:39.257 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 categorias modificadas desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:39.262 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para categorias_despesa_push: 0 registros em 35ms
+12-02 20:33:39.262 D/SyncRepository(18861): Ô£à Push Categorias Despesa: 0 sincronizadas
+12-02 20:33:39.263 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de tipos despesa...
+12-02 20:33:39.301 D/SyncRepository(18861): ­ƒôÑ Total de tipos despesa locais encontrados: 0
+12-02 20:33:39.301 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 tipos modificados desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:39.305 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para tipos_despesa_push: 0 registros em 38ms
+12-02 20:33:39.305 D/SyncRepository(18861): Ô£à Push Tipos Despesa: 0 sincronizados
+12-02 20:33:39.306 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de metas...
+12-02 20:33:39.339 D/SyncRepository(18861): ­ƒôÑ Total de metas locais encontradas: 0
+12-02 20:33:39.340 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 metas modificadas desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:39.343 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para metas_push: 0 registros em 34ms
+12-02 20:33:39.344 D/SyncRepository(18861): Ô£à Push Metas: 0 sincronizadas
+12-02 20:33:39.344 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de colaborador rotas...
+12-02 20:33:39.399 D/SyncRepository(18861): ­ƒôÑ Total de colaborador rotas locais encontradas: 0
+12-02 20:33:39.400 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 vincula├º├Áes modificadas desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:39.405 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para colaborador_rota_push: 0 registros em 56ms
+12-02 20:33:39.405 D/SyncRepository(18861): Ô£à Push Colaborador Rotas: 0 sincronizados
+12-02 20:33:39.406 D/SyncRepository(18861): ­ƒöÁ Iniciando push de aditivo mesas...
+12-02 20:33:39.427 D/SyncRepository(18861): ­ƒôÑ Total de aditivo mesas locais encontradas: 0
+12-02 20:33:39.431 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para aditivo_mesas_push: 0 registros em 21ms
+12-02 20:33:39.431 D/SyncRepository(18861): Ô£à Push Aditivo Mesas: 0 sincronizadas
+12-02 20:33:39.432 D/SyncRepository(18861): ­ƒöÁ Iniciando push de contrato mesas...
+12-02 20:33:39.467 D/SyncRepository(18861): ­ƒôÑ Total de contrato mesas locais encontradas: 1
+12-02 20:33:39.641 D/SyncRepository(18861): Ô£à ContratoMesa enviado: Contrato 1, Mesa 1 (ID: 1)
+12-02 20:33:39.646 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para contrato_mesas_push: 1 registros em 209ms
+12-02 20:33:39.646 D/SyncRepository(18861): Ô£à Push de contrato mesas conclu├¡do: 1 enviados, 0 erros, 209ms
+12-02 20:33:39.647 D/SyncRepository(18861): Ô£à Push Contrato Mesas: 1 sincronizadas
+12-02 20:33:39.648 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de assinaturas representante legal...
+12-02 20:33:39.660 D/SyncRepository(18861): ­ƒôÑ Total de assinaturas locais encontradas: 0
+12-02 20:33:39.660 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 assinaturas modificadas desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:39.665 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para assinaturas_push: 0 registros em 14ms
+12-02 20:33:39.665 D/SyncRepository(18861): Ô£à Push Assinaturas Representante Legal: 0 sincronizadas
+12-02 20:33:39.667 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de logs auditoria...
+12-02 20:33:39.677 D/SyncRepository(18861): ­ƒôÑ Total de logs auditoria locais encontrados: 0
+12-02 20:33:39.678 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 logs modificados desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:39.682 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para logs_auditoria_assinatura_push: 0 registros em 12ms
+12-02 20:33:39.683 D/SyncRepository(18861): Ô£à Push Logs Auditoria: 0 sincronizados
+12-02 20:33:39.683 D/SyncRepository(18861): ­ƒöÁ Iniciando push de panos estoque...
+12-02 20:33:39.708 D/SyncRepository(18861): ­ƒôÑ Total de panos estoque locais encontrados: 0
+12-02 20:33:39.712 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para panos_estoque_push: 0 registros em 25ms
+12-02 20:33:39.712 D/SyncRepository(18861): Ô£à Push PanoEstoque: 0 sincronizados
+12-02 20:33:39.713 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de mesas vendidas...
+12-02 20:33:39.744 D/SyncRepository(18861): ­ƒôÑ Total de mesas vendidas locais encontradas: 0
+12-02 20:33:39.745 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 mesas modificadas desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:39.754 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas_vendidas_push: 0 registros em 32ms
+12-02 20:33:39.755 D/SyncRepository(18861): Ô£à Push MesaVendida: 0 sincronizadas
+12-02 20:33:39.756 D/SyncRepository(18861): ­ƒöÁ Iniciando push de stock items...
+12-02 20:33:39.779 D/SyncRepository(18861): ­ƒôÑ Total de stock items locais encontrados: 0
+12-02 20:33:39.785 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para stock_items_push: 0 registros em 23ms
+12-02 20:33:39.785 D/SyncRepository(18861): Ô£à Push StockItem: 0 sincronizados
+12-02 20:33:39.786 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de mesas reformadas...
+12-02 20:33:39.818 D/SyncRepository(18861): ­ƒôÑ Total de mesas reformadas locais encontradas: 0
+12-02 20:33:39.819 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 mesas modificadas desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:39.824 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas_reformadas_push: 0 registros em 33ms
+12-02 20:33:39.824 D/SyncRepository(18861): Ô£à Push MesaReformada: 0 sincronizadas
+12-02 20:33:39.825 D/SyncRepository(18861): ­ƒöÁ Iniciando push de pano mesas...
+12-02 20:33:39.873 D/SyncRepository(18861): ­ƒôÑ Total de pano mesas locais encontradas: 0
+12-02 20:33:39.873 D/SyncRepository(18861): Ô£à Push de pano mesas conclu├¡do: 0 enviados, 0 erros
+12-02 20:33:39.873 D/SyncRepository(18861): Ô£à Push PanoMesa: 0 sincronizados
+12-02 20:33:39.874 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de hist├│rico manuten├º├úo mesa...
+12-02 20:33:39.912 D/SyncRepository(18861): ­ƒôÑ Total de hist├│rico manuten├º├úo mesa locais encontrados: 0
+12-02 20:33:39.913 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 hist├│ricos modificados desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:39.918 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_mesa_push: 0 registros em 39ms
+12-02 20:33:39.918 D/SyncRepository(18861): Ô£à Push HistoricoManutencaoMesa: 0 sincronizados
+12-02 20:33:39.919 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de hist├│rico manuten├º├úo ve├¡culo...
+12-02 20:33:39.954 D/SyncRepository(18861): ­ƒôÑ Total de hist├│ricos de manuten├º├úo locais encontrados: 0
+12-02 20:33:39.954 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 hist├│ricos modificados desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:39.958 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_veiculo_push: 0 registros em 35ms
+12-02 20:33:39.958 D/SyncRepository(18861): Ô£à Push HistoricoManutencaoVeiculo: 0 sincronizados
+12-02 20:33:39.959 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de hist├│rico combust├¡vel ve├¡culo...
+12-02 20:33:39.995 D/SyncRepository(18861): ­ƒôÑ Total de hist├│ricos de combust├¡vel locais encontrados: 0
+12-02 20:33:39.995 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 hist├│ricos modificados desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:39.998 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_combustivel_veiculo_push: 0 registros em 36ms
+12-02 20:33:39.998 D/SyncRepository(18861): Ô£à Push HistoricoCombustivelVeiculo: 0 sincronizados
+12-02 20:33:39.999 D/SyncRepository(18861): ­ƒöÁ Iniciando push de ve├¡culos...
+12-02 20:33:40.018 D/SyncRepository(18861): ­ƒôÑ Total de ve├¡culos locais encontrados: 0
+12-02 20:33:40.018 D/SyncRepository(18861): Ô£à Push de ve├¡culos conclu├¡do: 0 enviados, 0 erros
+12-02 20:33:40.018 D/SyncRepository(18861): Ô£à Push Veiculos: 0 sincronizados
+12-02 20:33:40.019 D/SyncRepository(18861): ­ƒöÁ Iniciando push INCREMENTAL de meta colaborador...
+12-02 20:33:40.055 D/SyncRepository(18861): ­ƒôÑ Total de meta colaborador locais encontradas: 0
+12-02 20:33:40.056 D/SyncRepository(18861): ­ƒöä Push INCREMENTAL: 0 metas modificadas desde Tue Dec 02 20:33:19 GMT-03:00 2025 (de 0 total)
+12-02 20:33:40.060 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para meta_colaborador_push: 0 registros em 37ms
+12-02 20:33:40.060 D/SyncRepository(18861): Ô£à Push Meta Colaborador: 0 sincronizadas
+12-02 20:33:40.061 D/SyncRepository(18861): ­ƒöÁ Iniciando push de equipamentos...
+12-02 20:33:40.085 D/SyncRepository(18861): ­ƒôÑ Total de equipamentos locais encontrados: 0
+12-02 20:33:40.090 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para equipments_push: 0 registros em 25ms
+12-02 20:33:40.090 D/SyncRepository(18861): Ô£à Push Equipments: 0 sincronizados
+12-02 20:33:40.101 D/SyncRepository(18861): Ô£à ========== SINCRONIZA├ç├âO PUSH CONCLU├ìDA ==========
+12-02 20:33:40.101 D/SyncRepository(18861): ­ƒôè Total enviado: 5 itens
+12-02 20:33:40.101 D/SyncRepository(18861): ÔØî Total de falhas: 0 dom├¡nios
+12-02 20:33:40.101 D/SyncRepository(18861): ÔÅ░ Timestamp: 1764718420101
+12-02 20:33:40.101 D/SyncRepository(18861): Ô£à Push conclu├¡do com sucesso - dados locais preservados na nuvem
+12-02 20:33:40.101 D/SyncRepository(18861): ­ƒôÑ Passo 2: Executando PULL (importar atualiza├º├Áes da nuvem)...
+12-02 20:33:40.102 D/SyncRepository(18861): ­ƒöä syncPull() CHAMADO - IN├ìCIO
+12-02 20:33:40.102 D/SyncRepository(18861): Ô£à Usu├írio autenticado no Firebase Auth - UID: aNrpdE8HC6UlUI5AtZ3LwXZWnrx1, Email: rossinys@gmail.com
+12-02 20:33:40.102 D/SyncRepository(18861): ­ƒöä ========== INICIANDO SINCRONIZA├ç├âO PULL ==========
+12-02 20:33:40.102 D/SyncRepository(18861): ­ƒöì Verificando conectividade...
+12-02 20:33:40.102 D/SyncRepository(18861): ­ƒææ ADMIN: Bootstrap desabilitado, acessando todas as rotas
+12-02 20:33:40.102 D/SyncRepository(18861): ­ƒæñ Usu├írio ADMIN - sincronizando todas as rotas dispon├¡veis.
+12-02 20:33:40.105 D/SyncRepository(18861): ­ƒöì NetworkUtils.isConnected() = true
+12-02 20:33:40.105 D/SyncRepository(18861): Ô£à Dispositivo online confirmado
+12-02 20:33:40.105 D/SyncRepository(18861): Ô£à Prosseguindo com sincroniza├º├úo PULL
+12-02 20:33:40.106 D/SyncRepository(18861): ­ƒôí Conectando ao Firestore...
+12-02 20:33:40.106 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de rotas...
+12-02 20:33:40.110 D/SyncRepository(18861): ­ƒôè Rotas: lastSyncTimestamp=1764718400432, canUseIncremental=true, allowRouteBootstrap=false
+12-02 20:33:40.111 D/SyncRepository(18861): ­ƒöä Tentando sincroniza├º├úo INCREMENTAL de rotas (├║ltima sync: Tue Dec 02 20:33:20 GMT-03:00 2025)
+12-02 20:33:40.339 D/SyncRepository(18861): ­ƒôÑ Rotas - incremental retornou 1 documentos
+12-02 20:33:40.355 D/SyncRepository(18861): ­ƒöä Rota sincronizada PRESERVANDO ciclo local: Moc (Ciclo local: 5, Servidor: 5, Motivo: ciclo em andamento)
+12-02 20:33:40.367 D/SyncRepository(18861): ­ƒöä Rota sincronizada: Moc (ID=1, Ciclo: 5)
+12-02 20:33:40.378 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para rotas: 1 registros em 261ms
+12-02 20:33:40.379 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de rotas: sync=1, skipped=0, errors=0, duration=261ms
+12-02 20:33:40.400 D/SyncRepository(18861): ­ƒôè Rotas incremental: syncedCount=1, localCount=1
+12-02 20:33:40.400 D/SyncRepository(18861): Ô£à Pull Rotas: 1 sincronizadas
+12-02 20:33:40.400 D/SyncRepository(18861): ­ƒöä Cache de rotas invalidado ap├│s pull de rotas
+12-02 20:33:40.401 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de clientes...
+12-02 20:33:40.405 D/SyncRepository(18861): ­ƒöä Tentando sincroniza├º├úo INCREMENTAL (├║ltima sync: Tue Dec 02 20:33:20 GMT-03:00 2025)
+12-02 20:33:40.463 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:40.463 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:40.463 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:40.463 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:40.463 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:40.463 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:40.463 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:40.517 D/SyncRepository(18861):    ­ƒôª Cache de clientes carregado: 0 em 21ms
+12-02 20:33:40.517 D/SyncRepository(18861): ­ƒôÑ Sincroniza├º├úo INCREMENTAL (clientes): 0 documentos modificados, verificando preserva├º├úo de clientes locais
+12-02 20:33:40.603 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para clientes: 0 registros em 195ms
+12-02 20:33:40.626 W/SyncRepository(18861): ÔÜá´©Å Incremental retornou 0 clientes e base local est├í vazia - executando pull COMPLETO como fallback
+12-02 20:33:40.685 D/SyncRepository(18861): ­ƒôÑ Total de clientes no Firestore (ap├│s filtro de rota): 1
+12-02 20:33:40.692 D/SyncRepository(18861):    ­ƒôª Cache de clientes carregado: 0 clientes (6ms)
+12-02 20:33:40.701 D/SyncRepository(18861):    ÔÅ▒´©Å Processamento de documentos: 8ms
+12-02 20:33:40.713 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para clientes: 1 registros em 300ms
+12-02 20:33:40.714 D/SyncRepository(18861): Ô£à Pull Clientes (COMPLETO) conclu├¡do: 1 sincronizados, 0 pulados, 0 erros
+12-02 20:33:40.714 D/SyncRepository(18861): Ô£à Pull Clientes: 1 sincronizados
+12-02 20:33:40.715 D/SyncRepository(18861): Iniciando pull de mesas...
+12-02 20:33:40.722 D/SyncRepository(18861): ­ƒöä Tentando sincroniza├º├úo INCREMENTAL (├║ltima sync: Tue Dec 02 20:33:20 GMT-03:00 2025)
+12-02 20:33:40.854 D/SyncRepository(18861):    ­ƒôª Cache de mesas carregado: 0 em 15ms
+12-02 20:33:40.855 D/SyncRepository(18861): ­ƒôÑ Sincroniza├º├úo INCREMENTAL: 1 documentos encontrados
+12-02 20:33:40.887 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:40.887 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:40.887 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:40.887 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:40.887 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:40.887 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:40.887 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:40.889 D/SyncRepository(18861):    ÔÅ▒´©Å Processamento de documentos: 34ms
+12-02 20:33:40.889 D/SyncRepository(18861):    ­ƒöì Verificando preserva├º├úo de mesas locais (buscando todas as mesas do Firestore para compara├º├úo)
+12-02 20:33:41.009 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas: 1 registros em 285ms
+12-02 20:33:41.010 D/SyncRepository(18861): Ô£à Pull Mesas (INCREMENTAL) conclu├¡do:
+12-02 20:33:41.010 D/SyncRepository(18861):    ­ƒôè 1 sincronizadas, 0 puladas, 0 erros
+12-02 20:33:41.010 D/SyncRepository(18861):    ÔÅ▒´©Å Dura├º├úo: 285ms
+12-02 20:33:41.010 D/SyncRepository(18861): Ô£à Pull Mesas: 1 sincronizadas
+12-02 20:33:41.011 D/SyncRepository(18861): Iniciando pull de colaboradores...
+12-02 20:33:41.022 D/SyncRepository(18861): ­ƒôè Colaboradores: lastSyncTimestamp=1764718401246, canUseIncremental=true, allowRouteBootstrap=false
+12-02 20:33:41.032 D/SyncRepository(18861): ­ƒöä Tentando sincroniza├º├úo INCREMENTAL de colaboradores (├║ltima sync: Tue Dec 02 20:33:21 GMT-03:00 2025)
+12-02 20:33:41.157 D/SyncRepository(18861): ­ƒôÑ Colaboradores - incremental retornou 0 documentos
+12-02 20:33:41.161 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para colaboradores: 0 registros em 146ms
+12-02 20:33:41.193 D/SyncRepository(18861): ­ƒôè Colaboradores incremental: syncedCount=0, localCount=1
+12-02 20:33:41.193 D/SyncRepository(18861): Ô£à Pull Colaboradores: 0 sincronizados
+12-02 20:33:41.194 D/SyncRepository(18861): Iniciando pull de ciclos...
+12-02 20:33:41.210 D/SyncRepository(18861): ­ƒöä Tentando sincroniza├º├úo INCREMENTAL de ciclos (├║ltima sync: Tue Dec 02 20:33:21 GMT-03:00 2025)
+12-02 20:33:41.346 D/SyncRepository(18861): ­ƒôÑ Ciclos - incremental retornou 1 documentos (ap├│s filtro de rota)
+12-02 20:33:41.355 D/SyncRepository(18861): ­ƒôè Nenhum ciclo local encontrado - usando apenas documentos incrementais
+12-02 20:33:41.355 D/SyncRepository(18861): ­ƒôÑ Ciclos - ap├│s corre├º├úo, total de 1 documentos
+12-02 20:33:41.372 D/SyncRepository(18861): ­ƒöä Processando ciclo ID=5, numeroCiclo=5, status=EM_ANDAMENTO, rotaId=1
+12-02 20:33:41.374 D/SyncRepository(18861): Ô×ò Inserindo novo ciclo ID=5, numeroCiclo=5, status=EM_ANDAMENTO
+12-02 20:33:41.391 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:41.391 D/RoutesViewModel(18861):    Total de ciclos no banco: 0
+12-02 20:33:41.391 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:41.392 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:41.392 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:41.392 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:41.392 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:41.392 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:41.392 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:41.392 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:41.408 D/SyncRepository(18861): ­ƒôè Total de ciclos ap├│s sincroniza├º├úo incremental: 1
+12-02 20:33:41.409 D/SyncRepository(18861):    - Ciclo ID=5, numeroCiclo=5, status=EM_ANDAMENTO, rotaId=1, dataCriacao=Tue Dec 02 20:33:32 GMT-03:00 2025
+12-02 20:33:41.416 D/SyncRepository(18861): Ô£à [INCREMENTAL] Rota ID=1 atualizada com ciclo 5 (status=EM_ANDAMENTO, numeroCiclo=5)
+12-02 20:33:41.421 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para ciclos: 1 registros em 222ms
+12-02 20:33:41.421 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de ciclos: sync=1, skipped=0, errors=0, duration=222ms
+12-02 20:33:41.429 D/SyncRepository(18861): Ô£à Pull Ciclos: 1 sincronizados
+12-02 20:33:41.429 D/SyncRepository(18861): ­ƒöä Iniciando pull de acertos...
+12-02 20:33:41.443 D/SyncRepository(18861): ­ƒöä Tentando sincroniza├º├úo INCREMENTAL (├║ltima sync: Tue Dec 02 20:33:21 GMT-03:00 2025)
+12-02 20:33:41.510 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:41.510 D/RoutesViewModel(18861):    Total de ciclos no banco: 0
+12-02 20:33:41.511 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:41.512 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:41.512 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:41.512 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:41.512 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:41.512 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:41.512 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:41.516 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:41.536 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para acertos: 0 registros em 91ms
+12-02 20:33:41.545 W/SyncRepository(18861): ÔÜá´©Å Incremental de acertos trouxe 0 registros com base local 0 - executando pull completo
+12-02 20:33:41.612 D/SyncRepository(18861): ­ƒôè Total de acertos no Firestore (ap├│s filtro de rota): 0
+12-02 20:33:41.615 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para acertos: 0 registros em 183ms
+12-02 20:33:41.615 D/SyncRepository(18861): Ô£à Pull Acertos (COMPLETO) conclu├¡do: 0 sincronizados, 0 pulados, 0 erros
+12-02 20:33:41.615 D/SyncRepository(18861): Ô£à Pull Acertos: 0 sincronizados
+12-02 20:33:41.616 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de despesas...
+12-02 20:33:41.619 D/SyncRepository(18861): ­ƒöä Tentando sincroniza├º├úo INCREMENTAL (├║ltima sync: Tue Dec 02 20:33:21 GMT-03:00 2025)
+12-02 20:33:41.703 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para despesas: 0 registros em 84ms
+12-02 20:33:41.703 D/SyncRepository(18861): Ô£à Pull Despesas: 0 sincronizadas
+12-02 20:33:41.704 D/SyncRepository(18861): Iniciando pull de contratos...
+12-02 20:33:41.984 D/SyncRepository(18861): ­ƒôÑ Contratos - incremental retornou 1 documentos
+12-02 20:33:42.029 D/SyncRepository(18861):    ­ƒôª Cache de contratos carregado: 0 em 45ms
+12-02 20:33:42.182 D/SyncRepository(18861):    ­ƒöì Verificando preserva├º├úo de contratos locais (buscando todos os contratos do Firestore para compara├º├úo)
+12-02 20:33:42.253 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:42.254 D/RoutesViewModel(18861):    Total de ciclos no banco: 1
+12-02 20:33:42.254 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:42.255 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:42.255 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:42.255 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:42.255 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:42.255 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:42.255 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:42.255 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:42.282 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:42.282 D/RoutesViewModel(18861):    Total de ciclos no banco: 1
+12-02 20:33:42.282 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:42.283 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro de rotas:
+12-02 20:33:42.283 D/RoutesViewModel(18861):    Usu├írio: Super Admin
+12-02 20:33:42.283 D/RoutesViewModel(18861):    Email: rossinys@gmail.com
+12-02 20:33:42.283 D/RoutesViewModel(18861):    ID: 1
+12-02 20:33:42.283 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:42.283 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:42.284 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:42.296 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:42.296 D/RoutesViewModel(18861):    Total de ciclos no banco: 1
+12-02 20:33:42.296 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:42.306 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para contratos: 1 registros em 598ms
+12-02 20:33:42.306 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de contratos: sync=1, skipped=0, errors=0, duration=598ms
+12-02 20:33:42.306 D/SyncRepository(18861): Ô£à Pull Contratos: 1 sincronizados
+12-02 20:33:42.307 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de categorias despesa...
+12-02 20:33:42.322 D/RoutesViewModel(18861): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:33:42.322 D/RoutesViewModel(18861):    Total de ciclos no banco: 1
+12-02 20:33:42.322 D/RoutesViewModel(18861):    Rotas sendo exibidas: 1
+12-02 20:33:42.393 D/SyncRepository(18861): ­ƒôÑ Categorias - incremental retornou 0 documentos
+12-02 20:33:42.397 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para categorias_despesa: 0 registros em 86ms
+12-02 20:33:42.397 D/SyncRepository(18861): Ô£à Pull Categorias Despesa: 0 sincronizadas
+12-02 20:33:42.399 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de tipos despesa...
+12-02 20:33:42.506 D/SyncRepository(18861): ­ƒôÑ Tipos - incremental retornou 0 documentos
+12-02 20:33:42.510 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para tipos_despesa: 0 registros em 107ms
+12-02 20:33:42.511 D/SyncRepository(18861): Ô£à Pull Tipos Despesa: 0 sincronizados
+12-02 20:33:42.511 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de metas...
+12-02 20:33:42.630 D/SyncRepository(18861): ­ƒôÑ Metas - incremental retornou 0 documentos (ap├│s filtro de rota)
+12-02 20:33:42.635 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para metas: 0 registros em 119ms
+12-02 20:33:42.635 D/SyncRepository(18861): Ô£à Pull Metas: 0 sincronizadas
+12-02 20:33:42.637 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de meta colaborador...
+12-02 20:33:42.734 D/SyncRepository(18861): ­ƒôÑ Meta colaborador - incremental retornou 0 documentos (ap├│s filtro de rota)
+12-02 20:33:42.737 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para meta_colaborador: 0 registros em 98ms
+12-02 20:33:42.738 D/SyncRepository(18861): Ô£à Pull Meta Colaborador: 0 sincronizadas
+12-02 20:33:42.738 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de equipamentos...
+12-02 20:33:42.821 D/SyncRepository(18861): ­ƒôÑ Equipamentos - incremental retornou 0 documentos
+12-02 20:33:42.825 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para equipments: 0 registros em 83ms
+12-02 20:33:42.825 D/SyncRepository(18861): Ô£à Pull Equipments: 0 sincronizados
+12-02 20:33:42.826 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de colaborador rotas...
+12-02 20:33:42.829 D/SyncRepository(18861): ­ƒöä Tentando sincroniza├º├úo INCREMENTAL de colaborador rotas (├║ltima sync: Tue Dec 02 20:33:23 GMT-03:00 2025)
+12-02 20:33:42.954 D/SyncRepository(18861): ­ƒôÑ Colaborador rotas - incremental retornou 0 documentos (ap├│s filtro de rota)
+12-02 20:33:42.958 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para colaborador_rota: 0 registros em 129ms
+12-02 20:33:42.959 D/SyncRepository(18861): Ô£à Pull Colaborador Rotas: 0 sincronizados
+12-02 20:33:42.959 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de aditivo mesas...
+12-02 20:33:43.185 D/SyncRepository(18861): ­ƒôÑ Aditivo mesas - incremental retornou 0 documentos
+12-02 20:33:43.191 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para aditivo_mesas: 0 registros em 226ms
+12-02 20:33:43.191 D/SyncRepository(18861): Ô£à Pull Aditivo Mesas: 0 sincronizadas
+12-02 20:33:43.192 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de contrato mesas...
+12-02 20:33:43.322 D/SyncRepository(18861): ­ƒôÑ Contrato mesas - incremental retornou 1 documentos
+12-02 20:33:43.372 D/SyncRepository(18861):    ­ƒôª Cache de contrato mesas carregado: 0 em 50ms
+12-02 20:33:43.404 D/SyncRepository(18861):    ­ƒöì Verificando preserva├º├úo de contrato mesas locais (buscando todos os contrato mesas do Firestore para compara├º├úo)
+12-02 20:33:43.516 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para contrato_mesas: 1 registros em 321ms
+12-02 20:33:43.516 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de contrato mesas: sync=1, skipped=0, errors=0, duration=321ms
+12-02 20:33:43.516 D/SyncRepository(18861): Ô£à Pull Contrato Mesas: 1 sincronizadas
+12-02 20:33:43.517 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de assinaturas representante legal...
+12-02 20:33:43.605 D/SyncRepository(18861): ­ƒôÑ Assinaturas - incremental retornou 0 documentos
+12-02 20:33:43.609 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para assinaturas: 0 registros em 88ms
+12-02 20:33:43.609 D/SyncRepository(18861): Ô£à Pull Assinaturas Representante Legal: 0 sincronizadas
+12-02 20:33:43.610 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de logs auditoria...
+12-02 20:33:43.703 D/SyncRepository(18861): ­ƒôÑ Logs auditoria - incremental retornou 0 documentos
+12-02 20:33:43.819 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para logs_auditoria_assinatura: 0 registros em 94ms
+12-02 20:33:43.820 D/SyncRepository(18861): Ô£à Pull Logs Auditoria: 0 sincronizados
+12-02 20:33:43.820 D/SyncRepository(18861): ­ƒöÁ Iniciando pull de panos estoque...
+12-02 20:33:43.894 D/SyncRepository(18861): ­ƒôÑ Total de panos estoque no Firestore: 0
+12-02 20:33:43.900 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para panos_estoque: 0 registros em 74ms
+12-02 20:33:43.900 D/SyncRepository(18861): Ô£à Pull de panos estoque conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 74ms
+12-02 20:33:43.901 D/SyncRepository(18861): Ô£à Pull PanoEstoque: 0 sincronizados
+12-02 20:33:43.901 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de mesas vendidas...
+12-02 20:33:43.906 D/SyncRepository(18861): ­ƒöä Sincroniza├º├úo INCREMENTAL (desde Tue Dec 02 20:33:23 GMT-03:00 2025)
+12-02 20:33:43.987 D/SyncRepository(18861): ­ƒôÑ Total de mesas vendidas no Firestore: 0
+12-02 20:33:43.992 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas_vendidas: 0 registros em 86ms
+12-02 20:33:43.993 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de mesas vendidas conclu├¡do: 0 sincronizadas, 0 ignoradas, 0 erros, 86ms
+12-02 20:33:43.993 D/SyncRepository(18861): Ô£à Pull MesaVendida: 0 sincronizadas
+12-02 20:33:43.994 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de stock items...
+12-02 20:33:43.998 D/SyncRepository(18861): ­ƒöä Sincroniza├º├úo INCREMENTAL (desde Tue Dec 02 20:33:23 GMT-03:00 2025)
+12-02 20:33:44.092 D/SyncRepository(18861): ­ƒôÑ Total de stock items no Firestore: 0
+12-02 20:33:44.097 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para stock_items: 0 registros em 98ms
+12-02 20:33:44.097 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de stock items conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 98ms
+12-02 20:33:44.097 D/SyncRepository(18861): Ô£à Pull StockItem: 0 sincronizados
+12-02 20:33:44.098 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de mesas reformadas...
+12-02 20:33:44.103 D/SyncRepository(18861): ­ƒöä Sincroniza├º├úo INCREMENTAL (desde Tue Dec 02 20:33:24 GMT-03:00 2025)
+12-02 20:33:44.195 D/SyncRepository(18861): ­ƒôÑ Total de mesas reformadas no Firestore: 0
+12-02 20:33:44.200 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para mesas_reformadas: 0 registros em 98ms
+12-02 20:33:44.201 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de mesas reformadas conclu├¡do: 0 sincronizadas, 0 ignoradas, 0 erros, 98ms
+12-02 20:33:44.201 D/SyncRepository(18861): Ô£à Pull MesaReformada: 0 sincronizadas
+12-02 20:33:44.202 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de pano mesas...
+12-02 20:33:44.206 D/SyncRepository(18861): ­ƒöä Sincroniza├º├úo INCREMENTAL (desde Tue Dec 02 20:33:24 GMT-03:00 2025)
+12-02 20:33:44.295 D/SyncRepository(18861): ­ƒôÑ Total de pano mesas no Firestore: 0
+12-02 20:33:44.299 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para pano_mesas: 0 registros em 93ms
+12-02 20:33:44.300 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de pano mesas conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 93ms
+12-02 20:33:44.300 D/SyncRepository(18861): Ô£à Pull PanoMesa: 0 sincronizados
+12-02 20:33:44.301 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de hist├│rico manuten├º├úo mesa...
+12-02 20:33:44.304 D/SyncRepository(18861): ­ƒöä Sincroniza├º├úo INCREMENTAL (desde Tue Dec 02 20:33:24 GMT-03:00 2025)
+12-02 20:33:44.394 D/SyncRepository(18861): ­ƒôÑ Total de hist├│rico manuten├º├úo mesa no Firestore: 0
+12-02 20:33:44.398 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_mesa: 0 registros em 93ms
+12-02 20:33:44.398 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de hist├│rico manuten├º├úo mesa conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 93ms
+12-02 20:33:44.399 D/SyncRepository(18861): Ô£à Pull HistoricoManutencaoMesa: 0 sincronizados
+12-02 20:33:44.400 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de hist├│rico manuten├º├úo ve├¡culo...
+12-02 20:33:44.404 D/SyncRepository(18861): ­ƒöä Sincroniza├º├úo INCREMENTAL (desde Tue Dec 02 20:33:24 GMT-03:00 2025)
+12-02 20:33:44.494 D/SyncRepository(18861): ­ƒôÑ Total de hist├│rico manuten├º├úo ve├¡culo no Firestore: 0
+12-02 20:33:44.499 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_veiculo: 0 registros em 95ms
+12-02 20:33:44.500 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de hist├│rico manuten├º├úo ve├¡culo conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 95ms
+12-02 20:33:44.500 D/SyncRepository(18861): Ô£à Pull HistoricoManutencaoVeiculo: 0 sincronizados
+12-02 20:33:44.501 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de hist├│rico combust├¡vel ve├¡culo...
+12-02 20:33:44.506 D/SyncRepository(18861): ­ƒöä Sincroniza├º├úo INCREMENTAL (desde Tue Dec 02 20:33:24 GMT-03:00 2025)
+12-02 20:33:44.636 D/SyncRepository(18861): ­ƒôÑ Total de hist├│rico combust├¡vel ve├¡culo no Firestore: 0
+12-02 20:33:44.642 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para historico_combustivel_veiculo: 0 registros em 135ms
+12-02 20:33:44.642 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de hist├│rico combust├¡vel ve├¡culo conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 135ms
+12-02 20:33:44.642 D/SyncRepository(18861): Ô£à Pull HistoricoCombustivelVeiculo: 0 sincronizados
+12-02 20:33:44.644 D/SyncRepository(18861): ­ƒöÁ Iniciando pull INCREMENTAL de ve├¡culos...
+12-02 20:33:44.650 D/SyncRepository(18861): ­ƒöä Sincroniza├º├úo INCREMENTAL (desde Tue Dec 02 20:33:24 GMT-03:00 2025)
+12-02 20:33:44.757 D/SyncRepository(18861): ­ƒôÑ Total de ve├¡culos no Firestore: 0
+12-02 20:33:44.762 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para veiculos: 0 registros em 114ms
+12-02 20:33:44.762 D/SyncRepository(18861): Ô£à Pull INCREMENTAL de ve├¡culos conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 114ms
+12-02 20:33:44.763 D/SyncRepository(18861): Ô£à Pull Veiculos: 0 sincronizados
+12-02 20:33:44.764 D/SyncRepository(18861): Ô£à ========== SINCRONIZA├ç├âO PULL CONCLU├ìDA ==========
+12-02 20:33:44.764 D/SyncRepository(18861): ­ƒôè Total sincronizado: 6 itens
+12-02 20:33:44.764 D/SyncRepository(18861): ÔØî Total de falhas: 0 dom├¡nios
+12-02 20:33:44.764 D/SyncRepository(18861): ÔÅ░ Timestamp: 1764718424764
+12-02 20:33:44.764 D/SyncRepository(18861): Ô£à Pull conclu├¡do com sucesso - dados locais atualizados
+12-02 20:33:44.764 D/SyncRepository(18861): Ô£à ========== SINCRONIZA├ç├âO BIDIRECIONAL CONCLU├ìDA COM SUCESSO ==========
+12-02 20:33:44.768 D/SyncRepository(18861): Ô£à Metadata de sincroniza├º├úo salva para _global_sync: 0 registros em 6311ms
+12-02 20:33:44.772 D/RoutesFragment(18861): Ô£à Sincroniza├º├úo conclu├¡da com sucesso
+12-02 20:33:44.772 D/RoutesFragment(18861):    Pendentes: 0
+12-02 20:33:44.772 D/RoutesFragment(18861):    Falhas: 0
+12-02 20:33:44.776 D/RoutesFragment(18861): ­ƒöä Aguardando processamento dos dados...
+12-02 20:33:46.778 D/RoutesFragment(18861): ­ƒöä For├ºando refresh dos dados...
+12-02 20:33:46.779 D/RoutesViewModel(18861): ­ƒöä For├ºando refresh dos dados das rotas
+12-02 20:33:46.944 D/RoutesViewModel(18861): ­ƒôè Dados atualizados: 1 rotas
+12-02 20:33:46.944 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro completo de rotas:
+12-02 20:33:46.944 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:46.944 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:46.944 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:46.945 D/RoutesViewModel(18861): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas
+12-02 20:33:47.789 D/RoutesViewModel(18861): ­ƒöä For├ºando refresh dos dados das rotas
+12-02 20:33:47.798 D/RoutesFragment(18861): Ô£à Refresh conclu├¡do
+12-02 20:33:47.986 D/RoutesViewModel(18861): ­ƒôè Dados atualizados: 1 rotas
+12-02 20:33:47.987 D/RoutesViewModel(18861): ­ƒöì Aplicando filtro completo de rotas:
+12-02 20:33:47.987 D/RoutesViewModel(18861):    ├ë Admin: true
+12-02 20:33:47.987 D/RoutesViewModel(18861):    Total de rotas: 1
+12-02 20:33:47.987 D/RoutesViewModel(18861): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:33:47.987 D/RoutesViewModel(18861): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas
+12-02 20:34:18.041 D/SyncRepository(20408): SyncRepository inicializado
+12-02 20:34:18.043 D/SyncRepository(20408): NetworkUtils.isConnected() inicial = true
+12-02 20:34:18.527 D/SyncRepository(20408): ÔÅ¡´©Å Primeira instala├º├úo detectada (sem hist├│rico de sync) - N├âO executar sync autom├ítico
+12-02 20:34:18.527 D/SyncRepository(20408): ÔÅ¡´©Å Usu├írio deve solicitar sincroniza├º├úo explicitamente
+12-02 20:34:29.199 D/RoutesFragment(20408): ­ƒöô Menu dispon├¡vel para ADMIN: Super Admin
+12-02 20:34:29.206 D/RoutesFragment(20408): Ô£à Handler do bot├úo voltar configurado e ativado
+12-02 20:34:29.207 D/RoutesFragment(20408): ­ƒöì Verificando origem da navega├º├úo:
+12-02 20:34:29.207 D/RoutesFragment(20408):    Destino anterior: null
+12-02 20:34:29.207 D/RoutesFragment(20408):    Vindo do login: false
+12-02 20:34:29.207 D/RoutesFragment(20408): ­ƒÜ½ N├âO vindo do login - PROIBIDO verificar sincroniza├º├úo
+12-02 20:34:29.241 D/RoutesViewModel(20408): ­ƒöì Aplicando filtro de rotas:
+12-02 20:34:29.241 D/RoutesViewModel(20408):    Usu├írio: Super Admin
+12-02 20:34:29.241 D/RoutesViewModel(20408):    Email: rossinys@gmail.com
+12-02 20:34:29.241 D/RoutesViewModel(20408):    ID: 1
+12-02 20:34:29.241 D/RoutesViewModel(20408):    ├ë Admin: true
+12-02 20:34:29.241 D/RoutesViewModel(20408):    Total de rotas: 0
+12-02 20:34:29.241 D/RoutesViewModel(20408): Ô£à ADMIN - Mostrando todas as 0 rotas
+12-02 20:34:29.266 D/RoutesFragment(20408): ­ƒöä onResume - For├ºando atualiza├º├úo dos dados das rotas
+12-02 20:34:29.266 D/RoutesFragment(20408): ­ƒöì onResume - Usu├írio logado: true
+12-02 20:34:29.266 D/RoutesViewModel(20408): ­ƒöä For├ºando refresh dos dados das rotas
+12-02 20:34:29.269 D/RoutesFragment(20408): Ôä╣´©Å onResume - N├úo verificando sincroniza├º├úo (s├│ aparece ap├│s login)
+12-02 20:34:29.463 D/RoutesViewModel(20408): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:34:29.463 D/RoutesViewModel(20408):    Total de ciclos no banco: 0
+12-02 20:34:29.463 D/RoutesViewModel(20408):    Rotas sendo exibidas: 0
+12-02 20:34:29.465 D/RoutesViewModel(20408): ­ƒôè Dados atualizados: 0 rotas
+12-02 20:34:29.465 D/RoutesViewModel(20408): ­ƒöì Aplicando filtro completo de rotas:
+12-02 20:34:29.466 D/RoutesViewModel(20408):    ├ë Admin: true
+12-02 20:34:29.466 D/RoutesViewModel(20408):    Total de rotas: 0
+12-02 20:34:29.466 D/RoutesViewModel(20408): Ô£à ADMIN - Mostrando todas as 0 rotas
+12-02 20:34:29.466 D/RoutesViewModel(20408): ­ƒôê Estat├¡sticas recalculadas: 0 clientes, 0 mesas
+12-02 20:34:30.693 D/RoutesFragment(20408): ­ƒöä Iniciando sincroniza├º├úo manual
+12-02 20:34:30.694 D/RoutesFragment(20408): Ô£à Usu├írio logado detectado (ID: 1)
+12-02 20:34:30.826 D/SyncRepository(20408): SyncRepository inicializado
+12-02 20:34:30.828 D/SyncRepository(20408): NetworkUtils.isConnected() inicial = true
+12-02 20:34:30.828 D/RoutesFragment(20408): ­ƒöä Iniciando sincroniza├º├úo bidirecional...
+12-02 20:34:30.830 D/SyncRepository(20408): ­ƒöä syncBidirectional() CHAMADO - IN├ìCIO
+12-02 20:34:30.830 D/SyncRepository(20408): ­ƒöä ========== INICIANDO SINCRONIZA├ç├âO BIDIRECIONAL ==========
+12-02 20:34:30.830 D/SyncRepository(20408): Iniciando sincroniza├º├úo bidirecional...
+12-02 20:34:30.831 D/SyncRepository(20408): ­ƒôñ Passo 1: Executando PUSH (enviar dados locais para nuvem)...
+12-02 20:34:30.831 D/SyncRepository(20408): ­ƒöä ========== INICIANDO SINCRONIZA├ç├âO PUSH ==========
+12-02 20:34:30.831 D/SyncRepository(20408): Ô£à Usu├írio autenticado no Firebase Auth - UID: aNrpdE8HC6UlUI5AtZ3LwXZWnrx1, Email: rossinys@gmail.com
+12-02 20:34:30.833 D/SyncRepository(20408): Ô£à Dispositivo online - prosseguindo com sincroniza├º├úo
+12-02 20:34:30.833 D/SyncRepository(20408): ­ƒôñ Processando fila de sincroniza├º├úo antes do push direto...
+12-02 20:34:30.847 D/SyncRepository(20408): ­ƒô¡ Nenhuma opera├º├úo pendente na fila
+12-02 20:34:30.848 D/SyncRepository(20408): Ô£à Fila de sincroniza├º├úo processada com sucesso.
+12-02 20:34:30.848 D/SyncRepository(20408): Iniciando push de dados locais para o Firestore...
+12-02 20:34:30.848 D/SyncRepository(20408): ­ƒôñ Iniciando push INCREMENTAL de clientes...
+12-02 20:34:30.859 D/SyncRepository(20408): ­ƒôè Total de clientes locais encontrados: 0
+12-02 20:34:30.859 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 clientes
+12-02 20:34:30.862 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para clientes_push: 0 registros em 11ms
+12-02 20:34:30.862 D/SyncRepository(20408): Ô£à Nenhum cliente para enviar - push conclu├¡do
+12-02 20:34:30.862 D/SyncRepository(20408): Ô£à Push Clientes: 0 sincronizados
+12-02 20:34:30.863 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de rotas...
+12-02 20:34:30.870 D/SyncRepository(20408): ­ƒôÑ Total de rotas locais encontradas: 0
+12-02 20:34:30.870 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 rotas
+12-02 20:34:30.873 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para rotas_push: 0 registros em 7ms
+12-02 20:34:30.873 D/SyncRepository(20408): Ô£à Nenhuma rota para enviar - push conclu├¡do
+12-02 20:34:30.873 D/SyncRepository(20408): Ô£à Push Rotas: 0 sincronizadas
+12-02 20:34:30.874 D/SyncRepository(20408): Iniciando push INCREMENTAL de mesas...
+12-02 20:34:30.894 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 mesas
+12-02 20:34:30.896 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para mesas_push: 0 registros em 20ms
+12-02 20:34:30.896 D/SyncRepository(20408): Ô£à Push Mesas: 0 sincronizadas
+12-02 20:34:30.897 D/SyncRepository(20408): Iniciando push INCREMENTAL de colaboradores...
+12-02 20:34:30.919 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 1 colaboradores
+12-02 20:34:31.232 D/SyncRepository(20408): Ô£à Colaborador 1 atualizado no Firestore (email: rossinys@gmail.com)
+12-02 20:34:31.235 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para colaboradores_push: 1 registros em 335ms
+12-02 20:34:31.235 D/SyncRepository(20408): Ô£à Push INCREMENTAL de colaboradores conclu├¡do: 1 enviados, 0 erros, 335ms
+12-02 20:34:31.236 D/SyncRepository(20408): Ô£à Push Colaboradores: 1 sincronizados
+12-02 20:34:31.237 D/SyncRepository(20408): Iniciando push INCREMENTAL de ciclos...
+12-02 20:34:31.250 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 ciclos
+12-02 20:34:31.253 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para ciclos_push: 0 registros em 13ms
+12-02 20:34:31.253 D/SyncRepository(20408): Ô£à Push Ciclos: 0 sincronizados
+12-02 20:34:31.254 D/SyncRepository(20408): Iniciando push INCREMENTAL de acertos...
+12-02 20:34:31.282 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 acertos
+12-02 20:34:31.393 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para acertos_push: 0 registros em 28ms
+12-02 20:34:31.394 D/SyncRepository(20408): Ô£à Push Acertos: 0 sincronizados
+12-02 20:34:31.395 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de despesas...
+12-02 20:34:31.429 D/SyncRepository(20408): ­ƒôÑ Total de despesas locais encontradas: 0
+12-02 20:34:31.429 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 despesas
+12-02 20:34:31.435 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para despesas_push: 0 registros em 34ms
+12-02 20:34:31.436 D/SyncRepository(20408): Ô£à Push Despesas: 0 sincronizadas
+12-02 20:34:31.437 D/SyncRepository(20408): Iniciando push INCREMENTAL de contratos...
+12-02 20:34:31.479 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 contratos
+12-02 20:34:31.482 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para contratos_push: 0 registros em 42ms
+12-02 20:34:31.482 D/SyncRepository(20408): Ô£à Push Contratos: 0 sincronizados
+12-02 20:34:31.483 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de categorias despesa...
+12-02 20:34:31.513 D/SyncRepository(20408): ­ƒôÑ Total de categorias despesa locais encontradas: 0
+12-02 20:34:31.513 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 categorias
+12-02 20:34:31.517 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para categorias_despesa_push: 0 registros em 30ms
+12-02 20:34:31.518 D/SyncRepository(20408): Ô£à Push Categorias Despesa: 0 sincronizadas
+12-02 20:34:31.518 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de tipos despesa...
+12-02 20:34:31.546 D/SyncRepository(20408): ­ƒôÑ Total de tipos despesa locais encontrados: 0
+12-02 20:34:31.546 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 tipos
+12-02 20:34:31.550 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para tipos_despesa_push: 0 registros em 28ms
+12-02 20:34:31.550 D/SyncRepository(20408): Ô£à Push Tipos Despesa: 0 sincronizados
+12-02 20:34:31.551 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de metas...
+12-02 20:34:31.586 D/SyncRepository(20408): ­ƒôÑ Total de metas locais encontradas: 0
+12-02 20:34:31.586 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 metas
+12-02 20:34:31.591 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para metas_push: 0 registros em 35ms
+12-02 20:34:31.591 D/SyncRepository(20408): Ô£à Push Metas: 0 sincronizadas
+12-02 20:34:31.592 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de colaborador rotas...
+12-02 20:34:31.648 D/SyncRepository(20408): ­ƒôÑ Total de colaborador rotas locais encontradas: 0
+12-02 20:34:31.648 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 vincula├º├Áes
+12-02 20:34:31.653 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para colaborador_rota_push: 0 registros em 57ms
+12-02 20:34:31.654 D/SyncRepository(20408): Ô£à Push Colaborador Rotas: 0 sincronizados
+12-02 20:34:31.655 D/SyncRepository(20408): ­ƒöÁ Iniciando push de aditivo mesas...
+12-02 20:34:31.680 D/SyncRepository(20408): ­ƒôÑ Total de aditivo mesas locais encontradas: 0
+12-02 20:34:31.683 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para aditivo_mesas_push: 0 registros em 25ms
+12-02 20:34:31.684 D/SyncRepository(20408): Ô£à Push Aditivo Mesas: 0 sincronizadas
+12-02 20:34:31.685 D/SyncRepository(20408): ­ƒöÁ Iniciando push de contrato mesas...
+12-02 20:34:31.712 D/SyncRepository(20408): ­ƒôÑ Total de contrato mesas locais encontradas: 0
+12-02 20:34:31.717 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para contrato_mesas_push: 0 registros em 27ms
+12-02 20:34:31.718 D/SyncRepository(20408): Ô£à Push Contrato Mesas: 0 sincronizadas
+12-02 20:34:31.719 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de assinaturas representante legal...
+12-02 20:34:31.734 D/SyncRepository(20408): ­ƒôÑ Total de assinaturas locais encontradas: 0
+12-02 20:34:31.734 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 assinaturas
+12-02 20:34:31.739 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para assinaturas_push: 0 registros em 15ms
+12-02 20:34:31.740 D/SyncRepository(20408): Ô£à Push Assinaturas Representante Legal: 0 sincronizadas
+12-02 20:34:31.741 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de logs auditoria...
+12-02 20:34:31.756 D/SyncRepository(20408): ­ƒôÑ Total de logs auditoria locais encontrados: 0
+12-02 20:34:31.756 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 logs
+12-02 20:34:31.763 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para logs_auditoria_assinatura_push: 0 registros em 15ms
+12-02 20:34:31.763 D/SyncRepository(20408): Ô£à Push Logs Auditoria: 0 sincronizados
+12-02 20:34:31.766 D/SyncRepository(20408): ­ƒöÁ Iniciando push de panos estoque...
+12-02 20:34:31.797 D/SyncRepository(20408): ­ƒôÑ Total de panos estoque locais encontrados: 0
+12-02 20:34:31.805 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para panos_estoque_push: 0 registros em 33ms
+12-02 20:34:31.805 D/SyncRepository(20408): Ô£à Push PanoEstoque: 0 sincronizados
+12-02 20:34:31.808 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de mesas vendidas...
+12-02 20:34:31.859 D/SyncRepository(20408): ­ƒôÑ Total de mesas vendidas locais encontradas: 0
+12-02 20:34:31.859 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 mesas
+12-02 20:34:31.863 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para mesas_vendidas_push: 0 registros em 51ms
+12-02 20:34:31.863 D/SyncRepository(20408): Ô£à Push MesaVendida: 0 sincronizadas
+12-02 20:34:31.864 D/SyncRepository(20408): ­ƒöÁ Iniciando push de stock items...
+12-02 20:34:31.887 D/SyncRepository(20408): ­ƒôÑ Total de stock items locais encontrados: 0
+12-02 20:34:31.892 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para stock_items_push: 0 registros em 23ms
+12-02 20:34:31.892 D/SyncRepository(20408): Ô£à Push StockItem: 0 sincronizados
+12-02 20:34:31.893 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de mesas reformadas...
+12-02 20:34:31.925 D/SyncRepository(20408): ­ƒôÑ Total de mesas reformadas locais encontradas: 0
+12-02 20:34:31.925 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 mesas
+12-02 20:34:31.929 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para mesas_reformadas_push: 0 registros em 32ms
+12-02 20:34:31.929 D/SyncRepository(20408): Ô£à Push MesaReformada: 0 sincronizadas
+12-02 20:34:31.930 D/SyncRepository(20408): ­ƒöÁ Iniciando push de pano mesas...
+12-02 20:34:31.949 D/SyncRepository(20408): ­ƒôÑ Total de pano mesas locais encontradas: 0
+12-02 20:34:31.950 D/SyncRepository(20408): Ô£à Push de pano mesas conclu├¡do: 0 enviados, 0 erros
+12-02 20:34:31.950 D/SyncRepository(20408): Ô£à Push PanoMesa: 0 sincronizados
+12-02 20:34:31.951 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de hist├│rico manuten├º├úo mesa...
+12-02 20:34:31.982 D/SyncRepository(20408): ­ƒôÑ Total de hist├│rico manuten├º├úo mesa locais encontrados: 0
+12-02 20:34:31.983 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 hist├│ricos
+12-02 20:34:31.986 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_mesa_push: 0 registros em 32ms
+12-02 20:34:31.987 D/SyncRepository(20408): Ô£à Push HistoricoManutencaoMesa: 0 sincronizados
+12-02 20:34:31.988 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de hist├│rico manuten├º├úo ve├¡culo...
+12-02 20:34:32.020 D/SyncRepository(20408): ­ƒôÑ Total de hist├│ricos de manuten├º├úo locais encontrados: 0
+12-02 20:34:32.020 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 hist├│ricos
+12-02 20:34:32.024 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_veiculo_push: 0 registros em 32ms
+12-02 20:34:32.025 D/SyncRepository(20408): Ô£à Push HistoricoManutencaoVeiculo: 0 sincronizados
+12-02 20:34:32.026 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de hist├│rico combust├¡vel ve├¡culo...
+12-02 20:34:32.054 D/SyncRepository(20408): ­ƒôÑ Total de hist├│ricos de combust├¡vel locais encontrados: 0
+12-02 20:34:32.054 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todos os 0 hist├│ricos
+12-02 20:34:32.058 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para historico_combustivel_veiculo_push: 0 registros em 28ms
+12-02 20:34:32.058 D/SyncRepository(20408): Ô£à Push HistoricoCombustivelVeiculo: 0 sincronizados
+12-02 20:34:32.059 D/SyncRepository(20408): ­ƒöÁ Iniciando push de ve├¡culos...
+12-02 20:34:32.081 D/SyncRepository(20408): ­ƒôÑ Total de ve├¡culos locais encontrados: 0
+12-02 20:34:32.081 D/SyncRepository(20408): Ô£à Push de ve├¡culos conclu├¡do: 0 enviados, 0 erros
+12-02 20:34:32.081 D/SyncRepository(20408): Ô£à Push Veiculos: 0 sincronizados
+12-02 20:34:32.083 D/SyncRepository(20408): ­ƒöÁ Iniciando push INCREMENTAL de meta colaborador...
+12-02 20:34:32.119 D/SyncRepository(20408): ­ƒôÑ Total de meta colaborador locais encontradas: 0
+12-02 20:34:32.120 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo PUSH - enviando todas as 0 metas
+12-02 20:34:32.124 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para meta_colaborador_push: 0 registros em 37ms
+12-02 20:34:32.124 D/SyncRepository(20408): Ô£à Push Meta Colaborador: 0 sincronizadas
+12-02 20:34:32.125 D/SyncRepository(20408): ­ƒöÁ Iniciando push de equipamentos...
+12-02 20:34:32.148 D/SyncRepository(20408): ­ƒôÑ Total de equipamentos locais encontrados: 0
+12-02 20:34:32.152 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para equipments_push: 0 registros em 23ms
+12-02 20:34:32.152 D/SyncRepository(20408): Ô£à Push Equipments: 0 sincronizados
+12-02 20:34:32.166 D/SyncRepository(20408): Ô£à ========== SINCRONIZA├ç├âO PUSH CONCLU├ìDA ==========
+12-02 20:34:32.166 D/SyncRepository(20408): ­ƒôè Total enviado: 1 itens
+12-02 20:34:32.166 D/SyncRepository(20408): ÔØî Total de falhas: 0 dom├¡nios
+12-02 20:34:32.167 D/SyncRepository(20408): ÔÅ░ Timestamp: 1764718472166
+12-02 20:34:32.167 D/SyncRepository(20408): Ô£à Push conclu├¡do com sucesso - dados locais preservados na nuvem
+12-02 20:34:32.167 D/SyncRepository(20408): ­ƒôÑ Passo 2: Executando PULL (importar atualiza├º├Áes da nuvem)...
+12-02 20:34:32.167 D/SyncRepository(20408): ­ƒöä syncPull() CHAMADO - IN├ìCIO
+12-02 20:34:32.168 D/SyncRepository(20408): Ô£à Usu├írio autenticado no Firebase Auth - UID: aNrpdE8HC6UlUI5AtZ3LwXZWnrx1, Email: rossinys@gmail.com
+12-02 20:34:32.168 D/SyncRepository(20408): ­ƒöä ========== INICIANDO SINCRONIZA├ç├âO PULL ==========
+12-02 20:34:32.168 D/SyncRepository(20408): ­ƒöì Verificando conectividade...
+12-02 20:34:32.168 D/SyncRepository(20408): ­ƒææ ADMIN: Bootstrap desabilitado, acessando todas as rotas
+12-02 20:34:32.168 D/SyncRepository(20408): ­ƒæñ Usu├írio ADMIN - sincronizando todas as rotas dispon├¡veis.
+12-02 20:34:32.170 D/SyncRepository(20408): ­ƒöì NetworkUtils.isConnected() = true
+12-02 20:34:32.170 D/SyncRepository(20408): Ô£à Dispositivo online confirmado
+12-02 20:34:32.170 D/SyncRepository(20408): Ô£à Prosseguindo com sincroniza├º├úo PULL
+12-02 20:34:32.171 D/SyncRepository(20408): ­ƒôí Conectando ao Firestore...
+12-02 20:34:32.171 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de rotas...
+12-02 20:34:32.175 D/SyncRepository(20408): ­ƒôè Rotas: lastSyncTimestamp=0, canUseIncremental=false, allowRouteBootstrap=false
+12-02 20:34:32.175 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de rotas - usando m├®todo COMPLETO
+12-02 20:34:32.280 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de rotas - documentos recebidos: 1
+12-02 20:34:32.303 D/SyncRepository(20408): ­ƒöä Rota sincronizada: Moc (ID=1)
+12-02 20:34:32.309 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para rotas: 1 registros em 133ms
+12-02 20:34:32.310 D/SyncRepository(20408): Ô£à Pull de rotas conclu├¡do (fallback incremental=false): sync=1, skipped=0, errors=0, duration=133ms
+12-02 20:34:32.310 D/SyncRepository(20408): Ô£à Pull Rotas: 1 sincronizadas
+12-02 20:34:32.310 D/SyncRepository(20408): ­ƒöä Cache de rotas invalidado ap├│s pull de rotas
+12-02 20:34:32.311 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de clientes...
+12-02 20:34:32.316 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo - usando m├®todo COMPLETO
+12-02 20:34:32.402 D/RoutesViewModel(20408): ­ƒöì Aplicando filtro de rotas:
+12-02 20:34:32.402 D/RoutesViewModel(20408):    Usu├írio: Super Admin
+12-02 20:34:32.402 D/RoutesViewModel(20408):    Email: rossinys@gmail.com
+12-02 20:34:32.402 D/RoutesViewModel(20408):    ID: 1
+12-02 20:34:32.402 D/RoutesViewModel(20408):    ├ë Admin: true
+12-02 20:34:32.402 D/RoutesViewModel(20408):    Total de rotas: 1
+12-02 20:34:32.402 D/RoutesViewModel(20408): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:34:32.416 D/RoutesViewModel(20408): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:34:32.416 D/RoutesViewModel(20408):    Total de ciclos no banco: 0
+12-02 20:34:32.416 D/SyncRepository(20408): ­ƒôÑ Total de clientes no Firestore (ap├│s filtro de rota): 1
+12-02 20:34:32.417 D/RoutesViewModel(20408):    Rotas sendo exibidas: 1
+12-02 20:34:32.424 D/SyncRepository(20408):    ­ƒôª Cache de clientes carregado: 0 clientes (8ms)
+12-02 20:34:32.436 D/SyncRepository(20408):    ÔÅ▒´©Å Processamento de documentos: 10ms
+12-02 20:34:32.440 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para clientes: 1 registros em 125ms
+12-02 20:34:32.440 D/SyncRepository(20408): Ô£à Pull Clientes (COMPLETO) conclu├¡do: 1 sincronizados, 0 pulados, 0 erros
+12-02 20:34:32.441 D/SyncRepository(20408): Ô£à Pull Clientes: 1 sincronizados
+12-02 20:34:32.441 D/SyncRepository(20408): Iniciando pull de mesas...
+12-02 20:34:32.445 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo - usando m├®todo COMPLETO
+12-02 20:34:32.555 D/RoutesViewModel(20408): ­ƒöì Aplicando filtro de rotas:
+12-02 20:34:32.555 D/RoutesViewModel(20408):    Usu├írio: Super Admin
+12-02 20:34:32.556 D/RoutesViewModel(20408):    Email: rossinys@gmail.com
+12-02 20:34:32.556 D/RoutesViewModel(20408):    ID: 1
+12-02 20:34:32.556 D/RoutesViewModel(20408):    ├ë Admin: true
+12-02 20:34:32.556 D/RoutesViewModel(20408):    Total de rotas: 1
+12-02 20:34:32.556 D/RoutesViewModel(20408): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:34:32.588 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para mesas: 1 registros em 144ms
+12-02 20:34:32.588 D/SyncRepository(20408): Ô£à Pull Mesas (COMPLETO) conclu├¡do: 1 sincronizadas, 0 puladas, 0 erros
+12-02 20:34:32.588 D/SyncRepository(20408): Ô£à Pull Mesas: 1 sincronizadas
+12-02 20:34:32.589 D/SyncRepository(20408): Iniciando pull de colaboradores...
+12-02 20:34:32.593 D/SyncRepository(20408): ­ƒôè Colaboradores: lastSyncTimestamp=0, canUseIncremental=false, allowRouteBootstrap=false
+12-02 20:34:32.593 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de colaboradores - usando m├®todo COMPLETO
+12-02 20:34:32.624 D/RoutesViewModel(20408): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:34:32.624 D/RoutesViewModel(20408):    Total de ciclos no banco: 0
+12-02 20:34:32.624 D/RoutesViewModel(20408):    Rotas sendo exibidas: 1
+12-02 20:34:32.711 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de colaboradores - documentos recebidos: 1
+12-02 20:34:33.055 D/SyncRepository(20408): ÔÅ¡´©Å Colaborador rossinys@gmail.com (ID=1) n├úo existe no Firebase Authentication - N├âO atualizando (foi exclu├¡do)
+12-02 20:34:33.058 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para colaboradores: 0 registros em 466ms
+12-02 20:34:33.059 D/SyncRepository(20408): Ô£à Pull de colaboradores conclu├¡do (fallback incremental=false): sync=0, skipped=1, errors=0, duration=466ms
+12-02 20:34:33.059 D/SyncRepository(20408): Ô£à Pull Colaboradores: 0 sincronizados
+12-02 20:34:33.060 D/SyncRepository(20408): Iniciando pull de ciclos...
+12-02 20:34:33.069 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de ciclos - usando m├®todo COMPLETO
+12-02 20:34:33.277 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de ciclos - documentos recebidos: 5
+12-02 20:34:33.314 D/SyncRepository(20408): ­ƒôè Documentos ordenados por data de cria├º├úo (do mais antigo para o mais recente)
+12-02 20:34:33.335 D/SyncRepository(20408): ­ƒöä Processando ciclo ID=3, numeroCiclo=3, status=EM_ANDAMENTO, rotaId=1
+12-02 20:34:33.336 D/SyncRepository(20408): Ô×ò Inserindo novo ciclo ID=3, numeroCiclo=3, status=EM_ANDAMENTO
+12-02 20:34:33.350 D/SyncRepository(20408): ­ƒöä Processando ciclo ID=2, numeroCiclo=2, status=FINALIZADO, rotaId=1
+12-02 20:34:33.351 D/SyncRepository(20408): Ô×ò Inserindo novo ciclo ID=2, numeroCiclo=2, status=FINALIZADO
+12-02 20:34:33.364 D/SyncRepository(20408): ­ƒöä Processando ciclo ID=1, numeroCiclo=1, status=FINALIZADO, rotaId=1
+12-02 20:34:33.365 D/SyncRepository(20408): Ô×ò Inserindo novo ciclo ID=1, numeroCiclo=1, status=FINALIZADO
+12-02 20:34:33.375 D/SyncRepository(20408): ­ƒöä Processando ciclo ID=4, numeroCiclo=4, status=EM_ANDAMENTO, rotaId=1
+12-02 20:34:33.376 D/SyncRepository(20408): Ô×ò Inserindo novo ciclo ID=4, numeroCiclo=4, status=EM_ANDAMENTO
+12-02 20:34:33.387 D/SyncRepository(20408): ­ƒöä Processando ciclo ID=5, numeroCiclo=5, status=EM_ANDAMENTO, rotaId=1
+12-02 20:34:33.388 D/SyncRepository(20408): Ô×ò Inserindo novo ciclo ID=5, numeroCiclo=5, status=EM_ANDAMENTO
+12-02 20:34:33.413 D/SyncRepository(20408): ­ƒôè Total de ciclos ap├│s sincroniza├º├úo: 5
+12-02 20:34:33.414 D/SyncRepository(20408):    - Ciclo ID=5, numeroCiclo=5, status=EM_ANDAMENTO, rotaId=1, dataCriacao=Tue Dec 02 20:33:32 GMT-03:00 2025
+12-02 20:34:33.414 D/SyncRepository(20408):    - Ciclo ID=4, numeroCiclo=4, status=EM_ANDAMENTO, rotaId=1, dataCriacao=Tue Dec 02 20:20:08 GMT-03:00 2025
+12-02 20:34:33.414 D/SyncRepository(20408):    - Ciclo ID=3, numeroCiclo=3, status=EM_ANDAMENTO, rotaId=1, dataCriacao=Tue Dec 02 17:11:53 GMT-03:00 2025
+12-02 20:34:33.414 D/SyncRepository(20408):    - Ciclo ID=2, numeroCiclo=2, status=FINALIZADO, rotaId=1, dataCriacao=Tue Dec 02 17:11:50 GMT-03:00 2025
+12-02 20:34:33.414 D/SyncRepository(20408):    - Ciclo ID=1, numeroCiclo=1, status=FINALIZADO, rotaId=1, dataCriacao=Tue Dec 02 17:11:46 GMT-03:00 2025
+12-02 20:34:33.417 D/SyncRepository(20408): ­ƒöì DEBUG: Rota 1 - Ciclo selecionado: ID=5, numeroCiclo=5, status=EM_ANDAMENTO
+12-02 20:34:33.417 D/SyncRepository(20408): ­ƒöì DEBUG: Rota 1 - Ciclos em andamento: 3, Total ciclos: 5
+12-02 20:34:33.427 D/SyncRepository(20408): Ô£à Rota ID=1 atualizada com ciclo 5 (status=EM_ANDAMENTO, numeroCiclo=5)
+12-02 20:34:33.431 D/SyncRepository(20408): ­ƒöä DEBUG: Timestamp da rota atualizado para for├ºar refresh dos Flows reativos
+12-02 20:34:33.443 D/SyncRepository(20408): ­ƒöä DEBUG: Terceira atualiza├º├úo da rota para garantir persist├¬ncia
+12-02 20:34:33.453 D/SyncRepository(20408): ­ƒöì DEBUG: Rota verificada ap├│s atualiza├º├úo - ID=1, cicloAcertoAtual=5, statusAtual=EM_ANDAMENTO
+12-02 20:34:33.473 D/RoutesViewModel(20408): ­ƒöì Aplicando filtro de rotas:
+12-02 20:34:33.473 D/RoutesViewModel(20408):    Usu├írio: Super Admin
+12-02 20:34:33.473 D/RoutesViewModel(20408):    Email: rossinys@gmail.com
+12-02 20:34:33.473 D/RoutesViewModel(20408):    ID: 1
+12-02 20:34:33.473 D/RoutesViewModel(20408):    ├ë Admin: true
+12-02 20:34:33.474 D/RoutesViewModel(20408):    Total de rotas: 1
+12-02 20:34:33.474 D/RoutesViewModel(20408): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:34:33.555 D/SyncRepository(20408): ­ƒöä DEBUG: Pausa de 100ms para processamento das atualiza├º├Áes
+12-02 20:34:33.565 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para ciclos: 5 registros em 495ms
+12-02 20:34:33.565 D/SyncRepository(20408): Ô£à Pull de ciclos conclu├¡do: sync=5, skipped=0, errors=0, duration=495ms
+12-02 20:34:33.566 D/SyncRepository(20408): Ô£à Pull Ciclos: 5 sincronizados
+12-02 20:34:33.566 D/SyncRepository(20408): ­ƒöä Iniciando pull de acertos...
+12-02 20:34:33.575 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de acertos - usando m├®todo COMPLETO
+12-02 20:34:33.717 D/SyncRepository(20408): ­ƒôè Total de acertos no Firestore (ap├│s filtro de rota): 0
+12-02 20:34:33.720 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para acertos: 0 registros em 151ms
+12-02 20:34:33.721 D/SyncRepository(20408): Ô£à Pull Acertos (COMPLETO) conclu├¡do: 0 sincronizados, 0 pulados, 0 erros
+12-02 20:34:33.721 D/SyncRepository(20408): Ô£à Pull Acertos: 0 sincronizados
+12-02 20:34:33.722 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de despesas...
+12-02 20:34:33.725 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo - usando m├®todo COMPLETO
+12-02 20:34:33.807 D/SyncRepository(20408): ­ƒôÑ Total de despesas no Firestore (ap├│s filtro de rota): 0
+12-02 20:34:33.819 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para despesas: 0 registros em 85ms
+12-02 20:34:33.819 D/SyncRepository(20408): Ô£à Pull Despesas: 0 sincronizadas
+12-02 20:34:33.820 D/SyncRepository(20408): Iniciando pull de contratos...
+12-02 20:34:33.829 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de contratos - usando m├®todo COMPLETO
+12-02 20:34:33.950 D/RoutesViewModel(20408): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:34:33.950 D/RoutesViewModel(20408):    Total de ciclos no banco: 5
+12-02 20:34:33.950 D/RoutesViewModel(20408):    Rotas sendo exibidas: 1
+12-02 20:34:33.951 D/RoutesViewModel(20408): ­ƒöì Aplicando filtro de rotas:
+12-02 20:34:33.951 D/RoutesViewModel(20408):    Usu├írio: Super Admin
+12-02 20:34:33.952 D/RoutesViewModel(20408):    Email: rossinys@gmail.com
+12-02 20:34:33.952 D/RoutesViewModel(20408):    ID: 1
+12-02 20:34:33.952 D/RoutesViewModel(20408):    ├ë Admin: true
+12-02 20:34:33.952 D/RoutesViewModel(20408):    Total de rotas: 1
+12-02 20:34:33.953 D/RoutesViewModel(20408): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:34:34.075 D/RoutesViewModel(20408): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:34:34.075 D/RoutesViewModel(20408):    Total de ciclos no banco: 5
+12-02 20:34:34.075 D/RoutesViewModel(20408):    Rotas sendo exibidas: 1
+12-02 20:34:34.096 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de contratos - documentos recebidos: 1
+12-02 20:34:34.253 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para contratos: 1 registros em 428ms
+12-02 20:34:34.253 D/SyncRepository(20408): Ô£à Pull de contratos conclu├¡do: sync=1, skipped=0, errors=0, duration=428ms
+12-02 20:34:34.253 D/SyncRepository(20408): Ô£à Pull Contratos: 1 sincronizados
+12-02 20:34:34.254 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de categorias despesa...
+12-02 20:34:34.261 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de categorias - usando m├®todo COMPLETO
+12-02 20:34:34.349 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de categorias - documentos recebidos: 0
+12-02 20:34:34.354 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para categorias_despesa: 0 registros em 95ms
+12-02 20:34:34.354 D/SyncRepository(20408): Ô£à Pull Categorias Despesa: 0 sincronizadas
+12-02 20:34:34.356 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de tipos despesa...
+12-02 20:34:34.361 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de tipos - usando m├®todo COMPLETO
+12-02 20:34:34.452 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de tipos - documentos recebidos: 0
+12-02 20:34:34.456 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para tipos_despesa: 0 registros em 96ms
+12-02 20:34:34.457 D/SyncRepository(20408): Ô£à Pull Tipos Despesa: 0 sincronizados
+12-02 20:34:34.459 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de metas...
+12-02 20:34:34.463 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de metas - usando m├®todo COMPLETO
+12-02 20:34:34.582 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de metas - documentos recebidos: 0
+12-02 20:34:34.588 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para metas: 0 registros em 124ms
+12-02 20:34:34.589 D/SyncRepository(20408): Ô£à Pull Metas: 0 sincronizadas
+12-02 20:34:34.591 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de meta colaborador...
+12-02 20:34:34.595 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de meta colaborador - usando m├®todo COMPLETO
+12-02 20:34:34.683 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de meta colaborador - documentos recebidos: 0
+12-02 20:34:34.688 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para meta_colaborador: 0 registros em 92ms
+12-02 20:34:34.689 D/SyncRepository(20408): Ô£à Pull Meta Colaborador: 0 sincronizadas
+12-02 20:34:34.691 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de equipamentos...
+12-02 20:34:34.695 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de equipamentos - usando m├®todo COMPLETO
+12-02 20:34:34.787 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de equipamentos - documentos recebidos: 0
+12-02 20:34:34.793 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para equipments: 0 registros em 96ms
+12-02 20:34:34.793 D/SyncRepository(20408): Ô£à Pull Equipments: 0 sincronizados
+12-02 20:34:34.795 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de colaborador rotas...
+12-02 20:34:34.800 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de colaborador rotas - usando m├®todo COMPLETO
+12-02 20:34:34.901 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de colaborador rotas - documentos recebidos: 0
+12-02 20:34:34.907 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para colaborador_rota: 0 registros em 106ms
+12-02 20:34:34.907 D/SyncRepository(20408): Ô£à Pull Colaborador Rotas: 0 sincronizados
+12-02 20:34:34.909 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de aditivo mesas...
+12-02 20:34:34.913 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de aditivo mesas - usando m├®todo COMPLETO
+12-02 20:34:34.994 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de aditivo mesas - documentos recebidos: 0
+12-02 20:34:34.998 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para aditivo_mesas: 0 registros em 85ms
+12-02 20:34:34.998 D/SyncRepository(20408): Ô£à Pull Aditivo Mesas: 0 sincronizadas
+12-02 20:34:34.999 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de contrato mesas...
+12-02 20:34:35.003 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de contrato mesas - usando m├®todo COMPLETO
+12-02 20:34:35.154 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de contrato mesas - documentos recebidos: 1
+12-02 20:34:35.230 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para contrato_mesas: 1 registros em 228ms
+12-02 20:34:35.231 D/SyncRepository(20408): Ô£à Pull de contrato mesas conclu├¡do: sync=1, skipped=0, errors=0, duration=228ms
+12-02 20:34:35.231 D/SyncRepository(20408): Ô£à Pull Contrato Mesas: 1 sincronizadas
+12-02 20:34:35.232 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de assinaturas representante legal...
+12-02 20:34:35.237 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de assinaturas - usando m├®todo COMPLETO
+12-02 20:34:35.342 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de assinaturas - documentos recebidos: 0
+12-02 20:34:35.346 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para assinaturas: 0 registros em 110ms
+12-02 20:34:35.347 D/SyncRepository(20408): Ô£à Pull Assinaturas Representante Legal: 0 sincronizadas
+12-02 20:34:35.348 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de logs auditoria...
+12-02 20:34:35.352 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo de logs auditoria - usando m├®todo COMPLETO
+12-02 20:34:35.447 D/SyncRepository(20408): ­ƒôÑ Pull COMPLETO de logs auditoria - documentos recebidos: 0
+12-02 20:34:35.454 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para logs_auditoria_assinatura: 0 registros em 100ms
+12-02 20:34:35.454 D/SyncRepository(20408): Ô£à Pull de logs auditoria conclu├¡do: sync=0, skipped=0, errors=0, duration=100ms
+12-02 20:34:35.454 D/SyncRepository(20408): Ô£à Pull Logs Auditoria: 0 sincronizados
+12-02 20:34:35.456 D/SyncRepository(20408): ­ƒöÁ Iniciando pull de panos estoque...
+12-02 20:34:35.555 D/SyncRepository(20408): ­ƒôÑ Total de panos estoque no Firestore: 0
+12-02 20:34:35.561 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para panos_estoque: 0 registros em 100ms
+12-02 20:34:35.562 D/SyncRepository(20408): Ô£à Pull de panos estoque conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 100ms
+12-02 20:34:35.562 D/SyncRepository(20408): Ô£à Pull PanoEstoque: 0 sincronizados
+12-02 20:34:35.564 D/SyncRepository(20408): ­ƒöÁ Iniciando pull INCREMENTAL de mesas vendidas...
+12-02 20:34:35.569 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:34:35.659 D/SyncRepository(20408): ­ƒôÑ Total de mesas vendidas no Firestore: 0
+12-02 20:34:35.664 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para mesas_vendidas: 0 registros em 95ms
+12-02 20:34:35.664 D/SyncRepository(20408): Ô£à Pull INCREMENTAL de mesas vendidas conclu├¡do: 0 sincronizadas, 0 ignoradas, 0 erros, 95ms
+12-02 20:34:35.665 D/SyncRepository(20408): Ô£à Pull MesaVendida: 0 sincronizadas
+12-02 20:34:35.666 D/SyncRepository(20408): ­ƒöÁ Iniciando pull INCREMENTAL de stock items...
+12-02 20:34:35.670 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:34:35.765 D/SyncRepository(20408): ­ƒôÑ Total de stock items no Firestore: 0
+12-02 20:34:35.770 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para stock_items: 0 registros em 99ms
+12-02 20:34:35.770 D/SyncRepository(20408): Ô£à Pull INCREMENTAL de stock items conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 99ms
+12-02 20:34:35.771 D/SyncRepository(20408): Ô£à Pull StockItem: 0 sincronizados
+12-02 20:34:35.772 D/SyncRepository(20408): ­ƒöÁ Iniciando pull INCREMENTAL de mesas reformadas...
+12-02 20:34:35.776 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:34:35.860 D/SyncRepository(20408): ­ƒôÑ Total de mesas reformadas no Firestore: 0
+12-02 20:34:35.865 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para mesas_reformadas: 0 registros em 88ms
+12-02 20:34:35.865 D/SyncRepository(20408): Ô£à Pull INCREMENTAL de mesas reformadas conclu├¡do: 0 sincronizadas, 0 ignoradas, 0 erros, 88ms
+12-02 20:34:35.865 D/SyncRepository(20408): Ô£à Pull MesaReformada: 0 sincronizadas
+12-02 20:34:35.867 D/SyncRepository(20408): ­ƒöÁ Iniciando pull INCREMENTAL de pano mesas...
+12-02 20:34:35.871 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:34:35.964 D/SyncRepository(20408): ­ƒôÑ Total de pano mesas no Firestore: 0
+12-02 20:34:35.970 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para pano_mesas: 0 registros em 98ms
+12-02 20:34:35.970 D/SyncRepository(20408): Ô£à Pull INCREMENTAL de pano mesas conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 98ms
+12-02 20:34:35.970 D/SyncRepository(20408): Ô£à Pull PanoMesa: 0 sincronizados
+12-02 20:34:35.972 D/SyncRepository(20408): ­ƒöÁ Iniciando pull INCREMENTAL de hist├│rico manuten├º├úo mesa...
+12-02 20:34:35.977 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:34:36.058 D/SyncRepository(20408): ­ƒôÑ Total de hist├│rico manuten├º├úo mesa no Firestore: 0
+12-02 20:34:36.063 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_mesa: 0 registros em 86ms
+12-02 20:34:36.064 D/SyncRepository(20408): Ô£à Pull INCREMENTAL de hist├│rico manuten├º├úo mesa conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 86ms
+12-02 20:34:36.064 D/SyncRepository(20408): Ô£à Pull HistoricoManutencaoMesa: 0 sincronizados
+12-02 20:34:36.065 D/SyncRepository(20408): ­ƒöÁ Iniciando pull INCREMENTAL de hist├│rico manuten├º├úo ve├¡culo...
+12-02 20:34:36.075 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:34:36.153 D/SyncRepository(20408): ­ƒôÑ Total de hist├│rico manuten├º├úo ve├¡culo no Firestore: 0
+12-02 20:34:36.158 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para historico_manutencao_veiculo: 0 registros em 89ms
+12-02 20:34:36.158 D/SyncRepository(20408): Ô£à Pull INCREMENTAL de hist├│rico manuten├º├úo ve├¡culo conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 89ms
+12-02 20:34:36.158 D/SyncRepository(20408): Ô£à Pull HistoricoManutencaoVeiculo: 0 sincronizados
+12-02 20:34:36.159 D/SyncRepository(20408): ­ƒöÁ Iniciando pull INCREMENTAL de hist├│rico combust├¡vel ve├¡culo...
+12-02 20:34:36.164 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:34:36.252 D/SyncRepository(20408): ­ƒôÑ Total de hist├│rico combust├¡vel ve├¡culo no Firestore: 0
+12-02 20:34:36.256 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para historico_combustivel_veiculo: 0 registros em 93ms
+12-02 20:34:36.256 D/SyncRepository(20408): Ô£à Pull INCREMENTAL de hist├│rico combust├¡vel ve├¡culo conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 93ms
+12-02 20:34:36.257 D/SyncRepository(20408): Ô£à Pull HistoricoCombustivelVeiculo: 0 sincronizados
+12-02 20:34:36.258 D/SyncRepository(20408): ­ƒöÁ Iniciando pull INCREMENTAL de ve├¡culos...
+12-02 20:34:36.261 D/SyncRepository(20408): ­ƒöä Primeira sincroniza├º├úo COMPLETA
+12-02 20:34:36.336 D/SyncRepository(20408): ­ƒôÑ Total de ve├¡culos no Firestore: 0
+12-02 20:34:36.339 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para veiculos: 0 registros em 78ms
+12-02 20:34:36.339 D/SyncRepository(20408): Ô£à Pull INCREMENTAL de ve├¡culos conclu├¡do: 0 sincronizados, 0 ignorados, 0 erros, 78ms
+12-02 20:34:36.340 D/SyncRepository(20408): Ô£à Pull Veiculos: 0 sincronizados
+12-02 20:34:36.340 D/SyncRepository(20408): Ô£à ========== SINCRONIZA├ç├âO PULL CONCLU├ìDA ==========
+12-02 20:34:36.340 D/SyncRepository(20408): ­ƒôè Total sincronizado: 10 itens
+12-02 20:34:36.341 D/SyncRepository(20408): ÔØî Total de falhas: 0 dom├¡nios
+12-02 20:34:36.341 D/SyncRepository(20408): ÔÅ░ Timestamp: 1764718476341
+12-02 20:34:36.341 D/SyncRepository(20408): Ô£à Pull conclu├¡do com sucesso - dados locais atualizados
+12-02 20:34:36.341 D/SyncRepository(20408): Ô£à ========== SINCRONIZA├ç├âO BIDIRECIONAL CONCLU├ìDA COM SUCESSO ==========
+12-02 20:34:36.344 D/SyncRepository(20408): Ô£à Metadata de sincroniza├º├úo salva para _global_sync: 0 registros em 5511ms
+12-02 20:34:36.351 D/RoutesFragment(20408): Ô£à Sincroniza├º├úo conclu├¡da com sucesso
+12-02 20:34:36.351 D/RoutesFragment(20408):    Pendentes: 0
+12-02 20:34:36.351 D/RoutesFragment(20408):    Falhas: 0
+12-02 20:34:36.357 D/RoutesFragment(20408): ­ƒöä Aguardando processamento dos dados...
+12-02 20:34:38.361 D/RoutesFragment(20408): ­ƒöä For├ºando refresh dos dados...
+12-02 20:34:38.362 D/RoutesViewModel(20408): ­ƒöä For├ºando refresh dos dados das rotas
+12-02 20:34:38.519 D/RoutesViewModel(20408): ­ƒôè Dados atualizados: 1 rotas
+12-02 20:34:38.520 D/RoutesViewModel(20408): ­ƒöì Aplicando filtro completo de rotas:
+12-02 20:34:38.520 D/RoutesViewModel(20408):    ├ë Admin: true
+12-02 20:34:38.520 D/RoutesViewModel(20408):    Total de rotas: 1
+12-02 20:34:38.520 D/RoutesViewModel(20408): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:34:38.520 D/RoutesViewModel(20408): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas
+12-02 20:34:39.371 D/RoutesViewModel(20408): ­ƒöä For├ºando refresh dos dados das rotas
+12-02 20:34:39.380 D/RoutesFragment(20408): Ô£à Refresh conclu├¡do
+12-02 20:34:39.567 D/RoutesViewModel(20408): ­ƒôè Dados atualizados: 1 rotas
+12-02 20:34:39.568 D/RoutesViewModel(20408): ­ƒöì Aplicando filtro completo de rotas:
+12-02 20:34:39.568 D/RoutesViewModel(20408):    ├ë Admin: true
+12-02 20:34:39.568 D/RoutesViewModel(20408):    Total de rotas: 1
+12-02 20:34:39.568 D/RoutesViewModel(20408): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:34:39.568 D/RoutesViewModel(20408): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas
+12-02 20:34:53.198 D/RoutesFragment(20408): ­ƒöô Menu dispon├¡vel para ADMIN: Super Admin
+12-02 20:34:53.203 D/RoutesFragment(20408): Ô£à Handler do bot├úo voltar configurado e ativado
+12-02 20:34:53.203 D/RoutesFragment(20408): ­ƒöì Verificando origem da navega├º├úo:
+12-02 20:34:53.203 D/RoutesFragment(20408):    Destino anterior: 2131296585
+12-02 20:34:53.203 D/RoutesFragment(20408):    Vindo do login: false
+12-02 20:34:53.203 D/RoutesFragment(20408): ­ƒÜ½ N├âO vindo do login - PROIBIDO verificar sincroniza├º├úo
+12-02 20:34:53.279 D/RoutesViewModel(20408): ­ƒöì Aplicando filtro de rotas:
+12-02 20:34:53.280 D/RoutesViewModel(20408):    Usu├írio: Super Admin
+12-02 20:34:53.280 D/RoutesViewModel(20408):    Email: rossinys@gmail.com
+12-02 20:34:53.280 D/RoutesViewModel(20408):    ID: 1
+12-02 20:34:53.280 D/RoutesViewModel(20408):    ├ë Admin: true
+12-02 20:34:53.280 D/RoutesViewModel(20408):    Total de rotas: 1
+12-02 20:34:53.280 D/RoutesViewModel(20408): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:34:53.297 D/RoutesFragment(20408): ­ƒöä onResume - For├ºando atualiza├º├úo dos dados das rotas
+12-02 20:34:53.298 D/RoutesFragment(20408): ­ƒöì onResume - Usu├írio logado: true
+12-02 20:34:53.298 D/RoutesViewModel(20408): ­ƒöä For├ºando refresh dos dados das rotas
+12-02 20:34:53.301 D/RoutesFragment(20408): Ôä╣´©Å onResume - N├úo verificando sincroniza├º├úo (s├│ aparece ap├│s login)
+12-02 20:34:53.553 D/RoutesViewModel(20408): ­ƒöì Verificando ciclos n├úo exibidos:
+12-02 20:34:53.553 D/RoutesViewModel(20408):    Total de ciclos no banco: 5
+12-02 20:34:53.553 D/RoutesViewModel(20408):    Rotas sendo exibidas: 1
+12-02 20:34:53.556 D/RoutesViewModel(20408): ­ƒôè Dados atualizados: 1 rotas
+12-02 20:34:53.556 D/RoutesViewModel(20408): ­ƒöì Aplicando filtro completo de rotas:
+12-02 20:34:53.556 D/RoutesViewModel(20408):    ├ë Admin: true
+12-02 20:34:53.556 D/RoutesViewModel(20408):    Total de rotas: 1
+12-02 20:34:53.556 D/RoutesViewModel(20408): Ô£à ADMIN - Mostrando todas as 1 rotas
+12-02 20:34:53.557 D/RoutesViewModel(20408): ­ƒôê Estat├¡sticas recalculadas: 1 clientes, 1 mesas

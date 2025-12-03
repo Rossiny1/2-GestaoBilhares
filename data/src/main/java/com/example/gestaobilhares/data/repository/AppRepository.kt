@@ -359,19 +359,21 @@ class AppRepository constructor(
         return try {
             kotlinx.coroutines.runBlocking {
                 val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
-                if (emAndamento != null) {
-                    // ✅ CORREÇÃO: Ciclo em andamento - mostrar o número atual
+                val ultimoCiclo = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
+                
+                // Lógica solicitada: Pegar o maior número de ciclo
+                // Se houver um último ciclo com número maior que o em andamento, usa o último
+                if (ultimoCiclo != null && (emAndamento == null || ultimoCiclo.numeroCiclo > emAndamento.numeroCiclo)) {
+                    android.util.Log.d("AppRepository", "🔄 Rota $rotaId: Exibindo maior ciclo encontrado: ${ultimoCiclo.numeroCiclo} (Status: ${ultimoCiclo.status})")
+                    // Se estiver finalizado, usa dataFim, senão dataInicio (fallback)
+                    val dataRef = if (ultimoCiclo.status == StatusCicloAcerto.FINALIZADO) ultimoCiclo.dataFim else ultimoCiclo.dataInicio
+                    Triple(ultimoCiclo.numeroCiclo, ultimoCiclo.id, dataRef.time)
+                } else if (emAndamento != null) {
+                    // Se o em andamento for maior ou igual (ou único), usa ele
                     Triple(emAndamento.numeroCiclo, emAndamento.id, emAndamento.dataInicio.time)
                 } else {
-                    // ✅ CORREÇÃO: Nenhum ciclo em andamento - mostrar o ÚLTIMO ciclo finalizado
-                    val ultimoCiclo = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
-                    if (ultimoCiclo != null) {
-                        android.util.Log.d("AppRepository", "🔄 Rota $rotaId: Nenhum ciclo em andamento, último ciclo finalizado: ${ultimoCiclo.numeroCiclo}")
-                        Triple(ultimoCiclo.numeroCiclo, ultimoCiclo.id, ultimoCiclo.dataFim.time)
-                    } else {
-                        android.util.Log.d("AppRepository", "🆕 Rota $rotaId: Sem histórico, exibindo 1º ciclo")
-                        Triple(1, null, null)
-                    }
+                    android.util.Log.d("AppRepository", "🆕 Rota $rotaId: Sem histórico, exibindo 1º ciclo")
+                    Triple(1, null, null)
                 }
             }
         } catch (e: Exception) {
