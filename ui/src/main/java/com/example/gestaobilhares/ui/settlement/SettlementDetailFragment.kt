@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.navigation.fragment.findNavController
-import androidx.activity.OnBackPressedCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.core.content.ContextCompat
 import com.example.gestaobilhares.data.database.AppDatabase
@@ -64,8 +63,7 @@ class SettlementDetailFragment : Fragment() {
         setupUI()
         loadData()
         
-        // ✅ CORREÇÃO: Configurar tratamento do botão voltar do Android
-        setupBackButtonHandler()
+        // ✅ REMOVIDO: setupBackButtonHandler() - Navigation Component gerencia automaticamente
     }
     
     // ✅ REMOVIDO: Callback de permissões - agora centralizado no ReciboPrinterHelper
@@ -1064,18 +1062,11 @@ class SettlementDetailFragment : Fragment() {
     }
 
     /**
-     * ✅ CORREÇÃO: Configura o tratamento do botão voltar do Android
-     * Garante que volte corretamente para ClientDetailFragment
+     * ✅ REMOVIDO: setupBackButtonHandler() - Navigation Component gerencia automaticamente
+     * O botão voltar agora é gerenciado globalmente pelo MainActivity, que mostra
+     * diálogo de saída apenas na tela de rotas. Em todas as outras telas, o Navigation
+     * Component gerencia o comportamento padrão de voltar para a tela anterior.
      */
-    private fun setupBackButtonHandler() {
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                // Simplesmente voltar no stack de navegação
-                findNavController().popBackStack()
-            }
-        }
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()

@@ -34,9 +34,6 @@ interface ColaboradorDao {
     @Query("SELECT * FROM colaboradores WHERE firebase_uid = :firebaseUid")
     suspend fun obterPorFirebaseUid(firebaseUid: String): Colaborador?
     
-    @Query("SELECT * FROM colaboradores WHERE google_id = :googleId")
-    suspend fun obterPorGoogleId(googleId: String): Colaborador?
-    
     @Query("SELECT * FROM colaboradores WHERE nivel_acesso = :nivelAcesso ORDER BY nome ASC")
     fun obterPorNivelAcesso(nivelAcesso: NivelAcesso): Flow<List<Colaborador>>
     

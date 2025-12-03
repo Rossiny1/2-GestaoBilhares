@@ -85,9 +85,6 @@ data class Colaborador(
     @ColumnInfo(name = "firebase_uid")
     val firebaseUid: String? = null,
     
-    @ColumnInfo(name = "google_id")
-    val googleId: String? = null,
-    
     @ColumnInfo(name = "senha_temporaria")
     val senhaTemporaria: String? = null,
     

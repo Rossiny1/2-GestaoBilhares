@@ -150,24 +150,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Botão Google Sign-In (aproximado do botão Entrar) -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/googleSignInButton"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Entrar com Google"
-            android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            android:layout_marginTop="12dp"
-            app:cornerRadius="12dp"
-            app:strokeColor="@color/primary_blue"
-            app:icon="@drawable/ic_google"
-            app:iconTint="#fff"
-            app:layout_constraintTop_toBottomOf="@id/loginButton"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
         <!-- Botão Cadastrar -->
         <TextView
             android:id="@+id/registerButton"
@@ -180,7 +162,7 @@
             android:focusable="true"
             android:padding="8dp"
             android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@id/googleSignInButton"
+            app:layout_constraintTop_toBottomOf="@id/loginButton"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 

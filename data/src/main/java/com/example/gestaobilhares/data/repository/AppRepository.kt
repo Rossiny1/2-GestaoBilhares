@@ -592,7 +592,6 @@ class AppRepository constructor(
     suspend fun obterColaboradorPorId(id: Long) = colaboradorDao.obterPorId(id)
     suspend fun obterColaboradorPorEmail(email: String) = colaboradorDao.obterPorEmail(email)
     suspend fun obterColaboradorPorFirebaseUid(firebaseUid: String) = colaboradorDao.obterPorFirebaseUid(firebaseUid)
-    suspend fun obterColaboradorPorGoogleId(googleId: String) = colaboradorDao.obterPorGoogleId(googleId)
     
     suspend fun inserirColaborador(colaborador: Colaborador): Long {
         logDbInsertStart("COLABORADOR", "Nome=${colaborador.nome}, Email=${colaborador.email}, Nivel=${colaborador.nivelAcesso}")

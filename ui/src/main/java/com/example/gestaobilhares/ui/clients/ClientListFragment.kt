@@ -55,12 +55,8 @@ class ClientListFragment : Fragment() {
         Log.d("LOG_CRASH", "ClientListFragment.onViewCreated - INÍCIO")
         android.util.Log.d("DEBUG_DIAG", "onViewCreated chamado - TESTE DE LOG")
         
-        // ✅ CORREÇÃO: Interceptar botão voltar do sistema
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : androidx.activity.OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                navegarParaRotas()
-            }
-        })
+        // ✅ REMOVIDO: Callback de botão voltar - Navigation Component gerencia automaticamente
+        // O botão voltar agora é gerenciado globalmente pelo MainActivity
         
         // ✅ FASE 8C: Inicializar ViewModel com todos os repositórios necessários
         val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
