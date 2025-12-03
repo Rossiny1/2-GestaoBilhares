@@ -36,8 +36,8 @@ class MainActivity : AppCompatActivity() {
         // ✅ REMOVIDO: Popular banco de dados - agora é feito automaticamente no AppDatabase
         // popularBancoDados()
         
-        // ✅ CORREÇÃO: Interceptar botão voltar apenas quando estamos na tela Rotas
-        // (ou seja, quando não há fragmentos no stack de navegação)
+        // ✅ CORREÇÃO: Gerenciar botão voltar globalmente
+        // Mostra diálogo de saída apenas na tela de rotas, caso contrário deixa Navigation Component gerenciar
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 val navHostFragment = supportFragmentManager.findFragmentById(
@@ -48,19 +48,42 @@ class MainActivity : AppCompatActivity() {
                 }
                 val navController = navHostFragment.navController
                 
-                // ✅ CORREÇÃO: Só interceptar se estamos na tela Rotas (ou seja, back stack está vazio)
-                // Se há fragmentos no stack, deixar o Navigation Component lidar normalmente
-                if (navController.previousBackStackEntry == null) {
-                    // Estamos na tela inicial (Rotas), verificar sincronização antes de sair
-                    checkPendingSyncBeforeExit()
+                // ✅ Verificar se estamos na tela de rotas
+                // Se o destino atual é routesFragment, mostrar diálogo de saída
+                // Caso contrário, deixar Navigation Component gerenciar o comportamento padrão
+                val currentDestinationId = navController.currentDestination?.id
+                val isRoutesScreen = currentDestinationId == com.example.gestaobilhares.ui.R.id.routesFragment
+                
+                if (isRoutesScreen) {
+                    // Estamos na tela de rotas - mostrar diálogo de saída
+                    showExitConfirmationDialog()
                 } else {
-                    // Há fragmentos no stack, deixar o Navigation Component lidar normalmente
+                    // Não estamos na tela de rotas - deixar Navigation Component gerenciar normalmente
+                    // O Navigation Component automaticamente volta para a tela anterior no back stack
                     isEnabled = false
                     navController.navigateUp()
                     isEnabled = true
                 }
             }
         })
+    }
+    
+    /**
+     * ✅ NOVO: Mostra diálogo de confirmação para sair do app
+     */
+    private fun showExitConfirmationDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Sair do aplicativo")
+            .setMessage("Deseja realmente sair do aplicativo?")
+            .setPositiveButton("Sair") { _, _ ->
+                // Verificar sincronização antes de fechar
+                checkPendingSyncBeforeExit()
+            }
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setCancelable(true)
+            .show()
     }
     
     /**

@@ -15,7 +15,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.activity.OnBackPressedCallback
 import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.core.content.ContextCompat
@@ -28,8 +27,6 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.Mesa
@@ -107,7 +104,7 @@ class RoutesFragment : Fragment() {
             observeViewModel()
             
             Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando botão voltar")
-            setupBackButtonHandler()
+            // ✅ REMOVIDO: setupBackButtonHandler() - MainActivity agora gerencia o botão voltar globalmente
             
             Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - CONFIGURAÇÃO COMPLETA")
         } catch (e: Exception) {
@@ -389,29 +386,18 @@ class RoutesFragment : Fragment() {
                     android.util.Log.d("RoutesFragment", "Usuário atual: ${userSessionManager.getCurrentUserName()}")
                     
                     try {
-                        // 1. Fazer logout do Google Sign-In
-                        val googleSignInClient = GoogleSignIn.getClient(requireActivity(), 
-                            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                                .requestIdToken("1089459035145-d55o1h307gaedp4v03cuchr6s6nn2lhg.apps.googleusercontent.com")
-                                .requestEmail()
-                                .build())
+                        // Encerrar sessão local
+                        userSessionManager.endSession()
+                        android.util.Log.d("RoutesFragment", "✅ Sessão local encerrada")
                         
-                        googleSignInClient.signOut().addOnCompleteListener {
-                            android.util.Log.d("RoutesFragment", "✅ Google Sign-Out realizado")
-                            
-                            // 2. Encerrar sessão local
-                            userSessionManager.endSession()
-                            android.util.Log.d("RoutesFragment", "✅ Sessão local encerrada")
-                            
-                            // 3. Fechar drawer
-                            binding.drawerLayout.closeDrawers()
-                            
-                            // 4. Mostrar mensagem de sucesso
-                            Toast.makeText(requireContext(), "Logout realizado com sucesso!", Toast.LENGTH_SHORT).show()
-                            
-                            // 5. Navegar de volta para login
-                            findNavController().navigate(com.example.gestaobilhares.ui.R.id.action_routesFragment_to_loginFragment)
-                        }
+                        // Fechar drawer
+                        binding.drawerLayout.closeDrawers()
+                        
+                        // Mostrar mensagem de sucesso
+                        Toast.makeText(requireContext(), "Logout realizado com sucesso!", Toast.LENGTH_SHORT).show()
+                        
+                        // Navegar de volta para login
+                        findNavController().navigate(com.example.gestaobilhares.ui.R.id.action_routesFragment_to_loginFragment)
                         
                         true
                     } catch (e: Exception) {
@@ -962,87 +948,14 @@ class RoutesFragment : Fragment() {
         }
     }
 
-    /**
-     * ✅ CORRIGIDO: Configura o tratamento do botão voltar do Android.
-     * Quando o usuário pressionar o botão voltar na tela de rotas (primeira tela),
-     * mostra um diálogo perguntando se deseja sair do app.
-     */
-    private var backPressedCallback: OnBackPressedCallback? = null
-    
-    private fun setupBackButtonHandler() {
-        // ✅ CORREÇÃO: Remover callback anterior se existir (evitar duplicação)
-        backPressedCallback?.remove()
-        
-        backPressedCallback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                android.util.Log.d("RoutesFragment", "🔙 Botão voltar pressionado")
-
-                try {
-                    val navController = findNavController()
-                    val currentDestination = navController.currentDestination?.id
-
-                    android.util.Log.d("RoutesFragment", "🔙 Debug navegação:")
-                    android.util.Log.d("RoutesFragment", "   Destino atual: $currentDestination")
-
-                    // ✅ CORREÇÃO: SEMPRE mostrar diálogo de saída quando estiver na tela de rotas
-                    // A tela de rotas é tratada como tela "home" do app
-                    val isRoutesFragment = currentDestination == com.example.gestaobilhares.ui.R.id.routesFragment
-
-                    if (isRoutesFragment) {
-                        // Estamos na tela de rotas - sempre mostrar diálogo de saída
-                        android.util.Log.d("RoutesFragment", "🔙 Estamos na tela de rotas - mostrando diálogo de saída")
-                        showExitConfirmationDialog()
-                    } else {
-                        // Não estamos na tela de rotas - permitir navegação normal
-                        android.util.Log.d("RoutesFragment", "🔙 Não estamos na tela de rotas - navegando para trás")
-                        navController.popBackStack()
-                    }
-                } catch (e: IllegalStateException) {
-                    // Navigation Controller não disponível - mostrar diálogo de saída
-                    android.util.Log.w("RoutesFragment", "⚠️ NavController não disponível - mostrando diálogo de saída")
-                    showExitConfirmationDialog()
-                } catch (e: Exception) {
-                    // Outro erro - mostrar diálogo de saída
-                    android.util.Log.e("RoutesFragment", "❌ Erro ao verificar navegação: ${e.message}", e)
-                    showExitConfirmationDialog()
-                }
-            }
-        }
-        
-        requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
-            backPressedCallback!!
-        )
-        
-        android.util.Log.d("RoutesFragment", "✅ Handler do botão voltar configurado e ativado")
-    }
-
-    /**
-     * ✅ NOVO: Mostra diálogo de confirmação para sair do app.
-     */
-    private fun showExitConfirmationDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Sair do aplicativo")
-            .setMessage("Deseja realmente sair do aplicativo?")
-            .setPositiveButton("Sair") { _, _ ->
-                // Fechar o app
-                requireActivity().finishAffinity()
-            }
-            .setNegativeButton("Cancelar") { dialog, _ ->
-                // Não fazer nada, apenas fechar o diálogo
-                dialog.dismiss()
-            }
-            .setCancelable(true)
-            .show()
-    }
+    // ✅ REMOVIDO: setupBackButtonHandler() e showExitConfirmationDialog()
+    // MainActivity agora gerencia o botão voltar globalmente
 
     override fun onDestroyView() {
         super.onDestroyView()
         syncDialog?.dismiss()
         syncDialog = null
-        // ✅ CORREÇÃO: Remover callback do botão voltar para evitar vazamentos
-        backPressedCallback?.remove()
-        backPressedCallback = null
+        // ✅ REMOVIDO: Remoção de callback - MainActivity gerencia globalmente
         _binding = null
     }
 } 

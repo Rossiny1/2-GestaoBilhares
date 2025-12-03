@@ -27,7 +27,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.activity.OnBackPressedCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Mesa
@@ -91,8 +90,7 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
         observeViewModel()
         setupListeners(clientId)
         
-        // ✅ NOVO: Configurar botão de retorno para sempre voltar para ClientListFragment
-        setupBackButtonHandler()
+        // ✅ REMOVIDO: setupBackButtonHandler() - Navigation Component gerencia automaticamente
         
         // Carregar dados do cliente
         viewModel.loadClientDetails(clientId)
@@ -666,59 +664,11 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
     }
 
     /**
-     * ✅ CORREÇÃO: Configura o botão de retorno para voltar para ClientListFragment
-     * Só intercepta quando não há fragmentos filhos no stack (ex: SettlementDetailFragment)
+     * ✅ REMOVIDO: setupBackButtonHandler() - Navigation Component gerencia automaticamente
+     * O botão voltar agora é gerenciado globalmente pelo MainActivity, que mostra
+     * diálogo de saída apenas na tela de rotas. Em todas as outras telas, o Navigation
+     * Component gerencia o comportamento padrão de voltar para a tela anterior.
      */
-    private fun setupBackButtonHandler() {
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                // ✅ CORREÇÃO: Verificar se há fragmentos filhos no stack antes de interceptar
-                val navController = findNavController()
-                val currentDestination = navController.currentDestination
-                
-                // Verificar se o destino atual é este fragment e se há um fragment anterior no stack
-                // Se há um fragment anterior que não é ClientListFragment, deixar o Navigation Component lidar
-                val previousEntry = navController.previousBackStackEntry
-                val isFromChildFragment = previousEntry?.destination?.id?.let { previousId ->
-                    previousId != com.example.gestaobilhares.ui.R.id.clientListFragment &&
-                    previousId != com.example.gestaobilhares.ui.R.id.routesFragment
-                } ?: false
-                
-                // Se estamos vindo de um fragment filho (como SettlementDetailFragment), deixar o Navigation Component lidar
-                if (isFromChildFragment && currentDestination?.id == com.example.gestaobilhares.ui.R.id.clientDetailFragment) {
-                    // Há fragmentos filhos, deixar o Navigation Component lidar normalmente
-                    isEnabled = false
-                    navController.popBackStack()
-                    isEnabled = true
-                } else {
-                    // Sem fragmentos filhos, navegar para ClientListFragment
-                    lifecycleScope.launch {
-                        try {
-                            val rotaId = viewModel.buscarRotaIdPorCliente(clientId)
-                            if (rotaId != null) {
-                                val action = ClientDetailFragmentDirections
-                                    .actionClientDetailFragmentToClientListFragment(rotaId = rotaId)
-                                navController.navigate(action)
-                            } else {
-                                // Se não encontrar rotaId, usar popUpTo para limpar o stack
-                                navController.popBackStack(
-                                    com.example.gestaobilhares.ui.R.id.clientListFragment, 
-                                    false
-                                )
-                            }
-                        } catch (e: Exception) {
-                            // Se a ação não existir, usar popUpTo para limpar o stack
-                            navController.popBackStack(
-                                com.example.gestaobilhares.ui.R.id.clientListFragment, 
-                                false
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
-    }
 
     /**
      * ✅ NOVO: Abre aplicativos de navegação com as coordenadas do cliente
