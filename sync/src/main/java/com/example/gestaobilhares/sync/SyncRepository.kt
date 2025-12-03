@@ -5850,12 +5850,11 @@ class SyncRepository(
                         maxServerTimestamp = serverTimestamp
                     }
                     
-                    // ✅ ATUALIZAÇÃO LOCAL: Garantir que o timestamp local seja idêntico ao do servidor
-                    // Isso previne que a próxima sync incremental ignore este registro devido a Clock Skew
-                    appRepository.atualizarMesa(mesa.copy(
-                        dataUltimaLeitura = Date(serverTimestamp) // Atualizar a data de leitura para consistência
-                    ))
-                    Log.d(TAG, "✅ Mesa ${mesa.id} atualizada localmente com timestamp do servidor: $serverTimestamp")
+                    // ✅ CORREÇÃO CRÍTICA: NÃO alterar dados locais durante exportação (push)
+                    // Os dados locais devem permanecer inalterados na exportação
+                    // A atualização dos dados locais acontece apenas na importação (pull)
+                    // quando há dados novos no servidor que devem ser sincronizados
+                    Log.d(TAG, "✅ Mesa ${mesa.id} exportada com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += mesaMap.toString().length.toLong()
@@ -6033,11 +6032,11 @@ class SyncRepository(
                     val snapshot = collectionRef.document(ciclo.id.toString()).get().await()
                     val serverTimestamp = snapshot.getTimestamp("lastModified")?.toDate()?.time ?: System.currentTimeMillis()
                     
-                    // Atualizar localmente
-                    appRepository.inserirCicloAcerto(ciclo.copy(
-                        dataAtualizacao = Date(serverTimestamp)
-                    ))
-                    Log.d(TAG, "✅ Ciclo ${ciclo.id} atualizado localmente com timestamp do servidor: $serverTimestamp")
+                    // ✅ CORREÇÃO CRÍTICA: NÃO alterar dados locais durante exportação (push)
+                    // Os dados locais devem permanecer inalterados na exportação
+                    // A atualização dos dados locais acontece apenas na importação (pull)
+                    // quando há dados novos no servidor que devem ser sincronizados
+                    Log.d(TAG, "✅ Ciclo ${ciclo.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += cicloMap.toString().length.toLong()
@@ -6358,11 +6357,11 @@ class SyncRepository(
                     val snapshot = collectionRef.document(contrato.id.toString()).get().await()
                     val serverTimestamp = snapshot.getTimestamp("lastModified")?.toDate()?.time ?: System.currentTimeMillis()
                     
-                    // Atualizar localmente
-                    appRepository.atualizarContrato(contrato.copy(
-                        dataAtualizacao = Date(serverTimestamp)
-                    ))
-                    Log.d(TAG, "✅ Contrato ${contrato.id} atualizado localmente com timestamp do servidor: $serverTimestamp")
+                    // ✅ CORREÇÃO CRÍTICA: NÃO alterar dados locais durante exportação (push)
+                    // Os dados locais devem permanecer inalterados na exportação
+                    // A atualização dos dados locais acontece apenas na importação (pull)
+                    // quando há dados novos no servidor que devem ser sincronizados
+                    Log.d(TAG, "✅ Contrato ${contrato.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += contratoMap.toString().length.toLong()
