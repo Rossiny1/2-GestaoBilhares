@@ -125,9 +125,12 @@ class CycleHistoryViewModel(
                         }
                 }
                 .collect { ciclosAtualizados ->
-                    _ciclos.value = ciclosAtualizados
+                    // ✅ CORREÇÃO: Aplicar regra de negócio - apenas o último ciclo pode estar EM_ANDAMENTO
+                    // Todos os ciclos anteriores devem estar FINALIZADO
+                    val ciclosCorrigidos = corrigirStatusCiclos(ciclosAtualizados)
+                    _ciclos.value = ciclosCorrigidos
                     // Recalcular estatísticas
-                    if (ciclosAtualizados.isNotEmpty() && _rotaIdFlow.value != null) {
+                    if (ciclosCorrigidos.isNotEmpty() && _rotaIdFlow.value != null) {
                         viewModelScope.launch {
                             try {
                                 val ciclosEntity = cicloAcertoRepository.buscarCiclosPorRota(_rotaIdFlow.value!!)
@@ -138,6 +141,36 @@ class CycleHistoryViewModel(
                         }
                     }
                 }
+        }
+    }
+    
+    /**
+     * ✅ CORREÇÃO: Corrige o status dos ciclos aplicando a regra de negócio:
+     * - Apenas o último ciclo (mais recente) pode estar EM_ANDAMENTO
+     * - Todos os ciclos anteriores devem estar FINALIZADO
+     * 
+     * Os ciclos já vêm ordenados por ano DESC, numero_ciclo DESC do banco,
+     * então o primeiro da lista é o mais recente.
+     */
+    private fun corrigirStatusCiclos(ciclos: List<CycleHistoryItem>): List<CycleHistoryItem> {
+        if (ciclos.isEmpty()) return ciclos
+        
+        // O primeiro ciclo é o mais recente (último criado)
+        // Apenas ele pode manter seu status original (EM_ANDAMENTO ou FINALIZADO)
+        // Todos os outros devem estar FINALIZADO
+        return ciclos.mapIndexed { index, ciclo ->
+            if (index == 0) {
+                // Primeiro ciclo (mais recente) - mantém status original
+                ciclo
+            } else {
+                // Ciclos anteriores - forçar FINALIZADO
+                if (ciclo.status != com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO) {
+                    android.util.Log.d("CycleHistoryViewModel", "🔧 Corrigindo status do ciclo ${ciclo.titulo} (ID: ${ciclo.id}) de ${ciclo.status} para FINALIZADO")
+                    ciclo.copy(status = com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO)
+                } else {
+                    ciclo
+                }
+            }
         }
     }
     
