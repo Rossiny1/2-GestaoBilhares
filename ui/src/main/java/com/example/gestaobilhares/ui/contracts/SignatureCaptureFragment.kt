@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.NavOptions
 import com.example.gestaobilhares.ui.databinding.FragmentSignatureCaptureBinding
 import com.example.gestaobilhares.ui.common.SignatureView
 import com.example.gestaobilhares.core.utils.DocumentIntegrityManager
@@ -368,22 +369,73 @@ class SignatureCaptureFragment : Fragment() {
                     android.util.Log.d("SignatureCaptureFragment", "  - contratoId: $contratoId")
                     android.util.Log.d("SignatureCaptureFragment", "  - assinaturaContexto: $assinaturaContexto")
                     
-                    // ✅ CORREÇÃO SIMPLES: Navegar diretamente para ClientDetailFragment
-                    // O ClientDetailFragment já tem lógica para voltar para a rota correta
+                    // ✅ CORREÇÃO: Remover todas as telas intermediárias (depósito, contrato) do back stack
+                    // Isso garante que ao clicar em voltar na tela de detalhes, volte para a lista de clientes
                     try {
-                        android.util.Log.d("SignatureCaptureFragment", "🚀 NAVEGANDO DIRETAMENTE PARA ClientDetailFragment")
+                        android.util.Log.d("SignatureCaptureFragment", "🚀 NAVEGANDO PARA ClientDetailFragment E LIMPANDO BACK STACK")
                         
                         if (clienteId > 0) {
-                            val bundle = android.os.Bundle().apply {
-                                putLong("clienteId", clienteId)
-                            }
-                            android.util.Log.d("SignatureCaptureFragment", "📦 Navegando com bundle: $bundle")
+                            val navController = findNavController()
                             
-                            findNavController().navigate(
-                                com.example.gestaobilhares.ui.R.id.clientDetailFragment, 
-                                bundle
-                            )
-                            android.util.Log.d("SignatureCaptureFragment", "✅ Navegação executada com sucesso!")
+                            // ✅ CORREÇÃO CRÍTICA: Limpar back stack até clientListFragment para remover
+                            // todas as telas intermediárias (mesasDepositoFragment, contractGenerationFragment, etc)
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                try {
+                                    val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                                    val cliente = appRepository.obterClientePorId(clienteId)
+                                    val rotaId = cliente?.rotaId
+                                    
+                                    val bundle = android.os.Bundle().apply {
+                                        putLong("clienteId", clienteId)
+                                    }
+                                    
+                                    if (rotaId != null && rotaId > 0L) {
+                                        // Limpar back stack até clientListFragment antes de navegar para clientDetailFragment
+                                        android.util.Log.d("SignatureCaptureFragment", "📦 Removendo todas as telas intermediárias do back stack até clientListFragment")
+                                        
+                                        val navOptions = NavOptions.Builder()
+                                            .setPopUpTo(com.example.gestaobilhares.ui.R.id.clientListFragment, false)
+                                            .build()
+                                        
+                                        navController.navigate(
+                                            com.example.gestaobilhares.ui.R.id.clientDetailFragment,
+                                            bundle,
+                                            navOptions
+                                        )
+                                        
+                                        android.util.Log.d("SignatureCaptureFragment", "✅ Navegação executada com sucesso!")
+                                    } else {
+                                        // Fallback: limpar até contractGenerationFragment se não conseguir rotaId
+                                        android.util.Log.w("SignatureCaptureFragment", "⚠️ RotaId não encontrado, usando fallback")
+                                        
+                                        val navOptions = NavOptions.Builder()
+                                            .setPopUpTo(com.example.gestaobilhares.ui.R.id.contractGenerationFragment, true)
+                                            .build()
+                                        
+                                        navController.navigate(
+                                            com.example.gestaobilhares.ui.R.id.clientDetailFragment,
+                                            bundle,
+                                            navOptions
+                                        )
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.e("SignatureCaptureFragment", "❌ Erro ao buscar rotaId: ${e.message}", e)
+                                    // Fallback: limpar até contractGenerationFragment
+                                    val bundle = android.os.Bundle().apply {
+                                        putLong("clienteId", clienteId)
+                                    }
+                                    
+                                    val navOptions = NavOptions.Builder()
+                                        .setPopUpTo(com.example.gestaobilhares.ui.R.id.contractGenerationFragment, true)
+                                        .build()
+                                    
+                                    navController.navigate(
+                                        com.example.gestaobilhares.ui.R.id.clientDetailFragment,
+                                        bundle,
+                                        navOptions
+                                    )
+                                }
+                            }
                         } else {
                             android.util.Log.w("SignatureCaptureFragment", "⚠️ ClienteId inválido: $clienteId")
                             findNavController().popBackStack()
@@ -458,17 +510,63 @@ class SignatureCaptureFragment : Fragment() {
                 }
                 startActivity(android.content.Intent.createChooser(intent, "Enviar distrato via"))
                 
-                // ✅ CORREÇÃO SIMPLES: Navegar diretamente para ClientDetailFragment após envio do distrato
+                // ✅ CORREÇÃO: Remover todas as telas intermediárias (depósito, contrato) do back stack
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ 
                     val clienteId = contrato.clienteId
                     if (clienteId > 0) {
-                        val bundle = android.os.Bundle().apply {
-                            putLong("clienteId", clienteId)
+                        val navController = findNavController()
+                        
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            try {
+                                val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                                val cliente = appRepository.obterClientePorId(clienteId)
+                                val rotaId = cliente?.rotaId
+                                
+                                val bundle = android.os.Bundle().apply {
+                                    putLong("clienteId", clienteId)
+                                }
+                                
+                                if (rotaId != null && rotaId > 0L) {
+                                    // Limpar back stack até clientListFragment
+                                    val navOptions = NavOptions.Builder()
+                                        .setPopUpTo(com.example.gestaobilhares.ui.R.id.clientListFragment, false)
+                                        .build()
+                                    
+                                    navController.navigate(
+                                        com.example.gestaobilhares.ui.R.id.clientDetailFragment, 
+                                        bundle,
+                                        navOptions
+                                    )
+                                } else {
+                                    // Fallback: limpar até contractGenerationFragment
+                                    val navOptions = NavOptions.Builder()
+                                        .setPopUpTo(com.example.gestaobilhares.ui.R.id.contractGenerationFragment, true)
+                                        .build()
+                                    
+                                    navController.navigate(
+                                        com.example.gestaobilhares.ui.R.id.clientDetailFragment, 
+                                        bundle,
+                                        navOptions
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.e("SignatureCaptureFragment", "❌ Erro ao buscar rotaId no distrato: ${e.message}", e)
+                                // Fallback: limpar até contractGenerationFragment
+                                val bundle = android.os.Bundle().apply {
+                                    putLong("clienteId", clienteId)
+                                }
+                                
+                                val navOptions = NavOptions.Builder()
+                                    .setPopUpTo(com.example.gestaobilhares.ui.R.id.contractGenerationFragment, true)
+                                    .build()
+                                
+                                navController.navigate(
+                                    com.example.gestaobilhares.ui.R.id.clientDetailFragment, 
+                                    bundle,
+                                    navOptions
+                                )
+                            }
                         }
-                        findNavController().navigate(
-                            com.example.gestaobilhares.ui.R.id.clientDetailFragment, 
-                            bundle
-                        )
                     } else {
                         findNavController().popBackStack()
                     }
