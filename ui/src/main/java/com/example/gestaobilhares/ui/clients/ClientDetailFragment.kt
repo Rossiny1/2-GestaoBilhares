@@ -201,6 +201,14 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
                         }
                     }
                 }
+                launch {
+                    // ✅ NOVO: Observer para pendências do cliente - mostrar diálogo de alerta
+                    viewModel.pendenciasCliente.collect { pendencias ->
+                        if (pendencias.isNotEmpty() && isAdded && !requireActivity().isFinishing) {
+                            mostrarDialogoPendencias(pendencias)
+                        }
+                    }
+                }
             }
         }
     }
@@ -358,6 +366,35 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
         val formattedDebt = NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(cliente.debitoAtual)
         binding.tvClientCurrentDebt.text = formattedDebt
         binding.tvLastVisit.text = cliente.ultimaVisita
+    }
+    
+    /**
+     * ✅ NOVO: Mostra diálogo de alerta com as pendências do cliente
+     * Exibe: dados faltantes (CPF, Telefone, Contrato), débito alto, sem acerto há mais de 4 meses
+     * O diálogo só aparece se houver pelo menos uma pendência
+     */
+    private fun mostrarDialogoPendencias(pendencias: List<String>) {
+        // ✅ Só mostrar se houver pendências
+        if (pendencias.isEmpty() || !isAdded || requireActivity().isFinishing) return
+        
+        try {
+            val mensagem = buildString {
+                append("⚠️ Este cliente possui as seguintes pendências:\n\n")
+                pendencias.forEachIndexed { index, pendencia ->
+                    append("${index + 1}. $pendencia\n")
+                }
+                append("\n💡 Recomendamos resolver essas pendências para manter o cadastro atualizado.")
+            }
+            
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("⚠️ Pendências do Cliente")
+                .setMessage(mensagem)
+                .setPositiveButton("OK", null)
+                .setCancelable(true)
+                .show()
+        } catch (e: Exception) {
+            Log.e("ClientDetailFragment", "Erro ao mostrar diálogo de pendências: ${e.message}", e)
+        }
     }
 
     private fun toggleFabMenu() {
