@@ -76,6 +76,9 @@ class ClientDetailViewModel(
     private val _cliente = MutableStateFlow<Cliente?>(null)
     val cliente: StateFlow<Cliente?> = _cliente.asStateFlow()
 
+    private val _pendenciasCliente = MutableStateFlow<List<String>>(emptyList())
+    val pendenciasCliente: StateFlow<List<String>> = _pendenciasCliente.asStateFlow()
+
     private var settlementHistoryJob: Job? = null
 
     init {
@@ -130,11 +133,92 @@ class ClientDetailViewModel(
 
                 loadSettlementHistory(clienteId)
                 observeMesasDoCliente(clienteId)
+                
+                // ✅ Verificar pendências do cliente após carregar os dados
+                verificarPendenciasCliente(cliente)
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao carregar detalhes do cliente", e)
                 showError("Erro ao carregar detalhes do cliente: ${e.message}", e)
             } finally {
                 hideLoading()
+            }
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Verifica pendências do cliente e armazena em StateFlow
+     * Verifica: dados faltantes (CPF, Telefone, Contrato), débito alto, sem acerto há mais de 4 meses
+     * O diálogo só aparece se houver pelo menos uma pendência
+     */
+    private fun verificarPendenciasCliente(cliente: Cliente) {
+        viewModelScope.launch {
+            try {
+                val pendencias = mutableListOf<String>()
+                
+                // 1. Verificar dados faltantes
+                val dadosFaltantes = mutableListOf<String>()
+                if (cliente.cpfCnpj.isNullOrBlank()) {
+                    dadosFaltantes.add("CPF")
+                }
+                if (cliente.telefone.isNullOrBlank()) {
+                    dadosFaltantes.add("Telefone")
+                }
+                
+                // Verificar se tem contrato ativo
+                val contratos = appRepository.buscarContratosPorCliente(cliente.id).first()
+                val temContratoAtivo = contratos.any { contrato: ContratoLocacao ->
+                    contrato.status.equals("ATIVO", ignoreCase = true)
+                }
+                
+                if (!temContratoAtivo) {
+                    dadosFaltantes.add("Contrato")
+                }
+                
+                if (dadosFaltantes.isNotEmpty()) {
+                    pendencias.add("Dados faltantes: ${dadosFaltantes.joinToString(", ")}")
+                }
+                
+                // 2. Verificar débito alto (> R$ 300)
+                val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(cliente.id)
+                val debitoAtual = ultimoAcerto?.debitoAtual ?: cliente.debitoAtual
+                
+                if (debitoAtual > 300.0) {
+                    val debitoFormatado = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("pt", "BR")).format(debitoAtual)
+                    pendencias.add("Débito alto: $debitoFormatado")
+                }
+                
+                // 3. Verificar se não acerta há mais de 4 meses
+                val hoje = Calendar.getInstance().time
+                val quatroMesesAtras = Calendar.getInstance().apply {
+                    add(Calendar.MONTH, -4)
+                }.time
+                
+                val semAcertoRecente = when {
+                    ultimoAcerto == null -> true // Nunca foi acertado
+                    else -> ultimoAcerto.dataAcerto.before(quatroMesesAtras)
+                }
+                
+                if (semAcertoRecente) {
+                    val mesesSemAcerto = if (ultimoAcerto == null) {
+                        "Nunca foi acertado"
+                    } else {
+                        val diffMeses = ((hoje.time - ultimoAcerto.dataAcerto.time) / (1000L * 60 * 60 * 24 * 30)).toInt()
+                        "Não acerta há $diffMeses mês(es)"
+                    }
+                    pendencias.add("Sem acerto recente: $mesesSemAcerto")
+                }
+                
+                // ✅ Só armazenar se houver pendências
+                _pendenciasCliente.value = pendencias
+                
+                if (pendencias.isNotEmpty()) {
+                    logDebug("Pendências detectadas: ${pendencias.size} pendência(s) encontrada(s)")
+                } else {
+                    logDebug("Nenhuma pendência detectada")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao verificar pendências do cliente", e)
+                _pendenciasCliente.value = emptyList()
             }
         }
     }
