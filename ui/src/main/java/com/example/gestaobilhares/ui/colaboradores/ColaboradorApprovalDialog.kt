@@ -106,9 +106,11 @@ class ColaboradorApprovalDialog : DialogFragment() {
     }
 
     private fun preencherDadosIniciais() {
-        // Preencher email com sugestão baseada no nome
-        val emailSugerido = gerarEmailSugerido(colaborador.nome)
-        binding.etEmailAcesso.setText(emailSugerido)
+        // ✅ CORREÇÃO: Preencher com o email ORIGINAL do colaborador (não gerar sugestão)
+        // O email original é o que foi fornecido no cadastro e deve ser usado para Firebase Authentication
+        val emailOriginal = colaborador.email
+        binding.etEmailAcesso.setText(emailOriginal)
+        android.util.Log.d("ColaboradorApprovalDialog", "Email original do colaborador: $emailOriginal")
         
         // Gerar senha temporária
         val senhaTemporaria = gerarSenhaTemporaria()
@@ -167,13 +169,16 @@ class ColaboradorApprovalDialog : DialogFragment() {
         }
     }
 
-    private fun gerarEmailSugerido(nome: String): String {
-        val nomeLimpo = nome.lowercase()
-            .replace(" ", ".")
-            .replace(Regex("[^a-z.]"), "")
-        
-        return "$nomeLimpo@gestaobilhares.com"
-    }
+    // ✅ REMOVIDO: Função gerarEmailSugerido não é mais usada
+    // O email original do colaborador (fornecido no cadastro) deve ser usado para Firebase Authentication
+    // Não criar emails com @gestaobilhares.com para evitar duplicação de contas
+    // private fun gerarEmailSugerido(nome: String): String {
+    //     val nomeLimpo = nome.lowercase()
+    //         .replace(" ", ".")
+    //         .replace(Regex("[^a-z.]"), "")
+    //     
+    //     return "$nomeLimpo@gestaobilhares.com"
+    // }
 
     private fun gerarSenhaTemporaria(): String {
         val caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"

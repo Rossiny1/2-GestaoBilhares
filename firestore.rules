@@ -108,19 +108,24 @@ service cloud.firestore {
     }
 
     // ✅ CRÍTICO: Regra para estrutura aninhada empresas/empresa_001/entidades/{collectionName}/items
-    // Esta é a estrutura REAL usada pelo SyncRepository
+    // Esta é a estrutura REAL usada pelo SyncRepository e AuthViewModel
     // Caminho: empresas/empresa_001/entidades/{collectionName}/items/{itemId}
     match /empresas/{empresaId}/entidades/{collectionName}/items/{itemId} {
-      // ✅ CORREÇÃO: Permitir leitura mesmo sem autenticação para manter o app offline-first
-      // O app precisa conseguir importar dados (clientes, rotas, etc.) usando apenas o login local
-      allow read: if true;
+      // ✅ CORREÇÃO CRÍTICA: Permitir leitura SEM autenticação para login em app vazio
+      // Quando o app está vazio, o usuário precisa buscar colaborador por email ANTES de autenticar
+      // Mas também funciona DEPOIS da autenticação Firebase (quando request.auth != null)
+      allow read: if true; // Sempre permitir leitura (necessário para login em app vazio)
       allow write: if isAdmin() ||
                    (request.auth != null && collectionName == "colaboradores");
     }
     
-    // ✅ NOVO: Regra genérica para subcoleções de empresas (caso haja outras estruturas)
+    // ✅ CORREÇÃO: Regra genérica para subcoleções de empresas (caso haja outras estruturas)
+    // IMPORTANTE: Esta regra vem DEPOIS da regra específica acima, então não interfere
+    // Mas para garantir, vamos permitir leitura sem autenticação também aqui
     match /empresas/{empresaId}/{document=**} {
-      allow read: if request.auth != null;
+      // ✅ PERMITIR LEITURA sem autenticação para permitir login em app vazio
+      // A busca de colaboradores por email precisa funcionar mesmo sem autenticação inicial
+      allow read: if true; // Permitir leitura sem autenticação (necessário para login)
       allow write: if isAdmin();
     }
 

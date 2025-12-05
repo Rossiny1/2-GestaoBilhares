@@ -189,43 +189,65 @@ class ColaboradorManagementViewModel(
             try {
                 showLoading()
                 
-                // ✅ NOVO: Criar conta no Firebase Authentication
-                var firebaseUid: String? = null
-                try {
-                    android.util.Log.d("ColaboradorManagementViewModel", "Criando conta Firebase para: $email")
-                    val result = firebaseAuth.createUserWithEmailAndPassword(email, senha).await()
-                    firebaseUid = result.user?.uid
-                    android.util.Log.d("ColaboradorManagementViewModel", "✅ Conta Firebase criada com sucesso! UID: $firebaseUid")
-                } catch (e: Exception) {
-                    android.util.Log.e("ColaboradorManagementViewModel", "Erro ao criar conta Firebase: ${e.message}")
-                    // Se o usuário já existe no Firebase, tentar obter o UID
+                // ✅ CORREÇÃO: Buscar colaborador para obter o email ORIGINAL
+                val colaborador = appRepository.obterColaboradorPorId(colaboradorId)
+                if (colaborador == null) {
+                    android.util.Log.e("ColaboradorManagementViewModel", "Colaborador não encontrado: $colaboradorId")
+                    _errorMessage.value = "Colaborador não encontrado"
+                    hideLoading()
+                    return@launch
+                }
+                
+                // ✅ CORREÇÃO CRÍTICA: Usar o email ORIGINAL do colaborador (não o emailAcesso sugerido)
+                // O email original é o que foi fornecido no cadastro e já pode ter um usuário Firebase criado
+                val emailParaFirebase = colaborador.email
+                android.util.Log.d("ColaboradorManagementViewModel", "Email original do colaborador: $emailParaFirebase")
+                android.util.Log.d("ColaboradorManagementViewModel", "Email sugerido (emailAcesso): $email")
+                
+                // ✅ CORREÇÃO: Se o colaborador já tem firebaseUid, usar esse (não criar novo usuário)
+                var firebaseUid: String? = colaborador.firebaseUid
+                
+                // Se não tem firebaseUid, criar conta no Firebase Authentication com o email ORIGINAL
+                if (firebaseUid == null) {
                     try {
-                        val user = firebaseAuth.currentUser
-                        if (user?.email == email) {
-                            firebaseUid = user.uid
-                            android.util.Log.d("ColaboradorManagementViewModel", "Usuário já existe no Firebase, UID: $firebaseUid")
-                        } else {
-                            // Tentar fazer login para obter o UID
-                            val signInResult = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
-                            firebaseUid = signInResult.user?.uid
-                            android.util.Log.d("ColaboradorManagementViewModel", "Login realizado para obter UID: $firebaseUid")
-                            // Fazer logout para não manter sessão
-                            firebaseAuth.signOut()
+                        android.util.Log.d("ColaboradorManagementViewModel", "Criando conta Firebase para email ORIGINAL: $emailParaFirebase")
+                        val result = firebaseAuth.createUserWithEmailAndPassword(emailParaFirebase, senha).await()
+                        firebaseUid = result.user?.uid
+                        android.util.Log.d("ColaboradorManagementViewModel", "✅ Conta Firebase criada com sucesso! UID: $firebaseUid")
+                    } catch (e: Exception) {
+                        android.util.Log.e("ColaboradorManagementViewModel", "Erro ao criar conta Firebase: ${e.message}")
+                        // Se o usuário já existe no Firebase, tentar obter o UID
+                        try {
+                            val user = firebaseAuth.currentUser
+                            if (user?.email == emailParaFirebase) {
+                                firebaseUid = user.uid
+                                android.util.Log.d("ColaboradorManagementViewModel", "Usuário já existe no Firebase, UID: $firebaseUid")
+                            } else {
+                                // Tentar fazer login para obter o UID
+                                val signInResult = firebaseAuth.signInWithEmailAndPassword(emailParaFirebase, senha).await()
+                                firebaseUid = signInResult.user?.uid
+                                android.util.Log.d("ColaboradorManagementViewModel", "Login realizado para obter UID: $firebaseUid")
+                                // Fazer logout para não manter sessão
+                                firebaseAuth.signOut()
+                            }
+                        } catch (e2: Exception) {
+                            android.util.Log.w("ColaboradorManagementViewModel", "Não foi possível obter UID do Firebase: ${e2.message}")
+                            // Continuar sem Firebase UID (modo offline)
                         }
-                    } catch (e2: Exception) {
-                        android.util.Log.w("ColaboradorManagementViewModel", "Não foi possível obter UID do Firebase: ${e2.message}")
-                        // Continuar sem Firebase UID (modo offline)
                     }
+                } else {
+                    android.util.Log.d("ColaboradorManagementViewModel", "✅ Colaborador já tem Firebase UID: $firebaseUid (não criando novo usuário)")
                 }
                 
                 // ✅ FASE 12.1: Hashear senha antes de armazenar (nunca texto plano)
                 // TODO: Implementar hash de senha (PasswordHasher removido)
                 val senhaHash = senha // TEMPORÁRIO: Usar senha sem hash até implementar
                 
-                // Atualizar colaborador com credenciais e aprovação
+                // ✅ CORREÇÃO: Atualizar colaborador com credenciais e aprovação
+                // IMPORTANTE: Usar o email ORIGINAL do colaborador, não o emailAcesso sugerido
                 appRepository.aprovarColaboradorComCredenciais(
                     colaboradorId = colaboradorId,
-                    email = email,
+                    email = emailParaFirebase, // ✅ CORREÇÃO: Usar email original, não emailAcesso
                     senha = senhaHash, // ✅ SEGURANÇA: Armazenar hash, não texto plano
                     nivelAcesso = nivelAcesso,
                     observacoes = observacoes,

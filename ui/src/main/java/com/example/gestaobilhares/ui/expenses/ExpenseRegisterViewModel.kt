@@ -297,11 +297,20 @@ class ExpenseRegisterViewModel constructor(
                     selecionado
                 } else {
                     // Fluxo normal por rota
+                    // ✅ CORREÇÃO CRÍTICA: Buscar APENAS ciclo EM_ANDAMENTO mais recente
                     val ativo = appRepository.buscarCicloAtivo(rotaId)
-                    if (ativo == null || ativo.status != StatusCicloAcerto.EM_ANDAMENTO) {
-                        showMessage("Não é possível cadastrar despesas. O ciclo de acerto não está em andamento.")
+                    if (ativo == null) {
+                        showMessage("Não é possível cadastrar despesas. Não há ciclo em andamento para esta rota.")
                         return@launch
                     }
+                    // ✅ VALIDAÇÃO CRÍTICA: Garantir que o ciclo está realmente EM_ANDAMENTO
+                    if (ativo.status != StatusCicloAcerto.EM_ANDAMENTO) {
+                        android.util.Log.e("ExpenseRegisterViewModel", "❌ ERRO: Ciclo encontrado não está EM_ANDAMENTO! ID: ${ativo.id}, Status: ${ativo.status}, Número: ${ativo.numeroCiclo}")
+                        showMessage("Não é possível cadastrar despesas. O ciclo atual está ${ativo.status.name.lowercase()}. Apenas ciclos em andamento permitem adição de despesas.")
+                        return@launch
+                    }
+                    // ✅ LOG PARA DEBUG: Confirmar ciclo correto
+                    android.util.Log.d("ExpenseRegisterViewModel", "✅ Despesa será vinculada ao ciclo EM_ANDAMENTO: ID=${ativo.id}, Número=${ativo.numeroCiclo}, Status=${ativo.status}")
                     ativo
                 }
 
@@ -332,6 +341,17 @@ class ExpenseRegisterViewModel constructor(
                     // ✅ NOVO: Modo de edição - atualizar despesa existente
                     val despesaExistente = appRepository.obterDespesaPorId(despesaId)
                     if (despesaExistente != null) {
+                        // ✅ VALIDAÇÃO CRÍTICA: Verificar se o ciclo da despesa está finalizado
+                        val cicloIdDespesa = despesaExistente.cicloId
+                        if (cicloIdDespesa != null) {
+                            val cicloDaDespesa = appRepository.buscarCicloPorId(cicloIdDespesa)
+                            if (cicloDaDespesa != null && cicloDaDespesa.status != StatusCicloAcerto.EM_ANDAMENTO) {
+                                android.util.Log.e("ExpenseRegisterViewModel", "❌ ERRO: Tentativa de editar despesa em ciclo finalizado! Ciclo ID: ${cicloDaDespesa.id}, Status: ${cicloDaDespesa.status}")
+                                showMessage("Não é possível editar despesas de ciclos finalizados. O ciclo desta despesa está ${cicloDaDespesa.status.name.lowercase()}.")
+                                hideLoading()
+                                return@launch
+                            }
+                        }
                         val despesaAtualizada = despesaExistente.copy(
                             descricao = descricao,
                             valor = valor * quantidade,
