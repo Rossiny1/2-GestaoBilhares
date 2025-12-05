@@ -204,7 +204,7 @@ class AuthViewModel constructor() : BaseViewModel() {
     
                             // ✅ NOVO: Criar/atualizar colaborador para usuário online
                             android.util.Log.d("AuthViewModel", "🔍 Chamando criarOuAtualizarColaboradorOnline...")
-                            var colaborador = criarOuAtualizarColaboradorOnline(result.user!!)
+                            var colaborador = criarOuAtualizarColaboradorOnline(result.user!!, senha)
                             android.util.Log.d("AuthViewModel", "   Resultado: ${if (colaborador != null) "SUCESSO - ${colaborador.nome}" else "NULL - não encontrado"}")
                             
                             // ✅ SUPERADMIN: Se for rossinys@gmail.com e não encontrou, criar automaticamente
@@ -907,7 +907,7 @@ class AuthViewModel constructor() : BaseViewModel() {
      * ✅ NOVO: Cria ou atualiza colaborador para usuário online
      * Retorna o colaborador atualizado ou null se não encontrado
      */
-    private suspend fun criarOuAtualizarColaboradorOnline(firebaseUser: FirebaseUser): Colaborador? {
+    private suspend fun criarOuAtualizarColaboradorOnline(firebaseUser: FirebaseUser, senha: String = ""): Colaborador? {
         try {
             val email = firebaseUser.email ?: return null
             
@@ -925,6 +925,13 @@ class AuthViewModel constructor() : BaseViewModel() {
                 // ✅ SUPERADMIN: rossinys@gmail.com sempre é ADMIN e aprovado
                 val colaboradorAtualizado = if (email == "rossinys@gmail.com") {
                     // Superadmin - sempre ADMIN, aprovado, sem primeiro acesso
+                    // ✅ CORREÇÃO CRÍTICA: Atualizar senhaHash com a senha atual para login offline funcionar
+                    val senhaParaHash = if (senha.isNotEmpty()) senha.trim() else colaboradorExistente.senhaHash
+                    android.util.Log.d("AuthViewModel", "🔧 SUPERADMIN: Atualizando senhaHash para login offline")
+                    android.util.Log.d("AuthViewModel", "   Senha fornecida: ${if (senha.isNotEmpty()) "presente (${senha.length} caracteres)" else "ausente"}")
+                    android.util.Log.d("AuthViewModel", "   SenhaHash anterior: ${colaboradorExistente.senhaHash}")
+                    android.util.Log.d("AuthViewModel", "   SenhaHash novo: $senhaParaHash")
+                    
                     colaboradorExistente.copy(
                         nome = firebaseUser.displayName ?: colaboradorExistente.nome,
                         firebaseUid = firebaseUser.uid,
@@ -933,7 +940,8 @@ class AuthViewModel constructor() : BaseViewModel() {
                         aprovado = true,
                         primeiroAcesso = false, // Superadmin nunca precisa alterar senha
                         dataAprovacao = colaboradorExistente.dataAprovacao ?: java.util.Date(),
-                        aprovadoPor = colaboradorExistente.aprovadoPor ?: "Sistema (Superadmin)"
+                        aprovadoPor = colaboradorExistente.aprovadoPor ?: "Sistema (Superadmin)",
+                        senhaHash = senhaParaHash // ✅ Atualizar senhaHash para login offline
                     )
                 } else {
                     // ✅ CORREÇÃO: Para outros usuários, MANTER nível de acesso original
@@ -986,12 +994,18 @@ class AuthViewModel constructor() : BaseViewModel() {
                     
                     // ✅ SUPERADMIN: rossinys@gmail.com sempre é ADMIN e aprovado
                     val colaboradorFinal = if (email == "rossinys@gmail.com") {
+                        // ✅ CORREÇÃO CRÍTICA: Atualizar senhaHash com a senha atual para login offline funcionar
+                        val senhaParaHash = if (senha.isNotEmpty()) senha.trim() else colaboradorAtualizado.senhaHash
+                        android.util.Log.d("AuthViewModel", "🔧 SUPERADMIN (nuvem): Atualizando senhaHash para login offline")
+                        android.util.Log.d("AuthViewModel", "   SenhaHash novo: $senhaParaHash")
+                        
                         colaboradorAtualizado.copy(
                             nivelAcesso = NivelAcesso.ADMIN,
                             aprovado = true,
                             primeiroAcesso = false,
                             dataAprovacao = colaboradorAtualizado.dataAprovacao ?: java.util.Date(),
-                            aprovadoPor = colaboradorAtualizado.aprovadoPor ?: "Sistema (Superadmin)"
+                            aprovadoPor = colaboradorAtualizado.aprovadoPor ?: "Sistema (Superadmin)",
+                            senhaHash = senhaParaHash // ✅ Atualizar senhaHash para login offline
                         )
                     } else {
                         colaboradorAtualizado
