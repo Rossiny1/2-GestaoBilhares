@@ -2835,11 +2835,25 @@ class SyncRepository(
             Log.d(TAG, "📥 Pull COMPLETO de colaboradores - documentos recebidos: ${snapshot.documents.size}")
             
             if (snapshot.isEmpty) {
+                Log.w(TAG, "⚠️ Nenhum colaborador encontrado no Firestore")
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
                 return Result.success(0)
             }
             
+            // ✅ LOG DETALHADO: Listar todos os documentos recebidos
+            Log.d(TAG, "📋 Documentos de colaboradores recebidos:")
+            snapshot.documents.forEachIndexed { index, doc ->
+                val email = (doc.data?.get("email") as? String) ?: "sem email"
+                val nome = (doc.data?.get("nome") as? String) ?: "sem nome"
+                Log.d(TAG, "   ${index + 1}. ID=${doc.id}, Email=$email, Nome=$nome")
+            }
+            
             val colaboradoresCache = appRepository.obterTodosColaboradores().first().associateBy { it.id }.toMutableMap()
+            Log.d(TAG, "📦 Cache local de colaboradores: ${colaboradoresCache.size} colaboradores")
+            colaboradoresCache.values.forEach { col ->
+                Log.d(TAG, "   - ID=${col.id}, Email=${col.email}, Nome=${col.nome}")
+            }
+            
             val (syncCount, skippedCount, errorCount) = processColaboradoresDocuments(snapshot.documents, colaboradoresCache)
             
             val durationMs = System.currentTimeMillis() - startTime
@@ -2913,14 +2927,29 @@ class SyncRepository(
         var skippedCount = 0
         var errorCount = 0
         
-        documents.forEach { doc ->
-            when (processColaboradorDocument(doc, colaboradoresCache)) {
-                ProcessResult.Synced -> syncCount++
-                ProcessResult.Skipped -> skippedCount++
-                ProcessResult.Error -> errorCount++
+        Log.d(TAG, "🔄 Processando ${documents.size} documentos de colaboradores...")
+        
+        documents.forEachIndexed { index, doc ->
+            val email = (doc.data?.get("email") as? String) ?: "sem email"
+            Log.d(TAG, "   [${index + 1}/${documents.size}] Processando: Email=$email, DocID=${doc.id}")
+            
+            when (val result = processColaboradorDocument(doc, colaboradoresCache)) {
+                ProcessResult.Synced -> {
+                    syncCount++
+                    Log.d(TAG, "   ✅ Sincronizado: Email=$email")
+                }
+                ProcessResult.Skipped -> {
+                    skippedCount++
+                    Log.d(TAG, "   ⏭️ Pulado: Email=$email")
+                }
+                ProcessResult.Error -> {
+                    errorCount++
+                    Log.e(TAG, "   ❌ Erro: Email=$email")
+                }
             }
         }
         
+        Log.d(TAG, "📊 Resultado do processamento: sync=$syncCount, skipped=$skippedCount, errors=$errorCount")
         return Triple(syncCount, skippedCount, errorCount)
     }
 
@@ -2929,15 +2958,32 @@ class SyncRepository(
         colaboradoresCache: MutableMap<Long, Colaborador>
     ): ProcessResult {
         return try {
-            val colaboradorData = doc.data ?: return ProcessResult.Skipped
+            val colaboradorData = doc.data ?: run {
+                Log.w(TAG, "⚠️ Colaborador ${doc.id} sem dados - pulando")
+                return ProcessResult.Skipped
+            }
+            
             val colaboradorId = doc.id.toLongOrNull()
                 ?: (colaboradorData["roomId"] as? Number)?.toLong()
                 ?: (colaboradorData["id"] as? Number)?.toLong()
-                ?: return ProcessResult.Skipped
+                ?: run {
+                    Log.w(TAG, "⚠️ Colaborador ${doc.id} sem ID válido - pulando")
+                    Log.w(TAG, "   doc.id: ${doc.id}")
+                    Log.w(TAG, "   roomId: ${colaboradorData["roomId"]}")
+                    Log.w(TAG, "   id: ${colaboradorData["id"]}")
+                    return ProcessResult.Skipped
+                }
+            
+            val colaboradorEmail = (colaboradorData["email"] as? String) ?: ""
+            Log.d(TAG, "📥 Processando colaborador: ID=$colaboradorId, Email=$colaboradorEmail")
             
             val colaboradorJson = gson.toJson(colaboradorData)
             val colaboradorFirestore = gson.fromJson(colaboradorJson, Colaborador::class.java)?.copy(id = colaboradorId)
-                ?: return ProcessResult.Error
+                ?: run {
+                    Log.e(TAG, "❌ Erro ao converter colaborador ${doc.id} do Firestore para objeto")
+                    Log.e(TAG, "   JSON gerado: $colaboradorJson")
+                    return ProcessResult.Error
+                }
             
             val serverTimestamp = doc.getTimestamp("lastModified")?.toDate()?.time
                 ?: (colaboradorData["dataUltimaAtualizacao"] as? com.google.firebase.Timestamp)?.toDate()?.time
@@ -2949,7 +2995,16 @@ class SyncRepository(
             
             // ✅ CORREÇÃO: Se não encontrou por ID, verificar por email para evitar duplicatas
             val localColaboradorPorEmail = if (localColaborador == null && colaboradorFirestore.email.isNotEmpty()) {
-                appRepository.obterColaboradorPorEmail(colaboradorFirestore.email)
+                try {
+                    val encontrado = appRepository.obterColaboradorPorEmail(colaboradorFirestore.email)
+                    if (encontrado != null) {
+                        Log.d(TAG, "🔍 Colaborador encontrado por email: ${colaboradorFirestore.email} (ID local: ${encontrado.id})")
+                    }
+                    encontrado
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Erro ao buscar colaborador por email: ${e.message}", e)
+                    null
+                }
             } else {
                 null
             }
@@ -2980,13 +3035,25 @@ class SyncRepository(
                 }
                 // Se não encontrou nem por ID nem por email, inserir novo
                 else -> {
-                    appRepository.inserirColaborador(colaboradorFirestore)
-                    colaboradoresCache[colaboradorId] = colaboradorFirestore
-                    ProcessResult.Synced
+                    Log.d(TAG, "✅ Inserindo novo colaborador: ID=$colaboradorId, Email=$colaboradorEmail")
+                    try {
+                        val insertedId = appRepository.inserirColaborador(colaboradorFirestore)
+                        Log.d(TAG, "✅ Colaborador inserido com sucesso: ID inserido=$insertedId, Email=$colaboradorEmail")
+                        // Atualizar cache com o ID real inserido (pode ser diferente se o banco gerou novo ID)
+                        val colaboradorInserido = colaboradorFirestore.copy(id = insertedId)
+                        colaboradoresCache[insertedId] = colaboradorInserido
+                        ProcessResult.Synced
+                    } catch (e: Exception) {
+                        Log.e(TAG, "❌ ERRO ao inserir colaborador: ${e.message}", e)
+                        Log.e(TAG, "   Colaborador: ID=$colaboradorId, Email=$colaboradorEmail")
+                        Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
+                        ProcessResult.Error
+                    }
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao processar colaborador ${doc.id}: ${e.message}", e)
+            Log.e(TAG, "❌ ERRO ao processar colaborador ${doc.id}: ${e.message}", e)
+            Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
             ProcessResult.Error
         }
     }

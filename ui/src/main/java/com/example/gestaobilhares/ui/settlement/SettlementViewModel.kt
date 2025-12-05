@@ -305,25 +305,25 @@ class SettlementViewModel constructor(
                 // ✅ CORREÇÃO: rotaId é Long (não nullable), elvis operator desnecessário
                 val rotaId = cliente.rotaId
                 
-                // Buscar ciclo como no pré-refatoração: fonte única (obterCicloAtualRota)
-                val cicloId = appRepository.obterCicloAtualIdPorRota(rotaId)
-                    ?: throw IllegalStateException("Nenhum ciclo encontrado para a rota $rotaId.")
-                
-                logOperation("SETTLEMENT", "[SALVAR_ACERTO] cicloId usado (pré-ref): $cicloId | rotaId: $rotaId | modoEdicao: ${acertoIdParaEdicao != null}")
-                
-                // ✅ DEBUG: Verificar se o ciclo está realmente ativo
-                val cicloAtual = appRepository.buscarCicloAtualPorRota(rotaId)
-                logOperation("SETTLEMENT", "🔍 DEBUG CICLO: Ciclo encontrado - ID: ${cicloAtual?.id}, Status: ${cicloAtual?.status}, Número: ${cicloAtual?.numeroCiclo}")
-                
-                if (cicloAtual?.status != com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO) {
-                    logError("SETTLEMENT", "❌ PROBLEMA: Ciclo não está EM_ANDAMENTO! Status atual: ${cicloAtual?.status}")
-                    _resultadoSalvamento.value = ResultadoSalvamento.Erro("Ciclo não está ativo. Finalize o ciclo anterior e inicie um novo.")
+                // ✅ CORREÇÃO CRÍTICA: Buscar APENAS ciclo EM_ANDAMENTO (não último finalizado)
+                val cicloAtivo = appRepository.buscarCicloAtivo(rotaId)
+                if (cicloAtivo == null) {
+                    logError("SETTLEMENT", "❌ ERRO: Nenhum ciclo EM_ANDAMENTO encontrado para a rota $rotaId")
+                    _resultadoSalvamento.value = ResultadoSalvamento.Erro("Não há ciclo em andamento para esta rota. Finalize o ciclo anterior e inicie um novo.")
                     hideLoading()
                     return@launch
                 }
-
-                // ✅ Usar SEMPRE o ID do ciclo ativo obtido acima para validação e salvamento
-                val cicloIdEfetivo = cicloAtual.id
+                
+                // ✅ VALIDAÇÃO CRÍTICA: Garantir que o ciclo está realmente EM_ANDAMENTO
+                if (cicloAtivo.status != com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO) {
+                    logError("SETTLEMENT", "❌ ERRO: Ciclo encontrado não está EM_ANDAMENTO! ID: ${cicloAtivo.id}, Status: ${cicloAtivo.status}, Número: ${cicloAtivo.numeroCiclo}")
+                    _resultadoSalvamento.value = ResultadoSalvamento.Erro("O ciclo atual está ${cicloAtivo.status.name.lowercase()}. Apenas ciclos em andamento permitem adição de acertos.")
+                    hideLoading()
+                    return@launch
+                }
+                
+                val cicloIdEfetivo = cicloAtivo.id
+                logOperation("SETTLEMENT", "✅ Acerto será vinculado ao ciclo EM_ANDAMENTO: ID=$cicloIdEfetivo, Número=${cicloAtivo.numeroCiclo}, Status=${cicloAtivo.status}")
 
                 // ✅ CORREÇÃO: Validação apenas para novos acertos (não para edição)
                 if (acertoIdParaEdicao == null) {

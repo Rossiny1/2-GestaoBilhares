@@ -173,6 +173,17 @@ class CycleExpensesViewModel(
                 val despesaExistente = appRepository.obterDespesaPorId(despesaId)
                 
                 if (despesaExistente != null) {
+                    // ✅ VALIDAÇÃO CRÍTICA: Verificar se o ciclo da despesa está finalizado
+                    val cicloIdDespesa = despesaExistente.cicloId
+                    if (cicloIdDespesa != null) {
+                        val cicloDaDespesa = appRepository.buscarCicloPorId(cicloIdDespesa)
+                        if (cicloDaDespesa != null && cicloDaDespesa.status != com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO) {
+                            android.util.Log.e("CycleExpensesViewModel", "❌ ERRO: Tentativa de editar despesa em ciclo finalizado! Ciclo ID: ${cicloDaDespesa.id}, Status: ${cicloDaDespesa.status}")
+                            _errorMessage.value = "Não é possível editar despesas de ciclos finalizados. O ciclo desta despesa está ${cicloDaDespesa.status.name.lowercase()}."
+                            hideLoading()
+                            return@launch
+                        }
+                    }
                     // Atualizar despesa no banco
                     val despesaAtualizada = despesaExistente.copy(
                         descricao = descricao,

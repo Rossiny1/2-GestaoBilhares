@@ -203,7 +203,9 @@ class AuthViewModel constructor() : BaseViewModel() {
                             )
     
                             // ✅ NOVO: Criar/atualizar colaborador para usuário online
+                            android.util.Log.d("AuthViewModel", "🔍 Chamando criarOuAtualizarColaboradorOnline...")
                             var colaborador = criarOuAtualizarColaboradorOnline(result.user!!)
+                            android.util.Log.d("AuthViewModel", "   Resultado: ${if (colaborador != null) "SUCESSO - ${colaborador.nome}" else "NULL - não encontrado"}")
                             
                             // ✅ SUPERADMIN: Se for rossinys@gmail.com e não encontrou, criar automaticamente
                             if (colaborador == null && email == "rossinys@gmail.com") {
@@ -211,7 +213,48 @@ class AuthViewModel constructor() : BaseViewModel() {
                                 colaborador = criarSuperAdminAutomatico(email, result.user!!.uid, senha)
                             }
                             
+                            // ✅ CORREÇÃO: Se ainda não encontrou, tentar buscar diretamente na nuvem como fallback
                             if (colaborador == null) {
+                                android.util.Log.w("AuthViewModel", "⚠️ Colaborador não encontrado após criarOuAtualizarColaboradorOnline")
+                                android.util.Log.w("AuthViewModel", "   Tentando busca direta na nuvem como fallback...")
+                                try {
+                                    val colaboradorFallback = buscarColaboradorNaNuvemPorEmail(email)
+                                    if (colaboradorFallback != null) {
+                                        android.util.Log.d("AuthViewModel", "✅ Colaborador encontrado no fallback: ${colaboradorFallback.nome}")
+                                        // Atualizar firebaseUid e salvar localmente
+                                        val colaboradorComUid = colaboradorFallback.copy(
+                                            firebaseUid = result.user!!.uid,
+                                            dataUltimoAcesso = java.util.Date()
+                                        )
+                                        try {
+                                            val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
+                                            if (colaboradorExistente != null) {
+                                                appRepository.atualizarColaborador(colaboradorComUid.copy(id = colaboradorExistente.id))
+                                                colaborador = colaboradorComUid.copy(id = colaboradorExistente.id)
+                                            } else {
+                                                appRepository.inserirColaborador(colaboradorComUid)
+                                                colaborador = colaboradorComUid
+                                            }
+                                            userSessionManager.startSession(colaborador)
+                                            android.util.Log.d("AuthViewModel", "✅ Colaborador salvo e sessão iniciada no fallback")
+                                        } catch (e: Exception) {
+                                            android.util.Log.e("AuthViewModel", "❌ Erro ao salvar colaborador no fallback: ${e.message}", e)
+                                            // Mesmo com erro, tentar usar o colaborador da nuvem
+                                            userSessionManager.startSession(colaboradorComUid)
+                                            colaborador = colaboradorComUid
+                                        }
+                                    } else {
+                                        android.util.Log.e("AuthViewModel", "❌ Colaborador também não encontrado no fallback")
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.e("AuthViewModel", "❌ Erro no fallback: ${e.message}", e)
+                                }
+                            }
+                            
+                            if (colaborador == null) {
+                                android.util.Log.e("AuthViewModel", "❌ ERRO FINAL: Colaborador não encontrado após todas as tentativas")
+                                android.util.Log.e("AuthViewModel", "   Email: $email")
+                                android.util.Log.e("AuthViewModel", "   Firebase UID: ${result.user!!.uid}")
                                 _errorMessage.value = "Usuário não encontrado. Contate o administrador."
                                 return@launch
                             }
@@ -915,35 +958,100 @@ class AuthViewModel constructor() : BaseViewModel() {
                 userSessionManager.startSession(colaboradorAtualizado)
                 return colaboradorAtualizado
             } else {
-                android.util.Log.d("AuthViewModel", "Colaborador ainda não existe localmente")
-                android.util.Log.w(
-                    "🔍 DB_POPULATION",
-                    "🚨 CRIAÇÃO AUTOMÁTICA DE COLABORADORES BLOQUEADA - LOGIN ONLINE"
-                )
-
-                // 🚨 BLOQUEADO: Criação automática de colaboradores desabilitada
-                android.util.Log.d("AuthViewModel", "CRIAÇÃO AUTOMÁTICA DE COLABORADORES BLOQUEADA")
-                android.util.Log.w(
-                    "🔍 DB_POPULATION",
-                    "🚨 CRIAÇÃO AUTOMÁTICA DE COLABORADORES BLOQUEADA - LOGIN ONLINE"
-                )
+                android.util.Log.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
+                android.util.Log.d("AuthViewModel", "   Email para busca: $email")
+                android.util.Log.d("AuthViewModel", "   Firebase UID: ${firebaseUser.uid}")
                 
-                // ✅ SUPERADMIN: Criar automaticamente para rossinys@gmail.com
+                // ✅ CORREÇÃO CRÍTICA: Buscar colaborador na nuvem quando não encontrar localmente
+                var colaboradorNuvem: Colaborador? = null
+                try {
+                    colaboradorNuvem = buscarColaboradorNaNuvemPorEmail(email)
+                    android.util.Log.d("AuthViewModel", "   Resultado da busca na nuvem: ${if (colaboradorNuvem != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
+                } catch (e: Exception) {
+                    android.util.Log.e("AuthViewModel", "❌ ERRO ao buscar colaborador na nuvem: ${e.message}", e)
+                    android.util.Log.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
+                }
+                
+                if (colaboradorNuvem != null) {
+                    android.util.Log.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaboradorNuvem.nome}")
+                    android.util.Log.d("AuthViewModel", "   ID: ${colaboradorNuvem.id}")
+                    android.util.Log.d("AuthViewModel", "   Email: ${colaboradorNuvem.email}")
+                    android.util.Log.d("AuthViewModel", "   Aprovado: ${colaboradorNuvem.aprovado}")
+                    
+                    // ✅ Atualizar firebaseUid com o UID do Firebase Authentication
+                    val colaboradorAtualizado = colaboradorNuvem.copy(
+                        firebaseUid = firebaseUser.uid,
+                        dataUltimoAcesso = java.util.Date()
+                    )
+                    
+                    // ✅ SUPERADMIN: rossinys@gmail.com sempre é ADMIN e aprovado
+                    val colaboradorFinal = if (email == "rossinys@gmail.com") {
+                        colaboradorAtualizado.copy(
+                            nivelAcesso = NivelAcesso.ADMIN,
+                            aprovado = true,
+                            primeiroAcesso = false,
+                            dataAprovacao = colaboradorAtualizado.dataAprovacao ?: java.util.Date(),
+                            aprovadoPor = colaboradorAtualizado.aprovadoPor ?: "Sistema (Superadmin)"
+                        )
+                    } else {
+                        colaboradorAtualizado
+                    }
+                    
+                    // ✅ Salvar colaborador localmente
+                    try {
+                        // Verificar se já existe por ID (pode ter sido criado com ID diferente)
+                        val colaboradorExistentePorId = appRepository.obterColaboradorPorId(colaboradorFinal.id)
+                        if (colaboradorExistentePorId != null) {
+                            android.util.Log.d("AuthViewModel", "Colaborador já existe localmente (por ID), atualizando...")
+                            appRepository.atualizarColaborador(colaboradorFinal)
+                        } else {
+                            // Verificar se existe por email (pode ter ID diferente)
+                            val colaboradorExistentePorEmail = appRepository.obterColaboradorPorEmail(email)
+                            if (colaboradorExistentePorEmail != null) {
+                                android.util.Log.d("AuthViewModel", "Colaborador já existe localmente (por email), atualizando com ID da nuvem...")
+                                // Atualizar o existente com os dados da nuvem, mantendo o ID local
+                                val colaboradorMesclado = colaboradorFinal.copy(id = colaboradorExistentePorEmail.id)
+                                appRepository.atualizarColaborador(colaboradorMesclado)
+                                userSessionManager.startSession(colaboradorMesclado)
+                                return colaboradorMesclado
+                            } else {
+                                android.util.Log.d("AuthViewModel", "Colaborador não existe localmente, inserindo...")
+                                appRepository.inserirColaborador(colaboradorFinal)
+                            }
+                        }
+                        
+                        android.util.Log.d("AuthViewModel", "✅ Colaborador salvo localmente com sucesso")
+                        userSessionManager.startSession(colaboradorFinal)
+                        return colaboradorFinal
+                        
+                    } catch (e: Exception) {
+                        android.util.Log.e("AuthViewModel", "❌ Erro ao salvar colaborador localmente: ${e.message}", e)
+                        // Mesmo com erro ao salvar, tentar iniciar sessão com dados da nuvem
+                        userSessionManager.startSession(colaboradorFinal)
+                        return colaboradorFinal
+                    }
+                }
+                
+                // ✅ SUPERADMIN: Criar automaticamente para rossinys@gmail.com se não encontrou na nuvem
                 if (email == "rossinys@gmail.com") {
+                    android.util.Log.d("AuthViewModel", "🔧 Criando SUPERADMIN automaticamente para: $email")
                     val colaborador = criarSuperAdminAutomatico(email, firebaseUser.uid, "")
                     if (colaborador != null) {
                         return colaborador
                     }
                 }
                 
-                android.util.Log.d("AuthViewModel", "Usuário não encontrado - criação automática bloqueada")
+                android.util.Log.d("AuthViewModel", "❌ Colaborador não encontrado nem localmente nem na nuvem")
                 _errorMessage.value = "Usuário não encontrado. Contate o administrador para criar sua conta."
                 _authState.value = AuthState.Unauthenticated
                 return null
             }
             
         } catch (e: Exception) {
-            android.util.Log.e("AuthViewModel", "Erro ao criar/atualizar colaborador online: ${e.message}")
+            android.util.Log.e("AuthViewModel", "❌ ERRO ao criar/atualizar colaborador online: ${e.message}", e)
+            android.util.Log.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
+            android.util.Log.e("AuthViewModel", "   Email: ${firebaseUser.email}")
+            android.util.Log.e("AuthViewModel", "   Firebase UID: ${firebaseUser.uid}")
             return null
         }
     }
@@ -1321,7 +1429,46 @@ class AuthViewModel constructor() : BaseViewModel() {
                         ?: (colaboradorData["id"] as? Number)?.toLong()
                         ?: return null
                     
-                    val colaboradorJson = gson.toJson(colaboradorData)
+                    // ✅ CORREÇÃO: Converter Timestamps do Firestore para Date antes de fazer parse com Gson
+                    val colaboradorDataConvertido = colaboradorData.toMutableMap()
+                    
+                    fun converterTimestampParaDate(value: Any?): Date? {
+                        return when (value) {
+                            is com.google.firebase.Timestamp -> value.toDate()
+                            is Date -> value
+                            is Long -> Date(value)
+                            is String -> {
+                                value.toLongOrNull()?.let { Date(it) }
+                                    ?: try {
+                                        java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault()).parse(value)
+                                    } catch (e: Exception) {
+                                        null
+                                    }
+                            }
+                            null -> null
+                            else -> null
+                        }
+                    }
+                    
+                    colaboradorDataConvertido["dataCadastro"] = converterTimestampParaDate(colaboradorData["dataCadastro"])
+                        ?: converterTimestampParaDate(colaboradorData["data_cadastro"])
+                        ?: Date()
+                    
+                    colaboradorDataConvertido["dataUltimaAtualizacao"] = converterTimestampParaDate(colaboradorData["dataUltimaAtualizacao"])
+                        ?: converterTimestampParaDate(colaboradorData["data_ultima_atualizacao"])
+                        ?: converterTimestampParaDate(colaboradorData["lastModified"])
+                        ?: Date()
+                    
+                    colaboradorDataConvertido["dataAprovacao"] = converterTimestampParaDate(colaboradorData["dataAprovacao"])
+                        ?: converterTimestampParaDate(colaboradorData["data_aprovacao"])
+                    
+                    colaboradorDataConvertido["dataUltimoAcesso"] = converterTimestampParaDate(colaboradorData["dataUltimoAcesso"])
+                        ?: converterTimestampParaDate(colaboradorData["data_ultimo_acesso"])
+                    
+                    colaboradorDataConvertido["dataNascimento"] = converterTimestampParaDate(colaboradorData["dataNascimento"])
+                        ?: converterTimestampParaDate(colaboradorData["data_nascimento"])
+                    
+                    val colaboradorJson = gson.toJson(colaboradorDataConvertido)
                     val colaboradorFirestore = gson.fromJson(colaboradorJson, Colaborador::class.java)?.copy(id = colaboradorId)
                     
                     if (colaboradorFirestore == null) {
@@ -1373,7 +1520,46 @@ class AuthViewModel constructor() : BaseViewModel() {
                         ?: (colaboradorData["id"] as? Number)?.toLong()
                         ?: return null
                     
-                    val colaboradorJson = gson.toJson(colaboradorData)
+                    // ✅ CORREÇÃO: Converter Timestamps do Firestore para Date antes de fazer parse com Gson
+                    val colaboradorDataConvertido = colaboradorData.toMutableMap()
+                    
+                    fun converterTimestampParaDate(value: Any?): Date? {
+                        return when (value) {
+                            is com.google.firebase.Timestamp -> value.toDate()
+                            is Date -> value
+                            is Long -> Date(value)
+                            is String -> {
+                                value.toLongOrNull()?.let { Date(it) }
+                                    ?: try {
+                                        java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault()).parse(value)
+                                    } catch (e: Exception) {
+                                        null
+                                    }
+                            }
+                            null -> null
+                            else -> null
+                        }
+                    }
+                    
+                    colaboradorDataConvertido["dataCadastro"] = converterTimestampParaDate(colaboradorData["dataCadastro"])
+                        ?: converterTimestampParaDate(colaboradorData["data_cadastro"])
+                        ?: Date()
+                    
+                    colaboradorDataConvertido["dataUltimaAtualizacao"] = converterTimestampParaDate(colaboradorData["dataUltimaAtualizacao"])
+                        ?: converterTimestampParaDate(colaboradorData["data_ultima_atualizacao"])
+                        ?: converterTimestampParaDate(colaboradorData["lastModified"])
+                        ?: Date()
+                    
+                    colaboradorDataConvertido["dataAprovacao"] = converterTimestampParaDate(colaboradorData["dataAprovacao"])
+                        ?: converterTimestampParaDate(colaboradorData["data_aprovacao"])
+                    
+                    colaboradorDataConvertido["dataUltimoAcesso"] = converterTimestampParaDate(colaboradorData["dataUltimoAcesso"])
+                        ?: converterTimestampParaDate(colaboradorData["data_ultimo_acesso"])
+                    
+                    colaboradorDataConvertido["dataNascimento"] = converterTimestampParaDate(colaboradorData["dataNascimento"])
+                        ?: converterTimestampParaDate(colaboradorData["data_nascimento"])
+                    
+                    val colaboradorJson = gson.toJson(colaboradorDataConvertido)
                     val colaboradorFirestore = gson.fromJson(colaboradorJson, Colaborador::class.java)?.copy(id = colaboradorId)
                     
                     if (colaboradorFirestore == null) {
@@ -1418,7 +1604,51 @@ class AuthViewModel constructor() : BaseViewModel() {
             
             android.util.Log.d("AuthViewModel", "   Colaborador ID extraído: $colaboradorId")
             
-            val colaboradorJson = gson.toJson(colaboradorData)
+            // ✅ CORREÇÃO CRÍTICA: Converter Timestamps do Firestore para Date antes de fazer parse com Gson
+            val colaboradorDataConvertido = colaboradorData.toMutableMap()
+            
+            // Converter campos Timestamp para Date
+            fun converterTimestampParaDate(value: Any?): Date? {
+                return when (value) {
+                    is com.google.firebase.Timestamp -> value.toDate()
+                    is Date -> value
+                    is Long -> Date(value)
+                    is String -> {
+                        // Tentar parsear como timestamp Long
+                        value.toLongOrNull()?.let { Date(it) }
+                            ?: try {
+                                // Tentar parsear como ISO string
+                                java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault()).parse(value)
+                            } catch (e: Exception) {
+                                null
+                            }
+                    }
+                    null -> null
+                    else -> null
+                }
+            }
+            
+            // Converter todos os campos de data
+            colaboradorDataConvertido["dataCadastro"] = converterTimestampParaDate(colaboradorData["dataCadastro"])
+                ?: converterTimestampParaDate(colaboradorData["data_cadastro"])
+                ?: Date()
+            
+            colaboradorDataConvertido["dataUltimaAtualizacao"] = converterTimestampParaDate(colaboradorData["dataUltimaAtualizacao"])
+                ?: converterTimestampParaDate(colaboradorData["data_ultima_atualizacao"])
+                ?: converterTimestampParaDate(colaboradorData["lastModified"])
+                ?: Date()
+            
+            colaboradorDataConvertido["dataAprovacao"] = converterTimestampParaDate(colaboradorData["dataAprovacao"])
+                ?: converterTimestampParaDate(colaboradorData["data_aprovacao"])
+            
+            colaboradorDataConvertido["dataUltimoAcesso"] = converterTimestampParaDate(colaboradorData["dataUltimoAcesso"])
+                ?: converterTimestampParaDate(colaboradorData["data_ultimo_acesso"])
+            
+            // Converter dataNascimento se existir
+            colaboradorDataConvertido["dataNascimento"] = converterTimestampParaDate(colaboradorData["dataNascimento"])
+                ?: converterTimestampParaDate(colaboradorData["data_nascimento"])
+            
+            val colaboradorJson = gson.toJson(colaboradorDataConvertido)
             val colaboradorFirestore = gson.fromJson(colaboradorJson, Colaborador::class.java)?.copy(id = colaboradorId)
             
             if (colaboradorFirestore == null) {
@@ -1432,11 +1662,16 @@ class AuthViewModel constructor() : BaseViewModel() {
             android.util.Log.d("AuthViewModel", "   Email: ${colaboradorFirestore.email}")
             android.util.Log.d("AuthViewModel", "   Aprovado: ${colaboradorFirestore.aprovado}")
             android.util.Log.d("AuthViewModel", "   Nível: ${colaboradorFirestore.nivelAcesso}")
+            android.util.Log.d("AuthViewModel", "   Ativo: ${colaboradorFirestore.ativo}")
             android.util.Log.d("AuthViewModel", "=== FIM BUSCA NA NUVEM ===")
             
+            // ✅ IMPORTANTE: Retornar o colaborador mesmo se não estiver aprovado
+            // A aprovação será verificada depois, mas precisamos do colaborador para salvar localmente
             return colaboradorFirestore
             
         } catch (e: Exception) {
+            android.util.Log.e("AuthViewModel", "❌ ERRO GERAL na busca na nuvem: ${e.message}", e)
+            android.util.Log.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
             android.util.Log.e("AuthViewModel", "❌ ERRO CRÍTICO ao buscar colaborador na nuvem", e)
             android.util.Log.e("AuthViewModel", "   Tipo de erro: ${e.javaClass.simpleName}")
             android.util.Log.e("AuthViewModel", "   Mensagem: ${e.message}")
