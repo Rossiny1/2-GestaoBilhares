@@ -114,6 +114,9 @@ class ClientDetailViewModel(
                 } ?: 0
 
                 val debitoAtualReal = ultimoAcerto?.debitoAtual ?: 0.0
+                
+                // ✅ NOVO: Calcular mensagem de pendência (nunca acertado ou meses sem acerto)
+                val mensagemPendencia = calcularMensagemPendencia(ultimoAcerto)
 
                 _clientDetails.value = ClienteResumo(
                     id = cliente.id,
@@ -128,7 +131,8 @@ class ClientDetailViewModel(
                     debitoAtual = debitoAtualReal,
                     latitude = cliente.latitude,
                     longitude = cliente.longitude,
-                    diasSemAcerto = diasSemAcerto
+                    diasSemAcerto = diasSemAcerto,
+                    mensagemPendencia = mensagemPendencia
                 )
 
                 loadSettlementHistory(clienteId)
@@ -527,6 +531,49 @@ class ClientDetailViewModel(
             )
         }
     }
+    
+    /**
+     * ✅ NOVO: Calcula a mensagem de pendência baseada no histórico de acertos
+     * Retorna:
+     * - "Nunca acertado" se o cliente nunca foi acertado
+     * - "Não acerta há X meses" se não acerta há 3 ou mais meses
+     * - null se não há pendência
+     */
+    private fun calcularMensagemPendencia(ultimoAcerto: Acerto?): String? {
+        return try {
+            when {
+                // Se nunca foi acertado
+                ultimoAcerto == null -> "Nunca acertado"
+                
+                // Se tem acerto, calcular meses sem acerto de forma mais precisa
+                else -> {
+                    val hoje = Calendar.getInstance()
+                    val dataUltimoAcerto = Calendar.getInstance().apply {
+                        time = ultimoAcerto.dataAcerto
+                    }
+                    
+                    // Calcular diferença em meses de forma mais precisa
+                    var diffMeses = (hoje.get(Calendar.YEAR) - dataUltimoAcerto.get(Calendar.YEAR)) * 12
+                    diffMeses += hoje.get(Calendar.MONTH) - dataUltimoAcerto.get(Calendar.MONTH)
+                    
+                    // Ajustar se o dia do mês ainda não passou
+                    if (hoje.get(Calendar.DAY_OF_MONTH) < dataUltimoAcerto.get(Calendar.DAY_OF_MONTH)) {
+                        diffMeses--
+                    }
+                    
+                    // Se não acerta há 3 ou mais meses, mostrar mensagem
+                    if (diffMeses >= 3) {
+                        "Não acerta há $diffMeses meses"
+                    } else {
+                        null // Sem pendência se menos de 3 meses
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao calcular mensagem de pendência: ${e.message}", e)
+            null
+        }
+    }
 }
 
 data class ClienteResumo(
@@ -542,7 +589,8 @@ data class ClienteResumo(
     val debitoAtual: Double = 0.0,
     val latitude: Double? = null,
     val longitude: Double? = null,
-    val diasSemAcerto: Int = 0
+    val diasSemAcerto: Int = 0,
+    val mensagemPendencia: String? = null // ✅ NOVO: Mensagem de pendência (Nunca acertado ou Não acerta há X meses)
 )
 
 @Parcelize

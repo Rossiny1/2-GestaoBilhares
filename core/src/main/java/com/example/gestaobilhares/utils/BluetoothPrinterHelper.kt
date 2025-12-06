@@ -406,16 +406,12 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             sendData(EscPos.LINE_FEED)
             sendData(EscPos.LINE_FEED)
             
-            // ✅ CRÍTICO: Flush antes de cortar para garantir que todos os dados foram enviados
-            outputStream?.flush()
-            Thread.sleep(200) // Pequeno delay para garantir processamento
-            
-            // Cortar papel
+            // Cortar papel (sem delay antes)
             sendData(EscPos.CUT)
             
-            // ✅ CRÍTICO: Garantir que todos os dados foram enviados
+            // ✅ CRÍTICO: Flush final para garantir que todos os dados foram enviados de uma vez
             outputStream?.flush()
-            Thread.sleep(500) // Delay para garantir que a impressão foi concluída
+            // ✅ REMOVIDO: Delays removidos para impressão contínua sem pausas
             
             // ✅ CRÍTICO: Reset após impressão para limpar estado
             sendData(byteArrayOf(0x1B, 0x40))

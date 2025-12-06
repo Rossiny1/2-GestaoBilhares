@@ -132,36 +132,31 @@ class ClientAdapter(
                 // ✅ CORREÇÃO: Usar o débito atual da tabela clientes (atualizado após cada acerto)
                 val debitoAtual = cliente.debitoAtual
                 
-                // ✅ DEBUG: Log para verificar o débito recebido
-                android.util.Log.d("ClientAdapter", "Cliente ${cliente.nome}: débitoAtual = R$ $debitoAtual")
+                // ✅ DEBUG: Log detalhado para verificar o débito recebido
+                android.util.Log.d("ClientAdapter", "═══════════════════════════════════════")
+                android.util.Log.d("ClientAdapter", "💰 CONFIGURANDO DÉBITO DO CLIENTE")
+                android.util.Log.d("ClientAdapter", "   Nome: ${cliente.nome}")
+                android.util.Log.d("ClientAdapter", "   ID: ${cliente.id}")
+                android.util.Log.d("ClientAdapter", "   débitoAtual (campo): R$ $debitoAtual")
+                android.util.Log.d("ClientAdapter", "   débitoAtual <= 0? ${debitoAtual <= 0}")
                 
                 // Se não há débito, mostrar "Sem Débito"
                 if (debitoAtual <= 0) {
                     binding.tvCurrentDebt.text = "Sem Débito"
-                    android.util.Log.d("ClientAdapter", "Cliente ${cliente.nome}: exibindo 'Sem Débito'")
+                    android.util.Log.d("ClientAdapter", "   ✅ Exibindo: 'Sem Débito'")
                 } else {
-                    binding.tvCurrentDebt.text = String.format("R$ %.2f", debitoAtual)
-                    android.util.Log.d("ClientAdapter", "Cliente ${cliente.nome}: exibindo débito R$ $debitoAtual")
+                    val textoFormatado = String.format("R$ %.2f", debitoAtual)
+                    binding.tvCurrentDebt.text = textoFormatado
+                    android.util.Log.d("ClientAdapter", "   ✅ Exibindo: '$textoFormatado'")
                 }
+                android.util.Log.d("ClientAdapter", "═══════════════════════════════════════")
                 
                 // Configurar cores baseadas no valor do débito
-                val (debtColor, backgroundTint) = when {
-                    debitoAtual > 300.0 -> Pair(
-                        context.getColor(com.example.gestaobilhares.ui.R.color.red_600),
-                        context.getColor(com.example.gestaobilhares.ui.R.color.red_50)
-                    )
-                    debitoAtual > 100.0 -> Pair(
-                        context.getColor(com.example.gestaobilhares.ui.R.color.orange_600),
-                        context.getColor(com.example.gestaobilhares.ui.R.color.orange_50)
-                    )
-                    debitoAtual > 0 -> Pair(
-                        context.getColor(com.example.gestaobilhares.ui.R.color.yellow_600),
-                        context.getColor(com.example.gestaobilhares.ui.R.color.yellow_50)
-                    )
-                    else -> Pair(
-                        context.getColor(com.example.gestaobilhares.ui.R.color.green_600),
-                        context.getColor(com.example.gestaobilhares.ui.R.color.green_50)
-                    )
+                val debtColor = when {
+                    debitoAtual > 300.0 -> context.getColor(com.example.gestaobilhares.ui.R.color.red_600)
+                    debitoAtual > 100.0 -> context.getColor(com.example.gestaobilhares.ui.R.color.orange_600)
+                    debitoAtual > 0 -> context.getColor(com.example.gestaobilhares.ui.R.color.yellow_600)
+                    else -> context.getColor(com.example.gestaobilhares.ui.R.color.green_600)
                 }
                 
                 binding.tvCurrentDebt.setTextColor(debtColor)

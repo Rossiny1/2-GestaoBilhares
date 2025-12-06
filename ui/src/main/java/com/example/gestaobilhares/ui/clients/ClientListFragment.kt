@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -337,7 +339,8 @@ class ClientListFragment : Fragment() {
         ) { acertoSalvo ->
             if (acertoSalvo == true) {
                 Log.d("ClientListFragment", "[DEBUG] Evento acerto_salvo recebido, recarregando clientes para rotaId=${args.rotaId}")
-                viewModel.carregarClientes(args.rotaId)
+                // ✅ CORREÇÃO: Usar carregarClientesOtimizado para garantir que os dados sejam atualizados
+                viewModel.carregarClientesOtimizado(args.rotaId)
                 findNavController().currentBackStackEntry?.savedStateHandle?.set("acerto_salvo", false)
             }
         }

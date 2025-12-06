@@ -2647,7 +2647,7 @@ class SyncRepository(
                     // ✅ CORREÇÃO: Verificar timestamp do servidor vs local
                     val serverTimestamp = (mesaData["lastModified"] as? com.google.firebase.Timestamp)?.toDate()?.time
                         ?: (mesaData["dataUltimaLeitura"] as? com.google.firebase.Timestamp)?.toDate()?.time
-                        ?: mesaFirestore.dataUltimaLeitura?.time
+                        ?: mesaFirestore.dataUltimaLeitura.time
                         ?: mesaFirestore.dataInstalacao.time
                     val localTimestamp = mesaLocal?.dataUltimaLeitura?.time
                         ?: mesaLocal?.dataInstalacao?.time ?: 0L
@@ -2933,7 +2933,7 @@ class SyncRepository(
             val email = (doc.data?.get("email") as? String) ?: "sem email"
             Log.d(TAG, "   [${index + 1}/${documents.size}] Processando: Email=$email, DocID=${doc.id}")
             
-            when (val result = processColaboradorDocument(doc, colaboradoresCache)) {
+            when (processColaboradorDocument(doc, colaboradoresCache)) {
                 ProcessResult.Synced -> {
                     syncCount++
                     Log.d(TAG, "   ✅ Sincronizado: Email=$email")
@@ -3025,7 +3025,7 @@ class SyncRepository(
                     Log.d(TAG, "⚠️ Colaborador duplicado encontrado por email: ${colaboradorFirestore.email} (ID local: ${localColaboradorPorEmail.id}, ID Firestore: $colaboradorId)")
                     // Atualizar o colaborador existente com os dados do Firestore, mantendo o ID local
                     val colaboradorAtualizado = colaboradorFirestore.copy(id = localColaboradorPorEmail.id)
-                    if (serverTimestamp > (localColaboradorPorEmail.dataUltimaAtualizacao?.time ?: 0L)) {
+                    if (serverTimestamp > localColaboradorPorEmail.dataUltimaAtualizacao.time) {
                         appRepository.atualizarColaborador(colaboradorAtualizado)
                         colaboradoresCache[localColaboradorPorEmail.id] = colaboradorAtualizado
                         ProcessResult.Synced
@@ -5665,7 +5665,7 @@ class SyncRepository(
             // ✅ NOVO: Filtrar apenas clientes modificados desde último push
             val clientesParaEnviar = if (canUseIncremental) {
                 clientesLocais.filter { cliente ->
-                    val clienteTimestamp = cliente.dataUltimaAtualizacao?.time ?: cliente.dataCadastro.time
+                    val clienteTimestamp = cliente.dataUltimaAtualizacao.time
                     clienteTimestamp > lastPushTimestamp
                 }.also {
                     Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} clientes modificados desde ${Date(lastPushTimestamp)} (de ${clientesLocais.size} total)")
@@ -5870,7 +5870,7 @@ class SyncRepository(
             // Filtrar apenas mesas modificadas (usar dataUltimaLeitura como proxy)
             val mesasParaEnviar = if (canUseIncremental) {
                 mesasLocais.filter { mesa ->
-                    val mesaTimestamp = mesa.dataUltimaLeitura?.time ?: mesa.dataInstalacao.time
+                    val mesaTimestamp = mesa.dataUltimaLeitura.time
                     mesaTimestamp > lastPushTimestamp
                 }.also {
                     Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} mesas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasLocais.size} total)")
@@ -5968,7 +5968,7 @@ class SyncRepository(
             
             val colaboradoresParaEnviar = if (canUseIncremental) {
                 colaboradoresLocais.filter { colaborador ->
-                    val colaboradorTimestamp = colaborador.dataUltimaAtualizacao?.time ?: System.currentTimeMillis()
+                    val colaboradorTimestamp = colaborador.dataUltimaAtualizacao.time
                     colaboradorTimestamp > lastPushTimestamp
                 }.also {
                     Log.d(TAG, "🔄 Push INCREMENTAL: ${it.size} colaboradores modificados desde ${Date(lastPushTimestamp)} (de ${colaboradoresLocais.size} total)")

@@ -25,6 +25,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.FlowPreview
 
 /**
  * Filtros disponíveis para a lista de clientes
@@ -152,6 +153,7 @@ class ClientListViewModel constructor(
         }
 
         // Configurar card de progresso reativo
+        @OptIn(FlowPreview::class)
         viewModelScope.launch {
             _rotaIdFlow.flatMapLatest { rotaId ->
                 if (rotaId == null) {
@@ -257,8 +259,17 @@ class ClientListViewModel constructor(
                 showLoading()
                 
                 // ✅ FASE 2D: Usar query otimizada com débito atual calculado
+                android.util.Log.d("ClientListViewModel", "📊 Buscando clientes com débito atual para rotaId: $rotaId")
                 val clientes = appRepository.obterClientesPorRotaComDebitoAtual(rotaId).first()
+                android.util.Log.d("ClientListViewModel", "✅ Clientes recebidos: ${clientes.size} clientes")
+                
+                // ✅ DEBUG: Log detalhado do débito de cada cliente
+                clientes.forEach { cliente ->
+                    android.util.Log.d("ClientListViewModel", "   Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
+                }
+                
                 _clientesTodos.value = clientes
+                android.util.Log.d("ClientListViewModel", "📋 Aplicando filtros combinados...")
                 aplicarFiltrosCombinados() // Aplicar filtros após carregar
                 
                 // ✅ NOVO: Calcular dados do card de progresso
@@ -266,8 +277,17 @@ class ClientListViewModel constructor(
                 
                 // ✅ NOVO: Continuar observando mudanças
                 appRepository.obterClientesPorRotaComDebitoAtual(rotaId).collect { clientesAtualizados ->
-                    if (clientesAtualizados != _clientesTodos.value) {
+                    val clientesAnteriores = _clientesTodos.value
+                    if (clientesAtualizados != clientesAnteriores) {
+                        android.util.Log.d("ClientListViewModel", "🔄 Clientes atualizados detectados: ${clientesAtualizados.size} clientes")
+                        
+                        // ✅ DEBUG: Log detalhado do débito de cada cliente atualizado
+                        clientesAtualizados.forEach { cliente ->
+                            android.util.Log.d("ClientListViewModel", "   Cliente atualizado: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
+                        }
+                        
                         _clientesTodos.value = clientesAtualizados
+                        android.util.Log.d("ClientListViewModel", "📋 Reaplicando filtros após atualização de clientes...")
                         aplicarFiltrosCombinados()
                         calcularDadosProgressoCiclo(clientesAtualizados)
                     }
@@ -540,8 +560,15 @@ class ClientListViewModel constructor(
                 android.util.Log.d("ClientListViewModel", "Ciclo finalizado com sucesso via repositório")
                 android.util.Log.d("ClientListViewModel", "Status da rota atualizado para: ${_statusRota.value}")
                 
-                // ✅ CORREÇÃO: Não recarregar rota inteira, apenas atualizar status
-                // carregarRota(rota.id) // REMOVIDO para evitar loop
+                // ✅ CORREÇÃO: Pequeno delay para garantir que o banco foi atualizado
+                android.util.Log.d("ClientListViewModel", "⏳ Aguardando 300ms para garantir atualização do banco...")
+                kotlinx.coroutines.delay(300)
+                android.util.Log.d("ClientListViewModel", "✅ Delay concluído, recarregando clientes...")
+                
+                // ✅ CORREÇÃO: Recarregar clientes após finalizar ciclo para atualizar débitos
+                // Isso garante que os débitos sejam exibidos corretamente após a finalização
+                android.util.Log.d("ClientListViewModel", "🔄 Chamando carregarClientesOtimizado para rotaId: ${rota.id}")
+                carregarClientesOtimizado(rota.id)
                 
                 // ✅ NOTIFICAR MUDANÇA DE STATUS para atualização em tempo real
                 notificarMudancaStatusRota(rota.id)
@@ -720,13 +747,28 @@ class ClientListViewModel constructor(
         val searchType = _searchType.value
         val searchCriteria = com.example.gestaobilhares.core.utils.StringUtils.removerEspacosExtras(_searchCriteria.value)
         
+        android.util.Log.d("ClientListViewModel", "🔍 APLICANDO FILTROS COMBINADOS")
+        android.util.Log.d("ClientListViewModel", "   Total de clientes antes do filtro: ${todos.size}")
+        android.util.Log.d("ClientListViewModel", "   Filtro atual: $filtro")
+        
+        // ✅ DEBUG: Log do débito de cada cliente antes do filtro
+        todos.forEach { cliente ->
+            android.util.Log.d("ClientListViewModel", "   [ANTES FILTRO] Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
+        }
+        
         // ✅ CORREÇÃO: Filtro PENDENCIAS agora é inclusivo - mostra todos os clientes com pendências
         val filtradosPorStatus = when (filtro) {
             FiltroCliente.TODOS -> todos
             FiltroCliente.ACERTADOS -> filtrarClientesAcertados(todos)
             FiltroCliente.NAO_ACERTADOS -> filtrarClientesNaoAcertados(todos)
             FiltroCliente.PENDENCIAS -> filtrarClientesPendenciasInclusivo(todos)
-            else -> todos // ✅ Adicionando else para tornar o when exhaustive
+        }
+        
+        android.util.Log.d("ClientListViewModel", "   Clientes após filtro de status: ${filtradosPorStatus.size}")
+        
+        // ✅ DEBUG: Log do débito de cada cliente após filtro de status
+        filtradosPorStatus.forEach { cliente ->
+            android.util.Log.d("ClientListViewModel", "   [APÓS FILTRO STATUS] Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
         }
         
         // Depois filtrar por busca (normal ou avançada)
@@ -740,16 +782,36 @@ class ClientListViewModel constructor(
             else -> filtradosPorStatus
         }
         
+        android.util.Log.d("ClientListViewModel", "   Clientes após filtro de busca: ${resultadoFinal.size}")
+        
+        // ✅ DEBUG: Log do débito de cada cliente no resultado final
+        resultadoFinal.forEach { cliente ->
+            android.util.Log.d("ClientListViewModel", "   [RESULTADO FINAL] Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
+        }
+        
         // Atualizar lista filtrada
         _clientes.value = resultadoFinal
+        android.util.Log.d("ClientListViewModel", "✅ Filtros aplicados - ${resultadoFinal.size} clientes exibidos")
     }
 
     /**
      * ✅ NOVO: Filtra clientes acertados no ciclo atual
+     * ✅ CORREÇÃO: Busca o ciclo ativo diretamente do repositório para garantir que está atualizado
      */
     private suspend fun filtrarClientesAcertados(clientes: List<Cliente>): List<Cliente> {
         val clientesAcertados = mutableListOf<Cliente>()
-        val cicloId = _cicloAcertoEntity.value?.id ?: -1L
+        
+        // ✅ CORREÇÃO: Buscar ciclo ativo diretamente do repositório usando rotaId
+        val rotaId = _rotaInfo.value?.id
+        if (rotaId == null) {
+            android.util.Log.w("ClientListViewModel", "⚠️ rotaId é null, não é possível filtrar clientes acertados")
+            return emptyList()
+        }
+        
+        val cicloAtivo = appRepository.buscarCicloAtivo(rotaId)
+        val cicloId = cicloAtivo?.id ?: -1L
+        
+        android.util.Log.d("ClientListViewModel", "🔍 Filtrando clientes acertados - Ciclo ativo: ID=$cicloId, Número=${cicloAtivo?.numeroCiclo}")
         
         for (cliente in clientes) {
             if (clienteFoiAcertadoNoCiclo(cliente.id, cicloId)) {
@@ -757,21 +819,37 @@ class ClientListViewModel constructor(
             }
         }
         
+        android.util.Log.d("ClientListViewModel", "✅ Clientes acertados encontrados: ${clientesAcertados.size} de ${clientes.size}")
+        
         return clientesAcertados
     }
 
     /**
      * ✅ NOVO: Filtra clientes não acertados no ciclo atual
+     * ✅ CORREÇÃO: Busca o ciclo ativo diretamente do repositório para garantir que está atualizado
      */
     private suspend fun filtrarClientesNaoAcertados(clientes: List<Cliente>): List<Cliente> {
         val clientesNaoAcertados = mutableListOf<Cliente>()
-        val cicloId = _cicloAcertoEntity.value?.id ?: -1L
+        
+        // ✅ CORREÇÃO: Buscar ciclo ativo diretamente do repositório usando rotaId
+        val rotaId = _rotaInfo.value?.id
+        if (rotaId == null) {
+            android.util.Log.w("ClientListViewModel", "⚠️ rotaId é null, não é possível filtrar clientes não acertados")
+            return emptyList()
+        }
+        
+        val cicloAtivo = appRepository.buscarCicloAtivo(rotaId)
+        val cicloId = cicloAtivo?.id ?: -1L
+        
+        android.util.Log.d("ClientListViewModel", "🔍 Filtrando clientes não acertados - Ciclo ativo: ID=$cicloId, Número=${cicloAtivo?.numeroCiclo}")
         
         for (cliente in clientes) {
             if (!clienteFoiAcertadoNoCiclo(cliente.id, cicloId)) {
                 clientesNaoAcertados.add(cliente)
             }
         }
+        
+        android.util.Log.d("ClientListViewModel", "✅ Clientes não acertados encontrados: ${clientesNaoAcertados.size} de ${clientes.size}")
         
         return clientesNaoAcertados
     }
@@ -824,15 +902,31 @@ class ClientListViewModel constructor(
      */
     private suspend fun clienteFoiAcertadoNoCiclo(clienteId: Long, cicloId: Long): Boolean {
         return try {
-            if (cicloId == -1L) return false
+            if (cicloId == -1L) {
+                android.util.Log.d("ClientListViewModel", "   ⚠️ cicloId inválido (-1), cliente não foi acertado")
+                return false
+            }
             
             val acertos = appRepository.buscarAcertosPorCicloId(cicloId).first()
+            android.util.Log.d("ClientListViewModel", "   🔍 Verificando acertos do cliente $clienteId no ciclo $cicloId")
+            android.util.Log.d("ClientListViewModel", "   Total de acertos no ciclo: ${acertos.size}")
+            
             // ✅ CORREÇÃO CRÍTICA: Verificar apenas acertos FINALIZADOS
-            acertos.any { acerto: com.example.gestaobilhares.data.entities.Acerto -> 
+            val foiAcertado = acertos.any { acerto: com.example.gestaobilhares.data.entities.Acerto -> 
                 acerto.clienteId == clienteId && acerto.status == com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO 
             }
+            
+            android.util.Log.d("ClientListViewModel", "   ✅ Cliente $clienteId foi acertado no ciclo $cicloId? $foiAcertado")
+            
+            // ✅ DEBUG: Log detalhado dos acertos encontrados
+            val acertosDoCliente = acertos.filter { it.clienteId == clienteId }
+            acertosDoCliente.forEach { acerto ->
+                android.util.Log.d("ClientListViewModel", "      Acerto encontrado: ID=${acerto.id}, Status=${acerto.status}, ClienteId=${acerto.clienteId}")
+            }
+            
+            foiAcertado
         } catch (e: Exception) {
-            android.util.Log.e("ClientListViewModel", "Erro ao verificar acerto do cliente: ${e.message}")
+            android.util.Log.e("ClientListViewModel", "Erro ao verificar acerto do cliente: ${e.message}", e)
             false
         }
     }
@@ -977,8 +1071,14 @@ class ClientListViewModel constructor(
             val totalClientes = clientes.size
             _totalClientes.value = totalClientes
             
+            // ✅ CORREÇÃO: Buscar ciclo ativo diretamente do repositório
+            val rotaId = _rotaInfo.value?.id
+            val cicloAtivo = if (rotaId != null) appRepository.buscarCicloAtivo(rotaId) else null
+            val cicloId = cicloAtivo?.id ?: -1L
+            
+            android.util.Log.d("ClientListViewModel", "📊 Calculando progresso - Ciclo ativo: ID=$cicloId, Número=${cicloAtivo?.numeroCiclo}")
+            
             // Calcular clientes acertados no ciclo atual
-            val cicloId = _cicloAcertoEntity.value?.id ?: -1L
             val clientesAcertados = calcularClientesAcertadosNoCiclo(clientes, cicloId)
             _clientesAcertados.value = clientesAcertados
             
@@ -1220,7 +1320,7 @@ class ClientListViewModel constructor(
      * ✅ FASE 4B: Verificar se deve pré-carregar
      * TODO: PaginationManager não existe - comentar temporariamente
      */
-    fun devePrecarregarProximaPagina(posicaoAtual: Int): Boolean {
+    fun devePrecarregarProximaPagina(@Suppress("UNUSED_PARAMETER") posicaoAtual: Int): Boolean {
         // TODO: PaginationManager não existe - retornar false temporariamente
         return false
         // return paginationManager.shouldPreloadNextPage(posicaoAtual)
