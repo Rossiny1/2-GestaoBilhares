@@ -1227,8 +1227,19 @@ class SettlementFragment : Fragment() {
                         is SettlementViewModel.ResultadoSalvamento.Sucesso -> {
                             Log.d("SettlementFragment", "✅ Acerto salvo com sucesso! ID: ${it.acertoId}")
                             
-                            // NOVO: Notificar ClientListFragment para atualizar card de progresso
-                            findNavController().previousBackStackEntry?.savedStateHandle?.set("acerto_salvo", true)
+                            // ✅ CORREÇÃO: Pequeno delay para garantir que o banco foi atualizado
+                            lifecycleScope.launch {
+                                kotlinx.coroutines.delay(500) // Delay para garantir atualização do banco
+                                
+                                // ✅ CORREÇÃO: Notificar ClientListFragment para atualizar lista de clientes
+                                // Usar currentBackStackEntry para garantir que a notificação chegue corretamente
+                                findNavController().currentBackStackEntry?.savedStateHandle?.set("acerto_salvo", true)
+                                
+                                // ✅ TAMBÉM notificar via previousBackStackEntry como fallback
+                                findNavController().previousBackStackEntry?.savedStateHandle?.set("acerto_salvo", true)
+                                
+                                Log.d("SettlementFragment", "📢 Notificação de acerto salvo enviada para ClientListFragment após delay")
+                            }
                             
                             mostrarDialogoResumoComAcerto(it.acertoId)
                         }

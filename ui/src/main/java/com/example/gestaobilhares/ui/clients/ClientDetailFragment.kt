@@ -366,6 +366,14 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
         val formattedDebt = NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(cliente.debitoAtual)
         binding.tvClientCurrentDebt.text = formattedDebt
         binding.tvLastVisit.text = cliente.ultimaVisita
+        
+        // ✅ NOVO: Exibir mensagem de pendência se houver
+        if (cliente.mensagemPendencia != null && cliente.mensagemPendencia.isNotBlank()) {
+            binding.tvMensagemPendencia.text = cliente.mensagemPendencia
+            binding.tvMensagemPendencia.visibility = View.VISIBLE
+        } else {
+            binding.tvMensagemPendencia.visibility = View.GONE
+        }
     }
     
     /**
