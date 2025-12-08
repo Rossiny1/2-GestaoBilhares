@@ -15,7 +15,8 @@ import com.example.gestaobilhares.ui.databinding.ItemClientBinding
  * Exibe informações dos clientes com design atualizado
  */
 class ClientAdapter(
-    private val onClientClick: (Cliente) -> Unit
+    private val onClientClick: (Cliente) -> Unit,
+    private val verificarNuncaAcertado: suspend (Long) -> Boolean = { false }
 ) : ListAdapter<Cliente, ClientAdapter.ClientViewHolder>(ClientDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClientViewHolder {
@@ -24,7 +25,7 @@ class ClientAdapter(
             parent, 
             false
         )
-        return ClientViewHolder(binding, onClientClick)
+        return ClientViewHolder(binding, onClientClick, verificarNuncaAcertado)
     }
 
     override fun onBindViewHolder(holder: ClientViewHolder, position: Int) {
@@ -33,7 +34,8 @@ class ClientAdapter(
 
     class ClientViewHolder(
         private val binding: ItemClientBinding,
-        private val onClientClick: (Cliente) -> Unit
+        private val onClientClick: (Cliente) -> Unit,
+        private val verificarNuncaAcertado: suspend (Long) -> Boolean
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(cliente: Cliente) {
@@ -53,8 +55,8 @@ class ClientAdapter(
             // Configurar status visual
             configurarStatusVisual(cliente)
             
-            // Configurar débito atual do último acerto
-            configurarDebitoAtual(cliente)
+            // Configurar débito atual do último acerto (com verificação de "Nunca acertado")
+            configurarDebitoAtual(cliente, verificarNuncaAcertado)
         }
         
         private fun configurarStatusVisual(cliente: Cliente) {
@@ -125,7 +127,7 @@ class ClientAdapter(
             val showSpecialTag: Boolean
         )
         
-        private fun configurarDebitoAtual(cliente: Cliente) {
+        private fun configurarDebitoAtual(cliente: Cliente, verificarNuncaAcertado: suspend (Long) -> Boolean) {
             try {
                 val context = binding.root.context
                 
@@ -140,27 +142,44 @@ class ClientAdapter(
                 android.util.Log.d("ClientAdapter", "   débitoAtual (campo): R$ $debitoAtual")
                 android.util.Log.d("ClientAdapter", "   débitoAtual <= 0? ${debitoAtual <= 0}")
                 
-                // Se não há débito, mostrar "Sem Débito"
+                // ✅ NOVO: Se não há débito, verificar se nunca foi acertado
                 if (debitoAtual <= 0) {
-                    binding.tvCurrentDebt.text = "Sem Débito"
-                    android.util.Log.d("ClientAdapter", "   ✅ Exibindo: 'Sem Débito'")
+                    // Verificar de forma síncrona se nunca foi acertado (usando runBlocking apenas quando necessário)
+                    val nuncaAcertado = kotlinx.coroutines.runBlocking {
+                        verificarNuncaAcertado(cliente.id)
+                    }
+                    
+                    if (nuncaAcertado) {
+                        binding.tvCurrentDebt.text = "Nunca acertado"
+                        android.util.Log.d("ClientAdapter", "   ✅ Exibindo: 'Nunca acertado'")
+                        // Usar cor laranja para indicar pendência
+                        val pendenciaColor = context.getColor(com.example.gestaobilhares.ui.R.color.orange_600)
+                        binding.tvCurrentDebt.setTextColor(pendenciaColor)
+                        binding.ivDebtIcon.setColorFilter(pendenciaColor)
+                    } else {
+                        binding.tvCurrentDebt.text = "Sem Débito"
+                        android.util.Log.d("ClientAdapter", "   ✅ Exibindo: 'Sem Débito'")
+                        val debtColor = context.getColor(com.example.gestaobilhares.ui.R.color.green_600)
+                        binding.tvCurrentDebt.setTextColor(debtColor)
+                        binding.ivDebtIcon.setColorFilter(debtColor)
+                    }
                 } else {
                     val textoFormatado = String.format("R$ %.2f", debitoAtual)
                     binding.tvCurrentDebt.text = textoFormatado
                     android.util.Log.d("ClientAdapter", "   ✅ Exibindo: '$textoFormatado'")
+                    
+                    // Configurar cores baseadas no valor do débito
+                    val debtColor = when {
+                        debitoAtual > 300.0 -> context.getColor(com.example.gestaobilhares.ui.R.color.red_600)
+                        debitoAtual > 100.0 -> context.getColor(com.example.gestaobilhares.ui.R.color.orange_600)
+                        debitoAtual > 0 -> context.getColor(com.example.gestaobilhares.ui.R.color.yellow_600)
+                        else -> context.getColor(com.example.gestaobilhares.ui.R.color.green_600)
+                    }
+                    
+                    binding.tvCurrentDebt.setTextColor(debtColor)
+                    binding.ivDebtIcon.setColorFilter(debtColor)
                 }
                 android.util.Log.d("ClientAdapter", "═══════════════════════════════════════")
-                
-                // Configurar cores baseadas no valor do débito
-                val debtColor = when {
-                    debitoAtual > 300.0 -> context.getColor(com.example.gestaobilhares.ui.R.color.red_600)
-                    debitoAtual > 100.0 -> context.getColor(com.example.gestaobilhares.ui.R.color.orange_600)
-                    debitoAtual > 0 -> context.getColor(com.example.gestaobilhares.ui.R.color.yellow_600)
-                    else -> context.getColor(com.example.gestaobilhares.ui.R.color.green_600)
-                }
-                
-                binding.tvCurrentDebt.setTextColor(debtColor)
-                binding.ivDebtIcon.setColorFilter(debtColor)
                 
                 // O label permanece fixo como "Débito Atual" no layout
                 
