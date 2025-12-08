@@ -40,6 +40,7 @@ class ClientListFragment : Fragment() {
     private lateinit var viewModel: ClientListViewModel
     private val args: ClientListFragmentArgs by navArgs()
     private lateinit var clientAdapter: ClientAdapter
+    private lateinit var appRepository: AppRepository
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -61,7 +62,7 @@ class ClientListFragment : Fragment() {
         // O botão voltar agora é gerenciado globalmente pelo MainActivity
         
         // ✅ FASE 8C: Inicializar ViewModel com todos os repositórios necessários
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
         val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
         viewModel = ClientListViewModel(appRepository, userSessionManager)
         
@@ -129,28 +130,38 @@ class ClientListFragment : Fragment() {
         Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - INÍCIO")
         
         try {
-            clientAdapter = ClientAdapter { cliente ->
-                // ✅ LOG CRASH: Clique em cliente
-                Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Clique em cliente: ${cliente.id}")
-                
-                // ✅ NOVO: Sempre permitir navegação para detalhes do cliente, independente do status da rota
-                // O bloqueio deve acontecer apenas no botão "Novo Acerto" dentro dos detalhes
-                try {
-                    val action = ClientListFragmentDirections
-                        .actionClientListFragmentToClientDetailFragment(
-                            clienteId = cliente.id,
-                            mostrarDialogoObservacoes = false // Não usar mais este parâmetro
-                        )
-                    Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Navegando para detalhes do cliente")
-                    findNavController().navigate(action)
+            // ✅ NOVO: Usar appRepository já inicializado para verificar se cliente nunca foi acertado
+            clientAdapter = ClientAdapter(
+                onClientClick = { cliente ->
+                    // ✅ LOG CRASH: Clique em cliente
+                    Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Clique em cliente: ${cliente.id}")
                     
-                    // Definir o flag no SavedStateHandle do destino
-                    findNavController().currentBackStackEntry?.savedStateHandle?.set("show_observations_dialog", true)
-                    Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Navegação bem-sucedida")
-                } catch (e: Exception) {
-                    Log.e("LOG_CRASH", "ClientListFragment.configurarRecyclerView - ERRO ao navegar para detalhes: ${e.message}", e)
+                    // ✅ NOVO: Sempre permitir navegação para detalhes do cliente, independente do status da rota
+                    // O bloqueio deve acontecer apenas no botão "Novo Acerto" dentro dos detalhes
+                    try {
+                        val action = ClientListFragmentDirections
+                            .actionClientListFragmentToClientDetailFragment(
+                                clienteId = cliente.id,
+                                mostrarDialogoObservacoes = false // Não usar mais este parâmetro
+                            )
+                        Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Navegando para detalhes do cliente")
+                        findNavController().navigate(action)
+                        
+                        // Definir o flag no SavedStateHandle do destino
+                        findNavController().currentBackStackEntry?.savedStateHandle?.set("show_observations_dialog", true)
+                        Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Navegação bem-sucedida")
+                    } catch (e: Exception) {
+                        Log.e("LOG_CRASH", "ClientListFragment.configurarRecyclerView - ERRO ao navegar para detalhes: ${e.message}", e)
+                    }
+                },
+                verificarNuncaAcertado = { clienteId ->
+                    // ✅ NOVO: Verificar se o cliente nunca foi acertado
+                    kotlinx.coroutines.runBlocking {
+                        val ultimoAcerto = appRepository.buscarUltimoAcertoPorCliente(clienteId)
+                        ultimoAcerto == null
+                    }
                 }
-            }
+            )
             
             _binding?.rvClients?.apply {
                 adapter = clientAdapter

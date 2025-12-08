@@ -101,6 +101,25 @@ class AppRepository constructor(
         CicloRepository(cicloAcertoDao)
     }
     
+    // ✅ NOVO: Instâncias dos repositórios antigos para usar no CicloAcertoRepository
+    private val acertoRepositoryLegacy: com.example.gestaobilhares.data.repository.AcertoRepository by lazy {
+        com.example.gestaobilhares.data.repository.AcertoRepository(acertoDao, clienteDao)
+    }
+    
+    private val clienteRepositoryLegacy: com.example.gestaobilhares.data.repository.ClienteRepository by lazy {
+        com.example.gestaobilhares.data.repository.ClienteRepository(clienteDao, this@AppRepository)
+    }
+    
+    // ✅ NOVO: Instância do CicloAcertoRepository para usar métodos como finalizarCiclo
+    private val cicloAcertoRepository: CicloAcertoRepository by lazy {
+        CicloAcertoRepository(
+            cicloAcertoDao,
+            despesaDao,
+            acertoRepositoryLegacy,
+            clienteRepositoryLegacy
+        )
+    }
+    
     private val veiculoRepository: VeiculoRepository by lazy {
         VeiculoRepository(
             veiculoDao,
@@ -1366,24 +1385,21 @@ class AppRepository constructor(
     
     /**
      * ✅ NOVO: Finaliza o ciclo atual de uma rota com dados consolidados
+     * ✅ CORREÇÃO: Usa o método finalizarCiclo do CicloAcertoRepository que salva o debitoTotal
      */
     suspend fun finalizarCicloAtualComDados(rotaId: Long) {
         try {
             val cicloAtual = buscarCicloAtivo(rotaId)
             if (cicloAtual != null) {
-                // Atualizar valores do ciclo antes de finalizar
-                atualizarValoresCiclo(cicloAtual.id)
-                
-                // Finalizar o ciclo na rota
+                // ✅ CORREÇÃO: Finalizar o ciclo na rota primeiro
                 val dataFim = System.currentTimeMillis()
                 finalizarCicloRota(rotaId, dataFim)
                 
-                // Atualizar status do ciclo para FINALIZADO
-                val cicloAtualizado = cicloAtual.copy(
-                    status = com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO,
-                    dataFim = java.util.Date(dataFim)
-                )
-                cicloAcertoDao.atualizar(cicloAtualizado)
+                // ✅ CORREÇÃO: Usar o método finalizarCiclo do CicloAcertoRepository que calcula e salva todos os valores,
+                // incluindo o debitoTotal "congelado" no ciclo finalizado
+                cicloAcertoRepository.finalizarCiclo(cicloAtual.id, java.util.Date(dataFim))
+                
+                Log.d("AppRepository", "Ciclo ${cicloAtual.id} finalizado com debitoTotal preservado")
             }
         } catch (e: Exception) {
             Log.e("AppRepository", "Erro ao finalizar ciclo atual: ${e.message}", e)
