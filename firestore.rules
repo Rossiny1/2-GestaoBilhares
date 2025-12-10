@@ -94,11 +94,10 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // 🏢 CLIENTES - ADMIN pode tudo, COLABORADORES autenticados podem ler
+    // 🏢 CLIENTES - ADMIN pode tudo, COLABORADORES autenticados podem ler e escrever (incluindo DELETE)
     match /clientes/{clienteId} {
       allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
-      allow write: if isAdmin() ||
-                   (request.auth != null);
+      allow write: if isAdmin() || request.auth != null; // ✅ CORREÇÃO: Usuários autenticados podem criar, atualizar e deletar
     }
 
     // 🛣️ ROTAS - ADMIN pode tudo, COLABORADORES autenticados podem ler todas
@@ -115,8 +114,16 @@ service cloud.firestore {
       // Quando o app está vazio, o usuário precisa buscar colaborador por email ANTES de autenticar
       // Mas também funciona DEPOIS da autenticação Firebase (quando request.auth != null)
       allow read: if true; // Sempre permitir leitura (necessário para login em app vazio)
+      // ✅ CORREÇÃO: Permitir write (CREATE, UPDATE, DELETE) para usuários autenticados em coleções comuns
+      // ADMIN pode tudo, usuários autenticados podem modificar despesas, acertos, clientes, etc.
       allow write: if isAdmin() ||
-                   (request.auth != null && collectionName == "colaboradores");
+                   (request.auth != null && 
+                    (collectionName == "colaboradores" || 
+                     collectionName == "despesas" ||
+                     collectionName == "acertos" ||
+                     collectionName == "clientes" ||
+                     collectionName == "mesas" ||
+                     collectionName == "ciclos"));
     }
     
     // ✅ CORREÇÃO: Regra genérica para subcoleções de empresas (caso haja outras estruturas)
@@ -129,28 +136,28 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // 📊 CICLOS - ADMIN pode tudo, COLABORADORES autenticados podem ler
+    // 📊 CICLOS - ADMIN pode tudo, COLABORADORES autenticados podem ler e escrever (incluindo DELETE)
     match /ciclos/{cicloId} {
       allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
-      allow write: if isAdmin();
+      allow write: if isAdmin() || request.auth != null; // ✅ CORREÇÃO: Usuários autenticados podem criar, atualizar e deletar
     }
 
-    // 💰 DESPESAS - ADMIN pode tudo, COLABORADORES autenticados podem ler
+    // 💰 DESPESAS - ADMIN pode tudo, COLABORADORES autenticados podem ler e escrever (incluindo DELETE)
     match /despesas/{despesaId} {
       allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
-      allow write: if isAdmin();
+      allow write: if isAdmin() || request.auth != null; // ✅ CORREÇÃO: Usuários autenticados podem criar, atualizar e deletar
     }
 
-    // 📋 ACERTOS - ADMIN pode tudo, COLABORADORES autenticados podem ler
+    // 📋 ACERTOS - ADMIN pode tudo, COLABORADORES autenticados podem ler e escrever (incluindo DELETE)
     match /acertos/{acertoId} {
       allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
-      allow write: if isAdmin();
+      allow write: if isAdmin() || request.auth != null; // ✅ CORREÇÃO: Usuários autenticados podem criar, atualizar e deletar
     }
 
-    // 🪑 MESAS - ADMIN pode tudo, COLABORADORES autenticados podem ler
+    // 🪑 MESAS - ADMIN pode tudo, COLABORADORES autenticados podem ler e escrever (incluindo DELETE)
     match /mesas/{mesaId} {
       allow read: if request.auth != null; // ✅ RESTAURADO: Qualquer usuário autenticado pode ler
-      allow write: if isAdmin();
+      allow write: if isAdmin() || request.auth != null; // ✅ CORREÇÃO: Usuários autenticados podem criar, atualizar e deletar
     }
 
     // 📄 CONTRATOS - Apenas ADMIN (documentos sensíveis)

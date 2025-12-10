@@ -8,6 +8,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.ui.databinding.FragmentCycleExpensesBinding
@@ -260,13 +262,25 @@ class CycleExpensesFragment : Fragment() {
 
     /**
      * Mostra diálogo para confirmar exclusão de despesa
+     * ✅ CORREÇÃO: Verificar se o fragment está anexado antes de mostrar o diálogo e executar exclusão
      */
     private fun mostrarDialogoConfirmarExclusao(despesa: CycleExpenseItem) {
+        // ✅ CORREÇÃO: Verificar se o fragment ainda está anexado antes de mostrar o diálogo
+        if (!isAdded || context == null) {
+            android.util.Log.w("CycleExpensesFragment", "Fragment não está anexado, ignorando exclusão")
+            return
+        }
+        
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle("Confirmar Exclusão")
             .setMessage("Tem certeza que deseja excluir a despesa '${despesa.descricao}'?")
             .setPositiveButton("Excluir") { _, _ ->
-                viewModel.removerDespesa(despesa.id)
+                // ✅ CORREÇÃO: Verificar novamente antes de executar a exclusão
+                if (isAdded && view != null && _binding != null) {
+                    viewModel.removerDespesa(despesa.id)
+                } else {
+                    android.util.Log.w("CycleExpensesFragment", "Fragment não está anexado, cancelando exclusão")
+                }
             }
             .setNegativeButton("Cancelar", null)
             .show()
@@ -274,23 +288,36 @@ class CycleExpensesFragment : Fragment() {
 
     private fun setupObservers() {
         lifecycleScope.launch {
-            viewModel.despesas.collect { despesas ->
-                (binding.rvExpenses.adapter as? CycleExpensesAdapter)?.submitList(despesas)
-                atualizarEmptyState(despesas.isEmpty())
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.despesas.collect { despesas ->
+                    // ✅ CORREÇÃO: Verificar se o binding e o adapter ainda estão válidos
+                    _binding?.let { binding ->
+                        (binding.rvExpenses.adapter as? CycleExpensesAdapter)?.submitList(despesas)
+                        atualizarEmptyState(despesas.isEmpty())
+                    }
+                }
             }
         }
         
         lifecycleScope.launch {
-            viewModel.isLoading.collect { carregando ->
-                binding.progressBar.visibility = if (carregando) View.VISIBLE else View.GONE
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isLoading.collect { carregando ->
+                    _binding?.let { binding ->
+                        binding.progressBar.visibility = if (carregando) View.VISIBLE else View.GONE
+                    }
+                }
             }
         }
         
         lifecycleScope.launch {
-            viewModel.errorMessage.collect { mensagem ->
-                mensagem?.let {
-                    mostrarFeedback("Erro: $it", Snackbar.LENGTH_LONG)
-                    viewModel.limparErro()
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorMessage.collect { mensagem ->
+                    mensagem?.let {
+                        _binding?.let {
+                            mostrarFeedback("Erro: $it", Snackbar.LENGTH_LONG)
+                            viewModel.limparErro()
+                        }
+                    }
                 }
             }
         }

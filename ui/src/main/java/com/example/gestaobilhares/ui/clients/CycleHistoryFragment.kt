@@ -8,6 +8,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.ui.databinding.FragmentCycleHistoryBinding
@@ -116,34 +118,51 @@ class CycleHistoryFragment : Fragment() {
     }
 
     private fun configurarObservadores() {
+        // ✅ CORREÇÃO: Usar repeatOnLifecycle para garantir que observers só rodem quando fragment está visível
         // Observar lista de ciclos
         lifecycleScope.launch {
-            viewModel.ciclos.collect { ciclos ->
-                cycleAdapter.submitList(ciclos)
-                atualizarEmptyState(ciclos.isEmpty())
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.ciclos.collect { ciclos ->
+                    _binding?.let { binding ->
+                        cycleAdapter.submitList(ciclos)
+                        atualizarEmptyState(ciclos.isEmpty())
+                    }
+                }
             }
         }
         
         // Observar estatísticas
         lifecycleScope.launch {
-            viewModel.estatisticas.collect { stats ->
-                atualizarEstatisticas(stats)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.estatisticas.collect { stats ->
+                    _binding?.let {
+                        atualizarEstatisticas(stats)
+                    }
+                }
             }
         }
         
         // Observar estado de carregamento
         lifecycleScope.launch {
-            viewModel.isLoading.collect { carregando ->
-                binding.progressBar.visibility = if (carregando) View.VISIBLE else View.GONE
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isLoading.collect { carregando ->
+                    _binding?.let { binding ->
+                        binding.progressBar.visibility = if (carregando) View.VISIBLE else View.GONE
+                    }
+                }
             }
         }
         
         // Observar mensagens de erro
         lifecycleScope.launch {
-            viewModel.errorMessage.collect { mensagem ->
-                mensagem?.let {
-                    mostrarFeedback("Erro: $it", Snackbar.LENGTH_LONG)
-                    viewModel.limparErro()
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorMessage.collect { mensagem ->
+                    mensagem?.let {
+                        _binding?.let {
+                            mostrarFeedback("Erro: $it", Snackbar.LENGTH_LONG)
+                            viewModel.limparErro()
+                        }
+                    }
                 }
             }
         }
@@ -161,31 +180,37 @@ class CycleHistoryFragment : Fragment() {
     }
 
     private fun atualizarEstatisticas(stats: CycleStatistics) {
-        binding.apply {
-            tvTotalCycles.text = "${stats.totalCiclos} ciclos"
-            tvTotalRevenue.text = formatarMoeda(stats.receitaTotal)
-            tvTotalExpenses.text = formatarMoeda(stats.despesasTotal)
-            tvNetProfit.text = formatarMoeda(stats.lucroLiquido)
-            tvAvgProfit.text = formatarMoeda(stats.lucroMedioPorCiclo)
-            
-            // Atualizar cores baseado no lucro
-            val color = if (stats.lucroLiquido >= 0) {
-                requireContext().getColor(com.example.gestaobilhares.ui.R.color.green_600)
-            } else {
-                requireContext().getColor(com.example.gestaobilhares.ui.R.color.red_600)
+        // ✅ CORREÇÃO: Verificar se binding não é null antes de usar
+        _binding?.let { binding ->
+            binding.apply {
+                tvTotalCycles.text = "${stats.totalCiclos} ciclos"
+                tvTotalRevenue.text = formatarMoeda(stats.receitaTotal)
+                tvTotalExpenses.text = formatarMoeda(stats.despesasTotal)
+                tvNetProfit.text = formatarMoeda(stats.lucroLiquido)
+                tvAvgProfit.text = formatarMoeda(stats.lucroMedioPorCiclo)
+                
+                // Atualizar cores baseado no lucro
+                val color = if (stats.lucroLiquido >= 0) {
+                    requireContext().getColor(com.example.gestaobilhares.ui.R.color.green_600)
+                } else {
+                    requireContext().getColor(com.example.gestaobilhares.ui.R.color.red_600)
+                }
+                tvNetProfit.setTextColor(color)
             }
-            tvNetProfit.setTextColor(color)
         }
     }
 
     private fun atualizarEmptyState(mostrar: Boolean) {
-        binding.apply {
-            if (mostrar) {
-                emptyStateLayout.visibility = View.VISIBLE
-                rvCycles.visibility = View.GONE
-            } else {
-                emptyStateLayout.visibility = View.GONE
-                rvCycles.visibility = View.VISIBLE
+        // ✅ CORREÇÃO: Verificar se binding não é null antes de usar
+        _binding?.let { binding ->
+            binding.apply {
+                if (mostrar) {
+                    emptyStateLayout.visibility = View.VISIBLE
+                    rvCycles.visibility = View.GONE
+                } else {
+                    emptyStateLayout.visibility = View.GONE
+                    rvCycles.visibility = View.VISIBLE
+                }
             }
         }
     }
@@ -260,10 +285,13 @@ class CycleHistoryFragment : Fragment() {
     }
 
     private fun mostrarFeedback(mensagem: String, duracao: Int) {
-        Snackbar.make(binding.root, mensagem, duracao)
-            .setBackgroundTint(requireContext().getColor(com.example.gestaobilhares.ui.R.color.purple_600))
-            .setTextColor(requireContext().getColor(com.example.gestaobilhares.ui.R.color.white))
-            .show()
+        // ✅ CORREÇÃO: Verificar se binding não é null antes de usar
+        _binding?.let { binding ->
+            Snackbar.make(binding.root, mensagem, duracao)
+                .setBackgroundTint(requireContext().getColor(com.example.gestaobilhares.ui.R.color.purple_600))
+                .setTextColor(requireContext().getColor(com.example.gestaobilhares.ui.R.color.white))
+                .show()
+        }
     }
 
     override fun onDestroyView() {

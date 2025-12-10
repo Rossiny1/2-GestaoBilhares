@@ -1,8 +1,9 @@
-# Script para capturar logs de sincronizacao e autenticacao
-# Foco: Debugar problemas de sincronizacao automatica, dialogo de sincronizacao e login
+# Script para capturar logs de sincronizacao, autenticacao e exclusao de despesas
+# Foco: Debugar problemas de sincronizacao automatica, dialogo de sincronizacao, login e exclusao de despesas
+# Versao: 2.0 - Atualizado para capturar todos os logs de DELETE e processamento da fila de sincronizacao
 
-Write-Host "=== CAPTURA DE LOGS DE SINCRONIZACAO E LOGIN ===" -ForegroundColor Yellow
-Write-Host "Objetivo: Analisar o fluxo de verificacao de sincronizacao, dialogo e autenticacao" -ForegroundColor Cyan
+Write-Host "=== CAPTURA DE LOGS DE SINCRONIZACAO, LOGIN E EXCLUSAO ===" -ForegroundColor Yellow
+Write-Host "Objetivo: Analisar o fluxo de verificacao de sincronizacao, dialogo, autenticacao e exclusao de despesas" -ForegroundColor Cyan
 Write-Host ""
 
 # Caminho do ADB (mesmo padrao dos outros scripts)
@@ -45,13 +46,26 @@ Write-Host "  - UserSessionManager (todos os niveis)" -ForegroundColor White
 Write-Host "  - AuthViewModel (todos os niveis)" -ForegroundColor White
 Write-Host "  - LoginFragment (todos os niveis)" -ForegroundColor White
 Write-Host "  - FirebaseAuth (todos os niveis)" -ForegroundColor White
+Write-Host "  - AppRepository (todos os niveis)" -ForegroundColor White
+Write-Host "  - CycleExpensesViewModel (todos os niveis)" -ForegroundColor White
+Write-Host "  - CycleExpensesFragment (todos os niveis)" -ForegroundColor White
 Write-Host ""
-Write-Host "Aguardando eventos de sincronizacao e login..." -ForegroundColor Gray
+Write-Host "Logs especificos capturados:" -ForegroundColor Cyan
+Write-Host "  - Processamento da fila de sincronizacao (processSyncQueue)" -ForegroundColor White
+Write-Host "  - Operacoes DELETE (inicio, execucao, verificacao pos-DELETE)" -ForegroundColor White
+Write-Host "  - Enfileiramento de operacoes (AppRepository)" -ForegroundColor White
+Write-Host "  - Mapeamento de entidades para colecoes Firestore" -ForegroundColor White
+Write-Host "  - Erros do Firestore (PERMISSION_DENIED, NOT_FOUND, etc.)" -ForegroundColor White
+Write-Host "  - Verificacao pos-DELETE (confirmacao de exclusao)" -ForegroundColor White
+Write-Host "  - Contagem de operacoes pendentes" -ForegroundColor White
+Write-Host "  - Stack traces e excecoes" -ForegroundColor White
+Write-Host ""
+Write-Host "Aguardando eventos de sincronizacao, login e exclusao..." -ForegroundColor Gray
 Write-Host "Pressione Ctrl+C para parar a captura" -ForegroundColor Gray
 Write-Host ""
 
 # Capturar logs com filtros especificos (usando o mesmo padrao do script que funcionava)
-& $ADB logcat -v time -s RoutesViewModel:* RoutesFragment:* SyncRepository:* UserSessionManager:* AuthViewModel:* LoginFragment:* FirebaseAuth:* | ForEach-Object {
+& $ADB logcat -v time -s RoutesViewModel:* RoutesFragment:* SyncRepository:* UserSessionManager:* AuthViewModel:* LoginFragment:* FirebaseAuth:* AppRepository:* CycleExpensesViewModel:* CycleExpensesFragment:* | ForEach-Object {
     $line = $_
     
     # Cores para diferentes tipos de logs
@@ -152,6 +166,171 @@ Write-Host ""
     }
     elseif ($line -match "SyncRepository.*Pull de colaboradores concluido|SyncRepository.*sync=.*skipped=.*errors=") {
         Write-Host $line -ForegroundColor Green
+    }
+    # Logs de processamento da fila de sincronizacao
+    elseif ($line -match "SyncRepository.*PROCESSANDO FILA|SyncRepository.*processSyncQueue.*INICIADO|SyncRepository.*Fila de sincronizacao") {
+        Write-Host $line -ForegroundColor Cyan
+    }
+    elseif ($line -match "SyncRepository.*Estado da fila|SyncRepository.*operacoes pendentes|SyncRepository.*operacoes falhadas") {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    elseif ($line -match "SyncRepository.*Buscando operacoes pendentes|SyncRepository.*Operacoes encontradas") {
+        Write-Host $line -ForegroundColor DarkCyan
+    }
+    elseif ($line -match "SyncRepository.*Processando lote|SyncRepository.*lote.*operacoes") {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    elseif ($line -match "SyncRepository.*Fila completamente processada|SyncRepository.*total sucesso|SyncRepository.*total falhas") {
+        Write-Host $line -ForegroundColor Green
+    }
+    elseif ($line -match "SyncRepository.*Nenhuma operacao pendente|SyncRepository.*Fila vazia") {
+        Write-Host $line -ForegroundColor DarkGray
+    }
+    elseif ($line -match "SyncRepository.*Operacao.*tipo=|SyncRepository.*Operation ID:") {
+        Write-Host $line -ForegroundColor DarkCyan
+    }
+    # Logs de operacoes individuais de sincronizacao
+    elseif ($line -match "SyncRepository.*Processando operacao unica|SyncRepository.*processSingleSyncOperation|SyncRepository.*Processando operacao:") {
+        Write-Host $line -ForegroundColor Cyan
+    }
+    elseif ($line -match "SyncRepository.*Tipo:|SyncRepository.*Entidade:|SyncRepository.*Document ID:|SyncRepository.*Collection Path:|SyncRepository.*Collection Name:") {
+        Write-Host $line -ForegroundColor DarkCyan
+    }
+    elseif ($line -match "SyncRepository.*Mapeamento de entidade|SyncRepository.*colecao") {
+        Write-Host $line -ForegroundColor DarkCyan
+    }
+    # Logs de DELETE especificos
+    elseif ($line -match "SyncRepository.*INICIANDO DELETE|SyncRepository.*Executando DELETE|SyncRepository.*DELETE executado|SyncRepository.*deletar documento|SyncRepository.*DELETE FINALIZADO") {
+        Write-Host $line -ForegroundColor Magenta
+    }
+    elseif ($line -match "SyncRepository.*Documento encontrado no Firestore|SyncRepository.*Documento.*nao existe no Firestore|SyncRepository.*Verificando existencia do documento") {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    elseif ($line -match "SyncRepository.*Confirmado: Documento foi deletado|SyncRepository.*Documento ainda existe apos DELETE") {
+        Write-Host $line -ForegroundColor Green
+    }
+    elseif ($line -match "SyncRepository.*Erro ao deletar documento|SyncRepository.*DELETE.*falhou|SyncRepository.*Erro do Firestore ao deletar") {
+        Write-Host $line -ForegroundColor Red
+    }
+    elseif ($line -match "SyncRepository.*Codigo:|SyncRepository.*Caminho:|SyncRepository.*Document Path completo") {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    # Logs de despesas - Push e Pull
+    elseif ($line -match "SyncRepository.*Push.*Despesas|SyncRepository.*pushDespesas|SyncRepository.*Enviando despesas") {
+        Write-Host $line -ForegroundColor Cyan
+    }
+    elseif ($line -match "SyncRepository.*Pull.*Despesas|SyncRepository.*pullDespesas|SyncRepository.*Importando despesas") {
+        Write-Host $line -ForegroundColor Cyan
+    }
+    elseif ($line -match "SyncRepository.*Despesa.*sincronizada|SyncRepository.*Despesa inserida|SyncRepository.*Despesa atualizada") {
+        Write-Host $line -ForegroundColor Green
+    }
+    elseif ($line -match "SyncRepository.*Processando despesa:|SyncRepository.*ID=.*Descricao=") {
+        Write-Host $line -ForegroundColor DarkCyan
+    }
+    elseif ($line -match "SyncRepository.*ERRO.*despesa|SyncRepository.*Erro ao.*despesa|SyncRepository.*Despesa.*falhou") {
+        Write-Host $line -ForegroundColor Red
+    }
+    # Logs do AppRepository - Operacoes DELETE
+    elseif ($line -match "AppRepository.*Despesa deletada localmente|AppRepository.*Operacao DELETE enfileirada|AppRepository.*DELETE.*Despesa|AppRepository.*Operacao inserida na fila.*DELETE") {
+        Write-Host $line -ForegroundColor Green
+    }
+    elseif ($line -match "AppRepository.*CRITICO.*SyncOperationDao|AppRepository.*Erro ao enfileirar DELETE|AppRepository.*DELETE.*falhou|AppRepository.*ERRO CRITICO") {
+        Write-Host $line -ForegroundColor Red
+    }
+    elseif ($line -match "AppRepository.*deletarDespesa|AppRepository.*Deletar.*despesa") {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    elseif ($line -match "AppRepository.*OperationID=") {
+        Write-Host $line -ForegroundColor Green
+    }
+    # Logs do CycleExpensesViewModel e Fragment - Exclusao de despesas
+    elseif ($line -match "CycleExpensesViewModel.*removerDespesa|CycleExpensesViewModel.*deletarDespesa|CycleExpensesViewModel.*Excluir despesa") {
+        Write-Host $line -ForegroundColor Cyan
+    }
+    elseif ($line -match "CycleExpensesViewModel.*Despesa removida|CycleExpensesViewModel.*Despesa deletada|CycleExpensesViewModel.*Exclusao.*sucesso") {
+        Write-Host $line -ForegroundColor Green
+    }
+    elseif ($line -match "CycleExpensesViewModel.*ERRO.*despesa|CycleExpensesViewModel.*Erro ao.*despesa|CycleExpensesViewModel.*Exclusao.*falhou") {
+        Write-Host $line -ForegroundColor Red
+    }
+    elseif ($line -match "CycleExpensesFragment.*excluir|CycleExpensesFragment.*Excluir|CycleExpensesFragment.*confirmarExclusao") {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    elseif ($line -match "CycleExpensesFragment.*ERRO|CycleExpensesFragment.*Erro|CycleExpensesFragment.*Exception") {
+        Write-Host $line -ForegroundColor Red
+    }
+    # Logs de Firestore - Operacoes DELETE
+    elseif ($line -match "Firestore.*delete|Firestore.*DELETE|Firestore.*deletar") {
+        Write-Host $line -ForegroundColor Magenta
+    }
+    elseif ($line -match "Firestore.*PERMISSION_DENIED|Firestore.*permission denied") {
+        Write-Host $line -ForegroundColor Red
+    }
+    elseif ($line -match "Firestore.*NOT_FOUND|Firestore.*not found|Firestore.*nao encontrado") {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    # Logs gerais de sincronizacao bidirecional
+    elseif ($line -match "SyncRepository.*INICIANDO SINCRONIZACAO|SyncRepository.*SINCRONIZACAO.*CONCLUIDA|SyncRepository.*syncBidirectional|SyncRepository.*Push concluido|SyncRepository.*Pull concluido") {
+        Write-Host $line -ForegroundColor Green
+    }
+    elseif ($line -match "SyncRepository.*Total enviado|SyncRepository.*Total sincronizado|SyncRepository.*Total de falhas|SyncRepository.*Timestamp:") {
+        Write-Host $line -ForegroundColor Cyan
+    }
+    elseif ($line -match "SyncRepository.*Passo 1.*PUSH|SyncRepository.*Passo 2.*PULL") {
+        Write-Host $line -ForegroundColor Cyan
+    }
+    # Logs de contagem e estado da fila
+    elseif ($line -match "SyncRepository.*Total de operacoes pendentes|SyncRepository.*contarOperacoesSyncPendentes|SyncRepository.*operacoes na fila") {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    elseif ($line -match "SyncRepository.*Nenhuma operacao pendente na fila|SyncRepository.*encerrando processamento") {
+        Write-Host $line -ForegroundColor DarkGray
+    }
+    # Logs de erros especificos do Firestore
+    elseif ($line -match "SyncRepository.*FirebaseFirestoreException|SyncRepository.*PERMISSION_DENIED|SyncRepository.*permission denied") {
+        Write-Host $line -ForegroundColor Red
+    }
+    elseif ($line -match "SyncRepository.*NOT_FOUND|SyncRepository.*not found|SyncRepository.*nao encontrado") {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    elseif ($line -match "SyncRepository.*Codigo do erro:|SyncRepository.*Mensagem do erro:|SyncRepository.*Firestore error code") {
+        Write-Host $line -ForegroundColor Red
+    }
+    # Logs de dados da operacao
+    elseif ($line -match "SyncRepository.*entityData:|SyncRepository.*Dados da operacao:|SyncRepository.*Keys do documento:") {
+        Write-Host $line -ForegroundColor DarkCyan
+    }
+    # Logs de retry e tentativas
+    elseif ($line -match "SyncRepository.*tentativa|SyncRepository.*retry|SyncRepository.*maxRetries") {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    # Logs de verificacao pos-DELETE
+    elseif ($line -match "SyncRepository.*Verificando apos DELETE|SyncRepository.*Documento ainda existe|SyncRepository.*Confirmado: Documento foi deletado") {
+        Write-Host $line -ForegroundColor Green
+    }
+    # Logs de resolucao de colecao
+    elseif ($line -match "SyncRepository.*resolveCollectionReference|SyncRepository.*Mapeando entidade|SyncRepository.*para colecao") {
+        Write-Host $line -ForegroundColor DarkCyan
+    }
+    # Logs de batch processing
+    elseif ($line -match "SyncRepository.*Processando batch|SyncRepository.*batch.*sucesso|SyncRepository.*batch.*falha") {
+        Write-Host $line -ForegroundColor Yellow
+    }
+    # Logs de AppRepository - Detalhes da operacao
+    elseif ($line -match "AppRepository.*OperationID=|AppRepository.*Operacao inserida na fila|AppRepository.*Tipo=.*Entidade=") {
+        Write-Host $line -ForegroundColor Green
+    }
+    elseif ($line -match "AppRepository.*CRITICO.*SyncOperationDao|AppRepository.*SyncOperationDao.*null") {
+        Write-Host $line -ForegroundColor Red
+    }
+    # Logs de CycleExpensesViewModel - Detalhes
+    elseif ($line -match "CycleExpensesViewModel.*ID da despesa|CycleExpensesViewModel.*Despesa.*ID=") {
+        Write-Host $line -ForegroundColor Cyan
+    }
+    # Logs de stack traces e excecoes gerais
+    elseif ($line -match ".*Stack trace:|.*Exception:|.*ERROR:|.*CRITICO:|.*FATAL:") {
+        Write-Host $line -ForegroundColor Red
     }
     else {
         Write-Host $line

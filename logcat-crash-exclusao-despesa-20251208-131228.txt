@@ -1,0 +1,1604 @@
+--------- beginning of main
+12-08 13:12:42.617 D/LOG_CRASH(16019): RoutesFragment.onViewCreated - IN+ÏCIO
+12-08 13:12:42.617 D/LOG_CRASH(16019): RoutesFragment.onViewCreated - Inicializando UserSessionManager
+12-08 13:12:42.617 D/LOG_CRASH(16019): RoutesFragment.onViewCreated - Configurando RecyclerView
+12-08 13:12:42.619 D/LOG_CRASH(16019): RoutesFragment.onViewCreated - Configurando ClickListeners
+12-08 13:12:42.619 D/LOG_CRASH(16019): RoutesFragment.setupClickListeners - IN+ÏCIO
+12-08 13:12:42.619 D/LOG_CRASH(16019): RoutesFragment.setupClickListeners - Configurando bot+˙o de menu
+12-08 13:12:42.619 D/LOG_CRASH(16019): RoutesFragment.onViewCreated - Configurando NavigationDrawer
+12-08 13:12:42.621 D/LOG_CRASH(16019): RoutesFragment.onViewCreated - Configurando Observers
+12-08 13:12:42.621 D/LOG_CRASH(16019): RoutesFragment.observeViewModel - IN+ÏCIO
+12-08 13:12:42.621 D/LOG_CRASH(16019): RoutesFragment.observeViewModel - Configurando observer de rotas
+12-08 13:12:42.623 D/LOG_CRASH(16019): RoutesFragment.observeViewModel - Configurando observer de estat+°sticas
+12-08 13:12:42.623 D/LOG_CRASH(16019): RoutesFragment.observeViewModel - Configurando observer de mensagens de erro
+12-08 13:12:42.624 D/LOG_CRASH(16019): RoutesFragment.observeViewModel - CONFIGURA+Á+‚O COMPLETA
+12-08 13:12:42.627 D/LOG_CRASH(16019): RoutesFragment.onViewCreated - Configurando bot+˙o voltar
+12-08 13:12:42.627 D/LOG_CRASH(16019): RoutesFragment.onViewCreated - CONFIGURA+Á+‚O COMPLETA
+12-08 13:12:42.741 D/LOG_CRASH(16019): RoutesFragment.observeViewModel - Recebidas 0 rotas
+12-08 13:12:42.744 D/LOG_CRASH(16019): RoutesFragment.observeViewModel - Recebidas 2 rotas
+12-08 13:12:42.748 D/LOG_CRASH(16019): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=0, clientes=0, pend+¨ncias=0
+12-08 13:12:42.751 D/LOG_CRASH(16019): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=1, clientes=1, pend+¨ncias=1
+12-08 13:12:44.478 D/LOG_CRASH(16019): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:12:44.492 D/LOG_CRASH(16019): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:12:44.493 D/LOG_CRASH(16019): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:12:44.493 D/LOG_CRASH(16019): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:12:49.366 D/LOG_CRASH(16019): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:12:49.372 D/LOG_CRASH(16019): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:12:49.372 D/LOG_CRASH(16019): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:12:49.372 D/LOG_CRASH(16019): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:13:02.526 D/LOG_CRASH(16019): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:13:02.532 D/LOG_CRASH(16019): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:13:02.532 D/LOG_CRASH(16019): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:13:02.532 D/LOG_CRASH(16019): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:13:08.063 D/CycleExpensesViewModel(16019): ‘£‡ Despesas atualizadas: 0 itens
+12-08 13:13:08.068 D/CycleExpensesViewModel(16019): ≠Éˆ‰ Carregando despesas para ciclo: 2
+12-08 13:13:08.151 D/CycleExpensesViewModel(16019): ≠ÉÙË Processando 1 despesas
+12-08 13:13:08.153 D/CycleExpensesViewModel(16019): ‘£‡ Despesas atualizadas: 1 itens
+12-08 13:13:11.220 D/CycleExpensesViewModel(16019): ‘£‡ Despesa 2 removida com sucesso do banco
+12-08 13:13:11.227 D/CycleExpensesViewModel(16019): ≠ÉÙË Processando 0 despesas
+12-08 13:13:11.227 D/CycleExpensesViewModel(16019): ‘£‡ Despesas atualizadas: 0 itens
+--------- beginning of crash
+12-08 13:13:11.265 E/AndroidRuntime(16019): FATAL EXCEPTION: main
+12-08 13:13:11.265 E/AndroidRuntime(16019): Process: com.example.gestaobilhares, PID: 16019
+12-08 13:13:11.265 E/AndroidRuntime(16019): java.lang.NullPointerException
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at com.example.gestaobilhares.ui.clients.CycleHistoryFragment.getBinding(CycleHistoryFragment.kt:32)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at com.example.gestaobilhares.ui.clients.CycleHistoryFragment.atualizarEmptyState(CycleHistoryFragment.kt:182)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at com.example.gestaobilhares.ui.clients.CycleHistoryFragment.access$atualizarEmptyState(CycleHistoryFragment.kt:29)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at com.example.gestaobilhares.ui.clients.CycleHistoryFragment$configurarObservadores$1$1.emit(CycleHistoryFragment.kt:123)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at com.example.gestaobilhares.ui.clients.CycleHistoryFragment$configurarObservadores$1$1.emit(CycleHistoryFragment.kt:121)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.flow.StateFlowImpl.collect(StateFlow.kt:396)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.flow.StateFlowImpl$collect$1.invokeSuspend(Unknown Source:15)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:108)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.EventLoop.processUnconfinedEvent(EventLoop.common.kt:68)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.DispatchedTaskKt.resumeUnconfined(DispatchedTask.kt:245)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.DispatchedTaskKt.dispatch(DispatchedTask.kt:163)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.CancellableContinuationImpl.dispatchResume(CancellableContinuationImpl.kt:474)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.CancellableContinuationImpl.completeResume(CancellableContinuationImpl.kt:590)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.channels.BufferedChannelKt.tryResume0(BufferedChannel.kt:2896)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.channels.BufferedChannelKt.access$tryResume0(BufferedChannel.kt:1)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.channels.BufferedChannel.tryResumeReceiver(BufferedChannel.kt:638)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.channels.BufferedChannel.updateCellSend(BufferedChannel.kt:458)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.channels.BufferedChannel.access$updateCellSend(BufferedChannel.kt:36)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.channels.BufferedChannel.send$suspendImpl(BufferedChannel.kt:3089)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.channels.BufferedChannel.send(Unknown Source:0)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.flow.internal.CombineKt$combineInternal$2$1$1.emit(Combine.kt:32)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.flow.FlowKt__ZipKt$combine$$inlined$combineUnsafe$FlowKt__ZipKt$1$2.invokeSuspend(Zip.kt:262)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at android.os.Handler.handleCallback(Handler.java:938)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:13:11.265 E/AndroidRuntime(16019): 	Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [StandaloneCoroutine{Cancelling}@94ccab1, Dispatchers.Main.immediate]
+12-08 13:15:08.436 W/System.err(25928): android.content.pm.PackageManager$NameNotFoundException: com.example.gestaobilhares
+12-08 13:15:08.436 W/System.err(25928): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:15:08.437 W/System.err(25928): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:15:08.437 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.a(:11)
+12-08 13:15:08.437 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.b(:1)
+12-08 13:15:08.437 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.c(Unknown Source:0)
+12-08 13:15:08.437 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.a.run(Unknown Source:6)
+12-08 13:15:08.437 W/System.err(25928): 	at android.os.Handler.handleCallback(Handler.java:938)
+12-08 13:15:08.437 W/System.err(25928): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+12-08 13:15:08.437 W/System.err(25928): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:15:08.437 W/System.err(25928): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:15:08.437 W/System.err(25928): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:17:39.144 W/System.err( 1364): android.content.pm.PackageManager$NameNotFoundException: com.example.gestaobilhares
+12-08 13:17:39.394 W/System.err( 1364): 	at android.app.ApplicationPackageManager.getApplicationInfoAsUser(ApplicationPackageManager.java:540)
+12-08 13:17:39.394 W/System.err( 1364): 	at com.android.server.ipm.auf.IpmAufPreloadController.preloadApp(IpmAufPreloadController.java:136)
+12-08 13:17:39.394 W/System.err( 1364): 	at com.android.server.ipm.auf.IpmAufPreloadController.handleMessageEvent(IpmAufPreloadController.java:190)
+12-08 13:17:39.394 W/System.err( 1364): 	at com.android.server.ipm.PreloadController$MainHandler.handleMessage(PreloadController.java:231)
+12-08 13:17:39.394 W/System.err( 1364): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:17:39.394 W/System.err( 1364): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:17:39.394 W/System.err( 1364): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:17:39.394 W/System.err( 1364): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:17:39.913 W/System.err(17841): com.samsung.android.scloud.common.exception.SCException: [rcode] 80000000, [rmsg]: SDK is not set up. please check if Scsp.setUp has been called., ResultCode: 100
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.handle(Unknown Source:27)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:204)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.keystore.c.a(Unknown Source:195)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.lambda$onCreate$2(Unknown Source:96)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.d(Unknown Source:0)
+12-08 13:17:39.913 W/System.err(17841): 	at A8.a.apply(Unknown Source:180)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.lambda$onCreate$3(Unknown Source:11)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.e(Unknown Source:0)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.backup.core.logic.worker.g.run(Unknown Source:293)
+12-08 13:17:39.913 W/System.err(17841): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:17:39.913 W/System.err(17841): Caused by: [rcode] 80000000, [rmsg]: SDK is not set up. please check if Scsp.setUp has been called.
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.scsp.framework.core.identity.ScspIdentityFactory.checkContext(Unknown Source:14)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.scsp.framework.core.identity.ScspIdentityFactory.getInstance(Unknown Source:0)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.scsp.framework.core.decorator.AbstractDecorator.<init>(Unknown Source:130)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.scsp.internal.certificate.SamsungCloudCertificate.<init>(Unknown Source:5)
+12-08 13:17:39.913 W/System.err(17841): 	at J.h.get(Unknown Source:20)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.backup.method.oem.f.get(Unknown Source:130)
+12-08 13:17:39.913 W/System.err(17841): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:4)
+12-08 13:17:39.913 W/System.err(17841): 	... 10 more
+12-08 13:17:40.407 W/System.err(17841): java.lang.ExceptionInInitializerError
+12-08 13:17:40.408 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.getInstance(Unknown Source:0)
+12-08 13:17:40.408 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings$Static.<clinit>(Unknown Source:0)
+12-08 13:17:40.408 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.getSettingValue(Unknown Source:0)
+12-08 13:17:40.408 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.isRecoveryInProcessing(Unknown Source:4)
+12-08 13:17:40.408 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.verifyState(Unknown Source:15)
+12-08 13:17:40.408 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.recover(Unknown Source:21)
+12-08 13:17:40.408 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$0(Unknown Source:2)
+12-08 13:17:40.408 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.c(Unknown Source:0)
+12-08 13:17:40.409 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.c.run(Unknown Source:49)
+12-08 13:17:40.409 W/System.err(17841): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+12-08 13:17:40.409 W/System.err(17841): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+12-08 13:17:40.409 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$2(Unknown Source:6)
+12-08 13:17:40.409 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.a(Unknown Source:0)
+12-08 13:17:40.409 W/System.err(17841): 	at G2.h.run(Unknown Source:193)
+12-08 13:17:40.409 W/System.err(17841): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+12-08 13:17:40.409 W/System.err(17841): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+12-08 13:17:40.409 W/System.err(17841): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:17:40.409 W/System.err(17841): Caused by: java.lang.RuntimeException: Cannot find implementation for com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase. MediaRecoveryDatabase_Impl does not exist
+12-08 13:17:40.409 W/System.err(17841): 	at androidx.room.Room.getGeneratedImplementation(Unknown Source:208)
+12-08 13:17:40.409 W/System.err(17841): 	at androidx.room.RoomDatabase$Builder.build(Unknown Source:321)
+12-08 13:17:40.410 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.create(Unknown Source:16)
+12-08 13:17:40.410 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.a(Unknown Source:0)
+12-08 13:17:40.410 W/System.err(17841): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase$Holder.<clinit>(Unknown Source:0)
+12-08 13:17:40.410 W/System.err(17841): 	... 17 more
+12-08 13:18:25.727 W/System.err(18633): java.lang.NullPointerException: Attempt to invoke virtual method 'com.samsung.android.desktopmode.SemDesktopModeState com.samsung.android.desktopmode.SemDesktopModeManager.getDesktopModeState()' on a null object reference
+12-08 13:18:25.728 W/System.err(18633): 	at d.e.a.a.a.x.f.d(SourceFile:2)
+12-08 13:18:25.728 W/System.err(18633): 	at d.e.a.a.a.x.f.c(SourceFile:1)
+12-08 13:18:25.728 W/System.err(18633): 	at com.samsung.android.app.galaxyfinder.GalaxyFinderActivity.v(SourceFile:1)
+12-08 13:18:25.728 W/System.err(18633): 	at com.samsung.android.app.galaxyfinder.GalaxyFinderActivity.onCreate(SourceFile:16)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.Activity.performCreate(Activity.java:8290)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.Activity.performCreate(Activity.java:8270)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1329)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4009)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4201)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:103)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:135)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2438)
+12-08 13:18:25.728 W/System.err(18633): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:18:25.728 W/System.err(18633): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:18:25.728 W/System.err(18633): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:18:25.728 W/System.err(18633): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:18:25.728 W/System.err(18633): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:18:25.728 W/System.err(18633): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:18:25.728 W/System.err(18633): java.lang.NullPointerException: Attempt to invoke virtual method 'com.samsung.android.desktopmode.SemDesktopModeState com.samsung.android.desktopmode.SemDesktopModeManager.getDesktopModeState()' on a null object reference
+12-08 13:18:25.728 W/System.err(18633): 	at d.e.a.a.a.x.f.a(SourceFile:2)
+12-08 13:18:25.728 W/System.err(18633): 	at d.e.a.a.a.x.f.c(SourceFile:2)
+12-08 13:18:25.728 W/System.err(18633): 	at com.samsung.android.app.galaxyfinder.GalaxyFinderActivity.v(SourceFile:1)
+12-08 13:18:25.728 W/System.err(18633): 	at com.samsung.android.app.galaxyfinder.GalaxyFinderActivity.onCreate(SourceFile:16)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.Activity.performCreate(Activity.java:8290)
+12-08 13:18:25.728 W/System.err(18633): 	at android.app.Activity.performCreate(Activity.java:8270)
+12-08 13:18:25.729 W/System.err(18633): 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1329)
+12-08 13:18:25.729 W/System.err(18633): 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4009)
+12-08 13:18:25.729 W/System.err(18633): 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4201)
+12-08 13:18:25.729 W/System.err(18633): 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:103)
+12-08 13:18:25.729 W/System.err(18633): 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:135)
+12-08 13:18:25.729 W/System.err(18633): 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+12-08 13:18:25.729 W/System.err(18633): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2438)
+12-08 13:18:25.729 W/System.err(18633): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:18:25.729 W/System.err(18633): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:18:25.729 W/System.err(18633): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:18:25.729 W/System.err(18633): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:18:25.729 W/System.err(18633): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:18:25.729 W/System.err(18633): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:18:25.729 W/System.err(18633): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:18:35.661 W/System.err(30333): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.scloud.quota
+12-08 13:18:35.664 W/System.err(30333): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:18:35.664 W/System.err(30333): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:18:35.664 W/System.err(30333): 	at com.samsung.android.settings.account.AccountUtils.checkSamsungStorageAvailble(AccountUtils.java:249)
+12-08 13:18:35.664 W/System.err(30333): 	at com.samsung.android.settings.backup.controller.SamsungStoragePreferenceController.getAvailabilityStatus(SamsungStoragePreferenceController.java:78)
+12-08 13:18:35.664 W/System.err(30333): 	at com.android.settings.core.BasePreferenceController.isAvailable(BasePreferenceController.java:266)
+12-08 13:18:35.664 W/System.err(30333): 	at com.android.settings.core.BasePreferenceController.updateNonIndexableKeys(BasePreferenceController.java:312)
+12-08 13:18:35.664 W/System.err(30333): 	at com.android.settings.search.BaseSearchIndexProvider.getNonIndexableKeys(BaseSearchIndexProvider.java:131)
+12-08 13:18:35.664 W/System.err(30333): 	at com.android.settings.search.SettingsSearchIndexablesProvider.getNonIndexableKeysFromProvider(SettingsSearchIndexablesProvider.java:365)
+12-08 13:18:35.664 W/System.err(30333): 	at com.android.settings.search.SettingsSearchIndexablesProvider.queryNonIndexableKeys(SettingsSearchIndexablesProvider.java:177)
+12-08 13:18:35.664 W/System.err(30333): 	at com.samsung.android.settings.search.provider.SearchIndexablesProvider.query(SearchIndexablesProvider.java:124)
+12-08 13:18:35.665 W/System.err(30333): 	at com.samsung.android.settings.search.provider.SecSearchIndexablesProvider.query(SecSearchIndexablesProvider.java:136)
+12-08 13:18:35.665 W/System.err(30333): 	at android.content.ContentProvider.query(ContentProvider.java:1520)
+12-08 13:18:35.665 W/System.err(30333): 	at android.content.ContentProvider.query(ContentProvider.java:1616)
+12-08 13:18:35.665 W/System.err(30333): 	at android.content.ContentProvider$Transport.query(ContentProvider.java:286)
+12-08 13:18:35.665 W/System.err(30333): 	at android.content.ContentProviderNative.onTransact(ContentProviderNative.java:107)
+12-08 13:18:35.665 W/System.err(30333): 	at android.os.Binder.execTransactInternal(Binder.java:1215)
+12-08 13:18:35.665 W/System.err(30333): 	at android.os.Binder.execTransact(Binder.java:1179)
+12-08 13:18:36.649 W/System.err(18889): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.voc
+12-08 13:18:36.650 W/System.err(18889): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:18:36.650 W/System.err(18889): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:18:36.650 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.getPackageVersion(NonIndexablesProviderEligibilityChecker.java:233)
+12-08 13:18:36.650 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.initConfigDependencyPackages(NonIndexablesProviderEligibilityChecker.java:157)
+12-08 13:18:36.650 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.init(NonIndexablesProviderEligibilityChecker.java:148)
+12-08 13:18:36.650 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.indexing.app.AppDatabaseIndexingManager.indexCommonSettingsDatabase(AppDatabaseIndexingManager.java:59)
+12-08 13:18:36.650 W/System.err(18889): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:932)
+12-08 13:18:36.650 W/System.err(18889): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:868)
+12-08 13:18:36.650 W/System.err(18889): 	at android.os.AsyncTask.finish(AsyncTask.java:771)
+12-08 13:18:36.650 W/System.err(18889): 	at android.os.AsyncTask.access$900(AsyncTask.java:199)
+12-08 13:18:36.650 W/System.err(18889): 	at android.os.AsyncTask$InternalHandler.handleMessage(AsyncTask.java:788)
+12-08 13:18:36.650 W/System.err(18889): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:18:36.650 W/System.err(18889): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:18:36.650 W/System.err(18889): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:18:36.650 W/System.err(18889): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:18:36.650 W/System.err(18889): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:18:36.650 W/System.err(18889): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:18:36.650 W/System.err(18889): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:18:36.651 W/System.err(18889): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.voc
+12-08 13:18:36.651 W/System.err(18889): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:18:36.651 W/System.err(18889): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:18:36.651 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.getPackageVersion(NonIndexablesProviderEligibilityChecker.java:233)
+12-08 13:18:36.651 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.initConfigDependencyPackages(NonIndexablesProviderEligibilityChecker.java:157)
+12-08 13:18:36.651 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.init(NonIndexablesProviderEligibilityChecker.java:148)
+12-08 13:18:36.651 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.indexing.app.AppDatabaseIndexingManager.indexCommonSettingsDatabase(AppDatabaseIndexingManager.java:59)
+12-08 13:18:36.652 W/System.err(18889): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:932)
+12-08 13:18:36.652 W/System.err(18889): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:868)
+12-08 13:18:36.652 W/System.err(18889): 	at android.os.AsyncTask.finish(AsyncTask.java:771)
+12-08 13:18:36.652 W/System.err(18889): 	at android.os.AsyncTask.access$900(AsyncTask.java:199)
+12-08 13:18:36.652 W/System.err(18889): 	at android.os.AsyncTask$InternalHandler.handleMessage(AsyncTask.java:788)
+12-08 13:18:36.652 W/System.err(18889): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:18:36.652 W/System.err(18889): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:18:36.652 W/System.err(18889): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:18:36.652 W/System.err(18889): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:18:36.652 W/System.err(18889): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:18:36.652 W/System.err(18889): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:18:36.652 W/System.err(18889): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:18:36.655 W/System.err(18889): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.voc
+12-08 13:18:36.655 W/System.err(18889): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:18:36.655 W/System.err(18889): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:18:36.655 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.getPackageVersion(NonIndexablesProviderEligibilityChecker.java:233)
+12-08 13:18:36.655 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.initConfigDependencyPackages(NonIndexablesProviderEligibilityChecker.java:157)
+12-08 13:18:36.655 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.init(NonIndexablesProviderEligibilityChecker.java:148)
+12-08 13:18:36.655 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.indexing.app.AppDatabaseIndexingManager.indexCommonSettingsDatabase(AppDatabaseIndexingManager.java:59)
+12-08 13:18:36.655 W/System.err(18889): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:932)
+12-08 13:18:36.655 W/System.err(18889): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:868)
+12-08 13:18:36.655 W/System.err(18889): 	at android.os.AsyncTask.finish(AsyncTask.java:771)
+12-08 13:18:36.655 W/System.err(18889): 	at android.os.AsyncTask.access$900(AsyncTask.java:199)
+12-08 13:18:36.655 W/System.err(18889): 	at android.os.AsyncTask$InternalHandler.handleMessage(AsyncTask.java:788)
+12-08 13:18:36.655 W/System.err(18889): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:18:36.655 W/System.err(18889): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:18:36.655 W/System.err(18889): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:18:36.655 W/System.err(18889): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:18:36.656 W/System.err(18889): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:18:36.656 W/System.err(18889): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:18:36.656 W/System.err(18889): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:18:36.656 W/System.err(18889): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.voc
+12-08 13:18:36.657 W/System.err(18889): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:18:36.657 W/System.err(18889): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:18:36.657 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.getPackageVersion(NonIndexablesProviderEligibilityChecker.java:233)
+12-08 13:18:36.657 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.initConfigDependencyPackages(NonIndexablesProviderEligibilityChecker.java:157)
+12-08 13:18:36.657 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.init(NonIndexablesProviderEligibilityChecker.java:148)
+12-08 13:18:36.657 W/System.err(18889): 	at com.samsung.android.settings.intelligence.search.indexing.app.AppDatabaseIndexingManager.indexCommonSettingsDatabase(AppDatabaseIndexingManager.java:59)
+12-08 13:18:36.657 W/System.err(18889): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:932)
+12-08 13:18:36.657 W/System.err(18889): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:868)
+12-08 13:18:36.657 W/System.err(18889): 	at android.os.AsyncTask.finish(AsyncTask.java:771)
+12-08 13:18:36.657 W/System.err(18889): 	at android.os.AsyncTask.access$900(AsyncTask.java:199)
+12-08 13:18:36.657 W/System.err(18889): 	at android.os.AsyncTask$InternalHandler.handleMessage(AsyncTask.java:788)
+12-08 13:18:36.657 W/System.err(18889): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:18:36.657 W/System.err(18889): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:18:36.657 W/System.err(18889): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:18:36.657 W/System.err(18889): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:18:36.657 W/System.err(18889): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:18:36.657 W/System.err(18889): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:18:36.657 W/System.err(18889): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:21:55.489 W/System.err( 1364): java.io.FileNotFoundException: https://play.google.com/store/apps/details?id=com.example.gestaobilhares&hl=en
+12-08 13:21:55.501 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getInputStream(HttpURLConnectionImpl.java:255)
+12-08 13:21:55.502 W/System.err( 1364): 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.getInputStream(DelegatingHttpsURLConnection.java:211)
+12-08 13:21:55.502 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:30)
+12-08 13:21:55.502 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerUtils.getApplicationCategory(SemWifiTransportLayerUtils.java:104)
+12-08 13:21:55.502 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerMonitor$TcpMonitorHandler.handleMessage(SemWifiTransportLayerMonitor.java:244)
+12-08 13:21:55.502 W/System.err( 1364): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:21:55.502 W/System.err( 1364): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:21:55.502 W/System.err( 1364): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:21:55.502 W/System.err( 1364): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:22:24.021 W/System.err(18633): java.lang.NullPointerException: Attempt to invoke virtual method 'com.samsung.android.desktopmode.SemDesktopModeState com.samsung.android.desktopmode.SemDesktopModeManager.getDesktopModeState()' on a null object reference
+12-08 13:22:24.028 W/System.err(18633): 	at d.e.a.a.a.x.f.d(SourceFile:2)
+12-08 13:22:24.028 W/System.err(18633): 	at d.e.a.a.a.x.f.c(SourceFile:1)
+12-08 13:22:24.028 W/System.err(18633): 	at com.samsung.android.app.galaxyfinder.GalaxyFinderActivity.v(SourceFile:1)
+12-08 13:22:24.028 W/System.err(18633): 	at com.samsung.android.app.galaxyfinder.GalaxyFinderActivity.onCreate(SourceFile:16)
+12-08 13:22:24.028 W/System.err(18633): 	at android.app.Activity.performCreate(Activity.java:8290)
+12-08 13:22:24.028 W/System.err(18633): 	at android.app.Activity.performCreate(Activity.java:8270)
+12-08 13:22:24.028 W/System.err(18633): 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1329)
+12-08 13:22:24.028 W/System.err(18633): 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4009)
+12-08 13:22:24.028 W/System.err(18633): 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4201)
+12-08 13:22:24.028 W/System.err(18633): 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:103)
+12-08 13:22:24.028 W/System.err(18633): 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:135)
+12-08 13:22:24.028 W/System.err(18633): 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+12-08 13:22:24.028 W/System.err(18633): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2438)
+12-08 13:22:24.028 W/System.err(18633): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:22:24.028 W/System.err(18633): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:22:24.028 W/System.err(18633): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:22:24.028 W/System.err(18633): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:22:24.028 W/System.err(18633): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:22:24.028 W/System.err(18633): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:22:24.028 W/System.err(18633): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:22:24.029 W/System.err(18633): java.lang.NullPointerException: Attempt to invoke virtual method 'com.samsung.android.desktopmode.SemDesktopModeState com.samsung.android.desktopmode.SemDesktopModeManager.getDesktopModeState()' on a null object reference
+12-08 13:22:24.029 W/System.err(18633): 	at d.e.a.a.a.x.f.a(SourceFile:2)
+12-08 13:22:24.029 W/System.err(18633): 	at d.e.a.a.a.x.f.c(SourceFile:2)
+12-08 13:22:24.029 W/System.err(18633): 	at com.samsung.android.app.galaxyfinder.GalaxyFinderActivity.v(SourceFile:1)
+12-08 13:22:24.029 W/System.err(18633): 	at com.samsung.android.app.galaxyfinder.GalaxyFinderActivity.onCreate(SourceFile:16)
+12-08 13:22:24.029 W/System.err(18633): 	at android.app.Activity.performCreate(Activity.java:8290)
+12-08 13:22:24.029 W/System.err(18633): 	at android.app.Activity.performCreate(Activity.java:8270)
+12-08 13:22:24.029 W/System.err(18633): 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1329)
+12-08 13:22:24.029 W/System.err(18633): 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4009)
+12-08 13:22:24.029 W/System.err(18633): 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4201)
+12-08 13:22:24.029 W/System.err(18633): 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:103)
+12-08 13:22:24.029 W/System.err(18633): 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:135)
+12-08 13:22:24.029 W/System.err(18633): 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+12-08 13:22:24.029 W/System.err(18633): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2438)
+12-08 13:22:24.029 W/System.err(18633): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:22:24.029 W/System.err(18633): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:22:24.029 W/System.err(18633): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:22:24.029 W/System.err(18633): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:22:24.029 W/System.err(18633): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:22:24.029 W/System.err(18633): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:22:24.029 W/System.err(18633): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:22:28.031 W/System.err(30333): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.scloud.quota
+12-08 13:22:28.283 W/System.err(30333): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:22:28.283 W/System.err(30333): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:22:28.283 W/System.err(30333): 	at com.samsung.android.settings.account.AccountUtils.checkSamsungStorageAvailble(AccountUtils.java:249)
+12-08 13:22:28.283 W/System.err(30333): 	at com.samsung.android.settings.backup.controller.SamsungStoragePreferenceController.getAvailabilityStatus(SamsungStoragePreferenceController.java:78)
+12-08 13:22:28.283 W/System.err(30333): 	at com.android.settings.core.BasePreferenceController.isAvailable(BasePreferenceController.java:266)
+12-08 13:22:28.283 W/System.err(30333): 	at com.android.settings.core.BasePreferenceController.updateNonIndexableKeys(BasePreferenceController.java:312)
+12-08 13:22:28.283 W/System.err(30333): 	at com.android.settings.search.BaseSearchIndexProvider.getNonIndexableKeys(BaseSearchIndexProvider.java:131)
+12-08 13:22:28.283 W/System.err(30333): 	at com.android.settings.search.SettingsSearchIndexablesProvider.getNonIndexableKeysFromProvider(SettingsSearchIndexablesProvider.java:365)
+12-08 13:22:28.283 W/System.err(30333): 	at com.android.settings.search.SettingsSearchIndexablesProvider.queryNonIndexableKeys(SettingsSearchIndexablesProvider.java:177)
+12-08 13:22:28.283 W/System.err(30333): 	at com.samsung.android.settings.search.provider.SearchIndexablesProvider.query(SearchIndexablesProvider.java:124)
+12-08 13:22:28.283 W/System.err(30333): 	at com.samsung.android.settings.search.provider.SecSearchIndexablesProvider.query(SecSearchIndexablesProvider.java:136)
+12-08 13:22:28.283 W/System.err(30333): 	at android.content.ContentProvider.query(ContentProvider.java:1520)
+12-08 13:22:28.283 W/System.err(30333): 	at android.content.ContentProvider.query(ContentProvider.java:1616)
+12-08 13:22:28.283 W/System.err(30333): 	at android.content.ContentProvider$Transport.query(ContentProvider.java:286)
+12-08 13:22:28.283 W/System.err(30333): 	at android.content.ContentProviderNative.onTransact(ContentProviderNative.java:107)
+12-08 13:22:28.283 W/System.err(30333): 	at android.os.Binder.execTransactInternal(Binder.java:1215)
+12-08 13:22:28.283 W/System.err(30333): 	at android.os.Binder.execTransact(Binder.java:1179)
+12-08 13:22:30.062 W/System.err(21370): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.voc
+12-08 13:22:30.064 W/System.err(21370): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:22:30.064 W/System.err(21370): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:22:30.064 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.getPackageVersion(NonIndexablesProviderEligibilityChecker.java:233)
+12-08 13:22:30.064 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.initConfigDependencyPackages(NonIndexablesProviderEligibilityChecker.java:157)
+12-08 13:22:30.064 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.init(NonIndexablesProviderEligibilityChecker.java:148)
+12-08 13:22:30.064 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.indexing.app.AppDatabaseIndexingManager.indexCommonSettingsDatabase(AppDatabaseIndexingManager.java:59)
+12-08 13:22:30.064 W/System.err(21370): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:932)
+12-08 13:22:30.064 W/System.err(21370): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:868)
+12-08 13:22:30.064 W/System.err(21370): 	at android.os.AsyncTask.finish(AsyncTask.java:771)
+12-08 13:22:30.064 W/System.err(21370): 	at android.os.AsyncTask.access$900(AsyncTask.java:199)
+12-08 13:22:30.065 W/System.err(21370): 	at android.os.AsyncTask$InternalHandler.handleMessage(AsyncTask.java:788)
+12-08 13:22:30.065 W/System.err(21370): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:22:30.065 W/System.err(21370): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:22:30.065 W/System.err(21370): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:22:30.065 W/System.err(21370): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:22:30.065 W/System.err(21370): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:22:30.065 W/System.err(21370): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:22:30.065 W/System.err(21370): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:22:30.065 W/System.err(21370): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.voc
+12-08 13:22:30.066 W/System.err(21370): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:22:30.066 W/System.err(21370): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:22:30.066 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.getPackageVersion(NonIndexablesProviderEligibilityChecker.java:233)
+12-08 13:22:30.066 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.initConfigDependencyPackages(NonIndexablesProviderEligibilityChecker.java:157)
+12-08 13:22:30.066 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.init(NonIndexablesProviderEligibilityChecker.java:148)
+12-08 13:22:30.066 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.indexing.app.AppDatabaseIndexingManager.indexCommonSettingsDatabase(AppDatabaseIndexingManager.java:59)
+12-08 13:22:30.066 W/System.err(21370): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:932)
+12-08 13:22:30.066 W/System.err(21370): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:868)
+12-08 13:22:30.066 W/System.err(21370): 	at android.os.AsyncTask.finish(AsyncTask.java:771)
+12-08 13:22:30.066 W/System.err(21370): 	at android.os.AsyncTask.access$900(AsyncTask.java:199)
+12-08 13:22:30.066 W/System.err(21370): 	at android.os.AsyncTask$InternalHandler.handleMessage(AsyncTask.java:788)
+12-08 13:22:30.066 W/System.err(21370): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:22:30.066 W/System.err(21370): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:22:30.066 W/System.err(21370): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:22:30.066 W/System.err(21370): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:22:30.066 W/System.err(21370): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:22:30.066 W/System.err(21370): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:22:30.066 W/System.err(21370): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:22:30.067 W/System.err(21370): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.voc
+12-08 13:22:30.067 W/System.err(21370): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:22:30.067 W/System.err(21370): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:22:30.067 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.getPackageVersion(NonIndexablesProviderEligibilityChecker.java:233)
+12-08 13:22:30.067 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.initConfigDependencyPackages(NonIndexablesProviderEligibilityChecker.java:157)
+12-08 13:22:30.067 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.init(NonIndexablesProviderEligibilityChecker.java:148)
+12-08 13:22:30.067 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.indexing.app.AppDatabaseIndexingManager.indexCommonSettingsDatabase(AppDatabaseIndexingManager.java:59)
+12-08 13:22:30.067 W/System.err(21370): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:932)
+12-08 13:22:30.067 W/System.err(21370): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:868)
+12-08 13:22:30.067 W/System.err(21370): 	at android.os.AsyncTask.finish(AsyncTask.java:771)
+12-08 13:22:30.067 W/System.err(21370): 	at android.os.AsyncTask.access$900(AsyncTask.java:199)
+12-08 13:22:30.067 W/System.err(21370): 	at android.os.AsyncTask$InternalHandler.handleMessage(AsyncTask.java:788)
+12-08 13:22:30.067 W/System.err(21370): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:22:30.067 W/System.err(21370): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:22:30.067 W/System.err(21370): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:22:30.068 W/System.err(21370): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:22:30.068 W/System.err(21370): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:22:30.068 W/System.err(21370): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:22:30.068 W/System.err(21370): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:22:30.068 W/System.err(21370): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.voc
+12-08 13:22:30.069 W/System.err(21370): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:22:30.069 W/System.err(21370): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:22:30.069 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.getPackageVersion(NonIndexablesProviderEligibilityChecker.java:233)
+12-08 13:22:30.069 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.initConfigDependencyPackages(NonIndexablesProviderEligibilityChecker.java:157)
+12-08 13:22:30.069 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.eligibility.NonIndexablesProviderEligibilityChecker.init(NonIndexablesProviderEligibilityChecker.java:148)
+12-08 13:22:30.069 W/System.err(21370): 	at com.samsung.android.settings.intelligence.search.indexing.app.AppDatabaseIndexingManager.indexCommonSettingsDatabase(AppDatabaseIndexingManager.java:59)
+12-08 13:22:30.069 W/System.err(21370): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:932)
+12-08 13:22:30.069 W/System.err(21370): 	at com.android.settings.intelligence.search.indexing.DatabaseIndexingManager$IndexingTask.onPostExecute(DatabaseIndexingManager.java:868)
+12-08 13:22:30.069 W/System.err(21370): 	at android.os.AsyncTask.finish(AsyncTask.java:771)
+12-08 13:22:30.069 W/System.err(21370): 	at android.os.AsyncTask.access$900(AsyncTask.java:199)
+12-08 13:22:30.069 W/System.err(21370): 	at android.os.AsyncTask$InternalHandler.handleMessage(AsyncTask.java:788)
+12-08 13:22:30.069 W/System.err(21370): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:22:30.069 W/System.err(21370): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:22:30.069 W/System.err(21370): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:22:30.069 W/System.err(21370): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:22:30.069 W/System.err(21370): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:22:30.069 W/System.err(21370): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:22:30.069 W/System.err(21370): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:22:31.671 W/System.err( 1364): java.io.FileNotFoundException: https://play.google.com/store/apps/details?id=com.example.gestaobilhares&hl=en
+12-08 13:22:31.672 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getInputStream(HttpURLConnectionImpl.java:255)
+12-08 13:22:31.672 W/System.err( 1364): 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.getInputStream(DelegatingHttpsURLConnection.java:211)
+12-08 13:22:31.672 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:30)
+12-08 13:22:31.673 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerUtils.getApplicationCategory(SemWifiTransportLayerUtils.java:104)
+12-08 13:22:31.673 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerMonitor$TcpMonitorHandler.handleMessage(SemWifiTransportLayerMonitor.java:244)
+12-08 13:22:31.673 W/System.err( 1364): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:22:31.673 W/System.err( 1364): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:22:31.673 W/System.err( 1364): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:22:31.673 W/System.err( 1364): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:22:44.946 W/System.err( 1364): java.io.FileNotFoundException: https://play.google.com/store/apps/details?id=com.example.gestaobilhares&hl=en
+12-08 13:22:44.947 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getInputStream(HttpURLConnectionImpl.java:255)
+12-08 13:22:44.947 W/System.err( 1364): 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.getInputStream(DelegatingHttpsURLConnection.java:211)
+12-08 13:22:44.947 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:30)
+12-08 13:22:44.947 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerUtils.getApplicationCategory(SemWifiTransportLayerUtils.java:104)
+12-08 13:22:44.947 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerMonitor$TcpMonitorHandler.handleMessage(SemWifiTransportLayerMonitor.java:244)
+12-08 13:22:44.947 W/System.err( 1364): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:22:44.947 W/System.err( 1364): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:22:44.947 W/System.err( 1364): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:22:44.947 W/System.err( 1364): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:22:47.414 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - IN+ÏCIO
+12-08 13:22:47.414 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Inicializando UserSessionManager
+12-08 13:22:47.414 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Configurando RecyclerView
+12-08 13:22:47.417 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Configurando ClickListeners
+12-08 13:22:47.417 D/LOG_CRASH(21629): RoutesFragment.setupClickListeners - IN+ÏCIO
+12-08 13:22:47.417 D/LOG_CRASH(21629): RoutesFragment.setupClickListeners - Configurando bot+˙o de menu
+12-08 13:22:47.417 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Configurando NavigationDrawer
+12-08 13:22:47.422 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Configurando Observers
+12-08 13:22:47.422 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - IN+ÏCIO
+12-08 13:22:47.422 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Configurando observer de rotas
+12-08 13:22:47.425 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Configurando observer de estat+°sticas
+12-08 13:22:47.426 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Configurando observer de mensagens de erro
+12-08 13:22:47.429 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - CONFIGURA+Á+‚O COMPLETA
+12-08 13:22:47.434 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Configurando bot+˙o voltar
+12-08 13:22:47.434 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - CONFIGURA+Á+‚O COMPLETA
+12-08 13:22:47.767 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Recebidas 0 rotas
+12-08 13:22:47.772 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Recebidas 2 rotas
+12-08 13:22:47.777 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=0, clientes=0, pend+¨ncias=0
+12-08 13:22:47.781 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=1, clientes=1, pend+¨ncias=1
+12-08 13:22:50.777 D/LOG_CRASH(21629): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:22:50.796 D/LOG_CRASH(21629): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:22:50.798 D/LOG_CRASH(21629): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:22:50.798 D/LOG_CRASH(21629): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:22:56.010 D/CycleExpensesViewModel(21629): ‘£‡ Despesas atualizadas: 0 itens
+12-08 13:22:56.017 D/CycleExpensesViewModel(21629): ≠Éˆ‰ Carregando despesas para ciclo: 2
+12-08 13:22:56.130 D/CycleExpensesViewModel(21629): ≠ÉÙË Processando 1 despesas
+12-08 13:22:56.131 D/CycleExpensesViewModel(21629): ‘£‡ Despesas atualizadas: 1 itens
+12-08 13:22:59.718 D/CycleExpensesViewModel(21629): ‘£‡ Despesa 1 removida com sucesso do banco
+12-08 13:22:59.743 D/CycleExpensesViewModel(21629): ≠ÉÙË Processando 0 despesas
+12-08 13:22:59.744 D/CycleExpensesViewModel(21629): ‘£‡ Despesas atualizadas: 0 itens
+12-08 13:23:03.583 D/LOG_CRASH(21629): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:23:03.590 D/LOG_CRASH(21629): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:23:03.590 D/LOG_CRASH(21629): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:23:03.590 D/LOG_CRASH(21629): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:23:05.003 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - IN+ÏCIO
+12-08 13:23:05.003 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Inicializando UserSessionManager
+12-08 13:23:05.003 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Configurando RecyclerView
+12-08 13:23:05.004 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Configurando ClickListeners
+12-08 13:23:05.004 D/LOG_CRASH(21629): RoutesFragment.setupClickListeners - IN+ÏCIO
+12-08 13:23:05.004 D/LOG_CRASH(21629): RoutesFragment.setupClickListeners - Configurando bot+˙o de menu
+12-08 13:23:05.004 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Configurando NavigationDrawer
+12-08 13:23:05.006 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Configurando Observers
+12-08 13:23:05.006 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - IN+ÏCIO
+12-08 13:23:05.006 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Configurando observer de rotas
+12-08 13:23:05.008 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Configurando observer de estat+°sticas
+12-08 13:23:05.008 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Configurando observer de mensagens de erro
+12-08 13:23:05.009 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - CONFIGURA+Á+‚O COMPLETA
+12-08 13:23:05.010 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - Configurando bot+˙o voltar
+12-08 13:23:05.010 D/LOG_CRASH(21629): RoutesFragment.onViewCreated - CONFIGURA+Á+‚O COMPLETA
+12-08 13:23:05.013 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Recebidas 2 rotas
+12-08 13:23:05.014 D/LOG_CRASH(21629): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=1, clientes=1, pend+¨ncias=1
+12-08 13:23:37.953 W/System.err(22766): SLF4J: No SLF4J providers were found.
+12-08 13:23:37.953 W/System.err(22766): SLF4J: Defaulting to no-operation (NOP) logger implementation
+12-08 13:23:37.955 W/System.err(22766): SLF4J: See https://www.slf4j.org/codes.html#noProviders for further details.
+12-08 13:23:38.144 W/System.err( 1364): java.io.FileNotFoundException: https://play.google.com/store/apps/details?id=com.example.gestaobilhares&hl=en
+12-08 13:23:38.144 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getInputStream(HttpURLConnectionImpl.java:255)
+12-08 13:23:38.145 W/System.err( 1364): 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.getInputStream(DelegatingHttpsURLConnection.java:211)
+12-08 13:23:38.145 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:30)
+12-08 13:23:38.145 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerUtils.getApplicationCategory(SemWifiTransportLayerUtils.java:104)
+12-08 13:23:38.145 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerMonitor$TcpMonitorHandler.handleMessage(SemWifiTransportLayerMonitor.java:244)
+12-08 13:23:38.145 W/System.err( 1364): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:23:38.145 W/System.err( 1364): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:23:38.145 W/System.err( 1364): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:23:38.145 W/System.err( 1364): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:23:47.303 D/LOG_CRASH(22825): RoutesFragment.onViewCreated - IN+ÏCIO
+12-08 13:23:47.303 D/LOG_CRASH(22825): RoutesFragment.onViewCreated - Inicializando UserSessionManager
+12-08 13:23:47.303 D/LOG_CRASH(22825): RoutesFragment.onViewCreated - Configurando RecyclerView
+12-08 13:23:47.305 D/LOG_CRASH(22825): RoutesFragment.onViewCreated - Configurando ClickListeners
+12-08 13:23:47.305 D/LOG_CRASH(22825): RoutesFragment.setupClickListeners - IN+ÏCIO
+12-08 13:23:47.305 D/LOG_CRASH(22825): RoutesFragment.setupClickListeners - Configurando bot+˙o de menu
+12-08 13:23:47.305 D/LOG_CRASH(22825): RoutesFragment.onViewCreated - Configurando NavigationDrawer
+12-08 13:23:47.307 D/LOG_CRASH(22825): RoutesFragment.onViewCreated - Configurando Observers
+12-08 13:23:47.308 D/LOG_CRASH(22825): RoutesFragment.observeViewModel - IN+ÏCIO
+12-08 13:23:47.308 D/LOG_CRASH(22825): RoutesFragment.observeViewModel - Configurando observer de rotas
+12-08 13:23:47.309 D/LOG_CRASH(22825): RoutesFragment.observeViewModel - Configurando observer de estat+°sticas
+12-08 13:23:47.310 D/LOG_CRASH(22825): RoutesFragment.observeViewModel - Configurando observer de mensagens de erro
+12-08 13:23:47.311 D/LOG_CRASH(22825): RoutesFragment.observeViewModel - CONFIGURA+Á+‚O COMPLETA
+12-08 13:23:47.313 D/LOG_CRASH(22825): RoutesFragment.onViewCreated - Configurando bot+˙o voltar
+12-08 13:23:47.313 D/LOG_CRASH(22825): RoutesFragment.onViewCreated - CONFIGURA+Á+‚O COMPLETA
+12-08 13:23:47.434 D/LOG_CRASH(22825): RoutesFragment.observeViewModel - Recebidas 0 rotas
+12-08 13:23:47.439 D/LOG_CRASH(22825): RoutesFragment.observeViewModel - Recebidas 2 rotas
+12-08 13:23:47.442 D/LOG_CRASH(22825): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=0, clientes=0, pend+¨ncias=0
+12-08 13:23:47.445 D/LOG_CRASH(22825): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=1, clientes=1, pend+¨ncias=1
+12-08 13:23:51.000 D/LOG_CRASH(22825): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:23:51.012 D/LOG_CRASH(22825): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:23:51.013 D/LOG_CRASH(22825): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:23:51.013 D/LOG_CRASH(22825): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:23:55.744 D/CycleExpensesViewModel(22825): ‘£‡ Despesas atualizadas: 0 itens
+12-08 13:23:55.749 D/CycleExpensesViewModel(22825): ≠Éˆ‰ Carregando despesas para ciclo: 2
+12-08 13:23:55.848 D/CycleExpensesViewModel(22825): ≠ÉÙË Processando 1 despesas
+12-08 13:23:55.849 D/CycleExpensesViewModel(22825): ‘£‡ Despesas atualizadas: 1 itens
+12-08 13:27:31.647 W/System.err( 4026): java.lang.NumberFormatException: For input string: "FAIL"
+12-08 13:27:31.648 W/System.err( 4026): 	at java.lang.Integer.parseInt(Integer.java:781)
+12-08 13:27:31.648 W/System.err( 4026): 	at java.lang.Integer.parseInt(Integer.java:897)
+12-08 13:27:31.648 W/System.err( 4026): 	at com.sec.android.sdhms.thermal.overheatcontrol.OverheatSensorChecker.getSensorValue(Unknown Source:407)
+12-08 13:27:31.648 W/System.err( 4026): 	at D1.a1.run(Unknown Source:20)
+12-08 13:27:31.648 W/System.err( 4026): 	at com.sec.android.sdhms.thermal.overheatcontrol.OverheatSensorChecker$2.run(Unknown Source:80)
+12-08 13:27:31.648 W/System.err( 4026): 	at android.os.Handler.handleCallback(Handler.java:938)
+12-08 13:27:31.648 W/System.err( 4026): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+12-08 13:27:31.648 W/System.err( 4026): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:27:31.648 W/System.err( 4026): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:27:31.648 W/System.err( 4026): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:27:31.648 W/System.err( 4026): java.lang.NumberFormatException: For input string: "FAIL"
+12-08 13:27:31.649 W/System.err( 4026): 	at java.lang.Integer.parseInt(Integer.java:781)
+12-08 13:27:31.649 W/System.err( 4026): 	at java.lang.Integer.parseInt(Integer.java:897)
+12-08 13:27:31.649 W/System.err( 4026): 	at com.sec.android.sdhms.thermal.overheatcontrol.OverheatSensorChecker.getSensorValue(Unknown Source:407)
+12-08 13:27:31.649 W/System.err( 4026): 	at D1.a1.run(Unknown Source:32)
+12-08 13:27:31.649 W/System.err( 4026): 	at com.sec.android.sdhms.thermal.overheatcontrol.OverheatSensorChecker$2.run(Unknown Source:80)
+12-08 13:27:31.649 W/System.err( 4026): 	at android.os.Handler.handleCallback(Handler.java:938)
+12-08 13:27:31.649 W/System.err( 4026): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+12-08 13:27:31.649 W/System.err( 4026): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:27:31.649 W/System.err( 4026): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:27:31.649 W/System.err( 4026): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:27:31.649 W/System.err( 4026): java.lang.NumberFormatException: For input string: "FAIL"
+12-08 13:27:31.649 W/System.err( 4026): 	at java.lang.Integer.parseInt(Integer.java:781)
+12-08 13:27:31.649 W/System.err( 4026): 	at java.lang.Integer.parseInt(Integer.java:897)
+12-08 13:27:31.649 W/System.err( 4026): 	at com.sec.android.sdhms.thermal.overheatcontrol.OverheatSensorChecker.getSensorValue(Unknown Source:407)
+12-08 13:27:31.649 W/System.err( 4026): 	at D1.a1.run(Unknown Source:48)
+12-08 13:27:31.649 W/System.err( 4026): 	at com.sec.android.sdhms.thermal.overheatcontrol.OverheatSensorChecker$2.run(Unknown Source:80)
+12-08 13:27:31.649 W/System.err( 4026): 	at android.os.Handler.handleCallback(Handler.java:938)
+12-08 13:27:31.649 W/System.err( 4026): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+12-08 13:27:31.649 W/System.err( 4026): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:27:31.649 W/System.err( 4026): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:27:31.649 W/System.err( 4026): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:30:25.367 D/LOG_CRASH(22825): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:30:25.376 D/LOG_CRASH(22825): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:30:25.376 D/LOG_CRASH(22825): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:30:25.376 D/LOG_CRASH(22825): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:30:48.128 W/System.err(25928): android.content.pm.PackageManager$NameNotFoundException: com.example.gestaobilhares
+12-08 13:30:48.129 W/System.err(25928): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:30:48.129 W/System.err(25928): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:30:48.129 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.a(:11)
+12-08 13:30:48.129 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.b(:1)
+12-08 13:30:48.129 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.c(Unknown Source:0)
+12-08 13:30:48.129 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.a.run(Unknown Source:6)
+12-08 13:30:48.129 W/System.err(25928): 	at android.os.Handler.handleCallback(Handler.java:938)
+12-08 13:30:48.129 W/System.err(25928): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+12-08 13:30:48.129 W/System.err(25928): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:30:48.129 W/System.err(25928): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:30:48.129 W/System.err(25928): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:38:32.701 W/System.err(25760): com.samsung.android.scloud.common.exception.SCException: [rcode] 80000000, [rmsg]: SDK is not set up. please check if Scsp.setUp has been called., ResultCode: 100
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.handle(Unknown Source:27)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:204)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.keystore.c.a(Unknown Source:195)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.lambda$onCreate$2(Unknown Source:96)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.d(Unknown Source:0)
+12-08 13:38:32.701 W/System.err(25760): 	at A8.a.apply(Unknown Source:180)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.lambda$onCreate$3(Unknown Source:11)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.e(Unknown Source:0)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.backup.core.logic.worker.g.run(Unknown Source:293)
+12-08 13:38:32.701 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:38:32.701 W/System.err(25760): Caused by: [rcode] 80000000, [rmsg]: SDK is not set up. please check if Scsp.setUp has been called.
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.scsp.framework.core.identity.ScspIdentityFactory.checkContext(Unknown Source:14)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.scsp.framework.core.identity.ScspIdentityFactory.getInstance(Unknown Source:0)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.scsp.framework.core.decorator.AbstractDecorator.<init>(Unknown Source:130)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.scsp.internal.certificate.SamsungCloudCertificate.<init>(Unknown Source:5)
+12-08 13:38:32.701 W/System.err(25760): 	at J.h.get(Unknown Source:20)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.backup.method.oem.f.get(Unknown Source:130)
+12-08 13:38:32.701 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:4)
+12-08 13:38:32.702 W/System.err(25760): 	... 10 more
+12-08 13:38:33.123 W/System.err(25760): java.lang.ExceptionInInitializerError
+12-08 13:38:33.123 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.getInstance(Unknown Source:0)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings$Static.<clinit>(Unknown Source:0)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.getSettingValue(Unknown Source:0)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.isRecoveryInProcessing(Unknown Source:4)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.verifyState(Unknown Source:15)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.recover(Unknown Source:21)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$0(Unknown Source:2)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.c(Unknown Source:0)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.c.run(Unknown Source:49)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$2(Unknown Source:6)
+12-08 13:38:33.124 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.a(Unknown Source:0)
+12-08 13:38:33.124 W/System.err(25760): 	at G2.h.run(Unknown Source:193)
+12-08 13:38:33.124 W/System.err(25760): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+12-08 13:38:33.125 W/System.err(25760): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+12-08 13:38:33.126 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:38:33.126 W/System.err(25760): Caused by: java.lang.RuntimeException: Cannot find implementation for com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase. MediaRecoveryDatabase_Impl does not exist
+12-08 13:38:33.126 W/System.err(25760): 	at androidx.room.Room.getGeneratedImplementation(Unknown Source:208)
+12-08 13:38:33.126 W/System.err(25760): 	at androidx.room.RoomDatabase$Builder.build(Unknown Source:321)
+12-08 13:38:33.126 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.create(Unknown Source:16)
+12-08 13:38:33.126 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.a(Unknown Source:0)
+12-08 13:38:33.126 W/System.err(25760): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase$Holder.<clinit>(Unknown Source:0)
+12-08 13:38:33.126 W/System.err(25760): 	... 17 more
+12-08 13:42:20.097 W/System.err( 1364): java.io.FileNotFoundException: https://play.google.com/store/apps/details?id=com.example.gestaobilhares&hl=en
+12-08 13:42:20.098 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getInputStream(HttpURLConnectionImpl.java:255)
+12-08 13:42:20.098 W/System.err( 1364): 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.getInputStream(DelegatingHttpsURLConnection.java:211)
+12-08 13:42:20.098 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:30)
+12-08 13:42:20.098 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerUtils.getApplicationCategory(SemWifiTransportLayerUtils.java:104)
+12-08 13:42:20.098 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerMonitor$TcpMonitorHandler.handleMessage(SemWifiTransportLayerMonitor.java:244)
+12-08 13:42:20.098 W/System.err( 1364): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:42:20.098 W/System.err( 1364): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:42:20.098 W/System.err( 1364): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:42:20.098 W/System.err( 1364): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:42:20.527 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.inputmethod
+12-08 13:42:20.531 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:20.531 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:20.532 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:20.532 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:20.532 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:20.532 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:20.532 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:20.532 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:20.532 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:20.532 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:20.532 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:20.532 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:20.532 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:20.532 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:20.532 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:20.532 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:20.657 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.app.desktoplauncher
+12-08 13:42:20.658 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:20.658 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:20.658 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:20.658 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:20.658 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:20.658 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:20.658 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:20.658 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:20.658 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:20.658 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:20.658 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:20.658 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:20.658 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:20.658 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:20.658 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:20.658 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:20.682 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.email.provider
+12-08 13:42:20.682 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:20.683 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:20.683 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:20.683 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:20.683 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:20.683 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:20.683 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:20.683 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:20.683 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:20.683 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:20.683 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:20.683 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:20.683 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:20.683 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:20.683 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:20.683 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:20.959 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.app.sbrowser
+12-08 13:42:20.959 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:20.959 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:20.959 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:20.959 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:20.959 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:20.959 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:20.959 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:20.959 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:20.959 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:20.959 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:20.959 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:20.959 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:20.959 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:20.959 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:20.959 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:20.959 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:20.961 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.samsung.voiceserviceplatform
+12-08 13:42:20.961 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:20.961 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:20.961 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:20.961 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:20.961 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:20.961 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:20.961 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:20.961 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:20.961 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:20.961 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:20.961 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:20.961 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:20.961 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:20.961 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:20.961 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:20.961 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:20.962 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:20.962 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:20.962 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:20.962 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:20.962 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:20.962 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:20.962 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:20.962 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:20.962 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:20.962 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:20.962 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:21.317 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.app.firewall
+12-08 13:42:21.318 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:21.318 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:21.318 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:21.318 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:21.318 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:21.318 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:21.318 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:21.318 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:21.318 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:21.318 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:21.318 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:21.318 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:21.318 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:21.318 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:21.318 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:21.318 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:21.320 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.sm_cn
+12-08 13:42:21.320 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:21.320 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:21.320 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:21.320 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:21.320 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:21.320 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:21.320 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:21.320 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:21.320 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:21.320 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:21.320 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:21.320 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:21.320 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:21.320 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:21.320 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:21.320 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:21.320 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:21.320 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:21.321 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:21.321 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:21.321 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:21.321 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:21.321 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:21.321 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:21.321 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:21.321 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:21.321 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:21.375 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.app.routines
+12-08 13:42:21.375 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:21.375 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:21.375 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:21.375 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:21.375 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:21.375 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:21.375 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:21.375 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:21.375 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:21.375 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:21.375 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:21.375 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:21.375 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:21.375 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:21.375 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:21.375 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:21.375 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:21.376 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:21.376 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:21.376 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:21.376 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:21.376 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:21.376 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:21.376 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:21.376 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:21.376 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:21.376 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:21.376 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.scloud.backupsamplecode
+12-08 13:42:21.377 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:21.377 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:21.377 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:21.377 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:21.377 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:21.377 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:21.377 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:21.377 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:21.377 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:21.377 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:21.377 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:21.377 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:21.377 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:21.377 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:21.377 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:21.377 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:21.378 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.example.filebackuptest
+12-08 13:42:21.378 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:21.378 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:21.378 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:21.378 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:21.379 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:21.379 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:21.379 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:21.379 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:21.379 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:21.379 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:21.379 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:21.379 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:21.379 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:21.379 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:21.379 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:21.379 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:21.379 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:21.379 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:21.379 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:21.379 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:21.379 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:21.379 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:21.379 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:21.379 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:21.379 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:21.379 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:21.379 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:21.380 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.example.messengermainapp
+12-08 13:42:21.380 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:21.380 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:21.380 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:21.380 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:21.380 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:21.380 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:21.380 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:21.380 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:21.380 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:21.380 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:21.380 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:21.380 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:21.380 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:21.380 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:21.380 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:21.380 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:21.380 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:21.380 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:21.380 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:21.380 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:21.380 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:21.380 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:21.380 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:21.380 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:21.381 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:21.381 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:21.381 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:21.381 W/System.err(25760): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.scloud.wearbackupexample
+12-08 13:42:21.381 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:42:21.381 W/System.err(25760): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:42:21.381 W/System.err(25760): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:42:21.382 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:42:21.382 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:42:21.382 W/System.err(25760): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:42:21.382 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:42:21.382 W/System.err(25760): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:42:21.382 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:42:21.382 W/System.err(25760): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:42:21.382 W/System.err(25760): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:42:21.382 W/System.err(25760): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:42:21.382 W/System.err(25760): 	at w6.b.load(Unknown Source:8)
+12-08 13:42:21.382 W/System.err(25760): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:42:21.382 W/System.err(25760): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:42:21.382 W/System.err(25760): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:42:21.382 W/System.err(25760): 	at w6.d.c(Unknown Source:0)
+12-08 13:42:21.382 W/System.err(25760): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:42:21.382 W/System.err(25760): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:42:21.382 W/System.err(25760): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:42:21.382 W/System.err(25760): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:42:21.382 W/System.err(25760): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:337)
+12-08 13:42:21.382 W/System.err(25760): 	at C2.f.apply(Unknown Source:382)
+12-08 13:42:21.382 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:42:21.382 W/System.err(25760): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:42:21.382 W/System.err(25760): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:42:21.382 W/System.err(25760): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:42:24.726 W/System.err(27029): android.os.DeadObjectException
+12-08 13:42:24.728 W/System.err(27029): 	at android.os.BinderProxy.transactNative(Native Method)
+12-08 13:42:24.728 W/System.err(27029): 	at android.os.BinderProxy.transact(BinderProxy.java:635)
+12-08 13:42:24.728 W/System.err(27029): 	at android.os.IMessenger$Stub$Proxy.send(IMessenger.java:125)
+12-08 13:42:24.728 W/System.err(27029): 	at android.os.Messenger.send(Messenger.java:59)
+12-08 13:42:24.728 W/System.err(27029): 	at com.samsung.android.sdk.scloud.uiconnection.SamsungCloudUIConnectionHandler.send(SamsungCloudUIConnectionHandler.java:5)
+12-08 13:42:24.728 W/System.err(27029): 	at com.samsung.android.sdk.scloud.uiconnection.SamsungCloudUIConnectionHandler.send(SamsungCloudUIConnectionHandler.java:3)
+12-08 13:42:24.728 W/System.err(27029): 	at com.samsung.android.sdk.scloud.uiconnection.GetControlDataImpl.execute(GetControlDataImpl.java:3)
+12-08 13:42:24.728 W/System.err(27029): 	at com.samsung.android.sdk.scloud.uiconnection.SamsungCloudUIConnectionHandler.handleMessage(SamsungCloudUIConnectionHandler.java:9)
+12-08 13:42:24.728 W/System.err(27029): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:42:24.728 W/System.err(27029): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:42:24.728 W/System.err(27029): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:42:24.728 W/System.err(27029): 	at android.app.ActivityThread.main(ActivityThread.java:8663)
+12-08 13:42:24.728 W/System.err(27029): 	at java.lang.reflect.Method.invoke(Native Method)
+12-08 13:42:24.728 W/System.err(27029): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:571)
+12-08 13:42:24.728 W/System.err(27029): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1135)
+12-08 13:42:27.170 W/System.err( 1364): java.io.FileNotFoundException: https://play.google.com/store/apps/details?id=com.example.gestaobilhares&hl=en
+12-08 13:42:27.171 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getInputStream(HttpURLConnectionImpl.java:255)
+12-08 13:42:27.172 W/System.err( 1364): 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.getInputStream(DelegatingHttpsURLConnection.java:211)
+12-08 13:42:27.172 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:30)
+12-08 13:42:27.172 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerUtils.getApplicationCategory(SemWifiTransportLayerUtils.java:104)
+12-08 13:42:27.172 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerMonitor$TcpMonitorHandler.handleMessage(SemWifiTransportLayerMonitor.java:244)
+12-08 13:42:27.172 W/System.err( 1364): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:42:27.172 W/System.err( 1364): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:42:27.172 W/System.err( 1364): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:42:27.172 W/System.err( 1364): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:42:42.082 W/System.err( 1364): java.io.FileNotFoundException: https://play.google.com/store/apps/details?id=com.example.gestaobilhares&hl=en
+12-08 13:42:42.082 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getInputStream(HttpURLConnectionImpl.java:255)
+12-08 13:42:42.082 W/System.err( 1364): 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.getInputStream(DelegatingHttpsURLConnection.java:211)
+12-08 13:42:42.082 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:30)
+12-08 13:42:42.082 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerUtils.getApplicationCategory(SemWifiTransportLayerUtils.java:104)
+12-08 13:42:42.083 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerMonitor$TcpMonitorHandler.handleMessage(SemWifiTransportLayerMonitor.java:244)
+12-08 13:42:42.083 W/System.err( 1364): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:42:42.083 W/System.err( 1364): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:42:42.083 W/System.err( 1364): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:42:42.083 W/System.err( 1364): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:42:46.734 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - IN+ÏCIO
+12-08 13:42:46.734 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Inicializando UserSessionManager
+12-08 13:42:46.734 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Configurando RecyclerView
+12-08 13:42:46.736 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Configurando ClickListeners
+12-08 13:42:46.736 D/LOG_CRASH(27080): RoutesFragment.setupClickListeners - IN+ÏCIO
+12-08 13:42:46.736 D/LOG_CRASH(27080): RoutesFragment.setupClickListeners - Configurando bot+˙o de menu
+12-08 13:42:46.737 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Configurando NavigationDrawer
+12-08 13:42:46.739 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Configurando Observers
+12-08 13:42:46.739 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - IN+ÏCIO
+12-08 13:42:46.739 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Configurando observer de rotas
+12-08 13:42:46.741 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Configurando observer de estat+°sticas
+12-08 13:42:46.742 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Configurando observer de mensagens de erro
+12-08 13:42:46.743 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - CONFIGURA+Á+‚O COMPLETA
+12-08 13:42:46.746 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Configurando bot+˙o voltar
+12-08 13:42:46.746 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - CONFIGURA+Á+‚O COMPLETA
+12-08 13:42:47.123 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Recebidas 0 rotas
+12-08 13:42:47.129 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Recebidas 2 rotas
+12-08 13:42:47.134 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=0, clientes=0, pend+¨ncias=0
+12-08 13:42:47.138 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=1, clientes=1, pend+¨ncias=1
+12-08 13:42:50.042 D/LOG_CRASH(27080): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:42:50.058 D/LOG_CRASH(27080): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:42:50.059 D/LOG_CRASH(27080): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:42:50.059 D/LOG_CRASH(27080): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:42:54.238 D/LOG_CRASH(27080): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:42:54.245 D/LOG_CRASH(27080): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:42:54.246 D/LOG_CRASH(27080): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:42:54.246 D/LOG_CRASH(27080): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:42:58.364 D/CycleExpensesViewModel(27080): ‘£‡ Despesas atualizadas: 0 itens
+12-08 13:42:58.370 D/CycleExpensesViewModel(27080): ≠Éˆ‰ Carregando despesas para ciclo: 2
+12-08 13:42:58.455 D/CycleExpensesViewModel(27080): ≠ÉÙË Processando 1 despesas
+12-08 13:42:58.456 D/CycleExpensesViewModel(27080): ‘£‡ Despesas atualizadas: 1 itens
+12-08 13:43:01.012 D/CycleExpensesViewModel(27080): ≠ÉÙË Processando 0 despesas
+12-08 13:43:01.012 D/CycleExpensesViewModel(27080): ‘£‡ Despesas atualizadas: 0 itens
+12-08 13:43:01.014 D/CycleExpensesViewModel(27080): ‘£‡ Despesa 1 removida com sucesso do banco
+12-08 13:43:05.183 D/LOG_CRASH(27080): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:43:05.189 D/LOG_CRASH(27080): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:43:05.189 D/LOG_CRASH(27080): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:43:05.189 D/LOG_CRASH(27080): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:43:06.360 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - IN+ÏCIO
+12-08 13:43:06.360 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Inicializando UserSessionManager
+12-08 13:43:06.360 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Configurando RecyclerView
+12-08 13:43:06.361 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Configurando ClickListeners
+12-08 13:43:06.361 D/LOG_CRASH(27080): RoutesFragment.setupClickListeners - IN+ÏCIO
+12-08 13:43:06.361 D/LOG_CRASH(27080): RoutesFragment.setupClickListeners - Configurando bot+˙o de menu
+12-08 13:43:06.361 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Configurando NavigationDrawer
+12-08 13:43:06.363 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Configurando Observers
+12-08 13:43:06.363 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - IN+ÏCIO
+12-08 13:43:06.363 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Configurando observer de rotas
+12-08 13:43:06.364 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Configurando observer de estat+°sticas
+12-08 13:43:06.365 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Configurando observer de mensagens de erro
+12-08 13:43:06.365 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - CONFIGURA+Á+‚O COMPLETA
+12-08 13:43:06.366 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - Configurando bot+˙o voltar
+12-08 13:43:06.366 D/LOG_CRASH(27080): RoutesFragment.onViewCreated - CONFIGURA+Á+‚O COMPLETA
+12-08 13:43:06.369 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Recebidas 2 rotas
+12-08 13:43:06.370 D/LOG_CRASH(27080): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=1, clientes=1, pend+¨ncias=1
+12-08 13:43:45.465 D/LOG_CRASH(27080): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:43:45.472 D/LOG_CRASH(27080): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:43:45.472 D/LOG_CRASH(27080): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:43:45.472 D/LOG_CRASH(27080): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:43:47.453 W/System.err(32638): java.nio.charset.MalformedInputException: Input length = 1
+12-08 13:43:47.459 W/System.err(32638): 	at java.nio.charset.CoderResult.throwException(CoderResult.java:274)
+12-08 13:43:47.459 W/System.err(32638): 	at sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:372)
+12-08 13:43:47.459 W/System.err(32638): 	at sun.nio.cs.StreamDecoder.read(StreamDecoder.java:181)
+12-08 13:43:47.460 W/System.err(32638): 	at java.io.InputStreamReader.read(InputStreamReader.java:177)
+12-08 13:43:47.460 W/System.err(32638): 	at java.io.BufferedReader.fill(BufferedReader.java:172)
+12-08 13:43:47.460 W/System.err(32638): 	at java.io.BufferedReader.readLine(BufferedReader.java:337)
+12-08 13:43:47.460 W/System.err(32638): 	at java.io.BufferedReader.readLine(BufferedReader.java:403)
+12-08 13:43:47.460 W/System.err(32638): 	at java.nio.file.Files.readAllLines(Files.java:3205)
+12-08 13:43:47.460 W/System.err(32638): 	at java.nio.file.Files.readAllLines(Files.java:3242)
+12-08 13:43:47.460 W/System.err(32638): 	at com.sec.internal.helper.SimpleEventLog.lambda$resize$2$SimpleEventLog(SimpleEventLog.java:183)
+12-08 13:43:47.460 W/System.err(32638): 	at com.sec.internal.helper.SimpleEventLog$$ExternalSyntheticLambda0.run(Unknown Source:2)
+12-08 13:43:47.460 W/System.err(32638): 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:524)
+12-08 13:43:47.460 W/System.err(32638): 	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+12-08 13:43:47.460 W/System.err(32638): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+12-08 13:43:47.460 W/System.err(32638): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+12-08 13:43:47.460 W/System.err(32638): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:43:49.710 D/CycleExpensesViewModel(27080): ‘£‡ Despesas atualizadas: 0 itens
+12-08 13:43:49.714 D/CycleExpensesViewModel(27080): ≠Éˆ‰ Carregando despesas para ciclo: 2
+12-08 13:43:49.785 D/CycleExpensesViewModel(27080): ≠ÉÙË Processando 0 despesas
+12-08 13:43:49.785 D/CycleExpensesViewModel(27080): ‘£‡ Despesas atualizadas: 0 itens
+12-08 13:44:00.074 W/System.err(27594): com.samsung.android.scloud.common.exception.SCException: [rcode] 80000000, [rmsg]: SDK is not set up. please check if Scsp.setUp has been called., ResultCode: 100
+12-08 13:44:00.074 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.handle(Unknown Source:27)
+12-08 13:44:00.074 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:204)
+12-08 13:44:00.074 W/System.err(27594): 	at com.samsung.android.scloud.keystore.c.a(Unknown Source:195)
+12-08 13:44:00.074 W/System.err(27594): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.lambda$onCreate$2(Unknown Source:96)
+12-08 13:44:00.074 W/System.err(27594): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.d(Unknown Source:0)
+12-08 13:44:00.074 W/System.err(27594): 	at A8.a.apply(Unknown Source:180)
+12-08 13:44:00.074 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:44:00.074 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:44:00.074 W/System.err(27594): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.lambda$onCreate$3(Unknown Source:11)
+12-08 13:44:00.074 W/System.err(27594): 	at com.samsung.android.scloud.keystore.KeyStoreProvider.e(Unknown Source:0)
+12-08 13:44:00.074 W/System.err(27594): 	at com.samsung.android.scloud.backup.core.logic.worker.g.run(Unknown Source:293)
+12-08 13:44:00.074 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:44:00.075 W/System.err(27594): Caused by: [rcode] 80000000, [rmsg]: SDK is not set up. please check if Scsp.setUp has been called.
+12-08 13:44:00.075 W/System.err(27594): 	at com.samsung.scsp.framework.core.identity.ScspIdentityFactory.checkContext(Unknown Source:14)
+12-08 13:44:00.075 W/System.err(27594): 	at com.samsung.scsp.framework.core.identity.ScspIdentityFactory.getInstance(Unknown Source:0)
+12-08 13:44:00.075 W/System.err(27594): 	at com.samsung.scsp.framework.core.decorator.AbstractDecorator.<init>(Unknown Source:130)
+12-08 13:44:00.075 W/System.err(27594): 	at com.samsung.scsp.internal.certificate.SamsungCloudCertificate.<init>(Unknown Source:5)
+12-08 13:44:00.075 W/System.err(27594): 	at J.h.get(Unknown Source:20)
+12-08 13:44:00.075 W/System.err(27594): 	at com.samsung.android.scloud.backup.method.oem.f.get(Unknown Source:130)
+12-08 13:44:00.075 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:4)
+12-08 13:44:00.075 W/System.err(27594): 	... 10 more
+12-08 13:44:00.375 W/System.err(27594): java.lang.ExceptionInInitializerError
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.getInstance(Unknown Source:0)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryStatUploader.lambda$upload$0(Unknown Source:0)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryStatUploader.b(Unknown Source:0)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.k.run(Unknown Source:7)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryStatUploader.upload(Unknown Source:6)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.k.run(Unknown Source:13)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.lambda$onStartJob$0(Unknown Source:49)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.d(Unknown Source:0)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.a.run(Unknown Source:9)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.lambda$onStartJob$1(Unknown Source:6)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.b(Unknown Source:0)
+12-08 13:44:00.376 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.e.run(Unknown Source:37)
+12-08 13:44:00.376 W/System.err(27594): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+12-08 13:44:00.376 W/System.err(27594): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+12-08 13:44:00.376 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:44:00.376 W/System.err(27594): Caused by: java.lang.RuntimeException: Cannot find implementation for com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase. MediaRecoveryDatabase_Impl does not exist
+12-08 13:44:00.377 W/System.err(27594): 	at androidx.room.Room.getGeneratedImplementation(Unknown Source:208)
+12-08 13:44:00.377 W/System.err(27594): 	at androidx.room.RoomDatabase$Builder.build(Unknown Source:321)
+12-08 13:44:00.377 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.create(Unknown Source:16)
+12-08 13:44:00.377 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.a(Unknown Source:0)
+12-08 13:44:00.377 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase$Holder.<clinit>(Unknown Source:0)
+12-08 13:44:00.377 W/System.err(27594): 	... 21 more
+12-08 13:44:37.122 W/System.err(27594): java.lang.NoClassDefFoundError: com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase$Holder
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.getInstance(Unknown Source:0)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings$Static.<clinit>(Unknown Source:0)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.getSettingValue(Unknown Source:0)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySettings.isRecoveryInProcessing(Unknown Source:4)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.verifyState(Unknown Source:15)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryManager.recover(Unknown Source:21)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$0(Unknown Source:2)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.c(Unknown Source:0)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.c.run(Unknown Source:49)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.lambda$onStartJob$2(Unknown Source:6)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryService.a(Unknown Source:0)
+12-08 13:44:37.122 W/System.err(27594): 	at G2.h.run(Unknown Source:193)
+12-08 13:44:37.122 W/System.err(27594): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+12-08 13:44:37.122 W/System.err(27594): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+12-08 13:44:37.122 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:44:37.122 W/System.err(27594): Caused by: java.lang.ExceptionInInitializerError
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.getInstance(Unknown Source:0)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryStatUploader.lambda$upload$0(Unknown Source:0)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryStatUploader.b(Unknown Source:0)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.k.run(Unknown Source:7)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryStatUploader.upload(Unknown Source:6)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.k.run(Unknown Source:13)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.lambda$onStartJob$0(Unknown Source:49)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.d(Unknown Source:0)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.a.run(Unknown Source:9)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:2)
+12-08 13:44:37.122 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.run(SourceFile:1)
+12-08 13:44:37.123 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.lambda$onStartJob$1(Unknown Source:6)
+12-08 13:44:37.123 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoverySchedulerService.b(Unknown Source:0)
+12-08 13:44:37.123 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.e.run(Unknown Source:37)
+12-08 13:44:37.123 W/System.err(27594): 	... 3 more
+12-08 13:44:37.123 W/System.err(27594): Caused by: java.lang.RuntimeException: Cannot find implementation for com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase. MediaRecoveryDatabase_Impl does not exist
+12-08 13:44:37.123 W/System.err(27594): 	at androidx.room.Room.getGeneratedImplementation(Unknown Source:208)
+12-08 13:44:37.123 W/System.err(27594): 	at androidx.room.RoomDatabase$Builder.build(Unknown Source:321)
+12-08 13:44:37.123 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.create(Unknown Source:16)
+12-08 13:44:37.123 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase.a(Unknown Source:0)
+12-08 13:44:37.123 W/System.err(27594): 	at com.samsung.android.scloud.galleryproxy.mediarecovery.MediaRecoveryDatabase$Holder.<clinit>(Unknown Source:0)
+12-08 13:44:37.123 W/System.err(27594): 	... 21 more
+12-08 13:44:46.633 W/System.err(28017): SLF4J: No SLF4J providers were found.
+12-08 13:44:46.633 W/System.err(28017): SLF4J: Defaulting to no-operation (NOP) logger implementation
+12-08 13:44:46.633 W/System.err(28017): SLF4J: See https://www.slf4j.org/codes.html#noProviders for further details.
+12-08 13:44:48.124 W/System.err( 1364): java.io.FileNotFoundException: https://play.google.com/store/apps/details?id=com.example.gestaobilhares&hl=en
+12-08 13:44:48.124 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getInputStream(HttpURLConnectionImpl.java:255)
+12-08 13:44:48.124 W/System.err( 1364): 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.getInputStream(DelegatingHttpsURLConnection.java:211)
+12-08 13:44:48.124 W/System.err( 1364): 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:30)
+12-08 13:44:48.124 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerUtils.getApplicationCategory(SemWifiTransportLayerUtils.java:104)
+12-08 13:44:48.124 W/System.err( 1364): 	at com.samsung.android.server.wifi.tcp.SemWifiTransportLayerMonitor$TcpMonitorHandler.handleMessage(SemWifiTransportLayerMonitor.java:244)
+12-08 13:44:48.124 W/System.err( 1364): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+12-08 13:44:48.124 W/System.err( 1364): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:44:48.124 W/System.err( 1364): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:44:48.124 W/System.err( 1364): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-08 13:45:02.329 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - IN+ÏCIO
+12-08 13:45:02.329 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Inicializando UserSessionManager
+12-08 13:45:02.330 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Configurando RecyclerView
+12-08 13:45:02.331 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Configurando ClickListeners
+12-08 13:45:02.331 D/LOG_CRASH(28368): RoutesFragment.setupClickListeners - IN+ÏCIO
+12-08 13:45:02.331 D/LOG_CRASH(28368): RoutesFragment.setupClickListeners - Configurando bot+˙o de menu
+12-08 13:45:02.331 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Configurando NavigationDrawer
+12-08 13:45:02.335 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Configurando Observers
+12-08 13:45:02.335 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - IN+ÏCIO
+12-08 13:45:02.335 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Configurando observer de rotas
+12-08 13:45:02.337 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Configurando observer de estat+°sticas
+12-08 13:45:02.338 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Configurando observer de mensagens de erro
+12-08 13:45:02.338 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - CONFIGURA+Á+‚O COMPLETA
+12-08 13:45:02.340 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Configurando bot+˙o voltar
+12-08 13:45:02.340 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - CONFIGURA+Á+‚O COMPLETA
+12-08 13:45:02.442 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Recebidas 0 rotas
+12-08 13:45:02.447 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Recebidas 2 rotas
+12-08 13:45:02.451 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=0, clientes=0, pend+¨ncias=0
+12-08 13:45:02.454 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=1, clientes=1, pend+¨ncias=1
+12-08 13:45:04.715 D/LOG_CRASH(28368): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:45:04.726 D/LOG_CRASH(28368): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:45:04.727 D/LOG_CRASH(28368): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:45:04.727 D/LOG_CRASH(28368): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:45:08.843 D/CycleExpensesViewModel(28368): ‘£‡ Despesas atualizadas: 0 itens
+12-08 13:45:08.848 D/CycleExpensesViewModel(28368): ≠Éˆ‰ Carregando despesas para ciclo: 2
+12-08 13:45:08.937 D/CycleExpensesViewModel(28368): ≠ÉÙË Processando 1 despesas
+12-08 13:45:08.938 D/CycleExpensesViewModel(28368): ‘£‡ Despesas atualizadas: 1 itens
+12-08 13:45:11.598 D/CycleExpensesViewModel(28368): ≠ÉÙË Processando 0 despesas
+12-08 13:45:11.598 D/CycleExpensesViewModel(28368): ‘£‡ Despesas atualizadas: 0 itens
+12-08 13:45:11.605 D/CycleExpensesViewModel(28368): ‘£‡ Despesa 1 removida com sucesso do banco
+12-08 13:45:16.610 D/LOG_CRASH(28368): ClientListFragment.onViewCreated - IN+ÏCIO
+12-08 13:45:16.618 D/LOG_CRASH(28368): ClientListFragment.configurarRecyclerView - IN+ÏCIO
+12-08 13:45:16.619 D/LOG_CRASH(28368): ClientListFragment.configurarBotoes - IN+ÏCIO
+12-08 13:45:16.619 D/LOG_CRASH(28368): ClientListFragment.configurarBotoes - Configurando bot+˙o voltar
+12-08 13:45:17.761 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - IN+ÏCIO
+12-08 13:45:17.761 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Inicializando UserSessionManager
+12-08 13:45:17.761 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Configurando RecyclerView
+12-08 13:45:17.762 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Configurando ClickListeners
+12-08 13:45:17.762 D/LOG_CRASH(28368): RoutesFragment.setupClickListeners - IN+ÏCIO
+12-08 13:45:17.762 D/LOG_CRASH(28368): RoutesFragment.setupClickListeners - Configurando bot+˙o de menu
+12-08 13:45:17.762 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Configurando NavigationDrawer
+12-08 13:45:17.764 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Configurando Observers
+12-08 13:45:17.764 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - IN+ÏCIO
+12-08 13:45:17.764 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Configurando observer de rotas
+12-08 13:45:17.765 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Configurando observer de estat+°sticas
+12-08 13:45:17.766 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Configurando observer de mensagens de erro
+12-08 13:45:17.766 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - CONFIGURA+Á+‚O COMPLETA
+12-08 13:45:17.768 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - Configurando bot+˙o voltar
+12-08 13:45:17.768 D/LOG_CRASH(28368): RoutesFragment.onViewCreated - CONFIGURA+Á+‚O COMPLETA
+12-08 13:45:17.771 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Recebidas 2 rotas
+12-08 13:45:17.772 D/LOG_CRASH(28368): RoutesFragment.observeViewModel - Recebidas estat+°sticas: mesas=1, clientes=1, pend+¨ncias=1
+12-08 13:47:55.330 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.inputmethod
+12-08 13:47:55.334 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:55.334 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:55.334 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:55.334 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:55.334 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:55.334 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:55.335 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:55.335 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:55.335 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:55.335 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:55.335 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:55.335 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:55.335 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:55.335 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:55.335 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:55.335 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:55.335 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:55.335 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:55.335 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:55.335 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:55.335 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:55.335 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:55.335 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:55.335 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:55.335 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:55.335 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:55.335 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:47:55.466 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.app.desktoplauncher
+12-08 13:47:55.467 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:55.467 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:55.467 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:55.467 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:55.467 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:55.467 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:55.467 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:55.467 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:55.467 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:55.467 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:55.467 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:55.467 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:55.467 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:55.467 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:55.467 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:55.467 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:47:55.507 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.email.provider
+12-08 13:47:55.507 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:55.507 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:55.507 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:55.507 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:55.507 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:55.508 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:55.508 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:55.508 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:55.508 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:55.508 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:55.508 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:55.508 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:55.508 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:55.508 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:55.508 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:55.508 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:55.508 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:55.508 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:55.508 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:55.508 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:55.508 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:55.508 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:55.508 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:55.508 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:55.508 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:55.508 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:55.508 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:47:56.156 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.app.sbrowser
+12-08 13:47:56.156 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:56.156 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:56.156 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:56.156 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:56.156 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:56.156 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:56.157 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:56.157 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:56.157 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:56.157 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:56.157 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:56.157 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:56.157 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:56.157 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:56.157 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:56.157 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:56.157 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:56.157 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:56.157 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:56.157 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:56.157 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:56.157 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:56.157 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:56.157 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:56.157 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:56.157 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:56.157 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:47:56.159 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.samsung.voiceserviceplatform
+12-08 13:47:56.159 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:56.159 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:56.159 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:56.159 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:56.159 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:56.159 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:56.159 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:56.159 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:56.159 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:56.159 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:56.159 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:56.159 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:56.159 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:56.159 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:56.159 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:56.160 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:47:56.725 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.sec.android.app.firewall
+12-08 13:47:56.725 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:56.725 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:56.725 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:56.725 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:56.725 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:56.725 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:56.725 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:56.725 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:56.725 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:56.725 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:56.725 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:56.725 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:56.725 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:56.725 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:56.726 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:56.726 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:56.726 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:56.726 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:56.726 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:56.726 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:56.726 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:56.726 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:56.726 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:56.726 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:56.726 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:56.726 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:56.726 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:47:56.727 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.sm_cn
+12-08 13:47:56.727 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:56.727 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:56.728 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:56.728 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:56.728 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:56.728 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:56.728 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:56.728 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:56.728 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:56.728 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:56.728 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:56.728 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:56.728 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:56.728 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:56.728 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:56.728 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:47:56.877 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.app.routines
+12-08 13:47:56.878 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:56.879 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:56.879 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:56.879 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:56.879 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:56.879 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:56.880 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:56.880 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:56.880 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:56.880 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:56.880 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:56.880 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:56.880 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:56.880 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:56.881 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:56.881 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:56.881 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:56.881 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:56.881 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:56.881 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:56.881 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:56.882 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:56.882 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:56.882 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:56.882 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:56.882 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:56.882 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:47:56.889 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.scloud.backupsamplecode
+12-08 13:47:56.889 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:56.889 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:56.889 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:56.889 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:56.889 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:56.889 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:56.889 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:56.889 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:56.889 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:56.889 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:56.889 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:56.889 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:56.889 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:56.889 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:56.889 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:56.889 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:56.890 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:56.890 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:56.890 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:56.890 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:56.890 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:56.890 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:56.890 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:56.890 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:56.890 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:56.890 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:56.890 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:47:56.891 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.example.filebackuptest
+12-08 13:47:56.892 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:56.892 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:56.892 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:56.892 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:56.892 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:56.892 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:56.892 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:56.892 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:56.892 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:56.892 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:56.892 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:56.892 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:56.892 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:56.892 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:56.892 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:56.892 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:56.892 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:56.892 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:56.892 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:56.892 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:56.892 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:56.892 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:56.893 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:56.893 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:56.893 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:56.893 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:56.893 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:47:56.894 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.example.messengermainapp
+12-08 13:47:56.894 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:56.894 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:56.894 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:56.894 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:56.894 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:56.894 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:56.894 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:56.894 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:56.894 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:56.894 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:56.894 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:56.894 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:56.894 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:56.894 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:56.894 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:56.894 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:56.894 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:56.894 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:56.894 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:56.895 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:56.895 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:56.895 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:56.895 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:56.895 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:56.895 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:56.895 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:56.895 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:47:56.896 W/System.err(27594): android.content.pm.PackageManager$NameNotFoundException: com.samsung.android.scloud.wearbackupexample
+12-08 13:47:56.896 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:47:56.896 W/System.err(27594): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.scsp.common.UtilityImpl.signature(Unknown Source:10)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$26(Unknown Source:2)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.c(Unknown Source:0)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.scsp.common.A.get(Unknown Source:27)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:1)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.scsp.error.FaultBarrier.get(SourceFile:4)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.lambda$new$27(Unknown Source:8)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.scsp.common.UtilityFactory.o(Unknown Source:0)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.scsp.common.C.apply(Unknown Source:9)
+12-08 13:47:56.896 W/System.err(27594): 	at w6.f.isLoadablePackage(Unknown Source:17)
+12-08 13:47:56.896 W/System.err(27594): 	at w6.b.load(Unknown Source:8)
+12-08 13:47:56.896 W/System.err(27594): 	at w6.b.readAppContentInfo(Unknown Source:75)
+12-08 13:47:56.896 W/System.err(27594): 	at w6.d.<init>(Unknown Source:200)
+12-08 13:47:56.896 W/System.err(27594): 	at w6.d.instance_delegate$lambda$27(Unknown Source:2)
+12-08 13:47:56.896 W/System.err(27594): 	at w6.d.c(Unknown Source:0)
+12-08 13:47:56.896 W/System.err(27594): 	at t2.a.invoke(Unknown Source:100)
+12-08 13:47:56.896 W/System.err(27594): 	at kotlin.SynchronizedLazyImpl.getValue(Unknown Source:20)
+12-08 13:47:56.896 W/System.err(27594): 	at w6.d$a.getInstance(Unknown Source:4)
+12-08 13:47:56.896 W/System.err(27594): 	at w6.d.getInstance(Unknown Source:2)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.android.scloud.app.runtime.k.execute(Unknown Source:211)
+12-08 13:47:56.896 W/System.err(27594): 	at C2.f.apply(Unknown Source:382)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.commit(Unknown Source:27)
+12-08 13:47:56.896 W/System.err(27594): 	at com.samsung.android.scloud.common.exception.ExceptionHandler.apply(Unknown Source:0)
+12-08 13:47:56.900 W/System.err(27594): 	at androidx.webkit.a.run(Unknown Source:323)
+12-08 13:47:56.900 W/System.err(27594): 	at java.lang.Thread.run(Thread.java:1119)
+12-08 13:48:06.485 W/System.err(25928): android.content.pm.PackageManager$NameNotFoundException: com.example.gestaobilhares
+12-08 13:48:06.485 W/System.err(25928): 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:293)
+12-08 13:48:06.485 W/System.err(25928): 	at android.app.ApplicationPackageManager.getPackageInfo(ApplicationPackageManager.java:265)
+12-08 13:48:06.485 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.a(:11)
+12-08 13:48:06.485 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.b(:1)
+12-08 13:48:06.485 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.AppInstallationMonitor$AppInstallationBroadcastReceiver.c(Unknown Source:0)
+12-08 13:48:06.486 W/System.err(25928): 	at com.sec.android.diagmonagent.sa.datalogging.monitor.a.run(Unknown Source:6)
+12-08 13:48:06.486 W/System.err(25928): 	at android.os.Handler.handleCallback(Handler.java:938)
+12-08 13:48:06.486 W/System.err(25928): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+12-08 13:48:06.486 W/System.err(25928): 	at android.os.Looper.loopOnce(Looper.java:226)
+12-08 13:48:06.486 W/System.err(25928): 	at android.os.Looper.loop(Looper.java:313)
+12-08 13:48:06.486 W/System.err(25928): 	at android.os.HandlerThread.run(HandlerThread.java:67)
