@@ -208,7 +208,27 @@ class AppRepository constructor(
     suspend fun obterClientePorId(id: Long) = clienteRepository.obterPorId(id)
     suspend fun inserirCliente(cliente: Cliente): Long = clienteRepository.inserir(cliente)
     suspend fun atualizarCliente(cliente: Cliente) = clienteRepository.atualizar(cliente)
-    suspend fun deletarCliente(cliente: Cliente) = clienteRepository.deletar(cliente)
+    suspend fun deletarCliente(cliente: Cliente) {
+        // ✅ CORREÇÃO: Deletar do banco local
+        clienteRepository.deletar(cliente)
+        
+        // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
+        try {
+            val operation = SyncOperationEntity(
+                operationType = "DELETE",
+                entityType = "Cliente",
+                entityId = cliente.id.toString(),
+                entityData = "{}",
+                timestamp = System.currentTimeMillis(),
+                retryCount = 0,
+                status = "PENDING"
+            )
+            inserirOperacaoSync(operation)
+            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Cliente: ${cliente.id}")
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Cliente: ${e.message}", e)
+        }
+    }
     suspend fun obterDebitoAtual(clienteId: Long) = clienteRepository.obterDebitoAtual(clienteId)
     suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) = clienteRepository.atualizarDebitoAtual(clienteId, novoDebito)
     suspend fun calcularDebitoAtualEmTempoReal(clienteId: Long) = clienteRepository.calcularDebitoAtualEmTempoReal(clienteId)
@@ -236,7 +256,27 @@ class AppRepository constructor(
     suspend fun buscarRotaPorId(rotaId: Long) = rotaRepository.obterPorId(rotaId)
     suspend fun inserirAcerto(acerto: Acerto): Long = acertoRepository.inserir(acerto)
     suspend fun atualizarAcerto(acerto: Acerto) = acertoRepository.atualizar(acerto)
-    suspend fun deletarAcerto(acerto: Acerto) = acertoRepository.deletar(acerto)
+    suspend fun deletarAcerto(acerto: Acerto) {
+        // ✅ CORREÇÃO: Deletar do banco local
+        acertoRepository.deletar(acerto)
+        
+        // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
+        try {
+            val operation = SyncOperationEntity(
+                operationType = "DELETE",
+                entityType = "Acerto",
+                entityId = acerto.id.toString(),
+                entityData = "{}",
+                timestamp = System.currentTimeMillis(),
+                retryCount = 0,
+                status = "PENDING"
+            )
+            inserirOperacaoSync(operation)
+            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Acerto: ${acerto.id}")
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Acerto: ${e.message}", e)
+        }
+    }
     suspend fun buscarUltimoAcertoPorMesa(mesaId: Long) = acertoRepository.buscarUltimoPorMesa(mesaId)
     suspend fun buscarObservacaoUltimoAcerto(clienteId: Long) = acertoRepository.buscarObservacaoUltimoAcerto(clienteId)
     suspend fun buscarUltimosAcertosPorClientes(clienteIds: List<Long>) = acertoRepository.buscarUltimosPorClientes(clienteIds)
@@ -251,7 +291,27 @@ class AppRepository constructor(
     fun obterMesasDisponiveis() = mesaRepository.obterDisponiveis()
     suspend fun inserirMesa(mesa: Mesa): Long = mesaRepository.inserir(mesa)
     suspend fun atualizarMesa(mesa: Mesa) = mesaRepository.atualizar(mesa)
-    suspend fun deletarMesa(mesa: Mesa) = mesaRepository.deletar(mesa)
+    suspend fun deletarMesa(mesa: Mesa) {
+        // ✅ CORREÇÃO: Deletar do banco local
+        mesaRepository.deletar(mesa)
+        
+        // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
+        try {
+            val operation = SyncOperationEntity(
+                operationType = "DELETE",
+                entityType = "Mesa",
+                entityId = mesa.id.toString(),
+                entityData = "{}",
+                timestamp = System.currentTimeMillis(),
+                retryCount = 0,
+                status = "PENDING"
+            )
+            inserirOperacaoSync(operation)
+            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Mesa: ${mesa.id}")
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Mesa: ${e.message}", e)
+        }
+    }
     suspend fun vincularMesaACliente(mesaId: Long, clienteId: Long) = mesaRepository.vincularACliente(mesaId, clienteId)
     suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double) = mesaRepository.vincularComValorFixo(mesaId, clienteId, valorFixo)
     suspend fun desvincularMesaDeCliente(mesaId: Long) = mesaRepository.desvincularDeCliente(mesaId)
@@ -469,7 +529,27 @@ class AppRepository constructor(
     }
     suspend fun atualizarRota(rota: Rota) = rotaDao.updateRota(rota)
     suspend fun atualizarRotas(rotas: List<Rota>) = rotaDao.updateRotas(rotas)
-    suspend fun deletarRota(rota: Rota) = rotaDao.deleteRota(rota)
+    suspend fun deletarRota(rota: Rota) {
+        // ✅ CORREÇÃO: Deletar do banco local
+        rotaDao.deleteRota(rota)
+        
+        // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
+        try {
+            val operation = SyncOperationEntity(
+                operationType = "DELETE",
+                entityType = "Rota",
+                entityId = rota.id.toString(),
+                entityData = "{}",
+                timestamp = System.currentTimeMillis(),
+                retryCount = 0,
+                status = "PENDING"
+            )
+            inserirOperacaoSync(operation)
+            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Rota: ${rota.id}")
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Rota: ${e.message}", e)
+        }
+    }
     suspend fun desativarRota(rotaId: Long, timestamp: Long = System.currentTimeMillis()) = 
         rotaDao.desativarRota(rotaId, timestamp)
     suspend fun ativarRota(rotaId: Long, timestamp: Long = System.currentTimeMillis()) = 
@@ -498,7 +578,36 @@ class AppRepository constructor(
     suspend fun obterDespesaPorId(id: Long) = despesaRepository.obterPorId(id)
     suspend fun inserirDespesa(despesa: Despesa): Long = despesaRepository.inserir(despesa)
     suspend fun atualizarDespesa(despesa: Despesa) = despesaRepository.atualizar(despesa)
-    suspend fun deletarDespesa(despesa: Despesa) = despesaRepository.deletar(despesa)
+    suspend fun deletarDespesa(despesa: Despesa) {
+        // ✅ CORREÇÃO: Deletar do banco local
+        despesaRepository.deletar(despesa)
+        android.util.Log.d("AppRepository", "🗑️ Despesa deletada localmente: ID=${despesa.id}")
+        
+        // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
+        // O ID local é usado como documentId no Firestore
+        if (syncOperationDao == null) {
+            android.util.Log.e("AppRepository", "❌ CRÍTICO: SyncOperationDao é null! Operação DELETE não será enfileirada para Despesa: ${despesa.id}")
+            return
+        }
+        
+        try {
+            val operation = SyncOperationEntity(
+                operationType = "DELETE",
+                entityType = "Despesa",
+                entityId = despesa.id.toString(),
+                entityData = "{}", // Para DELETE, não precisamos dos dados
+                timestamp = System.currentTimeMillis(),
+                retryCount = 0,
+                status = "PENDING"
+            )
+            val operationId = inserirOperacaoSync(operation)
+            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Despesa: ID=${despesa.id}, OperationID=$operationId")
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ ERRO CRÍTICO ao enfileirar DELETE de Despesa ${despesa.id}: ${e.message}", e)
+            android.util.Log.e("AppRepository", "   Stack trace: ${e.stackTraceToString()}")
+            // Não lança exceção para não impedir a exclusão local
+        }
+    }
     suspend fun calcularTotalPorRota(rotaId: Long) = despesaRepository.calcularTotalPorRota(rotaId)
     suspend fun calcularTotalGeral() = despesaRepository.calcularTotalGeral()
     suspend fun contarDespesasPorRota(rotaId: Long) = despesaRepository.contarPorRota(rotaId)
@@ -624,7 +733,27 @@ class AppRepository constructor(
         }
     }
     suspend fun atualizarColaborador(colaborador: Colaborador) = colaboradorDao.atualizar(colaborador)
-    suspend fun deletarColaborador(colaborador: Colaborador) = colaboradorDao.deletar(colaborador)
+    suspend fun deletarColaborador(colaborador: Colaborador) {
+        // ✅ CORREÇÃO: Deletar do banco local
+        colaboradorDao.deletar(colaborador)
+        
+        // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
+        try {
+            val operation = SyncOperationEntity(
+                operationType = "DELETE",
+                entityType = "Colaborador",
+                entityId = colaborador.id.toString(),
+                entityData = "{}",
+                timestamp = System.currentTimeMillis(),
+                retryCount = 0,
+                status = "PENDING"
+            )
+            inserirOperacaoSync(operation)
+            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Colaborador: ${colaborador.id}")
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Colaborador: ${e.message}", e)
+        }
+    }
     
     suspend fun aprovarColaborador(colaboradorId: Long, dataAprovacao: java.util.Date, aprovadoPor: String) = 
         colaboradorDao.aprovarColaborador(colaboradorId, dataAprovacao, aprovadoPor)
@@ -668,7 +797,27 @@ class AppRepository constructor(
         }
     }
     suspend fun atualizarMeta(meta: MetaColaborador) = colaboradorDao.atualizarMeta(meta)
-    suspend fun deletarMeta(meta: MetaColaborador) = colaboradorDao.deletarMeta(meta)
+    suspend fun deletarMeta(meta: MetaColaborador) {
+        // ✅ CORREÇÃO: Deletar do banco local
+        colaboradorDao.deletarMeta(meta)
+        
+        // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
+        try {
+            val operation = SyncOperationEntity(
+                operationType = "DELETE",
+                entityType = "MetaColaborador",
+                entityId = meta.id.toString(),
+                entityData = "{}",
+                timestamp = System.currentTimeMillis(),
+                retryCount = 0,
+                status = "PENDING"
+            )
+            inserirOperacaoSync(operation)
+            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para MetaColaborador: ${meta.id}")
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de MetaColaborador: ${e.message}", e)
+        }
+    }
     suspend fun atualizarValorAtualMeta(metaId: Long, valorAtual: Double) = colaboradorDao.atualizarValorAtualMeta(metaId, valorAtual)
     
     // ==================== METAS POR ROTA ====================
@@ -1322,7 +1471,25 @@ class AppRepository constructor(
         }
     }
     suspend fun deletarCategoria(categoria: CategoriaDespesa) {
+        // ✅ CORREÇÃO: Deletar do banco local
         categoriaDespesaDao?.deletar(categoria)
+        
+        // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
+        try {
+            val operation = SyncOperationEntity(
+                operationType = "DELETE",
+                entityType = "CategoriaDespesa",
+                entityId = categoria.id.toString(),
+                entityData = "{}",
+                timestamp = System.currentTimeMillis(),
+                retryCount = 0,
+                status = "PENDING"
+            )
+            inserirOperacaoSync(operation)
+            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para CategoriaDespesa: ${categoria.id}")
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de CategoriaDespesa: ${e.message}", e)
+        }
     }
     suspend fun categoriaExiste(nome: String): Boolean = categoriaDespesaDao?.contarPorNome(nome) ?: 0 > 0
     
@@ -1358,7 +1525,25 @@ class AppRepository constructor(
         }
     }
     suspend fun deletarTipo(tipo: TipoDespesa) {
+        // ✅ CORREÇÃO: Deletar do banco local
         tipoDespesaDao?.deletar(tipo)
+        
+        // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
+        try {
+            val operation = SyncOperationEntity(
+                operationType = "DELETE",
+                entityType = "TipoDespesa",
+                entityId = tipo.id.toString(),
+                entityData = "{}",
+                timestamp = System.currentTimeMillis(),
+                retryCount = 0,
+                status = "PENDING"
+            )
+            inserirOperacaoSync(operation)
+            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para TipoDespesa: ${tipo.id}")
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de TipoDespesa: ${e.message}", e)
+        }
     }
     
     // ==================== ACERTO MESA ====================
@@ -1447,7 +1632,27 @@ class AppRepository constructor(
     fun obterTodosVeiculos() = veiculoDao?.listar() ?: flowOf(emptyList())
     suspend fun inserirVeiculo(veiculo: Veiculo): Long = veiculoDao?.inserir(veiculo) ?: 0L
     suspend fun atualizarVeiculo(veiculo: Veiculo) = veiculoDao?.atualizar(veiculo)
-    suspend fun deletarVeiculo(veiculo: Veiculo) = veiculoDao?.deletar(veiculo)
+    suspend fun deletarVeiculo(veiculo: Veiculo) {
+        // ✅ CORREÇÃO: Deletar do banco local
+        veiculoDao?.deletar(veiculo)
+        
+        // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
+        try {
+            val operation = SyncOperationEntity(
+                operationType = "DELETE",
+                entityType = "Veiculo",
+                entityId = veiculo.id.toString(),
+                entityData = "{}",
+                timestamp = System.currentTimeMillis(),
+                retryCount = 0,
+                status = "PENDING"
+            )
+            inserirOperacaoSync(operation)
+            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Veiculo: ${veiculo.id}")
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Veiculo: ${e.message}", e)
+        }
+    }
     @Suppress("UNUSED_PARAMETER")
     suspend fun obterVeiculoPorId(id: Long) = veiculoDao?.let { 
         // VeiculoDao não tem método obterPorId, precisamos criar ou usar listar().first()
@@ -1531,7 +1736,14 @@ class AppRepository constructor(
      * Insere uma operação na fila de sincronização
      */
     suspend fun inserirOperacaoSync(operation: SyncOperationEntity): Long {
-        return syncOperationDao?.inserir(operation) ?: throw IllegalStateException("SyncOperationDao não inicializado")
+        if (syncOperationDao == null) {
+            android.util.Log.e("AppRepository", "❌ CRÍTICO: SyncOperationDao é null ao tentar inserir operação!")
+            android.util.Log.e("AppRepository", "   Tipo: ${operation.operationType}, Entidade: ${operation.entityType}, ID: ${operation.entityId}")
+            throw IllegalStateException("SyncOperationDao não inicializado")
+        }
+        val operationId = syncOperationDao.inserir(operation)
+        android.util.Log.d("AppRepository", "✅ Operação inserida na fila: ID=$operationId, Tipo=${operation.operationType}, Entidade=${operation.entityType}")
+        return operationId
     }
     
     /**
@@ -1593,7 +1805,27 @@ class AppRepository constructor(
     fun obterTodosEquipments() = equipmentDao?.listar() ?: flowOf(emptyList())
     suspend fun inserirEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment): Long = equipmentDao?.inserir(equipment) ?: 0L
     suspend fun atualizarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) = equipmentDao?.atualizar(equipment)
-    suspend fun deletarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) = equipmentDao?.deletar(equipment)
+    suspend fun deletarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) {
+        // ✅ CORREÇÃO: Deletar do banco local
+        equipmentDao?.deletar(equipment)
+        
+        // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
+        try {
+            val operation = SyncOperationEntity(
+                operationType = "DELETE",
+                entityType = "Equipment",
+                entityId = equipment.id.toString(),
+                entityData = "{}",
+                timestamp = System.currentTimeMillis(),
+                retryCount = 0,
+                status = "PENDING"
+            )
+            inserirOperacaoSync(operation)
+            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Equipment: ${equipment.id}")
+        } catch (e: Exception) {
+            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Equipment: ${e.message}", e)
+        }
+    }
     
     // ==================== META COLABORADOR (TODAS) ====================
     

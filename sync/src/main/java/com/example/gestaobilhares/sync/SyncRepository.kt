@@ -1308,6 +1308,8 @@ class SyncRepository(
      */
     suspend fun syncPush(progressTracker: ProgressTracker? = null): Result<Unit> {
         Log.d(TAG, "🔄 ========== INICIANDO SINCRONIZAÇÃO PUSH ==========")
+        Log.d(TAG, "   ⏰ Timestamp: ${System.currentTimeMillis()} (${java.util.Date()})")
+        Log.d(TAG, "   📍 Stack trace: ${Thread.currentThread().stackTrace.take(5).joinToString("\n") { it.toString() }}")
         return try {
             if (!networkUtils.isConnected()) {
                 Log.w(TAG, "⚠️ Sincronização Push cancelada: dispositivo offline")
@@ -1322,13 +1324,29 @@ class SyncRepository(
                 error = null
             )
             
-            Log.d(TAG, "📤 Processando fila de sincronização antes do push direto...")
+            Log.d(TAG, "📤 ========== PROCESSANDO FILA DE SINCRONIZAÇÃO ==========")
+            // ✅ CORREÇÃO: Verificar quantas operações existem na fila antes de processar
+            val pendingCountBefore = runCatching { appRepository.contarOperacoesSyncPendentes() }.getOrDefault(0)
+            val failedCountBefore = runCatching { appRepository.contarOperacoesSyncFalhadas() }.getOrDefault(0)
+            Log.d(TAG, "📊 Estado da fila ANTES do processamento:")
+            Log.d(TAG, "   - Operações pendentes: $pendingCountBefore")
+            Log.d(TAG, "   - Operações falhadas: $failedCountBefore")
+            
+            if (pendingCountBefore > 0) {
+                Log.d(TAG, "   ⚠️ Há $pendingCountBefore operação(ões) pendente(s) na fila!")
+            } else {
+                Log.d(TAG, "   ℹ️ Nenhuma operação pendente na fila")
+            }
+            
             val queueProcessResult = processSyncQueue()
             if (queueProcessResult.isFailure) {
                 Log.e(TAG, "❌ Falha ao processar fila de sincronização: ${queueProcessResult.exceptionOrNull()?.message}")
                 // Não retornamos falha aqui, tentamos o push direto mesmo assim
             } else {
+                val pendingCountAfter = runCatching { appRepository.contarOperacoesSyncPendentes() }.getOrDefault(0)
+                val failedCountAfter = runCatching { appRepository.contarOperacoesSyncFalhadas() }.getOrDefault(0)
                 Log.d(TAG, "✅ Fila de sincronização processada com sucesso.")
+                Log.d(TAG, "📊 Estado da fila DEPOIS do processamento: pendentes=$pendingCountAfter, falhadas=$failedCountAfter")
             }
 
             Log.d(TAG, "Iniciando push de dados locais para o Firestore...")
@@ -1825,46 +1843,106 @@ class SyncRepository(
      */
     suspend fun processSyncQueue(): Result<Unit> {
         return try {
+            Log.d(TAG, "🔄 processSyncQueue() INICIADO")
             if (!networkUtils.isConnected()) {
                 Log.w(TAG, "⚠️ Fila de sincronização não processada: dispositivo offline")
                 return Result.failure(Exception("Dispositivo offline - fila pendente"))
             }
             
-            val operations = appRepository.obterOperacoesSyncPendentesLimitadas(QUEUE_BATCH_SIZE)
-            if (operations.isEmpty()) {
-                Log.d(TAG, "📭 Nenhuma operação pendente na fila")
-        return Result.success(Unit)
+            // ✅ CORREÇÃO: Verificar quantas operações existem antes de processar
+            val totalPendingBefore = runCatching { appRepository.contarOperacoesSyncPendentes() }.getOrDefault(0)
+            Log.d(TAG, "📊 Total de operações pendentes na fila: $totalPendingBefore")
+            
+            if (totalPendingBefore == 0) {
+                Log.d(TAG, "📭 Nenhuma operação pendente na fila - encerrando processamento")
+                return Result.success(Unit)
             }
             
-            Log.d(TAG, "📦 Processando ${operations.size} operações pendentes")
-            var successCount = 0
-            var failureCount = 0
+            // ✅ CORREÇÃO: Processar em loop até esvaziar a fila
+            var totalSuccessCount = 0
+            var totalFailureCount = 0
+            var batchNumber = 0
             
-            operations.forEach { entity ->
-                val processingEntity = entity.copy(status = SyncOperationStatus.PROCESSING.name)
-                appRepository.atualizarOperacaoSync(processingEntity)
+            while (true) {
+                // ✅ CORREÇÃO: Log antes de buscar operações
+                Log.d(TAG, "   🔍 Buscando operações pendentes (limite: $QUEUE_BATCH_SIZE)...")
+                val operations = appRepository.obterOperacoesSyncPendentesLimitadas(QUEUE_BATCH_SIZE)
+                Log.d(TAG, "   📊 Operações encontradas: ${operations.size}")
                 
-                try {
-                    processSingleSyncOperation(processingEntity)
-                    appRepository.deletarOperacaoSync(processingEntity)
-                    successCount++
-                } catch (e: Exception) {
-                    failureCount++
-                    val newRetryCount = processingEntity.retryCount + 1
-                    val newStatus = if (newRetryCount >= processingEntity.maxRetries) {
-                        SyncOperationStatus.FAILED.name
+                if (operations.isEmpty()) {
+                    if (batchNumber == 0) {
+                        Log.d(TAG, "📭 Nenhuma operação pendente na fila")
                     } else {
-                        SyncOperationStatus.PENDING.name
+                        Log.d(TAG, "✅ Fila completamente processada após $batchNumber lote(s)")
                     }
-                    Log.e(TAG, "❌ Erro ao processar operação ${processingEntity.id}: ${e.message}", e)
-                    appRepository.atualizarOperacaoSync(
-                        processingEntity.copy(
-                            status = newStatus,
-                            retryCount = newRetryCount,
-                            timestamp = System.currentTimeMillis()
-                        )
-                    )
+                    break
                 }
+                
+                batchNumber++
+                Log.d(TAG, "📦 Processando lote $batchNumber: ${operations.size} operações pendentes")
+                // ✅ CORREÇÃO: Log detalhado de cada operação encontrada
+                operations.forEachIndexed { index, op ->
+                    Log.d(TAG, "   📋 Operação ${index + 1}: tipo=${op.operationType}, entidade=${op.entityType}, id=${op.entityId}, status=${op.status}")
+                }
+                var batchSuccessCount = 0
+                var batchFailureCount = 0
+                
+                operations.forEach { entity ->
+                    val processingEntity = entity.copy(status = SyncOperationStatus.PROCESSING.name)
+                    appRepository.atualizarOperacaoSync(processingEntity)
+                    
+                    try {
+                        Log.d(TAG, "🔄 Processando operação: tipo=${entity.operationType}, entidade=${entity.entityType}, id=${entity.entityId}")
+                        Log.d(TAG, "   📋 Operation ID: ${entity.id}, Status: ${entity.status}, Retry: ${entity.retryCount}")
+                        processSingleSyncOperation(processingEntity)
+                        appRepository.deletarOperacaoSync(processingEntity)
+                        batchSuccessCount++
+                        totalSuccessCount++
+                        Log.d(TAG, "✅ Operação processada com sucesso: tipo=${entity.operationType}, entidade=${entity.entityType}, id=${entity.entityId}")
+                    } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                        batchFailureCount++
+                        totalFailureCount++
+                        val newRetryCount = processingEntity.retryCount + 1
+                        val newStatus = if (newRetryCount >= processingEntity.maxRetries) {
+                            SyncOperationStatus.FAILED.name
+                        } else {
+                            SyncOperationStatus.PENDING.name
+                        }
+                        Log.e(TAG, "❌ Erro do Firestore ao processar operação ${processingEntity.id} (tentativa $newRetryCount/${processingEntity.maxRetries}): ${e.code} - ${e.message}", e)
+                        Log.e(TAG, "   Tipo: ${processingEntity.operationType}, Entidade: ${processingEntity.entityType}, ID: ${processingEntity.entityId}")
+                        if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                            Log.e(TAG, "   🔐 PERMISSION_DENIED: Verifique as regras do Firestore para ${processingEntity.operationType} em ${processingEntity.entityType}")
+                        }
+                        appRepository.atualizarOperacaoSync(
+                            processingEntity.copy(
+                                status = newStatus,
+                                retryCount = newRetryCount,
+                                timestamp = System.currentTimeMillis()
+                            )
+                        )
+                    } catch (e: Exception) {
+                        batchFailureCount++
+                        totalFailureCount++
+                        val newRetryCount = processingEntity.retryCount + 1
+                        val newStatus = if (newRetryCount >= processingEntity.maxRetries) {
+                            SyncOperationStatus.FAILED.name
+                        } else {
+                            SyncOperationStatus.PENDING.name
+                        }
+                        Log.e(TAG, "❌ Erro ao processar operação ${processingEntity.id} (tentativa $newRetryCount/${processingEntity.maxRetries}): ${e.message}", e)
+                        Log.e(TAG, "   Tipo: ${processingEntity.operationType}, Entidade: ${processingEntity.entityType}, ID: ${processingEntity.entityId}")
+                        Log.e(TAG, "   📚 Stack trace: ${e.stackTraceToString()}")
+                        appRepository.atualizarOperacaoSync(
+                            processingEntity.copy(
+                                status = newStatus,
+                                retryCount = newRetryCount,
+                                timestamp = System.currentTimeMillis()
+                            )
+                        )
+                    }
+                }
+                
+                Log.d(TAG, "📊 Lote $batchNumber processado: sucesso=$batchSuccessCount, falhas=$batchFailureCount")
             }
             
             val pendingCount = runCatching { appRepository.contarOperacoesSyncPendentes() }.getOrDefault(0)
@@ -1874,7 +1952,7 @@ class SyncRepository(
                 failedOperations = failedCount
             )
             
-            Log.d(TAG, "📊 Fila processada: sucesso=$successCount, falhas=$failureCount, pendentes=$pendingCount, falhadas=$failedCount")
+            Log.d(TAG, "📊 Fila completamente processada: total sucesso=$totalSuccessCount, total falhas=$totalFailureCount, pendentes=$pendingCount, falhadas=$failedCount")
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "❌ Erro ao processar fila de sincronização: ${e.message}", e)
@@ -1891,16 +1969,69 @@ class SyncRepository(
             throw IllegalArgumentException("entityId vazio para operação ${operation.id}")
         }
         
+        // ✅ CORREÇÃO: Logs detalhados para debug
+        Log.d(TAG, "🔧 Processando operação única:")
+        Log.d(TAG, "   Tipo: ${operation.operationType}")
+        Log.d(TAG, "   Entidade: ${operation.entityType}")
+        Log.d(TAG, "   Document ID: $documentId")
+        Log.d(TAG, "   Collection Path: ${collectionRef.path}")
+        
         when (operationType) {
             SyncOperationType.CREATE, SyncOperationType.UPDATE -> {
                 val rawMap: Map<String, Any?> = gson.fromJson(operation.entityData, mapType)
                 val mutableData = rawMap.toMutableMap()
                 mutableData["lastModified"] = FieldValue.serverTimestamp()
                 mutableData["syncTimestamp"] = FieldValue.serverTimestamp()
+                Log.d(TAG, "📝 Executando ${operation.operationType} no documento $documentId")
                 collectionRef.document(documentId).set(mutableData).await()
+                Log.d(TAG, "✅ ${operation.operationType} executado com sucesso no documento $documentId")
             }
             SyncOperationType.DELETE -> {
-                collectionRef.document(documentId).delete().await()
+                Log.d(TAG, "🗑️ ========== INICIANDO DELETE ==========")
+                Log.d(TAG, "   Tipo de entidade: ${operation.entityType}")
+                Log.d(TAG, "   Document ID: $documentId")
+                Log.d(TAG, "   Collection Path: ${collectionRef.path}")
+                Log.d(TAG, "   Collection Name: ${collectionRef.id}")
+                Log.d(TAG, "   Document Path completo: ${collectionRef.path}/$documentId")
+                
+                val documentRef = collectionRef.document(documentId)
+                
+                // ✅ CORREÇÃO: Verificar se o documento existe antes de deletar
+                try {
+                    Log.d(TAG, "   🔍 Verificando existência do documento...")
+                    val snapshot = documentRef.get().await()
+                    if (snapshot.exists()) {
+                        Log.d(TAG, "   📄 Documento encontrado no Firestore!")
+                        Log.d(TAG, "   📋 Dados do documento: ${snapshot.data?.keys?.joinToString()}")
+                        Log.d(TAG, "   🗑️ Executando DELETE...")
+                        documentRef.delete().await()
+                        Log.d(TAG, "✅ DELETE executado com sucesso no documento $documentId")
+                        Log.d(TAG, "   ✅ Verificando se foi deletado...")
+                        val verifySnapshot = documentRef.get().await()
+                        if (!verifySnapshot.exists()) {
+                            Log.d(TAG, "   ✅ Confirmado: Documento foi deletado com sucesso")
+                        } else {
+                            Log.w(TAG, "   ⚠️ ATENÇÃO: Documento ainda existe após DELETE!")
+                        }
+                    } else {
+                        Log.w(TAG, "⚠️ Documento $documentId não existe no Firestore")
+                        Log.w(TAG, "   Caminho verificado: ${collectionRef.path}/$documentId")
+                        Log.w(TAG, "   Possíveis causas: já foi deletado, nunca existiu, ou caminho incorreto")
+                        // Não lançar exceção - considerar sucesso se já não existe
+                    }
+                } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                    Log.e(TAG, "❌ Erro do Firestore ao deletar documento $documentId:", e)
+                    Log.e(TAG, "   Código: ${e.code}")
+                    Log.e(TAG, "   Mensagem: ${e.message}")
+                    Log.e(TAG, "   Caminho: ${collectionRef.path}/$documentId")
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Erro geral ao deletar documento $documentId: ${e.message}", e)
+                    Log.e(TAG, "   Tipo: ${e.javaClass.simpleName}")
+                    Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
+                    throw e
+                }
+                Log.d(TAG, "🗑️ ========== DELETE FINALIZADO ==========")
             }
         }
     }
@@ -1908,6 +2039,17 @@ class SyncRepository(
     private fun resolveCollectionReference(entityType: String): CollectionReference {
         val normalized = entityType.lowercase(Locale.getDefault())
         val collectionName = when (normalized) {
+            "cliente" -> COLLECTION_CLIENTES
+            "acerto" -> COLLECTION_ACERTOS
+            "despesa" -> COLLECTION_DESPESAS  // ✅ CORREÇÃO: Mapear "despesa" (singular) para "despesas" (plural)
+            "mesa" -> COLLECTION_MESAS
+            "rota" -> COLLECTION_ROTAS
+            "colaborador" -> COLLECTION_COLABORADORES
+            "mesareformada" -> COLLECTION_MESAS_REFORMADAS
+            "mesavendida" -> COLLECTION_MESAS_VENDIDAS
+            "equipment" -> COLLECTION_EQUIPMENTS
+            "ciclo" -> COLLECTION_CICLOS
+            "meta" -> COLLECTION_METAS
             COLLECTION_CLIENTES -> COLLECTION_CLIENTES
             COLLECTION_ACERTOS -> COLLECTION_ACERTOS
             COLLECTION_DESPESAS -> COLLECTION_DESPESAS
@@ -1919,8 +2061,12 @@ class SyncRepository(
             COLLECTION_EQUIPMENTS -> COLLECTION_EQUIPMENTS
             COLLECTION_CICLOS -> COLLECTION_CICLOS
             COLLECTION_METAS -> COLLECTION_METAS
-            else -> normalized
+            else -> {
+                Log.w(TAG, "⚠️ Tipo de entidade desconhecido: $entityType (normalizado: $normalized), usando como nome de coleção")
+                normalized
+            }
         }
+        Log.d(TAG, "🔗 Mapeamento de entidade: '$entityType' -> coleção '$collectionName'")
         return getCollectionReference(firestore, collectionName)
     }
     
