@@ -1,0 +1,5 @@
+C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\test\java\com\example\gestaobilhares\ExampleUnitTest.kt
+C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\test\java\com\example\gestaobilhares\ui\auth\AuthViewModelTest.kt
+C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\test\java\com\example\gestaobilhares\ui\routes\RoutesViewModelTest.kt
+C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\test\java\com\example\gestaobilhares\data\utils\CalculoUtilsTest.kt
+C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\test\java\com\example\gestaobilhares\ui\settlement\SettlementViewModelTest.kt

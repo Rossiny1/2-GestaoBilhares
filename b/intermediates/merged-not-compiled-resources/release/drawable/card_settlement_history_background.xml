@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 🎱 BACKGROUND TEMÁTICO PARA CARDS DE HISTÓRICO DE ACERTOS -->
+<!-- Design moderno com gradiente sutil e elementos de bilhar -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Fundo base com gradiente temático -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#FF1A2332"
+                android:endColor="#FF0F1419"
+                android:angle="135"
+                android:type="linear" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+    
+    <!-- Overlay sutil com cor temática -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#1000BCD4" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+    
+    <!-- Borda elegante -->
+    <item>
+        <shape android:shape="rectangle">
+            <stroke 
+                android:width="1dp" 
+                android:color="#2000BCD4" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+    
+</layer-list>
