@@ -17,8 +17,10 @@ import com.example.gestaobilhares.ui.databinding.ItemMetaRotaBinding
 import java.text.NumberFormat
 import java.util.Locale
 
-class MetasAdapter(private val onDetailsClick: (MetaRotaResumo) -> Unit) :
-    ListAdapter<MetaRotaResumo, MetasAdapter.MetaRotaViewHolder>(MetaRotaDiffCallback()) {
+class MetasAdapter(
+    private val onDetailsClick: (MetaRotaResumo) -> Unit,
+    private val onCreateMetaClick: (MetaRotaResumo) -> Unit
+) : ListAdapter<MetaRotaResumo, MetasAdapter.MetaRotaViewHolder>(MetaRotaDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MetaRotaViewHolder {
         val binding = ItemMetaRotaBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -48,8 +50,14 @@ class MetasAdapter(private val onDetailsClick: (MetaRotaResumo) -> Unit) :
             
             android.util.Log.d("MetasAdapter", "Configurando RecyclerView com ${metaRota.metas.size} metas para rota ${metaRota.rota.nome}")
 
-            binding.btnDetalhes.setOnClickListener {
+            // ✅ NOVO: Clicar no card abre histórico de metas
+            binding.root.setOnClickListener {
                 onDetailsClick(metaRota)
+            }
+            
+            // ✅ NOVO: Botão "Criar Metas" navega para cadastro (prevenir propagação do clique)
+            binding.btnDetalhes.setOnClickListener { 
+                onCreateMetaClick(metaRota)
             }
         }
     }

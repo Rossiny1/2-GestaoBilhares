@@ -116,7 +116,9 @@ class AppRepository constructor(
             cicloAcertoDao,
             despesaDao,
             acertoRepositoryLegacy,
-            clienteRepositoryLegacy
+            clienteRepositoryLegacy,
+            rotaDao,
+            colaboradorDao // ✅ NOVO: Adicionar ColaboradorDao para finalizar metas
         )
     }
     
@@ -830,7 +832,52 @@ class AppRepository constructor(
     
     // Métodos para metas
     suspend fun buscarMetasPorColaboradorECiclo(colaboradorId: Long, cicloId: Long) = colaboradorDao.buscarMetasPorColaboradorECiclo(colaboradorId, cicloId)
-    suspend fun buscarMetasPorRotaECiclo(rotaId: Long, cicloId: Long) = colaboradorDao.buscarMetasPorRotaECiclo(rotaId, cicloId)
+    suspend fun buscarMetasPorRotaECiclo(rotaId: Long, cicloId: Long): List<MetaColaborador> {
+        // Verificar se o ciclo está finalizado
+        val ciclo = buscarCicloPorId(cicloId)
+        val cicloFinalizado = ciclo?.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO
+        
+        // Se o ciclo está finalizado, buscar todas as metas (ativas e finalizadas) - para histórico
+        if (cicloFinalizado) {
+            val metasAtivas = colaboradorDao.buscarMetasPorRotaECiclo(rotaId, cicloId)
+            val metasFinalizadas = colaboradorDao.buscarMetasPorRotaECicloFinalizadas(rotaId, cicloId)
+            android.util.Log.d("AppRepository", "Ciclo finalizado: buscando ${metasAtivas.size} metas ativas e ${metasFinalizadas.size} metas finalizadas")
+            return (metasAtivas + metasFinalizadas).distinctBy { it.id }
+        }
+        
+        // Para ciclos em andamento, buscar APENAS metas ativas
+        // Tentar busca principal primeiro (apenas ativas)
+        val metas = colaboradorDao.buscarMetasPorRotaECiclo(rotaId, cicloId)
+        if (metas.isNotEmpty()) {
+            return metas
+        }
+        // Fallback: busca direta por rotaId (para casos onde colaboradorId = 0)
+        return colaboradorDao.buscarMetasPorRotaECicloDireto(rotaId, cicloId)
+    }
+    
+    /**
+     * Busca metas APENAS de ciclos em andamento (para tela principal)
+     * Não retorna metas de ciclos finalizados
+     */
+    suspend fun buscarMetasPorRotaECicloAtivo(rotaId: Long, cicloId: Long): List<MetaColaborador> {
+        // Verificar se o ciclo está em andamento
+        val ciclo = buscarCicloPorId(cicloId)
+        val cicloEmAndamento = ciclo?.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO
+        
+        // Se o ciclo não está em andamento, retornar lista vazia
+        if (!cicloEmAndamento) {
+            android.util.Log.d("AppRepository", "Ciclo $cicloId não está em andamento (status=${ciclo?.status}), retornando lista vazia")
+            return emptyList()
+        }
+        
+        // Buscar apenas metas ativas
+        val metas = colaboradorDao.buscarMetasPorRotaECiclo(rotaId, cicloId)
+        if (metas.isNotEmpty()) {
+            return metas
+        }
+        // Fallback: busca direta por rotaId
+        return colaboradorDao.buscarMetasPorRotaECicloDireto(rotaId, cicloId)
+    }
 
     suspend fun existeMetaDuplicada(rotaId: Long, cicloId: Long, tipoMeta: TipoMeta): Boolean {
         val count = colaboradorDao.contarMetasPorRotaCicloETipo(rotaId, cicloId, tipoMeta)
@@ -929,6 +976,7 @@ class AppRepository constructor(
     
     fun obterTodosCiclos() = cicloRepository.obterTodos()
     suspend fun buscarUltimoCicloFinalizadoPorRota(rotaId: Long) = cicloRepository.buscarUltimoFinalizadoPorRota(rotaId)
+    suspend fun buscarUltimoCicloPorRota(rotaId: Long) = cicloRepository.buscarUltimoCicloPorRota(rotaId)
     suspend fun buscarCiclosPorRotaEAno(rotaId: Long, ano: Int) = cicloRepository.buscarPorRotaEAno(rotaId, ano)
     suspend fun buscarCiclosPorRota(rotaId: Long) = cicloRepository.buscarPorRota(rotaId)
     suspend fun buscarProximoNumeroCiclo(rotaId: Long, ano: Int) = cicloRepository.buscarProximoNumero(rotaId, ano)
@@ -1576,18 +1624,24 @@ class AppRepository constructor(
         try {
             val cicloAtual = buscarCicloAtivo(rotaId)
             if (cicloAtual != null) {
+                Log.d("AppRepository", "🔄 Iniciando finalização do ciclo ${cicloAtual.id} da rota $rotaId")
+                
                 // ✅ CORREÇÃO: Finalizar o ciclo na rota primeiro
                 val dataFim = System.currentTimeMillis()
                 finalizarCicloRota(rotaId, dataFim)
                 
                 // ✅ CORREÇÃO: Usar o método finalizarCiclo do CicloAcertoRepository que calcula e salva todos os valores,
-                // incluindo o debitoTotal "congelado" no ciclo finalizado
+                // incluindo o debitoTotal "congelado" no ciclo finalizado E finaliza as metas automaticamente
+                Log.d("AppRepository", "📋 Chamando finalizarCiclo do CicloAcertoRepository para ciclo ${cicloAtual.id}")
                 cicloAcertoRepository.finalizarCiclo(cicloAtual.id, java.util.Date(dataFim))
                 
-                Log.d("AppRepository", "Ciclo ${cicloAtual.id} finalizado com debitoTotal preservado")
+                Log.d("AppRepository", "✅ Ciclo ${cicloAtual.id} finalizado com debitoTotal preservado e metas finalizadas")
+            } else {
+                Log.w("AppRepository", "⚠️ Nenhum ciclo ativo encontrado para rota $rotaId")
             }
         } catch (e: Exception) {
-            Log.e("AppRepository", "Erro ao finalizar ciclo atual: ${e.message}", e)
+            Log.e("AppRepository", "❌ Erro ao finalizar ciclo atual: ${e.message}", e)
+            e.printStackTrace()
         }
     }
     

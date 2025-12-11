@@ -106,6 +106,13 @@ interface ColaboradorDao {
     @Query("SELECT * FROM metas_colaborador WHERE colaborador_id = :colaboradorId AND ciclo_id = :cicloId AND rota_id = :rotaId AND ativo = 1")
     fun obterMetasPorCicloERota(colaboradorId: Long, cicloId: Long, rotaId: Long): Flow<List<MetaColaborador>>
     
+    /**
+     * Busca todas as metas de um ciclo (independente do colaborador)
+     * Usado para finalizar todas as metas quando o ciclo é finalizado
+     */
+    @Query("SELECT * FROM metas_colaborador WHERE ciclo_id = :cicloId AND ativo = 1")
+    suspend fun buscarTodasMetasPorCiclo(cicloId: Long): List<MetaColaborador>
+    
     // ==================== COLABORADOR ROTA ====================
     
     @Query("SELECT * FROM colaborador_rotas WHERE colaborador_id = :colaboradorId")
@@ -154,9 +161,39 @@ interface ColaboradorDao {
           AND (
                 cr.rota_id = :rotaId
              OR mc.rota_id = :rotaId
+             OR (mc.colaborador_id = 0 AND mc.rota_id = :rotaId)
           )
     """)
     suspend fun buscarMetasPorRotaECiclo(rotaId: Long, cicloId: Long): List<MetaColaborador>
+    
+    /**
+     * Busca todas as metas de uma rota em um ciclo (busca direta por rotaId)
+     * Usado como fallback quando a busca principal não encontra resultados
+     */
+    @Query("""
+        SELECT * FROM metas_colaborador 
+        WHERE rota_id = :rotaId 
+          AND ciclo_id = :cicloId 
+          AND ativo = 1
+    """)
+    suspend fun buscarMetasPorRotaECicloDireto(rotaId: Long, cicloId: Long): List<MetaColaborador>
+    
+    /**
+     * Busca metas finalizadas (ativo = 0) de uma rota em um ciclo
+     * Usado quando o ciclo está finalizado para exibir metas finalizadas
+     */
+    @Query("""
+        SELECT DISTINCT mc.* FROM metas_colaborador mc
+        LEFT JOIN colaborador_rotas cr ON mc.colaborador_id = cr.colaborador_id
+        WHERE mc.ciclo_id = :cicloId
+          AND mc.ativo = 0
+          AND (
+                cr.rota_id = :rotaId
+             OR mc.rota_id = :rotaId
+             OR (mc.colaborador_id = 0 AND mc.rota_id = :rotaId)
+          )
+    """)
+    suspend fun buscarMetasPorRotaECicloFinalizadas(rotaId: Long, cicloId: Long): List<MetaColaborador>
 
     /**
      * Verifica se já existe meta do mesmo tipo para a mesma rota e ciclo

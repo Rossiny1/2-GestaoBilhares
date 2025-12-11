@@ -15,6 +15,7 @@ class CicloRepository(
     
     fun obterTodos(): Flow<List<CicloAcertoEntity>> = cicloAcertoDao.listarTodos()
     suspend fun buscarUltimoFinalizadoPorRota(rotaId: Long) = cicloAcertoDao.buscarUltimoCicloFinalizadoPorRota(rotaId)
+    suspend fun buscarUltimoCicloPorRota(rotaId: Long) = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
     suspend fun buscarPorRotaEAno(rotaId: Long, ano: Int) = cicloAcertoDao.buscarCiclosPorRotaEAno(rotaId, ano)
     suspend fun buscarPorRota(rotaId: Long) = cicloAcertoDao.buscarCiclosPorRota(rotaId)
     suspend fun buscarProximoNumero(rotaId: Long, ano: Int) = cicloAcertoDao.buscarProximoNumeroCiclo(rotaId, ano)

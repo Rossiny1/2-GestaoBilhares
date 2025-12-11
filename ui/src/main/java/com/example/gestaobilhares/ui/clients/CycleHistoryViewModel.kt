@@ -209,7 +209,7 @@ class CycleHistoryViewModel(
             rotaId = ciclo.rotaId,
             titulo = ciclo.titulo,
             dataInicio = ciclo.dataInicio,
-            dataFim = ciclo.dataFim ?: Date(),
+            dataFim = ciclo.dataFim,
             valorTotalAcertado = valorTotalAcertado, // ✅ CORRIGIDO: Usar valor calculado dos acertos reais
             valorTotalDespesas = valorTotalDespesas,
             totalDescontos = totalDescontos,

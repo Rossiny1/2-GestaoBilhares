@@ -57,7 +57,7 @@ class GlobalExpensesViewModel constructor(
     private fun loadAvailableCycles() {
         viewModelScope.launch {
             try {
-                val currentYear = _selectedYear.value ?: Calendar.getInstance().get(Calendar.YEAR)
+                val currentYear = _selectedYear.value
                 
                 // Buscar ciclos de todas as rotas para o ano atual
                 // Vamos criar uma lista de ciclos baseada nos números de ciclo disponíveis
@@ -103,7 +103,7 @@ class GlobalExpensesViewModel constructor(
                 showLoading()
                 _selectedCycle.value = null
                 
-                val currentYear = _selectedYear.value ?: Calendar.getInstance().get(Calendar.YEAR)
+                val currentYear = _selectedYear.value
                 
                 // Buscar todas as despesas globais do ano atual
                 val allExpenses = mutableListOf<Despesa>()
