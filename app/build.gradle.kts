@@ -83,16 +83,8 @@ android {
         }
     }
     
-    // ✅ OTIMIZAÇÃO: Desabilitar tarefas desnecessárias no debug
-    tasks.whenTaskAdded {
-        if (name.contains("lint") || name.contains("Lint")) {
-            enabled = false
-        }
-        // Desabilitar testes durante build normal (executar separadamente)
-        if (name.contains("test") && !name.contains("assemble")) {
-            enabled = false
-        }
-    }
+    // ✅ TESTES: Habilitados para garantir qualidade do código
+    // Removido: tasks que desabilitavam testes
 }
 
 // ✅ CORREÇÃO: KSP para Room (compatível com Java 11+)
@@ -177,4 +169,35 @@ dependencies {
     // ✅ REMOVIDO: Hilt (pode causar conflito com Compose)
     // implementation("com.google.dagger:hilt-android:2.51")
     // kapt("com.google.dagger:hilt-android-compiler:2.51")
+    
+    // ✅ NOVO: Dependências de Teste
+    // JUnit 5
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    
+    // Mockito para mocks
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+    testImplementation("org.mockito:mockito-core:5.7.0")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+    
+    // Coroutines Test
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    
+    // Turbine para testar Flows
+    testImplementation("app.cash.turbine:turbine:1.0.0")
+    
+    // Truth para assertions mais legíveis
+    testImplementation("com.google.truth:truth:1.1.5")
+    
+    // Room Testing
+    testImplementation("androidx.room:room-testing:2.6.1")
+    
+    // Core Testing (LiveData testing)
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    
+    // AndroidX Test (para testes instrumentados)
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.room:room-testing:2.6.1")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 } 

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="3"><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res"><file name="fade_in" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\anim\fade_in.xml" qualifiers="" type="anim"/><file name="fade_out" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\anim\fade_out.xml" qualifiers="" type="anim"/><file name="pulse" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\anim\pulse.xml" qualifiers="" type="anim"/><file name="scale_up" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\anim\scale_up.xml" qualifiers="" type="anim"/><file name="slide_in_right" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\anim\slide_in_right.xml" qualifiers="" type="anim"/><file name="slide_up" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\anim\slide_up.xml" qualifiers="" type="anim"/><file name="card_background_light" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\color\card_background_light.xml" qualifiers="" type="color"/><file name="bottom_nav_menu" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\menu\bottom_nav_menu.xml" qualifiers="" type="menu"/><file name="menu_colaborador_management" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\menu\menu_colaborador_management.xml" qualifiers="" type="menu"/><file name="menu_colaborador_metas" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\menu\menu_colaborador_metas.xml" qualifiers="" type="menu"/><file name="ic_launcher" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml" qualifiers="anydpi-v26" type="mipmap"/><file name="ic_launcher_round" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-anydpi-v26\ic_launcher_round.xml" qualifiers="anydpi-v26" type="mipmap"/><file name="ic_launcher" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-hdpi\ic_launcher.webp" qualifiers="hdpi-v4" type="mipmap"/><file name="ic_launcher_round" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-hdpi\ic_launcher_round.webp" qualifiers="hdpi-v4" type="mipmap"/><file name="ic_launcher" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-mdpi\ic_launcher.webp" qualifiers="mdpi-v4" type="mipmap"/><file name="ic_launcher_round" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-mdpi\ic_launcher_round.webp" qualifiers="mdpi-v4" type="mipmap"/><file name="ic_launcher" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-xhdpi\ic_launcher.webp" qualifiers="xhdpi-v4" type="mipmap"/><file name="ic_launcher_round" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-xhdpi\ic_launcher_round.webp" qualifiers="xhdpi-v4" type="mipmap"/><file name="ic_launcher" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-xxhdpi\ic_launcher.webp" qualifiers="xxhdpi-v4" type="mipmap"/><file name="ic_launcher_round" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-xxhdpi\ic_launcher_round.webp" qualifiers="xxhdpi-v4" type="mipmap"/><file name="ic_launcher" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-xxxhdpi\ic_launcher.webp" qualifiers="xxxhdpi-v4" type="mipmap"/><file name="ic_launcher_round" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\mipmap-xxxhdpi\ic_launcher_round.webp" qualifiers="xxxhdpi-v4" type="mipmap"/><file path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\values\dimens.xml" qualifiers=""><dimen name="spacing_xs">4dp</dimen><dimen name="spacing_sm">8dp</dimen><dimen name="spacing_md">16dp</dimen><dimen name="spacing_lg">24dp</dimen><dimen name="spacing_xl">32dp</dimen><dimen name="card_corner_radius">16dp</dimen><dimen name="card_elevation">1dp</dimen><dimen name="card_margin">8dp</dimen><dimen name="card_padding">16dp</dimen><dimen name="button_height">48dp</dimen><dimen name="button_corner_radius">12dp</dimen><dimen name="button_elevation">0dp</dimen><dimen name="button_padding_horizontal">24dp</dimen><dimen name="button_padding_vertical">12dp</dimen><dimen name="dialog_corner_radius">28dp</dimen><dimen name="dialog_elevation">6dp</dimen><dimen name="dialog_padding">24dp</dimen><dimen name="icon_size_sm">16dp</dimen><dimen name="icon_size_md">24dp</dimen><dimen name="icon_size_lg">32dp</dimen><dimen name="text_size_title">26sp</dimen><dimen name="text_size_subtitle">20sp</dimen><dimen name="text_size_body">16sp</dimen><dimen name="text_size_caption">14sp</dimen><dimen name="text_size_small">12sp</dimen><dimen name="status_bar_width">4dp</dimen><dimen name="status_indicator_size">8dp</dimen></file><file path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\values\themes.xml" qualifiers=""><style name="Theme.GestaoBilhares" parent="Theme.Material3.DayNight.NoActionBar">
+        
+        <item name="colorPrimary">@color/primary_blue</item>
+        <item name="colorOnPrimary">@color/text_on_primary</item>
+        <item name="colorPrimaryContainer">@color/primary_blue_dark</item>
+        <item name="colorOnPrimaryContainer">@color/text_primary</item>
+        
+        
+        <item name="colorSecondary">@color/accent_teal</item>
+        <item name="colorOnSecondary">@color/text_on_primary</item>
+        <item name="colorSecondaryContainer">@color/secondary_slate</item>
+        <item name="colorOnSecondaryContainer">@color/text_primary</item>
+        
+        
+        <item name="colorTertiary">@color/primary_blue_light</item>
+        <item name="colorOnTertiary">@color/text_on_primary</item>
+        <item name="colorTertiaryContainer">@color/surface_secondary</item>
+        <item name="colorOnTertiaryContainer">@color/text_primary</item>
+        
+        
+        <item name="colorSurface">@color/surface_primary</item>
+        <item name="colorOnSurface">@color/text_on_surface</item>
+        <item name="colorSurfaceVariant">@color/surface_secondary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        
+        
+        <item name="colorOutline">@color/card_stroke</item>
+        <item name="colorOutlineVariant">@color/secondary_slate_light</item>
+        
+        
+        <item name="android:colorBackground">@color/background_primary</item>
+        <item name="colorOnBackground">@color/text_primary</item>
+        
+        
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/text_on_primary</item>
+        <item name="colorErrorContainer">@color/red_700</item>
+        <item name="colorOnErrorContainer">@color/red_100</item>
+        
+        
+        <item name="android:textColorHighlight">@color/primary_blue</item>
+        <item name="android:colorControlActivated">@color/primary_blue</item>
+        <item name="android:colorControlHighlight">@android:color/transparent</item>
+        <item name="android:autofilledHighlight">@android:color/transparent</item>
+        <item name="colorControlNormal">@color/primary_blue</item>
+        <item name="colorControlActivated">@color/primary_blue</item>
+        
+        
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/background_primary</item>
+    </style><style name="DarkDialogTheme" parent="Theme.Material3.DayNight.Dialog.Alert">
+        <item name="android:colorBackground">?attr/colorSurface</item>
+        <item name="android:textColorPrimary">?attr/colorOnSurface</item>
+        <item name="android:textColorSecondary">?attr/colorOnSurfaceVariant</item>
+        <item name="colorPrimary">?attr/colorPrimary</item>
+        <item name="colorSecondary">?attr/colorSecondary</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="colorSurface">?attr/colorSurface</item>
+        <item name="colorOnSurface">?attr/colorOnSurface</item>
+        <item name="colorOutline">?attr/colorOutline</item>
+        <item name="android:windowElevation">6dp</item>
+    </style><style name="DarkDialogTheme.Fullscreen" parent="Theme.Material3.DayNight.Dialog">
+        <item name="android:colorBackground">?attr/colorSurface</item>
+        <item name="android:textColorPrimary">?attr/colorOnSurface</item>
+        <item name="android:textColorSecondary">?attr/colorOnSurfaceVariant</item>
+        <item name="colorPrimary">?attr/colorPrimary</item>
+        <item name="colorSecondary">?attr/colorSecondary</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="colorSurface">?attr/colorSurface</item>
+        <item name="colorOnSurface">?attr/colorOnSurface</item>
+        <item name="colorOutline">?attr/colorOutline</item>
+        <item name="android:windowElevation">8dp</item>
+    </style><style name="AppTheme.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="android:background">@color/surface_primary</item>
+        <item name="titleTextColor">@color/text_primary</item>
+        <item name="navigationIconTint">@color/text_primary</item>
+    </style><style name="AppTheme.FloatingActionButton" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="tint">?attr/colorOnPrimary</item>
+        <item name="elevation">6dp</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.App.LargeComponent</item>
+    </style><style name="ShapeAppearance.App.LargeComponent" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style><style name="ShapeAppearance.App.MediumComponent" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style><style name="ShapeAppearance.App.SmallComponent" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style><style name="ShapeAppearance.Material3.Corner.Full" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style></file><file name="file_paths" path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\main\res\xml\file_paths.xml" qualifiers="" type="xml"/></source></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="release$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\release\res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="release" generated-set="release$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app\src\release\res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\b\generated\res\resValues\release"/><source path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\b\generated\res\processReleaseGoogleServices"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated" generated-set="generated$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\b\generated\res\resValues\release"/><source path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\b\generated\res\processReleaseGoogleServices"><file path="C:\Users\Rossiny\Desktop\2-GestaoBilhares\b\generated\res\processReleaseGoogleServices\values\values.xml" qualifiers=""><string name="default_web_client_id" translatable="false">1089459035145-d55o1h307gaedp4v03cuchr6s6nn2lhg.apps.googleusercontent.com</string><string name="gcm_defaultSenderId" translatable="false">1089459035145</string><string name="google_api_key" translatable="false">AIzaSyDb2s1PsqfZMQCswQMj2tmcV_e6DMSv0i4</string><string name="google_app_id" translatable="false">1:1089459035145:android:2d3b94222b1506a844acd8</string><string name="google_crash_reporting_api_key" translatable="false">AIzaSyDb2s1PsqfZMQCswQMj2tmcV_e6DMSv0i4</string><string name="google_storage_bucket" translatable="false">gestaobilhares.firebasestorage.app</string><string name="project_id" translatable="false">gestaobilhares</string></file></source></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="res-processReleaseGoogleServices$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"/><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="res-processReleaseGoogleServices" generated-set="res-processReleaseGoogleServices$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"/><mergedItems/></merger>
