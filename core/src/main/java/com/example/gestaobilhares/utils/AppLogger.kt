@@ -1,6 +1,6 @@
 ﻿package com.example.gestaobilhares.core.utils
 
-import android.icu.text.SimpleDateFormat
+import java.text.SimpleDateFormat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 // Removido: BuildConfig não disponível em módulos de biblioteca

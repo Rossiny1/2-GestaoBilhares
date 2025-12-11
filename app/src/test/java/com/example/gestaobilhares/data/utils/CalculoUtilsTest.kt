@@ -128,9 +128,9 @@ class CalculoUtilsTest {
 
     private fun formatarMoeda(valor: Double): String {
         return if (valor >= 0) {
-            "R$ ${String.format("%,.2f", valor).replace(",", "X").replace(".", ",").replace("X", ".")}"
+            "R$ ${String.format(java.util.Locale.US, "%,.2f", valor).replace(",", "X").replace(".", ",").replace("X", ".")}"
         } else {
-            "-R$ ${String.format("%,.2f", Math.abs(valor)).replace(",", "X").replace(".", ",").replace("X", ".")}"
+            "-R$ ${String.format(java.util.Locale.US, "%,.2f", Math.abs(valor)).replace(",", "X").replace(".", ",").replace("X", ".")}"
         }
     }
 }
