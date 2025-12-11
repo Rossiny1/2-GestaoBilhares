@@ -82,7 +82,10 @@ class MetaCadastroFragment : Fragment() {
         binding.spinnerCiclo.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
                 if (position > 0) { // Ignorar o primeiro item (placeholder)
-                    val ciclos = viewModel.ciclos.value
+                    // ✅ ATUALIZADO: Usar lista filtrada de ciclos EM_ANDAMENTO
+                    val ciclos = viewModel.ciclos.value.filter { 
+                        it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO 
+                    }
                     if (position - 1 < ciclos.size) {
                         cicloSelecionado = ciclos[position - 1]
                         android.util.Log.d("MetaCadastroFragment", "Ciclo selecionado: ${cicloSelecionado?.numeroCiclo}/${cicloSelecionado?.ano}")
@@ -136,6 +139,18 @@ class MetaCadastroFragment : Fragment() {
             viewModel.ciclos.collect { ciclos ->
                 if (ciclos.isNotEmpty() && rotaSelecionada != null) {
                     configurarSpinnerCiclos(ciclos)
+                    
+                    // ✅ NOVO: Auto-selecionar ciclo EM_ANDAMENTO
+                    val cicloEmAndamento = ciclos.find { 
+                        it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO 
+                    }
+                    
+                    if (cicloEmAndamento != null) {
+                        val index = ciclos.indexOf(cicloEmAndamento)
+                        binding.spinnerCiclo.setSelection(index + 1) // +1 por causa do placeholder
+                        cicloSelecionado = cicloEmAndamento
+                        android.util.Log.d("MetaCadastroFragment", "✅ Ciclo EM_ANDAMENTO auto-selecionado: ${cicloEmAndamento.numeroCiclo}/${cicloEmAndamento.ano}")
+                    }
                 } else {
                     configurarSpinnerCiclos(emptyList())
                 }
@@ -183,19 +198,18 @@ class MetaCadastroFragment : Fragment() {
     private fun configurarSpinnerCiclos(ciclos: List<com.example.gestaobilhares.data.entities.CicloAcertoEntity>) {
         val items = mutableListOf<String>()
         
-        if (ciclos.isEmpty()) {
-            items.add("Nenhum ciclo disponível")
+        // ✅ NOVO: Filtrar apenas ciclos EM_ANDAMENTO
+        val ciclosEmAndamento = ciclos.filter { 
+            it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO 
+        }
+        
+        if (ciclosEmAndamento.isEmpty()) {
+            items.add("Nenhum ciclo em andamento disponível")
             binding.spinnerCiclo.isEnabled = false
         } else {
             items.add("Selecione um ciclo")
-            ciclos.forEach { ciclo ->
-                val status = when (ciclo.status) {
-                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO -> "Em Andamento"
-                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.PLANEJADO -> "Planejado"
-                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO -> "Finalizado"
-                    com.example.gestaobilhares.data.entities.StatusCicloAcerto.CANCELADO -> "Cancelado"
-                }
-                items.add("Ciclo ${ciclo.numeroCiclo}/${ciclo.ano} - $status")
+            ciclosEmAndamento.forEach { ciclo ->
+                items.add("Ciclo ${ciclo.numeroCiclo}/${ciclo.ano} - Em Andamento")
             }
             binding.spinnerCiclo.isEnabled = true
         }
@@ -204,19 +218,25 @@ class MetaCadastroFragment : Fragment() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerCiclo.adapter = adapter
         
-        android.util.Log.d("MetaCadastroFragment", "Spinner configurado com ${items.size} itens")
+        android.util.Log.d("MetaCadastroFragment", "Spinner configurado com ${items.size} itens (${ciclosEmAndamento.size} ciclos em andamento)")
     }
 
 
     private fun updateValorMetaHint() {
         val hint = when (tipoMetaSelecionado) {
-            TipoMeta.FATURAMENTO -> "Ex: 15000.00 (valor em reais)"
-            TipoMeta.CLIENTES_ACERTADOS -> "Ex: 50 (número de clientes)"
-            TipoMeta.MESAS_LOCADAS -> "Ex: 25 (número de mesas)"
-            TipoMeta.TICKET_MEDIO -> "Ex: 300.00 (valor médio por acerto)"
+            TipoMeta.FATURAMENTO -> "Ex: 15000.00"
+            TipoMeta.CLIENTES_ACERTADOS -> "Ex: 50"
+            TipoMeta.MESAS_LOCADAS -> "Ex: 25"
+            TipoMeta.TICKET_MEDIO -> "Ex: 300.00"
             null -> "Selecione o tipo de meta primeiro"
         }
         binding.tilValorMeta.hint = hint
+        
+        // ✅ NOVO: Definir prefixo apenas para metas monetárias
+        binding.tilValorMeta.prefixText = when (tipoMetaSelecionado) {
+            TipoMeta.FATURAMENTO, TipoMeta.TICKET_MEDIO -> "R$ "
+            else -> null
+        }
     }
 
     private fun salvarMeta() {

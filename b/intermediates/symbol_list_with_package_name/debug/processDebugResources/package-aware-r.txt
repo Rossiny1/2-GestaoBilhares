@@ -3620,7 +3620,6 @@ id actvEstadoMesa
 id actvPaymentMethod
 id actvRotaMesa
 id actvSearchType
-id actvStatus
 id actvStatusMesa
 id actvTamanhoMesa
 id actvTipoMesa
@@ -3703,7 +3702,6 @@ id btnFilterAcertados
 id btnFilterByCycle
 id btnFilterNaoAcertados
 id btnFilterPendencias
-id btnFilters
 id btnFiltrar
 id btnFinishRoute
 id btnGenerate
@@ -4156,7 +4154,6 @@ id layoutCusto
 id layoutEmpty
 id layoutEmptyState
 id layoutFichas
-id layoutFilters
 id layoutFotoComprovante
 id layoutFotoRelogio
 id layoutMediaFichas
@@ -4570,7 +4567,6 @@ id tilSearch
 id tilSearchCriteria
 id tilSearchNumero
 id tilSearchType
-id tilStatus
 id tilTelefone
 id tilTipoDespesa
 id tilTipoMeta
@@ -4612,6 +4608,7 @@ id tvCategoryName
 id tvCheque
 id tvCheques
 id tvChipValue
+id tvCicloInfo
 id tvCicloLabel
 id tvClientAddress
 id tvClientCurrentDebt
@@ -4683,6 +4680,7 @@ id tvDocumentoStatus
 id tvDocumentoTipo
 id tvDocumentoTitulo
 id tvEmail
+id tvEmojiIndicador
 id tvEmptyMessage
 id tvEmptyState
 id tvEmptyStateMessage
@@ -4777,6 +4775,7 @@ id tvProfit
 id tvProgress
 id tvProgressPercent
 id tvProgressPercentage
+id tvProgresso
 id tvQuantidade
 id tvQuantidadeAcertos
 id tvRelogioFinal
@@ -4860,6 +4859,7 @@ id tvTotalWithDebt
 id tvTypeCount
 id tvTypeName
 id tvValidadaJuridicamente
+id tvValorAtingido
 id tvValorAtual
 id tvValorFicha
 id tvValorFixo
@@ -5177,7 +5177,9 @@ layout item_mesa_reformada
 layout item_mesa_vendida
 layout item_meta_colaborador
 layout item_meta_detalhe
+layout item_meta_detalhe_historico
 layout item_meta_historico
+layout item_meta_historico_rota
 layout item_meta_rota
 layout item_pano_detail
 layout item_pano_estoque

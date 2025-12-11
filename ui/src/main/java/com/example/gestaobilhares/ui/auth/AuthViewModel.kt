@@ -1686,10 +1686,6 @@ class AuthViewModel constructor() : BaseViewModel() {
         } catch (e: Exception) {
             android.util.Log.e("AuthViewModel", "❌ ERRO GERAL na busca na nuvem: ${e.message}", e)
             android.util.Log.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
-            android.util.Log.e("AuthViewModel", "❌ ERRO CRÍTICO ao buscar colaborador na nuvem", e)
-            android.util.Log.e("AuthViewModel", "   Tipo de erro: ${e.javaClass.simpleName}")
-            android.util.Log.e("AuthViewModel", "   Mensagem: ${e.message}")
-            android.util.Log.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
             return null
         }
     }

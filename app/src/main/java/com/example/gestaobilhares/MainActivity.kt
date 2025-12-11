@@ -58,11 +58,12 @@ class MainActivity : AppCompatActivity() {
                     // Estamos na tela de rotas - mostrar diálogo de saída
                     showExitConfirmationDialog()
                 } else {
-                    // Não estamos na tela de rotas - deixar Navigation Component gerenciar normalmente
-                    // O Navigation Component automaticamente volta para a tela anterior no back stack
-                    isEnabled = false
-                    navController.navigateUp()
-                    isEnabled = true
+                    // Não estamos na tela de rotas - voltar para tela anterior
+                    // ✅ CORRIGIDO: Usar popBackStack() em vez de navigateUp()
+                    if (!navController.popBackStack()) {
+                        // Se não conseguiu voltar (não há mais telas no back stack), fechar o app
+                        finish()
+                    }
                 }
             }
         })

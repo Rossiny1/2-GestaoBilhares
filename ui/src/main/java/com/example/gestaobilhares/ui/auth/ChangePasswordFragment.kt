@@ -161,7 +161,7 @@ class ChangePasswordFragment : Fragment() {
                             val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
                             val colaboradorId = userSessionManager.getCurrentUserId()
                             
-                            if (colaboradorId == null || colaboradorId == 0L) {
+                            if (colaboradorId == 0L) {
                                 android.util.Log.d("ChangePasswordFragment", "⚠️ Nenhuma sessão ativa. Voltando para login...")
                                 findNavController().popBackStack()
                             } else {
