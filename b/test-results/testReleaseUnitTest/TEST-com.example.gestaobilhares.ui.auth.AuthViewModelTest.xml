@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.gestaobilhares.ui.auth.AuthViewModelTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2025-12-11T20:37:24" hostname="LAPTOP-SAMSUNG" time="3.867">
+  <properties/>
+  <testcase name="validarEmail deve retornar false para email invalido" classname="com.example.gestaobilhares.ui.auth.AuthViewModelTest" time="3.726"/>
+  <testcase name="validarSenha deve retornar false para senha curta" classname="com.example.gestaobilhares.ui.auth.AuthViewModelTest" time="0.113"/>
+  <testcase name="validarSenha deve retornar false para senha vazia" classname="com.example.gestaobilhares.ui.auth.AuthViewModelTest" time="0.005"/>
+  <testcase name="validarEmail deve retornar false para email vazio" classname="com.example.gestaobilhares.ui.auth.AuthViewModelTest" time="0.003"/>
+  <testcase name="validarSenha deve retornar true para senha com minimo 6 caracteres" classname="com.example.gestaobilhares.ui.auth.AuthViewModelTest" time="0.01"/>
+  <testcase name="validarEmail deve retornar true para email valido" classname="com.example.gestaobilhares.ui.auth.AuthViewModelTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
