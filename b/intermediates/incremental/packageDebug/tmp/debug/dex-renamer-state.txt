@@ -1,4 +1,4 @@
-#Thu Dec 11 11:15:42 GMT-03:00 2025
+#Thu Dec 11 13:52:08 GMT-03:00 2025
 base.0=C\:\\Users\\Rossiny\\Desktop\\2-GestaoBilhares\\b\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
 base.1=C\:\\Users\\Rossiny\\Desktop\\2-GestaoBilhares\\b\\intermediates\\dex\\debug\\mergeLibDexDebug\\10\\classes.dex
 base.10=C\:\\Users\\Rossiny\\Desktop\\2-GestaoBilhares\\b\\intermediates\\dex\\debug\\mergeLibDexDebug\\6\\classes.dex

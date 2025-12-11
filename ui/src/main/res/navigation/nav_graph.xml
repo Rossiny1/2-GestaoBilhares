@@ -555,19 +555,8 @@
         android:id="@+id/metaHistoricoFragment"
         android:name="com.example.gestaobilhares.ui.metas.MetaHistoricoFragment"
         android:label="Histórico de Metas"
-        tools:layout="@layout/fragment_meta_historico">
-        <argument
-            android:name="rotaId"
-            app:argType="long" />
-        <argument
-            android:name="cicloNumero"
-            app:argType="integer"
-            android:defaultValue="0" />
-        <argument
-            android:name="cicloAno"
-            app:argType="integer"
-            android:defaultValue="0" />
-    </fragment>
+        tools:layout="@layout/fragment_meta_historico" />
+
 
     <!-- ✅ NOVO: Telas de Inventário -->
     <fragment

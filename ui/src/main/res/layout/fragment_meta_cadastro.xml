@@ -149,8 +149,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="24dp"
                     android:hint="Valor da Meta"
-                    app:startIconDrawable="@drawable/ic_money"
-                    app:prefixText="R$ ">
+                    app:startIconDrawable="@drawable/ic_money">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etValorMeta"

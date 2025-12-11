@@ -45,7 +45,6 @@ class MetasFragment : Fragment() {
 
         setupToolbar()
         setupRecyclerView()
-        setupFilters()
         observeViewModel()
     }
 
@@ -65,35 +64,17 @@ class MetasFragment : Fragment() {
             findNavController().navigateUp()
         }
 
-        binding.btnFilters.setOnClickListener {
-            toggleFilters()
-        }
-
+        // ✅ ATUALIZADO: Botão histórico navega para tela de histórico global
         binding.btnHistory.setOnClickListener {
-            viewModel.alternarHistorico()
+            findNavController().navigate(com.example.gestaobilhares.ui.R.id.action_metasFragment_to_metaHistoricoFragment)
         }
     }
 
     private fun setupRecyclerView() {
         metasAdapter = MetasAdapter(
             onDetailsClick = { metaRota ->
-                // ✅ NOVO: Clicar no card navega para histórico detalhado de metas
-                try {
-                    val action = com.example.gestaobilhares.ui.metas.MetasFragmentDirections
-                        .actionMetasFragmentToMetaHistoricoFragment(
-                            rotaId = metaRota.rota.id,
-                            cicloNumero = metaRota.cicloAtual,
-                            cicloAno = metaRota.anoCiclo
-                        )
-                    findNavController().navigate(action)
-                } catch (e: Exception) {
-                    android.util.Log.e("MetasFragment", "Erro ao abrir histórico de metas: ${e.message}", e)
-                    Toast.makeText(
-                        requireContext(), 
-                        "Erro ao abrir histórico: ${e.message}", 
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                // ✅ ATUALIZADO: Cards não navegam mais para histórico individual
+                // O histórico agora é global e acessado pelo botão no toolbar
             },
             onCreateMetaClick = { metaRota ->
                 // ✅ NOVO: Botão "Criar Metas" navega para cadastro
@@ -113,36 +94,6 @@ class MetasFragment : Fragment() {
             adapter = metasAdapter
         }
     }
-
-    private fun setupFilters() {
-        // Configurar filtro por tipo de meta
-        val tiposMeta = listOf("Todos") + TipoMeta.values().map { getTipoMetaFormatado(it) }
-        val tipoMetaAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, tiposMeta)
-        binding.actvTipoMeta.setAdapter(tipoMetaAdapter)
-
-        binding.actvTipoMeta.setOnItemClickListener { _, _, position, _ ->
-            val tipoSelecionado = if (position == 0) null else TipoMeta.values()[position - 1]
-            viewModel.aplicarFiltroTipoMeta(tipoSelecionado)
-        }
-
-        // Configurar filtro por status
-        val statusOptions = listOf("Todos", "Próximas", "Atingidas", "Em Andamento", "Finalizadas")
-        val statusAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, statusOptions)
-        binding.actvStatus.setAdapter(statusAdapter)
-
-        binding.actvStatus.setOnItemClickListener { _, _, position, _ ->
-            val statusSelecionado = when (position) {
-                0 -> null
-                1 -> StatusFiltroMeta.PROXIMAS
-                2 -> StatusFiltroMeta.ATINGIDAS
-                3 -> StatusFiltroMeta.EM_ANDAMENTO
-                4 -> StatusFiltroMeta.FINALIZADAS
-                else -> null
-            }
-            viewModel.aplicarFiltroStatus(statusSelecionado)
-        }
-    }
-
 
     private fun observeViewModel() {
         // Recarregar imediatamente quando voltamos para este fragment
@@ -181,19 +132,6 @@ class MetasFragment : Fragment() {
             }
         }
 
-        // Observar histórico
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.mostrarHistorico.collect { mostrarHistorico ->
-                    // Atualizar ícone e título baseado no modo histórico
-                    binding.btnHistory.setImageResource(
-                        if (mostrarHistorico) com.example.gestaobilhares.ui.R.drawable.ic_today else com.example.gestaobilhares.ui.R.drawable.ic_history
-                    )
-                    binding.toolbar.title = if (mostrarHistorico) "Histórico de Metas" else "Metas por Rota"
-                }
-            }
-        }
-
         // Observar notificações
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -206,11 +144,6 @@ class MetasFragment : Fragment() {
         binding.swipeRefresh.setOnRefreshListener {
             viewModel.carregarMetasRotas()
         }
-    }
-
-    private fun toggleFilters() {
-        val isVisible = binding.layoutFilters.visibility == View.VISIBLE
-        binding.layoutFilters.visibility = if (isVisible) View.GONE else View.VISIBLE
     }
 
     private fun updateEmptyState(isEmpty: Boolean) {

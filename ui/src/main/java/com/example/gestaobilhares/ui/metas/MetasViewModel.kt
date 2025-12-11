@@ -25,15 +25,6 @@ class MetasViewModel constructor() : BaseViewModel() {
 
     // Estados de loading e message já estão no BaseViewModel
 
-    private val _filtroTipoMeta = MutableStateFlow<TipoMeta?>(null)
-    val filtroTipoMeta: StateFlow<TipoMeta?> = _filtroTipoMeta.asStateFlow()
-
-    private val _filtroStatus = MutableStateFlow<StatusFiltroMeta?>(null)
-    val filtroStatus: StateFlow<StatusFiltroMeta?> = _filtroStatus.asStateFlow()
-
-    private val _mostrarHistorico = MutableStateFlow(false)
-    val mostrarHistorico: StateFlow<Boolean> = _mostrarHistorico.asStateFlow()
-
     private val _notificacoes = MutableStateFlow<List<NotificacaoMeta>>(emptyList())
     val notificacoes: StateFlow<List<NotificacaoMeta>> = _notificacoes.asStateFlow()
 
@@ -106,30 +97,13 @@ class MetasViewModel constructor() : BaseViewModel() {
             Timber.d("════════════════════════════════════════")
             Timber.d("Criando MetaRotaResumo para rota: %s (id=%s)", rota.nome, rota.id)
 
-            // ✅ CORREÇÃO: Na tela principal, buscar APENAS ciclos EM_ANDAMENTO
-            // No histórico, buscar ciclos finalizados
-            val cicloAtual = if (_mostrarHistorico.value) {
-                Timber.d("Buscando ultimo ciclo finalizado para rota %s", rota.nome)
-                appRepository.buscarUltimoCicloFinalizadoPorRota(rota.id)
-            } else {
-                // ✅ CORREÇÃO: Buscar APENAS ciclo EM_ANDAMENTO (não finalizado)
-                Timber.d("Buscando ciclo em andamento para rota %s", rota.nome)
-                val cicloAtivo = appRepository.buscarCicloAtivo(rota.id)
-                Timber.d("Resultado buscarCicloAtivo: %s", if (cicloAtivo != null) "Ciclo ${cicloAtivo.numeroCiclo}/${cicloAtivo.ano} (id=${cicloAtivo.id}, status=${cicloAtivo.status})" else "null")
-                
-                // Se não há ciclo em andamento, retornar null (não mostrar metas finalizadas na tela principal)
-                if (cicloAtivo == null) {
-                    Timber.d("Nenhum ciclo em andamento encontrado para rota %s - não exibindo metas", rota.nome)
-                }
-                cicloAtivo
-            }
-
+            // ✅ SIMPLIFICADO: Buscar APENAS ciclo EM_ANDAMENTO
+            Timber.d("Buscando ciclo em andamento para rota %s", rota.nome)
+            val cicloAtual = appRepository.buscarCicloAtivo(rota.id)
+            Timber.d("Resultado buscarCicloAtivo: %s", if (cicloAtual != null) "Ciclo ${cicloAtual.numeroCiclo}/${cicloAtual.ano} (id=${cicloAtual.id}, status=${cicloAtual.status})" else "null")
+            
             if (cicloAtual == null) {
-                if (_mostrarHistorico.value) {
-                    Timber.w("⚠️ Nenhum ciclo finalizado encontrado para rota %s (id=%s)", rota.nome, rota.id)
-                } else {
-                    Timber.d("ℹ️ Nenhum ciclo em andamento encontrado para rota %s (id=%s) - não exibindo na tela principal", rota.nome, rota.id)
-                }
+                Timber.d("ℹ️ Nenhum ciclo em andamento encontrado para rota %s (id=%s) - não exibindo", rota.nome, rota.id)
                 Timber.d("════════════════════════════════════════")
                 return null
             }
@@ -146,21 +120,14 @@ class MetasViewModel constructor() : BaseViewModel() {
                 Timber.w("Nenhum colaborador responsavel encontrado para rota %s", rota.nome)
             }
 
-            // ✅ CORREÇÃO CRÍTICA: Na tela principal, buscar APENAS metas de ciclos em andamento
+            // ✅ SIMPLIFICADO: Buscar apenas metas ativas de ciclos em andamento
             Timber.d("Buscando metas para rota %s (id=%s) e ciclo %s/%s (id=%s, status=%s)", rota.nome, rota.id, cicloAtual.numeroCiclo, cicloAtual.ano, cicloAtual.id, cicloAtual.status)
             
-            // Se estiver em modo histórico, buscar todas as metas (ativas e finalizadas)
-            // Se não estiver em modo histórico, buscar apenas metas ativas de ciclos em andamento
-            var metas = if (_mostrarHistorico.value) {
-                appRepository.buscarMetasPorRotaECiclo(rota.id, cicloAtual.id)
+            var metas = if (cicloAtual.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO) {
+                appRepository.buscarMetasPorRotaECicloAtivo(rota.id, cicloAtual.id)
             } else {
-                // Tela principal: apenas metas ativas de ciclos em andamento
-                if (cicloAtual.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO) {
-                    appRepository.buscarMetasPorRotaECicloAtivo(rota.id, cicloAtual.id)
-                } else {
-                    Timber.d("Ciclo não está em andamento, não exibindo metas na tela principal")
-                    emptyList()
-                }
+                Timber.d("Ciclo não está em andamento, não exibindo metas")
+                emptyList()
             }
             Timber.d("Metas encontradas para ciclo %s: %s", cicloAtual.id, metas.size)
             if (metas.isNotEmpty()) {
@@ -388,29 +355,6 @@ class MetasViewModel constructor() : BaseViewModel() {
     }
 
     /**
-     * Aplica filtro por tipo de meta
-     */
-    fun aplicarFiltroTipoMeta(tipoMeta: TipoMeta?) {
-        _filtroTipoMeta.value = tipoMeta
-    }
-
-    /**
-     * Aplica filtro por status
-     */
-    fun aplicarFiltroStatus(status: StatusFiltroMeta?) {
-        _filtroStatus.value = status
-    }
-
-    /**
-     * Alterna exibição do histórico
-     */
-    fun alternarHistorico() {
-        _mostrarHistorico.value = !_mostrarHistorico.value
-        // Recarregar metas com a nova configuração
-        carregarMetasRotas()
-    }
-
-    /**
      * Limpa mensagem
      */
     fun limparMensagem() {
@@ -418,39 +362,10 @@ class MetasViewModel constructor() : BaseViewModel() {
     }
 
     /**
-     * Retorna metas filtradas
+     * Retorna metas (sem filtros complexos, apenas rotas em andamento)
      */
     fun getMetasFiltradas(): StateFlow<List<MetaRotaResumo>> {
-        return combine(
-            metasRotas,
-            filtroTipoMeta,
-            filtroStatus
-        ) { metas, tipoFiltro, statusFiltro ->
-            var resultado = metas
-
-            // Aplicar filtro por tipo de meta
-            if (tipoFiltro != null) {
-                resultado = resultado.map { metaRota ->
-                    metaRota.copy(
-                        metas = metaRota.metas.filter { it.tipoMeta == tipoFiltro }
-                    )
-                }.filter { it.metas.isNotEmpty() }
-            }
-
-            // Aplicar filtro por status
-            if (statusFiltro != null) {
-                resultado = resultado.filter { metaRota ->
-                    when (statusFiltro) {
-                        StatusFiltroMeta.PROXIMAS -> metaRota.temMetasProximas()
-                        StatusFiltroMeta.ATINGIDAS -> metaRota.temMetasAtingidas()
-                        StatusFiltroMeta.EM_ANDAMENTO -> metaRota.statusCiclo == StatusCicloAcerto.EM_ANDAMENTO
-                        StatusFiltroMeta.FINALIZADAS -> metaRota.statusCiclo == StatusCicloAcerto.FINALIZADO
-                    }
-                }
-            }
-
-            resultado
-        }.stateIn(
+        return metasRotas.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
@@ -550,16 +465,6 @@ class MetasViewModel constructor() : BaseViewModel() {
         super.onCleared()
         pararAtualizacaoTempoReal()
     }
-}
-
-/**
- * Enum para filtros de status das metas
- */
-enum class StatusFiltroMeta {
-    PROXIMAS,      // Metas próximas de serem atingidas (80%+)
-    ATINGIDAS,     // Metas já atingidas (100%)
-    EM_ANDAMENTO,  // Ciclos em andamento
-    FINALIZADAS    // Ciclos finalizados
 }
 
 /**

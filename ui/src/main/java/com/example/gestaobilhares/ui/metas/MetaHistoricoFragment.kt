@@ -9,28 +9,27 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.MetaColaborador
+import com.example.gestaobilhares.data.entities.MetaRotaResumo
+import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.TipoMeta
 import com.example.gestaobilhares.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.databinding.FragmentMetaHistoricoBinding
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import java.util.Calendar
 
 /**
- * Fragment para exibir histórico de metas de uma rota
+ * Fragment para exibir histórico de metas de TODAS as rotas
  * Permite selecionar ano e ciclo para filtrar as metas
+ * ✅ REFATORADO: Agora mostra TODAS as rotas do ciclo selecionado (não apenas uma rota)
  */
 class MetaHistoricoFragment : Fragment() {
 
     private var _binding: FragmentMetaHistoricoBinding? = null
     private val binding get() = _binding!!
-
-    private val args: MetaHistoricoFragmentArgs by navArgs()
-    private val rotaId: Long by lazy { args.rotaId }
 
     private lateinit var appRepository: com.example.gestaobilhares.data.repository.AppRepository
     private lateinit var metasAdapter: MetaHistoricoAdapter
@@ -100,33 +99,45 @@ class MetaHistoricoFragment : Fragment() {
         binding.actvCiclo.setOnItemClickListener { _, _, position, _ ->
             if (position < ciclosDisponiveis.size) {
                 cicloSelecionado = ciclosDisponiveis[position]
-                carregarMetas()
+                carregarMetasTodasRotas()
             }
         }
     }
 
     private fun setupSwipeRefresh() {
         binding.swipeRefresh.setOnRefreshListener {
-            carregarMetas()
+            carregarMetasTodasRotas()
         }
     }
 
+    /**
+     * ✅ REFATORADO: Busca ciclos finalizados de TODAS as rotas (não apenas uma rota)
+     */
     private fun carregarCiclosDisponiveis() {
         lifecycleScope.launch {
             try {
                 binding.progressBar.visibility = View.VISIBLE
                 
-                // ✅ CORREÇÃO: Buscar apenas ciclos FINALIZADOS para o histórico
-                val todosCiclos = appRepository.buscarCiclosPorRotaEAno(rotaId, anoSelecionado)
-                ciclosDisponiveis = todosCiclos.filter { 
-                    it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO 
+                // ✅ MUDANÇA: Buscar todos os ciclos e filtrar finalizados do ano selecionado
+                val todasRotas = appRepository.obterTodasRotas().first().filter { it.ativa }
+                val todosCiclosSet = mutableSetOf<CicloAcertoEntity>()
+                
+                // Buscar ciclos de cada rota e agregar
+                for (rota in todasRotas) {
+                    val ciclosDaRota = appRepository.buscarCiclosPorRota(rota.id)
+                        .filter { it.ano == anoSelecionado && it.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO }
+                    todosCiclosSet.addAll(ciclosDaRota)
                 }
+                
+                ciclosDisponiveis = todosCiclosSet
+                    .distinctBy { it.numeroCiclo } // Pegar apenas um ciclo de cada número
+                    .sortedByDescending { it.numeroCiclo } // Ordenar do mais recente para o mais antigo
                 
                 // Criar lista de strings para o spinner
                 val ciclosStrings = if (ciclosDisponiveis.isEmpty()) {
                     listOf("Nenhum ciclo finalizado encontrado")
                 } else {
-                    ciclosDisponiveis.map { "Ciclo ${it.numeroCiclo}/${it.ano} - FINALIZADO" }
+                    ciclosDisponiveis.map { "${it.numeroCiclo}º Acerto - ${it.ano}" }
                 }
                 
                 val adapter = ArrayAdapter(
@@ -136,23 +147,11 @@ class MetaHistoricoFragment : Fragment() {
                 )
                 binding.actvCiclo.setAdapter(adapter)
                 
-                // Selecionar o primeiro ciclo por padrão, ou o ciclo passado como argumento
+                // ✅ Seleção padrão: último ciclo finalizado (primeiro da lista ordenada)
                 if (ciclosDisponiveis.isNotEmpty()) {
-                    val cicloInicial = if (args.cicloNumero != 0 && args.cicloAno != 0) {
-                        ciclosDisponiveis.find { 
-                            it.numeroCiclo == args.cicloNumero && it.ano == args.cicloAno 
-                        } ?: ciclosDisponiveis.first()
-                    } else {
-                        ciclosDisponiveis.first()
-                    }
-                    
-                    cicloSelecionado = cicloInicial
-                    val posicao = ciclosDisponiveis.indexOf(cicloInicial)
-                    if (posicao >= 0) {
-                        binding.actvCiclo.setText(ciclosStrings[posicao], false)
-                    }
-                    
-                    carregarMetas()
+                    cicloSelecionado = ciclosDisponiveis.first()
+                    binding.actvCiclo.setText(ciclosStrings.first(), false)
+                    carregarMetasTodasRotas()
                 } else {
                     binding.progressBar.visibility = View.GONE
                     mostrarEstadoVazio()
@@ -166,7 +165,10 @@ class MetaHistoricoFragment : Fragment() {
         }
     }
 
-    private fun carregarMetas() {
+    /**
+     * ✅ REFATORADO: Carrega metas de TODAS as rotas para o ciclo selecionado
+     */
+    private fun carregarMetasTodasRotas() {
         lifecycleScope.launch {
             try {
                 binding.swipeRefresh.isRefreshing = true
@@ -177,18 +179,53 @@ class MetaHistoricoFragment : Fragment() {
                     return@launch
                 }
                 
-                // Buscar metas do ciclo selecionado
-                val metas = appRepository.buscarMetasPorRotaECiclo(rotaId, cicloSelecionado!!.id)
+                // ✅ MUDANÇA CRÍTICA: Buscar TODAS as rotas ativas
+                val rotasAtivas = appRepository.obterTodasRotas().first().filter { it.ativa }
                 
-                // Calcular progresso das metas
-                val metasComProgresso = calcularProgressoMetas(metas, rotaId, cicloSelecionado!!.id)
+                val metasPorRota = mutableListOf<MetaRotaResumo>()
                 
-                if (metasComProgresso.isEmpty()) {
+                // Para cada rota, buscar as metas do ciclo selecionado
+                for (rota in rotasAtivas) {
+                    // Buscar ciclos da rota e encontrar o que corresponde ao número do ciclo selecionado
+                    val ciclosDaRota = appRepository.buscarCiclosPorRota(rota.id)
+                    val cicloDaRota = ciclosDaRota.find { 
+                        it.numeroCiclo == cicloSelecionado!!.numeroCiclo && 
+                        it.ano == cicloSelecionado!!.ano 
+                    }
+                    
+                    if (cicloDaRota != null) {
+                        // Buscar metas deste ciclo
+                        val metas = appRepository.buscarMetasPorRotaECiclo(rota.id, cicloDaRota.id)
+                        
+                        // Calcular progresso das metas
+                        val metasComProgresso = calcularProgressoMetas(metas, rota.id, cicloDaRota.id)
+                        
+                        // Buscar colaborador responsável
+                        val colaborador = appRepository.buscarColaboradorResponsavelPrincipal(rota.id)
+                        
+                        // Criar resumo da rota
+                        val metaRotaResumo = MetaRotaResumo(
+                            rota = rota,
+                            cicloAtual = cicloDaRota.numeroCiclo,
+                            anoCiclo = cicloDaRota.ano,
+                            statusCiclo = cicloDaRota.status,
+                            colaboradorResponsavel = colaborador,
+                            metas = metasComProgresso,
+                            dataInicioCiclo = cicloDaRota.dataInicio,
+                            dataFimCiclo = cicloDaRota.dataFim,
+                            ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
+                        )
+                        
+                        metasPorRota.add(metaRotaResumo)
+                    }
+                }
+                
+                if (metasPorRota.isEmpty()) {
                     mostrarEstadoVazio()
                 } else {
                     binding.layoutEmptyState.visibility = View.GONE
                     binding.recyclerViewMetas.visibility = View.VISIBLE
-                    metasAdapter.atualizarMetas(metasComProgresso)
+                    metasAdapter.atualizarMetas(metasPorRota)
                 }
                 
             } catch (e: Exception) {
@@ -206,7 +243,7 @@ class MetaHistoricoFragment : Fragment() {
         metas: List<MetaColaborador>,
         rotaId: Long,
         cicloId: Long
-    ): List<MetaColaboradorComProgresso> {
+    ): List<MetaColaborador> {
         return metas.map { meta ->
             val valorAtual = when (meta.tipoMeta) {
                 TipoMeta.FATURAMENTO -> {
@@ -236,17 +273,8 @@ class MetaHistoricoFragment : Fragment() {
                 }
             }
             
-            val progresso = if (meta.valorMeta > 0) {
-                ((valorAtual / meta.valorMeta) * 100).coerceAtMost(100.0)
-            } else {
-                0.0
-            }
-            
-            MetaColaboradorComProgresso(
-                meta = meta,
-                valorAtual = valorAtual,
-                progresso = progresso
-            )
+            // Retornar meta com valor atual atualizado
+            meta.copy(valorAtual = valorAtual)
         }
     }
 
@@ -259,14 +287,4 @@ class MetaHistoricoFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
-
-    /**
-     * Data class para representar uma meta com seu progresso calculado
-     */
-    data class MetaColaboradorComProgresso(
-        val meta: MetaColaborador,
-        val valorAtual: Double,
-        val progresso: Double
-    )
 }
-
