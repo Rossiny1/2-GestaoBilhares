@@ -70,6 +70,8 @@ class MetasViewModel constructor() : BaseViewModel() {
                 for (rota in rotas) {
                     try {
                         Timber.d("Processando rota: %s (id=%s)", rota.nome, rota.id)
+                        
+                        // ✅ CORREÇÃO: Sempre mostrar o último ciclo (finalizado ou em andamento)
                         val metaRota = criarMetaRotaResumo(rota)
                         if (metaRota != null) {
                             Timber.d("MetaRota criada para %s: %s metas", rota.nome, metaRota.metas.size)
@@ -101,23 +103,38 @@ class MetasViewModel constructor() : BaseViewModel() {
      */
     private suspend fun criarMetaRotaResumo(rota: Rota): MetaRotaResumo? {
         try {
+            Timber.d("════════════════════════════════════════")
             Timber.d("Criando MetaRotaResumo para rota: %s (id=%s)", rota.nome, rota.id)
 
-            // Buscar ciclo atual ou histórico
+            // ✅ CORREÇÃO: Na tela principal, buscar APENAS ciclos EM_ANDAMENTO
+            // No histórico, buscar ciclos finalizados
             val cicloAtual = if (_mostrarHistorico.value) {
                 Timber.d("Buscando ultimo ciclo finalizado para rota %s", rota.nome)
                 appRepository.buscarUltimoCicloFinalizadoPorRota(rota.id)
             } else {
-                Timber.d("Buscando ciclo atual para rota %s", rota.nome)
-                appRepository.buscarCicloAtualPorRota(rota.id)
+                // ✅ CORREÇÃO: Buscar APENAS ciclo EM_ANDAMENTO (não finalizado)
+                Timber.d("Buscando ciclo em andamento para rota %s", rota.nome)
+                val cicloAtivo = appRepository.buscarCicloAtivo(rota.id)
+                Timber.d("Resultado buscarCicloAtivo: %s", if (cicloAtivo != null) "Ciclo ${cicloAtivo.numeroCiclo}/${cicloAtivo.ano} (id=${cicloAtivo.id}, status=${cicloAtivo.status})" else "null")
+                
+                // Se não há ciclo em andamento, retornar null (não mostrar metas finalizadas na tela principal)
+                if (cicloAtivo == null) {
+                    Timber.d("Nenhum ciclo em andamento encontrado para rota %s - não exibindo metas", rota.nome)
+                }
+                cicloAtivo
             }
 
             if (cicloAtual == null) {
-                Timber.w("Nenhum ciclo encontrado para rota %s", rota.nome)
+                if (_mostrarHistorico.value) {
+                    Timber.w("⚠️ Nenhum ciclo finalizado encontrado para rota %s (id=%s)", rota.nome, rota.id)
+                } else {
+                    Timber.d("ℹ️ Nenhum ciclo em andamento encontrado para rota %s (id=%s) - não exibindo na tela principal", rota.nome, rota.id)
+                }
+                Timber.d("════════════════════════════════════════")
                 return null
             }
 
-            Timber.d("Ciclo encontrado: %s/%s (id=%s)", cicloAtual.numeroCiclo, cicloAtual.ano, cicloAtual.id)
+            Timber.d("✅ Ciclo encontrado: %s/%s (id=%s, status=%s)", cicloAtual.numeroCiclo, cicloAtual.ano, cicloAtual.id, cicloAtual.status)
 
             // Buscar colaborador responsável principal
             Timber.d("Buscando colaborador responsavel principal para rota %s", rota.nome)
@@ -129,13 +146,71 @@ class MetasViewModel constructor() : BaseViewModel() {
                 Timber.w("Nenhum colaborador responsavel encontrado para rota %s", rota.nome)
             }
 
-            // Buscar metas do ciclo atual
-            Timber.d("Buscando metas para rota %s e ciclo %s", rota.id, cicloAtual.id)
-            val metas = appRepository.buscarMetasPorRotaECiclo(rota.id, cicloAtual.id)
-            Timber.d("Metas encontradas: %s", metas.size)
+            // ✅ CORREÇÃO CRÍTICA: Na tela principal, buscar APENAS metas de ciclos em andamento
+            Timber.d("Buscando metas para rota %s (id=%s) e ciclo %s/%s (id=%s, status=%s)", rota.nome, rota.id, cicloAtual.numeroCiclo, cicloAtual.ano, cicloAtual.id, cicloAtual.status)
+            
+            // Se estiver em modo histórico, buscar todas as metas (ativas e finalizadas)
+            // Se não estiver em modo histórico, buscar apenas metas ativas de ciclos em andamento
+            var metas = if (_mostrarHistorico.value) {
+                appRepository.buscarMetasPorRotaECiclo(rota.id, cicloAtual.id)
+            } else {
+                // Tela principal: apenas metas ativas de ciclos em andamento
+                if (cicloAtual.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO) {
+                    appRepository.buscarMetasPorRotaECicloAtivo(rota.id, cicloAtual.id)
+                } else {
+                    Timber.d("Ciclo não está em andamento, não exibindo metas na tela principal")
+                    emptyList()
+                }
+            }
+            Timber.d("Metas encontradas para ciclo %s: %s", cicloAtual.id, metas.size)
+            if (metas.isNotEmpty()) {
+                metas.forEach { meta ->
+                    Timber.d("  - Meta encontrada: tipo=%s, valorMeta=%.2f, rotaId=%s, cicloId=%s, colaboradorId=%s", 
+                        meta.tipoMeta, meta.valorMeta, meta.rotaId, meta.cicloId, meta.colaboradorId)
+                }
+            }
+            
+            // ✅ NOVO: Se não encontrou metas no ciclo atual, buscar em todos os ciclos da rota
+            if (metas.isEmpty()) {
+                Timber.w("⚠️ Nenhuma meta encontrada para ciclo %s, buscando em todos os ciclos da rota", cicloAtual.id)
+                val todosCiclos = appRepository.buscarCiclosPorRota(rota.id)
+                Timber.d("Total de ciclos encontrados para rota %s: %s", rota.nome, todosCiclos.size)
+                
+                for (ciclo in todosCiclos) {
+                    val metasCiclo = appRepository.buscarMetasPorRotaECiclo(rota.id, ciclo.id)
+                    Timber.d("Ciclo %s/%s (id=%s): %s metas", ciclo.numeroCiclo, ciclo.ano, ciclo.id, metasCiclo.size)
+                    if (metasCiclo.isNotEmpty()) {
+                        Timber.d("✅ Encontradas %s metas no ciclo %s/%s, usando este ciclo", metasCiclo.size, ciclo.numeroCiclo, ciclo.ano)
+                        metas = metasCiclo
+                        // Atualizar cicloAtual para o ciclo que tem metas e continuar processamento
+                        Timber.d("Usando ciclo %s/%s (id=%s) que contém %s metas", ciclo.numeroCiclo, ciclo.ano, ciclo.id, metas.size)
+                        
+                        // Calcular progresso das metas baseado em dados reais
+                        Timber.d("Calculando progresso das metas")
+                        val metasComProgresso = calcularProgressoMetas(metas, rota.id, ciclo.id)
+
+                        val metaRotaResumo = MetaRotaResumo(
+                            rota = rota,
+                            cicloAtual = ciclo.numeroCiclo,
+                            anoCiclo = ciclo.ano,
+                            statusCiclo = ciclo.status,
+                            colaboradorResponsavel = colaboradorResponsavel,
+                            metas = metasComProgresso,
+                            dataInicioCiclo = ciclo.dataInicio,
+                            dataFimCiclo = ciclo.dataFim,
+                            ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
+                        )
+
+                        Timber.d("✅ MetaRotaResumo criado para %s com %s metas (ciclo %s/%s)", rota.nome, metasComProgresso.size, ciclo.numeroCiclo, ciclo.ano)
+                        Timber.d("════════════════════════════════════════")
+                        return metaRotaResumo
+                    }
+                }
+            }
 
             if (metas.isEmpty()) {
-                Timber.w("Nenhuma meta encontrada para rota %s e ciclo %s", rota.nome, cicloAtual.id)
+                Timber.w("⚠️ Nenhuma meta encontrada para rota %s em nenhum ciclo", rota.nome)
+                Timber.d("════════════════════════════════════════")
                 // Retornar MetaRotaResumo mesmo sem metas para mostrar a rota
                 return MetaRotaResumo(
                     rota = rota,
@@ -166,7 +241,8 @@ class MetasViewModel constructor() : BaseViewModel() {
                 ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
             )
 
-            Timber.d("MetaRotaResumo criado para %s", rota.nome)
+            Timber.d("✅ MetaRotaResumo criado para %s com %s metas", rota.nome, metasComProgresso.size)
+            Timber.d("════════════════════════════════════════")
             return metaRotaResumo
         } catch (e: Exception) {
             Timber.e(e, "Erro ao criar resumo de metas para rota %s: %s", rota.nome, e.message)

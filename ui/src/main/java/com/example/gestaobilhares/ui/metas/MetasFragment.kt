@@ -75,17 +75,38 @@ class MetasFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        metasAdapter = MetasAdapter { metaRota ->
-            // Navegar para cadastro de metas com a rota pre-selecionada
-            try {
-                val bundle = Bundle().apply {
-                    putLong("rota_id", metaRota.rota.id)
+        metasAdapter = MetasAdapter(
+            onDetailsClick = { metaRota ->
+                // ✅ NOVO: Clicar no card navega para histórico detalhado de metas
+                try {
+                    val action = com.example.gestaobilhares.ui.metas.MetasFragmentDirections
+                        .actionMetasFragmentToMetaHistoricoFragment(
+                            rotaId = metaRota.rota.id,
+                            cicloNumero = metaRota.cicloAtual,
+                            cicloAno = metaRota.anoCiclo
+                        )
+                    findNavController().navigate(action)
+                } catch (e: Exception) {
+                    android.util.Log.e("MetasFragment", "Erro ao abrir histórico de metas: ${e.message}", e)
+                    Toast.makeText(
+                        requireContext(), 
+                        "Erro ao abrir histórico: ${e.message}", 
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-                findNavController().navigate(com.example.gestaobilhares.ui.R.id.metaCadastroFragment, bundle)
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Erro ao abrir cadastro de metas: ${e.message}", Toast.LENGTH_SHORT).show()
+            },
+            onCreateMetaClick = { metaRota ->
+                // ✅ NOVO: Botão "Criar Metas" navega para cadastro
+                try {
+                    val bundle = Bundle().apply {
+                        putLong("rota_id", metaRota.rota.id)
+                    }
+                    findNavController().navigate(com.example.gestaobilhares.ui.R.id.metaCadastroFragment, bundle)
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(), "Erro ao abrir cadastro de metas: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
-        }
+        )
 
         binding.recyclerViewMetas.apply {
             layoutManager = LinearLayoutManager(context)
@@ -205,6 +226,7 @@ class MetasFragment : Fragment() {
             TipoMeta.TICKET_MEDIO -> "Ticket Médio"
         }
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

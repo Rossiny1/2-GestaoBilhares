@@ -60,6 +60,10 @@ android {
         kotlinCompilerExtensionVersion = "1.5.4"
     }
     
+    // ✅ FIX: Correção para "Filename too long" no Windows
+    // Usar diretório de build mais curto
+    buildDir = File(rootDir, "b")
+    
     // ✅ OTIMIZAÇÃO: Desabilitar tarefas desnecessárias no debug
     packaging {
         resources {

@@ -35,7 +35,8 @@ class CicloAcertoRepository constructor(
     private val despesaDao: DespesaDao, // ✅ CORRIGIDO: Usar DespesaDao diretamente em vez de DespesaRepository
     private val acertoRepository: com.example.gestaobilhares.data.repository.AcertoRepository,
     private val clienteRepository: ClienteRepository, // NOVO
-    private val rotaDao: com.example.gestaobilhares.data.dao.RotaDao? = null // NOVO: Para relatórios
+    private val rotaDao: com.example.gestaobilhares.data.dao.RotaDao? = null, // NOVO: Para relatórios
+    private val colaboradorDao: com.example.gestaobilhares.data.dao.ColaboradorDao? = null // NOVO: Para finalizar metas
 ) {
 
     /**
@@ -55,7 +56,7 @@ class CicloAcertoRepository constructor(
      * Busca ciclos por período
      */
     suspend fun buscarCiclosPorPeriodo(
-        rotaId: Long,
+        @Suppress("UNUSED_PARAMETER") rotaId: Long,
         dataInicio: Date,
         dataFim: Date
     ): List<CicloAcertoEntity> {
@@ -228,6 +229,65 @@ class CicloAcertoRepository constructor(
             )
             cicloAcertoDao.atualizar(cicloFinalizado)
             Log.d("CicloAcertoRepo", "Ciclo $cicloId finalizado com dados completos salvos.")
+            
+            // ✅ NOVO: Finalizar todas as metas associadas a este ciclo
+            Log.d("CicloAcertoRepo", "🔄 Iniciando finalização de metas para o ciclo $cicloId")
+            finalizarMetasDoCiclo(cicloId)
+            Log.d("CicloAcertoRepo", "✅ Finalização de metas concluída para o ciclo $cicloId")
+        }
+    }
+    
+    /**
+     * Finaliza todas as metas associadas a um ciclo (marca como inativas)
+     */
+    private suspend fun finalizarMetasDoCiclo(cicloId: Long) {
+        try {
+            Log.d("CicloAcertoRepo", "🔍 Verificando ColaboradorDao para ciclo $cicloId")
+            if (colaboradorDao == null) {
+                Log.e("CicloAcertoRepo", "❌ ColaboradorDao não disponível, pulando finalização de metas")
+                return
+            }
+            
+            Log.d("CicloAcertoRepo", "✅ ColaboradorDao disponível, buscando metas do ciclo $cicloId")
+            // Buscar todas as metas ativas do ciclo
+            val metas = colaboradorDao.buscarTodasMetasPorCiclo(cicloId)
+            Log.d("CicloAcertoRepo", "📊 Encontradas ${metas.size} metas ativas para o ciclo $cicloId")
+            
+            if (metas.isNotEmpty()) {
+                Log.d("CicloAcertoRepo", "🔄 Finalizando ${metas.size} metas do ciclo $cicloId")
+                
+                // Marcar todas as metas como inativas (finalizadas)
+                var sucessoCount = 0
+                var erroCount = 0
+                
+                metas.forEachIndexed { index, meta ->
+                    try {
+                        Log.d("CicloAcertoRepo", "  - Finalizando meta ${index + 1}/${metas.size}: ID=${meta.id}, Tipo=${meta.tipoMeta}, RotaId=${meta.rotaId}, Ativo=${meta.ativo}")
+                        
+                        // Criar cópia com ativo = false
+                        val metaFinalizada = meta.copy(ativo = false)
+                        
+                        // Atualizar no banco
+                        colaboradorDao.atualizarMeta(metaFinalizada)
+                        
+                        // Verificar se foi atualizado corretamente (read-your-writes)
+                        // Nota: buscarTodasMetasPorCiclo só retorna metas ativas, então não podemos usar para verificar
+                        // A atualização foi feita, então assumimos sucesso
+                        Log.d("CicloAcertoRepo", "  ✅ Meta ${meta.id} finalizada (ativo = false)")
+                        sucessoCount++
+                    } catch (e: Exception) {
+                        Log.e("CicloAcertoRepo", "  ❌ Erro ao finalizar meta ${meta.id}: ${e.message}", e)
+                        erroCount++
+                    }
+                }
+                
+                Log.d("CicloAcertoRepo", "✅ Finalização concluída: $sucessoCount sucesso, $erroCount erros de ${metas.size} metas")
+            } else {
+                Log.w("CicloAcertoRepo", "⚠️ Nenhuma meta encontrada para o ciclo $cicloId")
+            }
+        } catch (e: Exception) {
+            Log.e("CicloAcertoRepo", "❌ Erro ao finalizar metas do ciclo $cicloId: ${e.message}", e)
+            e.printStackTrace()
         }
     }
 

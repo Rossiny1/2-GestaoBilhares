@@ -205,7 +205,7 @@ class MyViewModel(
 ### **Estratégia Offline-first**
 
 1. **Dados Locais**: Sempre disponíveis (Room Database)
-2. **Fila de Sincronização**: Operações offline enfileiradas
+2. **Fila de Sincronização**: Operações offline enfileiradas (CREATE, UPDATE, DELETE)
 3. **Sincronização Bidirecional**: Pull (servidor → local) + Push (local → servidor)
 4. **Resolução de Conflitos**: Comparação de timestamp (última escrita vence)
 5. **WorkManager**: Sincronização periódica em background
@@ -214,6 +214,8 @@ class MyViewModel(
 8. **Cache In-Memory**: Reduz queries ao banco durante processamento
 9. **Heurística de Background**: `SyncRepository.shouldRunBackgroundSync()` só dispara WorkManager se houver pendências/falhas na fila ou se a última sync global `_global_sync` ocorreu há mais de 6 h, evitando execuções desnecessárias
 10. **ACL por Rota**: `shouldSyncRouteData` e `accessibleRouteIdsCache` (Set) garantem que apenas as rotas permitidas sejam sincronizadas; usuários restritos têm queries Firestore filtradas por `rotaId`/`whereIn`
+11. **Processamento Completo da Fila**: `processSyncQueue()` processa todas as operações pendentes em loop até esvaziar a fila completamente
+12. **Operações DELETE**: Todas as exclusões locais enfileiram operação DELETE que é processada na próxima sincronização, com verificação pós-DELETE para confirmar exclusão no Firestore
 
 > **Nota**: O `SyncManager` agenda o WorkManager apenas quando o dispositivo está carregando, com bateria saudável e em rede não medida (Wi‑Fi). Isso reduz impacto em bateria/dados mantendo o comportamento offline-first.
 
@@ -228,16 +230,33 @@ class SyncRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
     suspend fun syncPull(): Result<Int> // Sincronizar do servidor
-    suspend fun syncPush(): Result<Int> // Enviar para servidor
+    suspend fun syncPush(): Result<Int> // Enviar para servidor (processa fila de operações)
     suspend fun syncBidirectional(): Result<Int> // Sincronização completa (PUSH → PULL)
+    suspend fun processSyncQueue(): Result<Unit> // Processa todas as operações pendentes (CREATE, UPDATE, DELETE)
+    suspend fun processSingleSyncOperation(operation: SyncOperationEntity): Result<Unit> // Processa uma operação individual
     
     // Métodos auxiliares para sincronização incremental
     private suspend fun getLastSyncTimestamp(entityType: String): Long
     private suspend fun saveSyncMetadata(entityType: String, ...)
     private suspend fun executePaginatedQuery(query: Query, ...): Int
     private fun createIncrementalQuery(collectionRef: CollectionReference, ...): Query
+    private fun resolveCollectionReference(entityType: String): CollectionReference // Mapeia tipo de entidade para coleção Firestore
 }
 ```
+
+**Fila de Sincronização (SyncOperationEntity)**:
+- **OperationType**: CREATE, UPDATE, DELETE
+- **EntityType**: Tipo da entidade (ex: "Despesa", "Cliente", "Acerto")
+- **EntityId**: ID da entidade (usado como documentId no Firestore)
+- **EntityData**: Dados JSON (para CREATE/UPDATE) ou "{}" (para DELETE)
+- **Status**: PENDING, PROCESSING, COMPLETED, FAILED
+- **RetryCount**: Contador de tentativas (máximo configurável)
+
+**Processamento da Fila**:
+- `processSyncQueue()` busca operações pendentes em lotes (configurável, padrão: 50)
+- Processa cada operação individualmente via `processSingleSyncOperation()`
+- Continua processando em loop até não haver mais operações pendentes
+- Logs detalhados para rastreamento (enfileiramento, processamento, execução, erros)
 
 ### **Sincronização Incremental (PULL e PUSH)**
 

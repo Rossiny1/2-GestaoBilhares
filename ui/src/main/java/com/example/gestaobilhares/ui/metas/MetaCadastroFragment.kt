@@ -52,16 +52,22 @@ class MetaCadastroFragment : Fragment() {
         val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
         viewModel = MetaCadastroViewModel(appRepository)
         
-        // Obter rota selecionada dos argumentos
-        val rotaId = arguments?.getLong("rota_id")
-        if (rotaId != null) {
-            viewModel.carregarRotaPorId(rotaId)
-        }
-        
         setupUI()
         setupClickListeners()
         observeViewModel()
-        loadInitialData()
+        
+        // Obter rota selecionada dos argumentos
+        val rotaId = arguments?.getLong("rota_id")
+        android.util.Log.d("MetaCadastroFragment", "Rota ID recebida nos argumentos: $rotaId")
+        if (rotaId != null && rotaId != 0L) {
+            // Se há rota_id nos argumentos, carregar apenas essa rota
+            android.util.Log.d("MetaCadastroFragment", "Carregando rota específica com ID: $rotaId")
+            viewModel.carregarRotaPorId(rotaId)
+        } else {
+            // Se não há rota_id, carregar todas as rotas (para seleção manual)
+            android.util.Log.d("MetaCadastroFragment", "Nenhum rota_id fornecido, carregando todas as rotas")
+            loadInitialData()
+        }
     }
 
     private fun setupUI() {
@@ -109,8 +115,18 @@ class MetaCadastroFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.rotas.collect { rotas ->
                 if (rotas.isNotEmpty()) {
-                    rotaSelecionada = rotas.first()
-                    binding.etRota.setText(rotaSelecionada!!.nome)
+                    // Se há apenas uma rota na lista, significa que foi carregada por ID (argumento)
+                    // Se há múltiplas rotas, significa que foram carregadas todas (sem argumento)
+                    if (rotas.size == 1) {
+                        // Rota específica carregada via argumento
+                        rotaSelecionada = rotas.first()
+                        binding.etRota.setText(rotaSelecionada!!.nome)
+                        android.util.Log.d("MetaCadastroFragment", "Rota selecionada via argumento: ${rotaSelecionada!!.nome}")
+                    } else if (rotaSelecionada == null) {
+                        // Múltiplas rotas carregadas, mas nenhuma selecionada ainda
+                        // Não selecionar automaticamente - deixar o usuário escolher
+                        android.util.Log.d("MetaCadastroFragment", "Múltiplas rotas disponíveis (${rotas.size}), aguardando seleção do usuário")
+                    }
                 }
             }
         }
@@ -140,18 +156,11 @@ class MetaCadastroFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.metaSalva.collect { sucesso ->
                 if (sucesso) {
+                    android.util.Log.d("MetaCadastroFragment", "✅ Meta salva com sucesso! Navegando de volta...")
                     Toast.makeText(requireContext(), "Meta salva com sucesso!", Toast.LENGTH_SHORT).show()
                     
-                    // Notificar o MetasViewModel para recarregar as metas
-                    try {
-                        val metasViewModel = androidx.lifecycle.ViewModelProvider(requireActivity())[MetasViewModel::class.java]
-                        metasViewModel.refreshMetas()
-                        android.util.Log.d("MetaCadastroFragment", "MetasViewModel notificado para refresh")
-                    } catch (e: Exception) {
-                        android.util.Log.e("MetaCadastroFragment", "Erro ao notificar MetasViewModel: ${e.message}")
-                    }
-                    
                     // Navegar de volta para a tela anterior
+                    // O MetasFragment.onResume() irá recarregar as metas automaticamente
                     findNavController().navigateUp()
                 }
             }

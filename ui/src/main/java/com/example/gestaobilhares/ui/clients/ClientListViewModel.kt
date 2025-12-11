@@ -453,6 +453,20 @@ class ClientListViewModel constructor(
                 val rota = _rotaInfo.value ?: return@launch
                 val anoAtual = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
                 
+                // ✅ NOVO: Verificar se há ciclo anterior em andamento e finalizá-lo antes de criar novo
+                val cicloAnterior = appRepository.buscarCicloAtivo(rota.id)
+                if (cicloAnterior != null && cicloAnterior.status == StatusCicloAcerto.EM_ANDAMENTO) {
+                    android.util.Log.d("ClientListViewModel", "🔄 Finalizando ciclo anterior ${cicloAnterior.numeroCiclo}/${cicloAnterior.ano} (id=${cicloAnterior.id}) antes de iniciar novo ciclo")
+                    try {
+                        // Finalizar o ciclo anterior (isso também finalizará as metas automaticamente)
+                        appRepository.finalizarCicloAtualComDados(rota.id)
+                        android.util.Log.d("ClientListViewModel", "✅ Ciclo anterior finalizado com sucesso")
+                    } catch (e: Exception) {
+                        android.util.Log.e("ClientListViewModel", "❌ Erro ao finalizar ciclo anterior: ${e.message}", e)
+                        // Continuar mesmo se houver erro na finalização
+                    }
+                }
+                
                 // Buscar próximo número de ciclo
                 val proximoCiclo = appRepository.buscarProximoNumeroCiclo(rota.id, anoAtual)
                 
@@ -473,6 +487,7 @@ class ClientListViewModel constructor(
                 )
                 
                 val cicloId = appRepository.inserirCicloAcerto(novoCiclo)
+                android.util.Log.d("ClientListViewModel", "✅ Novo ciclo ${proximoCiclo}/${anoAtual} criado com ID=$cicloId")
                 
                 // Atualizar estado
                 _cicloAcerto.value = proximoCiclo
@@ -517,6 +532,11 @@ class ClientListViewModel constructor(
                 
                 // ✅ NOTIFICAR MUDANÇA DE STATUS para atualização em tempo real
                 notificarMudancaStatusRota(rota.id)
+                
+                // ✅ NOVO: Notificar que um novo ciclo foi iniciado para atualizar tela de metas
+                // Isso fará com que o card de metas seja zerado e fique disponível para criar novas metas
+                android.util.Log.d("ClientListViewModel", "📢 Notificando início de novo ciclo para atualização de metas")
+                // A atualização da rota já dispara os Flows, então as metas serão recarregadas automaticamente
                 
                 // ✅ CORREÇÃO: Recarregar clientes IMEDIATAMENTE após iniciar novo acerto
                 // Isso garante que os clientes apareçam corretamente nas abas (em aberto/pago)

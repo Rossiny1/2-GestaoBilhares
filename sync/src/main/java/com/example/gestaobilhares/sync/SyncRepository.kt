@@ -718,6 +718,154 @@ class SyncRepository(
     }
     
     /**
+     * ✅ NOVO (2025): Valida que uma entidade referenciada existe localmente.
+     * Se não existir, tenta buscar do Firestore.
+     * 
+     * @param entityType Tipo da entidade ("cliente", "mesa", "contrato")
+     * @param entityId ID da entidade
+     * @return true se a entidade existe localmente, false caso contrário
+     */
+    private suspend fun ensureEntityExists(
+        entityType: String,
+        entityId: Long
+    ): Boolean {
+        return try {
+            when (entityType) {
+                "cliente" -> {
+                    val exists = appRepository.obterClientePorId(entityId) != null
+                    if (!exists) {
+                        Log.w(TAG, "⚠️ Cliente $entityId não encontrado localmente - tentando buscar do Firestore")
+                        return tryFetchMissingCliente(entityId)
+                    }
+                    true
+                }
+                "mesa" -> {
+                    val exists = appRepository.obterMesaPorId(entityId) != null
+                    if (!exists) {
+                        Log.w(TAG, "⚠️ Mesa $entityId não encontrada localmente - tentando buscar do Firestore")
+                        return tryFetchMissingMesa(entityId)
+                    }
+                    true
+                }
+                "contrato" -> {
+                    val contrato = runCatching {
+                        appRepository.buscarTodosContratos().first().find { it.id == entityId }
+                    }.getOrNull()
+                    if (contrato == null) {
+                        Log.w(TAG, "⚠️ Contrato $entityId não encontrado localmente - tentando buscar do Firestore")
+                        return tryFetchMissingContrato(entityId)
+                    }
+                    true
+                }
+                else -> {
+                    Log.w(TAG, "⚠️ Tipo de entidade desconhecido: $entityType")
+                    false
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erro ao validar FK para $entityType $entityId: ${e.message}", e)
+            false
+        }
+    }
+    
+    private suspend fun tryFetchMissingCliente(clienteId: Long): Boolean {
+        return try {
+            val doc = getCollectionReference(firestore, COLLECTION_CLIENTES)
+                .document(clienteId.toString())
+                .get()
+                .await()
+            
+            if (!doc.exists()) {
+                Log.w(TAG, "⚠️ Cliente $clienteId não existe no Firestore")
+                return false
+            }
+            
+            val clienteData = doc.data ?: return false
+            val clienteJson = gson.toJson(clienteData)
+            val cliente = gson.fromJson(clienteJson, Cliente::class.java)?.copy(id = clienteId)
+                ?: return false
+            
+            appRepository.inserirCliente(cliente)
+            Log.d(TAG, "✅ Cliente $clienteId buscado e inserido com sucesso")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Falha ao buscar cliente $clienteId: ${e.message}", e)
+            false
+        }
+    }
+    
+    private suspend fun tryFetchMissingMesa(mesaId: Long): Boolean {
+        return try {
+            val doc = getCollectionReference(firestore, COLLECTION_MESAS)
+                .document(mesaId.toString())
+                .get()
+                .await()
+            
+            if (!doc.exists()) {
+                Log.w(TAG, "⚠️ Mesa $mesaId não existe no Firestore")
+                return false
+            }
+            
+            val mesaData = doc.data ?: return false
+            val mesaJson = gson.toJson(mesaData)
+            val mesa = gson.fromJson(mesaJson, Mesa::class.java)?.copy(id = mesaId)
+                ?: return false
+            
+            // Validar que o cliente da mesa existe
+            val clienteId = mesa.clienteId
+            if (clienteId == null || clienteId <= 0L) {
+                Log.w(TAG, "⚠️ Mesa $mesaId tem clienteId inválido: $clienteId")
+                return false
+            }
+            
+            if (!ensureEntityExists("cliente", clienteId)) {
+                Log.w(TAG, "⚠️ Mesa $mesaId referencia cliente $clienteId que não existe")
+                return false
+            }
+            
+            appRepository.inserirMesa(mesa)
+            Log.d(TAG, "✅ Mesa $mesaId buscada e inserida com sucesso")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Falha ao buscar mesa $mesaId: ${e.message}", e)
+            false
+        }
+    }
+    
+    private suspend fun tryFetchMissingContrato(contratoId: Long): Boolean {
+        return try {
+            val doc = getCollectionReference(firestore, COLLECTION_CONTRATOS)
+                .document(contratoId.toString())
+                .get()
+                .await()
+            
+            if (!doc.exists()) {
+                Log.w(TAG, "⚠️ Contrato $contratoId não existe no Firestore")
+                return false
+            }
+            
+            val contratoData = doc.data ?: return false
+            val contratoJson = gson.toJson(contratoData)
+            val contrato = gson.fromJson(contratoJson, ContratoLocacao::class.java)?.copy(id = contratoId)
+                ?: return false
+            
+            // Validar que o cliente do contrato existe
+            if (!ensureEntityExists("cliente", contrato.clienteId)) {
+                Log.w(TAG, "⚠️ Contrato $contratoId referencia cliente ${contrato.clienteId} que não existe")
+                return false
+            }
+            
+            appRepository.inserirContrato(contrato)
+            Log.d(TAG, "✅ Contrato $contratoId buscado e inserido com sucesso")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Falha ao buscar contrato $contratoId: ${e.message}", e)
+            false
+        }
+    }
+    
+
+    /**
      * ✅ NOVO (2025): Executa query Firestore com paginação automática.
      * Processa documentos em lotes para evitar problemas de memória e timeout.
      * 
@@ -2791,10 +2939,10 @@ class SyncRepository(
                     val mesaLocal = mesasCache[mesaId]
                     
                     // ✅ CORREÇÃO: Verificar timestamp do servidor vs local
+                    // dataUltimaLeitura.time e dataInstalacao.time são Long (não nullable)
                     val serverTimestamp = (mesaData["lastModified"] as? com.google.firebase.Timestamp)?.toDate()?.time
                         ?: (mesaData["dataUltimaLeitura"] as? com.google.firebase.Timestamp)?.toDate()?.time
                         ?: mesaFirestore.dataUltimaLeitura.time
-                        ?: mesaFirestore.dataInstalacao.time
                     val localTimestamp = mesaLocal?.dataUltimaLeitura?.time
                         ?: mesaLocal?.dataInstalacao?.time ?: 0L
                     
@@ -3421,12 +3569,24 @@ class SyncRepository(
                 Log.d(TAG, "🔄 Tentando sincronização INCREMENTAL (última sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullAcertosIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 if (incrementalResult != null) {
-                    val syncedCount = incrementalResult.getOrElse { return incrementalResult }
-                    val localCount = runCatching { appRepository.obterTodosAcertos().first().size }.getOrDefault(0)
-                    if (syncedCount > 0 || localCount > 0) {
-                        return incrementalResult
+                    val resultadoIncremental = incrementalResult.fold(
+                        onSuccess = { syncedCount ->
+                            val localCount = runCatching { appRepository.obterTodosAcertos().first().size }.getOrDefault(0)
+                            if (syncedCount > 0 || localCount > 0) {
+                                Result.success(syncedCount)
+                            } else {
+                                Log.w(TAG, "⚠️ Incremental de acertos trouxe $syncedCount registros com base local $localCount - executando pull completo")
+                                null // Indica que precisa fazer pull completo
+                            }
+                        },
+                        onFailure = { error ->
+                            Result.failure(error)
+                        }
+                    )
+                    // Se o resultado incremental foi bem-sucedido, retornar
+                    if (resultadoIncremental != null) {
+                        return resultadoIncremental
                     }
-                    Log.w(TAG, "⚠️ Incremental de acertos trouxe $syncedCount registros com base local $localCount - executando pull completo")
                 } else {
                     Log.w(TAG, "⚠️ Sincronização incremental de acertos falhou, usando método COMPLETO")
                 }
@@ -4189,6 +4349,13 @@ class SyncRepository(
                                     serverTimestamp > lastSyncTimestamp
                     
                     if (shouldSync) {
+                        // ✅ VALIDAR FK: Verificar que o cliente existe antes de inserir
+                        if (!ensureEntityExists("cliente", contratoFirestore.clienteId)) {
+                            Log.w(TAG, "❌ Contrato $contratoId skipado: cliente ${contratoFirestore.clienteId} não existe")
+                            skippedCount++
+                            return@forEach
+                        }
+                        
                         if (contratoLocal == null) {
                             appRepository.inserirContrato(contratoFirestore)
                         } else {
@@ -4247,6 +4414,7 @@ class SyncRepository(
                         return@forEach
                     }
                 
+                
                 if (!shouldSyncRouteData(null, clienteId = contratoFirestore.clienteId, allowUnknown = false)) {
                     skipCount++
                     return@forEach
@@ -4259,13 +4427,31 @@ class SyncRepository(
                     
                 val shouldSync = contratoLocal == null || serverTimestamp > localTimestamp
                 if (shouldSync) {
-                    if (contratoLocal == null) {
-                            appRepository.inserirContrato(contratoFirestore)
-                    } else {
-                            appRepository.atualizarContrato(contratoFirestore)
+                    // ✅ VALIDAR FK: Verificar que o cliente existe antes de inserir
+                    if (!ensureEntityExists("cliente", contratoFirestore.clienteId)) {
+                        Log.w(TAG, "❌ Contrato $contratoId skipado: cliente ${contratoFirestore.clienteId} não existe")
+                        errorCount++
+                        return@forEach
                     }
+                    
+                    try {
+                        if (contratoLocal == null) {
+                            appRepository.inserirContrato(contratoFirestore)
+                        } else {
+                            appRepository.atualizarContrato(contratoFirestore)
+                        }
                             pullAditivosContrato(contratoId)
-                    syncCount++
+                        syncCount++
+                    } catch (e: Exception) {
+                        errorCount++
+                        val isFkError = e.message?.contains("FOREIGN KEY", ignoreCase = true) == true
+                        if (isFkError) {
+                            Log.e(TAG, "🔴 FK CONSTRAINT VIOLATION ao inserir contrato $contratoId: ${e.message}")
+                            Log.e(TAG, "   ➜ Verifique se cliente ${contratoFirestore.clienteId} existe localmente")
+                        } else {
+                            Log.e(TAG, "❌ Erro ao inserir contrato $contratoId: ${e.message}", e)
+                        }
+                    }
                 } else {
                     skipCount++
                     }
@@ -5381,15 +5567,30 @@ class SyncRepository(
                             ?: (data["valor_fixo"] as? Number)?.toDouble()
                     )
                     
+            // ✅ VALIDAR FK: Verificar que contrato e mesa existem antes de inserir
+            if (!ensureEntityExists("contrato", contratoId)) {
+                Log.w(TAG, "❌ ContratoMesa $contratoMesaId skipada: contrato $contratoId não existe")
+                return ProcessResult.Skipped
+            }
+            if (!ensureEntityExists("mesa", mesaId)) {
+                Log.w(TAG, "❌ ContratoMesa $contratoMesaId skipada: mesa $mesaId não existe")
+                return ProcessResult.Skipped
+            }
+            
             val existing = contratoMesasCache[contratoMesaId]
-            return if (existing == null) {
-                    appRepository.inserirContratoMesa(contratoMesa)
-                contratoMesasCache[contratoMesaId] = contratoMesa
-                ProcessResult.Synced
-            } else {
+            return try {
                 appRepository.inserirContratoMesa(contratoMesa)
                 contratoMesasCache[contratoMesaId] = contratoMesa
                 ProcessResult.Synced
+            } catch (e: Exception) {
+                val isFkError = e.message?.contains("FOREIGN KEY", ignoreCase = true) == true
+                if (isFkError) {
+                    Log.e(TAG, "🔴 FK CONSTRAINT VIOLATION ao inserir contrato mesa $contratoMesaId: ${e.message}")
+                    Log.e(TAG, "   ➜ Contrato: $contratoId, Mesa: $mesaId")
+                } else {
+                    Log.e(TAG, "❌ Erro ao inserir contrato mesa $contratoMesaId: ${e.message}", e)
+                }
+                ProcessResult.Error
             }
                 } catch (e: Exception) {
                     Log.e(TAG, "❌ Erro ao processar contrato mesa ${doc.id}: ${e.message}", e)

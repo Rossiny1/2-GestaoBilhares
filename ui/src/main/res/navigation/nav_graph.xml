@@ -537,6 +537,10 @@
         <action
             android:id="@+id/action_metasFragment_to_metaCadastroFragment"
             app:destination="@id/metaCadastroFragment" />
+        <!-- Navegação para histórico de metas -->
+        <action
+            android:id="@+id/action_metasFragment_to_metaHistoricoFragment"
+            app:destination="@id/metaHistoricoFragment" />
     </fragment>
 
     <!-- ✅ NOVO: Fragment de Cadastro de Meta -->
@@ -545,6 +549,25 @@
         android:name="com.example.gestaobilhares.ui.metas.MetaCadastroFragment"
         android:label="Cadastrar Meta"
         tools:layout="@layout/fragment_meta_cadastro" />
+
+    <!-- ✅ NOVO: Fragment de Histórico de Metas -->
+    <fragment
+        android:id="@+id/metaHistoricoFragment"
+        android:name="com.example.gestaobilhares.ui.metas.MetaHistoricoFragment"
+        android:label="Histórico de Metas"
+        tools:layout="@layout/fragment_meta_historico">
+        <argument
+            android:name="rotaId"
+            app:argType="long" />
+        <argument
+            android:name="cicloNumero"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
+            android:name="cicloAno"
+            app:argType="integer"
+            android:defaultValue="0" />
+    </fragment>
 
     <!-- ✅ NOVO: Telas de Inventário -->
     <fragment
