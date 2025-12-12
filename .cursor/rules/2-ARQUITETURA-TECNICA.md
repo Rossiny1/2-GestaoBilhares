@@ -216,6 +216,7 @@ class MyViewModel(
 10. **ACL por Rota**: `shouldSyncRouteData` e `accessibleRouteIdsCache` (Set) garantem que apenas as rotas permitidas sejam sincronizadas; usuários restritos têm queries Firestore filtradas por `rotaId`/`whereIn`
 11. **Processamento Completo da Fila**: `processSyncQueue()` processa todas as operações pendentes em loop até esvaziar a fila completamente
 12. **Operações DELETE**: Todas as exclusões locais enfileiram operação DELETE que é processada na próxima sincronização, com verificação pós-DELETE para confirmar exclusão no Firestore
+13. **Proteção contra Cascade Delete (UPSERT)**: Entidades "pai" (Rota, Cliente, Mesa) utilizam estratégia `UPSERT` (Insert Ignore + Update Manual) no lugar de `REPLACE`. Isso previne que a atualização da entidade pai dispare `ON DELETE CASCADE` no banco de dados, excluindo acidentalmente entidades filhas (Ciclos, Acertos) durante a sincronização.
 
 > **Nota**: O `SyncManager` agenda o WorkManager apenas quando o dispositivo está carregando, com bateria saudável e em rede não medida (Wi‑Fi). Isso reduz impacto em bateria/dados mantendo o comportamento offline-first.
 

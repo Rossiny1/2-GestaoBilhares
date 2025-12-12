@@ -20,7 +20,15 @@ class ClienteRepository(
     suspend fun inserir(cliente: Cliente): Long {
         logDbInsertStart("CLIENTE", "Nome=${cliente.nome}, RotaID=${cliente.rotaId}")
         return try {
-            val id = clienteDao.inserir(cliente)
+            // ✅ UPSERT: Tentar inserir (IGNORE). Se retornar -1, fazer update.
+            // Isso previne que a atualização do cliente (REPLACE) dispare um DELETE CASCADE
+            // que apagaria todos os acertos vinculados a este cliente.
+            var id = clienteDao.inserir(cliente)
+            if (id == -1L) {
+                Log.d("ClienteRepository", "🔄 Cliente ${cliente.id} já existe, atualizando para evitar cascade delete...")
+                clienteDao.atualizar(cliente)
+                id = cliente.id
+            }
             logDbInsertSuccess("CLIENTE", "Nome=${cliente.nome}, ID=$id")
             id
         } catch (e: Exception) {

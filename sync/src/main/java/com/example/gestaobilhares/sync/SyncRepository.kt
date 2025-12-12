@@ -3675,13 +3675,13 @@ class SyncRepository(
                 
                 if (updateCount > 0) {
                     Log.d(TAG, "🔄 (Incremental) Acerto atualizado ID: ${acertoFirestore.id}")
-                    maintainLocalAcertoHistory(acertoFirestore.clienteId)
+                    // ❌ REMOVIDO: maintainLocalAcertoHistory - PULL não deve deletar dados locais (offline-first)
                     syncCount++
                     pullAcertoMesas(acertoFirestore.id)
                 } else {
                     Log.d(TAG, "➕ (Incremental) Acerto novo inserido ID: ${acertoFirestore.id}")
                     appRepository.inserirAcerto(acertoFirestore)
-                    maintainLocalAcertoHistory(acertoFirestore.clienteId)
+                    // ❌ REMOVIDO: maintainLocalAcertoHistory - PULL não deve deletar dados locais (offline-first)
                     syncCount++
                     pullAcertoMesas(acertoFirestore.id)
                 }
@@ -3765,13 +3765,13 @@ class SyncRepository(
                 
                 if (updateCount > 0) {
                     Log.d(TAG, "🔄 Acerto atualizado com sucesso ID: ${acertoFirestore.id}")
-                    maintainLocalAcertoHistory(acertoFirestore.clienteId)
+                    // ❌ REMOVIDO: maintainLocalAcertoHistory - PULL não deve deletar dados locais (offline-first)
                     syncCount++
                     pullAcertoMesas(acertoFirestore.id)
                 } else {
                     Log.d(TAG, "➕ Acerto não encontrado para update, inserindo novo ID: ${acertoFirestore.id}")
                     appRepository.inserirAcerto(acertoFirestore)
-                    maintainLocalAcertoHistory(acertoFirestore.clienteId)
+                    // ❌ REMOVIDO: maintainLocalAcertoHistory - PULL não deve deletar dados locais (offline-first)
                     syncCount++
                     pullAcertoMesas(acertoFirestore.id)
                 }
@@ -6530,6 +6530,20 @@ class SyncRepository(
                 } catch (e: Exception) {
                     errorCount++
                     Log.e(TAG, "Erro ao enviar acerto ${acerto.id}: ${e.message}", e)
+                }
+            }
+            
+            // ✅ CORRIGIDO: Manter histórico APÓS todos os uploads (fora do loop)
+            // Chamar apenas UMA VEZ por cliente único, evitando múltiplas execuções
+            // que podem causar race conditions e deletar dados incorretamente
+            val clientesAfetados = acertosParaEnviar.map { it.clienteId }.distinct()
+            Log.d(TAG, "🧹 Limpando histórico para ${clientesAfetados.size} cliente(s) único(s)...")
+            clientesAfetados.forEach { clienteId ->
+                try {
+                    maintainLocalAcertoHistory(clienteId, limit = 15)
+                    Log.d(TAG, "   ✅ Histórico mantido para cliente $clienteId (últimos 15 acertos)")
+                } catch (e: Exception) {
+                    Log.e(TAG, "   ❌ Erro ao manter histórico do cliente $clienteId: ${e.message}", e)
                 }
             }
             
