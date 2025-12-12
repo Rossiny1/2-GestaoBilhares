@@ -58,7 +58,7 @@ interface AcertoDao {
     suspend fun buscarUltimosAcertosPorClientes(clienteIds: List<Long>): List<Acerto>
 
     @Update
-    suspend fun atualizar(acerto: Acerto)
+    suspend fun atualizar(acerto: Acerto): Int
 
     @Delete
     suspend fun deletar(acerto: Acerto)

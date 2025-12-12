@@ -17,7 +17,7 @@ interface ClienteDao {
     suspend fun inserir(cliente: Cliente): Long
 
     @Update
-    suspend fun atualizar(cliente: Cliente)
+    suspend fun atualizar(cliente: Cliente): Int
 
     @Delete
     suspend fun deletar(cliente: Cliente)

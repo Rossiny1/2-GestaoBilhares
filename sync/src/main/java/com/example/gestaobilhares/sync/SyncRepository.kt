@@ -6,7 +6,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.sync.utils.NetworkUtils
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.core.utils.FirebaseImageUploader
-import com.example.gestaobilhares.utils.UserSessionManager
+import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.dao.SyncMetadataDao
 import com.google.firebase.firestore.FirebaseFirestore
@@ -2510,13 +2510,23 @@ class SyncRepository(
                     val localTimestamp = clienteLocal?.dataUltimaAtualizacao?.time ?: 0L
                     
                     when {
-                clienteLocal == null || serverTimestamp > localTimestamp -> {
-                    appRepository.inserirCliente(clienteFirestore)
-                    ProcessResult.Synced
+                    clienteLocal == null -> {
+                        // Inserir novo cliente (Insert)
+                        appRepository.inserirCliente(clienteFirestore)
+                        ProcessResult.Synced
+                    }
+                    serverTimestamp > localTimestamp -> {
+                        // ✅ ESTRATÉGIA SEGURA (2025): Tentar UPDATE primeiro
+                        val updateCount = appRepository.atualizarCliente(clienteFirestore)
+                        if (updateCount == 0) {
+                            // Se update não encontrou (raro, pois local != null), inserir
+                             appRepository.inserirCliente(clienteFirestore)
                         }
-                        else -> {
-                    ProcessResult.Skipped
-                        }
+                        ProcessResult.Synced
+                    }
+                    else -> {
+                        ProcessResult.Skipped
+                    }
                     }
                 } catch (e: Exception) {
             Log.e(TAG, "❌ Erro ao processar cliente ${doc.id}: ${e.message}", e)
@@ -3660,28 +3670,21 @@ class SyncRepository(
                         ?: acertoFirestore.dataAcerto.time
                     val localTimestamp = acertoLocal?.dataAcerto?.time ?: 0L
                     
-                    when {
-                        acertoLocal == null -> {
-                            Log.d(TAG, "➕ Inserindo novo acerto ID: ${acertoFirestore.id}, clienteId: ${acertoFirestore.clienteId}")
-                            appRepository.inserirAcerto(acertoFirestore)
-                            maintainLocalAcertoHistory(acertoFirestore.clienteId)
-                            syncCount++
-                            
-                            pullAcertoMesas(acertoFirestore.id)
-                        }
-                        serverTimestamp > localTimestamp -> {
-                            Log.d(TAG, "🔄 Atualizando acerto existente ID: ${acertoFirestore.id}")
-                            appRepository.atualizarAcerto(acertoFirestore)
-                            maintainLocalAcertoHistory(acertoFirestore.clienteId)
-                            syncCount++
-                            
-                            pullAcertoMesas(acertoFirestore.id)
-                        }
-                        else -> {
-                            skippedCount++
-                            Log.d(TAG, "⏭️ Acerto ${acertoFirestore.id} já está atualizado")
-                        }
-                    }
+                    // ✅ ESTRATÉGIA SEGURA (2025): Tentar UPDATE primeiro
+                val updateCount = appRepository.atualizarAcerto(acertoFirestore)
+                
+                if (updateCount > 0) {
+                    Log.d(TAG, "🔄 (Incremental) Acerto atualizado ID: ${acertoFirestore.id}")
+                    maintainLocalAcertoHistory(acertoFirestore.clienteId)
+                    syncCount++
+                    pullAcertoMesas(acertoFirestore.id)
+                } else {
+                    Log.d(TAG, "➕ (Incremental) Acerto novo inserido ID: ${acertoFirestore.id}")
+                    appRepository.inserirAcerto(acertoFirestore)
+                    maintainLocalAcertoHistory(acertoFirestore.clienteId)
+                    syncCount++
+                    pullAcertoMesas(acertoFirestore.id)
+                }
                     processedCount++
                     if (processedCount % 50 == 0) {
                         val elapsed = System.currentTimeMillis() - processStartTime
@@ -3756,30 +3759,22 @@ class SyncRepository(
                         ?: acertoFirestore.dataAcerto.time
                     val localTimestamp = acertoLocal?.dataAcerto?.time ?: 0L
                     
-                    when {
-                        acertoLocal == null -> {
-                            Log.d(TAG, "➕ Inserindo novo acerto ID: ${acertoFirestore.id}, clienteId: ${acertoFirestore.clienteId}")
-                            appRepository.inserirAcerto(acertoFirestore)
-                            maintainLocalAcertoHistory(acertoFirestore.clienteId)
-                            syncCount++
-                            
-                            // Sincronizar AcertoMesa relacionados
-                            pullAcertoMesas(acertoFirestore.id)
-                        }
-                        serverTimestamp > localTimestamp -> {
-                            Log.d(TAG, "🔄 Atualizando acerto existente ID: ${acertoFirestore.id}")
-                            appRepository.atualizarAcerto(acertoFirestore)
-                            maintainLocalAcertoHistory(acertoFirestore.clienteId)
-                            syncCount++
-                            
-                            // Sincronizar AcertoMesa relacionados
-                            pullAcertoMesas(acertoFirestore.id)
-                        }
-                        else -> {
-                            skippedCount++
-                            Log.d(TAG, "⏭️ Acerto ${acertoFirestore.id} já está atualizado")
-                        }
-                    }
+                // ✅ ESTRATÉGIA SEGURA (2025): Tentar UPDATE primeiro para evitar CASCADE DELETE dos filhos
+                // Se o update retornar 0, significa que não existe, então fazemos INSERT
+                val updateCount = appRepository.atualizarAcerto(acertoFirestore)
+                
+                if (updateCount > 0) {
+                    Log.d(TAG, "🔄 Acerto atualizado com sucesso ID: ${acertoFirestore.id}")
+                    maintainLocalAcertoHistory(acertoFirestore.clienteId)
+                    syncCount++
+                    pullAcertoMesas(acertoFirestore.id)
+                } else {
+                    Log.d(TAG, "➕ Acerto não encontrado para update, inserindo novo ID: ${acertoFirestore.id}")
+                    appRepository.inserirAcerto(acertoFirestore)
+                    maintainLocalAcertoHistory(acertoFirestore.clienteId)
+                    syncCount++
+                    pullAcertoMesas(acertoFirestore.id)
+                }
                 } catch (e: Exception) {
                     errorCount++
                     Log.e(TAG, "❌ Erro ao sincronizar acerto ${doc.id}: ${e.message}", e)

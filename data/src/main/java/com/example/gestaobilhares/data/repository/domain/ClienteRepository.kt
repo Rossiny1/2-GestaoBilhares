@@ -29,7 +29,7 @@ class ClienteRepository(
         }
     }
     
-    suspend fun atualizar(cliente: Cliente) = clienteDao.atualizar(cliente)
+    suspend fun atualizar(cliente: Cliente): Int = clienteDao.atualizar(cliente)
     suspend fun deletar(cliente: Cliente) = clienteDao.deletar(cliente)
     suspend fun obterDebitoAtual(clienteId: Long) = clienteDao.obterDebitoAtual(clienteId)
     suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) = 

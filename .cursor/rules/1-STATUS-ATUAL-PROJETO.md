@@ -211,6 +211,174 @@
   - UI tests para telas críticas
   - Prioridade: Média (melhora qualidade e confiabilidade)
 
+## 🎯 MELHORIAS FUTURAS (ANDROID 2025)
+
+### **Objetivo**
+Manter o projeto alinhado com as melhores práticas Android mais recentes, garantindo qualidade, performance, segurança e manutenibilidade a longo prazo.
+
+### **PRIORIDADE ALTA (2-4 semanas)**
+
+#### **1. Cobertura de Testes Automatizados**
+- **Status**: ⚠️ 13 testes existentes mas cobertura insuficiente (~5%)
+- **Objetivo**: Aumentar cobertura para >60% (ViewModels e Repositories)
+- **Benefícios**:
+  - ✅ Detecção precoce de bugs
+  - ✅ Refatoração segura
+  - ✅ Documentação viva do comportamento
+  - ✅ Redução de regressões em produção
+- **Implementação**:
+  - ✅ Testes existe para: SettlementViewModel, RoutesViewModel, MetasViewModel, CycleManagementViewModel, ClientRegisterViewModel, AuthViewModel, GlobalExpensesViewModel
+  - ⏳ Corrigir testes existentes (podem não estar passando)
+  - ⏳ Adicionar testes para ViewModels restantes
+  - ⏳ Adicionar testes de integração para Repositories
+  - ⏳ Configurar cobertura de código (JaCoCo)
+- **Ferramentas**:
+  - JUnit 5 ✅ (já configurado)
+  - Mockito ✅ (já configurado)
+  - Turbine ✅ (para testar Flows)
+  - Truth ✅ (assertions legíveis)
+- **Referência**: [Android Testing Guide](https://developer.android.com/training/testing)
+
+#### **2. Injeção de Dependência com Hilt**
+- **Status**: ⏳ Hilt configurado no build.gradle mas não implementado
+- **Problema Atual**: RepositoryFactory manual dificulta testes e escalabilidade
+- **Objetivo**: Migrar para Hilt (padrão Android 2025)
+- **Benefícios**:
+  - ✅ Facilita testes unitários (mocking)
+  - ✅ Reduz boilerplate
+  - ✅ Padrão oficial Android
+  - ✅ Melhor suporte a multi-módulos
+- **Implementação**:
+  - ⏳ Ativar plugin Hilt (já está em build.gradle)
+  - ⏳ Criar módulos Hilt (@Module, @Provides)
+  - ⏳ Anotar Application com @HiltAndroidApp
+  - ⏳ Migrar ViewModels para @HiltViewModel
+  - ⏳ Remover RepositoryFactory manual
+- **Estimativa**: 1-2 semanas (migração incremental)
+- **Referência**: [Hilt Documentation](https://developer.android.com/training/dependency-injection/hilt-android)
+
+### **PRIORIDADE MÉDIA (4-8 semanas)**
+
+#### **3. Otimização de Performance e Memória**
+- **Status**: ⚠️ Sem monitoramento ativo
+- **Problemas Potenciais**:
+  - Possíveis memory leaks em ViewModels/Repositories
+  - Cache in-memory sem limite de tamanho
+  - Queries Room não otimizadas
+- **Objetivo**: Monitorar e otimizar consumo de recursos
+- **Implementação**:
+  - ⏳ Adicionar LeakCanary para detectar leaks
+  - ⏳ Implementar limite de tamanho para caches in-memory
+  - ⏳ Profiling de performance (Android Studio Profiler)
+  - ⏳ Otimizar queries Room (índices, lazy loading)
+  - ⏳ Implementar paginação para listas grandes
+- **Métricas**:
+  - Tempo de resposta UI < 16ms (60 FPS)
+  - Consumo de memória < 100MB em uso normal
+  - Zero memory leaks detectados
+- **Referência**: [App Performance Guide](https://developer.android.com/topic/performance)
+
+#### **4. Documentação KDoc Consistente**
+- **Status**: ⚠️ Documentação básica e inconsistente
+- **Objetivo**: KDoc completo para todas as classes públicas
+- **Implementação**:
+  - ⏳ Documentar ViewModels (parâmetros, estados, ações)
+  - ⏳ Documentar Repositories (contratos, side effects)
+  - ⏳ Documentar Entities (relacionamentos, validações)
+  - ⏳ Gerar documentação HTML (Dokka)
+- **Padrão**:
+  ```kotlin
+  /**
+   * ViewModel para gerenciar [Entidade].
+   * 
+   * Responsabilidades:
+   * - Observar dados reativos do [Repository]
+   * - Expor estados via [StateFlow]
+   * - Processar ações do usuário
+   * 
+   * @property repository Fonte de dados
+   * @see [Entity]
+   */
+  class MyViewModel(...) : BaseViewModel() { }
+  ```
+- **Referência**: [KDoc Documentation](https://kotlinlang.org/docs/kotlin-doc.html)
+
+#### **5. Segurança para Produção**
+- **Status**: ⚠️ Proguard básico, sem validações avançadas
+- **Melhorias Necessárias**:
+  - ⏳ Ativar R8 full mode (ofuscação completa)
+  - ⏳ Implementar certificate pinning (API calls)
+  - ⏳ Validar entrada do usuário (SQL injection, XSS)
+  - ⏳ Crypto para dados sensíveis (EncryptedSharedPreferences)
+  - ⏳ Configurar App Signing no Google Play Console
+- **Conformidade**:
+  - LGPD/GDPR compliance
+  - Audit logs para assinaturas (já implementado ✅)
+  - Criptografia de dados em repouso
+- **Referência**: [Security Best Practices](https://developer.android.com/topic/security/best-practices)
+
+### **PRIORIDADE BAIXA (8+ semanas)**
+
+#### **6. Accessibility (A11y)**
+- **Status**: ❌ Não implementado
+- **Objetivo**: Tornar app acessível para todos os usuários
+- **Implementação**:
+  - ⏳ Content descriptions para imagens/ícones
+  - ⏳ Suporte TalkBack completo
+  - ⏳ Contraste de cores WCAG 2.1 AA
+  - ⏳ Tamanho mínimo de toque (48dp)
+  - ⏳ Navegação por teclado
+- **Referência**: [Accessibility Guide](https://developer.android.com/guide/topics/ui/accessibility)
+
+#### **7. CI/CD Pipeline**
+- **Status**: ❌ Build manual
+- **Objetivo**: Automatizar build, testes e deploy
+- **Ferramentas Sugeridas**:
+  - GitHub Actions (gratuito para projetos públicos)
+  - Bitrise
+  - CircleCI
+- **Pipeline Ideal**:
+  1. Lint & Static Analysis (ktlint, detekt)
+  2. Unit Tests (JUnit)
+  3. Integration Tests
+  4. Build APK/Bundle
+  5. Deploy para Firebase App Distribution (beta)
+  6. Deploy para Google Play (produção)
+- **Referência**: [CI/CD for Android](https://developer.android.com/studio/projects/continuous-integration)
+
+#### **8. Analytics e Monitoramento**
+- **Status**: ❌ Não implementado
+- **Objetivo**: Entender uso e problemas em produção
+- **Ferramentas**:
+  - Firebase Analytics (eventos de uso)
+  - Firebase Crashlytics (crash reporting)
+  - Firebase Performance Monitoring
+- **Métricas Importantes**:
+  - MAU/DAU (usuários ativos)
+  - Tempo de sessão
+  - Telas mais visitadas
+  - Taxa de crashes (< 1%)
+  - Tempo de carregamento
+- **Referência**: [Firebase Analytics](https://firebase.google.com/docs/analytics)
+
+### **Roadmap Resumido**
+
+| Fase | Prioridade | Duração | Itens |
+|------|-----------|---------|-------|
+| **Q1 2025** | ALTA | 2-4 sem | ✅ Testes Automatizados<br/>✅ Hilt DI |
+| **Q2 2025** | MÉDIA | 4-8 sem | ⏳ Performance<br/>⏳ KDoc<br/>⏳ Segurança |
+| **Q3 2025** | BAIXA | 8+ sem | ⏳ A11y<br/>⏳ CI/CD<br/>⏳ Analytics |
+
+### **Métricas de Sucesso**
+
+- **Testes**: Cobertura >60%, todos passando
+- **Performance**: UI 60 FPS, memória <100MB
+- **Segurança**: 0 vulnerabilidades críticas (OWASP)
+- **Qualidade**: 0 warnings críticos, documentação completa
+- **Produção**: Taxa de crash <1%, tempo de build <5min
+
+---
+
 ## 🧪 QUALIDADE E ESTABILIDADE
 
 - ✅ **Build**: Estável e funcional

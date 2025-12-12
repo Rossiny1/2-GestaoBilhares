@@ -138,7 +138,6 @@ interface CicloAcertoDao {
         SELECT * FROM ciclos_acerto 
         WHERE rota_id = :rotaId 
         ORDER BY 
-            CASE WHEN status = 'EM_ANDAMENTO' THEN 0 ELSE 1 END,
             ano DESC, 
             numero_ciclo DESC 
         LIMIT 1

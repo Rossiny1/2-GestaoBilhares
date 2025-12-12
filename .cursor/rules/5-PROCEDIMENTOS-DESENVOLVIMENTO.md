@@ -235,6 +235,248 @@ adb logcat -s LOG_CRASH:* RoutesScreen:* UserSessionManager:*
 - [StateFlow](https://developer.android.com/kotlin/flow/stateflow-and-sharedflow)
 - [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager)
 
+## ✅ CHECKLIST DE QUALIDADE E BOAS PRÁTICAS
+
+### **Antes de Cada Commit**
+
+#### **1. Build e Compilação**
+- [ ] Build passa sem erros: `./gradlew assembleDebug`
+- [ ] Sem warnings críticos no Lint
+- [ ] Código Kotlin segue convenções (ktlint)
+- [ ] ProGuard rules atualizadas (se necessário)
+
+#### **2. Testes (PRIORIDADE ALTA)**
+- [ ] Testes unitários passando: `./gradlew test`
+- [ ] Cobertura de código mantida ou aumentada
+- [ ] Testes novos para funcionalidades novas
+- [ ] Mocks atualizados se necessário
+
+```bash
+# Executar todos os testes
+./gradlew test
+
+# Executar testes com cobertura
+./gradlew testDebugUnitTestCoverage
+
+# Ver relatório de cobertura
+# build/reports/coverage/debug/index.html
+```
+
+#### **3. Performance**
+- [ ] Sem leaks de memória (LeakCanary)
+- [ ] Listas grandes usando LazyColumn/RecyclerView
+- [ ] Images otimizadas (< 500KB cada)
+- [ ] Queries Room com índices apropriados
+
+```kotlin
+// ✅ CHECKLIST: Otimizações essenciais
+class MyViewModel {
+    // ✅ Cancelar coroutines ao destruir ViewModel
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.cancel() // Evita leaks
+    }
+    
+    // ✅ Cache com limite
+    private val cache = LruCache<String, Data>(100)
+    
+    // ✅ Debounce em buscas
+    val searchQuery = MutableStateFlow("")
+    val searchResults = searchQuery
+        .debounce(300) // Aguarda 300ms
+        .flatMapLatest { repository.search(it) }
+}
+```
+
+#### **4. Segurança**
+- [ ] Dados sensíveis criptografados
+- [ ] Validação de entrada do usuário
+- [ ] Permissões Android justificadas
+- [ ] Tokens não versionados (gitignore)
+
+```kotlin
+// ❗ NÃO FAÇA: Hardcoded secrets
+val apiKey = "sk_live_123456789" // ❌ ERRADO
+
+// ✅ FAÇA: Use BuildConfig ou arquivo seguro
+val apiKey = BuildConfig.API_KEY // ✅ CORRETO
+```
+
+#### **5. Accessibility**
+- [ ] Content descriptions em imagens
+- [ ] Tamanhos de toque >= 48dp
+- [ ] Contraste de cores adequado
+- [ ] Testado com TalkBack
+
+```kotlin
+// ✅ CHECKLIST A11y
+// 1. Imagens
+Image(
+    painter = painterResource(R.drawable.ic_save),
+    contentDescription = "Salvar alterações" // ✅ Sempre inclua
+)
+
+// 2. Botões com área de toque adequada
+IconButton(
+    onClick = { },
+    modifier = Modifier.size(48.dp) // ✅ Mínimo
+) { Icon(...) }
+
+// 3. Contraste de cores
+Text(
+    text = "Importante",
+    color = Color(0xFF000000), // Preto
+    background = Color(0xFFFFFFFF) // Branco
+    // Razão de contraste: 21:1 (WCAG AAA) ✅
+)
+```
+
+### **Padrões de Código (Code Review)**
+
+#### **ViewModels**
+```kotlin
+// ✅ BOM: StateFlow + Observação reativa
+class GoodViewModel(private val repo: Repo) : ViewModel() {
+    private val _state = MutableStateFlow<State>(State.Loading)
+    val state = _state.asStateFlow()
+    
+    init {
+        viewModelScope.launch {
+            repo.getData()
+                .catch { _state.value = State.Error(it) }
+                .collect { _state.value = State.Success(it) }
+        }
+    }
+}
+
+// ❌ RUIM: LiveData + update manual
+class BadViewModel(private val repo: Repo) : ViewModel() {
+    val data = MutableLiveData<Data>()
+    
+    fun loadData() { // ❌ Manual, não reativo
+        viewModelScope.launch {
+            data.value = repo.getData() // ❌ Sem error handling
+        }
+    }
+}
+```
+
+#### **Repositories**
+```kotlin
+// ✅ BOM: Flow reativo do Room
+class GoodRepository(private val dao: Dao) {
+    fun getData(): Flow<List<Item>> = dao.getAll() // ✅ Reativo
+    
+    suspend fun insert(item: Item) {
+        withContext(Dispatchers.IO) {
+            dao.insert(item)
+        }
+    }
+}
+
+// ❌ RUIM: Listas estáticas
+class BadRepository(private val dao: Dao) {
+    suspend fun getData(): List<Item> = dao.getAllSync() // ❌ Não reativo
+}
+```
+
+### **Testes de Regressão (Manual)**
+
+Antes de release, testar manualmente:
+
+**Fluxos Críticos**:
+1. ✅ Login/Logout
+2. ✅ Criação de cliente
+3. ✅ Acerto (settlement)
+4. ✅ Geração de relatório
+5. ✅ Sincronização (offline → online)
+
+**Cenários Edge**:
+- [ ] App funciona offline
+- [ ] Recriação de configuração (rotação de tela)
+- [ ] Memória baixa (background apps)
+- [ ] Rede lenta/instável
+- [ ] Dados inválidos/edge cases
+
+### **Métricas de Qualidade**
+
+| Métrica | Target | Como Verificar |
+|---------|--------|----------------|
+| **Cobertura de Testes** | > 60% | `./gradlew testDebugUnitTestCoverage` |
+| **Warnings** | 0 críticos | Android Studio Lint |
+| **Memory Leaks** | 0 | LeakCanary em debug |
+| **Crash Rate** | < 1% | Firebase Crashlytics (produção) |
+| **Build Time** | < 5min | Gradle build scan |
+| **APK Size** | < 50MB | `app/build/outputs/apk/` |
+
+### **Documentação KDoc**
+
+```kotlin
+/**
+ * ViewModel para gerenciar acertos de clientes.
+ * 
+ * **Responsabilidades**:
+ * - Carregar lista de acertos via [AcertoRepository]
+ * - Calcular totais (fichas, valores)
+ * - Filtrar por período/cliente
+ * 
+ * **Estados**:
+ * - [Loading]: Carregando dados
+ * - [Success]: Dados disponíveis
+ * - [Error]: Erro ao carregar
+ * 
+ * @property repository Fonte de dados de acertos
+ * @constructor Cria ViewModel com injeção de [AcertoRepository]
+ * 
+ * @see AcertoRepository
+ * @see Acerto
+ * 
+ * @sample
+ * ```kotlin
+ * val viewModel = SettlementViewModel(repository)
+ * viewModel.state.collect { state ->
+ *     when (state) {
+ *         is Loading -> showLoading()
+ *         is Success -> showData(state.acertos)
+ *         is Error -> showError(state.message)
+ *     }
+ * }
+ * ```
+ */
+@HiltViewModel
+class SettlementViewModel @Inject constructor(
+    private val repository: AcertoRepository
+) : BaseViewModel() { ... }
+```
+
+### **Git Commit Messages**
+
+Seguir convenção Conventional Commits:
+
+```bash
+# Formato:
+<type>(<scope>): <subject>
+
+# Exemplos:
+feat(clients): adicionar filtro por rota
+fix(sync): corrigir timestamp após push
+test(settlement): adicionar testes para cálculo de total
+refactor(repository): extrair lógica para ClienteRepository
+docs(readme): atualizar instruções de setup
+perf(database): adicionar índices para queries frequentes
+
+# Types:
+# feat: Nova funcionalidade
+# fix: Correção de bug
+# refactor: Refatoração sem mudança de comportamento
+# test: Adição/correção de testes
+# docs: Documentação
+# perf: Otimização de performance
+# chore: Manutenção (build, deps, etc)
+```
+
+---
+
 ## ⚠️ AVISOS IMPORTANTES
 
 1. **Nunca quebrar compatibilidade**: ViewModels devem continuar usando AppRepository

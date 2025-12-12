@@ -65,8 +65,8 @@ class ClienteRepository constructor(
     /**
      * Atualiza um cliente
      */
-    suspend fun atualizar(cliente: Cliente) {
-        clienteDao.atualizar(cliente)
+    suspend fun atualizar(cliente: Cliente): Int {
+        return clienteDao.atualizar(cliente)
     }
 
     /**

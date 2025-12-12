@@ -209,7 +209,7 @@ class AppRepository constructor(
     fun obterClientesPorRota(rotaId: Long): Flow<List<Cliente>> = clienteRepository.obterClientesPorRota(rotaId)
     suspend fun obterClientePorId(id: Long) = clienteRepository.obterPorId(id)
     suspend fun inserirCliente(cliente: Cliente): Long = clienteRepository.inserir(cliente)
-    suspend fun atualizarCliente(cliente: Cliente) = clienteRepository.atualizar(cliente)
+    suspend fun atualizarCliente(cliente: Cliente): Int = clienteRepository.atualizar(cliente)
     suspend fun deletarCliente(cliente: Cliente) {
         // ✅ CORREÇÃO: Deletar do banco local
         clienteRepository.deletar(cliente)
@@ -257,7 +257,7 @@ class AppRepository constructor(
     fun buscarClientesPorRota(rotaId: Long) = clienteRepository.obterClientesPorRota(rotaId)
     suspend fun buscarRotaPorId(rotaId: Long) = rotaRepository.obterPorId(rotaId)
     suspend fun inserirAcerto(acerto: Acerto): Long = acertoRepository.inserir(acerto)
-    suspend fun atualizarAcerto(acerto: Acerto) = acertoRepository.atualizar(acerto)
+    suspend fun atualizarAcerto(acerto: Acerto): Int = acertoRepository.atualizar(acerto)
     suspend fun deletarAcerto(acerto: Acerto) {
         // ✅ CORREÇÃO: Deletar do banco local
         acertoRepository.deletar(acerto)

@@ -122,8 +122,8 @@ class AcertoRepository constructor(
     suspend fun buscarPorId(id: Long): Acerto? {
         return acertoDao.buscarPorId(id)
     }
-    suspend fun atualizar(acerto: Acerto) {
-        acertoDao.atualizar(acerto)
+    suspend fun atualizar(acerto: Acerto): Int {
+        return acertoDao.atualizar(acerto)
     }
     suspend fun deletar(acerto: Acerto) = acertoDao.deletar(acerto)
     
