@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.example.gestaobilhares.ui.cycles.CycleManagementViewModelTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-12-11T20:37:03" hostname="LAPTOP-SAMSUNG" time="21.447">
+<testsuite name="com.example.gestaobilhares.ui.cycles.CycleManagementViewModelTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-12-12T19:05:30" hostname="LAPTOP-SAMSUNG" time="1.087">
   <properties/>
-  <testcase name="carregarDadosCiclo deve atualizar dadosCiclo e estatisticas" classname="com.example.gestaobilhares.ui.cycles.CycleManagementViewModelTest" time="21.447"/>
+  <testcase name="carregarDadosCiclo deve atualizar dadosCiclo e estatisticas" classname="com.example.gestaobilhares.ui.cycles.CycleManagementViewModelTest" time="1.087"/>
   <system-out><![CDATA[DEBUG: FinancialCalculator: ]]>&#x1f504;<![CDATA[ Método: 'PIX' -> Normalizado: 'PIX' -> Valor: R$ 500.0
 DEBUG: FinancialCalculator: ]]>&#x1f4ca;<![CDATA[ Totais por modalidade calculados: {PIX=500.0}
 DEBUG: FinancialCalculator: ]]>&#x1f4b0;<![CDATA[ Valores extraídos: PIX=500.0, Cartão=0.0, Cheque=0.0, Dinheiro=0.0
 STATS_DEBUG: total=500.0 pix=500.0
 ]]></system-out>
-  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\d2a3ae3de270cf046c1204b1fdafd20a\transformed\jetified-byte-buddy-agent-1.14.9.jar)
-WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
-WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
-WARNING: Dynamic loading of agents will be disallowed by default in a future release
-]]></system-err>
+  <system-err><![CDATA[]]></system-err>
 </testsuite>

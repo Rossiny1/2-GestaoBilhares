@@ -71,6 +71,9 @@
     - ✅ Mapeamento de entidades: Sistema robusto de mapeamento de tipos de entidade para coleções Firestore (ex: "Despesa" → "despesas")
     - ✅ Verificação pós-DELETE: Confirmação de exclusão no Firestore após DELETE executado
     - ✅ Tratamento de erros: Captura e log detalhado de erros do Firestore (PERMISSION_DENIED, NOT_FOUND, etc.)
+    - ✅ **Correção Crítica de Integridade de Dados (Janeiro 2025)**:
+      - ✅ **Proteção contra Cascade Delete**: Alterada estratégia de sync de Rotas e Clientes para **UPSERT** (Insert Ignore + Update) em vez de REPLACE, prevenindo a exclusão acidental de Ciclos e Acertos vinculados.
+      - ✅ **Correção de Histórico**: Lógica `maintainLocalAcertoHistory` movida para fora do loop de sincronização para evitar execução redundante e race conditions.
 
 ### **2. Migração Compose (PRIORIDADE MÉDIA)**
 

@@ -6,6 +6,8 @@
     // ✅ CORREÇÃO: KSP (compatível com Java 11+)
     id("com.google.devtools.ksp")
     id("kotlin-parcelize")
+    // ✅ NOVO: JaCoCo para cobertura de testes
+    id("jacoco")
     // ✅ REMOVIDO: Hilt (pode causar conflito com Compose)
     // id("com.google.dagger.hilt.android")
 }
@@ -23,10 +25,19 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     
-    // Configuração temporária para pular testes unitários
+    // ✅ ATUALIZADO: Configuração de testes com JaCoCo
     testOptions {
         unitTests {
-            isIncludeAndroidResources = false
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+        }
+        // Habilitar cobertura de código
+        unitTests.all {
+            it.useJUnitPlatform() // JUnit 5 support
+            it.extensions.configure(JacocoTaskExtension::class) {
+                isIncludeNoLocationClasses = true
+                excludes = listOf("jdk.internal.*")
+            }
         }
     }
 
@@ -201,3 +212,60 @@ dependencies {
     androidTestImplementation("androidx.room:room-testing:2.6.1")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 } 
+
+// ✅ NOVO: Configuração JaCoCo para Cobertura de Testes
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+    
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports for Debug build"
+    
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+    
+    val fileFilter = listOf(
+        "**/R.class",
+        "**/R\$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "android/**/*.*",
+        "**/databinding/**/*.*",
+        "**/generated/**/*.*"
+    )
+    
+    val debugTree = fileTree("${layout.buildDirectory.asFile.get()}/tmp/kotlin-classes/debug") {
+        exclude(fileFilter)
+    }
+    
+    val mainSrc = "${project.projectDir}/src/main/java"
+    
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(fileTree(layout.buildDirectory.asFile.get()) {
+        include("jacoco/testDebugUnitTest.exec")
+    })
+}
+
+tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
+    dependsOn("jacocoTestReport")
+    
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.60".toBigDecimal() // 60% coverage mínima
+            }
+        }
+    }
+}
+
+// Task helper para rodar testes + cobertura
+tasks.register("testCoverage") {
+    group = "verification"
+    description = "Run tests and generate coverage report"
+    dependsOn("testDebugUnitTest", "jacocoTestReport")
+}
+

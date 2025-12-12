@@ -510,7 +510,15 @@ class AppRepository constructor(
     suspend fun inserirRota(rota: Rota): Long {
         logDbInsertStart("ROTA", "Nome=${rota.nome}")
         return try {
-            val id = rotaDao.insertRota(rota)
+            // ✅ UPSERT: Tentar inserir (IGNORE). Se retornar -1, fazer update.
+            // Isso evita o problema de DELETE CASCADE que ocorria com REPLACE,
+            // preservando os Ciclos vinculados à rota.
+            var id = rotaDao.insertRota(rota)
+            if (id == -1L) {
+                android.util.Log.d("AppRepository", "🔄 Rota ${rota.id} já existe, atualizando para evitar cascade delete...")
+                rotaDao.updateRota(rota)
+                id = rota.id
+            }
             logDbInsertSuccess("ROTA", "Nome=${rota.nome}, ID=$id")
             id
         } catch (e: Exception) {
