@@ -34,7 +34,7 @@ class AcertoRepository(
         }
     }
     
-    suspend fun atualizar(acerto: Acerto) = acertoDao.atualizar(acerto)
+    suspend fun atualizar(acerto: Acerto): Int = acertoDao.atualizar(acerto)
     suspend fun deletar(acerto: Acerto) = acertoDao.deletar(acerto)
     suspend fun buscarUltimoPorMesa(mesaId: Long) = acertoDao.buscarUltimoAcertoPorMesa(mesaId)
     suspend fun buscarObservacaoUltimoAcerto(clienteId: Long) = acertoDao.buscarObservacaoUltimoAcerto(clienteId)

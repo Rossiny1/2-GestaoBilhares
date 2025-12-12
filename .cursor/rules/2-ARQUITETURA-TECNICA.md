@@ -416,14 +416,264 @@ Todas as entidades principais estão sendo sincronizadas:
 
 ## 🎯 MELHORES PRÁTICAS ANDROID 2025
 
-1. **Jetpack Compose**: Priorizar para novas telas
-2. **StateFlow**: Usar em vez de LiveData
-3. **repeatOnLifecycle**: Observação segura de StateFlow
-4. **Offline-first**: Dados sempre disponíveis localmente
-5. **Modularização**: Código organizado por domínio
-6. **Type-safe Navigation**: Navigation Component
-7. **Material Design 3**: Componentes modernos
-8. **WorkManager**: Background tasks confiáveis
+### **1. Arquitetura e Estrutura de Código**
+
+#### **MVVM com Observação Reativa**
+- ✅ **Jetpack Compose**: Priorizar para novas telas (moderno, declarativo)
+- ✅ **StateFlow**: Usar em vez de LiveData (melhor para coroutines)
+- ✅ **repeatOnLifecycle**: Observação segura de StateFlow (evita leaks)
+- ✅ **Offline-first**: Dados sempre disponíveis localmente (Room como fonte primária)
+- ✅ **Modularização**: Código organizado por domínio (escalabilidade)
+- ✅ **Type-safe Navigation**: Navigation Component com SafeArgs
+- ✅ **Material Design 3**: Componentes modernos e consistentes
+- ✅ **WorkManager**: Background tasks confiáveis (respeitando sistema)
+
+```kotlin
+// ✅ PADRÃO RECOMENDADO 2025: ViewModel com StateFlow
+@HiltViewModel // Injeção automática
+class MyViewModel @Inject constructor(
+    private val repository: MyRepository
+) : ViewModel() {
+    // Estado UI como StateFlow (imutável externamente)
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    
+    init {
+        loadData() // Carregar dados ao iniciar
+    }
+    
+    private fun loadData() {
+        viewModelScope.launch {
+            // Observa Flow do Repository (reativo)
+            repository.getData()
+                .catch { e -> _uiState.value = UiState.Error(e.message) }
+                .collect { data -> _uiState.value = UiState.Success(data) }
+        }
+    }
+}
+
+// Estado UI com sealed class (type-safe)
+sealed class UiState {
+    object Loading : UiState()
+    data class Success(val data: List<Item>) : UiState()
+    data class Error(val message: String?) : UiState()
+}
+```
+
+### **2. Testes Automatizados (PRIORIDADE ALTA)**
+
+#### **Estratégia de Testes**
+
+**Pirâmide de Testes**:
+- 70% Unit Tests (ViewModels, Repositories, Utils)
+- 20% Integration Tests (Repositories + Room)
+- 10% UI Tests (fluxos críticos)
+
+**Ferramentas**:
+- ✅ JUnit 5 (framework principal)
+- ✅ Mockito/MockK (mocking)
+- ✅ Turbine (testar Flows)
+- ✅ Truth (assertions legíveis)
+- ✅ Robolectric (testes Android sem emulador)
+
+```kotlin
+// ✅ EXEMPLO: Teste de ViewModel
+class MyViewModelTest {
+    @get:Rule
+    val instantTaskExecutorRule = InstantTaskExecutorRule()
+    
+    private val mainDispatcher = StandardTestDispatcher()
+    private val mockRepository = mock<MyRepository>()
+    private lateinit var viewModel: MyViewModel
+    
+    @Before
+    fun setup() {
+        Dispatchers.setMain(mainDispatcher)
+        viewModel = MyViewModel(mockRepository)
+    }
+    
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+    
+    @Test
+    fun `quando dados são carregados, estado muda para Success`() = runTest {
+        // Given
+        val testData = listOf(Item("test"))
+        whenever(mockRepository.getData()).thenReturn(flowOf(testData))
+        
+        // When
+        viewModel.loadData()
+        mainDispatcher.scheduler.advanceUntilIdle()
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue(state is UiState.Success)
+        assertEquals(testData, (state as UiState.Success).data)
+    }
+}
+```
+
+### **3. Performance e Otimização (PRIORIDADE MÉDIA)**
+
+#### **Memory Management**
+
+```kotlin
+// ✅ BOA PRÁTICA: Cache com limite de tamanho
+class CacheManager<K, V>(private val maxSize: Int = 100) {
+    private val cache = LinkedHashMap<K, V>(maxSize, 0.75f, true)
+    
+    fun put(key: K, value: V) {
+        if (cache.size >= maxSize) {
+            cache.remove(cache.keys.first()) // Remove oldest
+        }
+        cache[key] = value
+    }
+    
+    fun get(key: K): V? = cache[key]
+}
+
+// ✅ BOA PRÁTICA: LazyColumn para listas grandes (Compose)
+@Composable
+fun MyLazyList(items: List<Item>) {
+    LazyColumn {
+        items(
+            items = items,
+            key = { it.id } // Recomposição eficiente
+        ) { item ->
+            ItemCard(item)
+        }
+    }
+}
+```
+
+#### **Database Optimization**
+
+```kotlin
+// ✅ BOA PRÁTICA: Índices Room para queries frequentes
+@Entity(
+    tableName = "clientes",
+    indices = [
+        Index(value = ["rotaId"]),           // Filtro por rota
+        Index(value = ["dataAtualizacao"]),  // Sync incremental
+        Index(value = ["nome"])              // Busca por nome
+    ]
+)
+data class Cliente(...)
+
+// ✅ BOA PRÁTICA: Paginação com Paging 3
+@Dao
+interface ClienteDao {
+    @Query("SELECT * FROM clientes ORDER BY nome ASC")
+    fun getPagedClientes(): PagingSource<Int, Cliente>
+}
+```
+
+#### **Métricas de Performance**
+
+| Métrica | Target | Como Medir |
+|---------|--------|------------|
+| **Frame Rate** | 60 FPS (16ms/frame) | Android Studio Profiler |
+| **Cold Start** | < 2s | Logcat timestamps |
+| **Memória** | < 100MB normal | Profiler Memory |
+| **APK Size** | < 50MB | Build output |
+| **Battery** | < 5%/hora | Battery Historian |
+
+### **4. Segurança (PRIORIDADE MÉDIA)**
+
+#### **Dados Sensíveis**
+
+```kotlin
+// ✅ BOA PRÁTICA: EncryptedSharedPreferences para dados sensíveis
+val masterKey = MasterKey.Builder(context)
+    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+    .build()
+
+val encryptedPrefs = EncryptedSharedPreferences.create(
+    context,
+    "secure_prefs",
+    masterKey,
+    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+)
+
+// Armazenar token de forma segura
+encryptedPrefs.edit().putString("auth_token", token).apply()
+```
+
+#### **Validação de Entrada**
+
+```kotlin
+// ✅ BOA PRÁTICA: Validação robusta
+fun validarEmail(email: String): Result<String> {
+    return when {
+        email.isBlank() -> Result.failure(Exception("Email vazio"))
+        !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> 
+            Result.failure(Exception("Email inválido"))
+        else -> Result.success(email.trim())
+    }
+}
+
+// Sanitização para evitar SQL injection (Room já protege, mas para raw queries)
+fun sanitizeQuery(input: String): String {
+    return input.replace("'", "''")  // Escape single quotes
+        .replace("--", "")           // Remove SQL comments
+}
+```
+
+#### **ProGuard/R8 para Produção**
+
+```proguard
+# Ofuscação agressiva
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+-optimizationpasses 5
+-allowaccessmodification
+-dontpreverify
+
+# Mantém classes essenciais
+-keep class com.example.gestaobilhares.data.entities.** { *; }
+-keep class * extends androidx.room.RoomDatabase
+
+# Firebase
+-keep class com.google.firebase.** { *; }
+```
+
+### **5. Accessibility (A11y) (PRIORIDADE BAIXA)**
+
+```kotlin
+// ✅ BOA PRÁTICA: Content descriptions para imagens
+Image(
+    painter = painterResource(R.drawable.ic_client),
+    contentDescription = "Foto do cliente" // Essencial para TalkBack
+)
+
+// ✅ BOA PRÁTICA: Tamanho mínimo de toque (48dp)
+Button(
+    onClick = { },
+    modifier = Modifier.size(48.dp) // Mínimo recomendado
+) {
+    Text("Ação")
+}
+
+// ✅ BOA PRÁTICA: Contraste de cores (WCAG 2.1 AA)
+val textColor = if (isHighContrast) Color.Black else Color.DarkGray
+val backgroundColor = Color.White
+// Razão de contraste mínima: 4.5:1 para texto normal
+```
+
+### **6. Documentação KDoc (PRIORIDADE MÉDIA)**
+
+```kotlin
+/**
+ * Repository para gerenciar operações de [Cliente].
+ * 
+ * Este repository implementa o padrão offline-first, onde:
+ * - Dados locais (Room) são a fonte primária
+ * - Sincronização com Firestore ocorre em background
+ * - Conflitos são resolvidos por timestamp (last-write-wins)
+ * 
+ * @property dao DAO para acess
 
 ## 📚 REFERÊNCIAS
 
