@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GestaoBilharesApplication.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.example.gestaobilhares</a> &gt; <span class="el_source">GestaoBilharesApplication.kt</span></div><h1>GestaoBilharesApplication.kt</h1><pre class="source lang-java linenums">﻿package com.example.gestaobilhares
+
+import android.app.Application
+import com.google.firebase.FirebaseApp
+import timber.log.Timber
+
+/**
+ * Application class principal do app.
+ * Inicializa Firebase e configurações básicas.
+ */
+<span class="nc" id="L11">class GestaoBilharesApplication : Application() {</span>
+    
+    companion object {
+        @Volatile
+        private var INSTANCE: GestaoBilharesApplication? = null
+        
+        fun getInstance(): GestaoBilharesApplication {
+<span class="nc bnc" id="L18" title="All 2 branches missed.">            return INSTANCE ?: throw IllegalStateException(&quot;Application não inicializada&quot;)</span>
+        }
+    }
+    
+    override fun onCreate() {
+<span class="nc" id="L23">        super.onCreate()</span>
+<span class="nc" id="L24">        INSTANCE = this</span>
+        
+<span class="nc" id="L26">        try {</span>
+            // Inicializar Firebase de forma segura
+<span class="nc bnc" id="L28" title="All 2 branches missed.">            if (FirebaseApp.getApps(this).isEmpty()) {</span>
+<span class="nc" id="L29">                FirebaseApp.initializeApp(this)</span>
+<span class="nc" id="L30">                Timber.d(&quot;Firebase inicializado com sucesso&quot;)</span>
+            } else {
+<span class="nc" id="L32">                Timber.d(&quot;Firebase já estava inicializado&quot;)</span>
+            }
+<span class="nc" id="L34">        } catch (e: Exception) {</span>
+<span class="nc" id="L35">            Timber.e(e, &quot;Erro ao inicializar Firebase: ${e.message}&quot;)</span>
+            // Continuar mesmo se Firebase falhar (modo offline)
+        }
+        
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (BuildConfig.DEBUG) {</span>
+<span class="nc" id="L40">            Timber.plant(Timber.DebugTree())</span>
+        }
+<span class="nc" id="L42">        Timber.d(&quot;Aplicacao iniciada com sucesso&quot;)</span>
+        
+        // Agendar sincronização periódica em background
+<span class="nc" id="L45">        try {</span>
+<span class="nc" id="L46">            com.example.gestaobilhares.sync.SyncManager.schedulePeriodicSync(this)</span>
+<span class="nc" id="L47">            Timber.d(&quot;Sincronização periódica agendada&quot;)</span>
+<span class="nc" id="L48">        } catch (e: Exception) {</span>
+<span class="nc" id="L49">            Timber.e(e, &quot;Erro ao agendar sincronização periódica: ${e.message}&quot;)</span>
+            // Continuar mesmo se falhar (modo offline)
+        }
+<span class="nc" id="L52">    }</span>
+} 
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

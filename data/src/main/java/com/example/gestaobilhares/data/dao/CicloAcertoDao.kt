@@ -84,14 +84,16 @@ interface CicloAcertoDao {
     
     /**
      * Busca o ciclo em andamento de uma rota.
+     * ✅ CORREÇÃO: Adicionado ORDER BY para garantir consistência se houver múltiplos (pegar o mais recente)
      */
-    @Query("SELECT * FROM ciclos_acerto WHERE rota_id = :rotaId AND status = 'EM_ANDAMENTO' LIMIT 1")
+    @Query("SELECT * FROM ciclos_acerto WHERE rota_id = :rotaId AND status = 'EM_ANDAMENTO' ORDER BY ano DESC, numero_ciclo DESC LIMIT 1")
     suspend fun buscarCicloEmAndamento(rotaId: Long): CicloAcertoEntity?
     
     /**
      * Busca o ciclo em andamento de uma rota como Flow.
+     * ✅ CORREÇÃO: Adicionado ORDER BY
      */
-    @Query("SELECT * FROM ciclos_acerto WHERE rota_id = :rotaId AND status = 'EM_ANDAMENTO' LIMIT 1")
+    @Query("SELECT * FROM ciclos_acerto WHERE rota_id = :rotaId AND status = 'EM_ANDAMENTO' ORDER BY ano DESC, numero_ciclo DESC LIMIT 1")
     fun observarCicloEmAndamento(rotaId: Long): Flow<CicloAcertoEntity?>
     
     /**

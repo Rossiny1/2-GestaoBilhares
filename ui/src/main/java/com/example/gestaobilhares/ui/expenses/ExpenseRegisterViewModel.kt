@@ -297,20 +297,24 @@ class ExpenseRegisterViewModel constructor(
                     selecionado
                 } else {
                     // Fluxo normal por rota
-                    // ✅ CORREÇÃO CRÍTICA: Buscar APENAS ciclo EM_ANDAMENTO mais recente
+                    // ✅ CORREÇÃO CRÍTICA: Buscar APENAS ciclo EM_ANDAMENTO mais recente (DAO corrigido com ORDER BY)
                     val ativo = appRepository.buscarCicloAtivo(rotaId)
+                    
                     if (ativo == null) {
+                        android.util.Log.e("ExpenseRegisterViewModel", "❌ Nenhum ciclo ativo encontrado para rota $rotaId")
                         showMessage("Não é possível cadastrar despesas. Não há ciclo em andamento para esta rota.")
                         return@launch
                     }
+                    
                     // ✅ VALIDAÇÃO CRÍTICA: Garantir que o ciclo está realmente EM_ANDAMENTO
                     if (ativo.status != StatusCicloAcerto.EM_ANDAMENTO) {
                         android.util.Log.e("ExpenseRegisterViewModel", "❌ ERRO: Ciclo encontrado não está EM_ANDAMENTO! ID: ${ativo.id}, Status: ${ativo.status}, Número: ${ativo.numeroCiclo}")
                         showMessage("Não é possível cadastrar despesas. O ciclo atual está ${ativo.status.name.lowercase()}. Apenas ciclos em andamento permitem adição de despesas.")
                         return@launch
                     }
+                    
                     // ✅ LOG PARA DEBUG: Confirmar ciclo correto
-                    android.util.Log.d("ExpenseRegisterViewModel", "✅ Despesa será vinculada ao ciclo EM_ANDAMENTO: ID=${ativo.id}, Número=${ativo.numeroCiclo}, Status=${ativo.status}")
+                    android.util.Log.w("ExpenseRegisterViewModel", "✅ Despesa será vinculada ao ciclo EM_ANDAMENTO: ID=${ativo.id}, Número=${ativo.numeroCiclo}, Ano=${ativo.ano}, Rota=$rotaId")
                     ativo
                 }
 

@@ -26,6 +26,20 @@ class RotaRepository(
     fun obterTodas(): Flow<List<Rota>> = rotaDao.getAllRotas()
     fun obterAtivas(): Flow<List<Rota>> = rotaDao.getAllRotasAtivas()
     suspend fun obterPorId(rotaId: Long) = rotaDao.getRotaById(rotaId)
+
+    /**
+     * Insere ou atualiza uma rota usando estratégia segura para evitar Cascade Delete.
+     * Tenta inserir (IGNORE). Se falhar (retornar -1), faz update manual.
+     */
+    suspend fun inserir(rota: Rota): Long {
+        var id = rotaDao.insertRota(rota)
+        if (id == -1L) {
+            android.util.Log.d("RotaRepository", "🔄 Rota ${rota.id} já existe, atualizando manual para evitar cascade delete...")
+            rotaDao.updateRota(rota)
+            id = rota.id
+        }
+        return id
+    }
     
     /**
      * Obtém resumo de rotas com atualização em tempo real
