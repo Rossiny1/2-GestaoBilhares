@@ -17,8 +17,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.ui.databinding.FragmentColaboradorManagementBinding
 import com.example.gestaobilhares.data.entities.Colaborador
-import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.data.database.AppDatabase
+// import com.example.gestaobilhares.data.repository.AppRepository
+import dagger.hilt.android.AndroidEntryPoint
 import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
@@ -27,12 +27,14 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
  * Permite visualizar, aprovar, ativar/desativar e excluir colaboradores.
  * Acesso restrito apenas para administradores.
  */
+@AndroidEntryPoint
 class ColaboradorManagementFragment : Fragment() {
 
     private var _binding: FragmentColaboradorManagementBinding? = null
     private val binding get() = _binding!!
-
-    private lateinit var viewModel: ColaboradorManagementViewModel
+    
+    private val viewModel: ColaboradorManagementViewModel by viewModels()
+    // private lateinit var viewModel: ColaboradorManagementViewModel
     private lateinit var colaboradorAdapter: ColaboradorAdapter
 
     override fun onCreateView(
@@ -48,9 +50,9 @@ class ColaboradorManagementFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar ViewModel
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
-        viewModel = ColaboradorManagementViewModel(appRepository, userSessionManager)
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
+        // viewModel = ColaboradorManagementViewModel(appRepository, userSessionManager)
         
         setupRecyclerView()
         setupClickListeners()

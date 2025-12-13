@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.ui.databinding.FragmentClientRegisterBinding
+import dagger.hilt.android.AndroidEntryPoint
 import com.example.gestaobilhares.core.utils.DataValidator
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -32,12 +33,13 @@ import java.util.*
  * Fragment para cadastro de novos clientes
  * FASE 4B - Recursos Avançados
  */
+@AndroidEntryPoint
 class ClientRegisterFragment : Fragment() {
 
     private var _binding: FragmentClientRegisterBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: ClientRegisterViewModel
+    private val viewModel: ClientRegisterViewModel by viewModels()
     private val args: ClientRegisterFragmentArgs by navArgs()
     
     // ✅ NOVO: Variáveis para Geolocalização
@@ -74,8 +76,8 @@ class ClientRegisterFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar ViewModel aqui onde o contexto está disponível
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = ClientRegisterViewModel(appRepository)
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = ClientRegisterViewModel(appRepository) // Injetado via Hilt
         
         // ✅ NOVO: Inicializar cliente de localização
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())

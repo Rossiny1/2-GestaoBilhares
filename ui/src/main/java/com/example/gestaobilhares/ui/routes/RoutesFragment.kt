@@ -40,6 +40,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.auth.FirebaseAuth
 
+import dagger.hilt.android.AndroidEntryPoint
+
 /**
  * Fragment que exibe a tela de rotas.
  * Mostra lista de rotas, estatísticas e permite adicionar novas rotas.
@@ -47,6 +49,7 @@ import com.google.firebase.auth.FirebaseAuth
  * 
  * FASE 4: Inclui Navigation Drawer, dados reais e menu lateral.
  */
+@AndroidEntryPoint
 class RoutesFragment : Fragment() {
 
     // ViewBinding para acessar as views de forma type-safe
@@ -54,13 +57,8 @@ class RoutesFragment : Fragment() {
     private val binding get() = _binding!!
     private var syncDialog: androidx.appcompat.app.AlertDialog? = null
 
-    // ✅ CORREÇÃO: ViewModel com Factory customizada
-    private val viewModel: RoutesViewModel by viewModels {
-        RoutesViewModelFactory(
-            com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()),
-            UserSessionManager.getInstance(requireContext())
-        )
-    }
+    // ✅ CORREÇÃO: ViewModel injetado pelo Hilt
+    private val viewModel: RoutesViewModel by viewModels()
 
     // Adapter para a lista de rotas
     private lateinit var routesAdapter: RoutesAdapter

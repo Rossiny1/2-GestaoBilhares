@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.fragment.app.viewModels
 import com.example.gestaobilhares.data.entities.CicloAcerto
 import com.example.gestaobilhares.data.entities.MetaColaborador
 import com.example.gestaobilhares.data.entities.Rota
@@ -20,16 +21,19 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.launch
 import java.util.Date
 
+import dagger.hilt.android.AndroidEntryPoint
+
 /**
  * Fragment para cadastro de metas
  * Fluxo: Selecionar Rota → Selecionar Ciclo → Definir Tipo e Valor da Meta
  */
+@AndroidEntryPoint
 class MetaCadastroFragment : Fragment() {
 
     private var _binding: FragmentMetaCadastroBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: MetaCadastroViewModel
+    private val viewModel: MetaCadastroViewModel by viewModels()
 
     // Dados selecionados
     private var rotaSelecionada: Rota? = null
@@ -48,9 +52,7 @@ class MetaCadastroFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // Inicializar ViewModel
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = MetaCadastroViewModel(appRepository)
+        // ViewModel initialized by Hilt
         
         setupUI()
         setupClickListeners()

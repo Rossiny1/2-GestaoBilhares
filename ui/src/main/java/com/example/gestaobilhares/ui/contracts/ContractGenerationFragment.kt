@@ -21,13 +21,19 @@ import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.launch
 
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class ContractGenerationFragment : Fragment() {
     
     private var _binding: FragmentContractGenerationBinding? = null
     private val binding get() = _binding!!
     
-    // ✅ CORREÇÃO: ViewModel com Factory customizada
-    private lateinit var viewModel: ContractGenerationViewModel
+    // ViewModel with Hilt
+    private val viewModel: ContractGenerationViewModel by viewModels()
+
+    @javax.inject.Inject
+    lateinit var repository: AppRepository
     
     // ✅ PROTEÇÃO: Flag para evitar múltiplos cliques
     private var isGenerating = false
@@ -57,12 +63,10 @@ class ContractGenerationFragment : Fragment() {
         // ✅ LOG CRASH: Início da tela
         android.util.Log.d("LOG_CRASH", "ContractGenerationFragment.onViewCreated - INÍCIO")
         
-        // ✅ CORREÇÃO: Inicializar ViewModel antes de usar
         try {
             // ✅ LOG CRASH: Inicializando ViewModel
             android.util.Log.d("LOG_CRASH", "ContractGenerationFragment.onViewCreated - Inicializando ViewModel")
-            val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-            viewModel = ContractGenerationViewModel(appRepository)
+            // ViewModel already initialized by Hilt
             
             val clienteId = arguments?.getLong("cliente_id") ?: 0L
             val mesasVinculadas = arguments?.getLongArray("mesas_vinculadas")?.toList() ?: emptyList()
@@ -305,7 +309,7 @@ class ContractGenerationFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 // Gerar PDF do contrato
-                val pdfGenerator = ContractPdfGenerator(requireContext())
+                val pdfGenerator = ContractPdfGenerator(requireContext(), repository)
                 
                 // ✅ NOVO: Obter assinatura do representante legal automaticamente
                 val representanteLegal = viewModel.obterAssinaturaRepresentanteLegalAtiva()

@@ -12,12 +12,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.ui.databinding.FragmentGerenciarMesasBinding
 import kotlinx.coroutines.launch
 
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class GerenciarMesasFragment : Fragment() {
 
     private var _binding: FragmentGerenciarMesasBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var viewModel: GerenciarMesasViewModel
+    private val viewModel: GerenciarMesasViewModel by viewModels()
     private lateinit var adapter: RotaMesasAdapter
 
     override fun onCreateView(
@@ -32,8 +35,7 @@ class GerenciarMesasFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = GerenciarMesasViewModel(appRepository)
+        // ViewModel initialized by Hilt
         
         setupRecyclerView()
         setupClickListeners()

@@ -7,7 +7,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import com.example.gestaobilhares.ui.databinding.DialogAddEditFuelBinding
 import com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo
-import com.example.gestaobilhares.factory.RepositoryFactory
+
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
@@ -16,11 +16,18 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import com.example.gestaobilhares.data.repository.AppRepository
 
+@AndroidEntryPoint
 class AddEditFuelDialog : DialogFragment() {
     
     private var _binding: DialogAddEditFuelBinding? = null
     private val binding get() = _binding!!
+    
+    @Inject
+    lateinit var appRepository: AppRepository
     
     private var vehicleId: Long = 0L
 
@@ -134,7 +141,7 @@ class AddEditFuelDialog : DialogFragment() {
             // Salvar no banco de dados
             lifecycleScope.launch {
                 try {
-                    val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                    // val appRepository = RepositoryFactory.getAppRepository(requireContext())
                     android.util.Log.d("AddEditFuelDialog", "📝 Salvando abastecimento: Veículo=$vehicleId, Litros=$litros, Valor=$valor, KM=$kmVeiculo")
                     val idInserido = appRepository.inserirHistoricoCombustivel(historicoCombustivel)
                     android.util.Log.d("AddEditFuelDialog", "✅ Abastecimento salvo com ID: $idInserido")

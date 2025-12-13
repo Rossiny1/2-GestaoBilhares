@@ -9,11 +9,15 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.util.*
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para gerenciar a assinatura digital do representante legal
  * Implementa todos os requisitos de segurança da Cláusula 9.3 do contrato
  */
-class RepresentanteLegalSignatureViewModel constructor(
+@HiltViewModel
+class RepresentanteLegalSignatureViewModel @Inject constructor(
     private val repository: AppRepository
 ) : ViewModel() {
     

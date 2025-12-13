@@ -14,13 +14,17 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.auth.FirebaseAuth
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para gerenciamento de colaboradores.
  * Implementa CRUD de colaboradores com controle de acesso administrativo.
  */
-class ColaboradorManagementViewModel(
+@HiltViewModel
+class ColaboradorManagementViewModel @Inject constructor(
     private val appRepository: AppRepository,
-    private val userSessionManager: com.example.gestaobilhares.core.utils.UserSessionManager? = null
+    private val userSessionManager: com.example.gestaobilhares.core.utils.UserSessionManager
 ) : BaseViewModel() {
     
     // Instância do Firebase Auth para criar contas

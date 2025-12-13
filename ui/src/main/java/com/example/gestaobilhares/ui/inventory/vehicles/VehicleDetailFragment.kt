@@ -17,12 +17,16 @@ import com.example.gestaobilhares.data.database.AppDatabase
 // import com.example.gestaobilhares.data.repository.HistoricoCombustivelVeiculoRepository
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class VehicleDetailFragment : Fragment() {
     private var _binding: FragmentVehicleDetailBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: VehicleDetailViewModel
+    private val viewModel: VehicleDetailViewModel by viewModels()
     private lateinit var maintenanceAdapter: MaintenanceHistoryAdapter
     private lateinit var fuelAdapter: FuelHistoryAdapter
 
@@ -42,9 +46,9 @@ class VehicleDetailFragment : Fragment() {
         
         vehicleId = arguments?.getLong("vehicleId", 0L) ?: 0L
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = VehicleDetailViewModel(appRepository)
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = VehicleDetailViewModel(appRepository)
         
         setupUI()
         setupRecyclerViews()

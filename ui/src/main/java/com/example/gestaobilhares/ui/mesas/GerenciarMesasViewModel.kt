@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 data class EstatisticasGerais(
     val totalSinuca: Int = 0,
     val totalJukebox: Int = 0,
@@ -27,7 +30,8 @@ data class RotaComMesas(
     val pembolim: Int = 0
 )
 
-class GerenciarMesasViewModel constructor(
+@HiltViewModel
+class GerenciarMesasViewModel @Inject constructor(
     private val repository: AppRepository
 ) : ViewModel() {
 

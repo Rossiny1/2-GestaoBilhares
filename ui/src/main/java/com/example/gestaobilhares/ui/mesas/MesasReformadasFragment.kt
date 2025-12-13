@@ -23,17 +23,24 @@ import com.example.gestaobilhares.ui.databinding.FragmentMesasReformadasBinding
 // import com.example.gestaobilhares.data.database.AppDatabase
 // import com.example.gestaobilhares.data.repository.MesaReformadaRepository
 
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
+
 /**
  * Fragment que exibe a lista de mesas reformadas.
  * Permite visualizar o histórico de reformas e adicionar novas reformas.
  */
+@AndroidEntryPoint
 class MesasReformadasFragment : Fragment() {
 
     private var _binding: FragmentMesasReformadasBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: MesasReformadasViewModel
+    private val viewModel: MesasReformadasViewModel by viewModels()
     private lateinit var adapter: MesasReformadasAdapter
+    
+    // ...
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,10 +54,10 @@ class MesasReformadasFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
         // TODO: MesaReformadaRepository não existe - usar AppRepository quando método estiver disponível
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = MesasReformadasViewModel(appRepository)
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = MesasReformadasViewModel(appRepository) -> Hilt handles this
         
         setupRecyclerView()
         setupClickListeners()

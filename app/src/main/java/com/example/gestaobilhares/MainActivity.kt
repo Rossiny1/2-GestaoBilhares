@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares
+package com.example.gestaobilhares
 
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -14,16 +14,24 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-// ✅ REMOVIDO: import DatabasePopulator - não é mais necessário
-// import dagger.hilt.android.AndroidEntryPoint // REMOVIDO: Hilt nao e mais usado
-// ✅ REMOVIDO: imports CoroutineScope - não são mais necessários
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import com.example.gestaobilhares.data.repository.AppRepository
+
 /**
  * MainActivity configurada para Navigation Component e ViewBinding.
  * Usando NoActionBar theme - navegação gerenciada pelos próprios fragments.
  */
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var isSyncingOnExit = false
+    
+    @Inject
+    lateinit var appRepository: AppRepository
+    
+    @Inject
+    lateinit var networkUtils: NetworkUtils
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,8 +106,8 @@ class MainActivity : AppCompatActivity() {
         
         lifecycleScope.launch {
             try {
-                val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(this@MainActivity)
-                val networkUtils = NetworkUtils(this@MainActivity)
+                // Usando dependências injetadas pelo Hilt
+                // val appRepository e val networkUtils já estão disponíveis na classe
                 
                 // Verificar se está online
                 if (!networkUtils.isConnected()) {
@@ -148,9 +156,7 @@ class MainActivity : AppCompatActivity() {
         
         lifecycleScope.launch {
             try {
-                // Criar SyncRepository diretamente (sem usar RepositoryFactory para evitar dependência circular)
-                val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(this@MainActivity)
-                val appRepository = com.example.gestaobilhares.data.repository.AppRepository.create(database)
+                // Criar SyncRepository diretamente (firestore e networkUtils têm valores padrão)
                 val syncRepository = com.example.gestaobilhares.sync.SyncRepository(this@MainActivity, appRepository)
                 
                 // Mostrar diálogo de progresso

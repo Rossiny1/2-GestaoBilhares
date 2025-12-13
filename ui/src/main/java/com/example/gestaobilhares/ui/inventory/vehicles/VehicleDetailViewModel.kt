@@ -20,8 +20,12 @@ import java.util.Calendar
 import java.time.LocalDate
 import java.time.ZoneId
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 @OptIn(ExperimentalCoroutinesApi::class)
-class VehicleDetailViewModel constructor(
+@HiltViewModel
+class VehicleDetailViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
     

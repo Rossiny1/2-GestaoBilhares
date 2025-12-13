@@ -16,17 +16,24 @@ import com.example.gestaobilhares.data.entities.TipoDespesa
 import com.example.gestaobilhares.data.entities.TipoDespesaComCategoria
 import com.example.gestaobilhares.data.entities.NovoTipoDespesa
 import com.example.gestaobilhares.data.entities.EdicaoTipoDespesa
-import com.example.gestaobilhares.factory.RepositoryFactory
+
 import com.example.gestaobilhares.ui.expenses.adapter.ExpenseTypeAdapter
 import com.example.gestaobilhares.ui.expenses.dialog.AddEditTypeDialog
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import androidx.navigation.fragment.findNavController
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import com.example.gestaobilhares.data.repository.AppRepository
 
+@AndroidEntryPoint
 class ExpenseTypesFragment : Fragment() {
 
     private var _binding: FragmentExpenseTypesBinding? = null
     private val binding get() = _binding!!
+    
+    @Inject
+    lateinit var appRepository: AppRepository
 
     private lateinit var typeAdapter: ExpenseTypeAdapter
     private val types = mutableListOf<TipoDespesaComCategoria>()
@@ -108,7 +115,8 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                
                 
                 // Carregar categorias e tipos em paralelo
                 launch {
@@ -163,7 +171,8 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                
                 
                 val novoTipo = NovoTipoDespesa(
                     categoriaId = categoryId,
@@ -199,7 +208,8 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                
                 
                 val edicaoTipo = EdicaoTipoDespesa(
                     id = type.id,
@@ -235,7 +245,8 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                
                 
                 appRepository.deletarTipo(type.tipoDespesa)
                 

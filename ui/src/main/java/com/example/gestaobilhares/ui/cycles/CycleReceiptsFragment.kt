@@ -14,10 +14,9 @@ import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.AcertoRepository
-import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.factory.RepositoryFactory
+
+
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.google.android.material.snackbar.Snackbar
@@ -26,10 +25,15 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
+
 /**
  * Fragment para exibir lista de recebimentos (acertos) do ciclo
  * Similar ao que está no relatório PDF
  */
+@AndroidEntryPoint
 class CycleReceiptsFragment : Fragment() {
 
     private var _binding: FragmentCycleReceiptsBinding? = null
@@ -40,7 +44,7 @@ class CycleReceiptsFragment : Fragment() {
     private var isCicloFinalizado: Boolean = false
     
     private lateinit var receiptsAdapter: CycleReceiptsAdapter
-    private lateinit var viewModel: CycleReceiptsViewModel
+    private val viewModel: CycleReceiptsViewModel by viewModels()
     
     private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
     private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
@@ -78,17 +82,8 @@ class CycleReceiptsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = RepositoryFactory.getAppRepository(requireContext())
-        val cicloAcertoRepository = CicloAcertoRepository(
-            database.cicloAcertoDao(),
-            database.despesaDao(), // ✅ CORRIGIDO: Passar DespesaDao diretamente
-            AcertoRepository(database.acertoDao(), database.clienteDao()),
-            ClienteRepository(database.clienteDao(), appRepository),
-            database.rotaDao()
-        )
-        viewModel = CycleReceiptsViewModel(cicloAcertoRepository, appRepository)
+        // ✅ CORREÇÃO: Inicializar ViewModel -> Hilt
+        // viewModel injetado via by viewModels()
         
         setupRecyclerView()
         setupObservers()

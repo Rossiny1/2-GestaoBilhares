@@ -14,17 +14,24 @@ import com.example.gestaobilhares.ui.databinding.FragmentExpenseCategoriesBindin
 import com.example.gestaobilhares.data.entities.CategoriaDespesa
 import com.example.gestaobilhares.data.entities.NovaCategoriaDespesa
 import com.example.gestaobilhares.data.entities.EdicaoCategoriaDespesa
-import com.example.gestaobilhares.factory.RepositoryFactory
+
 import com.example.gestaobilhares.ui.expenses.adapter.ExpenseCategoryAdapter
 import com.example.gestaobilhares.ui.expenses.dialog.AddEditCategoryDialog
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import androidx.navigation.fragment.findNavController
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import com.example.gestaobilhares.data.repository.AppRepository
 
+@AndroidEntryPoint
 class ExpenseCategoriesFragment : Fragment() {
 
     private var _binding: FragmentExpenseCategoriesBinding? = null
     private val binding get() = _binding!!
+
+    @Inject
+    lateinit var appRepository: AppRepository
 
     private lateinit var categoryAdapter: ExpenseCategoryAdapter
     private val categories = mutableListOf<CategoriaDespesa>()
@@ -105,7 +112,8 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                
                 
                 appRepository.buscarCategoriasAtivas().collect { categorias ->
                     if (!isAdded) return@collect
@@ -147,7 +155,8 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                
                 
                 val novaCategoria = NovaCategoriaDespesa(
                     nome = name,
@@ -182,7 +191,8 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                
                 
                 val edicaoCategoria = EdicaoCategoriaDespesa(
                     id = category.id,
@@ -217,7 +227,8 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+                
                 
                 appRepository.deletarCategoria(category)
                 

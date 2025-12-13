@@ -26,13 +26,20 @@ import com.google.gson.GsonBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Date
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /**
  * ViewModel responsável pela lógica de autenticação híbrida (Firebase + Local).
  * Implementa padrão MVVM para separar lógica de negócio da UI.
  * Suporta autenticação online (Firebase) e offline (Room Database).
  */
-class AuthViewModel constructor() : BaseViewModel() {
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val appRepository: AppRepository,
+    private val networkUtils: NetworkUtils,
+    private val userSessionManager: UserSessionManager
+) : BaseViewModel() {
     
     // Instância do Firebase Auth
     private val firebaseAuth = FirebaseAuth.getInstance()
@@ -44,15 +51,6 @@ class AuthViewModel constructor() : BaseViewModel() {
     private val gson: Gson = GsonBuilder()
         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
         .create()
-    
-    // Repositório para acesso local
-    private lateinit var appRepository: AppRepository
-    
-    // Utilitário de rede
-    private lateinit var networkUtils: NetworkUtils
-    
-    // Gerenciador de sessão do usuário
-    private lateinit var userSessionManager: UserSessionManager
     
     // ✅ MODERNIZADO: StateFlow para estado da autenticação
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
@@ -72,64 +70,20 @@ class AuthViewModel constructor() : BaseViewModel() {
         // Inicializar sempre como não autenticado para mostrar tela de login
         _authState.value = AuthState.Unauthenticated
         _isOnline.value = true // Assumir online por padrão
-    }
-    
-    /**
-     * Inicializa o repositório local, utilitário de rede e gerenciador de sessão
-     */
-    fun initializeRepository(context: Context) {
-        try {
-            android.util.Log.d("AuthViewModel", "🚨 INICIANDO REPOSITORIO - CONTEXT: ${context.javaClass.simpleName}")
-            android.util.Log.d("AuthViewModel", "🚨 CONTEXT PACKAGE: ${context.packageName}")
-            
-            // Inicializar banco de dados de forma segura
-            android.util.Log.d("AuthViewModel", "🔧 CRIANDO APPDATABASE...")
-            AppDatabase.getDatabase(context)
-            android.util.Log.d("AuthViewModel", "✅ AppDatabase inicializado")
-            
-            appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(context)
-            android.util.Log.d("AuthViewModel", "AppRepository inicializado com sucesso")
-            
-            // Inicializar utilitários de forma segura
+        
+        // Observar mudanças na conectividade
+        viewModelScope.launch {
             try {
-                networkUtils = NetworkUtils(context)
-                android.util.Log.d("AuthViewModel", "✅ NetworkUtils inicializado")
-            } catch (e: Exception) {
-                android.util.Log.e("AuthViewModel", "Erro ao inicializar NetworkUtils: ${e.message}")
-                // Continuar sem NetworkUtils (modo offline)
-            }
-            
-            // ✅ FASE 1: SyncManager antigo removido - usar SyncManagerV2 quando necessário
-            // A sincronização é gerenciada pelo SyncManagerV2 em outros pontos do app
-            
-            try {
-                userSessionManager = UserSessionManager.getInstance(context)
-                android.util.Log.d("AuthViewModel", "✅ UserSessionManager inicializado")
-            } catch (e: Exception) {
-                android.util.Log.e("AuthViewModel", "Erro ao inicializar UserSessionManager: ${e.message}")
-                // Continuar sem UserSessionManager
-            }
-            
-            android.util.Log.d("AuthViewModel", "✅ Repositório local inicializado com sucesso")
-            
-            // Observar mudanças na conectividade
-            viewModelScope.launch {
-                try {
-                    networkUtils.isNetworkAvailable.collect { isAvailable ->
-                        _isOnline.value = isAvailable
-                        
-                        // ✅ FASE 1: SyncManager antigo removido
-                        // A sincronização é gerenciada pelo SyncManagerV2 em outros pontos do app
-                        // Quando necessário, pode ser acionada manualmente via UI
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e("AuthViewModel", "Erro ao observar conectividade: ${e.message}")
+                networkUtils.isNetworkAvailable.collect { isAvailable ->
+                    _isOnline.value = isAvailable
+                    
+                    // ✅ FASE 1: SyncManager antigo removido
+                    // A sincronização é gerenciada pelo SyncManagerV2 em outros pontos do app
+                    // Quando necessário, pode ser acionada manualmente via UI
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("AuthViewModel", "Erro ao observar conectividade: ${e.message}")
             }
-        } catch (e: Exception) {
-            android.util.Log.e("AuthViewModel", "Erro crítico ao inicializar repositório: ${e.message}")
-            // Definir como offline em caso de erro
-            _isOnline.value = false
         }
     }
     
@@ -137,11 +91,7 @@ class AuthViewModel constructor() : BaseViewModel() {
      * Verifica se há conexão com internet
      */
     private fun isNetworkAvailable(): Boolean {
-        return if (::networkUtils.isInitialized) {
-            networkUtils.isConnected()
-        } else {
-            true // Assumir online se NetworkUtils não foi inicializado
-        }
+        return networkUtils.isConnected()
     }
     
     /**
@@ -151,13 +101,6 @@ class AuthViewModel constructor() : BaseViewModel() {
         android.util.Log.d("AuthViewModel", "=== INICIANDO LOGIN HÍBRIDO ===")
         android.util.Log.d("AuthViewModel", "Email: $email")
         android.util.Log.d("AuthViewModel", "Senha: ${senha.length} caracteres")
-        
-        // Verificar se o repositório foi inicializado
-        if (!::appRepository.isInitialized) {
-            android.util.Log.e("AuthViewModel", "ERRO: appRepository nao foi inicializado")
-            _errorMessage.value = "Erro de inicializacao. Reinicie o app."
-            return
-        }
         
         // Validação básica
         if (email.isBlank() || senha.isBlank()) {
@@ -745,14 +688,6 @@ class AuthViewModel constructor() : BaseViewModel() {
             try {
                 showLoading()
                 _errorMessage.value = ""
-                
-                // Verificar se o repositório foi inicializado
-                if (!::appRepository.isInitialized) {
-                    android.util.Log.e("AuthViewModel", "ERRO: appRepository não foi inicializado")
-                    _errorMessage.value = "Erro de inicialização. Reinicie o app."
-                    hideLoading()
-                    return@launch
-                }
                 
                 // Verificar se já existe colaborador com este email
                 val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)

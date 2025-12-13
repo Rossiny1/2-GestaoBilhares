@@ -12,13 +12,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import com.example.gestaobilhares.core.utils.UserSessionManager
+
 /**
  * ViewModel para gerenciamento de rotas.
  * Implementa CRUD de rotas com controle de acesso administrativo.
  */
-class RouteManagementViewModel(
+@HiltViewModel
+class RouteManagementViewModel @Inject constructor(
     private val appRepository: AppRepository,
-    private val userSessionManager: com.example.gestaobilhares.core.utils.UserSessionManager? = null
+    private val userSessionManager: UserSessionManager
 ) : BaseViewModel() {
 
     // Lista de rotas observável

@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
 import androidx.navigation.fragment.navArgs
@@ -26,13 +27,16 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
 
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class EditMesaFragment : Fragment() {
 
     private var _binding: FragmentEditMesaBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: EditMesaViewModel
-    private lateinit var historicoViewModel: HistoricoManutencaoMesaViewModel
+    private val viewModel: EditMesaViewModel by viewModels()
+    private val historicoViewModel: HistoricoManutencaoMesaViewModel by viewModels()
     private val args: EditMesaFragmentArgs by navArgs()
 
     override fun onCreateView(
@@ -47,10 +51,7 @@ class EditMesaFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // ✅ CORREÇÃO: Inicializar ViewModels manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = EditMesaViewModel(appRepository)
-        historicoViewModel = HistoricoManutencaoMesaViewModel(appRepository)
+        // ViewModels initialized by Hilt
 
         setupSpinners()
         setupClickListeners()

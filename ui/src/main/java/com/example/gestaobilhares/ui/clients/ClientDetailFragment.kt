@@ -45,8 +45,11 @@ import java.util.Locale
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.data.repository.AppRepository
 import android.util.Log
-import com.example.gestaobilhares.factory.RepositoryFactory
+// import com.example.gestaobilhares.factory.RepositoryFactory
 import com.example.gestaobilhares.sync.SyncRepository
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import androidx.fragment.app.viewModels
 // TODO: Dialogs não existem - comentar temporariamente
 // import com.example.gestaobilhares.ui.dialogs.AdicionarMesaDialogFragment
 // import com.example.gestaobilhares.ui.dialogs.AdicionarObservacaoDialogFragment
@@ -58,24 +61,26 @@ import com.example.gestaobilhares.ui.clients.RetiradaStatus
 import com.example.gestaobilhares.data.entities.ContratoLocacao
 
 // TODO: Interfaces de dialogs não existem - remover temporariamente
+@AndroidEntryPoint
 class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.ConfirmarRetiradaDialogListener, AdicionarObservacaoDialogFragment.AdicionarObservacaoDialogListener, GerarRelatorioDialogFragment.GerarRelatorioDialogListener */ {
 
     private var _binding: FragmentClientDetailBinding? = null
     private val binding get() = _binding ?: throw IllegalStateException("Binding is null. Fragment may be destroyed.")
     private val args: ClientDetailFragmentArgs by navArgs()
-    private lateinit var viewModel: ClientDetailViewModel
+    
+    private val viewModel: ClientDetailViewModel by viewModels()
+    
+    @Inject
+    lateinit var appRepository: AppRepository
+    
+    @Inject
+    lateinit var syncRepository: SyncRepository
+    
     private lateinit var mesasAdapter: MesasAdapter
     private lateinit var historicoAdapter: SettlementHistoryAdapter
     private var isFabMenuOpen = false
-    private lateinit var appRepository: AppRepository
     private var mesaParaRemover: Mesa? = null
     private val clientId: Long get() = args.clienteId
-    private lateinit var syncRepository: SyncRepository
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        appRepository = RepositoryFactory.getAppRepository(requireContext())
-        syncRepository = SyncRepository(requireContext(), appRepository)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -84,8 +89,8 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
         _binding = FragmentClientDetailBinding.inflate(inflater, container, false)
 
         val clientId = args.clienteId
-        val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
-        viewModel = ClientDetailViewModel(appRepository, userSessionManager, syncRepository)
+        // val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
+        // viewModel = ClientDetailViewModel(appRepository, userSessionManager, syncRepository) // Injetado via Hilt
         setupRecyclerView()
         observeViewModel()
         setupListeners(clientId)
@@ -515,7 +520,7 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
                     viewModel.retirarMesaDoCliente(mesa.id, args.clienteId, relogioFinal = mesa.relogioFinal, valorRecebido = 0.0)
                     
                     // Verificar se cliente tem contrato ativo
-                    val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                    // appRepository já injetado via Hilt
                     val contratoAtivo = appRepository.buscarContratoAtivoPorCliente(args.clienteId)
                     
                     if (contratoAtivo != null) {
@@ -561,7 +566,7 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
     private suspend fun gerarDistratoAposRetiradaMesa(contrato: ContratoLocacao, @Suppress("UNUSED_PARAMETER") _mesaRemovida: Mesa) {
         try {
             // Buscar último acerto do cliente usando AppRepository
-            val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+            // appRepository já injetado via Hilt
             // ✅ FASE 12.7: Variável removida (não utilizada)
             
             // Atualizar status do contrato para aguardando assinatura
@@ -602,7 +607,7 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
     private suspend fun gerarAditivoAposRetiradaMesa(contrato: ContratoLocacao, mesaRemovida: Mesa) {
         try {
             // Criar aditivo de retirada diretamente
-            val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+            // appRepository já injetado via Hilt
             
             // Gerar número do aditivo
             val numeroAditivo = gerarNumeroAditivo()
@@ -660,7 +665,7 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
     
     private suspend fun gerarNumeroAditivo(): String {
         val ano = java.text.SimpleDateFormat("yyyy", java.util.Locale.getDefault()).format(java.util.Date())
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // appRepository já injetado via Hilt
         val numeroSequencial = appRepository.contarAditivosPorAno(ano) + 1
         return "ADT-$ano-${String.format("%04d", numeroSequencial)}"
     }

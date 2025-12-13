@@ -15,24 +15,37 @@ import kotlinx.coroutines.flow.first
 import com.example.gestaobilhares.ui.R
 import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.factory.RepositoryFactory
+// import com.example.gestaobilhares.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.databinding.DialogSelectPanoBinding
 import com.example.gestaobilhares.ui.databinding.ItemPanoSelectionBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+
 /**
  * Dialog para seleção de pano no acerto.
  * Permite escolher um pano disponível do estoque para trocar na mesa.
  */
+@AndroidEntryPoint
 class PanoSelectionDialog : DialogFragment() {
 
     private var _binding: DialogSelectPanoBinding? = null
     private val binding get() = _binding!!
 
+    @Inject
+    lateinit var appRepository: AppRepository
+
     // Dialog não depende mais do ViewModel do fragmento pai
     private lateinit var adapter: PanoSelectionAdapter
     private var selectedPano: PanoEstoque? = null
     private var onPanoSelected: ((PanoEstoque) -> Unit)? = null
+
+    // ... companion object and setup omitted (unchanged) ...
+
+    /* Skipping unmodified methods setupUI, setupClickListeners */
+    // Note: I cannot skip methods in replace_file_content like this easily without accurate line numbers.
+    // I will target specific blocks.
 
     companion object {
         fun newInstance(onPanoSelected: (PanoEstoque) -> Unit, tamanhoMesa: String? = null): PanoSelectionDialog {
@@ -112,13 +125,16 @@ class PanoSelectionDialog : DialogFragment() {
         lifecycleScope.launch {
             try {
                 val tamanhoMesa = arguments?.getString("tamanho_mesa")
-                val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - REMOVDO
                 
                 val panos = appRepository.obterPanosDisponiveis().first()
                 
                 if (tamanhoMesa != null) {
                     // Filtrar por tamanho da mesa
-                    val panosFiltrados = panos.filter { it.tamanho.equals(tamanhoMesa, ignoreCase = true) }
+                    val panosFiltrados = panos.filter { pano -> 
+                         val tamanho = pano.tamanho // Accessing directly to be sure
+                         tamanho != null && tamanho.equals(tamanhoMesa, ignoreCase = true) 
+                    }
                     adapter.submitList(panosFiltrados)
                     Log.d("PanoSelectionDialog", "[PANO] Panos carregados (filtrados por $tamanhoMesa): ${panosFiltrados.size}")
                 } else {

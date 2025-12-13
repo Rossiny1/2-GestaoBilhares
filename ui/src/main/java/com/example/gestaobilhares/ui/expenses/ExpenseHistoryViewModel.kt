@@ -20,7 +20,16 @@ import kotlinx.coroutines.launch
  * Gerencia dados de despesas, filtros e estados da UI.
  * ✅ MIGRADO: Usa AppRepository centralizado
  */
-class ExpenseHistoryViewModel(
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+/**
+ * ViewModel para a tela de histórico de despesas.
+ * Gerencia dados de despesas, filtros e estados da UI.
+ * ✅ MIGRADO: Usa AppRepository centralizado
+ */
+@HiltViewModel
+class ExpenseHistoryViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 

@@ -16,10 +16,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para gerenciamento de contratos
  */
-class ContractManagementViewModel constructor(
+@HiltViewModel
+class ContractManagementViewModel @Inject constructor(
     private val repository: AppRepository
 ) : BaseViewModel() {
 

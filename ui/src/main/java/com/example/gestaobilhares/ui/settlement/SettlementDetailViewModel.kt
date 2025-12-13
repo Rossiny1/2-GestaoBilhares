@@ -15,11 +15,12 @@ import java.util.*
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
-@Suppress("DEPRECATION")
-class SettlementDetailViewModel(
-    private val acertoRepository: AcertoRepository,
-    private val appRepository: AppRepository,
-    private val clienteRepository: com.example.gestaobilhares.data.repository.ClienteRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class SettlementDetailViewModel @Inject constructor(
+    private val appRepository: AppRepository
 ) : BaseViewModel() {
 
     private val _settlementDetail = MutableLiveData<SettlementDetail?>()
@@ -33,7 +34,7 @@ class SettlementDetailViewModel(
             logOperation("SETTLEMENT_DETAIL", "Carregando detalhes do acerto ID: $acertoId")
             
             try {
-                val acerto = acertoRepository.buscarPorId(acertoId)
+                val acerto = appRepository.obterAcertoPorId(acertoId)
                 if (acerto != null) {
                     android.util.Log.d("SettlementDetail", "✅ Acerto encontrado")
                     android.util.Log.d("SettlementDetail", "Cliente ID: ${acerto.clienteId}")
@@ -113,7 +114,7 @@ class SettlementDetailViewModel(
                     android.util.Log.d("SettlementDetail", "Data finalização: ${acerto.dataFinalizacao}")
 
                     // ✅ CORREÇÃO CRÍTICA: Sempre carregar dados do cliente para garantir dados completos
-                    val cliente = clienteRepository.obterPorId(acerto.clienteId)
+                    val cliente = appRepository.obterClientePorId(acerto.clienteId)
                     val clienteNome = cliente?.nome ?: "Cliente #${acerto.clienteId}"
                     val clienteTelefone = cliente?.telefone
                     val clienteCpf = cliente?.cpfCnpj
@@ -212,7 +213,7 @@ class SettlementDetailViewModel(
      * ✅ NOVA FUNCIONALIDADE: Busca um acerto por ID
      */
     suspend fun buscarAcertoPorId(acertoId: Long): Acerto? {
-        return acertoRepository.buscarPorId(acertoId)
+        return appRepository.obterAcertoPorId(acertoId)
     }
     
     /**
@@ -220,7 +221,7 @@ class SettlementDetailViewModel(
      */
     suspend fun buscarContratoAtivoPorCliente(clienteId: Long): com.example.gestaobilhares.data.entities.ContratoLocacao? {
         return try {
-            clienteRepository.buscarContratoAtivoPorCliente(clienteId)
+            appRepository.buscarContratoAtivoPorCliente(clienteId)
         } catch (e: Exception) {
             android.util.Log.d("SettlementDetailViewModel", "Erro ao buscar contrato ativo do cliente: ${e.message}")
             null

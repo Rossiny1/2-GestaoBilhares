@@ -11,7 +11,11 @@ import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
-class DashboardViewModel constructor(
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class DashboardViewModel @Inject constructor(
     private val repository: AppRepository
 ) : ViewModel() {
 

@@ -16,15 +16,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.ui.databinding.FragmentLoginBinding
+import dagger.hilt.android.AndroidEntryPoint
 /**
  * Fragmento responsável pela tela de login com Firebase Authentication.
  * Utiliza ViewBinding, ViewModel e navegação segura.
  */
+@AndroidEntryPoint
 class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
-    private lateinit var authViewModel: AuthViewModel
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,14 +57,13 @@ class LoginFragment : Fragment() {
         try {
             android.util.Log.d("LoginFragment", "=== INICIANDO LOGINFRAGMENT ===")
             
-            // ✅ CORREÇÃO: Inicializar ViewModel corretamente
-            authViewModel = AuthViewModel()
-            android.util.Log.d("LoginFragment", "✅ AuthViewModel criado")
+            // ✅ CORREÇÃO: ViewModel injetado via Hilt, não precisa inicializar manualmente
+            // authViewModel injetado automaticamente pelo Hilt
+            android.util.Log.d("LoginFragment", "✅ AuthViewModel injetado via Hilt")
             
-            // Inicializar repositório local de forma segura
-            android.util.Log.d("LoginFragment", "🔧 CHAMANDO initializeRepository...")
-            authViewModel.initializeRepository(requireContext())
-            android.util.Log.d("LoginFragment", "✅ Repositório inicializado")
+            // Não precisa mais chamar initializeRepository - Hilt injeta dependências
+            // authViewModel.initializeRepository(requireContext()) // Removido - Hilt injeta dependências
+            android.util.Log.d("LoginFragment", "✅ Dependências injetadas via Hilt")
             
             setupClickListeners()
             android.util.Log.d("LoginFragment", "✅ Click listeners configurados")

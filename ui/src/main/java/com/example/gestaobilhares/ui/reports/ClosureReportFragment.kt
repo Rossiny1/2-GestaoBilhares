@@ -19,11 +19,14 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.text.NumberFormat
 import java.util.Locale
 
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class ClosureReportFragment : Fragment() {
 
     private var _binding: FragmentClosureReportBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: ClosureReportViewModel
+    private val viewModel: ClosureReportViewModel by viewModels()
     private val moeda = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
     private lateinit var adapter: DetalheAdapter
@@ -40,9 +43,7 @@ class ClosureReportFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = ClosureReportViewModel(appRepository)
+        // viewModel initialized by delegation
         
         binding.btnBack.setOnClickListener { findNavController().popBackStack() }
 

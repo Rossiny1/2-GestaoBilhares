@@ -27,16 +27,19 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import com.example.gestaobilhares.sync.SyncRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /**
  * ViewModel responsável pelos dados da tela de detalhes do cliente.
  * Mantém o histórico de acertos, mesas vinculadas e informações auxiliares
  * necessárias para o fluxo offline-first.
  */
-class ClientDetailViewModel(
+@HiltViewModel
+class ClientDetailViewModel @Inject constructor(
     private val appRepository: AppRepository,
-    private val userSessionManager: UserSessionManager? = null,
-    private val syncRepository: SyncRepository? = null
+    private val userSessionManager: UserSessionManager,
+    private val syncRepository: SyncRepository
 ) : BaseViewModel() {
 
     companion object {

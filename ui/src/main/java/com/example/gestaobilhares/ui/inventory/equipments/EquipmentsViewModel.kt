@@ -9,13 +9,17 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para gerenciar a lista de equipamentos.
  * Carrega equipamentos do banco de dados e permite adicionar novos.
  * 
  * ✅ CORRIGIDO: Agora usa banco de dados Room com Flow reativo
  */
-class EquipmentsViewModel constructor(
+@HiltViewModel
+class EquipmentsViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
     

@@ -13,12 +13,15 @@ import com.example.gestaobilhares.ui.databinding.FragmentStockBinding
 import com.example.gestaobilhares.ui.inventory.stock.AddPanosLoteDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class StockFragment : Fragment() {
     private var _binding: FragmentStockBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: StockViewModel
+    private val viewModel: StockViewModel by viewModels()
     private lateinit var adapter: StockAdapter
     private lateinit var panosAdapter: PanosEstoqueAdapter
     private lateinit var panoGroupAdapter: PanoGroupAdapter
@@ -36,9 +39,9 @@ class StockFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = StockViewModel(appRepository)
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = StockViewModel(appRepository)
         
         setupRecyclerView()
         observeData()

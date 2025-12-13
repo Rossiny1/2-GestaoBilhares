@@ -8,7 +8,11 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-class ContractGenerationViewModel constructor(
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class ContractGenerationViewModel @Inject constructor(
     private val repository: AppRepository
 ) : ViewModel() {
     

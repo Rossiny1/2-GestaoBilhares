@@ -11,11 +11,15 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import com.example.gestaobilhares.data.repository.AppRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para o cadastro de despesas.
  * Gerencia o estado da tela de cadastro e integra com o ciclo de acertos.
  */
-class ExpenseRegisterViewModel constructor(
+@HiltViewModel
+class ExpenseRegisterViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 

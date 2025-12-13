@@ -6,17 +6,21 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.example.gestaobilhares.ui.databinding.DialogAddEditEquipmentBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
 
 /**
  * Diálogo para adicionar ou editar um equipamento.
  * Solicita: Nome do item, Descrição, Quantidade e Localização.
  */
+@AndroidEntryPoint
 class AddEditEquipmentDialog : DialogFragment() {
     
     private var _binding: DialogAddEditEquipmentBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var viewModel: EquipmentsViewModel
+    private val viewModel: EquipmentsViewModel by viewModels()
 
     companion object {
         fun newInstance(): AddEditEquipmentDialog {
@@ -27,9 +31,11 @@ class AddEditEquipmentDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddEditEquipmentBinding.inflate(layoutInflater)
         
-        // ✅ CORRIGIDO: Criar nova instância do ViewModel (compartilha lista via companion object)
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = EquipmentsViewModel(appRepository)
+        _binding = DialogAddEditEquipmentBinding.inflate(layoutInflater)
+        
+        // ✅ CORRIGIDO: Criar nova instância do ViewModel (compartilha lista via companion object
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = EquipmentsViewModel(appRepository)
         
         return MaterialAlertDialogBuilder(requireContext())
             .setView(binding.root)

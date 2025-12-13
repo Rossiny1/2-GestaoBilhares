@@ -23,12 +23,20 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
  * Permite criar, editar e excluir rotas.
  * Acesso restrito apenas para administradores.
  */
+import dagger.hilt.android.AndroidEntryPoint
+
+/**
+ * Fragment para gerenciamento de rotas (CRUD).
+ * Permite criar, editar e excluir rotas.
+ * Acesso restrito apenas para administradores.
+ */
+@AndroidEntryPoint
 class RouteManagementFragment : Fragment() {
 
     private var _binding: FragmentRouteManagementBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: RouteManagementViewModel
+    private val viewModel: RouteManagementViewModel by viewModels()
     
     private lateinit var routeAdapter: RouteManagementAdapter
 
@@ -43,9 +51,9 @@ class RouteManagementFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
-        viewModel = RouteManagementViewModel(appRepository, userSessionManager)
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
+        // viewModel = RouteManagementViewModel(appRepository, userSessionManager) -> Hilt handles this
         
         setupRecyclerView()
         setupClickListeners()

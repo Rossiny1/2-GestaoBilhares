@@ -26,7 +26,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.FlowPreview
-
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 /**
  * Filtros disponíveis para a lista de clientes
  */
@@ -45,14 +46,17 @@ enum class SearchType(val label: String, val hint: String) {
     CPF_CNPJ("CPF/CNPJ", "Digite o CPF ou CNPJ")
 }
 
+
+
 /**
  * ViewModel para ClientListFragment
  * ✅ FASE 8C: Integração com sistema de ciclo de acerto real
  */
+@HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
-class ClientListViewModel constructor(
+class ClientListViewModel @Inject constructor(
     private val appRepository: AppRepository,
-    private val userSessionManager: com.example.gestaobilhares.core.utils.UserSessionManager? = null
+    private val userSessionManager: com.example.gestaobilhares.core.utils.UserSessionManager
 ) : BaseViewModel() {
     
     // ✅ FASE 4B: Pagination Manager para lazy loading
@@ -475,7 +479,7 @@ class ClientListViewModel constructor(
                 
                 // Criar novo ciclo de acerto
                 // ✅ FASE 12.7: Usar UserSessionManager para obter usuário atual
-                val criadoPor = userSessionManager?.getCurrentUserName() ?: "Sistema"
+                val criadoPor = userSessionManager.getCurrentUserName()
                 val novoCiclo = CicloAcertoEntity(
                     rotaId = rota.id,
                     numeroCiclo = proximoCiclo,

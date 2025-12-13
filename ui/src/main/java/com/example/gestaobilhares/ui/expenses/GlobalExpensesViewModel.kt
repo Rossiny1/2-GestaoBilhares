@@ -11,12 +11,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para gerenciar despesas globais
  * Controla listagem, filtros por ciclo e resumos
  * ✅ MIGRADO: Usa AppRepository centralizado
  */
-class GlobalExpensesViewModel constructor(
+@HiltViewModel
+class GlobalExpensesViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 

@@ -14,17 +14,21 @@ import com.example.gestaobilhares.ui.databinding.FragmentHistoricoMesasVendidasB
 import com.example.gestaobilhares.ui.mesas.adapter.MesasVendidasAdapter
 import com.example.gestaobilhares.data.database.AppDatabase
 import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
 
 /**
  * Fragment para exibir o histórico de mesas vendidas
  * ✅ NOVO: SISTEMA DE VENDA DE MESAS
  */
+@AndroidEntryPoint
 class HistoricoMesasVendidasFragment : Fragment() {
 
     private var _binding: FragmentHistoricoMesasVendidasBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var viewModel: HistoricoMesasVendidasViewModel
+    private val viewModel: HistoricoMesasVendidasViewModel by viewModels()
     private lateinit var adapter: MesasVendidasAdapter
 
     override fun onCreateView(
@@ -41,9 +45,9 @@ class HistoricoMesasVendidasFragment : Fragment() {
         
         android.util.Log.d("HistoricoMesasVendidasFragment", "🚀 Inicializando fragment de histórico de mesas vendidas...")
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = HistoricoMesasVendidasViewModel(appRepository)
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = HistoricoMesasVendidasViewModel(appRepository)
         
         setupRecyclerView()
         setupClickListeners()

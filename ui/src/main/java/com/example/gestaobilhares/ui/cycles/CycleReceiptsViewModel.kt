@@ -18,12 +18,15 @@ import com.google.gson.reflect.TypeToken
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para CycleReceiptsFragment
  * ✅ IMPLEMENTADO: Carrega recebimentos (acertos) do ciclo reativamente, similar ao CycleExpensesViewModel
  */
-class CycleReceiptsViewModel(
-    private val cicloAcertoRepository: CicloAcertoRepository,
+@HiltViewModel
+class CycleReceiptsViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
     

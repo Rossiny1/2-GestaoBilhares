@@ -13,10 +13,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para o histórico de manutenção de uma mesa.
  */
-class HistoricoManutencaoMesaViewModel constructor(
+@HiltViewModel
+class HistoricoManutencaoMesaViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 

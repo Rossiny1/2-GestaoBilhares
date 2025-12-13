@@ -13,7 +13,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-class EditMesaViewModel constructor(
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class EditMesaViewModel @Inject constructor(
     private val repository: AppRepository
 ) : ViewModel() {
 

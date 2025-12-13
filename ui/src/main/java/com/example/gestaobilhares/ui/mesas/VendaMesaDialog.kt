@@ -21,18 +21,22 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.take
 import java.util.*
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Dialog para venda de mesa - VERSÃO SIMPLIFICADA
  * ✅ FLUXO MAIS DIRETO E FUNCIONAL
  */
+@AndroidEntryPoint
 class VendaMesaDialog : DialogFragment() {
 
     private var _binding: DialogVendaMesaBinding? = null
     private val binding get() = _binding!!
 
-    // ✅ SIMPLIFICADO: Usar instâncias diretas ao invés de injeção
-    private lateinit var appRepository: AppRepository
+    // ✅ SIMPLIFICADO: Usar instâncias diretas ao invés de injeção -> Agora com Hilt
+    @Inject
+    lateinit var appRepository: AppRepository
 
     private var onVendaRealizada: ((MesaVendida) -> Unit)? = null
     private var mesasDisponiveis: List<Mesa> = emptyList()
@@ -73,7 +77,8 @@ class VendaMesaDialog : DialogFragment() {
         // onViewCreated normalmente NÃO é chamado. Portanto, inicializamos aqui.
         try {
             android.util.Log.d(TAG, "onCreateDialog() - inicializando dependencias e UI")
-            appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+            // appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+            // Hilt injected.
 
             setupUI()
             setupClickListeners()

@@ -21,21 +21,24 @@ import kotlinx.coroutines.launch
 import androidx.core.view.children
 import java.text.NumberFormat
 import java.util.*
-import com.example.gestaobilhares.factory.RepositoryFactory
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Fragment para exibir o histórico de despesas.
  * Implementa funcionalidades de listagem, filtros e estatísticas.
- * ✅ MIGRADO: Usa AppRepository centralizado
  */
+@AndroidEntryPoint
 class ExpenseHistoryFragment : Fragment() {
 
     // ViewBinding para acessar as views
     private var _binding: FragmentExpenseHistoryBinding? = null
     private val binding get() = _binding!!
 
+
+
     // ViewModel injetado pelo Hilt
-    private lateinit var viewModel: ExpenseHistoryViewModel
+    private val viewModel: ExpenseHistoryViewModel by viewModels()
 
     // Adapter para a lista de despesas
     private lateinit var expenseAdapter: ExpenseAdapter
@@ -53,10 +56,11 @@ class ExpenseHistoryFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
         super.onViewCreated(view, savedInstanceState)
-        // ✅ MIGRADO: Usa AppRepository centralizado
-        val appRepository = RepositoryFactory.getAppRepository(requireContext())
-        viewModel = ExpenseHistoryViewModel(appRepository)
+        // ✅ MIGRADO: Usa AppRepository centralizado - Injetado via Hilt
+        // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = ExpenseHistoryViewModel(appRepository)
         
         setupRecyclerView()
         setupClickListeners()

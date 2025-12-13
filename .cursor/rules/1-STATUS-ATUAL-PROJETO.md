@@ -247,22 +247,29 @@ Manter o projeto alinhado com as melhores práticas Android mais recentes, garan
 - **Referência**: [Android Testing Guide](https://developer.android.com/training/testing)
 
 #### **2. Injeção de Dependência com Hilt**
-- **Status**: ⏳ Hilt configurado no build.gradle mas não implementado
-- **Problema Atual**: RepositoryFactory manual dificulta testes e escalabilidade
-- **Objetivo**: Migrar para Hilt (padrão Android 2025)
+- **Status**: ✅ **BUILD FUNCIONANDO** - Configuração base completa (Dezembro 2025)
+- **Progresso Atual**: Build compilando com sucesso, app instalado, Hilt gerando componentes corretamente
+- **Objetivo**: Migrar ViewModels para Hilt (padrão Android 2025)
 - **Benefícios**:
   - ✅ Facilita testes unitários (mocking)
   - ✅ Reduz boilerplate
   - ✅ Padrão oficial Android
   - ✅ Melhor suporte a multi-módulos
 - **Implementação**:
-  - ⏳ Ativar plugin Hilt (já está em build.gradle)
-  - ⏳ Criar módulos Hilt (@Module, @Provides)
-  - ⏳ Anotar Application com @HiltAndroidApp
-  - ⏳ Migrar ViewModels para @HiltViewModel
+  - ✅ Ativar plugin Hilt (já está em build.gradle)
+  - ✅ Criar módulos Hilt completos:
+    - ✅ `CoreModule` - NetworkUtils, UserSessionManager
+    - ✅ `DatabaseModule` - AppDatabase, todos os DAOs
+    - ✅ `RepositoryModule` - FirebaseFirestore, AppRepository, repositórios de domínio (Cliente, Acerto, CicloAcerto)
+    - ✅ `SyncModule` - SyncRepository, NetworkUtils
+  - ✅ Anotar Application com @HiltAndroidApp
+  - ✅ Build compilando sem erros com KSP gerando classes Hilt
+  - 🔄 Migrar ViewModels para @HiltViewModel (1 migrado: CycleHistoryViewModel)
+  - ⏳ Migrar Fragments para @AndroidEntryPoint
   - ⏳ Remover RepositoryFactory manual
-- **Estimativa**: 1-2 semanas (migração incremental)
+- **Estimativa**: 1-2 semanas (migração incremental de ViewModels/Fragments)
 - **Referência**: [Hilt Documentation](https://developer.android.com/training/dependency-injection/hilt-android)
+- **Última atualização**: 13/12/2024 - Build passou, app instalado com sucesso
 
 ### **PRIORIDADE MÉDIA (4-8 semanas)**
 

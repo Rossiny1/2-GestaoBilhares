@@ -10,10 +10,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para ClientRegisterFragment
  */
-class ClientRegisterViewModel(
+@HiltViewModel
+class ClientRegisterViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
     private val _novoClienteId = MutableStateFlow<Long?>(null)

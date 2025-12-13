@@ -15,16 +15,20 @@ import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.ui.databinding.FragmentHistoricoManutencaoMesaBinding
 import com.example.gestaobilhares.data.database.AppDatabase
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
 
 /**
  * Fragment que exibe o histórico completo de manutenção de uma mesa.
  */
+@AndroidEntryPoint
 class HistoricoManutencaoMesaFragment : Fragment() {
 
     private var _binding: FragmentHistoricoManutencaoMesaBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: HistoricoManutencaoMesaViewModel
+    private val viewModel: HistoricoManutencaoMesaViewModel by viewModels()
     private val args: HistoricoManutencaoMesaFragmentArgs by navArgs()
     private lateinit var adapter: HistoricoManutencaoMesaAdapter
 
@@ -40,9 +44,9 @@ class HistoricoManutencaoMesaFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = HistoricoManutencaoMesaViewModel(appRepository)
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = HistoricoManutencaoMesaViewModel(appRepository)
 
         setupRecyclerView()
         setupClickListeners()

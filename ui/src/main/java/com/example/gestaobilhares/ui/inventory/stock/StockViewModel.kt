@@ -12,7 +12,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-class StockViewModel constructor(
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class StockViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
     

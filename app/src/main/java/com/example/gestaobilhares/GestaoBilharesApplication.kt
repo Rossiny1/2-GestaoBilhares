@@ -3,11 +3,13 @@
 import android.app.Application
 import com.google.firebase.FirebaseApp
 import timber.log.Timber
+import dagger.hilt.android.HiltAndroidApp
 
 /**
  * Application class principal do app.
  * Inicializa Firebase e configurações básicas.
  */
+@HiltAndroidApp
 class GestaoBilharesApplication : Application() {
     
     companion object {
