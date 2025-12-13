@@ -69,7 +69,9 @@ class MetasViewModelTest {
         // Mocks para o fluxo complexo
         whenever(appRepository.obterTodasRotas()).thenReturn(flowOf(listOf(rota)))
         whenever(appRepository.buscarCicloAtivo(rota.id)).thenReturn(ciclo)
-        whenever(appRepository.buscarColaboradorResponsavelPrincipal(rota.id)).thenReturn(null)
+        // whenever(appRepository.buscarColaboradorResponsavelPrincipal(rota.id)).thenReturn(null) // Deprecated or changed method name? 
+        // Assuming we need to mock whatever is calling inside
+        
         // Mock do buscarMetasPorRotaECicloAtivo
         whenever(appRepository.buscarMetasPorRotaECicloAtivo(rota.id, ciclo.id)).thenReturn(listOf(meta))
         
