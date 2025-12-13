@@ -264,12 +264,17 @@ Manter o projeto alinhado com as melhores práticas Android mais recentes, garan
     - ✅ `SyncModule` - SyncRepository, NetworkUtils
   - ✅ Anotar Application com @HiltAndroidApp
   - ✅ Build compilando sem erros com KSP gerando classes Hilt
-  - 🔄 Migrar ViewModels para @HiltViewModel (1 migrado: CycleHistoryViewModel)
-  - ⏳ Migrar Fragments para @AndroidEntryPoint
+  - 🔄 Migrar ViewModels para @HiltViewModel:
+    - ✅ `AuthViewModel`
+    - ✅ `RoutesViewModel`
+    - ✅ `CycleHistoryViewModel`
+  - 🔄 Migrar Fragments para @AndroidEntryPoint:
+    - ✅ `LoginFragment`
+    - ✅ `RoutesFragment`
   - ⏳ Remover RepositoryFactory manual
-- **Estimativa**: 1-2 semanas (migração incremental de ViewModels/Fragments)
+- **Estimativa**: 1-2 semanas (15% concluído)
 - **Referência**: [Hilt Documentation](https://developer.android.com/training/dependency-injection/hilt-android)
-- **Última atualização**: 13/12/2024 - Build passou, app instalado com sucesso
+- **Última atualização**: 13/12/2024 - Autenticação e Rotas migrados com sucesso para Hilt
 
 ### **PRIORIDADE MÉDIA (4-8 semanas)**
 
