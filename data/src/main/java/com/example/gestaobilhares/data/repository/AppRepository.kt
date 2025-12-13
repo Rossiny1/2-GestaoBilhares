@@ -25,8 +25,8 @@ import android.util.Log
 import java.util.concurrent.TimeUnit
 import java.util.Date
 import kotlinx.coroutines.runBlocking
-// import javax.inject.Inject // REMOVIDO: Hilt nao e mais usado
-// import javax.inject.Singleton // REMOVIDO: Hilt nao e mais usado
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * ✅ REPOSITORY CONSOLIDADO E MODERNIZADO - AppRepository
@@ -37,7 +37,8 @@ import kotlinx.coroutines.runBlocking
  * - Centralizado para facilitar manutenção
  * - Meta: ~200-300 linhas (delegando para especializados)
  */
-class AppRepository constructor(
+@Singleton
+class AppRepository @Inject constructor(
     private val clienteDao: ClienteDao,
     private val acertoDao: AcertoDao,
     private val mesaDao: MesaDao,

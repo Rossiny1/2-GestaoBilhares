@@ -9,11 +9,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para gerenciar o histórico de mesas vendidas
  * ✅ NOVO: SISTEMA DE VENDA DE MESAS
  */
-class HistoricoMesasVendidasViewModel constructor(
+@HiltViewModel
+class HistoricoMesasVendidasViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 

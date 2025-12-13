@@ -18,7 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.factory.RepositoryFactory
+// import com.example.gestaobilhares.factory.RepositoryFactory
 import com.example.gestaobilhares.core.utils.DataValidator
 import com.example.gestaobilhares.data.entities.CategoriaDespesa
 import com.example.gestaobilhares.data.entities.TipoDespesa
@@ -36,16 +36,21 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
+
 /**
  * Fragment para cadastro de despesas.
  * Permite criar despesas vinculadas ao ciclo de acertos atual.
  */
+@AndroidEntryPoint
 class ExpenseRegisterFragment : Fragment() {
 
     private var _binding: FragmentExpenseRegisterBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: ExpenseRegisterViewModel
+    private val viewModel: ExpenseRegisterViewModel by viewModels()
     private val args: ExpenseRegisterFragmentArgs by navArgs()
     
     // ✅ CORREÇÃO: Inicialização segura do ImageCompressionUtils
@@ -133,9 +138,9 @@ class ExpenseRegisterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // Inicializar ViewModel
-        val appRepository = RepositoryFactory.getAppRepository(requireContext())
-        viewModel = ExpenseRegisterViewModel(appRepository)
+        // Inicializar ViewModel -> Hilt
+        // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = ExpenseRegisterViewModel(appRepository)
         
         setupUI()
         setupClickListeners()

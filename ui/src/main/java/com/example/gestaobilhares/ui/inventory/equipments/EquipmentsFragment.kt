@@ -11,12 +11,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.ui.databinding.FragmentEquipmentsBinding
 import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class EquipmentsFragment : Fragment() {
     private var _binding: FragmentEquipmentsBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: EquipmentsViewModel
+    private val viewModel: EquipmentsViewModel by viewModels()
     private lateinit var adapter: EquipmentsAdapter
 
     override fun onCreateView(
@@ -31,9 +35,10 @@ class EquipmentsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente com AppRepository
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = EquipmentsViewModel(appRepository)
+        
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente com AppRepository -> Hilt
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = EquipmentsViewModel(appRepository)
         
         setupRecyclerView()
         observeData()

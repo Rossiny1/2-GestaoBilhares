@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.util.Date
 import java.time.ZoneId
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /**
  * Extensão para converter LocalDateTime para Date
@@ -43,7 +45,8 @@ data class CycleExpenseItem(
  * ✅ CORRIGIDO: Usa observação reativa como CycleReceiptsViewModel
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class CycleExpensesViewModel(
+@HiltViewModel
+class CycleExpensesViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 
@@ -241,18 +244,4 @@ class CycleExpensesViewModel(
     }
 }
 
-/**
- * Factory para o ViewModel
- * ✅ MIGRADO: Usa AppRepository centralizado
- */
-class CycleExpensesViewModelFactory(
-    private val appRepository: AppRepository
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(CycleExpensesViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return CycleExpensesViewModel(appRepository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
+

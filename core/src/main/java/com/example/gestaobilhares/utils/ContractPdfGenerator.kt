@@ -28,6 +28,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.gestaobilhares.data.repository.AppRepository
 
 data class ContractEmissionMetadata(
     val operadorNome: String,
@@ -40,14 +41,16 @@ data class ContractEmissionMetadata(
     val timestampOperacao: Date = Date()
 )
 
-class ContractPdfGenerator(private val context: Context) {
+class ContractPdfGenerator(
+    private val context: Context,
+    private val repository: AppRepository
+) {
     
     /**
      * ✅ FASE 12.5: Função suspend para salvar hash do documento (removido runBlocking)
      */
     suspend fun salvarHashDocumento(contrato: ContratoLocacao, documentoHash: String) {
         try {
-            val repository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(context)
             // TODO: Adicionar campo documentoHash na entidade ContratoLocacao se necessário
             // Por enquanto, apenas atualizamos a data de atualização
             val contratoAtualizado = contrato.copy(

@@ -11,10 +11,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para cadastro de metas
  */
-class MetaCadastroViewModel constructor(
+@HiltViewModel
+class MetaCadastroViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
 

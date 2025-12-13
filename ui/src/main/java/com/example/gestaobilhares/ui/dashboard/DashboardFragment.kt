@@ -17,11 +17,14 @@ import com.github.mikephil.charting.utils.ColorTemplate
 import java.text.NumberFormat
 import java.util.Locale
 
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class DashboardFragment : Fragment() {
 
     private var _binding: FragmentDashboardBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: DashboardViewModel
+    private val viewModel: DashboardViewModel by viewModels()
 
     private val moeda: NumberFormat = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
 
@@ -37,9 +40,7 @@ class DashboardFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = DashboardViewModel(appRepository)
+        // viewModel initialized by delegation
 
         binding.toolbar.setNavigationOnClickListener { findNavController().popBackStack() }
         

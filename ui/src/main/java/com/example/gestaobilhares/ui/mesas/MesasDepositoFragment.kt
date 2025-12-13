@@ -13,22 +13,29 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.ui.databinding.FragmentMesasDepositoBinding
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.factory.RepositoryFactory
+// import com.example.gestaobilhares.factory.RepositoryFactory
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.Toast
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-// Hilt removido - usando instanciação direta
+// Hilt removido - usando instanciação direta -> Hilt restaurado
+@AndroidEntryPoint
 class MesasDepositoFragment : Fragment() {
     private var _binding: FragmentMesasDepositoBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: MesasDepositoViewModel
+    private val viewModel: MesasDepositoViewModel by viewModels()
     private val args: MesasDepositoFragmentArgs by navArgs()
     private lateinit var adapter: MesasDepositoAdapter
-    private lateinit var userSessionManager: UserSessionManager
+    
+    @Inject
+    lateinit var userSessionManager: UserSessionManager
+    @Inject
+    lateinit var appRepository: AppRepository
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -41,10 +48,10 @@ class MesasDepositoFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar gerenciador de sessão
-        userSessionManager = UserSessionManager.getInstance(requireContext())
+        // userSessionManager = UserSessionManager.getInstance(requireContext())
         
-        val appRepository = RepositoryFactory.getAppRepository(requireContext())
-        viewModel = MesasDepositoViewModel(appRepository)
+        // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = MesasDepositoViewModel(appRepository)
         setupRecyclerView()
         setupListeners()
         setupAccessControl()
@@ -342,11 +349,11 @@ class MesasDepositoFragment : Fragment() {
                                 // Executar vinculação de forma síncrona
                                 try {
                                     if (tipoFixo && valorFixo != null) {
-                                        val appRepo = RepositoryFactory.getAppRepository(requireContext())
-                                        appRepo.vincularMesaComValorFixo(mesa.id, clienteId, valorFixo)
+                                        // val appRepo = RepositoryFactory.getAppRepository(requireContext())
+                                        appRepository.vincularMesaComValorFixo(mesa.id, clienteId, valorFixo)
                                     } else {
-                                        val appRepo = RepositoryFactory.getAppRepository(requireContext())
-                                        appRepo.vincularMesaACliente(mesa.id, clienteId)
+                                        // val appRepo = RepositoryFactory.getAppRepository(requireContext())
+                                        appRepository.vincularMesaACliente(mesa.id, clienteId)
                                     }
                                     android.util.Log.d("MesasDepositoFragment", "Mesa vinculada com sucesso")
                                     

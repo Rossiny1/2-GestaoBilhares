@@ -20,11 +20,15 @@ import com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa
 import com.example.gestaobilhares.data.entities.TipoManutencao
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para SettlementFragment
  * FASE 4A - Implementação básica para desbloqueio
  */
-class SettlementViewModel constructor(
+@HiltViewModel
+class SettlementViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 

@@ -8,8 +8,8 @@
     id("kotlin-parcelize")
     // ✅ NOVO: JaCoCo para cobertura de testes
     id("jacoco")
-    // ✅ REMOVIDO: Hilt (pode causar conflito com Compose)
-    // id("com.google.dagger.hilt.android")
+    // ✅ ATIVADO: Hilt
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -177,9 +177,9 @@ dependencies {
     // WorkManager (para sincronização em background)
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 
-    // ✅ REMOVIDO: Hilt (pode causar conflito com Compose)
-    // implementation("com.google.dagger:hilt-android:2.51")
-    // kapt("com.google.dagger:hilt-android-compiler:2.51")
+    // ✅ ATIVADO: Hilt
+    implementation("com.google.dagger:hilt-android:2.51")
+    ksp("com.google.dagger:hilt-android-compiler:2.51")
     
     // ✅ NOVO: Dependências de Teste
     // JUnit 5

@@ -14,20 +14,17 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.ui.databinding.FragmentCycleHistoryBinding
 import com.example.gestaobilhares.ui.clients.adapter.CycleHistoryAdapter
-import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.data.repository.CicloAcertoRepository
-import com.example.gestaobilhares.data.repository.AcertoRepository
-import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.ui.clients.CycleHistoryItem
-import com.example.gestaobilhares.ui.clients.CycleHistoryViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Fragment para exibir o histórico de ciclos de acerto de uma rota
  * ✅ FASE 9C: HISTÓRICO DE CICLOS E RELATÓRIOS FINANCEIROS
  */
+@AndroidEntryPoint
 class CycleHistoryFragment : Fragment() {
 
     private var _binding: FragmentCycleHistoryBinding? = null
@@ -36,20 +33,8 @@ class CycleHistoryFragment : Fragment() {
     // ✅ CORREÇÃO: Usar Bundle em vez de navArgs para evitar problemas de geração
     private var rotaId: Long = 0L
     
-    private val viewModel: CycleHistoryViewModel by viewModels {
-        val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        CycleHistoryViewModelFactory(
-            CicloAcertoRepository(
-                database.cicloAcertoDao(),
-                database.despesaDao(), // ✅ CORRIGIDO: Passar DespesaDao diretamente
-                AcertoRepository(database.acertoDao(), database.clienteDao()),
-                ClienteRepository(database.clienteDao(), appRepository),
-                database.rotaDao()
-            ),
-            appRepository
-        )
-    }
+    // ViewModel with Hilt
+    private val viewModel: CycleHistoryViewModel by viewModels()
     
     private lateinit var cycleAdapter: CycleHistoryAdapter
 

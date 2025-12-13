@@ -22,12 +22,20 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
  * DialogFragment para transferir um cliente de uma rota para outra.
  * Exibe informações do cliente e permite selecionar a rota de destino.
  */
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+
+/**
+ * DialogFragment para transferir um cliente de uma rota para outra.
+ * Exibe informações do cliente e permite selecionar a rota de destino.
+ */
+@AndroidEntryPoint
 class TransferClientDialog : DialogFragment() {
 
     private var _binding: DialogTransferClientBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: TransferClientViewModel
+    private val viewModel: TransferClientViewModel by viewModels()
 
     private var onTransferSuccessListener: (() -> Unit)? = null
 
@@ -59,8 +67,9 @@ class TransferClientDialog : DialogFragment() {
         dialog.setCanceledOnTouchOutside(true)
         
         // Inicializar repositórios e ViewModel
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = TransferClientViewModel(appRepository)
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = TransferClientViewModel(appRepository)
+        // Hilt initializes ViewModel automatically
 
         setupArguments()
         setupClickListeners()

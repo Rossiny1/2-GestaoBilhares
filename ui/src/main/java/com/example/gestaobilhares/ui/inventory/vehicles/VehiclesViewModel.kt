@@ -10,7 +10,11 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class VehiclesViewModel constructor(
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class VehiclesViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
 

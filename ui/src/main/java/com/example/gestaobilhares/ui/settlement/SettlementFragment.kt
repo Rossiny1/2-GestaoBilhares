@@ -34,7 +34,7 @@ import com.example.gestaobilhares.ui.databinding.FragmentSettlementBinding
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.factory.RepositoryFactory
+// import com.example.gestaobilhares.factory.RepositoryFactory
 // BuildConfig não disponível em módulos de biblioteca
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.entities.Acerto
@@ -63,16 +63,23 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.launch
 
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+
 /**
  * Fragment para registrar novos acertos
  * FASE 4A - Implementação crítica do core business
  */
+@AndroidEntryPoint
 class SettlementFragment : Fragment() {
 
     private var _binding: FragmentSettlementBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: SettlementViewModel
-    private lateinit var appRepository: com.example.gestaobilhares.data.repository.AppRepository
+    private val viewModel: SettlementViewModel by viewModels()
+    
+    @Inject
+    lateinit var appRepository: com.example.gestaobilhares.data.repository.AppRepository
+    
     private val args: SettlementFragmentArgs by navArgs()
     
     private val formatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
@@ -277,8 +284,9 @@ class SettlementFragment : Fragment() {
         Log.d("LOG_CRASH", "SettlementFragment.onViewCreated - INÍCIO")
         
         // Inicializar ViewModel aqui onde o contexto está disponível
-        appRepository = RepositoryFactory.getAppRepository(requireContext())
-        viewModel = SettlementViewModel(appRepository)
+        // REMOVIDO: Inicialização manual do RepositoryFactory
+        // appRepository = RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = SettlementViewModel(appRepository)
         
         Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
         Log.d("SettlementFragment", "Cliente ID: ${args.clienteId}")

@@ -22,6 +22,11 @@ import com.example.gestaobilhares.core.utils.SignatureMetadataCollector
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import java.io.ByteArrayOutputStream
+import dagger.hilt.android.AndroidEntryPoint
+
+import androidx.fragment.app.viewModels
+
+@AndroidEntryPoint
 class SignatureCaptureFragment : Fragment() {
     
     companion object {
@@ -31,7 +36,10 @@ class SignatureCaptureFragment : Fragment() {
     private var _binding: FragmentSignatureCaptureBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var viewModel: SignatureCaptureViewModel
+    private val viewModel: SignatureCaptureViewModel by viewModels()
+
+    @javax.inject.Inject
+    lateinit var appRepository: com.example.gestaobilhares.data.repository.AppRepository
     
     // ✅ CORREÇÃO: Inicializar managers no onViewCreated
     private var legalLogger: LegalLogger? = null
@@ -60,9 +68,7 @@ class SignatureCaptureFragment : Fragment() {
         try {
             // ✅ LOG CRASH: Inicializando ViewModel
             android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.onViewCreated - Inicializando ViewModel")
-            val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-            viewModel = SignatureCaptureViewModel()
-            viewModel.initializeRepository(appRepository)
+            // ViewModel initialized by Hilt
             
                     // ✅ CORREÇÃO: Inicializar managers de forma segura
                     try {
@@ -247,11 +253,11 @@ class SignatureCaptureFragment : Fragment() {
                     val contratoAtual = viewModel.contrato.value ?: return@launch
                     val fechamento = viewModel.getFechamentoResumoDistrato()
                     
-                    val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                    val repo = appRepository
                     val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
                     val agora = java.util.Date()
                     android.util.Log.d("DistratoFlow", "✅ ATUALIZAR STATUS ao salvar assinatura: contrato ${contratoAtual.id} para $novoStatus em $agora")
-                    repo.encerrarContrato(contratoAtual.id, contratoAtual.clienteId, novoStatus)
+                    repo.atualizarContrato(contratoAtual.copy(status = novoStatus, dataEncerramento = agora))
                     
                     // Verificação imediata
                     try {
@@ -309,7 +315,7 @@ class SignatureCaptureFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val contrato = viewModel.contrato.value ?: return@launch
-                val pdfGenerator = com.example.gestaobilhares.core.utils.ContractPdfGenerator(requireContext())
+                val pdfGenerator = com.example.gestaobilhares.core.utils.ContractPdfGenerator(requireContext(), appRepository)
                 val mesas = viewModel.getMesasVinculadas()
                 
                 // ✅ NOVO: Obter assinatura do representante legal automaticamente
@@ -381,7 +387,7 @@ class SignatureCaptureFragment : Fragment() {
                             // todas as telas intermediárias (mesasDepositoFragment, contractGenerationFragment, etc)
                             viewLifecycleOwner.lifecycleScope.launch {
                                 try {
-                                    val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                                    // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
                                     val cliente = appRepository.obterClientePorId(clienteId)
                                     val rotaId = cliente?.rotaId
                                     
@@ -464,7 +470,7 @@ class SignatureCaptureFragment : Fragment() {
                 // ✅ NOVO: Obter assinatura do representante legal automaticamente
                 val representanteLegal = viewModel.obterAssinaturaRepresentanteLegalAtiva()
                 
-                val pdf = com.example.gestaobilhares.core.utils.ContractPdfGenerator(requireContext())
+                val pdf = com.example.gestaobilhares.core.utils.ContractPdfGenerator(requireContext(), appRepository)
                     .generateDistratoPdf(
                         contrato = contrato,
                         mesas = mesas,
@@ -479,11 +485,11 @@ class SignatureCaptureFragment : Fragment() {
 
                 // ✅ NOVO: Persistir status de encerramento do contrato
                 try {
-                    val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                    val repo = appRepository
                     val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
                     val agora = java.util.Date()
                     android.util.Log.d("DistratoFlow", "Encerrar direto contrato ${contrato.id} para $novoStatus em $agora")
-                    repo.encerrarContrato(contrato.id, contrato.clienteId, novoStatus)
+                    repo.atualizarContrato(contrato.copy(status = novoStatus, dataEncerramento = agora))
                     // Verificação imediata (diagnóstico)
                     try {
                         val apos = repo.buscarContratosPorCliente(contrato.clienteId).first()
@@ -518,7 +524,7 @@ class SignatureCaptureFragment : Fragment() {
                         
                         viewLifecycleOwner.lifecycleScope.launch {
                             try {
-                                val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                                // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
                                 val cliente = appRepository.obterClientePorId(clienteId)
                                 val rotaId = cliente?.rotaId
                                 

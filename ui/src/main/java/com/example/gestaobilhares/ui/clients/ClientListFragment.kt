@@ -28,19 +28,24 @@ import android.view.animation.Animation
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import android.util.Log
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Fragment modernizado para lista de clientes com controle de status da rota
  */
+@AndroidEntryPoint
 class ClientListFragment : Fragment() {
 
     private var _binding: FragmentClientListBinding? = null
     private val binding get() = _binding ?: throw IllegalStateException("Binding não está disponível")
 
-    private lateinit var viewModel: ClientListViewModel
+    private val viewModel: ClientListViewModel by viewModels()
     private val args: ClientListFragmentArgs by navArgs()
     private lateinit var clientAdapter: ClientAdapter
-    private lateinit var appRepository: AppRepository
+    
+    @Inject
+    lateinit var appRepository: AppRepository
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -61,10 +66,7 @@ class ClientListFragment : Fragment() {
         // ✅ REMOVIDO: Callback de botão voltar - Navigation Component gerencia automaticamente
         // O botão voltar agora é gerenciado globalmente pelo MainActivity
         
-        // ✅ FASE 8C: Inicializar ViewModel com todos os repositórios necessários
-        appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
-        viewModel = ClientListViewModel(appRepository, userSessionManager)
+        // ✅ FASE 8C: Inicialização automatica pelo Hilt
         
         try {
             // Verificar se binding está disponível
@@ -118,11 +120,9 @@ class ClientListFragment : Fragment() {
         android.util.Log.d("ClientListFragment", "🔄 onStart - Garantindo carregamento de dados")
         
         val rotaId = args.rotaId
-        if (::viewModel.isInitialized) {
-            // ✅ CORREÇÃO: Usar recarregamento forçado para garantir que os dados apareçam
-            viewModel.forcarRecarregamentoClientes(rotaId)
-            android.util.Log.d("ClientListFragment", "✅ onStart - Dados forçados recarregados para rotaId=$rotaId")
-        }
+        // ✅ CORREÇÃO: Usar recarregamento forçado para garantir que os dados apareçam
+        viewModel.forcarRecarregamentoClientes(rotaId)
+        android.util.Log.d("ClientListFragment", "✅ onStart - Dados forçados recarregados para rotaId=$rotaId")
     }
 
     private fun configurarRecyclerView() {

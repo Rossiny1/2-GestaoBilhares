@@ -15,8 +15,12 @@ import com.example.gestaobilhares.data.entities.NivelAcesso
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.database.AppDatabase
-import com.example.gestaobilhares.factory.RepositoryFactory
+// import com.example.gestaobilhares.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.databinding.FragmentColaboradorRegisterBinding
+import com.example.gestaobilhares.ui.colaboradores.ColaboradorManagementViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import androidx.fragment.app.viewModels
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,12 +34,15 @@ import java.util.*
  * Fragment para cadastro e edição de colaboradores.
  * Permite inserir dados pessoais completos e configurações de acesso.
  */
+@AndroidEntryPoint
 class ColaboradorRegisterFragment : Fragment() {
 
     private var _binding: FragmentColaboradorRegisterBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var appRepository: AppRepository
+    @Inject
+    lateinit var appRepository: AppRepository
+    // private lateinit var appRepository: AppRepository
     private var colaboradorId: Long? = null
     private var dataNascimento: Date? = null
     private val rotasSelecionadas = mutableSetOf<Long>()
@@ -57,7 +64,7 @@ class ColaboradorRegisterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        setupRepository()
+        // setupRepository() // Injetado via Hilt
         setupToolbar()
         setupDropdowns()
         setupDatePicker()
@@ -71,10 +78,10 @@ class ColaboradorRegisterFragment : Fragment() {
         }
     }
 
-    private fun setupRepository() {
-        val _database = AppDatabase.getDatabase(requireContext())
-        appRepository = RepositoryFactory.getAppRepository(requireContext())
-    }
+    // private fun setupRepository() {
+    //     val _database = AppDatabase.getDatabase(requireContext())
+    //     appRepository = RepositoryFactory.getAppRepository(requireContext())
+    // }
 
     private fun setupToolbar() {
         binding.toolbar.setNavigationOnClickListener {

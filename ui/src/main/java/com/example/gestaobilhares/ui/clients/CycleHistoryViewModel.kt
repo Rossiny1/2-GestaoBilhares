@@ -18,6 +18,9 @@ import kotlinx.coroutines.launch
 import java.util.Date
 import kotlinx.coroutines.runBlocking
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * Estatísticas financeiras dos ciclos
  * ✅ FASE 9C: DADOS PARA RELATÓRIOS FINANCEIROS
@@ -31,23 +34,6 @@ data class CycleStatistics(
     val periodoInicio: Date? = null,
     val periodoFim: Date? = null
 )
-
-/**
- * Factory para criar CycleHistoryViewModel com dependências
- */
-class CycleHistoryViewModelFactory(
-    private val cicloAcertoRepository: CicloAcertoRepository,
-    private val appRepository: AppRepository
-) : ViewModelProvider.Factory {
-    
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(CycleHistoryViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return CycleHistoryViewModel(cicloAcertoRepository, appRepository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
 
 // DTO para o Adapter do histórico de ciclos
 // Inclui todos os campos necessários para exibição
@@ -72,7 +58,8 @@ data class CycleHistoryItem(
  * ViewModel para gerenciar histórico de ciclos e relatórios
  * ✅ FASE 9C: HISTÓRICO DE CICLOS E RELATÓRIOS FINANCEIROS
  */
-class CycleHistoryViewModel(
+@HiltViewModel
+class CycleHistoryViewModel @Inject constructor(
     private val cicloAcertoRepository: CicloAcertoRepository,
     private val appRepository: AppRepository
 ) : BaseViewModel() {

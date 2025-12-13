@@ -17,15 +17,18 @@ import com.example.gestaobilhares.data.entities.TamanhoMesa
 import com.example.gestaobilhares.data.entities.EstadoConservacao
 import com.example.gestaobilhares.ui.databinding.FragmentCadastroMesaBinding
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.factory.RepositoryFactory
+// import com.example.gestaobilhares.factory.RepositoryFactory
 import kotlinx.coroutines.launch
 import java.util.*
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-// Hilt removido - usando instanciação direta
+// Hilt removido - usando instanciação direta -> Hilt restaurado
+@AndroidEntryPoint
 class CadastroMesaFragment : Fragment() {
     private var _binding: FragmentCadastroMesaBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: CadastroMesaViewModel
+    private val viewModel: CadastroMesaViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -36,8 +39,8 @@ class CadastroMesaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val appRepository = RepositoryFactory.getAppRepository(requireContext())
-        viewModel = CadastroMesaViewModel(appRepository)
+        // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = CadastroMesaViewModel(appRepository)
         setupUI()
     }
 

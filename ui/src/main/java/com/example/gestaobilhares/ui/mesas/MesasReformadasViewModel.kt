@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /**
  * ✅ NOVO: Data class para agrupar reformas por mesa com histórico
@@ -39,7 +41,8 @@ data class MesaReformadaComHistorico(
  * Gerencia o estado e operações relacionadas às mesas reformadas.
  * ✅ NOVO: Agrupa reformas por mesa e inclui histórico de manutenções
  */
-class MesasReformadasViewModel constructor(
+@HiltViewModel
+class MesasReformadasViewModel @Inject constructor(
     // TODO: MesaReformadaRepository não existe - usar AppRepository quando método estiver disponível
     // private val mesaReformadaRepository: MesaReformadaRepository,
     private val appRepository: AppRepository

@@ -14,7 +14,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.ui.databinding.FragmentCycleExpensesBinding
 import com.example.gestaobilhares.ui.cycles.adapter.CycleExpensesAdapter
-import com.example.gestaobilhares.factory.RepositoryFactory
+
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.util.Date
@@ -22,6 +22,12 @@ import java.util.Date
 /**
  * Fragment para listar despesas do ciclo
  */
+import dagger.hilt.android.AndroidEntryPoint
+
+/**
+ * Fragment para listar despesas do ciclo
+ */
+@AndroidEntryPoint
 class CycleExpensesFragment : Fragment() {
 
     companion object {
@@ -43,7 +49,7 @@ class CycleExpensesFragment : Fragment() {
     private var rotaId: Long = 0L
     private var isCicloFinalizado: Boolean = false
     
-    private lateinit var viewModel: CycleExpensesViewModel
+    private val viewModel: CycleExpensesViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,9 +70,7 @@ class CycleExpensesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ MIGRADO: Usa AppRepository centralizado
-        val appRepository = RepositoryFactory.getAppRepository(requireContext())
-        viewModel = CycleExpensesViewModel(appRepository)
+        // viewModel initialized by delegation
         
         setupRecyclerView()
         setupObservers()

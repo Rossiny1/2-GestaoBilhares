@@ -15,10 +15,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 // ✅ REMOVIDO: Hilt não é mais usado
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para a tela de nova reforma.
  */
-class NovaReformaViewModel constructor(
+@HiltViewModel
+class NovaReformaViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 

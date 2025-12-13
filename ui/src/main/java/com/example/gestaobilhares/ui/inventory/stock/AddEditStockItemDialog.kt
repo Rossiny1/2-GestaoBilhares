@@ -11,12 +11,17 @@ import androidx.fragment.app.DialogFragment
 import com.example.gestaobilhares.ui.databinding.DialogAddEditStockItemBinding
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
+
+@AndroidEntryPoint
 class AddEditStockItemDialog : DialogFragment() {
     
     private var _binding: DialogAddEditStockItemBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var viewModel: StockViewModel
+    private val viewModel: StockViewModel by viewModels()
     private var onItemSaved: (() -> Unit)? = null
 
     companion object {
@@ -30,9 +35,9 @@ class AddEditStockItemDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddEditStockItemBinding.inflate(layoutInflater)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = StockViewModel(appRepository)
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = StockViewModel(appRepository)
         
         setupSpinners()
         setupClickListeners()

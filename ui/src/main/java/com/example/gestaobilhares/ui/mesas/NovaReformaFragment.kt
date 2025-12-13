@@ -39,16 +39,21 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
+
 /**
  * Fragment para cadastrar uma nova reforma de mesa.
  */
+@AndroidEntryPoint
 class NovaReformaFragment : Fragment() {
 
     private var _binding: FragmentNovaReformaBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: NovaReformaViewModel
-    private lateinit var historicoViewModel: HistoricoManutencaoMesaViewModel
+    private val viewModel: NovaReformaViewModel by viewModels()
+    private val historicoViewModel: HistoricoManutencaoMesaViewModel by viewModels()
     
     private var mesaSelecionada: Mesa? = null
     private var fotoUri: Uri? = null
@@ -129,10 +134,10 @@ class NovaReformaFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModels manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = NovaReformaViewModel(appRepository)
-        historicoViewModel = HistoricoManutencaoMesaViewModel(appRepository)
+        // ✅ CORREÇÃO: Inicializar ViewModels manualmente -> Hilt
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = NovaReformaViewModel(appRepository)
+        // historicoViewModel = HistoricoManutencaoMesaViewModel(appRepository)
         
         setupClickListeners()
         observeViewModel()

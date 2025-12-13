@@ -14,23 +14,28 @@ import com.example.gestaobilhares.data.database.AppDatabase
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.Date
 
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
+
 /**
  * Dialog para adicionar panos em lote no estoque.
  * Permite criar múltiplos panos com numeração sequencial.
  */
+@AndroidEntryPoint
 class AddPanosLoteDialog : DialogFragment() {
 
     private var _binding: DialogAddPanosLoteBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: StockViewModel
+    private val viewModel: StockViewModel by viewModels()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddPanosLoteBinding.inflate(LayoutInflater.from(requireContext()))
 
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = StockViewModel(appRepository)
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = StockViewModel(appRepository)
 
         setupUI()
         setupClickListeners()

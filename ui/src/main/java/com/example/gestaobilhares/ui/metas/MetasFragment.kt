@@ -19,12 +19,15 @@ import com.example.gestaobilhares.data.entities.TipoMeta
 import com.example.gestaobilhares.ui.databinding.FragmentMetasBinding
 import kotlinx.coroutines.launch
 
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class MetasFragment : Fragment() {
 
     private var _binding: FragmentMetasBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: MetasViewModel
+    private val viewModel: MetasViewModel by viewModels()
     private lateinit var metasAdapter: MetasAdapter
 
     override fun onCreateView(
@@ -38,11 +41,8 @@ class MetasFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Inicializar ViewModel
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = MetasViewModel()
-        viewModel.initializeRepository(appRepository)
-
+        // ViewModel initialized by Hilt
+        
         setupToolbar()
         setupRecyclerView()
         observeViewModel()

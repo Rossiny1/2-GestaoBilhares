@@ -15,7 +15,7 @@ import com.example.gestaobilhares.data.repository.CicloAcertoRepository
 import com.example.gestaobilhares.data.repository.AcertoRepository
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.factory.RepositoryFactory
+
 import com.example.gestaobilhares.ui.cycles.adapter.CycleClientsAdapter
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
@@ -25,6 +25,12 @@ import java.util.Locale
 /**
  * Fragment para listar clientes acertados do ciclo
  */
+import dagger.hilt.android.AndroidEntryPoint
+
+/**
+ * Fragment para listar clientes acertados do ciclo
+ */
+@AndroidEntryPoint
 class CycleClientsFragment : Fragment() {
 
     private var _binding: FragmentCycleClientsBinding? = null
@@ -33,7 +39,7 @@ class CycleClientsFragment : Fragment() {
     private var cicloId: Long = 0L
     private var rotaId: Long = 0L
     
-    private lateinit var viewModel: CycleClientsViewModel
+    private val viewModel: CycleClientsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,17 +59,7 @@ class CycleClientsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = RepositoryFactory.getAppRepository(requireContext())
-        val cicloAcertoRepository = CicloAcertoRepository(
-            database.cicloAcertoDao(),
-            database.despesaDao(), // ✅ CORRIGIDO: Passar DespesaDao diretamente
-            AcertoRepository(database.acertoDao(), database.clienteDao()),
-            ClienteRepository(database.clienteDao(), appRepository),
-            database.rotaDao()
-        )
-        viewModel = CycleClientsViewModel(cicloAcertoRepository)
+        // viewModel initialized by delegation
         
         setupRecyclerView()
         setupObservers()

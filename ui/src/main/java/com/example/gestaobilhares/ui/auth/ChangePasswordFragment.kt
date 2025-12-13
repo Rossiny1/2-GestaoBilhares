@@ -9,21 +9,24 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.fragment.app.viewModels
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.ui.databinding.FragmentChangePasswordBinding
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Fragmento responsável pela tela de alteração de senha obrigatória (primeiro acesso).
  * Exibido quando o usuário faz login pela primeira vez com senha temporária.
  */
+@AndroidEntryPoint
 class ChangePasswordFragment : Fragment() {
 
     private var _binding: FragmentChangePasswordBinding? = null
     private val binding get() = _binding!!
-    private lateinit var authViewModel: AuthViewModel
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,9 +42,9 @@ class ChangePasswordFragment : Fragment() {
         try {
             android.util.Log.d("ChangePasswordFragment", "=== INICIANDO CHANGEPASSWORDFRAGMENT ===")
             
-            // Inicializar ViewModel
-            authViewModel = AuthViewModel()
-            authViewModel.initializeRepository(requireContext())
+            // ViewModel injetado via Hilt, não precisa inicializar manualmente
+            // authViewModel injetado automaticamente via Hilt
+            android.util.Log.d("ChangePasswordFragment", "✅ AuthViewModel injetado via Hilt")
             
             // Configurar observadores
             observeAuthState()

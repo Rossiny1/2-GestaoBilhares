@@ -7,7 +7,11 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class CadastroMesaViewModel(
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class CadastroMesaViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
     

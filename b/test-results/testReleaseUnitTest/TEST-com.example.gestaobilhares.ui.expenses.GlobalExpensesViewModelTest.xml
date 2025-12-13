@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.example.gestaobilhares.ui.expenses.GlobalExpensesViewModelTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-12-12T19:05:31" hostname="LAPTOP-SAMSUNG" time="0.401">
-  <properties/>
-  <testcase name="loadAvailableCycles deve popular lista com 12 ciclos" classname="com.example.gestaobilhares.ui.expenses.GlobalExpensesViewModelTest" time="0.232"/>
-  <testcase name="loadAllGlobalExpenses deve carregar despesas e atualizar estado" classname="com.example.gestaobilhares.ui.expenses.GlobalExpensesViewModelTest" time="0.075"/>
-  <testcase name="deleteGlobalExpense deve chamar repository e recarregar dados" classname="com.example.gestaobilhares.ui.expenses.GlobalExpensesViewModelTest" time="0.092"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

@@ -15,23 +15,27 @@ import com.example.gestaobilhares.data.entities.MetaColaborador
 import com.example.gestaobilhares.data.entities.MetaRotaResumo
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.entities.TipoMeta
-import com.example.gestaobilhares.factory.RepositoryFactory
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import com.example.gestaobilhares.ui.databinding.FragmentMetaHistoricoBinding
+import java.util.Calendar
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
-import java.util.Calendar
 
 /**
  * Fragment para exibir histórico de metas de TODAS as rotas
  * Permite selecionar ano e ciclo para filtrar as metas
  * ✅ REFATORADO: Agora mostra TODAS as rotas do ciclo selecionado (não apenas uma rota)
  */
+@AndroidEntryPoint
 class MetaHistoricoFragment : Fragment() {
 
     private var _binding: FragmentMetaHistoricoBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var appRepository: com.example.gestaobilhares.data.repository.AppRepository
+    @Inject
+    lateinit var appRepository: com.example.gestaobilhares.data.repository.AppRepository
+
     private lateinit var metasAdapter: MetaHistoricoAdapter
 
     private var anoSelecionado: Int = Calendar.getInstance().get(Calendar.YEAR)
@@ -50,8 +54,8 @@ class MetaHistoricoFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Inicializar repositório
-        appRepository = RepositoryFactory.getAppRepository(requireContext())
+        // Inicializar repositório - Hilt injeta automaticamente
+        // appRepository = RepositoryFactory.getAppRepository(requireContext())
 
         setupToolbar()
         setupRecyclerView()

@@ -12,7 +12,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.gestaobilhares.ui.R
 import com.example.gestaobilhares.ui.databinding.FragmentCycleManagementBinding
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.factory.RepositoryFactory
+
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
 import com.example.gestaobilhares.core.utils.PdfReportGenerator
 import com.example.gestaobilhares.ui.clients.CycleReportDialog
@@ -32,6 +32,13 @@ import java.text.NumberFormat
  * Fragment para gerenciar ciclos (em andamento e finalizados)
  * Implementa todas as informações do relatório PDF
  */
+import dagger.hilt.android.AndroidEntryPoint
+
+/**
+ * Fragment para gerenciar ciclos (em andamento e finalizados)
+ * Implementa todas as informações do relatório PDF
+ */
+@AndroidEntryPoint
 class CycleManagementFragment : Fragment() {
 
     private var _binding: FragmentCycleManagementBinding? = null
@@ -40,7 +47,7 @@ class CycleManagementFragment : Fragment() {
     var cicloId: Long = 0L
     var rotaId: Long = 0L
     
-    lateinit var viewModel: CycleManagementViewModel
+    val viewModel: CycleManagementViewModel by viewModels()
 
     // Formatação centralizada via utilitários
     // private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
@@ -64,9 +71,7 @@ class CycleManagementFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val appRepository = RepositoryFactory.getAppRepository(requireContext())
-        viewModel = CycleManagementViewModel(appRepository)
+        // viewModel initialized by delegation
         
         setupViews()
         setupViewPager()

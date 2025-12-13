@@ -6,20 +6,25 @@ import android.view.LayoutInflater
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import com.example.gestaobilhares.ui.databinding.DialogAddEditVehicleBinding
+import com.example.gestaobilhares.data.database.AppDatabase
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+
+@AndroidEntryPoint
 class AddEditVehicleDialog : DialogFragment() {
 
     private var _binding: DialogAddEditVehicleBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: VehiclesViewModel
+    private val viewModel: VehiclesViewModel by viewModels()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddEditVehicleBinding.inflate(LayoutInflater.from(requireContext()))
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = VehiclesViewModel(appRepository)
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = VehiclesViewModel(appRepository)
 
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle("Novo Veículo")

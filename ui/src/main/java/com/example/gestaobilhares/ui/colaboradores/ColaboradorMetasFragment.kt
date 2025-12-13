@@ -12,8 +12,10 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.data.database.AppDatabase
+// import com.example.gestaobilhares.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.databinding.FragmentColaboradorMetasBinding
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,12 +28,15 @@ import java.util.*
  * Fragment para gerenciamento de metas dos colaboradores.
  * Permite cadastrar, editar e acompanhar metas de performance.
  */
+@AndroidEntryPoint
 class ColaboradorMetasFragment : Fragment() {
 
     private var _binding: FragmentColaboradorMetasBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var appRepository: AppRepository
+    @Inject
+    lateinit var appRepository: AppRepository
+    // private lateinit var appRepository: AppRepository
     private var colaboradorId: Long? = null
     private var cicloSelecionado: Long? = null
     private var rotaSelecionada: Long? = null
@@ -51,7 +56,7 @@ class ColaboradorMetasFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        setupRepository()
+        // setupRepository() // Injetado via Hilt
         setupToolbar()
         setupDropdowns()
         setupCiclosERotas()
@@ -69,10 +74,10 @@ class ColaboradorMetasFragment : Fragment() {
         }
     }
 
-    private fun setupRepository() {
-        val _database = AppDatabase.getDatabase(requireContext())
-        appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-    }
+    // private fun setupRepository() {
+    //     val _database = AppDatabase.getDatabase(requireContext())
+    //     appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+    // }
 
     private fun setupToolbar() {
         binding.toolbar.setNavigationOnClickListener {

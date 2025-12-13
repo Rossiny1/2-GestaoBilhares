@@ -12,12 +12,15 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.ui.databinding.FragmentVehiclesBinding
 import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class VehiclesFragment : Fragment() {
     private var _binding: FragmentVehiclesBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: VehiclesViewModel
+    private val viewModel: VehiclesViewModel by viewModels()
     private lateinit var adapter: VehiclesAdapter
 
     override fun onCreateView(
@@ -32,9 +35,9 @@ class VehiclesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = VehiclesViewModel(appRepository)
+        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = VehiclesViewModel(appRepository)
         
         // Configurar toolbar com título "Veículo" e navegação back
         binding.toolbar.setNavigationOnClickListener {

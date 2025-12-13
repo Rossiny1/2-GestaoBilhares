@@ -16,12 +16,20 @@ import com.example.gestaobilhares.data.repository.AppRepository
  * DialogFragment para selecionar um cliente para transferência.
  * Inclui busca por nome e exibe informações do cliente, rota e mesas.
  */
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+
+/**
+ * DialogFragment para selecionar um cliente para transferência.
+ * Inclui busca por nome e exibe informações do cliente, rota e mesas.
+ */
+@AndroidEntryPoint
 class ClientSelectionDialog : DialogFragment() {
 
     private var _binding: DialogSelectClientBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: ClientSelectionViewModel
+    private val viewModel: ClientSelectionViewModel by viewModels()
 
     private lateinit var clientAdapter: ClientSelectionAdapter
 
@@ -48,8 +56,8 @@ class ClientSelectionDialog : DialogFragment() {
         dialog.window?.setLayout(width, android.view.WindowManager.LayoutParams.WRAP_CONTENT)
         
         // Inicializar repositórios e ViewModel
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = ClientSelectionViewModel(appRepository)
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = ClientSelectionViewModel(appRepository) // Hilt init
 
         setupRecyclerView()
         setupClickListeners()

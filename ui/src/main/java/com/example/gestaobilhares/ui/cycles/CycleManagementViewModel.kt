@@ -23,6 +23,8 @@ import kotlinx.coroutines.launch
 import java.util.Date
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /**
  * Dados do ciclo para gerenciamento
@@ -65,8 +67,10 @@ data class PaymentMethodStats(
 /**
  * ViewModel para gerenciar dados do ciclo
  */
+
 @OptIn(ExperimentalCoroutinesApi::class)
-class CycleManagementViewModel(
+@HiltViewModel
+class CycleManagementViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
 
@@ -358,15 +362,5 @@ class CycleManagementViewModel(
 /**
  * Factory para o ViewModel
  */
-class CycleManagementViewModelFactory(
-    private val appRepository: AppRepository
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(CycleManagementViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return CycleManagementViewModel(appRepository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
+
 

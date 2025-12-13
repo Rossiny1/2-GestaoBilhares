@@ -20,6 +20,12 @@ import com.example.gestaobilhares.core.utils.LegalLogger
 import com.example.gestaobilhares.core.utils.SignatureMetadataCollector
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+import javax.inject.Inject
+import com.example.gestaobilhares.data.repository.AppRepository
+
+@AndroidEntryPoint
 class AditivoSignatureFragment : Fragment() {
     
     companion object {
@@ -29,7 +35,11 @@ class AditivoSignatureFragment : Fragment() {
     private var _binding: FragmentAditivoSignatureBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var viewModel: AditivoSignatureViewModel
+    // ViewModel com Hilt
+    private val viewModel: AditivoSignatureViewModel by viewModels()
+
+    @Inject
+    lateinit var appRepository: AppRepository
     
     private var contratoId: Long = 0L
     
@@ -53,10 +63,16 @@ class AditivoSignatureFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // ✅ CORREÇÃO: Inicializar ViewModel antes de usar
+        // ✅ CORREÇÃO: Inicializar ViewModel antes de usar
         try {
-            val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-            viewModel = AditivoSignatureViewModel()
-            viewModel.initializeRepository(appRepository)
+            // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+            // viewModel = AditivoSignatureViewModel()
+            // viewModel.initializeRepository(appRepository)
+            
+            // Com Hilt, viewModel já vem pronto e repository injetado
+            if (!viewModel.isRepositoryInitialized()) {
+                viewModel.initializeRepository(appRepository)
+            }
             
             // ✅ CORREÇÃO: Inicializar managers de forma segura
             try {
@@ -302,7 +318,7 @@ class AditivoSignatureFragment : Fragment() {
                             try {
                                 // ✅ CORREÇÃO: Usar lifecycleScope para chamada suspensa
                                 viewLifecycleOwner.lifecycleScope.launch fallbackLaunch@{
-                                    val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                                val repo = appRepository // Use injected repository
                                     val contratoCompleto = repo.buscarContratoPorId(contratoId)
                                     val novoClienteId = contratoCompleto?.clienteId ?: 0L
                                     android.util.Log.d("AditivoSignatureFragment", "✅ ClienteId obtido do banco: $novoClienteId")
@@ -346,7 +362,7 @@ class AditivoSignatureFragment : Fragment() {
                             
                             viewLifecycleOwner.lifecycleScope.launch {
                                 try {
-                                    val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                                    // val appRepository = ... já injetado
                                     val cliente = appRepository.obterClientePorId(clienteId)
                                     val rotaId = cliente?.rotaId
                                     

@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 data class EstatisticasDeposito(
     val totalMesas: Int = 0,
@@ -24,7 +26,8 @@ data class EstatisticasDeposito(
     val mesasGrandes: Int = 0
 )
 
-class MesasDepositoViewModel(
+@HiltViewModel
+class MesasDepositoViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
     private val _mesasDisponiveis = MutableStateFlow<List<Mesa>>(emptyList())

@@ -28,16 +28,25 @@ import java.util.*
 // BluetoothPrinterHelper removido - usar ReciboPrinterHelper
 import androidx.core.app.ActivityCompat
 import java.io.File
+import androidx.fragment.app.viewModels
+
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Fragment para exibir detalhes de um acerto específico.
  * FASE 4B+ - Detalhes e edição de acertos
  */
+@AndroidEntryPoint
 class SettlementDetailFragment : Fragment() {
 
     private var _binding: FragmentSettlementDetailBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: SettlementDetailViewModel
+    private val viewModel: SettlementDetailViewModel by viewModels()
+    
+    @Inject
+    lateinit var appRepository: AppRepository
+
     private val args: SettlementDetailFragmentArgs by navArgs()
 
     private var mesaDetailAdapter: AcertoMesaDetailAdapter? = null
@@ -58,7 +67,7 @@ class SettlementDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // Inicializar ViewModel ANTES de configurar observers
-        initializeViewModel()
+        // initializeViewModel() -> Hilt initializes it
         setupViewModelAndObservers()
         setupUI()
         loadData()
@@ -68,24 +77,8 @@ class SettlementDetailFragment : Fragment() {
     
     // ✅ REMOVIDO: Callback de permissões - agora centralizado no ReciboPrinterHelper
 
-    @Suppress("DEPRECATION")
-    private fun initializeViewModel() {
-        // Inicializar ViewModel onde o contexto está disponível
-        // Nota: AcertoRepository ainda é necessário para o ViewModel, mas será migrado no futuro
-        val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = SettlementDetailViewModel(
-            com.example.gestaobilhares.data.repository.AcertoRepository(
-                database.acertoDao(),
-                database.clienteDao()
-            ),
-            appRepository,
-            com.example.gestaobilhares.data.repository.ClienteRepository(
-                database.clienteDao(),
-                appRepository
-            )
-        )
-    }
+    // @Suppress("DEPRECATION") -> Not needed anymore
+    // private fun initializeViewModel() { ... } -> Removed
 
     private fun setupViewModelAndObservers() {
         // Observer para dados do acerto
@@ -210,7 +203,7 @@ class SettlementDetailFragment : Fragment() {
         // ✅ MELHORIA: Buscar dados completos das mesas para exibir numeração correta
         lifecycleScope.launch {
             try {
-                val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
                 val mesasCompletas = mutableMapOf<Long, AcertoMesaDetailAdapter.MesaCompleta>()
                 
                 android.util.Log.d("SettlementDetailFragment", "=== BUSCANDO DADOS COMPLETOS DAS MESAS ===")
@@ -403,7 +396,7 @@ class SettlementDetailFragment : Fragment() {
      * ✅ MÉTODO CENTRALIZADO: Obtém mesas completas (FONTE ÚNICA DE VERDADE)
      */
     private suspend fun obterMesasCompletas(settlement: SettlementDetailViewModel.SettlementDetail): List<Mesa> {
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
         val mesasCompletas = mutableListOf<Mesa>()
         
         android.util.Log.d("SettlementDetailFragment", "=== BUSCANDO MESAS COMPLETAS ===")
@@ -452,7 +445,7 @@ class SettlementDetailFragment : Fragment() {
      */
     private suspend fun buscarMesaCompleta(mesaId: Long): Mesa? {
         return try {
-            val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+            // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
             appRepository.obterMesaPorId(mesaId)
         } catch (e: Exception) {
             Log.e("SettlementDetailFragment", "Erro ao buscar mesa: ${e.message}")
@@ -484,7 +477,7 @@ class SettlementDetailFragment : Fragment() {
                 binding.btnEdit.isEnabled = false
                 
                 // Usar AppRepository em vez de repositórios deprecated
-                val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+                // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
                 
                 // Verificar permissão usando AppRepository
                 val permissao = verificarPermissaoEdicaoComAppRepository(appRepository, args.acertoId)

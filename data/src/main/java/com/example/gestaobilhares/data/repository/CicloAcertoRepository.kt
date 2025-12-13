@@ -13,6 +13,8 @@ import java.util.Date
 import java.util.Calendar
 import com.example.gestaobilhares.data.repository.ClienteRepository
 import java.time.ZoneId
+import javax.inject.Inject
+
 /**
  * Repositório para operações de ciclos de acerto
  * ✅ FASE 9C: REPOSITÓRIO PARA HISTÓRICO DE CICLOS
@@ -30,7 +32,7 @@ import java.time.ZoneId
     ),
     level = DeprecationLevel.WARNING
 )
-class CicloAcertoRepository constructor(
+class CicloAcertoRepository @Inject constructor(
     private val cicloAcertoDao: CicloAcertoDao,
     private val despesaDao: DespesaDao, // ✅ CORRIGIDO: Usar DespesaDao diretamente em vez de DespesaRepository
     private val acertoRepository: com.example.gestaobilhares.data.repository.AcertoRepository,

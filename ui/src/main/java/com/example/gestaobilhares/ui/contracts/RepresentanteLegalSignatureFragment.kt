@@ -26,12 +26,20 @@ import org.json.JSONObject
  * Fragment para captura da assinatura digital do representante legal
  * Implementa todos os requisitos de segurança da Cláusula 9.3 do contrato
  */
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.fragment.app.viewModels
+
+/**
+ * Fragment para captura da assinatura digital do representante legal
+ * Implementa todos os requisitos de segurança da Cláusula 9.3 do contrato
+ */
+@AndroidEntryPoint
 class RepresentanteLegalSignatureFragment : Fragment() {
     
     private var _binding: FragmentRepresentanteLegalSignatureBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var viewModel: RepresentanteLegalSignatureViewModel
+    private val viewModel: RepresentanteLegalSignatureViewModel by viewModels()
     
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -55,10 +63,7 @@ class RepresentanteLegalSignatureFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        val database = AppDatabase.getDatabase(requireContext())
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = RepresentanteLegalSignatureViewModel(appRepository)
+        // ViewModel initialized by Hilt
         
         setupUI()
         setupObservers()

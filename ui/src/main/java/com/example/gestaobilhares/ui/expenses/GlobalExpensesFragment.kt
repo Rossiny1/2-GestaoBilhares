@@ -25,17 +25,20 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Fragment para listagem e gerenciamento de despesas globais
  * Permite filtrar por ciclo e adicionar novas despesas
  */
+@AndroidEntryPoint
 class GlobalExpensesFragment : Fragment() {
 
     private var _binding: FragmentGlobalExpensesBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: GlobalExpensesViewModel
+    private val viewModel: GlobalExpensesViewModel by viewModels()
     private lateinit var globalExpensesAdapter: GlobalExpensesAdapter
 
     private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
@@ -52,9 +55,9 @@ class GlobalExpensesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ MIGRADO: Usa AppRepository centralizado
-        val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        viewModel = GlobalExpensesViewModel(appRepository)
+        // ✅ MIGRADO: Usa AppRepository centralizado -> Hilt
+        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // viewModel = GlobalExpensesViewModel(appRepository)
         
         setupUI()
         setupRecyclerView()

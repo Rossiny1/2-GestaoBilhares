@@ -35,20 +35,24 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.flow.first
 
+import dagger.hilt.android.AndroidEntryPoint
+
 /**
  * Fragment para gerenciamento de contratos
  * Permite visualizar, filtrar e gerenciar todos os contratos de locação
  */
+@AndroidEntryPoint
 class ContractManagementFragment : Fragment() {
 
     private var _binding: FragmentContractManagementBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: ContractManagementViewModel
+    private val viewModel: ContractManagementViewModel by viewModels()
     private lateinit var contractAdapter: ContractManagementAdapter
 
-    // ✅ CORREÇÃO: Database inicializado no onViewCreated
-    private var database: AppDatabase? = null
+    @javax.inject.Inject
+    lateinit var repository: AppRepository
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -62,14 +66,7 @@ class ContractManagementFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente
-        try {
-            database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-            val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-            viewModel = ContractManagementViewModel(appRepository)
-        } catch (e: Exception) {
-            android.util.Log.w("ContractManagementFragment", "Erro ao inicializar ViewModel: ${e.message}")
-        }
+        // ViewModel initialized by Hilt
         
         setupRecyclerView()
         setupClickListeners()
@@ -127,9 +124,9 @@ class ContractManagementFragment : Fragment() {
      */
     private fun showDocumentsDialog(item: ContractManagementViewModel.ContractItem) {
         val cliente = item.cliente ?: return
-        val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
+        // val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
         lifecycleScope.launch {
-            val contratosFlow = repo.buscarContratosPorCliente(cliente.id)
+            val contratosFlow = repository.buscarContratosPorCliente(cliente.id)
             val contratos = contratosFlow.first()
             android.util.Log.d("DocsDialog", "Cliente=${cliente.id} '${cliente.nome}' - contratos=${contratos.size}")
             val documentos = mutableListOf<DocumentoItem>()
@@ -148,7 +145,7 @@ class ContractManagementFragment : Fragment() {
                     aditivo = null
                 ))
                 // Adiciona aditivos
-                val aditivosFlow = repo.buscarAditivosPorContrato(contrato.id)
+                val aditivosFlow = repository.buscarAditivosPorContrato(contrato.id)
                 val aditivos = aditivosFlow.first()
                 android.util.Log.d("DocsDialog", "Aditivos contratoId=${contrato.id} qtd=${aditivos.size}")
                 aditivos.forEach { aditivo ->
@@ -505,7 +502,7 @@ class ContractManagementFragment : Fragment() {
                 }
                 
                 // Gerar PDF do contrato para visualização
-                val contractPdfGenerator = ContractPdfGenerator(requireContext())
+                val contractPdfGenerator = ContractPdfGenerator(requireContext(), repository)
                 val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
                 
                 // ✅ NOVO: Obter assinatura do representante legal automaticamente
@@ -698,8 +695,8 @@ class ContractManagementFragment : Fragment() {
         lifecycleScope.launch {
             val contrato = item.contrato ?: return@launch
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
-            val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-            val ultimo = repo.buscarUltimoAcertoPorCliente(contrato.clienteId)
+            // val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
+            val ultimo = repository.buscarUltimoAcertoPorCliente(contrato.clienteId)
             val totalRecebido = ultimo?.valorRecebido ?: 0.0
             val despesasViagem = 0.0
             val subtotal = totalRecebido - despesasViagem
@@ -709,7 +706,7 @@ class ContractManagementFragment : Fragment() {
             val saldo = ultimo?.debitoAtual ?: 0.0
             val fechamento = com.example.gestaobilhares.core.utils.ContractPdfGenerator.FechamentoResumo(totalRecebido, despesasViagem, subtotal, comissaoMotorista, comissaoIltair, totalGeral, saldo)
             val representanteLegal = viewModel.obterAssinaturaRepresentanteLegalAtiva()
-            val pdf = com.example.gestaobilhares.core.utils.ContractPdfGenerator(requireContext()).generateDistratoPdf(
+            val pdf = com.example.gestaobilhares.core.utils.ContractPdfGenerator(requireContext(), repository).generateDistratoPdf(
                 contrato = contrato,
                 mesas = mesas,
                 fechamento = fechamento,
@@ -721,7 +718,7 @@ class ContractManagementFragment : Fragment() {
             val novoStatus = if (saldo > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
             val agora = java.util.Date()
             val contratoEncerrado = contrato.copy(status = novoStatus, dataEncerramento = agora, dataAtualizacao = agora)
-            repo.atualizarContrato(contratoEncerrado)
+            repository.atualizarContrato(contratoEncerrado)
 
             // Recarregar lista e abrir PDF
             viewModel.loadContractData()
@@ -740,8 +737,8 @@ class ContractManagementFragment : Fragment() {
         lifecycleScope.launch {
             val contrato = item.contrato ?: return@launch
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
-            val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-            val ultimo = repo.buscarUltimoAcertoPorCliente(contrato.clienteId)
+            // val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
+            val ultimo = repository.buscarUltimoAcertoPorCliente(contrato.clienteId)
             val totalRecebido = ultimo?.valorRecebido ?: 0.0
             val despesasViagem = 0.0
             val subtotal = totalRecebido - despesasViagem
@@ -751,7 +748,7 @@ class ContractManagementFragment : Fragment() {
             val saldo = ultimo?.debitoAtual ?: 0.0
             val fechamento = com.example.gestaobilhares.core.utils.ContractPdfGenerator.FechamentoResumo(totalRecebido, despesasViagem, subtotal, comissaoMotorista, comissaoIltair, totalGeral, saldo)
             val representanteLegal = viewModel.obterAssinaturaRepresentanteLegalAtiva()
-            val pdf = com.example.gestaobilhares.core.utils.ContractPdfGenerator(requireContext()).generateDistratoPdf(
+            val pdf = com.example.gestaobilhares.core.utils.ContractPdfGenerator(requireContext(), repository).generateDistratoPdf(
                 contrato = contrato,
                 mesas = mesas,
                 fechamento = fechamento,
@@ -763,7 +760,7 @@ class ContractManagementFragment : Fragment() {
             val novoStatus = if (saldo > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
             val agora = java.util.Date()
             val contratoEncerrado = contrato.copy(status = novoStatus, dataEncerramento = agora, dataAtualizacao = agora)
-            repo.atualizarContrato(contratoEncerrado)
+            repository.atualizarContrato(contratoEncerrado)
 
             // Recarregar lista e compartilhar
             viewModel.loadContractData()
@@ -792,7 +789,7 @@ class ContractManagementFragment : Fragment() {
                 }
                 
                 // Gerar PDF do contrato para compartilhamento
-                val contractPdfGenerator = ContractPdfGenerator(requireContext())
+                val contractPdfGenerator = ContractPdfGenerator(requireContext(), repository)
                 val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
                 
                 // ✅ NOVO: Obter assinatura do representante legal automaticamente

@@ -10,10 +10,14 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 /**
  * ViewModel para gerenciar a seleção de clientes para transferência.
  */
-class ClientSelectionViewModel constructor(
+@HiltViewModel
+class ClientSelectionViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : ViewModel() {
 
