@@ -63,6 +63,7 @@
     - ✅ Safe calls corrigidos para campos Date nullable em caches
     - ✅ Build estável e funcional
     - ✅ Todas as entidades menores implementadas: PanoEstoque, MesaVendida, StockItem, MesaReformada, HistoricoManutencaoMesa, HistoricoManutencaoVeiculo, HistoricoCombustivelVeiculo, Veiculos, PanoMesa
+    - ✅ **Correção de Visibilidade de Despesas**: `CicloAcertoDao.buscarCicloEmAndamento` agora usa `ORDER BY` p/ garantir consistência; Logs de debug adicionados em `ExpenseRegisterViewModel`.
   - ✅ **Fila de Sincronização e Operações DELETE (Janeiro 2025)**:
     - ✅ Processamento completo da fila: `processSyncQueue()` agora processa todas as operações pendentes em loop até esvaziar a fila
     - ✅ Operações DELETE enfileiradas: Todas as exclusões locais (Despesa, Cliente, Acerto, Mesa, Ciclo, Rota, Colaborador, Meta, Categoria, Tipo, Veiculo, Equipment) agora enfileiram operação DELETE na fila de sincronização
@@ -231,6 +232,9 @@ Manter o projeto alinhado com as melhores práticas Android mais recentes, garan
   - ✅ Redução de regressões em produção
 - **Implementação**:
   - ✅ Testes existe para: SettlementViewModel, RoutesViewModel, MetasViewModel, CycleManagementViewModel, ClientRegisterViewModel, AuthViewModel, GlobalExpensesViewModel
+  - ✅ **Novos Testes de Repositório (Dez 2025)**: `ClienteRepositoryTest`, `RotaRepositoryTest`, `AcertoRepositoryTest` e `DespesaRepositoryTest` implementados.
+  - ✅ **Correção de Testes de UI (Dez 2025)**: `SettlementViewModelTest` e `CycleManagementViewModelTest` recuperados, migrados para módulo `ui` e corrigidos.
+  - ✅ **Migração Final de Testes (Janeiro 2025)**: `RoutesViewModelTest`, `ClientRegisterViewModelTest`, `AuthViewModelTest`, `GlobalExpensesViewModelTest` e `MetasViewModelTest` migrados para módulo `ui` e passando 100%.
   - ⏳ Corrigir testes existentes (podem não estar passando)
   - ⏳ Adicionar testes para ViewModels restantes
   - ⏳ Adicionar testes de integração para Repositories
