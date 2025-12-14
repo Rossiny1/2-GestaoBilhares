@@ -360,7 +360,7 @@ class CycleManagementViewModel @Inject constructor(
 }
 
 /**
- * Factory para o ViewModel
+ * Factory para o ViewModel removida (Hilt)
  */
 
 

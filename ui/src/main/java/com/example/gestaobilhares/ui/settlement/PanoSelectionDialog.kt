@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.first
 import com.example.gestaobilhares.ui.R
 import com.example.gestaobilhares.data.entities.PanoEstoque
 import com.example.gestaobilhares.data.repository.AppRepository
-// import com.example.gestaobilhares.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.databinding.DialogSelectPanoBinding
 import com.example.gestaobilhares.ui.databinding.ItemPanoSelectionBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -125,7 +124,7 @@ class PanoSelectionDialog : DialogFragment() {
         lifecycleScope.launch {
             try {
                 val tamanhoMesa = arguments?.getString("tamanho_mesa")
-                // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - REMOVDO
+
                 
                 val panos = appRepository.obterPanosDisponiveis().first()
                 

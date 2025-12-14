@@ -32,7 +32,8 @@
 ### **Exemplo de ViewModel (Observação Reativa)**
 ```kotlin
 @OptIn(ExperimentalCoroutinesApi::class)
-class MyViewModel(
+@HiltViewModel
+class MyViewModel @Inject constructor(
     private val appRepository: AppRepository
 ) : BaseViewModel() {
     // ✅ RECOMENDADO: Usar MutableStateFlow para IDs e observar com flatMapLatest
@@ -80,13 +81,14 @@ fun MyScreen(
 }
 
 // Fragment (Legacy)
+@AndroidEntryPoint
 class MyFragment : Fragment() {
-    private lateinit var viewModel: MyViewModel
+    private val viewModel: MyViewModel by viewModels()
     
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        viewModel = ViewModelProvider(this)[MyViewModel::class.java]
+        // viewModel já está inicializado pelo Hilt
         
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

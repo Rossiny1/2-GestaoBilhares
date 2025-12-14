@@ -15,7 +15,6 @@ import com.example.gestaobilhares.data.entities.NivelAcesso
 import com.example.gestaobilhares.data.entities.Rota
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.database.AppDatabase
-// import com.example.gestaobilhares.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.databinding.FragmentColaboradorRegisterBinding
 import com.example.gestaobilhares.ui.colaboradores.ColaboradorManagementViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -64,7 +63,6 @@ class ColaboradorRegisterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // setupRepository() // Injetado via Hilt
         setupToolbar()
         setupDropdowns()
         setupDatePicker()

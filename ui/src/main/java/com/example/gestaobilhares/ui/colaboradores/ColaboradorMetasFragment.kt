@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.gestaobilhares.data.entities.*
 import com.example.gestaobilhares.data.repository.AppRepository
-// import com.example.gestaobilhares.factory.RepositoryFactory
 import com.example.gestaobilhares.ui.databinding.FragmentColaboradorMetasBinding
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -56,7 +55,6 @@ class ColaboradorMetasFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // setupRepository() // Injetado via Hilt
         setupToolbar()
         setupDropdowns()
         setupCiclosERotas()

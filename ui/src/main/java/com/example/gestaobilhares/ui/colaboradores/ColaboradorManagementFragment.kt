@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.ui.databinding.FragmentColaboradorManagementBinding
 import com.example.gestaobilhares.data.entities.Colaborador
-// import com.example.gestaobilhares.data.repository.AppRepository
 import dagger.hilt.android.AndroidEntryPoint
 import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -48,11 +47,6 @@ class ColaboradorManagementFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        // Inicializar ViewModel
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
-        // viewModel = ColaboradorManagementViewModel(appRepository, userSessionManager)
         
         setupRecyclerView()
         setupClickListeners()

@@ -11,10 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.ui.databinding.FragmentVehicleDetailBinding
 import com.example.gestaobilhares.data.database.AppDatabase
-// TODO: Repositories de veículos não existem mais - comentado temporariamente
-// import com.example.gestaobilhares.data.repository.VeiculoRepository
-// import com.example.gestaobilhares.data.repository.HistoricoManutencaoVeiculoRepository
-// import com.example.gestaobilhares.data.repository.HistoricoCombustivelVeiculoRepository
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import dagger.hilt.android.AndroidEntryPoint
@@ -45,10 +41,6 @@ class VehicleDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         vehicleId = arguments?.getLong("vehicleId", 0L) ?: 0L
-        
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = VehicleDetailViewModel(appRepository)
         
         setupUI()
         setupRecyclerViews()

@@ -77,9 +77,6 @@ class VendaMesaDialog : DialogFragment() {
         // onViewCreated normalmente NÃO é chamado. Portanto, inicializamos aqui.
         try {
             android.util.Log.d(TAG, "onCreateDialog() - inicializando dependencias e UI")
-            // appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-            // Hilt injected.
-
             setupUI()
             setupClickListeners()
             carregarMesasDisponiveis()

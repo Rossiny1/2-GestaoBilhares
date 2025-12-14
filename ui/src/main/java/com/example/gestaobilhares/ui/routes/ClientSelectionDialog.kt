@@ -56,9 +56,7 @@ class ClientSelectionDialog : DialogFragment() {
         dialog.window?.setLayout(width, android.view.WindowManager.LayoutParams.WRAP_CONTENT)
         
         // Inicializar repositórios e ViewModel
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = ClientSelectionViewModel(appRepository) // Hilt init
-
+        
         setupRecyclerView()
         setupClickListeners()
         setupSearchField()

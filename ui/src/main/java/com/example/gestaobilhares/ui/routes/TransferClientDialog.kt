@@ -67,8 +67,6 @@ class TransferClientDialog : DialogFragment() {
         dialog.setCanceledOnTouchOutside(true)
         
         // Inicializar repositórios e ViewModel
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = TransferClientViewModel(appRepository)
         // Hilt initializes ViewModel automatically
 
         setupArguments()

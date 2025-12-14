@@ -107,7 +107,7 @@
 - **MVVM**: ViewModel + StateFlow + repeatOnLifecycle
 - **Offline-first**: Dados locais sempre disponíveis
 - **Repository Pattern**: AppRepository como Facade
-- **Dependency Injection**: RepositoryFactory (Hilt pode ser adicionado futuramente)
+- **Dependency Injection**: ✅ **Hilt** (Padrão principal), RepositoryFactory (Legado/Descontinuado)
 
 ## 📊 ESTATÍSTICAS DO PROJETO
 
@@ -247,9 +247,9 @@ Manter o projeto alinhado com as melhores práticas Android mais recentes, garan
 - **Referência**: [Android Testing Guide](https://developer.android.com/training/testing)
 
 #### **2. Injeção de Dependência com Hilt**
-- **Status**: ✅ **BUILD FUNCIONANDO** - Configuração base completa (Dezembro 2025)
-- **Progresso Atual**: Build compilando com sucesso, app instalado, Hilt gerando componentes corretamente
-- **Objetivo**: Migrar ViewModels para Hilt (padrão Android 2025)
+- **Status**: ✅ **BUILD FUNCIONANDO** - Migração Concluída em Módulos Principais (Dezembro 2025)
+- **Progresso Atual**: Build compilando com sucesso, app instalado, Hilt gerando componentes corretamente. Limpeza de código legado concluída.
+- **Objetivo**: Migração completa para Hilt (padrão Android 2025)
 - **Benefícios**:
   - ✅ Facilita testes unitários (mocking)
   - ✅ Reduz boilerplate
@@ -257,24 +257,23 @@ Manter o projeto alinhado com as melhores práticas Android mais recentes, garan
   - ✅ Melhor suporte a multi-módulos
 - **Implementação**:
   - ✅ Ativar plugin Hilt (já está em build.gradle)
-  - ✅ Criar módulos Hilt completos:
-    - ✅ `CoreModule` - NetworkUtils, UserSessionManager
-    - ✅ `DatabaseModule` - AppDatabase, todos os DAOs
-    - ✅ `RepositoryModule` - FirebaseFirestore, AppRepository, repositórios de domínio (Cliente, Acerto, CicloAcerto)
-    - ✅ `SyncModule` - SyncRepository, NetworkUtils
+  - ✅ Criar módulos Hilt completos (CoreModule, DatabaseModule, RepositoryModule, SyncModule)
   - ✅ Anotar Application com @HiltAndroidApp
-  - ✅ Build compilando sem erros com KSP gerando classes Hilt
-  - 🔄 Migrar ViewModels para @HiltViewModel:
-    - ✅ `AuthViewModel`
-    - ✅ `RoutesViewModel`
-    - ✅ `CycleHistoryViewModel`
-  - 🔄 Migrar Fragments para @AndroidEntryPoint:
-    - ✅ `LoginFragment`
-    - ✅ `RoutesFragment`
-  - ⏳ Remover RepositoryFactory manual
-- **Estimativa**: 1-2 semanas (15% concluído)
+  - ✅ Migrar `AuthViewModel`, `RoutesViewModel`, `CycleHistoryViewModel`, `SettlementViewModel`, `ClientDetailViewModel`, etc.
+  - ✅ Migrar Fragments para @AndroidEntryPoint:
+    - ✅ **Auth**: `LoginFragment`
+    - ✅ **Routes**: `RoutesFragment`, `RouteManagementFragment` (e dialogs)
+    - ✅ **Expenses**: `GlobalExpensesFragment`, `ExpenseRegisterFragment`, `ExpenseHistoryFragment`, `ExpenseCategoriesFragment`, `ExpenseTypesFragment`
+    - ✅ **Contracts**: `AditivoSignatureFragment`, `ContractManagementFragment`, `SignatureCaptureFragment`
+    - ✅ **Inventory**: `EquipmentsFragment`, `VehiclesFragment`, `StockFragment` (e extensions)
+    - ✅ **Colaboradores**: `ColaboradorManagementFragment`, `ColaboradorRegisterFragment`, `ColaboradorMetasFragment`
+    - ✅ **Cycles**: `CycleManagementFragment`, `CycleHistoryFragment`
+    - ✅ **Settlement**: `SettlementFragment`, `SettlementDetailFragment`, `PanoSelectionDialog`
+    - ✅ **Mesas**: `MesasDepositoFragment` e demais fragments de mesas
+    - ✅ **Clients**: `ClientDetailFragment`
+    - ✅ **Limpeza**: Remoção sistemática de `RepositoryFactory` concluída em todos os módulos acima.
 - **Referência**: [Hilt Documentation](https://developer.android.com/training/dependency-injection/hilt-android)
-- **Última atualização**: 13/12/2024 - Autenticação e Rotas migrados com sucesso para Hilt
+- **Última atualização**: 14/12/2025 - Limpeza final de RepositoryFactory e build verificado.
 
 ### **PRIORIDADE MÉDIA (4-8 semanas)**
 

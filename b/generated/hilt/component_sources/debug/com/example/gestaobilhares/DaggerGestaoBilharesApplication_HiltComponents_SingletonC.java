@@ -925,210 +925,210 @@ public final class DaggerGestaoBilharesApplication_HiltComponents_SingletonC {
 
     @IdentifierNameString
     private static final class LazyClassKeyProvider {
-      static String com_example_gestaobilhares_ui_routes_management_RouteManagementViewModel = "com.example.gestaobilhares.ui.routes.management.RouteManagementViewModel";
-
-      static String com_example_gestaobilhares_ui_routes_TransferClientViewModel = "com.example.gestaobilhares.ui.routes.TransferClientViewModel";
-
-      static String com_example_gestaobilhares_ui_expenses_ExpenseHistoryViewModel = "com.example.gestaobilhares.ui.expenses.ExpenseHistoryViewModel";
+      static String com_example_gestaobilhares_ui_settlement_SettlementDetailViewModel = "com.example.gestaobilhares.ui.settlement.SettlementDetailViewModel";
 
       static String com_example_gestaobilhares_ui_clients_ClientListViewModel = "com.example.gestaobilhares.ui.clients.ClientListViewModel";
 
-      static String com_example_gestaobilhares_ui_contracts_ContractManagementViewModel = "com.example.gestaobilhares.ui.contracts.ContractManagementViewModel";
-
-      static String com_example_gestaobilhares_ui_contracts_ContractGenerationViewModel = "com.example.gestaobilhares.ui.contracts.ContractGenerationViewModel";
-
-      static String com_example_gestaobilhares_ui_settlement_SettlementDetailViewModel = "com.example.gestaobilhares.ui.settlement.SettlementDetailViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_GerenciarMesasViewModel = "com.example.gestaobilhares.ui.mesas.GerenciarMesasViewModel";
-
-      static String com_example_gestaobilhares_ui_clients_ClientRegisterViewModel = "com.example.gestaobilhares.ui.clients.ClientRegisterViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_CadastroMesaViewModel = "com.example.gestaobilhares.ui.mesas.CadastroMesaViewModel";
-
-      static String com_example_gestaobilhares_ui_inventory_equipments_EquipmentsViewModel = "com.example.gestaobilhares.ui.inventory.equipments.EquipmentsViewModel";
-
-      static String com_example_gestaobilhares_ui_expenses_GlobalExpensesViewModel = "com.example.gestaobilhares.ui.expenses.GlobalExpensesViewModel";
-
-      static String com_example_gestaobilhares_ui_settlement_SettlementViewModel = "com.example.gestaobilhares.ui.settlement.SettlementViewModel";
-
-      static String com_example_gestaobilhares_ui_inventory_vehicles_VehiclesViewModel = "com.example.gestaobilhares.ui.inventory.vehicles.VehiclesViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_MesasReformadasViewModel = "com.example.gestaobilhares.ui.mesas.MesasReformadasViewModel";
-
-      static String com_example_gestaobilhares_ui_inventory_vehicles_VehicleDetailViewModel = "com.example.gestaobilhares.ui.inventory.vehicles.VehicleDetailViewModel";
-
-      static String com_example_gestaobilhares_ui_cycles_CycleClientsViewModel = "com.example.gestaobilhares.ui.cycles.CycleClientsViewModel";
-
-      static String com_example_gestaobilhares_ui_metas_MetasViewModel = "com.example.gestaobilhares.ui.metas.MetasViewModel";
-
-      static String com_example_gestaobilhares_ui_cycles_CycleExpensesViewModel = "com.example.gestaobilhares.ui.cycles.CycleExpensesViewModel";
-
-      static String com_example_gestaobilhares_ui_dashboard_DashboardViewModel = "com.example.gestaobilhares.ui.dashboard.DashboardViewModel";
-
-      static String com_example_gestaobilhares_ui_colaboradores_ColaboradorManagementViewModel = "com.example.gestaobilhares.ui.colaboradores.ColaboradorManagementViewModel";
-
-      static String com_example_gestaobilhares_ui_cycles_CycleManagementViewModel = "com.example.gestaobilhares.ui.cycles.CycleManagementViewModel";
-
-      static String com_example_gestaobilhares_ui_routes_ClientSelectionViewModel = "com.example.gestaobilhares.ui.routes.ClientSelectionViewModel";
-
-      static String com_example_gestaobilhares_ui_cycles_CycleReceiptsViewModel = "com.example.gestaobilhares.ui.cycles.CycleReceiptsViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_EditMesaViewModel = "com.example.gestaobilhares.ui.mesas.EditMesaViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_MesasDepositoViewModel = "com.example.gestaobilhares.ui.mesas.MesasDepositoViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_RotaMesasViewModel = "com.example.gestaobilhares.ui.mesas.RotaMesasViewModel";
-
-      static String com_example_gestaobilhares_ui_contracts_SignatureCaptureViewModel = "com.example.gestaobilhares.ui.contracts.SignatureCaptureViewModel";
-
-      static String com_example_gestaobilhares_ui_reports_ClosureReportViewModel = "com.example.gestaobilhares.ui.reports.ClosureReportViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_HistoricoManutencaoMesaViewModel = "com.example.gestaobilhares.ui.mesas.HistoricoManutencaoMesaViewModel";
-
-      static String com_example_gestaobilhares_ui_metas_MetaCadastroViewModel = "com.example.gestaobilhares.ui.metas.MetaCadastroViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_NovaReformaViewModel = "com.example.gestaobilhares.ui.mesas.NovaReformaViewModel";
-
-      static String com_example_gestaobilhares_ui_clients_CycleHistoryViewModel = "com.example.gestaobilhares.ui.clients.CycleHistoryViewModel";
-
-      static String com_example_gestaobilhares_ui_contracts_RepresentanteLegalSignatureViewModel = "com.example.gestaobilhares.ui.contracts.RepresentanteLegalSignatureViewModel";
+      static String com_example_gestaobilhares_ui_routes_management_RouteManagementViewModel = "com.example.gestaobilhares.ui.routes.management.RouteManagementViewModel";
 
       static String com_example_gestaobilhares_ui_contracts_AditivoSignatureViewModel = "com.example.gestaobilhares.ui.contracts.AditivoSignatureViewModel";
 
-      static String com_example_gestaobilhares_ui_routes_RoutesViewModel = "com.example.gestaobilhares.ui.routes.RoutesViewModel";
+      static String com_example_gestaobilhares_ui_clients_CycleHistoryViewModel = "com.example.gestaobilhares.ui.clients.CycleHistoryViewModel";
 
-      static String com_example_gestaobilhares_ui_mesas_HistoricoMesasVendidasViewModel = "com.example.gestaobilhares.ui.mesas.HistoricoMesasVendidasViewModel";
+      static String com_example_gestaobilhares_ui_contracts_ContractManagementViewModel = "com.example.gestaobilhares.ui.contracts.ContractManagementViewModel";
 
-      static String com_example_gestaobilhares_ui_auth_AuthViewModel = "com.example.gestaobilhares.ui.auth.AuthViewModel";
+      static String com_example_gestaobilhares_ui_dashboard_DashboardViewModel = "com.example.gestaobilhares.ui.dashboard.DashboardViewModel";
 
-      static String com_example_gestaobilhares_ui_expenses_ExpenseRegisterViewModel = "com.example.gestaobilhares.ui.expenses.ExpenseRegisterViewModel";
+      static String com_example_gestaobilhares_ui_mesas_MesasReformadasViewModel = "com.example.gestaobilhares.ui.mesas.MesasReformadasViewModel";
 
-      static String com_example_gestaobilhares_ui_clients_ClientDetailViewModel = "com.example.gestaobilhares.ui.clients.ClientDetailViewModel";
+      static String com_example_gestaobilhares_ui_settlement_SettlementViewModel = "com.example.gestaobilhares.ui.settlement.SettlementViewModel";
 
       static String com_example_gestaobilhares_ui_inventory_stock_StockViewModel = "com.example.gestaobilhares.ui.inventory.stock.StockViewModel";
 
-      @KeepFieldType
-      RouteManagementViewModel com_example_gestaobilhares_ui_routes_management_RouteManagementViewModel2;
+      static String com_example_gestaobilhares_ui_expenses_ExpenseRegisterViewModel = "com.example.gestaobilhares.ui.expenses.ExpenseRegisterViewModel";
 
-      @KeepFieldType
-      TransferClientViewModel com_example_gestaobilhares_ui_routes_TransferClientViewModel2;
+      static String com_example_gestaobilhares_ui_mesas_CadastroMesaViewModel = "com.example.gestaobilhares.ui.mesas.CadastroMesaViewModel";
 
-      @KeepFieldType
-      ExpenseHistoryViewModel com_example_gestaobilhares_ui_expenses_ExpenseHistoryViewModel2;
+      static String com_example_gestaobilhares_ui_reports_ClosureReportViewModel = "com.example.gestaobilhares.ui.reports.ClosureReportViewModel";
 
-      @KeepFieldType
-      ClientListViewModel com_example_gestaobilhares_ui_clients_ClientListViewModel2;
+      static String com_example_gestaobilhares_ui_inventory_equipments_EquipmentsViewModel = "com.example.gestaobilhares.ui.inventory.equipments.EquipmentsViewModel";
 
-      @KeepFieldType
-      ContractManagementViewModel com_example_gestaobilhares_ui_contracts_ContractManagementViewModel2;
+      static String com_example_gestaobilhares_ui_cycles_CycleReceiptsViewModel = "com.example.gestaobilhares.ui.cycles.CycleReceiptsViewModel";
 
-      @KeepFieldType
-      ContractGenerationViewModel com_example_gestaobilhares_ui_contracts_ContractGenerationViewModel2;
+      static String com_example_gestaobilhares_ui_colaboradores_ColaboradorManagementViewModel = "com.example.gestaobilhares.ui.colaboradores.ColaboradorManagementViewModel";
+
+      static String com_example_gestaobilhares_ui_metas_MetasViewModel = "com.example.gestaobilhares.ui.metas.MetasViewModel";
+
+      static String com_example_gestaobilhares_ui_routes_TransferClientViewModel = "com.example.gestaobilhares.ui.routes.TransferClientViewModel";
+
+      static String com_example_gestaobilhares_ui_cycles_CycleExpensesViewModel = "com.example.gestaobilhares.ui.cycles.CycleExpensesViewModel";
+
+      static String com_example_gestaobilhares_ui_inventory_vehicles_VehiclesViewModel = "com.example.gestaobilhares.ui.inventory.vehicles.VehiclesViewModel";
+
+      static String com_example_gestaobilhares_ui_cycles_CycleClientsViewModel = "com.example.gestaobilhares.ui.cycles.CycleClientsViewModel";
+
+      static String com_example_gestaobilhares_ui_expenses_GlobalExpensesViewModel = "com.example.gestaobilhares.ui.expenses.GlobalExpensesViewModel";
+
+      static String com_example_gestaobilhares_ui_metas_MetaCadastroViewModel = "com.example.gestaobilhares.ui.metas.MetaCadastroViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_GerenciarMesasViewModel = "com.example.gestaobilhares.ui.mesas.GerenciarMesasViewModel";
+
+      static String com_example_gestaobilhares_ui_auth_AuthViewModel = "com.example.gestaobilhares.ui.auth.AuthViewModel";
+
+      static String com_example_gestaobilhares_ui_expenses_ExpenseHistoryViewModel = "com.example.gestaobilhares.ui.expenses.ExpenseHistoryViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_NovaReformaViewModel = "com.example.gestaobilhares.ui.mesas.NovaReformaViewModel";
+
+      static String com_example_gestaobilhares_ui_routes_ClientSelectionViewModel = "com.example.gestaobilhares.ui.routes.ClientSelectionViewModel";
+
+      static String com_example_gestaobilhares_ui_contracts_ContractGenerationViewModel = "com.example.gestaobilhares.ui.contracts.ContractGenerationViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_HistoricoMesasVendidasViewModel = "com.example.gestaobilhares.ui.mesas.HistoricoMesasVendidasViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_HistoricoManutencaoMesaViewModel = "com.example.gestaobilhares.ui.mesas.HistoricoManutencaoMesaViewModel";
+
+      static String com_example_gestaobilhares_ui_inventory_vehicles_VehicleDetailViewModel = "com.example.gestaobilhares.ui.inventory.vehicles.VehicleDetailViewModel";
+
+      static String com_example_gestaobilhares_ui_routes_RoutesViewModel = "com.example.gestaobilhares.ui.routes.RoutesViewModel";
+
+      static String com_example_gestaobilhares_ui_clients_ClientRegisterViewModel = "com.example.gestaobilhares.ui.clients.ClientRegisterViewModel";
+
+      static String com_example_gestaobilhares_ui_cycles_CycleManagementViewModel = "com.example.gestaobilhares.ui.cycles.CycleManagementViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_MesasDepositoViewModel = "com.example.gestaobilhares.ui.mesas.MesasDepositoViewModel";
+
+      static String com_example_gestaobilhares_ui_contracts_RepresentanteLegalSignatureViewModel = "com.example.gestaobilhares.ui.contracts.RepresentanteLegalSignatureViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_RotaMesasViewModel = "com.example.gestaobilhares.ui.mesas.RotaMesasViewModel";
+
+      static String com_example_gestaobilhares_ui_clients_ClientDetailViewModel = "com.example.gestaobilhares.ui.clients.ClientDetailViewModel";
+
+      static String com_example_gestaobilhares_ui_contracts_SignatureCaptureViewModel = "com.example.gestaobilhares.ui.contracts.SignatureCaptureViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_EditMesaViewModel = "com.example.gestaobilhares.ui.mesas.EditMesaViewModel";
 
       @KeepFieldType
       SettlementDetailViewModel com_example_gestaobilhares_ui_settlement_SettlementDetailViewModel2;
 
       @KeepFieldType
-      GerenciarMesasViewModel com_example_gestaobilhares_ui_mesas_GerenciarMesasViewModel2;
+      ClientListViewModel com_example_gestaobilhares_ui_clients_ClientListViewModel2;
 
       @KeepFieldType
-      ClientRegisterViewModel com_example_gestaobilhares_ui_clients_ClientRegisterViewModel2;
-
-      @KeepFieldType
-      CadastroMesaViewModel com_example_gestaobilhares_ui_mesas_CadastroMesaViewModel2;
-
-      @KeepFieldType
-      EquipmentsViewModel com_example_gestaobilhares_ui_inventory_equipments_EquipmentsViewModel2;
-
-      @KeepFieldType
-      GlobalExpensesViewModel com_example_gestaobilhares_ui_expenses_GlobalExpensesViewModel2;
-
-      @KeepFieldType
-      SettlementViewModel com_example_gestaobilhares_ui_settlement_SettlementViewModel2;
-
-      @KeepFieldType
-      VehiclesViewModel com_example_gestaobilhares_ui_inventory_vehicles_VehiclesViewModel2;
-
-      @KeepFieldType
-      MesasReformadasViewModel com_example_gestaobilhares_ui_mesas_MesasReformadasViewModel2;
-
-      @KeepFieldType
-      VehicleDetailViewModel com_example_gestaobilhares_ui_inventory_vehicles_VehicleDetailViewModel2;
-
-      @KeepFieldType
-      CycleClientsViewModel com_example_gestaobilhares_ui_cycles_CycleClientsViewModel2;
-
-      @KeepFieldType
-      MetasViewModel com_example_gestaobilhares_ui_metas_MetasViewModel2;
-
-      @KeepFieldType
-      CycleExpensesViewModel com_example_gestaobilhares_ui_cycles_CycleExpensesViewModel2;
-
-      @KeepFieldType
-      DashboardViewModel com_example_gestaobilhares_ui_dashboard_DashboardViewModel2;
-
-      @KeepFieldType
-      ColaboradorManagementViewModel com_example_gestaobilhares_ui_colaboradores_ColaboradorManagementViewModel2;
-
-      @KeepFieldType
-      CycleManagementViewModel com_example_gestaobilhares_ui_cycles_CycleManagementViewModel2;
-
-      @KeepFieldType
-      ClientSelectionViewModel com_example_gestaobilhares_ui_routes_ClientSelectionViewModel2;
-
-      @KeepFieldType
-      CycleReceiptsViewModel com_example_gestaobilhares_ui_cycles_CycleReceiptsViewModel2;
-
-      @KeepFieldType
-      EditMesaViewModel com_example_gestaobilhares_ui_mesas_EditMesaViewModel2;
-
-      @KeepFieldType
-      MesasDepositoViewModel com_example_gestaobilhares_ui_mesas_MesasDepositoViewModel2;
-
-      @KeepFieldType
-      RotaMesasViewModel com_example_gestaobilhares_ui_mesas_RotaMesasViewModel2;
-
-      @KeepFieldType
-      SignatureCaptureViewModel com_example_gestaobilhares_ui_contracts_SignatureCaptureViewModel2;
-
-      @KeepFieldType
-      ClosureReportViewModel com_example_gestaobilhares_ui_reports_ClosureReportViewModel2;
-
-      @KeepFieldType
-      HistoricoManutencaoMesaViewModel com_example_gestaobilhares_ui_mesas_HistoricoManutencaoMesaViewModel2;
-
-      @KeepFieldType
-      MetaCadastroViewModel com_example_gestaobilhares_ui_metas_MetaCadastroViewModel2;
-
-      @KeepFieldType
-      NovaReformaViewModel com_example_gestaobilhares_ui_mesas_NovaReformaViewModel2;
-
-      @KeepFieldType
-      CycleHistoryViewModel com_example_gestaobilhares_ui_clients_CycleHistoryViewModel2;
-
-      @KeepFieldType
-      RepresentanteLegalSignatureViewModel com_example_gestaobilhares_ui_contracts_RepresentanteLegalSignatureViewModel2;
+      RouteManagementViewModel com_example_gestaobilhares_ui_routes_management_RouteManagementViewModel2;
 
       @KeepFieldType
       AditivoSignatureViewModel com_example_gestaobilhares_ui_contracts_AditivoSignatureViewModel2;
 
       @KeepFieldType
-      RoutesViewModel com_example_gestaobilhares_ui_routes_RoutesViewModel2;
+      CycleHistoryViewModel com_example_gestaobilhares_ui_clients_CycleHistoryViewModel2;
 
       @KeepFieldType
-      HistoricoMesasVendidasViewModel com_example_gestaobilhares_ui_mesas_HistoricoMesasVendidasViewModel2;
+      ContractManagementViewModel com_example_gestaobilhares_ui_contracts_ContractManagementViewModel2;
 
       @KeepFieldType
-      AuthViewModel com_example_gestaobilhares_ui_auth_AuthViewModel2;
+      DashboardViewModel com_example_gestaobilhares_ui_dashboard_DashboardViewModel2;
+
+      @KeepFieldType
+      MesasReformadasViewModel com_example_gestaobilhares_ui_mesas_MesasReformadasViewModel2;
+
+      @KeepFieldType
+      SettlementViewModel com_example_gestaobilhares_ui_settlement_SettlementViewModel2;
+
+      @KeepFieldType
+      StockViewModel com_example_gestaobilhares_ui_inventory_stock_StockViewModel2;
 
       @KeepFieldType
       ExpenseRegisterViewModel com_example_gestaobilhares_ui_expenses_ExpenseRegisterViewModel2;
 
       @KeepFieldType
+      CadastroMesaViewModel com_example_gestaobilhares_ui_mesas_CadastroMesaViewModel2;
+
+      @KeepFieldType
+      ClosureReportViewModel com_example_gestaobilhares_ui_reports_ClosureReportViewModel2;
+
+      @KeepFieldType
+      EquipmentsViewModel com_example_gestaobilhares_ui_inventory_equipments_EquipmentsViewModel2;
+
+      @KeepFieldType
+      CycleReceiptsViewModel com_example_gestaobilhares_ui_cycles_CycleReceiptsViewModel2;
+
+      @KeepFieldType
+      ColaboradorManagementViewModel com_example_gestaobilhares_ui_colaboradores_ColaboradorManagementViewModel2;
+
+      @KeepFieldType
+      MetasViewModel com_example_gestaobilhares_ui_metas_MetasViewModel2;
+
+      @KeepFieldType
+      TransferClientViewModel com_example_gestaobilhares_ui_routes_TransferClientViewModel2;
+
+      @KeepFieldType
+      CycleExpensesViewModel com_example_gestaobilhares_ui_cycles_CycleExpensesViewModel2;
+
+      @KeepFieldType
+      VehiclesViewModel com_example_gestaobilhares_ui_inventory_vehicles_VehiclesViewModel2;
+
+      @KeepFieldType
+      CycleClientsViewModel com_example_gestaobilhares_ui_cycles_CycleClientsViewModel2;
+
+      @KeepFieldType
+      GlobalExpensesViewModel com_example_gestaobilhares_ui_expenses_GlobalExpensesViewModel2;
+
+      @KeepFieldType
+      MetaCadastroViewModel com_example_gestaobilhares_ui_metas_MetaCadastroViewModel2;
+
+      @KeepFieldType
+      GerenciarMesasViewModel com_example_gestaobilhares_ui_mesas_GerenciarMesasViewModel2;
+
+      @KeepFieldType
+      AuthViewModel com_example_gestaobilhares_ui_auth_AuthViewModel2;
+
+      @KeepFieldType
+      ExpenseHistoryViewModel com_example_gestaobilhares_ui_expenses_ExpenseHistoryViewModel2;
+
+      @KeepFieldType
+      NovaReformaViewModel com_example_gestaobilhares_ui_mesas_NovaReformaViewModel2;
+
+      @KeepFieldType
+      ClientSelectionViewModel com_example_gestaobilhares_ui_routes_ClientSelectionViewModel2;
+
+      @KeepFieldType
+      ContractGenerationViewModel com_example_gestaobilhares_ui_contracts_ContractGenerationViewModel2;
+
+      @KeepFieldType
+      HistoricoMesasVendidasViewModel com_example_gestaobilhares_ui_mesas_HistoricoMesasVendidasViewModel2;
+
+      @KeepFieldType
+      HistoricoManutencaoMesaViewModel com_example_gestaobilhares_ui_mesas_HistoricoManutencaoMesaViewModel2;
+
+      @KeepFieldType
+      VehicleDetailViewModel com_example_gestaobilhares_ui_inventory_vehicles_VehicleDetailViewModel2;
+
+      @KeepFieldType
+      RoutesViewModel com_example_gestaobilhares_ui_routes_RoutesViewModel2;
+
+      @KeepFieldType
+      ClientRegisterViewModel com_example_gestaobilhares_ui_clients_ClientRegisterViewModel2;
+
+      @KeepFieldType
+      CycleManagementViewModel com_example_gestaobilhares_ui_cycles_CycleManagementViewModel2;
+
+      @KeepFieldType
+      MesasDepositoViewModel com_example_gestaobilhares_ui_mesas_MesasDepositoViewModel2;
+
+      @KeepFieldType
+      RepresentanteLegalSignatureViewModel com_example_gestaobilhares_ui_contracts_RepresentanteLegalSignatureViewModel2;
+
+      @KeepFieldType
+      RotaMesasViewModel com_example_gestaobilhares_ui_mesas_RotaMesasViewModel2;
+
+      @KeepFieldType
       ClientDetailViewModel com_example_gestaobilhares_ui_clients_ClientDetailViewModel2;
 
       @KeepFieldType
-      StockViewModel com_example_gestaobilhares_ui_inventory_stock_StockViewModel2;
+      SignatureCaptureViewModel com_example_gestaobilhares_ui_contracts_SignatureCaptureViewModel2;
+
+      @KeepFieldType
+      EditMesaViewModel com_example_gestaobilhares_ui_mesas_EditMesaViewModel2;
     }
   }
 
@@ -1289,87 +1289,90 @@ public final class DaggerGestaoBilharesApplication_HiltComponents_SingletonC {
 
     @IdentifierNameString
     private static final class LazyClassKeyProvider {
+      static String com_example_gestaobilhares_ui_colaboradores_ColaboradorManagementViewModel = "com.example.gestaobilhares.ui.colaboradores.ColaboradorManagementViewModel";
+
       static String com_example_gestaobilhares_ui_auth_AuthViewModel = "com.example.gestaobilhares.ui.auth.AuthViewModel";
 
       static String com_example_gestaobilhares_ui_dashboard_DashboardViewModel = "com.example.gestaobilhares.ui.dashboard.DashboardViewModel";
 
-      static String com_example_gestaobilhares_ui_cycles_CycleClientsViewModel = "com.example.gestaobilhares.ui.cycles.CycleClientsViewModel";
+      static String com_example_gestaobilhares_ui_mesas_HistoricoManutencaoMesaViewModel = "com.example.gestaobilhares.ui.mesas.HistoricoManutencaoMesaViewModel";
 
-      static String com_example_gestaobilhares_ui_clients_ClientListViewModel = "com.example.gestaobilhares.ui.clients.ClientListViewModel";
+      static String com_example_gestaobilhares_ui_inventory_vehicles_VehicleDetailViewModel = "com.example.gestaobilhares.ui.inventory.vehicles.VehicleDetailViewModel";
+
+      static String com_example_gestaobilhares_ui_cycles_CycleExpensesViewModel = "com.example.gestaobilhares.ui.cycles.CycleExpensesViewModel";
+
+      static String com_example_gestaobilhares_ui_contracts_AditivoSignatureViewModel = "com.example.gestaobilhares.ui.contracts.AditivoSignatureViewModel";
 
       static String com_example_gestaobilhares_ui_settlement_SettlementViewModel = "com.example.gestaobilhares.ui.settlement.SettlementViewModel";
 
       static String com_example_gestaobilhares_ui_clients_ClientRegisterViewModel = "com.example.gestaobilhares.ui.clients.ClientRegisterViewModel";
 
-      static String com_example_gestaobilhares_ui_routes_ClientSelectionViewModel = "com.example.gestaobilhares.ui.routes.ClientSelectionViewModel";
-
-      static String com_example_gestaobilhares_ui_routes_RoutesViewModel = "com.example.gestaobilhares.ui.routes.RoutesViewModel";
-
-      static String com_example_gestaobilhares_ui_metas_MetasViewModel = "com.example.gestaobilhares.ui.metas.MetasViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_EditMesaViewModel = "com.example.gestaobilhares.ui.mesas.EditMesaViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_HistoricoMesasVendidasViewModel = "com.example.gestaobilhares.ui.mesas.HistoricoMesasVendidasViewModel";
-
-      static String com_example_gestaobilhares_ui_contracts_ContractGenerationViewModel = "com.example.gestaobilhares.ui.contracts.ContractGenerationViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_NovaReformaViewModel = "com.example.gestaobilhares.ui.mesas.NovaReformaViewModel";
-
-      static String com_example_gestaobilhares_ui_expenses_GlobalExpensesViewModel = "com.example.gestaobilhares.ui.expenses.GlobalExpensesViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_HistoricoManutencaoMesaViewModel = "com.example.gestaobilhares.ui.mesas.HistoricoManutencaoMesaViewModel";
+      static String com_example_gestaobilhares_ui_clients_ClientDetailViewModel = "com.example.gestaobilhares.ui.clients.ClientDetailViewModel";
 
       static String com_example_gestaobilhares_ui_contracts_SignatureCaptureViewModel = "com.example.gestaobilhares.ui.contracts.SignatureCaptureViewModel";
 
-      static String com_example_gestaobilhares_ui_cycles_CycleReceiptsViewModel = "com.example.gestaobilhares.ui.cycles.CycleReceiptsViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_CadastroMesaViewModel = "com.example.gestaobilhares.ui.mesas.CadastroMesaViewModel";
-
-      static String com_example_gestaobilhares_ui_expenses_ExpenseHistoryViewModel = "com.example.gestaobilhares.ui.expenses.ExpenseHistoryViewModel";
-
-      static String com_example_gestaobilhares_ui_inventory_vehicles_VehiclesViewModel = "com.example.gestaobilhares.ui.inventory.vehicles.VehiclesViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_MesasDepositoViewModel = "com.example.gestaobilhares.ui.mesas.MesasDepositoViewModel";
-
-      static String com_example_gestaobilhares_ui_cycles_CycleExpensesViewModel = "com.example.gestaobilhares.ui.cycles.CycleExpensesViewModel";
-
-      static String com_example_gestaobilhares_ui_expenses_ExpenseRegisterViewModel = "com.example.gestaobilhares.ui.expenses.ExpenseRegisterViewModel";
+      static String com_example_gestaobilhares_ui_settlement_SettlementDetailViewModel = "com.example.gestaobilhares.ui.settlement.SettlementDetailViewModel";
 
       static String com_example_gestaobilhares_ui_contracts_RepresentanteLegalSignatureViewModel = "com.example.gestaobilhares.ui.contracts.RepresentanteLegalSignatureViewModel";
 
       static String com_example_gestaobilhares_ui_inventory_stock_StockViewModel = "com.example.gestaobilhares.ui.inventory.stock.StockViewModel";
 
-      static String com_example_gestaobilhares_ui_routes_TransferClientViewModel = "com.example.gestaobilhares.ui.routes.TransferClientViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_GerenciarMesasViewModel = "com.example.gestaobilhares.ui.mesas.GerenciarMesasViewModel";
-
-      static String com_example_gestaobilhares_ui_contracts_ContractManagementViewModel = "com.example.gestaobilhares.ui.contracts.ContractManagementViewModel";
-
-      static String com_example_gestaobilhares_ui_inventory_vehicles_VehicleDetailViewModel = "com.example.gestaobilhares.ui.inventory.vehicles.VehicleDetailViewModel";
-
-      static String com_example_gestaobilhares_ui_metas_MetaCadastroViewModel = "com.example.gestaobilhares.ui.metas.MetaCadastroViewModel";
-
-      static String com_example_gestaobilhares_ui_mesas_RotaMesasViewModel = "com.example.gestaobilhares.ui.mesas.RotaMesasViewModel";
+      static String com_example_gestaobilhares_ui_clients_ClientListViewModel = "com.example.gestaobilhares.ui.clients.ClientListViewModel";
 
       static String com_example_gestaobilhares_ui_cycles_CycleManagementViewModel = "com.example.gestaobilhares.ui.cycles.CycleManagementViewModel";
 
-      static String com_example_gestaobilhares_ui_inventory_equipments_EquipmentsViewModel = "com.example.gestaobilhares.ui.inventory.equipments.EquipmentsViewModel";
+      static String com_example_gestaobilhares_ui_cycles_CycleReceiptsViewModel = "com.example.gestaobilhares.ui.cycles.CycleReceiptsViewModel";
 
-      static String com_example_gestaobilhares_ui_mesas_MesasReformadasViewModel = "com.example.gestaobilhares.ui.mesas.MesasReformadasViewModel";
+      static String com_example_gestaobilhares_ui_mesas_HistoricoMesasVendidasViewModel = "com.example.gestaobilhares.ui.mesas.HistoricoMesasVendidasViewModel";
+
+      static String com_example_gestaobilhares_ui_contracts_ContractManagementViewModel = "com.example.gestaobilhares.ui.contracts.ContractManagementViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_EditMesaViewModel = "com.example.gestaobilhares.ui.mesas.EditMesaViewModel";
+
+      static String com_example_gestaobilhares_ui_routes_RoutesViewModel = "com.example.gestaobilhares.ui.routes.RoutesViewModel";
+
+      static String com_example_gestaobilhares_ui_inventory_vehicles_VehiclesViewModel = "com.example.gestaobilhares.ui.inventory.vehicles.VehiclesViewModel";
+
+      static String com_example_gestaobilhares_ui_expenses_GlobalExpensesViewModel = "com.example.gestaobilhares.ui.expenses.GlobalExpensesViewModel";
 
       static String com_example_gestaobilhares_ui_clients_CycleHistoryViewModel = "com.example.gestaobilhares.ui.clients.CycleHistoryViewModel";
 
-      static String com_example_gestaobilhares_ui_settlement_SettlementDetailViewModel = "com.example.gestaobilhares.ui.settlement.SettlementDetailViewModel";
+      static String com_example_gestaobilhares_ui_expenses_ExpenseHistoryViewModel = "com.example.gestaobilhares.ui.expenses.ExpenseHistoryViewModel";
 
-      static String com_example_gestaobilhares_ui_contracts_AditivoSignatureViewModel = "com.example.gestaobilhares.ui.contracts.AditivoSignatureViewModel";
+      static String com_example_gestaobilhares_ui_inventory_equipments_EquipmentsViewModel = "com.example.gestaobilhares.ui.inventory.equipments.EquipmentsViewModel";
 
-      static String com_example_gestaobilhares_ui_reports_ClosureReportViewModel = "com.example.gestaobilhares.ui.reports.ClosureReportViewModel";
+      static String com_example_gestaobilhares_ui_mesas_GerenciarMesasViewModel = "com.example.gestaobilhares.ui.mesas.GerenciarMesasViewModel";
 
-      static String com_example_gestaobilhares_ui_clients_ClientDetailViewModel = "com.example.gestaobilhares.ui.clients.ClientDetailViewModel";
+      static String com_example_gestaobilhares_ui_routes_ClientSelectionViewModel = "com.example.gestaobilhares.ui.routes.ClientSelectionViewModel";
+
+      static String com_example_gestaobilhares_ui_routes_TransferClientViewModel = "com.example.gestaobilhares.ui.routes.TransferClientViewModel";
 
       static String com_example_gestaobilhares_ui_routes_management_RouteManagementViewModel = "com.example.gestaobilhares.ui.routes.management.RouteManagementViewModel";
 
-      static String com_example_gestaobilhares_ui_colaboradores_ColaboradorManagementViewModel = "com.example.gestaobilhares.ui.colaboradores.ColaboradorManagementViewModel";
+      static String com_example_gestaobilhares_ui_mesas_NovaReformaViewModel = "com.example.gestaobilhares.ui.mesas.NovaReformaViewModel";
+
+      static String com_example_gestaobilhares_ui_cycles_CycleClientsViewModel = "com.example.gestaobilhares.ui.cycles.CycleClientsViewModel";
+
+      static String com_example_gestaobilhares_ui_reports_ClosureReportViewModel = "com.example.gestaobilhares.ui.reports.ClosureReportViewModel";
+
+      static String com_example_gestaobilhares_ui_expenses_ExpenseRegisterViewModel = "com.example.gestaobilhares.ui.expenses.ExpenseRegisterViewModel";
+
+      static String com_example_gestaobilhares_ui_metas_MetasViewModel = "com.example.gestaobilhares.ui.metas.MetasViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_CadastroMesaViewModel = "com.example.gestaobilhares.ui.mesas.CadastroMesaViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_MesasDepositoViewModel = "com.example.gestaobilhares.ui.mesas.MesasDepositoViewModel";
+
+      static String com_example_gestaobilhares_ui_contracts_ContractGenerationViewModel = "com.example.gestaobilhares.ui.contracts.ContractGenerationViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_RotaMesasViewModel = "com.example.gestaobilhares.ui.mesas.RotaMesasViewModel";
+
+      static String com_example_gestaobilhares_ui_mesas_MesasReformadasViewModel = "com.example.gestaobilhares.ui.mesas.MesasReformadasViewModel";
+
+      static String com_example_gestaobilhares_ui_metas_MetaCadastroViewModel = "com.example.gestaobilhares.ui.metas.MetaCadastroViewModel";
+
+      @KeepFieldType
+      ColaboradorManagementViewModel com_example_gestaobilhares_ui_colaboradores_ColaboradorManagementViewModel2;
 
       @KeepFieldType
       AuthViewModel com_example_gestaobilhares_ui_auth_AuthViewModel2;
@@ -1378,10 +1381,16 @@ public final class DaggerGestaoBilharesApplication_HiltComponents_SingletonC {
       DashboardViewModel com_example_gestaobilhares_ui_dashboard_DashboardViewModel2;
 
       @KeepFieldType
-      CycleClientsViewModel com_example_gestaobilhares_ui_cycles_CycleClientsViewModel2;
+      HistoricoManutencaoMesaViewModel com_example_gestaobilhares_ui_mesas_HistoricoManutencaoMesaViewModel2;
 
       @KeepFieldType
-      ClientListViewModel com_example_gestaobilhares_ui_clients_ClientListViewModel2;
+      VehicleDetailViewModel com_example_gestaobilhares_ui_inventory_vehicles_VehicleDetailViewModel2;
+
+      @KeepFieldType
+      CycleExpensesViewModel com_example_gestaobilhares_ui_cycles_CycleExpensesViewModel2;
+
+      @KeepFieldType
+      AditivoSignatureViewModel com_example_gestaobilhares_ui_contracts_AditivoSignatureViewModel2;
 
       @KeepFieldType
       SettlementViewModel com_example_gestaobilhares_ui_settlement_SettlementViewModel2;
@@ -1390,55 +1399,13 @@ public final class DaggerGestaoBilharesApplication_HiltComponents_SingletonC {
       ClientRegisterViewModel com_example_gestaobilhares_ui_clients_ClientRegisterViewModel2;
 
       @KeepFieldType
-      ClientSelectionViewModel com_example_gestaobilhares_ui_routes_ClientSelectionViewModel2;
-
-      @KeepFieldType
-      RoutesViewModel com_example_gestaobilhares_ui_routes_RoutesViewModel2;
-
-      @KeepFieldType
-      MetasViewModel com_example_gestaobilhares_ui_metas_MetasViewModel2;
-
-      @KeepFieldType
-      EditMesaViewModel com_example_gestaobilhares_ui_mesas_EditMesaViewModel2;
-
-      @KeepFieldType
-      HistoricoMesasVendidasViewModel com_example_gestaobilhares_ui_mesas_HistoricoMesasVendidasViewModel2;
-
-      @KeepFieldType
-      ContractGenerationViewModel com_example_gestaobilhares_ui_contracts_ContractGenerationViewModel2;
-
-      @KeepFieldType
-      NovaReformaViewModel com_example_gestaobilhares_ui_mesas_NovaReformaViewModel2;
-
-      @KeepFieldType
-      GlobalExpensesViewModel com_example_gestaobilhares_ui_expenses_GlobalExpensesViewModel2;
-
-      @KeepFieldType
-      HistoricoManutencaoMesaViewModel com_example_gestaobilhares_ui_mesas_HistoricoManutencaoMesaViewModel2;
+      ClientDetailViewModel com_example_gestaobilhares_ui_clients_ClientDetailViewModel2;
 
       @KeepFieldType
       SignatureCaptureViewModel com_example_gestaobilhares_ui_contracts_SignatureCaptureViewModel2;
 
       @KeepFieldType
-      CycleReceiptsViewModel com_example_gestaobilhares_ui_cycles_CycleReceiptsViewModel2;
-
-      @KeepFieldType
-      CadastroMesaViewModel com_example_gestaobilhares_ui_mesas_CadastroMesaViewModel2;
-
-      @KeepFieldType
-      ExpenseHistoryViewModel com_example_gestaobilhares_ui_expenses_ExpenseHistoryViewModel2;
-
-      @KeepFieldType
-      VehiclesViewModel com_example_gestaobilhares_ui_inventory_vehicles_VehiclesViewModel2;
-
-      @KeepFieldType
-      MesasDepositoViewModel com_example_gestaobilhares_ui_mesas_MesasDepositoViewModel2;
-
-      @KeepFieldType
-      CycleExpensesViewModel com_example_gestaobilhares_ui_cycles_CycleExpensesViewModel2;
-
-      @KeepFieldType
-      ExpenseRegisterViewModel com_example_gestaobilhares_ui_expenses_ExpenseRegisterViewModel2;
+      SettlementDetailViewModel com_example_gestaobilhares_ui_settlement_SettlementDetailViewModel2;
 
       @KeepFieldType
       RepresentanteLegalSignatureViewModel com_example_gestaobilhares_ui_contracts_RepresentanteLegalSignatureViewModel2;
@@ -1447,52 +1414,85 @@ public final class DaggerGestaoBilharesApplication_HiltComponents_SingletonC {
       StockViewModel com_example_gestaobilhares_ui_inventory_stock_StockViewModel2;
 
       @KeepFieldType
-      TransferClientViewModel com_example_gestaobilhares_ui_routes_TransferClientViewModel2;
-
-      @KeepFieldType
-      GerenciarMesasViewModel com_example_gestaobilhares_ui_mesas_GerenciarMesasViewModel2;
-
-      @KeepFieldType
-      ContractManagementViewModel com_example_gestaobilhares_ui_contracts_ContractManagementViewModel2;
-
-      @KeepFieldType
-      VehicleDetailViewModel com_example_gestaobilhares_ui_inventory_vehicles_VehicleDetailViewModel2;
-
-      @KeepFieldType
-      MetaCadastroViewModel com_example_gestaobilhares_ui_metas_MetaCadastroViewModel2;
-
-      @KeepFieldType
-      RotaMesasViewModel com_example_gestaobilhares_ui_mesas_RotaMesasViewModel2;
+      ClientListViewModel com_example_gestaobilhares_ui_clients_ClientListViewModel2;
 
       @KeepFieldType
       CycleManagementViewModel com_example_gestaobilhares_ui_cycles_CycleManagementViewModel2;
 
       @KeepFieldType
-      EquipmentsViewModel com_example_gestaobilhares_ui_inventory_equipments_EquipmentsViewModel2;
+      CycleReceiptsViewModel com_example_gestaobilhares_ui_cycles_CycleReceiptsViewModel2;
 
       @KeepFieldType
-      MesasReformadasViewModel com_example_gestaobilhares_ui_mesas_MesasReformadasViewModel2;
+      HistoricoMesasVendidasViewModel com_example_gestaobilhares_ui_mesas_HistoricoMesasVendidasViewModel2;
+
+      @KeepFieldType
+      ContractManagementViewModel com_example_gestaobilhares_ui_contracts_ContractManagementViewModel2;
+
+      @KeepFieldType
+      EditMesaViewModel com_example_gestaobilhares_ui_mesas_EditMesaViewModel2;
+
+      @KeepFieldType
+      RoutesViewModel com_example_gestaobilhares_ui_routes_RoutesViewModel2;
+
+      @KeepFieldType
+      VehiclesViewModel com_example_gestaobilhares_ui_inventory_vehicles_VehiclesViewModel2;
+
+      @KeepFieldType
+      GlobalExpensesViewModel com_example_gestaobilhares_ui_expenses_GlobalExpensesViewModel2;
 
       @KeepFieldType
       CycleHistoryViewModel com_example_gestaobilhares_ui_clients_CycleHistoryViewModel2;
 
       @KeepFieldType
-      SettlementDetailViewModel com_example_gestaobilhares_ui_settlement_SettlementDetailViewModel2;
+      ExpenseHistoryViewModel com_example_gestaobilhares_ui_expenses_ExpenseHistoryViewModel2;
 
       @KeepFieldType
-      AditivoSignatureViewModel com_example_gestaobilhares_ui_contracts_AditivoSignatureViewModel2;
+      EquipmentsViewModel com_example_gestaobilhares_ui_inventory_equipments_EquipmentsViewModel2;
 
       @KeepFieldType
-      ClosureReportViewModel com_example_gestaobilhares_ui_reports_ClosureReportViewModel2;
+      GerenciarMesasViewModel com_example_gestaobilhares_ui_mesas_GerenciarMesasViewModel2;
 
       @KeepFieldType
-      ClientDetailViewModel com_example_gestaobilhares_ui_clients_ClientDetailViewModel2;
+      ClientSelectionViewModel com_example_gestaobilhares_ui_routes_ClientSelectionViewModel2;
+
+      @KeepFieldType
+      TransferClientViewModel com_example_gestaobilhares_ui_routes_TransferClientViewModel2;
 
       @KeepFieldType
       RouteManagementViewModel com_example_gestaobilhares_ui_routes_management_RouteManagementViewModel2;
 
       @KeepFieldType
-      ColaboradorManagementViewModel com_example_gestaobilhares_ui_colaboradores_ColaboradorManagementViewModel2;
+      NovaReformaViewModel com_example_gestaobilhares_ui_mesas_NovaReformaViewModel2;
+
+      @KeepFieldType
+      CycleClientsViewModel com_example_gestaobilhares_ui_cycles_CycleClientsViewModel2;
+
+      @KeepFieldType
+      ClosureReportViewModel com_example_gestaobilhares_ui_reports_ClosureReportViewModel2;
+
+      @KeepFieldType
+      ExpenseRegisterViewModel com_example_gestaobilhares_ui_expenses_ExpenseRegisterViewModel2;
+
+      @KeepFieldType
+      MetasViewModel com_example_gestaobilhares_ui_metas_MetasViewModel2;
+
+      @KeepFieldType
+      CadastroMesaViewModel com_example_gestaobilhares_ui_mesas_CadastroMesaViewModel2;
+
+      @KeepFieldType
+      MesasDepositoViewModel com_example_gestaobilhares_ui_mesas_MesasDepositoViewModel2;
+
+      @KeepFieldType
+      ContractGenerationViewModel com_example_gestaobilhares_ui_contracts_ContractGenerationViewModel2;
+
+      @KeepFieldType
+      RotaMesasViewModel com_example_gestaobilhares_ui_mesas_RotaMesasViewModel2;
+
+      @KeepFieldType
+      MesasReformadasViewModel com_example_gestaobilhares_ui_mesas_MesasReformadasViewModel2;
+
+      @KeepFieldType
+      MetaCadastroViewModel com_example_gestaobilhares_ui_metas_MetaCadastroViewModel2;
     }
 
     private static final class SwitchingProvider<T> implements Provider<T> {

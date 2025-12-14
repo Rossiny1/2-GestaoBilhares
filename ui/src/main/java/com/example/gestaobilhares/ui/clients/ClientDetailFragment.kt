@@ -45,7 +45,7 @@ import java.util.Locale
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.data.repository.AppRepository
 import android.util.Log
-// import com.example.gestaobilhares.factory.RepositoryFactory
+
 import com.example.gestaobilhares.sync.SyncRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -89,8 +89,7 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
         _binding = FragmentClientDetailBinding.inflate(inflater, container, false)
 
         val clientId = args.clienteId
-        // val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
-        // viewModel = ClientDetailViewModel(appRepository, userSessionManager, syncRepository) // Injetado via Hilt
+
         setupRecyclerView()
         observeViewModel()
         setupListeners(clientId)

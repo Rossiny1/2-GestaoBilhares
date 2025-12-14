@@ -134,11 +134,6 @@ class NovaReformaFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModels manualmente -> Hilt
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = NovaReformaViewModel(appRepository)
-        // historicoViewModel = HistoricoManutencaoMesaViewModel(appRepository)
-        
         setupClickListeners()
         observeViewModel()
     }

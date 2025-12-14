@@ -35,10 +35,6 @@ class VehiclesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = VehiclesViewModel(appRepository)
-        
         // Configurar toolbar com título "Veículo" e navegação back
         binding.toolbar.setNavigationOnClickListener {
             requireActivity().onBackPressed()

@@ -56,11 +56,7 @@ class ExpenseHistoryFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
         super.onViewCreated(view, savedInstanceState)
-        // ✅ MIGRADO: Usa AppRepository centralizado - Injetado via Hilt
-        // val appRepository = RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = ExpenseHistoryViewModel(appRepository)
         
         setupRecyclerView()
         setupClickListeners()

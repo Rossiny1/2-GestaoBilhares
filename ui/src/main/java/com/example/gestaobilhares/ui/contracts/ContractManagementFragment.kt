@@ -124,7 +124,7 @@ class ContractManagementFragment : Fragment() {
      */
     private fun showDocumentsDialog(item: ContractManagementViewModel.ContractItem) {
         val cliente = item.cliente ?: return
-        // val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
+
         lifecycleScope.launch {
             val contratosFlow = repository.buscarContratosPorCliente(cliente.id)
             val contratos = contratosFlow.first()
@@ -695,7 +695,7 @@ class ContractManagementFragment : Fragment() {
         lifecycleScope.launch {
             val contrato = item.contrato ?: return@launch
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
-            // val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
+
             val ultimo = repository.buscarUltimoAcertoPorCliente(contrato.clienteId)
             val totalRecebido = ultimo?.valorRecebido ?: 0.0
             val despesasViagem = 0.0
@@ -737,7 +737,7 @@ class ContractManagementFragment : Fragment() {
         lifecycleScope.launch {
             val contrato = item.contrato ?: return@launch
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
-            // val repo = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
+
             val ultimo = repository.buscarUltimoAcertoPorCliente(contrato.clienteId)
             val totalRecebido = ultimo?.valorRecebido ?: 0.0
             val despesasViagem = 0.0

@@ -34,7 +34,6 @@ import com.example.gestaobilhares.ui.databinding.FragmentSettlementBinding
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
 import com.example.gestaobilhares.data.database.AppDatabase
-// import com.example.gestaobilhares.factory.RepositoryFactory
 // BuildConfig não disponível em módulos de biblioteca
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.data.entities.Acerto
@@ -284,10 +283,6 @@ class SettlementFragment : Fragment() {
         Log.d("LOG_CRASH", "SettlementFragment.onViewCreated - INÍCIO")
         
         // Inicializar ViewModel aqui onde o contexto está disponível
-        // REMOVIDO: Inicialização manual do RepositoryFactory
-        // appRepository = RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = SettlementViewModel(appRepository)
-        
         Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
         Log.d("SettlementFragment", "Cliente ID: ${args.clienteId}")
         Log.d("SettlementFragment", "Acerto ID para edição: ${args.acertoIdParaEdicao}")

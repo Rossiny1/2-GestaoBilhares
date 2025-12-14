@@ -35,9 +35,7 @@ class AddEditStockItemDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddEditStockItemBinding.inflate(layoutInflater)
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = StockViewModel(appRepository)
+
         
         setupSpinners()
         setupClickListeners()
