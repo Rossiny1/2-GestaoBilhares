@@ -18,7 +18,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.data.database.AppDatabase
-// import com.example.gestaobilhares.factory.RepositoryFactory
 import com.example.gestaobilhares.core.utils.DataValidator
 import com.example.gestaobilhares.data.entities.CategoriaDespesa
 import com.example.gestaobilhares.data.entities.TipoDespesa
@@ -137,10 +136,6 @@ class ExpenseRegisterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        // Inicializar ViewModel -> Hilt
-        // val appRepository = RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = ExpenseRegisterViewModel(appRepository)
         
         setupUI()
         setupClickListeners()

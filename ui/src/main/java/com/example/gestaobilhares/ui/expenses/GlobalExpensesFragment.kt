@@ -55,10 +55,6 @@ class GlobalExpensesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // ✅ MIGRADO: Usa AppRepository centralizado -> Hilt
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = GlobalExpensesViewModel(appRepository)
-        
         setupUI()
         setupRecyclerView()
         setupObservers()

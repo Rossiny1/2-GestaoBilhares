@@ -141,7 +141,6 @@ class AddEditFuelDialog : DialogFragment() {
             // Salvar no banco de dados
             lifecycleScope.launch {
                 try {
-                    // val appRepository = RepositoryFactory.getAppRepository(requireContext())
                     android.util.Log.d("AddEditFuelDialog", "📝 Salvando abastecimento: Veículo=$vehicleId, Litros=$litros, Valor=$valor, KM=$kmVeiculo")
                     val idInserido = appRepository.inserirHistoricoCombustivel(historicoCombustivel)
                     android.util.Log.d("AddEditFuelDialog", "✅ Abastecimento salvo com ID: $idInserido")

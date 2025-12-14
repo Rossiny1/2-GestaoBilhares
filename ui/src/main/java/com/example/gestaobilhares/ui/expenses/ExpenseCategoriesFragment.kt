@@ -112,7 +112,7 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+
                 
                 
                 appRepository.buscarCategoriasAtivas().collect { categorias ->
@@ -155,7 +155,7 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+
                 
                 
                 val novaCategoria = NovaCategoriaDespesa(
@@ -191,7 +191,7 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+
                 
                 
                 val edicaoCategoria = EdicaoCategoriaDespesa(
@@ -227,7 +227,7 @@ class ExpenseCategoriesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+
                 
                 
                 appRepository.deletarCategoria(category)

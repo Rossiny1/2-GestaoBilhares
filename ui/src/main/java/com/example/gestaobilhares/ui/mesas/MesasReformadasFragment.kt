@@ -20,8 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestaobilhares.data.entities.MesaReformada
 import com.example.gestaobilhares.ui.databinding.FragmentMesasReformadasBinding
 // TODO: MesaReformadaRepository não existe - usar AppRepository quando método estiver disponível
-// import com.example.gestaobilhares.data.database.AppDatabase
-// import com.example.gestaobilhares.data.repository.MesaReformadaRepository
+
 
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.fragment.app.viewModels
@@ -53,11 +52,6 @@ class MesasReformadasFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
-        // TODO: MesaReformadaRepository não existe - usar AppRepository quando método estiver disponível
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = MesasReformadasViewModel(appRepository) -> Hilt handles this
         
         setupRecyclerView()
         setupClickListeners()

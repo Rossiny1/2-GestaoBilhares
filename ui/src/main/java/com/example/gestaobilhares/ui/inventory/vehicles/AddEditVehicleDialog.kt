@@ -22,9 +22,7 @@ class AddEditVehicleDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddEditVehicleBinding.inflate(LayoutInflater.from(requireContext()))
         
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente -> Hilt
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = VehiclesViewModel(appRepository)
+
 
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle("Novo Veículo")

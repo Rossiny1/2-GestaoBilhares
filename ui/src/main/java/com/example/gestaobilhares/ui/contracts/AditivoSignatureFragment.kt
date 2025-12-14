@@ -65,9 +65,6 @@ class AditivoSignatureFragment : Fragment() {
         // ✅ CORREÇÃO: Inicializar ViewModel antes de usar
         // ✅ CORREÇÃO: Inicializar ViewModel antes de usar
         try {
-            // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-            // viewModel = AditivoSignatureViewModel()
-            // viewModel.initializeRepository(appRepository)
             
             // Com Hilt, viewModel já vem pronto e repository injetado
             if (!viewModel.isRepositoryInitialized()) {

@@ -115,7 +115,7 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+
                 
                 
                 // Carregar categorias e tipos em paralelo
@@ -171,7 +171,7 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+
                 
                 
                 val novoTipo = NovoTipoDespesa(
@@ -208,7 +208,7 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+
                 
                 
                 val edicaoTipo = EdicaoTipoDespesa(
@@ -245,7 +245,7 @@ class ExpenseTypesFragment : Fragment() {
             try {
                 if (!isAdded || context == null) return@launch
                 
-                // val appRepository = RepositoryFactory.getAppRepository(requireContext())
+
                 
                 
                 appRepository.deletarTipo(type.tipoDespesa)

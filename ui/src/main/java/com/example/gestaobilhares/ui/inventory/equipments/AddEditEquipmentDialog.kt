@@ -31,11 +31,7 @@ class AddEditEquipmentDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddEditEquipmentBinding.inflate(layoutInflater)
         
-        _binding = DialogAddEditEquipmentBinding.inflate(layoutInflater)
-        
-        // ✅ CORRIGIDO: Criar nova instância do ViewModel (compartilha lista via companion object
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = EquipmentsViewModel(appRepository)
+
         
         return MaterialAlertDialogBuilder(requireContext())
             .setView(binding.root)

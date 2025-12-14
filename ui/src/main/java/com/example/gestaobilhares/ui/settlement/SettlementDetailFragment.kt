@@ -203,7 +203,7 @@ class SettlementDetailFragment : Fragment() {
         // ✅ MELHORIA: Buscar dados completos das mesas para exibir numeração correta
         lifecycleScope.launch {
             try {
-                // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
+                // val appRepository - USAR INJECTED (Já injetado via Hilt)
                 val mesasCompletas = mutableMapOf<Long, AcertoMesaDetailAdapter.MesaCompleta>()
                 
                 android.util.Log.d("SettlementDetailFragment", "=== BUSCANDO DADOS COMPLETOS DAS MESAS ===")
@@ -396,7 +396,7 @@ class SettlementDetailFragment : Fragment() {
      * ✅ MÉTODO CENTRALIZADO: Obtém mesas completas (FONTE ÚNICA DE VERDADE)
      */
     private suspend fun obterMesasCompletas(settlement: SettlementDetailViewModel.SettlementDetail): List<Mesa> {
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
+        // val appRepository - USAR INJECTED (Já injetado via Hilt)
         val mesasCompletas = mutableListOf<Mesa>()
         
         android.util.Log.d("SettlementDetailFragment", "=== BUSCANDO MESAS COMPLETAS ===")
@@ -445,7 +445,7 @@ class SettlementDetailFragment : Fragment() {
      */
     private suspend fun buscarMesaCompleta(mesaId: Long): Mesa? {
         return try {
-            // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
+            // val appRepository - USAR INJECTED (Já injetado via Hilt)
             appRepository.obterMesaPorId(mesaId)
         } catch (e: Exception) {
             Log.e("SettlementDetailFragment", "Erro ao buscar mesa: ${e.message}")
@@ -477,7 +477,7 @@ class SettlementDetailFragment : Fragment() {
                 binding.btnEdit.isEnabled = false
                 
                 // Usar AppRepository em vez de repositórios deprecated
-                // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
+                // val appRepository - USAR INJECTED (Já injetado via Hilt)
                 
                 // Verificar permissão usando AppRepository
                 val permissao = verificarPermissaoEdicaoComAppRepository(appRepository, args.acertoId)

@@ -387,7 +387,7 @@ class SignatureCaptureFragment : Fragment() {
                             // todas as telas intermediárias (mesasDepositoFragment, contractGenerationFragment, etc)
                             viewLifecycleOwner.lifecycleScope.launch {
                                 try {
-                                    // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
+
                                     val cliente = appRepository.obterClientePorId(clienteId)
                                     val rotaId = cliente?.rotaId
                                     
@@ -524,7 +524,7 @@ class SignatureCaptureFragment : Fragment() {
                         
                         viewLifecycleOwner.lifecycleScope.launch {
                             try {
-                                // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext()) - USAR INJECTED
+
                                 val cliente = appRepository.obterClientePorId(clienteId)
                                 val rotaId = cliente?.rotaId
                                 

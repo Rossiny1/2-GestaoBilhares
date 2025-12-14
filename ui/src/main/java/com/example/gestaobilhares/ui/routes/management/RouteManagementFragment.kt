@@ -51,9 +51,6 @@ class RouteManagementFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // val userSessionManager = com.example.gestaobilhares.core.utils.UserSessionManager.getInstance(requireContext())
-        // viewModel = RouteManagementViewModel(appRepository, userSessionManager) -> Hilt handles this
         
         setupRecyclerView()
         setupClickListeners()

@@ -35,11 +35,6 @@ class EquipmentsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        
-        // ✅ CORREÇÃO: Inicializar ViewModel manualmente com AppRepository -> Hilt
-        // val appRepository = com.example.gestaobilhares.factory.RepositoryFactory.getAppRepository(requireContext())
-        // viewModel = EquipmentsViewModel(appRepository)
-        
         setupRecyclerView()
         observeData()
         setupClickListeners()
