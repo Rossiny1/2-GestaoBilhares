@@ -45,6 +45,7 @@ menu menu_colaborador_management
 menu menu_colaborador_metas
 mipmap ic_launcher
 mipmap ic_launcher_round
+string com.google.firebase.crashlytics.mapping_file_id
 string default_web_client_id
 string gcm_defaultSenderId
 string google_api_key

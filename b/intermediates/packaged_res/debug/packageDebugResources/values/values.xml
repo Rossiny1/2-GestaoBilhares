@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:ns1="http://schemas.android.com/tools">
     <dimen name="button_corner_radius">12dp</dimen>
     <dimen name="button_elevation">0dp</dimen>
     <dimen name="button_height">48dp</dimen>
@@ -27,6 +27,7 @@
     <dimen name="text_size_small">12sp</dimen>
     <dimen name="text_size_subtitle">20sp</dimen>
     <dimen name="text_size_title">26sp</dimen>
+    <string name="com.google.firebase.crashlytics.mapping_file_id" ns1:ignore="UnusedResources,TypographyDashes" translatable="false">00000000000000000000000000000000</string>
     <string name="default_web_client_id" translatable="false">1089459035145-d55o1h307gaedp4v03cuchr6s6nn2lhg.apps.googleusercontent.com</string>
     <string name="gcm_defaultSenderId" translatable="false">1089459035145</string>
     <string name="google_api_key" translatable="false">AIzaSyDb2s1PsqfZMQCswQMj2tmcV_e6DMSv0i4</string>

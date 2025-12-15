@@ -252,6 +252,23 @@ Manter o projeto alinhado com as melhores práticas Android mais recentes, garan
 | **Q4 2025** | ALTA | 2-4 sem | ✅ Hilt DI (Concluído)<br/>🔄 Testes (Em andamento) |
 | **Q1 2026** | MÉDIA | 4-8 sem | 🔄 Migração Compose<br/>⏳ Performance |
 | **Q2 2026** | BAIXA | 8+ sem | ⏳ A11y<br/>⏳ CI/CD<br/>⏳ Analytics |
+| **IMEDIATO** | CRÍTICA | 1 sem | 🧹 Limpeza Raiz (Scripts)<br/>🛡️ Segurança Logs (PII)<br/>🏗️ Refatoração AppRepository |
+
+### **METAS IMEDIATAS (DEZ 2025 - SENIOR AUDIT)**
+#### **1. Limpeza e Organização (PRIORIDADE CRÍTICA)**
+- **Problema**: Raiz do projeto poluída com centenas de scripts.
+- **Ação**: Mover `.ps1` e `.bat` para pasta `scripts/`.
+
+#### **2. Segurança de Dados (PRIORIDADE CRÍTICA)**
+- **Problema**: Logs com PII (nomes, emails) em `AppRepository`.
+- **Ação**: Remover interpolação de dados sensíveis em `Log.d`.
+
+#### **3. Refatoração Arquitetural (GOD OBJECT)**
+- **Problema**: `AppRepository` viola SRP (~2000 linhas).
+- **Ação**: 
+    - Parar de injetar `AppRepository` em novos ViewModels.
+    - Usar `ClienteRepository`, `RotaRepository` diretamente.
+    - Planejar quebra gradual do `AppRepository`.
 
 ### **Métricas de Sucesso**
 

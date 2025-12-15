@@ -1,10 +1,20 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.gestaobilhares.app-mergeDebugResources-90:/values-v16/values-v16.xml",
+            "outputFile": "com.example.gestaobilhares.app-mergeDebugResources-91:/values-v16/values-v16.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Rossiny\\.gradle\\caches\\8.11.1\\transforms\\8d43d928cf0bed699ab35a6dd6ff090a\\transformed\\appcompat-1.6.1\\res\\values-v16\\values-v16.xml",
+                    "source": "C:\\Users\\Rossiny\\.gradle\\caches\\8.11.1\\transforms\\1d3eb4ae33f2a9e46ac71d37a5d4f233\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "65",
+                        "endOffsets": "116"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Rossiny\\.gradle\\caches\\8.11.1\\transforms\\fc8161b4776dc8d0ab7240d53bc3f33d\\transformed\\appcompat-1.6.1\\res\\values-v16\\values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -20,16 +30,6 @@
                         "endLines": "6",
                         "endColumns": "12",
                         "endOffsets": "289"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\Rossiny\\.gradle\\caches\\8.11.1\\transforms\\33c05a857de546fd721a15190cea93f5\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
-                    "from": {
-                        "startLines": "2",
-                        "startColumns": "4",
-                        "startOffsets": "55",
-                        "endColumns": "65",
-                        "endOffsets": "116"
                     }
                 }
             ]
