@@ -6,6 +6,7 @@ import com.example.gestaobilhares.data.entities.Colaborador
 import com.example.gestaobilhares.data.entities.NivelAcesso
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.core.utils.UserSessionManager
+import com.example.gestaobilhares.core.utils.NetworkUtils
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
@@ -44,6 +45,9 @@ class AuthViewModelTest {
 
     @Mock
     private lateinit var userSessionManager: UserSessionManager
+
+    @Mock
+    private lateinit var networkUtils: NetworkUtils
 
     @Mock
     private lateinit var firebaseAuth: FirebaseAuth
@@ -86,7 +90,7 @@ class AuthViewModelTest {
             logMock.`when`<Int> { android.util.Log.i(any<String>(), any<String>()) }.thenReturn(0)
              logMock.`when`<Int> { android.util.Log.w(any(), any<String>()) }.thenReturn(0)
         } catch (e: Exception) {
-            // Ignore
+            // Ignore if already mocked or in a non-Android environment where it might fail specific calls
         }
         
         // Mock android.util.Patterns
@@ -103,26 +107,11 @@ class AuthViewModelTest {
              // Patterns might be stubbed in Robolectric or unit test environment
         }
 
-        viewModel = AuthViewModel()
-        // Inject dependencies manually via reflection or additional setters if needed
-        // AuthViewModel has initializeRepository, but we can also use reflection to set properties if they are private
-        // For now, let's assume we can set them via initializeRepository or they are lazy.
-        // But initializeRepository takes Context.
-        // It's better to modify AuthViewModel to allow injection, but let's try to mock the internal lateinit properties via Reflection if necessary
-        // or just assume standard creation.
-        
-        // Actually, AuthViewModel uses a factory to get AppRepository. 
-        // We need to intercept that Factory or just use reflection to set 'appRepository'
-        
-        setPrivateField(viewModel, "appRepository", appRepository)
-        setPrivateField(viewModel, "userSessionManager", userSessionManager)
+        // CORRECT INSTANTIATION for Hilt @Inject constructor
+        viewModel = AuthViewModel(appRepository, networkUtils, userSessionManager)
     }
     
-    private fun setPrivateField(target: Any, fieldName: String, value: Any) {
-        val field = target.javaClass.getDeclaredField(fieldName)
-        field.isAccessible = true
-        field.set(target, value)
-    }
+    
 
     @After
     fun tearDown() {

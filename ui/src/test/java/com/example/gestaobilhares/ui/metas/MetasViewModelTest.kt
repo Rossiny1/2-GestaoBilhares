@@ -41,8 +41,8 @@ class MetasViewModelTest {
     fun setup() {
         MockitoAnnotations.openMocks(this)
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        viewModel = MetasViewModel()
-        viewModel.initializeRepository(appRepository)
+        // CORRECT INSTANTIATION for Hilt @Inject constructor
+        viewModel = MetasViewModel(appRepository)
     }
 
     @After
