@@ -97,4 +97,47 @@ class CycleManagementViewModelTest {
             assertThat(dados?.titulo).contains("Rota Teste")
         }
     }
+    @Test
+    fun `estatisticas devem ser calculadas corretamente ao carregar dados`() = runTest {
+        // Arrange
+        val cicloId = 1L
+        val rotaId = 1L
+        val dataAgora = Date()
+        
+        val ciclo = CicloAcertoEntity(
+            id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025,
+            dataInicio = dataAgora, dataFim = dataAgora, status = StatusCicloAcerto.EM_ANDAMENTO,
+            totalClientes = 10, observacoes = "Teste", criadoPor = "Tester"
+        )
+        val rota = Rota(id = rotaId, nome = "Rota Teste", cidades = "Regiao Teste")
+        
+        // Simular 2 acertos de 100 reais cada (Total 200) - PIX e Dinheiro
+        // Acerto 1: 100 reais PIX
+        val acerto1 = Acerto(id = 1, valorRecebido = 100.0, metodosPagamentoJson = "{\"PIX\": 100.0}", rotaId = rotaId, clienteId = 1L, periodoInicio = Date(), periodoFim = Date())
+        // Acerto 2: 100 reais DINHEIRO
+        val acerto2 = Acerto(id = 2, valorRecebido = 100.0, metodosPagamentoJson = "{\"DINHEIRO\": 100.0}", rotaId = rotaId, clienteId = 2L, periodoInicio = Date(), periodoFim = Date())
+        
+        whenever(appRepository.buscarAcertosPorCicloId(cicloId)).thenReturn(flowOf(listOf(acerto1, acerto2)))
+        whenever(appRepository.buscarDespesasPorCicloId(cicloId)).thenReturn(flowOf(emptyList()))
+        whenever(appRepository.buscarCicloPorId(cicloId)).thenReturn(ciclo)
+        whenever(appRepository.buscarRotaPorId(rotaId)).thenReturn(rota)
+
+        // Act
+        viewModel.carregarDadosCiclo(cicloId, rotaId)
+        advanceUntilIdle()
+
+        // Assert Stat Flow
+        viewModel.estatisticas.test {
+            val stats = awaitItem()
+            // FinancialCalculator pode ter lógica complexa, mas esperamos que some os recebidos
+            // Se o FinancialCalculator não for mockado, ele roda a lógica real.
+            // Assumimos que ele está funcionando (Testes unitários dele cobrem a lógica matemática).
+            // Apenas verificamos se o ViewModel repassou os valores.
+            
+            // Verifique se o totalRecebido é > 0, indicando que o cálculo ocorreu
+            assertThat(stats.totalRecebido).isEqualTo(200.0) 
+            assertThat(stats.somaPix).isEqualTo(100.0)
+            // Dinheiro might be in 'dinheiro' or 'subtotal' depending on logic
+        }
+    }
 }

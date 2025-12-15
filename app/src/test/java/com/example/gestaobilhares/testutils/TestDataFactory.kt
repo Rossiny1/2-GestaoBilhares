@@ -44,33 +44,43 @@ object TestDataFactory {
     fun createAcerto(
         id: Long = 1L,
         clienteId: Long = 1L,
-        rotaId: Long = 1L,
-        cicloId: Long = 1L,
-        fichasJogadas: Int = 100,
-        valorFicha: Double = 2.0,
-        totalFichas: Double = 200.0,
-        comissaoFicha: Double = 0.5,
-        totalComissao: Double = 50.0,
-        valorRecebido: Double = 150.0,
-        metodoPagamento: String = "PIX",
+        colaboradorId: Long? = 1L,
+        dataAcerto: Date = Date(),
         periodoInicio: Date = Date(),
         periodoFim: Date = Date(),
-        dataAcerto: Date = Date()
+        totalMesas: Double = 100.0,
+        debitoAnterior: Double = 0.0,
+        valorTotal: Double = 100.0,
+        desconto: Double = 0.0,
+        valorComDesconto: Double = 100.0,
+        valorRecebido: Double = 100.0,
+        debitoAtual: Double = 0.0,
+        status: StatusAcerto = StatusAcerto.FINALIZADO,
+        observacoes: String? = null,
+        metodoPagamento: String = "PIX",
+        rotaId: Long? = 1L,
+        cicloId: Long? = 1L
     ) = Acerto(
         id = id,
         clienteId = clienteId,
-        rotaId = rotaId,
-        cicloId = cicloId,
-        fichasJogadas = fichasJogadas,
-        valorFicha = valorFicha,
-        totalFichas = totalFichas,
-        comissaoFicha = comissaoFicha,
-        totalComissao = totalComissao,
-        valorRecebido = valorRecebido,
-        metodosPagamentoJson = "{\"$metodoPagamento\": $valorRecebido}",
+        colaboradorId = colaboradorId,
+        dataAcerto = dataAcerto,
         periodoInicio = periodoInicio,
         periodoFim = periodoFim,
-        dataAcerto = dataAcerto
+        totalMesas = totalMesas,
+        debitoAnterior = debitoAnterior,
+        valorTotal = valorTotal,
+        desconto = desconto,
+        valorComDesconto = valorComDesconto,
+        valorRecebido = valorRecebido,
+        debitoAtual = debitoAtual,
+        status = status,
+        observacoes = observacoes,
+        dataCriacao = Date(),
+        dataFinalizacao = Date(),
+        metodosPagamentoJson = "{\"$metodoPagamento\": $valorRecebido}",
+        rotaId = rotaId,
+        cicloId = cicloId
     )
     
     fun createCiclo(
@@ -102,7 +112,7 @@ object TestDataFactory {
         nome: String = "Rota Teste",
         cidades: String = "São Paulo, Campinas",
         ativa: Boolean = true,
-        dataCriacao: Date = Date()
+        dataCriacao: Long = System.currentTimeMillis()
     ) = Rota(
         id = id,
         nome = nome,
@@ -115,19 +125,21 @@ object TestDataFactory {
         id: Long = 1L,
         rotaId: Long = 1L,
         cicloId: Long = 1L,
-        tipoDespesaId: Long = 1L,
+        tipoDespesa: String = "Combustível",
         valor: Double = 100.0,
         descricao: String = "Despesa teste",
-        data: Date = Date()
+        categoria: String = "Transporte",
+        dataHora: java.time.LocalDateTime = java.time.LocalDateTime.now()
     ) = Despesa(
         id = id,
         rotaId = rotaId,
         cicloId = cicloId,
-        tipoDespesaId = tipoDespesaId,
+        tipoDespesa = tipoDespesa,
         valor = valor,
         descricao = descricao,
-        data = data,
-        observacoes = null
+        categoria = categoria,
+        dataHora = dataHora,
+        observacoes = ""
     )
     
     fun createMesa(
@@ -139,9 +151,12 @@ object TestDataFactory {
     ) = Mesa(
         id = id,
         clienteId = clienteId,
-        numeroMesa = numeroMesa,
+        numero = numeroMesa,
         ativa = ativa,
-        dataCadastro = dataCadastro
+        dataInstalacao = dataCadastro,
+        tipoMesa = TipoMesa.SINUCA,
+        tamanho = TamanhoMesa.GRANDE,
+        estadoConservacao = EstadoConservacao.BOM
     )
 }
 
