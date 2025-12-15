@@ -509,14 +509,14 @@ class AppRepository @Inject constructor(
     fun obterRotaPorIdFlow(id: Long) = rotaDao.obterRotaPorId(id)
     suspend fun obterRotaPorNome(nome: String) = rotaDao.getRotaByNome(nome)
     suspend fun inserirRota(rota: Rota): Long {
-        logDbInsertStart("ROTA", "Nome=${rota.nome}")
+        logDbInsertStart("ROTA", "ID=${rota.id} [NAME_REDACTED]")
         return try {
             // ✅ UPSERT: Delegado para RotaRepository (lógica centralizada)
             val id = rotaRepository.inserir(rota)
-            logDbInsertSuccess("ROTA", "Nome=${rota.nome}, ID=$id")
+            logDbInsertSuccess("ROTA", "ID=$id")
             id
         } catch (e: Exception) {
-            logDbInsertError("ROTA", "Nome=${rota.nome}", e)
+            logDbInsertError("ROTA", "ID=${rota.id}", e)
             throw e
         }
     }
@@ -726,13 +726,13 @@ class AppRepository @Inject constructor(
     suspend fun obterColaboradorPorFirebaseUid(firebaseUid: String) = colaboradorDao.obterPorFirebaseUid(firebaseUid)
     
     suspend fun inserirColaborador(colaborador: Colaborador): Long {
-        logDbInsertStart("COLABORADOR", "Nome=${colaborador.nome}, Email=${colaborador.email}, Nivel=${colaborador.nivelAcesso}")
+        logDbInsertStart("COLABORADOR", "ID=${colaborador.id}, Nivel=${colaborador.nivelAcesso} [PII REDACTED]")
         return try {
             val id = colaboradorDao.inserir(colaborador)
-            logDbInsertSuccess("COLABORADOR", "Email=${colaborador.email}, ID=$id")
+            logDbInsertSuccess("COLABORADOR", "ID=$id [PII REDACTED]")
             id
         } catch (e: Exception) {
-            logDbInsertError("COLABORADOR", "Email=${colaborador.email}", e)
+            logDbInsertError("COLABORADOR", "ID=${colaborador.id}", e)
             throw e
         }
     }

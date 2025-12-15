@@ -10,6 +10,7 @@
     id("jacoco")
     // ✅ ATIVADO: Hilt
     id("com.google.dagger.hilt.android")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -129,6 +130,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     // ✅ CORREÇÃO: Firebase Storage para upload de imagens
     implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
     
     // ✅ NOVO: Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")

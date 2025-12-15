@@ -40,6 +40,8 @@ class GestaoBilharesApplication : Application() {
         
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
+        } else {
+            Timber.plant(CrashlyticsTree())
         }
         Timber.d("Aplicacao iniciada com sucesso")
         
