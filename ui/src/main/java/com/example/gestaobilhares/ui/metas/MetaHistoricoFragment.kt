@@ -55,7 +55,7 @@ class MetaHistoricoFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Inicializar repositório - Hilt injeta automaticamente
-        // appRepository = RepositoryFactory.getAppRepository(requireContext())
+
 
         setupToolbar()
         setupRecyclerView()
