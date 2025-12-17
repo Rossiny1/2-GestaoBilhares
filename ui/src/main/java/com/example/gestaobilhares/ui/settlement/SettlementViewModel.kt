@@ -104,7 +104,7 @@ class SettlementViewModel @Inject constructor(
                     logOperation("SETTLEMENT", "Cliente não encontrado para ID: $clienteId")
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                timber.log.Timber.e(e, "Erro ao carregar cliente ID: $clienteId")
                 _clientName.value = "Erro ao carregar cliente"
                 _clientAddress.value = "---"
             } finally {

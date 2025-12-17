@@ -2,7 +2,23 @@
 
 > **Propósito**: Status atual do projeto + Roadmap + Prioridades  
 > **Audiência**: PM, Tech Lead, Desenvolvedores  
-> **Última Atualização**: Dezembro 2025
+> **Última Atualização**: 17 Dezembro 2025
+
+---
+
+## 🚨 ALERTA DE PRODUÇÃO
+
+> [!CAUTION]
+> **Análise de código identificou 5 PROBLEMAS CRÍTICOS que impedem publicação imediata:**
+> 
+> 1. **3185+ logs de debug** usando `android.util.Log.*` ao invés de `Timber`
+> 2. **5 chamadas a `.printStackTrace()`** que vazam stack traces em produção
+> 3. **SyncWorker com logs de debug** em código de background
+> 4. **Versionamento não atualizado** (`versionCode=1` precisa ser ≥2)
+> 5. **Regras Firestore permissivas** (`allow read: if true`) - risco de segurança
+>
+> **STATUS**: ⚠️ **NÃO PUBLICAR ANTES DE CORRIGIR**  
+> **AÇÃO**: Ver seção "Correções Críticas Pré-Produção" abaixo
 
 ---
 
@@ -13,6 +29,7 @@
 - ✅ **Hilt DI**: Migração 100% completa
 - ✅ **Offline-First**: Implementado e testado
 - ✅ **Sincronização**: Incremental PULL + PUSH implementada
+- ⚠️ **ProGuard**: Configurado mas **pode quebrar com logs atuais**
 
 ### Features Completas
 
@@ -33,6 +50,121 @@
 | **Estoque** | ✅ Completo | 100% |
 | **Monitoramento Firebase** | ✅ Completo | 100% |
 | **Backup de Emergência** | ✅ Completo | 100% |
+
+---
+
+## 🚨 Correções Críticas Pré-Produção
+
+> [!IMPORTANT]
+> **ESTAS CORREÇÕES SÃO OBRIGATÓRIAS ANTES DE PUBLICAR**
+
+### 1. Substituir Logs de Debug por Timber ⭐⭐⭐ **CRÍTICO**
+
+**Problema**: 3185+ ocorrências de `android.util.Log.d/e/w/i` no código  
+**Risco**: 
+- Vazamento de dados sensíveis (IDs, emails, valores financeiros)
+- Performance degradada (logs em loops)
+- ProGuard pode causar crashes ao remover códigos referenciados apenas em logs
+
+**Arquivos Críticos**:
+- `SyncWorker.kt` - 5 ocorrências (código de background)
+- `AcertoMesaDetailAdapter.kt` - 50+ ocorrências (adapter crítico)
+- Múltiplos ViewModels e Fragments
+
+**Ação Imediata**:
+```powershell
+# Opção 1: Executar script automatizado
+.\scripts\substituir-logs-por-timber.ps1
+
+# Opção 2: Manual (prioritário)
+# 1. SyncWorker.kt - substituir Log.* por Timber.*
+# 2. AcertoMesaDetailAdapter.kt - remover logs excessivos
+```
+
+**Comando de Verificação**:
+```powershell
+# Buscar logs restantes (deve retornar 0)
+grep -r "Log\.[deiw]" --include="*.kt" --exclude-dir="test" .
+```
+
+---
+
+### 2. Remover printStackTrace() ⭐⭐⭐ **CRÍTICO**
+
+**Problema**: 5 ocorrências de `.printStackTrace()` que vazam estrutura interna  
+**Arquivos**:
+- `SettlementViewModel.kt:107`
+- `ClientRegisterFragment.kt:173, 219`
+- `CicloAcertoRepository.kt:292`
+- `AppRepository.kt:1646`
+
+**Ação**:
+```kotlin
+// ❌ REMOVER
+catch (e: Exception) {
+    e.printStackTrace()
+}
+
+// ✅ SUBSTITUIR POR
+catch (e: Exception) {
+    Timber.e(e, "Descrição do erro")
+}
+```
+
+---
+
+### 3. Atualizar Versionamento ⭐⭐⭐ **OBRIGATÓRIO**
+
+**Problema**: `versionCode = 1`, `versionName = "1.0"`  
+**Risco**: Google Play rejeita uploads com mesmo versionCode
+
+**Ação**:
+```kotlin
+// app/build.gradle.kts linha 29-30
+defaultConfig {
+    versionCode = 2  // Incrementar sempre
+    versionName = "1.0.0"  // Formato semântico
+}
+```
+
+---
+
+### 4. Revisar Regras Firestore ⭐⭐ **SEGURANÇA**
+
+**Problema**: `allow read: if true` em 3 lugares permite leitura pública  
+**Risco**: Dados de colaboradores, clientes, acertos expostos publicamente
+
+**Locais**:
+- `firestore.rules:92` - colaboradores
+- `firestore.rules:116` - entidades gerais
+- `firestore.rules:135` - empresas/**
+
+**Motivo Atual**: Necessário para login em app vazio (sem dados locais)
+
+**Opções**:
+1. **Curto Prazo** (AGORA): Manter e documentar risco
+2. **Médio Prazo**: Implementar Cloud Function para autenticação
+
+**Ação Imediata**: Adicionar comentários de segurança nas rules
+
+---
+
+### 5. Testar Build de Release ⭐⭐⭐ **OBRIGATÓRIO**
+
+**Ação**:
+```powershell
+# 1. Build de release
+./gradlew clean assembleRelease
+
+# 2. Verificar assinatura
+jarsigner -verify -verbose app/build/outputs/apk/release/app-release.apk
+
+# 3. Instalar e testar
+adb install -r app/build/outputs/apk/release/app-release.apk
+
+# 4. Monitorar crashes
+.\scripts\capturar-crash-sincronizacao.ps1
+```
 
 ---
 
@@ -63,6 +195,8 @@
 | **Build Time** | ~3 min | <5 min | ✅ OK |
 | **APK Size** | 45 MB | <50 MB | ✅ OK |
 | **Crash Rate** | <1% | <1% | ✅ OK |
+| **Logs de Debug** | 3185+ | 0 | 🔴 **CRÍTICO** |
+| **printStackTrace** | 5 | 0 | 🔴 **CRÍTICO** |
 
 ### Sincronização
 
@@ -77,6 +211,24 @@
 ---
 
 ## 🚨 Pendências Críticas
+
+### 🔥 PRIORIDADE MÁXIMA (AGORA - Antes de publicar)
+
+#### 0. Correções Críticas de Produção ⭐⭐⭐ **BLOQUEADOR**
+**Status**: ⚠️ **EM ANDAMENTO**  
+**Esforço**: 2-4 horas  
+**Ação**:
+- [x] Identificar problemas (COMPLETO)
+- [ ] Substituir logs de debug por Timber
+- [ ] Remover printStackTrace()
+- [ ] Atualizar versionamento
+- [ ] Adicionar comentários de segurança em Firestore rules
+- [ ] Testar build de release
+- [ ] Verificar correções
+
+**Bloqueador**: Não publicar sem corrigir
+
+---
 
 ### PRIORIDADE ALTA (1-2 meses)
 
@@ -165,8 +317,9 @@ firebase deploy --only firestore:indexes
 **Ações**:
 - Implementar `EncryptedSharedPreferences` para tokens
 - Adicionar Certificate Pinning para Firebase
-- Auditoria completa de PII em logs
+- Auditoria completa de PII em logs (parcialmente feito)
 - Validações de entrada mais rigorosas
+- **Resolver regras Firestore permissivas** (Cloud Functions)
 
 ---
 
@@ -191,12 +344,14 @@ firebase deploy --only firestore:indexes
 ### Q1 2026 (Jan-Mar)
 **Foco**: Qualidade e Testes
 
+- ✅ **Correções críticas de produção** (2-4 horas)
 - ✅ Aumentar cobertura de testes para 60%+
 - ✅ Refatorar AppRepository (Facades)
 - ✅ Implementar CI/CD (GitHub Actions)
 - ✅ Deploy de índices Firestore
 
 **Entregáveis**:
+- App publicável (sem bloqueadores)
 - Suite de testes completa
 - AppRepository refatorado
 - Pipeline CI/CD funcionando
@@ -213,12 +368,14 @@ firebase deploy --only firestore:indexes
 - ✅ EncryptedSharedPreferences
 - ✅ Certificate Pinning
 - ✅ Auditoria de segurança completa
+- ✅ **Resolver Firestore rules com Cloud Functions**
 
 **Entregáveis**:
 - 60% do app em Compose
 - Dados sensíveis criptografados
 - Certificados pinados
 - Relatório de auditoria
+- Firestore seguro (sem allow read: if true)
 
 ---
 
@@ -254,16 +411,17 @@ firebase deploy --only firestore:indexes
 
 ---
 
-## ✅ Checklist de Produção
+## ✅ Checklist de Produção (ATUALIZADO)
 
 ### Pré-Release
 
 #### Build e Configuração
+- [ ] **Correções críticas aplicadas** (ver seção acima) 🔴 **BLOQUEADOR**
 - [ ] `./gradlew assembleRelease` passa
 - [ ] ProGuard/R8 configurado e testado
-- [ ] Keystore configurado (`keystore.properties`)
+- [ ] Keystore configurado (`keystore.properties`) ✅
 - [ ] `versionCode` e `versionName` atualizados
-- [ ] Firebase configurado para produção
+- [ ] Firebase configurado para produção ✅
 
 #### Testes
 - [ ] Todos os testes unitários passando
@@ -271,21 +429,24 @@ firebase deploy --only firestore:indexes
 - [ ] Teste offline/online
 - [ ] Teste em dispositivos reais (mínimo 3)
 - [ ] Teste de sincronização completa
+- [ ] **Build de release testado sem crashes** 🔴 **CRÍTICO**
 
 #### Segurança
-- [ ] Sem logs de debug em produção
-- [ ] Sem PII (dados pessoais) em logs
-- [ ] Timber configurado para produção (CrashlyticsTree)
+- [ ] **Sem logs `android.util.Log.*` em produção** 🔴 **CRÍTICO**
+- [ ] **Sem `.printStackTrace()` no código** 🔴 **CRÍTICO**
+- [ ] Sem PII (dados pessoais) em logs ✅
+- [ ] Timber configurado para produção (CrashlyticsTree) ✅
 - [ ] Validações de entrada em todas as telas
 - [ ] Tokens não versionados
+- [ ] **Firestore rules documentadas com avisos de segurança**
 
 #### Firebase
-- [ ] Crashlytics configurado e testado
-- [ ] Analytics configurado
-- [ ] Performance Monitoring ativo
-- [ ] Remote Config com valores padrão
+- [ ] Crashlytics configurado e testado ✅
+- [ ] Analytics configurado ✅
+- [ ] Performance Monitoring ativo ✅
+- [ ] Remote Config com valores padrão ✅
 - [ ] Índices Firestore criados (performance)
-- [ ] Regras Firestore revisadas
+- [ ] Regras Firestore revisadas ⚠️ **Permissivas - risco documentado**
 
 ---
 
@@ -312,6 +473,7 @@ firebase deploy --only firestore:indexes
 - [ ] Verificar Analytics (uso real)
 - [ ] Verificar Performance Monitoring
 - [ ] Monitorar feedback de usuários
+- [ ] **Monitorar acessos Firestore** (regras permissivas)
 
 #### Correções
 - [ ] Hotfixes priorizados (crashes críticos)
@@ -322,9 +484,11 @@ firebase deploy --only firestore:indexes
 
 ## 📈 Avaliação do Projeto
 
-### Nota Geral: **7.8/10** ⭐⭐⭐⭐
+### Nota Geral: **7.3/10** ⭐⭐⭐⭐
 
-> Avaliação realizada por Desenvolvedor Android Sênior em Dezembro 2025
+> Avaliação atualizada após análise de código em 17 Dezembro 2025  
+> **Nota anterior**: 7.8/10  
+> **Redução**: Problemas críticos de produção identificados
 
 ### Pontos Fortes
 
@@ -342,12 +506,12 @@ firebase deploy --only firestore:indexes
 - ✅ WorkManager para background
 - ✅ 98.6% de redução de dados
 
-#### 3. Monitoramento Completo (9.5/10)
+#### 3. Monitoramento Completo (8.5/10) ⚠️
 - ✅ Firebase Crashlytics + Analytics
 - ✅ Performance Monitoring
 - ✅ Remote Config
 - ✅ Timber (logging moderno)
-- ✅ Logs seguros (sem PII em produção)
+- ⚠️ **Logs de debug ainda no código** (3185+)
 
 #### 4. Stack Tecnológico Moderno (8.5/10)
 - ✅ Kotlin 100%
@@ -356,6 +520,13 @@ firebase deploy --only firestore:indexes
 - ✅ Bibliotecas atualizadas
 
 ### Pontos Fracos
+
+#### 🚨 0. Problemas de Produção (4.0/10) 🔴 **NOVO - CRÍTICO**
+- 🔴 **3185+ logs de debug** usando `Log.*`
+- 🔴 **5 printStackTrace()** vazando stack traces
+- 🔴 **Versionamento não atualizado**
+- 🔴 **Regras Firestore permissivas**
+- **Ação**: Correção IMEDIATA antes de publicar
 
 #### 1. Testes Automatizados (6.0/10) ⚠️
 - ⚠️ Cobertura baixa (<40%, meta: 60%)
@@ -380,13 +551,16 @@ firebase deploy --only firestore:indexes
 
 ### Caminho para 9.0/10
 
-Com as melhorias sugeridas para Q1-Q2 2026:
+Após correções críticas + melhorias Q1-Q2 2026:
+- ✅ **Problemas de produção corrigidos** (IMEDIATO)
 - ✅ Testes: 60%+ cobertura
 - ✅ AppRepository refatorado
 - ✅ CI/CD implementado
 - ✅ Compose: 60%+
+- ✅ Firestore seguro (Cloud Functions)
 
-**Projeto pode alcançar 9.0/10 em 6 meses** 🚀
+**Projeto pode alcançar 9.0/10 em 6 meses** 🚀  
+**Primeiro passo**: Corrigir bloqueadores de produção (2-4 horas)
 
 ---
 
@@ -402,3 +576,8 @@ Com as melhorias sugeridas para Q1-Q2 2026:
 - [Firebase Console](https://console.firebase.google.com/project/gestaobilhares)
 - [Crashlytics Dashboard](https://console.firebase.google.com/project/gestaobilhares/crashlytics)
 - [Analytics Dashboard](https://console.firebase.google.com/project/gestaobilhares/analytics)
+
+### Documentos de Produção
+- [CHECKLIST-PRODUCAO.md](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/.cursor/rules/CHECKLIST-PRODUCAO.md) - Checklist detalhado
+- [PROGRESSO-PRODUCAO.md](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/.cursor/rules/PROGRESSO-PRODUCAO.md) - Progresso atual
+- [AVALIACAO-COMPLETA-PROJETO.md](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/.cursor/rules/AVALIACAO-COMPLETA-PROJETO.md) - Avaliação técnica

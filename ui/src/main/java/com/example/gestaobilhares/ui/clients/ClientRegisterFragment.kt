@@ -216,11 +216,11 @@ class ClientRegisterFragment : Fragment() {
                                 .show()
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        timber.log.Timber.e(e, "Erro ao exibir confirmação de atualização")
                         try {
                             showErrorDialog("Erro ao exibir confirmação: ${e.localizedMessage}")
                         } catch (dialogException: Exception) {
-                            android.util.Log.e("ClientRegister", "Erro ao mostrar dialog: ${dialogException.message}")
+                            timber.log.Timber.e(dialogException, "Erro ao mostrar dialog de erro")
                         }
                     }
                 }

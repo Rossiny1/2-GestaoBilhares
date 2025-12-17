@@ -83,13 +83,15 @@ service cloud.firestore {
 
     // 👥 COLABORADORES (ESTRUTURA EMPRESAS) - Permitir busca por email para login
     // Estrutura: empresas/empresa_001/entidades/colaboradores/items
-    // ✅ PERMITIR LEITURA sem autenticação para permitir login em app vazio
-    // Isso é necessário porque quando o app está vazio, o usuário não está autenticado no Firebase
-    // mas precisa buscar seu colaborador na nuvem para fazer login
+    // ⚠️ SEGURANÇA TEMPORÁRIA: allow read: if true
+    // MOTIVO: Necessário para login em app vazio (sem dados locais, sem auth token)
+    // RISCO: Dados de colaboradores (emails, nomes, senhas hash) expostos publicamente
+    // MITIGAÇÃO: Implementar Cloud Function para autenticação na próxima versão
+    // TODO (Q2 2026): Substituir por endpoint seguro /auth/login
     match /empresas/{empresaId}/entidades/colaboradores/items/{itemId} {
-      // ✅ PERMITIR LEITURA para todos (incluindo não autenticados) para login
+      // ⚠️ PERMITIR LEITURA para todos (incluindo não autenticados) para login
       // A busca por email é necessária quando o app está vazio
-      allow read: if true; // Permitir leitura sem autenticação para login
+      allow read: if true; // TEMPORÁRIO - Risco de segurança documentado
       // ✅ PERMITIR ESCRITA apenas para usuários autenticados (sincronização)
       allow write: if request.auth != null;
     }
@@ -109,11 +111,16 @@ service cloud.firestore {
     // ✅ CRÍTICO: Regra para estrutura aninhada empresas/empresa_001/entidades/{collectionName}/items
     // Esta é a estrutura REAL usada pelo SyncRepository e AuthViewModel
     // Caminho: empresas/empresa_001/entidades/{collectionName}/items/{itemId}
+    // ⚠️ SEGURANÇA TEMPORÁRIA: allow read: if true
+    // MOTIVO: Necessário para login em app vazio E sincronização inicial
+    // RISCO ALTO: Expõe TODAS entidades (clientes, acertos, mesas, despesas, colaboradores)
+    // MITIGAÇÃO: Implementar Cloud Function + custom claims na próxima versão
+    // TODO (Q2 2026): Implementar autenticação servidor-side e custom claims
     match /empresas/{empresaId}/entidades/{collectionName}/items/{itemId} {
-      // ✅ CORREÇÃO CRÍTICA: Permitir leitura SEM autenticação para login em app vazio
+      // ⚠️ CORREÇÃO CRÍTICA: Permitir leitura SEM autenticação para login em app vazio
       // Quando o app está vazio, o usuário precisa buscar colaborador por email ANTES de autenticar
       // Mas também funciona DEPOIS da autenticação Firebase (quando request.auth != null)
-      allow read: if true; // Sempre permitir leitura (necessário para login em app vazio)
+      allow read: if true; // TEMPORÁRIO - Risco ALTO documentado no roadmap
       // ✅ CORREÇÃO: Permitir write (CREATE, UPDATE, DELETE) para usuários autenticados em coleções comuns
       // ADMIN pode tudo, usuários autenticados podem modificar despesas, acertos, clientes, etc.
       allow write: if isAdmin() ||
@@ -128,11 +135,14 @@ service cloud.firestore {
     
     // ✅ CORREÇÃO: Regra genérica para subcoleções de empresas (caso haja outras estruturas)
     // IMPORTANTE: Esta regra vem DEPOIS da regra específica acima, então não interfere
-    // Mas para garantir, vamos permitir leitura sem autenticação também aqui
+    // ⚠️ SEGURANÇA TEMPORÁRIA: allow read: if true
+    // MOTIVO: Fallback para estruturas não capturadas pela regra específica acima
+    // RISCO: Backup de segurança mas ainda expõe dados
+    // TODO (Q2 2026): Revisar e restringir após implementar Cloud Functions
     match /empresas/{empresaId}/{document=**} {
-      // ✅ PERMITIR LEITURA sem autenticação para permitir login em app vazio
+      // ⚠️ PERMITIR LEITURA sem autenticação para permitir login em app vazio
       // A busca de colaboradores por email precisa funcionar mesmo sem autenticação inicial
-      allow read: if true; // Permitir leitura sem autenticação (necessário para login)
+      allow read: if true; // TEMPORÁRIO - Risco documentado
       allow write: if isAdmin();
     }
 
