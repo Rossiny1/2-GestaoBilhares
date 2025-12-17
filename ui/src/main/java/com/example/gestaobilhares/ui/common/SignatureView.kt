@@ -7,7 +7,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.example.gestaobilhares.core.utils.SignaturePoint
-// import com.example.gestaobilhares.core.utils.SignatureStatistics // TODO: Classe removida
+
 import java.io.ByteArrayOutputStream
 
 /**

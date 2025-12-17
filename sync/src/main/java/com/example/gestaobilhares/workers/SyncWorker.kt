@@ -32,7 +32,7 @@ class SyncWorker(
         return try {
             Timber.d("Iniciando sincronização em background...")
             
-            // Criar repositories diretamente (sem usar RepositoryFactory para evitar dependência circular)
+            // Criar repositories manualmente (evita dependência circular com Hilt/WorkManager)
             val database = AppDatabase.getDatabase(applicationContext)
             val appRepository = AppRepository.create(database)
             val syncRepository = SyncRepository(applicationContext, appRepository)
