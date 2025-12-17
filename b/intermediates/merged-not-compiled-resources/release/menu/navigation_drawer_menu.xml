@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Grupo: Gerenciamento -->
+    <group android:id="@+id/group_management" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_manage_collaborator"
+            android:icon="@drawable/ic_person"
+            android:title="Gerenciar Colaborador" />
+        <item
+            android:id="@+id/nav_expense_management"
+            android:icon="@drawable/ic_money"
+            android:title="Gerenciamento de Despesa" />
+        
+        <item
+            android:id="@+id/nav_expense_categories"
+            android:icon="@drawable/ic_category"
+            android:title="Categorias de Despesa" />
+        <item
+            android:id="@+id/nav_expense_types"
+            android:icon="@drawable/ic_type"
+            android:title="Tipos de Despesa" />
+        <item
+            android:id="@+id/nav_expense_quick_add"
+            android:icon="@drawable/ic_add"
+            android:title="+ Despesa" />
+        
+        <item
+            android:id="@+id/nav_manage_tables"
+            android:icon="@drawable/ic_table"
+            android:title="Gerenciar Mesas" />
+        
+        <item
+            android:id="@+id/nav_manage_routes"
+            android:icon="@drawable/ic_route"
+            android:title="Gerenciar Rotas" />
+        
+        <item
+            android:id="@+id/nav_manage_contracts"
+            android:icon="@drawable/ic_contract"
+            android:title="Gerenciar Contratos" />
+
+        <!-- ✅ NOVO: Inventário -->
+        <item
+            android:id="@+id/nav_inventory"
+            android:icon="@drawable/ic_category"
+            android:title="Inventário" />
+    </group>
+
+    <!-- Grupo: Relatórios -->
+    <group android:id="@+id/group_reports" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_metas"
+            android:icon="@drawable/ic_target"
+            android:title="Metas" />
+        <item
+            android:id="@+id/nav_dashboard"
+            android:icon="@drawable/ic_dashboard"
+            android:title="Dashboard" />
+        <item
+            android:id="@+id/nav_closure_report"
+            android:icon="@drawable/ic_assessment"
+            android:title="Relatório" />
+    </group>
+
+    <!-- Grupo: Configurações -->
+    <group android:id="@+id/group_settings" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_message_settings"
+            android:icon="@drawable/ic_whatsapp"
+            android:title="Configurações de Mensagens" />
+        
+        <item
+            android:id="@+id/nav_system_settings"
+            android:icon="@drawable/ic_settings"
+            android:title="Configuração do Sistema" />
+    </group>
+
+    <!-- ✅ NOVO: Grupo de Sessão -->
+    <group android:id="@+id/group_session" android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/ic_logout"
+            android:title="Sair da Conta" />
+    </group>
+
+</menu>

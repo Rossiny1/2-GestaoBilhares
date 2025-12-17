@@ -1,12 +1,12 @@
-# 🚨 BUILD MÍNIMO DE EMERGÊNCIA
-# Estratégia: Criar um APK funcional mínimo
+# BUILD MINIMO DE EMERGENCIA
+# Estrategia: Criar um APK funcional minimo
 
-Write-Host "🚨 BUILD MÍNIMO DE EMERGÊNCIA..." -ForegroundColor Red
+Write-Host "BUILD MINIMO DE EMERGENCIA..." -ForegroundColor Red
 
 # 1. DESABILITAR TUDO QUE PODE CAUSAR PROBLEMAS
-Write-Host "🔧 Desabilitando recursos problemáticos..." -ForegroundColor Yellow
+Write-Host "Desabilitando recursos problematicos..." -ForegroundColor Yellow
 
-# Criar build.gradle.kts temporário simplificado
+# Criar build.gradle.kts temporario simplificado
 $buildGradleSimplificado = @"
 plugins {
     id("com.android.application")
@@ -54,17 +54,17 @@ Copy-Item "app/build.gradle.kts" "app/build.gradle.kts.backup"
 # Aplicar build simplificado
 $buildGradleSimplificado | Out-File -FilePath "app/build.gradle.kts" -Encoding UTF8
 
-Write-Host "📝 Build simplificado aplicado" -ForegroundColor Green
+Write-Host "Build simplificado aplicado" -ForegroundColor Green
 
-# 2. BUILD MÍNIMO
-Write-Host "🔨 Executando build mínimo..." -ForegroundColor Yellow
+# 2. BUILD MINIMO
+Write-Host "Executando build minimo..." -ForegroundColor Yellow
 ./gradlew assembleDebug --no-daemon
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "✅ BUILD MÍNIMO SUCESSO!" -ForegroundColor Green
-    Write-Host "📱 APK mínimo gerado!" -ForegroundColor Green
+    Write-Host "BUILD MINIMO SUCESSO!" -ForegroundColor Green
+    Write-Host "APK minimo gerado!" -ForegroundColor Green
 } else {
-    Write-Host "❌ Mesmo o build mínimo falhou" -ForegroundColor Red
-    Write-Host "🔧 Restaurando build original..." -ForegroundColor Yellow
+    Write-Host "Mesmo o build minimo falhou" -ForegroundColor Red
+    Write-Host "Restaurando build original..." -ForegroundColor Yellow
     Copy-Item "app/build.gradle.kts.backup" "app/build.gradle.kts"
 }

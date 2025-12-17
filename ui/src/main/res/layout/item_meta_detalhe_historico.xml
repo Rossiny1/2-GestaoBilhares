@@ -16,7 +16,7 @@
         android:layout_gravity="center_vertical"
         android:textSize="20sp"
         android:layout_marginEnd="8dp"
-        tools:text="✅" />
+        tools:text="OK" />
 
     <!-- Informações da meta -->
     <LinearLayout

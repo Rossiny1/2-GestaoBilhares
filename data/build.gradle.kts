@@ -69,6 +69,9 @@ dependencies {
     
     // Gson
     implementation("com.google.code.gson:gson:2.10.1")
+    
+    // Timber para logging
+    implementation("com.jakewharton.timber:timber:5.0.1")
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.51")

@@ -1,0 +1,1 @@
+{"className":"com.example.gestaobilhares.DaggerGestaoBilharesApplication_HiltComponents_SingletonC$ViewModelCBuilder","classAnnotations":[],"interfaces":["com.example.gestaobilhares.GestaoBilharesApplication_HiltComponents$ViewModelC$Builder","dagger.hilt.android.internal.builders.ViewModelComponentBuilder"],"superClasses":["java.lang.Object"]}

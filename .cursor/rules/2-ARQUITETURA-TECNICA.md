@@ -676,6 +676,153 @@ val backgroundColor = Color.White
  * 
  * @property dao DAO para acess
 
+## 📊 MONITORAMENTO E FERRAMENTAS FIREBASE (IMPLEMENTADO)
+
+### **Firebase Crashlytics**
+
+**Status**: ✅ **IMPLEMENTADO E FUNCIONANDO**
+
+**Implementação**:
+- **CrashlyticsTree**: Classe customizada que integra Timber com Firebase Crashlytics
+- **Localização**: `app/src/main/java/com/example/gestaobilhares/CrashlyticsTree.kt`
+- **Comportamento**:
+  - Em modo DEBUG: Usa `Timber.DebugTree()` (logs completos)
+  - Em modo PRODUÇÃO: Usa `CrashlyticsTree()` (apenas WARN e ERROR)
+  - Registra automaticamente exceções não capturadas
+  - Logs seguros sem PII (dados pessoais identificáveis)
+
+**Configuração**:
+```kotlin
+// GestaoBilharesApplication.kt
+if (BuildConfig.DEBUG) {
+    Timber.plant(Timber.DebugTree())
+} else {
+    Timber.plant(CrashlyticsTree()) // Produção: apenas WARN/ERROR
+}
+```
+
+**Uso**:
+```kotlin
+// Em qualquer parte do código
+Timber.w("Aviso importante") // Será enviado ao Crashlytics em produção
+Timber.e(exception, "Erro crítico") // Exceção registrada automaticamente
+```
+
+### **Firebase Analytics**
+
+**Status**: ✅ **CONFIGURADO E ATIVO**
+
+**Implementação**:
+- Integrado via Firebase BOM 32.7.4
+- Rastreamento automático de eventos de uso
+- Configurado no `build.gradle.kts`:
+  ```kotlin
+  implementation("com.google.firebase:firebase-analytics-ktx")
+  ```
+
+**Eventos Rastreados**:
+- Abertura do app
+- Navegação entre telas
+- Ações do usuário (cliques, formulários, etc.)
+- Eventos customizados (quando implementados)
+
+### **Firebase Performance Monitoring**
+
+**Status**: ✅ **HABILITADO**
+
+**Implementação**:
+- Plugin `firebase-perf` configurado no `build.gradle.kts`
+- Monitoramento automático de:
+  - Performance de rede (requisições HTTP)
+  - Tempo de inicialização do app
+  - Operações de banco de dados
+  - Renderização de telas
+
+**Configuração**:
+```kotlin
+plugins {
+    id("com.google.firebase.firebase-perf")
+}
+
+dependencies {
+    implementation("com.google.firebase:firebase-perf-ktx")
+}
+```
+
+### **Firebase Remote Config**
+
+**Status**: ✅ **IMPLEMENTADO E OPERACIONAL**
+
+**Implementação**:
+- Configurado em `GestaoBilharesApplication.onCreate()`
+- Intervalo de atualização:
+  - DEBUG: 1 hora (3600 segundos)
+  - PRODUÇÃO: 12 horas (43200 segundos)
+
+**Parâmetros Padrão Configurados**:
+```kotlin
+val defaultDefaults = mapOf(
+    "sync_interval_minutes" to 15,
+    "enable_new_sync_engine" to true,
+    "force_update_version" to 1
+)
+```
+
+**Uso**:
+```kotlin
+val remoteConfig = FirebaseRemoteConfig.getInstance()
+val syncInterval = remoteConfig.getLong("sync_interval_minutes")
+val enableNewEngine = remoteConfig.getBoolean("enable_new_sync_engine")
+```
+
+**Benefícios**:
+- Atualização de configurações sem nova versão do app
+- A/B testing de funcionalidades
+- Controle remoto de features
+- Configuração dinâmica de intervalos e limites
+
+### **Timber - Sistema de Logging Moderno**
+
+**Status**: ✅ **IMPLEMENTADO**
+
+**Implementação**:
+- Biblioteca: `com.jakewharton.timber:timber:5.0.1`
+- Integração com Crashlytics via `CrashlyticsTree`
+- Logs seguros em produção (sem PII)
+
+**Padrão de Uso**:
+```kotlin
+// Substituir Log.d() por Timber.d()
+Timber.d("Mensagem de debug") // Apenas em DEBUG
+
+// Logs que vão para Crashlytics em produção
+Timber.w("Aviso importante")
+Timber.e(exception, "Erro crítico")
+```
+
+**Vantagens sobre Log.d()**:
+- ✅ Integração automática com Crashlytics
+- ✅ Filtros automáticos por nível (DEBUG/WARN/ERROR)
+- ✅ Não expõe PII em produção
+- ✅ API mais limpa e moderna
+
+### **Stack Completo de Monitoramento**
+
+**Componentes Integrados**:
+1. ✅ **Crashlytics**: Rastreamento de crashes e exceções
+2. ✅ **Analytics**: Métricas de uso e comportamento
+3. ✅ **Performance**: Monitoramento de performance
+4. ✅ **Remote Config**: Configuração remota dinâmica
+5. ✅ **Timber**: Sistema de logging moderno e seguro
+
+**Dashboard Firebase**:
+- Acesse: https://console.firebase.google.com/project/gestaobilhares
+- Visualize:
+  - Crashes e exceções (Crashlytics)
+  - Eventos e métricas (Analytics)
+  - Performance metrics (Performance Monitoring)
+  - Configurações remotas (Remote Config)
+
 ## 📚 REFERÊNCIAS
 
 - [Android Developer - Architecture](https://developer.android.com/topic/architecture)
@@ -683,3 +830,8 @@ val backgroundColor = Color.White
 - [StateFlow vs LiveData](https://developer.android.com/kotlin/flow/stateflow-and-sharedflow)
 - [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager)
 - [Firebase Firestore](https://firebase.google.com/docs/firestore)
+- [Firebase Crashlytics](https://firebase.google.com/docs/crashlytics)
+- [Firebase Analytics](https://firebase.google.com/docs/analytics)
+- [Firebase Performance](https://firebase.google.com/docs/perf-mon)
+- [Firebase Remote Config](https://firebase.google.com/docs/remote-config)
+- [Timber](https://github.com/JakeWharton/timber)

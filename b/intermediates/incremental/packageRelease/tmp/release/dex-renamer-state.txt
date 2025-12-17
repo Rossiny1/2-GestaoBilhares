@@ -1,0 +1,7 @@
+#Wed Dec 17 09:54:47 GMT-03:00 2025
+base.0=C\:\\Users\\Rossiny\\Desktop\\2-GestaoBilhares\\b\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
+base.1=C\:\\Users\\Rossiny\\Desktop\\2-GestaoBilhares\\b\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes2.dex
+path.0=classes.dex
+path.1=classes2.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex

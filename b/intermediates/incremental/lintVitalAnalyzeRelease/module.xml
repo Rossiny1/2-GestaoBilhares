@@ -1,0 +1,18 @@
+<lint-module
+    format="1"
+    dir="C:\Users\Rossiny\Desktop\2-GestaoBilhares\app"
+    name=":app"
+    type="APP"
+    maven="GestaoBilhares:app:unspecified"
+    agpVersion="8.10.1"
+    buildFolder="C:\Users\Rossiny\Desktop\2-GestaoBilhares\b"
+    bootClassPath="C:\Users\Rossiny\AppData\Local\Android\Sdk\platforms\android-34\android.jar;C:\Users\Rossiny\AppData\Local\Android\Sdk\build-tools\35.0.0\core-lambda-stubs.jar"
+    javaSourceLevel="11"
+    compileTarget="android-34">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>
