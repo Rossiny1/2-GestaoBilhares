@@ -1,1 +1,0 @@
-{"className":"com.example.gestaobilhares.DaggerGestaoBilharesApplication_HiltComponents_SingletonC$ActivityRetainedCBuilder","classAnnotations":[],"interfaces":["com.example.gestaobilhares.GestaoBilharesApplication_HiltComponents$ActivityRetainedC$Builder","dagger.hilt.android.internal.builders.ActivityRetainedComponentBuilder"],"superClasses":["java.lang.Object"]}
