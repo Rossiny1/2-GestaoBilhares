@@ -1,0 +1,1 @@
+{"className":"com.example.gestaobilhares.DaggerGestaoBilharesApplication_HiltComponents_SingletonC$ViewCImpl","classAnnotations":[],"interfaces":["dagger.hilt.android.components.ViewComponent","dagger.hilt.internal.GeneratedComponent"],"superClasses":["com.example.gestaobilhares.GestaoBilharesApplication_HiltComponents$ViewC","java.lang.Object"]}

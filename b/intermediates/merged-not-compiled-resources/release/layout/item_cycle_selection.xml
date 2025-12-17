@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp"
+    app:strokeColor="@color/divider_color"
+    app:strokeWidth="1dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvCycleNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1º Acerto"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary_color"
+                    tools:text="1º Acerto" />
+
+                <TextView
+                    android:id="@+id/tvCycleYear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2024"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    tools:text="2024" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvCycleStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ativo"
+                android:textSize="12sp"
+                android:textColor="@color/success_color"
+                android:background="@drawable/bg_status_chip"
+                android:padding="6dp"
+                tools:text="Ativo" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvCycleDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ciclo de acerto para o período"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="8dp"
+            tools:text="Ciclo de acerto para o período" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

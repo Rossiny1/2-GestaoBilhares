@@ -18,3 +18,10 @@ local.properties
 # Arquivos temporários do Google Drive
 .tmp.driveupload/
 *.tmp.driveupload
+
+# ✅ PRODUÇÃO: Keystore e credenciais (NUNCA COMMITAR!)
+keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pfx

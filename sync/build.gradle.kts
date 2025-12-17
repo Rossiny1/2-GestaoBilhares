@@ -59,5 +59,6 @@ dependencies {
     // Hilt
     implementation("com.google.dagger:hilt-android:2.51")
     ksp("com.google.dagger:hilt-android-compiler:2.51")
+    implementation("com.jakewharton.timber:timber:5.0.1")
 }
 

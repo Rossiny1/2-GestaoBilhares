@@ -59,6 +59,7 @@
     
     <!-- Cards com Excelente Visibilidade -->
     <color name="card_background">#FFFFFF</color>        <!-- Card claro -->
+    <color name="card_background_light">#FFFFFF</color>  <!-- Card claro alias -->
     <color name="card_background_dark">#2D3748</color>   <!-- Card escuro com melhor contraste -->
     <color name="card_stroke">#4A5568</color>            <!-- Borda mais visível -->
     <color name="card_stroke_light">#E2E8F0</color>      <!-- Borda clara -->

@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        app:elevation="0dp">
+
+        <!-- Header com gradiente -->
+        <LinearLayout
+            android:id="@+id/headerLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gradient_overlay"
+            android:elevation="4dp"
+            android:orientation="vertical"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+
+            <!-- Barra de título -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="8dp">
+
+                <ImageButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Voltar"
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="?attr/colorOnPrimary" />
+
+                <TextView
+                    android:id="@+id/tvTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:text="Rota Centro"
+                    android:textColor="?attr/colorOnPrimary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/btnSearch"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Pesquisar"
+                    android:src="@drawable/ic_search"
+                    app:tint="?attr/colorOnPrimary" />
+
+                <ImageButton
+                    android:id="@+id/btnFilter"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Filtrar"
+                    android:src="@drawable/ic_filter"
+                    app:tint="?attr/colorOnPrimary" />
+
+                <!-- ✅ NOVO: Botão de Relatórios -->
+                <ImageButton
+                    android:id="@+id/btnReports"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Relatórios de Ciclos"
+                    android:src="@drawable/ic_report"
+                    app:tint="?attr/colorOnPrimary" />
+
+            </LinearLayout>
+
+            <!-- Informações resumidas da rota -->
+            <LinearLayout
+                android:id="@+id/layoutRouteInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="16dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_location"
+                    app:tint="?attr/colorOnPrimary"
+                    android:contentDescription="Ícone de localização"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/tvRouteInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="?attr/colorOnPrimary"
+                    android:textSize="14sp"
+                    tools:text="12 clientes ativos • 24 mesas" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Card de Status e Controle da Rota -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/routeControlCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:background="@drawable/settlement_history_card_background">
+
+                    <!-- Linha 1: Título e Status lado a lado -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
+
+                        <!-- Coluna 1: 3º Acerto -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:id="@+id/tvCycleTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="3º Acerto"
+                        android:textColor="@color/accent_teal"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="center" />
+
+                    </LinearLayout>
+
+                        <!-- Coluna 2: Status -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Status:"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:layout_marginBottom="2dp" />
+
+                            <TextView
+                                android:id="@+id/tvRouteStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Em andamento"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold"
+                                    android:singleLine="true"
+                                    android:ellipsize="end" />
+
+                            </LinearLayout>
+
+                    </LinearLayout>
+
+                    <!-- Linha 2: Botões lado a lado -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <!-- Botão Iniciar -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnStartRoute"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="Iniciar"
+                            android:textColor="@color/primary_blue"
+                            android:textSize="14sp"
+                            android:maxLines="2"
+                            android:ellipsize="end"
+                            android:gravity="center"
+                            android:layout_marginEnd="4dp" />
+
+                        <!-- Botão Finalizar -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnFinishRoute"
+                                style="@style/Widget.Material3.Button.TextButton"
+                                android:layout_width="0dp"
+                            android:layout_height="48dp"
+                                android:layout_weight="1"
+                                android:enabled="false"
+                                android:text="Finalizar"
+                                android:textColor="@color/primary_blue"
+                            android:textSize="14sp"
+                            android:maxLines="2"
+                            android:ellipsize="end"
+                                android:gravity="center"
+                            android:layout_marginStart="4dp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+
+
+
+
+            <!-- ✅ NOVO: Campo de pesquisa (inicialmente oculto) -->
+            <LinearLayout
+                android:id="@+id/searchLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="12dp"
+                android:background="?attr/colorSurface"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilSearch"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Pesquisar cliente por nome"
+                    app:endIconDrawable="@drawable/ic_close"
+                    app:endIconMode="custom"
+                    app:startIconDrawable="@drawable/ic_search"
+                    app:startIconTint="?attr/colorOnSurfaceVariant">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etSearch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:textSize="16sp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+            <!-- Filtros Rápidos -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/filtersCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="4dp"
+                    android:background="@drawable/settlement_history_card_background">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnFilterNaoAcertados"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:text="Em aberto"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnFilterAcertados"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:text="Pago"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnFilterPendencias"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:text="Pendências"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- RecyclerView para lista de clientes -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvClients"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:clipToPadding="false"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="32dp"
+                android:nestedScrollingEnabled="true"
+                tools:listitem="@layout/item_client" />
+
+            <!-- ✅ FASE 9A: Empty state melhorado -->
+            <LinearLayout
+                android:id="@+id/emptyStateLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/ivEmptyStateIcon"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginBottom="16dp"
+                    android:alpha="0.6"
+                    android:src="@drawable/ic_user"
+                    app:tint="?attr/colorOnSurfaceVariant"
+                    android:contentDescription="Nenhum cliente encontrado"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/tvEmptyStateTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Nenhum cliente encontrado"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvEmptyStateMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Não há clientes nesta rota ou com os filtros aplicados."
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEmptyStateAction"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Adicionar Cliente"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- FAB Principal -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="Menu de ações"
+        android:src="@drawable/ic_add"
+        app:fabSize="normal" />
+
+    <!-- Container para FABs expandidos -->
+    <LinearLayout
+        android:id="@+id/fab_expanded_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="80dp"
+        android:orientation="vertical"
+        android:gravity="end"
+        android:visibility="gone">
+
+        <!-- FAB Novo Cliente com Label -->
+        <LinearLayout
+            android:id="@+id/fab_new_client_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="?attr/colorSurface"
+            android:elevation="8dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:alpha="0">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Novo Cliente"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_new_client"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Novo Cliente"
+                android:src="@drawable/ic_person"
+                app:fabSize="mini"
+                app:backgroundTint="?attr/colorPrimary"
+                app:tint="?attr/colorOnPrimary"
+                android:clickable="false" />
+
+        </LinearLayout>
+
+        <!-- FAB Nova Despesa com Label -->
+        <LinearLayout
+            android:id="@+id/fab_new_expense_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="0dp"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="?attr/colorSurface"
+            android:elevation="8dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:alpha="0">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nova Despesa"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_new_expense"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Nova Despesa"
+                android:src="@drawable/ic_money"
+                app:fabSize="mini"
+                app:backgroundTint="?attr/colorSecondary"
+                app:tint="?attr/colorOnSecondary"
+                android:clickable="false" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout> 

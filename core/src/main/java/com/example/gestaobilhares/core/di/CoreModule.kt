@@ -3,6 +3,9 @@ package com.example.gestaobilhares.core.di
 import android.content.Context
 import com.example.gestaobilhares.core.utils.NetworkUtils
 import com.example.gestaobilhares.core.utils.UserSessionManager
+
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,6 +16,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object CoreModule {
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return GsonBuilder().create()
+    }
 
     @Provides
     @Singleton

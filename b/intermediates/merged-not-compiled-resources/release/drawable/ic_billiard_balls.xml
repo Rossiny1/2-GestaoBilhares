@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- Bola 1 - Amarela (usando path) -->
+    <path
+        android:fillColor="@color/warning_orange"
+        android:pathData="M5,8 A3,3 0 1,1 11,8 A3,3 0 1,1 5,8" />
+    
+    <!-- Bola 2 - Vermelha -->
+    <path
+        android:fillColor="@color/error_red"
+        android:pathData="M13,8 A3,3 0 1,1 19,8 A3,3 0 1,1 13,8" />
+    
+    <!-- Bola 3 - Verde -->
+    <path
+        android:fillColor="@color/success_green"
+        android:pathData="M9,16 A3,3 0 1,1 15,16 A3,3 0 1,1 9,16" />
+        
+</vector>

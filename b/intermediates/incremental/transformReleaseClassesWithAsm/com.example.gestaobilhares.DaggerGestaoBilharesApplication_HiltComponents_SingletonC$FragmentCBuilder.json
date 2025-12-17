@@ -1,0 +1,1 @@
+{"className":"com.example.gestaobilhares.DaggerGestaoBilharesApplication_HiltComponents_SingletonC$FragmentCBuilder","classAnnotations":[],"interfaces":["com.example.gestaobilhares.GestaoBilharesApplication_HiltComponents$FragmentC$Builder","dagger.hilt.android.internal.builders.FragmentComponentBuilder"],"superClasses":["java.lang.Object"]}

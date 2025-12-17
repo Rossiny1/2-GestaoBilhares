@@ -189,11 +189,13 @@
 ## 🎯 MELHORIAS FUTURAS (ANDROID 2025)
 
 ### **Objetivo**
+
 Manter o projeto alinhado com as melhores práticas Android mais recentes, garantindo qualidade, performance, segurança e manutenibilidade a longo prazo.
 
 ### **PRIORIDADE ALTA (2-4 semanas)**
 
 #### **1. Cobertura de Testes Automatizados**
+
 - **Status**: 🔄 **Em expansão** - Testes críticos implementados
 - **Objetivo**: Aumentar cobertura para >60% (ViewModels e Repositories)
 - **Benefícios**: Detecção precoce de bugs, refatoração segura
@@ -207,6 +209,7 @@ Manter o projeto alinhado com as melhores práticas Android mais recentes, garan
 - **Ferramentas**: JUnit 5, Mockito, Turbine, Truth
 
 #### **2. Injeção de Dependência com Hilt**
+
 - **Status**: ✅ **CONCLUÍDA** - RepositoryFactory Removido (Dezembro 2025)
 - **Progresso Atual**: Todos os módulos migrados para Hilt (`@AndroidEntryPoint`, `@HiltViewModel`). Código legado (`RepositoryFactory`) completamente removido. Build bem-sucedido.
 - **Objetivo**: Manter padrão Hilt em novas features.
@@ -219,31 +222,56 @@ Manter o projeto alinhado com as melhores práticas Android mais recentes, garan
 ### **PRIORIDADE MÉDIA (4-8 semanas)**
 
 #### **3. Otimização de Performance e Memória**
+
 - **Status**: ⚠️ Sem monitoramento ativo
 - **Objetivo**: Monitorar e otimizar consumo de recursos
 - **Implementação**: LeakCanary, cache limits, profiling, otimização de queries
 
 #### **4. Documentação KDoc Consistente**
+
 - **Status**: ⚠️ Documentação básica e inconsistente
 - **Objetivo**: KDoc completo para todas as classes públicas
 
 #### **5. Segurança para Produção**
+
 - **Status**: ⚠️ Proguard básico, sem validações avançadas
 - **Melhorias Necessárias**: R8 full mode, certificate pinning, input validation
 
 ### **PRIORIDADE BAIXA (8+ semanas)**
 
 #### **6. Accessibility (A11y)**
+
 - **Status**: ❌ Não implementado
 - **Objetivo**: Tornar app acessível para todos os usuários
 
 #### **7. CI/CD Pipeline**
+
 - **Status**: ❌ Build manual
 - **Objetivo**: Automatizar build, testes e deploy
 
 #### **8. Analytics e Monitoramento**
-- **Status**: ❌ Não implementado
-- **Objetivo**: Entender uso e problemas em produção
+
+- **Status**: ✅ **IMPLEMENTADO E FUNCIONANDO**
+- **Componentes Implementados**:
+  - ✅ **Firebase Crashlytics**: Sistema completo de rastreamento de crashes e exceções
+    - `CrashlyticsTree` integrado com Timber para logs automáticos
+    - Registra apenas logs WARN e ERROR em produção
+    - Captura exceções automaticamente
+  - ✅ **Firebase Analytics**: Configurado e ativo
+    - Rastreamento de eventos de uso do app
+    - Integrado via Firebase BOM 32.7.4
+  - ✅ **Firebase Performance Monitoring**: Configurado
+    - Monitoramento de performance de rede e operações
+    - Plugin `firebase-perf` habilitado
+  - ✅ **Firebase Remote Config**: Implementado e funcionando
+    - Configuração remota para parâmetros do app
+    - Intervalo de atualização: 1h (debug) / 12h (produção)
+    - Parâmetros padrão: `sync_interval_minutes`, `enable_new_sync_engine`, `force_update_version`
+  - ✅ **Timber**: Sistema de logging moderno
+    - `DebugTree` em modo debug (logs completos)
+    - `CrashlyticsTree` em produção (apenas WARN/ERROR)
+    - Logs seguros sem PII (dados pessoais identificáveis)
+- **Objetivo**: ✅ **CONCLUÍDO** - Monitoramento completo de crashes, analytics e performance em produção
 
 ### **Roadmap Resumido**
 
@@ -251,24 +279,35 @@ Manter o projeto alinhado com as melhores práticas Android mais recentes, garan
 |------|-----------|---------|-------|
 | **Q4 2025** | ALTA | 2-4 sem | ✅ Hilt DI (Concluído)<br/>🔄 Testes (Em andamento) |
 | **Q1 2026** | MÉDIA | 4-8 sem | 🔄 Migração Compose<br/>⏳ Performance |
-| **Q2 2026** | BAIXA | 8+ sem | ⏳ A11y<br/>⏳ CI/CD<br/>⏳ Analytics |
-| **IMEDIATO** | CRÍTICA | 1 sem | 🧹 Limpeza Raiz (Scripts)<br/>🛡️ Segurança Logs (PII)<br/>🏗️ Refatoração AppRepository |
+| **Q2 2026** | BAIXA | 8+ sem | ⏳ A11y<br/>⏳ CI/CD<br/>✅ Analytics (Concluído) |
+| **IMEDIATO** | CRÍTICA | 1 sem | ✅ 🧹 Limpeza Raiz (Scripts)<br/>✅ 🛡️ Segurança Logs (PII)<br/>✅ 📊 Monitoramento (Crashlytics, Analytics, Performance, Remote Config)<br/>🏗️ Refatoração AppRepository |
 
 ### **METAS IMEDIATAS (DEZ 2025 - SENIOR AUDIT)**
+
 #### **1. Limpeza e Organização (PRIORIDADE CRÍTICA)**
+
 - **Problema**: Raiz do projeto poluída com centenas de scripts.
-- **Ação**: Mover `.ps1` e `.bat` para pasta `scripts/`.
+- **Ação**: ✅ Mover `.ps1` e `.bat` para pasta `scripts/`.
 
 #### **2. Segurança de Dados (PRIORIDADE CRÍTICA)**
+
 - **Problema**: Logs com PII (nomes, emails) em `AppRepository`.
-- **Ação**: Remover interpolação de dados sensíveis em `Log.d`.
+- **Ação**: ✅ Remover interpolação de dados sensíveis em `Log.d`.
+- **Ação**: ✅ Implementar Crashlytics e Timber para logs seguros em produção.
+- **Status**: ✅ **CONCLUÍDO** - Sistema completo de monitoramento implementado:
+  - ✅ Crashlytics configurado e funcionando
+  - ✅ Timber integrado (DebugTree/CrashlyticsTree)
+  - ✅ Analytics ativo
+  - ✅ Performance Monitoring habilitado
+  - ✅ Remote Config operacional
 
 #### **3. Refatoração Arquitetural (GOD OBJECT)**
+
 - **Problema**: `AppRepository` viola SRP (~2000 linhas).
-- **Ação**: 
-    - Parar de injetar `AppRepository` em novos ViewModels.
-    - Usar `ClienteRepository`, `RotaRepository` diretamente.
-    - Planejar quebra gradual do `AppRepository`.
+- **Ação**:
+  - Parar de injetar `AppRepository` em novos ViewModels.
+  - Usar `ClienteRepository`, `RotaRepository` diretamente.
+  - Planejar quebra gradual do `AppRepository`.
 
 ### **Métricas de Sucesso**
 
@@ -290,6 +329,16 @@ Manter o projeto alinhado com as melhores práticas Android mais recentes, garan
 - ✅ **Fila de Sincronização**: Processamento completo (CREATE, UPDATE, DELETE)
 - ✅ **Hilt**: Migração total concluída
 - 🔄 **Compose**: Migração em andamento (35.8%)
+- ✅ **Monitoramento e Analytics**: Sistema completo implementado
+  - ✅ Firebase Crashlytics (rastreamento de crashes)
+  - ✅ Firebase Analytics (eventos de uso)
+  - ✅ Firebase Performance Monitoring (métricas de performance)
+  - ✅ Firebase Remote Config (configuração remota)
+  - ✅ Timber (sistema de logging moderno)
+- ✅ **Backup de Emergência**: Implementado e funcionando
+  - ✅ Exportação de dados locais para JSON
+  - ✅ Permite continuar trabalho quando sincronização falha
+  - ✅ Interface na tela de Configurações
 
 ## 📝 NOTAS IMPORTANTES
 
@@ -297,6 +346,52 @@ Manter o projeto alinhado com as melhores práticas Android mais recentes, garan
 2. **Modularização**: Manter separação estrita de responsabilidades
 3. **Hilt**: Único padrão de injeção permitido
 4. **Testes**: Todo código novo deve incluir testes unitários
+5. **Monitoramento**: Sistema completo de monitoramento implementado (Crashlytics, Analytics, Performance, Remote Config)
+
+## ✅ BACKUP DE EMERGÊNCIA (BOTÃO PÂNICO)
+
+### **Status**: ✅ **IMPLEMENTADO E FUNCIONANDO**
+
+**Localização**: Tela de Configurações (`SettingsFragment`)
+
+**Funcionalidade**:
+
+- **Backup de Emergência**: Permite exportar todos os dados locais para um arquivo JSON quando a sincronização falha
+- **Objetivo**: Permitir que o funcionário continue trabalhando sem depender da sincronização
+- **Dados Exportados**: Clientes, Rotas, Acertos, Mesas, Despesas (todos os dados locais)
+
+**Implementação**:
+
+- **Repository**: `BackupRepository` (módulo `:data`)
+- **ViewModel**: `BackupViewModel` (com Hilt)
+- **Tela**: `SettingsFragment` (`fragment_settings.xml`)
+- **Botão**: "EXPORTAR DADOS AGORA" (cor vermelha #D32F2F)
+- **Formato**: Arquivo JSON (`backup_gestaobilhares_{timestamp}.json`)
+- **Método**: Usa Storage Access Framework (SAF) para escolher local de salvamento
+
+**Fluxo de Uso**:
+
+1. Usuário acessa Configurações
+2. Clica em "EXPORTAR DADOS AGORA"
+3. Sistema exporta todos os dados locais para JSON via `BackupRepository.exportData()`
+4. Usuário escolhe onde salvar o arquivo (SAF)
+5. Backup salvo com sucesso
+
+**Casos de Uso**:
+
+- ✅ Sincronização falha repetidamente
+- ✅ Funcionário precisa continuar trabalhando offline
+- ✅ Backup manual antes de atualizações críticas
+- ✅ Transferência de dados entre dispositivos
+- ✅ Recuperação de dados em caso de problemas
+
+**Componentes Técnicos**:
+
+- `BackupRepository`: Responsável pela exportação dos dados (usa Gson para serialização)
+- `BackupViewModel`: Gerencia estado da exportação (Idle, Loading, Success, Error)
+- `SettingsFragment`: Interface do usuário com feedback visual
+- Storage Access Framework: Para salvamento seguro do arquivo
+- **Dados Exportados**: `BackupData` (timestamp, clientes, rotas, mesas, acertos, despesas)
 
 ## 🔗 REFERÊNCIAS
 

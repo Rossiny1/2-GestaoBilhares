@@ -19,6 +19,22 @@
 -keep class com.example.gestaobilhares.data.entities.** { *; }
 -keep class com.example.gestaobilhares.data.dao.** { *; }
 
+# Gson - CRITICAL: Preserve generic signatures for TypeToken
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.google.gson.** { *; }
+-keep class * implements com.google.gson.TypeAdapter
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+
+# Gson TypeToken - Fix for ExceptionInInitializerError
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
+# Generic signatures for all app classes (needed for Gson)
+-keepattributes Signature,InnerClasses,EnclosingMethod
+
 # App models (Gson)
 -keep class com.example.gestaobilhares.** { *; }
 -dontwarn sun.misc.**
@@ -30,3 +46,4 @@
 # iText warnings
 -dontwarn org.bouncycastle.**
 -dontwarn org.spongycastle.**
+-dontwarn org.slf4j.**
