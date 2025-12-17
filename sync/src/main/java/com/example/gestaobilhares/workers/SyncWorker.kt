@@ -1,12 +1,12 @@
 ﻿package com.example.gestaobilhares.workers
 
 import android.content.Context
-import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.sync.SyncRepository
+import timber.log.Timber
 
 /**
  * Worker para sincronização periódica em background.
@@ -30,7 +30,7 @@ class SyncWorker(
     
     override suspend fun doWork(): Result {
         return try {
-            Log.d(TAG, "Iniciando sincronização em background...")
+            Timber.d("Iniciando sincronização em background...")
             
             // Criar repositories diretamente (sem usar RepositoryFactory para evitar dependência circular)
             val database = AppDatabase.getDatabase(applicationContext)
@@ -39,7 +39,7 @@ class SyncWorker(
 
             // Verificar se há necessidade real de sincronizar
             if (!syncRepository.shouldRunBackgroundSync(maxIdleHours = MAX_IDLE_HOURS)) {
-                Log.d(TAG, "Nenhuma sincronização necessária no momento. Encerrando job em background.")
+                Timber.d("Nenhuma sincronização necessária no momento. Encerrando job em background.")
                 return Result.success()
             }
             
@@ -53,18 +53,20 @@ class SyncWorker(
             syncRepository.limparOperacoesAntigas()
             
             if (result.isSuccess) {
-                Log.d(TAG, "Sincronização em background concluída com sucesso")
+                Timber.d("Sincronização em background concluída com sucesso")
                 Result.success()
             } else {
-                Log.w(TAG, "Sincronização em background falhou: ${result.exceptionOrNull()?.message}")
+                Timber.w("Sincronização em background falhou: ${result.exceptionOrNull()?.message}")
                 Result.retry() // Tentar novamente mais tarde
             }
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro na sincronização em background: ${e.message}", e)
+            Timber.e(e, "Erro na sincronização em background")
             Result.retry() // Tentar novamente mais tarde
         }
     }
 }
+
+
 
 

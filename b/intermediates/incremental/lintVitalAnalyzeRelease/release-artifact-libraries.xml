@@ -1,10 +1,10 @@
 <libraries>
   <library
       name=":@@:ui::release"
-      jars="C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\f41ac7cbb5f98d7792444515273b3e85\transformed\out\jars\classes.jar;C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\f41ac7cbb5f98d7792444515273b3e85\transformed\out\jars\libs\R.jar"
+      jars="C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\495353a967fd988906d0bb33439e43e9\transformed\out\jars\classes.jar;C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\495353a967fd988906d0bb33439e43e9\transformed\out\jars\libs\R.jar"
       resolved="GestaoBilhares:ui:unspecified"
       partialResultsDir="C:\Users\Rossiny\Desktop\2-GestaoBilhares\ui\build\intermediates\lint_vital_partial_results\release\lintVitalAnalyzeRelease\out"
-      folder="C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\f41ac7cbb5f98d7792444515273b3e85\transformed\out"
+      folder="C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\495353a967fd988906d0bb33439e43e9\transformed\out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -56,10 +56,10 @@
       proguardRules="proguard.txt"/>
   <library
       name=":@@:sync::release"
-      jars="C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\5992d889895cb27f02648cbafb10f816\transformed\out\jars\classes.jar;C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\5992d889895cb27f02648cbafb10f816\transformed\out\jars\libs\R.jar"
+      jars="C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\5d4d7cb7b290388efbfb4f4e488fb189\transformed\out\jars\classes.jar;C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\5d4d7cb7b290388efbfb4f4e488fb189\transformed\out\jars\libs\R.jar"
       resolved="GestaoBilhares:sync:unspecified"
       partialResultsDir="C:\Users\Rossiny\Desktop\2-GestaoBilhares\sync\build\intermediates\lint_vital_partial_results\release\lintVitalAnalyzeRelease\out"
-      folder="C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\5992d889895cb27f02648cbafb10f816\transformed\out"
+      folder="C:\Users\Rossiny\.gradle\caches\8.11.1\transforms\5d4d7cb7b290388efbfb4f4e488fb189\transformed\out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"

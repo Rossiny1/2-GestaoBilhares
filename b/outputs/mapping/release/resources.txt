@@ -7629,7 +7629,6 @@ ipAddress
 foto_reforma
 spi
 com.example.gestaobilhares.ui.metas.M...
-1.0
 sms_code_browser
 TLS_ECDH_RSA_WITH_AES_128_CBC_SHA
 mccMnc
