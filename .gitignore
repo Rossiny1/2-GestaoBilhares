@@ -29,3 +29,9 @@ keystore.properties
 
 # Pastas de build acidentais
 /b/
+
+# Firebase Functions
+functions/node_modules/
+functions/lib/
+.firebase/
+
