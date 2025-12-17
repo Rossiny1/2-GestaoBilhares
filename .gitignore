@@ -25,3 +25,7 @@ keystore.properties
 *.keystore
 *.p12
 *.pfx
+*.pfx
+
+# Pastas de build acidentais
+/b/

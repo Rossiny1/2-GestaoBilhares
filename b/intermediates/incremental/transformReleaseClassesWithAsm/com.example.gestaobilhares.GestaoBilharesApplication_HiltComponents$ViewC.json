@@ -1,1 +1,0 @@
-{"className":"com.example.gestaobilhares.GestaoBilharesApplication_HiltComponents$ViewC","classAnnotations":["dagger.Subcomponent","dagger.hilt.android.scopes.ViewScoped"],"interfaces":["dagger.hilt.android.components.ViewComponent","dagger.hilt.internal.GeneratedComponent"],"superClasses":["java.lang.Object"]}

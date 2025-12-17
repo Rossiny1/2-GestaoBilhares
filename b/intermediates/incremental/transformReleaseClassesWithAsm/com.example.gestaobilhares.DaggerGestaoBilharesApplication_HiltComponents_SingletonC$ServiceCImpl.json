@@ -1,1 +1,0 @@
-{"className":"com.example.gestaobilhares.DaggerGestaoBilharesApplication_HiltComponents_SingletonC$ServiceCImpl","classAnnotations":[],"interfaces":["dagger.hilt.android.components.ServiceComponent","dagger.hilt.internal.GeneratedComponent"],"superClasses":["com.example.gestaobilhares.GestaoBilharesApplication_HiltComponents$ServiceC","java.lang.Object"]}
