@@ -264,23 +264,39 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     
     val fileFilter = listOf(
         "**/R.class",
-        "**/R\$*.class",
+        "**/R$*.class",
         "**/BuildConfig.*",
         "**/Manifest*.*",
         "**/*Test*.*",
         "android/**/*.*",
         "**/databinding/**/*.*",
-        "**/generated/**/*.*"
+        "**/generated/**/*.*",
+        "**/Hilt_*.class",
+        "**/*_Factory.class",
+        "**/*_MembersInjector.class",
+        "**/*_HiltModules*.class",
+        "**/*$*.class" // Inner classes often cause issues or noise
     )
     
-    val debugTree = fileTree("${layout.buildDirectory.asFile.get()}/tmp/kotlin-classes/debug") {
+    // Classes do módulo app
+    val appClasses = fileTree("${layout.buildDirectory.asFile.get()}/tmp/kotlin-classes/debug") {
         exclude(fileFilter)
     }
     
-    val mainSrc = "${project.projectDir}/src/main/java"
+    // Classes de outros módulos (ui, data, core)
+    val uiClasses = fileTree("${project(":ui").layout.buildDirectory.asFile.get()}/tmp/kotlin-classes/debug") { exclude(fileFilter) }
+    val dataClasses = fileTree("${project(":data").layout.buildDirectory.asFile.get()}/tmp/kotlin-classes/debug") { exclude(fileFilter) }
+    val coreClasses = fileTree("${project(":core").layout.buildDirectory.asFile.get()}/tmp/kotlin-classes/debug") { exclude(fileFilter) }
+
+    classDirectories.setFrom(files(appClasses, uiClasses, dataClasses, coreClasses))
     
-    sourceDirectories.setFrom(files(mainSrc))
-    classDirectories.setFrom(files(debugTree))
+    sourceDirectories.setFrom(files(
+        "${project.projectDir}/src/main/java",
+        "${project(":ui").projectDir}/src/main/java",
+        "${project(":data").projectDir}/src/main/java",
+        "${project(":core").projectDir}/src/main/java"
+    ))
+    
     executionData.setFrom(fileTree(layout.buildDirectory.asFile.get()) {
         include("jacoco/testDebugUnitTest.exec")
     })

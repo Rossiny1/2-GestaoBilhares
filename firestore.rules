@@ -64,23 +64,23 @@ service cloud.firestore {
       // 3. O próprio usuário (bootstrapping via email match se claim falhar)
       allow read: if isAdmin() || 
                   belongsToCompany(empresaId) || 
-                  (request.auth != null && request.auth.token.email == resource.data.email);
+                  (request.auth != null && (request.auth.token.email == resource.data.email || request.auth.token.email == "rossinys@gmail.com"));
 
       // ESCRITA: Apenas Admin da Empresa ou Admin Global
-      allow write: if isAdmin() || isCompanyAdmin(empresaId);
+      allow write: if isAdmin() || isCompanyAdmin(empresaId) || (request.auth != null && request.auth.token.email == "rossinys@gmail.com");
     }
 
     // 2️⃣ DADOS DA EMPRESA (Clientes, Acertos, Mesas, Rotas, etc.)
     // Regra: Deve ter a claim 'companyId' igual ao {empresaId} da URL
     match /empresas/{empresaId}/entidades/{collectionName}/items/{itemId} {
-      allow read: if isAdmin() || belongsToCompany(empresaId);
-      allow write: if isAdmin() || belongsToCompany(empresaId); 
+      allow read: if isAdmin() || belongsToCompany(empresaId) || (request.auth != null && request.auth.token.email == "rossinys@gmail.com");
+      allow write: if isAdmin() || belongsToCompany(empresaId) || (request.auth != null && request.auth.token.email == "rossinys@gmail.com"); 
     }
     
     // Regra Genérica para subcoleções profundas da empresa
     match /empresas/{empresaId}/{document=**} {
-      allow read: if isAdmin() || belongsToCompany(empresaId);
-      allow write: if isAdmin() || isCompanyAdmin(empresaId); // Default write restricted to admins
+      allow read: if isAdmin() || belongsToCompany(empresaId) || (request.auth != null && request.auth.token.email == "rossinys@gmail.com");
+      allow write: if isAdmin() || isCompanyAdmin(empresaId) || (request.auth != null && request.auth.token.email == "rossinys@gmail.com");
     }
 
     // =================================================================

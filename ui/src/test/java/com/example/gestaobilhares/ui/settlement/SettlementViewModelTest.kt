@@ -2,10 +2,7 @@ package com.example.gestaobilhares.ui.settlement
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.gestaobilhares.data.repository.AppRepository
-import com.example.gestaobilhares.data.entities.Cliente
-import com.example.gestaobilhares.data.entities.Mesa
-import com.example.gestaobilhares.data.entities.Acerto
-import com.example.gestaobilhares.data.entities.StatusAcerto
+import com.example.gestaobilhares.data.entities.*
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,10 +19,16 @@ import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
+import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.util.Date
 
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+
+@RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettlementViewModelTest {
 
@@ -42,6 +45,14 @@ class SettlementViewModelTest {
     fun setup() {
         MockitoAnnotations.openMocks(this)
         Dispatchers.setMain(testDispatcher)
+        
+        timber.log.Timber.plant(object : timber.log.Timber.Tree() {
+            override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+                println("[$tag] $message")
+                // t?.printStackTrace() // Removido para manter padrão de produção mesmo em testes
+            }
+        })
+        
         viewModel = SettlementViewModel(appRepository)
     }
 
@@ -98,58 +109,179 @@ class SettlementViewModelTest {
     }
 
     @Test
-    fun `buscarDebitoAnterior no modo EDIÇÃO deve usar debitoAnterior do proprio acerto se for o primeiro`() = runTest {
+    fun `salvarAcerto deve inserir acerto e acerto_mesas com sucesso`() = runTest {
         // Arrange
         val clienteId = 1L
-        val acertoParaEdicaoId = 20L
-        val dataAgora = Date()
+        val rotaId = 10L
+        val cicloId = 100L
         
-        val acertoEdicao = Acerto(
-            id = acertoParaEdicaoId, 
-            clienteId = clienteId, 
-            dataAcerto = dataAgora,
-            debitoAnterior = 30.0,
-            rotaId = 1L, periodoInicio = Date(), periodoFim = Date()
+        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", comissaoFicha = 0.5, valorFicha = 2.0, dataCadastro = Date(), ativo = true, debitoAtual = 0.0)
+        val cicloAtivo = CicloAcertoEntity(id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025, status = StatusCicloAcerto.EM_ANDAMENTO, dataInicio = Date(), dataFim = Date())
+        
+        whenever(appRepository.obterClientePorId(clienteId)).thenReturn(cliente)
+        whenever(appRepository.buscarCicloAtivo(rotaId)).thenReturn(cicloAtivo)
+        whenever(appRepository.buscarAcertosPorClienteECicloId(clienteId, cicloId)).thenReturn(flowOf(emptyList()))
+        whenever(appRepository.obterAcertoPorId(any())).thenAnswer { invocation ->
+             val id = invocation.arguments[0] as Long
+             Acerto(id = id, clienteId = clienteId, rotaId = rotaId, cicloId = cicloId, valorRecebido = 100.0, periodoInicio = Date(), periodoFim = Date())
+        }
+        whenever(appRepository.buscarAcertosPorRotaECicloId(rotaId, cicloId)).thenReturn(flowOf(emptyList()))
+        whenever(appRepository.buscarDespesasPorCicloId(cicloId)).thenReturn(flowOf(emptyList()))
+        whenever(appRepository.inserirAcerto(any())).thenReturn(500L)
+        whenever(appRepository.obterAcertoPorId(500L)).thenReturn(Acerto(id = 500L, clienteId = clienteId, rotaId = rotaId, cicloId = cicloId, valorRecebido = 100.0, periodoInicio = Date(), periodoFim = Date()))
+        whenever(appRepository.inserirAcertoMesa(any())).thenReturn(1000L)
+        whenever(appRepository.atualizarDebitoAtual(any(), any())).thenReturn(Unit)
+        whenever(appRepository.atualizarValoresCiclo(any())).thenReturn(Unit)
+        whenever(appRepository.inserirHistoricoManutencaoMesa(any())).thenReturn(2000L)
+        
+        val dadosAcerto = SettlementViewModel.DadosAcerto(
+            mesas = listOf(
+                SettlementViewModel.MesaAcerto(id = 1, numero = "M1", relogioInicial = 100, relogioFinal = 200, tipoMesa = TipoMesa.SINUCA)
+            ),
+            representante = "Rossiny",
+            panoTrocado = false,
+            numeroPano = null,
+            tipoAcerto = "NORMAL",
+            observacao = "Teste",
+            justificativa = null,
+            metodosPagamento = mapOf("DINHEIRO" to 100.0)
         )
-        
-        // Simular que só existe este acerto
-        whenever(appRepository.obterAcertosPorCliente(clienteId)).thenReturn(flowOf(listOf(acertoEdicao)))
 
         // Act
-        viewModel.buscarDebitoAnterior(clienteId, acertoParaEdicaoId) // Modo edição
+        viewModel.definirDebitoAnteriorParaEdicao(0.0)
+        viewModel.salvarAcerto(clienteId, dadosAcerto, dadosAcerto.metodosPagamento)
         advanceUntilIdle()
 
         // Assert
-        assertThat(viewModel.debitoAnterior.value).isEqualTo(30.0)
+        val resultado = viewModel.resultadoSalvamento.value
+        if (resultado is SettlementViewModel.ResultadoSalvamento.Erro) {
+            println("❌ Erro no salvamento: ${resultado.mensagem}")
+        }
+        
+        verify(appRepository).inserirAcerto(any())
+        verify(appRepository, atLeastOnce()).inserirAcertoMesa(any())
+        assertThat(resultado).isInstanceOf(SettlementViewModel.ResultadoSalvamento.Sucesso::class.java)
+        assertThat((resultado as SettlementViewModel.ResultadoSalvamento.Sucesso).acertoId).isEqualTo(500L)
     }
 
     @Test
-    fun `buscarDebitoAnterior no modo EDIÇÃO deve buscar acerto imediatamente anterior se houver mais`() = runTest {
+    fun `salvarAcerto deve falhar se nao houver ciclo ativo`() = runTest {
         // Arrange
         val clienteId = 1L
-        val acertoParaEdicaoId = 20L
-        // Datas: Acerto 1 (Antigo) -> Acerto 2 (Edição)
-        val dataAntiga = Date(1672531200000) // 01/01/2023
-        val dataEdicao = Date(1704067200000) // 01/01/2024
+        val rotaId = 10L
+        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", dataCadastro = Date(), ativo = true)
         
-        val acertoAntigo = Acerto(
-            id = 10, clienteId = clienteId, dataAcerto = dataAntiga, 
-            debitoAtual = 15.0, // Este é o valor esperado
-            rotaId = 1L, periodoInicio = Date(), periodoFim = Date()
+        whenever(appRepository.obterClientePorId(clienteId)).thenReturn(cliente)
+        whenever(appRepository.buscarCicloAtivo(rotaId)).thenReturn(null)
+        
+        val dadosAcerto = SettlementViewModel.DadosAcerto(
+            mesas = emptyList(), representante = "R", panoTrocado = false, numeroPano = null, tipoAcerto = "N", observacao = "", justificativa = null, metodosPagamento = emptyMap()
         )
-        val acertoEdicao = Acerto(
-            id = acertoParaEdicaoId, clienteId = clienteId, dataAcerto = dataEdicao,
-            debitoAnterior = 999.0, // Valor salvo que deve ser ignorado em favor do recalculado/buscado
-            rotaId = 1L, periodoInicio = Date(), periodoFim = Date()
-        )
-
-        whenever(appRepository.obterAcertosPorCliente(clienteId)).thenReturn(flowOf(listOf(acertoEdicao, acertoAntigo)))
 
         // Act
-        viewModel.buscarDebitoAnterior(clienteId, acertoParaEdicaoId)
+        viewModel.salvarAcerto(clienteId, dadosAcerto, emptyMap())
         advanceUntilIdle()
 
         // Assert
-        assertThat(viewModel.debitoAnterior.value).isEqualTo(15.0)
+        assertThat(viewModel.resultadoSalvamento.value).isInstanceOf(SettlementViewModel.ResultadoSalvamento.Erro::class.java)
+        val erro = viewModel.resultadoSalvamento.value as SettlementViewModel.ResultadoSalvamento.Erro
+        assertThat(erro.mensagem).contains("Não há ciclo em andamento")
+    }
+
+    @Test
+    fun `salvarAcerto em modo EDICAO deve atualizar acerto existente`() = runTest {
+        // Arrange
+        val acertoId = 500L
+        val clienteId = 1L
+        val rotaId = 10L
+        val cicloId = 100L
+        
+        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", dataCadastro = Date(), ativo = true)
+        val cicloAtivo = CicloAcertoEntity(id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025, status = StatusCicloAcerto.EM_ANDAMENTO, dataInicio = Date(), dataFim = Date())
+        val acertoExistente = Acerto(id = acertoId, clienteId = clienteId, status = StatusAcerto.PENDENTE, rotaId = rotaId, cicloId = cicloId, periodoInicio = Date(), periodoFim = Date())
+        
+        whenever(appRepository.obterClientePorId(clienteId)).thenReturn(cliente)
+        whenever(appRepository.buscarCicloAtivo(rotaId)).thenReturn(cicloAtivo)
+        whenever(appRepository.buscarAcertosPorClienteECicloId(clienteId, cicloId)).thenReturn(flowOf(listOf(acertoExistente)))
+        whenever(appRepository.obterAcertoPorId(acertoId)).thenReturn(acertoExistente)
+        whenever(appRepository.atualizarAcerto(any())).thenReturn(1)
+        whenever(appRepository.atualizarDebitoAtual(any(), any())).thenReturn(Unit)
+        whenever(appRepository.atualizarValoresCiclo(any())).thenReturn(Unit)
+        whenever(appRepository.buscarAcertosPorRotaECicloId(any(), any())).thenReturn(flowOf(emptyList()))
+        whenever(appRepository.buscarDespesasPorCicloId(any())).thenReturn(flowOf(emptyList()))
+
+        val dadosAcerto = SettlementViewModel.DadosAcerto(
+            mesas = emptyList(), representante = "R", panoTrocado = false, numeroPano = null, tipoAcerto = "N", observacao = "", justificativa = null, metodosPagamento = emptyMap()
+        )
+
+        // Act
+        viewModel.salvarAcerto(clienteId, dadosAcerto, emptyMap(), acertoIdParaEdicao = acertoId)
+        advanceUntilIdle()
+
+        // Assert
+        verify(appRepository).atualizarAcerto(any())
+        assertThat(viewModel.resultadoSalvamento.value).isInstanceOf(SettlementViewModel.ResultadoSalvamento.Sucesso::class.java)
+    }
+
+    @Test
+    fun `salvarAcerto deve registrar troca de pano quando panoTrocado for true`() = runTest {
+        // Arrange
+        val clienteId = 1L
+        val rotaId = 10L
+        val cicloId = 100L
+        
+        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", comissaoFicha = 0.5, valorFicha = 2.0, dataCadastro = Date(), ativo = true)
+        val cicloAtivo = CicloAcertoEntity(id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025, status = StatusCicloAcerto.EM_ANDAMENTO, dataInicio = Date(), dataFim = Date())
+        
+        whenever(appRepository.obterClientePorId(clienteId)).thenReturn(cliente)
+        whenever(appRepository.buscarCicloAtivo(rotaId)).thenReturn(cicloAtivo)
+        whenever(appRepository.buscarAcertosPorClienteECicloId(any(), any())).thenReturn(flowOf(emptyList()))
+        whenever(appRepository.buscarAcertosPorRotaECicloId(any(), any())).thenReturn(flowOf(emptyList()))
+        whenever(appRepository.buscarDespesasPorCicloId(any())).thenReturn(flowOf(emptyList()))
+        whenever(appRepository.inserirAcerto(any())).thenReturn(500L)
+        whenever(appRepository.obterAcertoPorId(any())).thenReturn(Acerto(id = 500L, clienteId = clienteId, periodoInicio = Date(), periodoFim = Date()))
+        whenever(appRepository.inserirAcertoMesa(any())).thenReturn(1000L)
+        whenever(appRepository.atualizarDebitoAtual(any(), any())).thenReturn(Unit)
+        whenever(appRepository.atualizarValoresCiclo(any())).thenReturn(Unit)
+        whenever(appRepository.inserirHistoricoManutencaoMesa(any())).thenReturn(2000L)
+        
+        val dadosAcerto = SettlementViewModel.DadosAcerto(
+            mesas = listOf(
+                SettlementViewModel.MesaAcerto(id = 1, numero = "M1", relogioInicial = 100, relogioFinal = 200, tipoMesa = TipoMesa.SINUCA)
+            ),
+            representante = "R",
+            panoTrocado = true,
+            numeroPano = "P123",
+            tipoAcerto = "N",
+            observacao = "",
+            justificativa = null,
+            metodosPagamento = emptyMap()
+        )
+
+        // Act
+        viewModel.salvarAcerto(clienteId, dadosAcerto, emptyMap())
+        advanceUntilIdle()
+
+        // Assert
+        verify(appRepository).inserirAcerto(any()) // Should pass
+        verify(appRepository, atLeastOnce()).inserirHistoricoManutencaoMesa(any())
+    }
+
+    @Test
+    fun `prepararMesasParaAcerto deve usar relogio final do ultimo acerto como inicial`() = runTest {
+        // Arrange
+        val mesaId = 1L
+        val mesa = Mesa(id = mesaId, clienteId = 1L, numero = "01", relogioInicial = 0, tipoMesa = TipoMesa.SINUCA, dataInstalacao = Date(), ativa = true)
+        val ultimoAcertoMesa = com.example.gestaobilhares.data.entities.AcertoMesa(
+            id = 10, acertoId = 100, mesaId = mesaId, relogioInicial = 50, relogioFinal = 150, subtotal = 0.0, fichasJogadas = 100
+        )
+        
+        whenever(appRepository.buscarUltimoAcertoMesaItem(mesaId)).thenReturn(ultimoAcertoMesa)
+
+        // Act
+        val result = viewModel.prepararMesasParaAcerto(listOf(mesa))
+        
+        // Assert
+        assertThat(result[0].relogioInicial).isEqualTo(150)
     }
 }

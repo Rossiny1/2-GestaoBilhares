@@ -8,7 +8,7 @@ admin.initializeApp();
  * Executado quando um novo usuário se cadastra/loga pela primeira vez.
  * Busca o colaborador correspondente no Firestore e define as Custom Claims.
  */
-export const onUserCreated = functions.auth.user().onCreate(async (user) => {
+export const onUserCreated = functions.auth.user().onCreate(async (user: admin.auth.UserRecord) => {
     const email = user.email;
     if (!email) {
         console.log("Usuário criado sem email:", user.uid);
@@ -17,44 +17,43 @@ export const onUserCreated = functions.auth.user().onCreate(async (user) => {
 
     console.log(`Novo usuário criado: ${email}. Buscando perfil de colaborador...`);
 
-    // Group Query por 'email' na coleção 'colaboradores'
-    // IMPORTANTE: Requer índice no Firestore (colaboradores / email)
-    const snapshot = await admin.firestore().collectionGroup("colaboradores")
+    // ✅ CORREÇÃO: A estrutura agora é empresas/{id}/entidades/colaboradores/items/{itemId}
+    // O collectionGroup deve ser 'items' e filtramos pelo path
+    const snapshot = await admin.firestore().collectionGroup("items")
         .where("email", "==", email)
-        .limit(1)
         .get();
 
-    if (snapshot.empty) {
+    const doc = snapshot.docs.find((d: admin.firestore.QueryDocumentSnapshot) => d.ref.path.includes("/colaboradores/items/"));
+
+    if (!doc) {
         console.log(`Nenhum colaborador encontrado para o email ${email}`);
         // Define claim 'pending' para indicar que não tem acesso ainda
-        await admin.auth().setCustomUserClaims(user.uid, { 
+        await admin.auth().setCustomUserClaims(user.uid, {
             role: "pending",
-            approved: false 
+            approved: false
         });
         return;
     }
 
-    const doc = snapshot.docs[0];
     const data = doc.data();
-    
-    // Extrair empresaId do caminho: empresas/{empresaId}/entidades/colaboradores/{id}
-    // doc.ref.path ex: empresas/empresa_001/entidades/colaboradores/items/colab_123
+
+    // Extrair empresaId do caminho: empresas/{empresaId}/entidades/colaboradores/items/{id}
     const pathSegments = doc.ref.path.split("/");
-    const empresaId = pathSegments[1]; 
-    
+    const empresaId = pathSegments[1];
+
     // Configura as claims que serão usadas nas Security Rules
     const claims = {
         companyId: empresaId,
         colaboradorId: doc.id,
-        role: data.role || "collaborator", // admin, gerente, etc
+        role: data.nivelAcesso || data.role || "collaborator", // Ajustado para nivelAcesso (Kotlin enum)
         approved: true
     };
 
     console.log(`Atribuindo claims para ${email}:`, claims);
     await admin.auth().setCustomUserClaims(user.uid, claims);
-    
-    // Opcional: Atualizar o documento do colaborador com o UID do Auth para referência futura
-    await doc.ref.update({ authUid: user.uid });
+
+    // Atualizar o documento do colaborador com o UID do Auth
+    await doc.ref.update({ firebaseUid: user.uid });
 });
 
 /**
@@ -64,13 +63,13 @@ export const onUserCreated = functions.auth.user().onCreate(async (user) => {
  */
 export const onCollaboratorUpdated = functions.firestore
     .document("empresas/{empresaId}/entidades/colaboradores/items/{docId}")
-    .onWrite(async (change, context) => {
+    .onWrite(async (change: functions.Change<functions.firestore.DocumentSnapshot>, context: functions.EventContext) => {
         const data = change.after.exists ? change.after.data() : null;
-        
+
         // Se deletado
         if (!data) {
-            console.log("Colaborador deletado. A revogação automática de acesso requer busca pelo email antigo.");
-            return; 
+            console.log("Colaborador deletado.");
+            return;
         }
 
         const email = data.email;
@@ -82,23 +81,23 @@ export const onCollaboratorUpdated = functions.firestore
         try {
             // Buscar usuário no Auth pelo email
             const userRecord = await admin.auth().getUserByEmail(email);
-            
+
             const claims = {
                 companyId: context.params.empresaId,
                 colaboradorId: context.params.docId,
-                role: data.role || "collaborator",
+                role: data.nivelAcesso || data.role || "collaborator",
                 approved: true
             };
 
             await admin.auth().setCustomUserClaims(userRecord.uid, claims);
             console.log(`Claims atualizadas com sucesso para ${email} (UID: ${userRecord.uid})`);
-            
-            // Se o authUid ainda não estiver no doc, salva agora
-            if (!data.authUid) {
-                 await change.after.ref.update({ authUid: userRecord.uid });
+
+            // Se o firebaseUid ainda não estiver no doc, salva agora
+            if (!data.firebaseUid) {
+                await change.after.ref.update({ firebaseUid: userRecord.uid });
             }
 
         } catch (error) {
-            console.log(`Usuário Auth não encontrado para email ${email}. As claims serão definidas quando ele se cadastrar (via onUserCreated).`);
+            console.log(`Usuário Auth não encontrado para email ${email}.`);
         }
     });
