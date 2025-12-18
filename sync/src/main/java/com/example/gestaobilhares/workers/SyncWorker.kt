@@ -19,7 +19,9 @@ import timber.log.Timber
  */
 class SyncWorker(
     context: Context,
-    params: WorkerParameters
+    params: WorkerParameters,
+    private val appRepositoryTest: AppRepository? = null,
+    private val syncRepositoryTest: SyncRepository? = null
 ) : CoroutineWorker(context, params) {
     
     companion object {
@@ -32,31 +34,35 @@ class SyncWorker(
         return try {
             Timber.d("Iniciando sincronização em background...")
             
-            // Criar repositories manualmente (evita dependência circular com Hilt/WorkManager)
+            // Usar repositories injetados (testes) ou criar novos (produção)
             val database = AppDatabase.getDatabase(applicationContext)
-            val appRepository = AppRepository.create(database)
-            val syncRepository = SyncRepository(applicationContext, appRepository)
+            val appRepo = appRepositoryTest ?: AppRepository.create(database)
+            val syncRepo = syncRepositoryTest ?: SyncRepository(applicationContext, appRepo)
 
             // Verificar se há necessidade real de sincronizar
-            if (!syncRepository.shouldRunBackgroundSync(maxIdleHours = MAX_IDLE_HOURS)) {
+            if (!syncRepo.shouldRunBackgroundSync(maxIdleHours = MAX_IDLE_HOURS)) {
                 Timber.d("Nenhuma sincronização necessária no momento. Encerrando job em background.")
                 return Result.success()
             }
             
             // 1. Processar fila primeiro (operações pendentes)
-            syncRepository.processSyncQueue()
+            val queueResult = syncRepo.processSyncQueue()
+            if (queueResult.isFailure) {
+                Timber.w("Processamento da fila falhou: ${queueResult.exceptionOrNull()?.message}")
+                return Result.retry()
+            }
             
             // 2. Executar sincronização bidirecional
-            val result = syncRepository.syncBidirectional()
+            val syncResult = syncRepo.syncBidirectional()
             
             // 3. Limpar operações antigas completadas
-            syncRepository.limparOperacoesAntigas()
+            syncRepo.limparOperacoesAntigas()
             
-            if (result.isSuccess) {
+            return if (syncResult.isSuccess) {
                 Timber.d("Sincronização em background concluída com sucesso")
                 Result.success()
             } else {
-                Timber.w("Sincronização em background falhou: ${result.exceptionOrNull()?.message}")
+                Timber.w("Sincronização em background falhou: ${syncResult.exceptionOrNull()?.message}")
                 Result.retry() // Tentar novamente mais tarde
             }
             

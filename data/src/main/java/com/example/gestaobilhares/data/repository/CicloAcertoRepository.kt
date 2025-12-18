@@ -289,7 +289,7 @@ class CicloAcertoRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("CicloAcertoRepo", "❌ Erro ao finalizar metas do ciclo $cicloId: ${e.message}", e)
-            e.printStackTrace()
+            timber.log.Timber.e(e, "Erro ao finalizar metas do ciclo $cicloId")
         }
     }
 

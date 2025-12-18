@@ -170,7 +170,7 @@ class ClientRegisterFragment : Fragment() {
                                 .show()
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        timber.log.Timber.e(e, "Erro ao processar novo cliente ID")
                         // Usar try-catch para evitar crash
                         try {
                             showErrorDialog("Erro ao exibir confirmação: ${e.localizedMessage}")

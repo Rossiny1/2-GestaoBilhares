@@ -1643,7 +1643,7 @@ class AppRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("AppRepository", "❌ Erro ao finalizar ciclo atual: ${e.message}", e)
-            e.printStackTrace()
+            timber.log.Timber.e(e, "Erro ao finalizar ciclo atual")
         }
     }
     

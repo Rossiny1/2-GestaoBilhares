@@ -31,7 +31,9 @@ import javax.inject.Inject
 @HiltViewModel
 class RoutesViewModel @Inject constructor(
     private val appRepository: AppRepository,
-    private val userSessionManager: UserSessionManager
+    private val userSessionManager: UserSessionManager,
+    private val syncRepository: com.example.gestaobilhares.sync.SyncRepository, // ✅ INJETADO PARA TESTABILIDADE
+    private val networkUtils: com.example.gestaobilhares.sync.utils.NetworkUtils // ✅ INJETADO PARA TESTABILIDADE
 ) : ViewModel() {
 
     // ✅ MODERNIZADO: StateFlow para controlar o estado de loading
@@ -138,7 +140,6 @@ class RoutesViewModel @Inject constructor(
                 }
                 
                 // ✅ CONDIÇÃO 1: Verificar conectividade primeiro - só mostrar diálogo se estiver online
-                val networkUtils = com.example.gestaobilhares.sync.utils.NetworkUtils(context)
                 val isOnline = networkUtils.isConnected()
                 
                 android.util.Log.d("RoutesViewModel", "🔍 Verificando pendências de sincronização para NOVO login (timestamp: $currentLoginTimestamp)...")
@@ -152,7 +153,6 @@ class RoutesViewModel @Inject constructor(
                     return@launch
                 }
                 
-                val syncRepository = com.example.gestaobilhares.sync.SyncRepository(context, appRepository)
                 val lastGlobalSync = runCatching {
                     syncRepository.getGlobalLastSyncTimestamp()
                 }.getOrDefault(0L).takeIf { it > 0L }
@@ -216,7 +216,6 @@ class RoutesViewModel @Inject constructor(
                 android.util.Log.e("RoutesViewModel", "Erro ao verificar pendências de sync: ${e.message}", e)
                 // Em caso de erro, tentar mostrar diálogo se banco está vazio E estiver online
                 try {
-                    val networkUtils = com.example.gestaobilhares.sync.utils.NetworkUtils(context)
                     val isOnline = networkUtils.isConnected()
                     
                     if (isOnline) {

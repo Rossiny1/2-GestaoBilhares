@@ -49,6 +49,7 @@ class UserSessionManager private constructor(context: Context) {
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_USER_APPROVED = "user_approved"
         private const val KEY_LOGIN_TIMESTAMP = "login_timestamp" // ✅ NOVO: Timestamp do login para detectar novo login
+        private const val KEY_COMPANY_ID = "company_id" // ✅ NOVO: ID da empresa para sincronização dinâmica
     }
     
     private val sharedPrefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -64,6 +65,7 @@ class UserSessionManager private constructor(context: Context) {
         val USER_LEVEL = stringPreferencesKey(KEY_USER_NIVEL_ACESSO)
         val IS_LOGGED = booleanPreferencesKey(KEY_IS_LOGGED_IN)
         val USER_APPROVED = booleanPreferencesKey(KEY_USER_APPROVED)
+        val COMPANY_ID = stringPreferencesKey(KEY_COMPANY_ID) // ✅ NOVO
     }
     
     // Estados observáveis
@@ -76,6 +78,9 @@ class UserSessionManager private constructor(context: Context) {
     private val _userLevel = MutableStateFlow(NivelAcesso.USER)
     val userLevel: StateFlow<NivelAcesso> = _userLevel.asStateFlow()
     
+    private val _companyId = MutableStateFlow("empresa_001") // ✅ Default para compatibilidade
+    val companyId: StateFlow<String> = _companyId.asStateFlow()
+    
     init {
         // Restaurar sessão ao inicializar
         restoreSession()
@@ -84,10 +89,13 @@ class UserSessionManager private constructor(context: Context) {
     /**
      * Inicia sessão do usuário
      */
-    fun startSession(colaborador: Colaborador) {
+    fun startSession(colaborador: Colaborador, companyId: String? = null) {
         _currentUser.value = colaborador
         _isLoggedIn.value = true
         _userLevel.value = colaborador.nivelAcesso
+        
+        val effectiveCompanyId = if (!companyId.isNullOrBlank()) companyId else "empresa_001"
+        _companyId.value = effectiveCompanyId
         
         // ✅ NOVO: Timestamp do login para detectar novo login
         val loginTimestamp = System.currentTimeMillis()
@@ -101,6 +109,7 @@ class UserSessionManager private constructor(context: Context) {
             putBoolean(KEY_IS_LOGGED_IN, true)
             putBoolean(KEY_USER_APPROVED, colaborador.aprovado)
             putLong(KEY_LOGIN_TIMESTAMP, loginTimestamp) // ✅ NOVO: Salvar timestamp do login
+            putString(KEY_COMPANY_ID, effectiveCompanyId) // ✅ NOVO: Salvar ID da empresa
             commit() // ✅ CORREÇÃO: Usar commit() para garantir salvamento imediato
         }
         ioScope.launch {
@@ -112,14 +121,15 @@ class UserSessionManager private constructor(context: Context) {
                     prefs[Keys.USER_LEVEL] = colaborador.nivelAcesso.name
                     prefs[Keys.IS_LOGGED] = true
                     prefs[Keys.USER_APPROVED] = colaborador.aprovado
+                    prefs[Keys.COMPANY_ID] = effectiveCompanyId
                 }
             } catch (e: Exception) {
                 android.util.Log.e("UserSessionManager", "Erro ao salvar DataStore: ${e.message}")
             }
         }
         
-        Timber.d("Sessao iniciada: id=%s nome=%s nivel=%s aprovado=%s admin=%s menu=%s",
-            colaborador.id, colaborador.nome, colaborador.nivelAcesso, colaborador.aprovado, isAdmin(), hasMenuAccess())
+        Timber.d("Sessao iniciada: id=%s nome=%s nivel=%s empresa=%s aprovado=%s admin=%s menu=%s",
+            colaborador.id, colaborador.nome, colaborador.nivelAcesso, effectiveCompanyId, colaborador.aprovado, isAdmin(), hasMenuAccess())
     }
     
     /**
@@ -129,6 +139,7 @@ class UserSessionManager private constructor(context: Context) {
         _currentUser.value = null
         _isLoggedIn.value = false
         _userLevel.value = NivelAcesso.USER
+        _companyId.value = "empresa_001"
         
         // Limpar SharedPreferences
         sharedPrefs.edit().clear().apply()
@@ -170,6 +181,7 @@ class UserSessionManager private constructor(context: Context) {
             val userName = sharedPrefs.getString(KEY_USER_NAME, "") ?: ""
             val userLevelString = sharedPrefs.getString(KEY_USER_NIVEL_ACESSO, NivelAcesso.USER.name)
             val userApproved = sharedPrefs.getBoolean(KEY_USER_APPROVED, false)
+            val companyId = sharedPrefs.getString(KEY_COMPANY_ID, "empresa_001") ?: "empresa_001"
             
             try {
                 val userLevel = NivelAcesso.valueOf(userLevelString ?: NivelAcesso.USER.name)
@@ -186,6 +198,7 @@ class UserSessionManager private constructor(context: Context) {
                 _currentUser.value = colaborador
                 _isLoggedIn.value = true
                 _userLevel.value = userLevel
+                _companyId.value = companyId
                 
                 Timber.d("Sessao restaurada: id=%s nome=%s nivel=%s aprovado=%s admin=%s menu=%s",
                     userId, userName, userLevel, userApproved, isAdmin(), hasMenuAccess())
@@ -204,6 +217,7 @@ class UserSessionManager private constructor(context: Context) {
             val userName = prefs[Keys.USER_NAME] ?: ""
             val userLevelString = prefs[Keys.USER_LEVEL] ?: NivelAcesso.USER.name
             val userApproved = prefs[Keys.USER_APPROVED] ?: false
+            val companyId = prefs[Keys.COMPANY_ID] ?: "empresa_001"
 
             val userLevel = NivelAcesso.valueOf(userLevelString)
             val colaborador = Colaborador(
@@ -217,6 +231,7 @@ class UserSessionManager private constructor(context: Context) {
             _currentUser.value = colaborador
             _isLoggedIn.value = true
             _userLevel.value = userLevel
+            _companyId.value = companyId
         } catch (e: Exception) {
             Timber.e(e, "Erro ao restaurar DataStore: %s", e.message)
         }
@@ -279,6 +294,13 @@ class UserSessionManager private constructor(context: Context) {
      */
     fun getLoginTimestamp(): Long {
         return sharedPrefs.getLong(KEY_LOGIN_TIMESTAMP, 0L)
+    }
+
+    /**
+     * ✅ NOVO: Obtém o ID da empresa atual
+     */
+    fun getCurrentCompanyId(): String {
+        return _companyId.value
     }
     
     /**
