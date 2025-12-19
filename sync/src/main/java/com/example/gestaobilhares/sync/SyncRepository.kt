@@ -8517,8 +8517,34 @@ class SyncRepository(
                     
                     val mesaReformadaId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
-                    val dataReforma = converterTimestampParaDate(data["dataReforma"])
-                        ?: converterTimestampParaDate(data["data_reforma"]) ?: Date()
+                    // ✅ CORREÇÃO: Verificar se já existe localmente para preservar dataReforma
+                    val mesaReformadaLocal = mesasReformadasCache[mesaReformadaId]
+                    
+                    // ✅ CORREÇÃO: Preservar dataReforma local se existir e for válida
+                    // Se o Firestore não tiver dataReforma ou tiver uma data muito recente (fallback),
+                    // usar a data local que já existe
+                    val dataReformaFirestore = converterTimestampParaDate(data["dataReforma"])
+                        ?: converterTimestampParaDate(data["data_reforma"])
+                    
+                    // Verificar se a data local não é de hoje (indicando que não é um fallback)
+                    val hoje = System.currentTimeMillis()
+                    val inicioHoje = hoje - (hoje % 86400000) // Início do dia em millis
+                    val dataLocalValida = mesaReformadaLocal?.dataReforma?.time?.let { it < inicioHoje } ?: false
+                    
+                    val dataReforma = when {
+                        // Se existe localmente com data válida (não é de hoje), preservar
+                        mesaReformadaLocal != null && dataLocalValida -> {
+                            Log.d(TAG, "⚠️ Preservando dataReforma local para mesa reformada ID=$mesaReformadaId: ${mesaReformadaLocal.dataReforma}")
+                            mesaReformadaLocal.dataReforma
+                        }
+                        // Se o Firestore tem dataReforma válida, usar ela
+                        dataReformaFirestore != null -> dataReformaFirestore
+                        // Se existe localmente mas sem data válida, usar a local mesmo assim
+                        mesaReformadaLocal != null -> mesaReformadaLocal.dataReforma
+                        // Fallback apenas se não existir localmente
+                        else -> Date()
+                    }
+                    
                     val dataCriacao = converterTimestampParaDate(data["dataCriacao"])
                         ?: converterTimestampParaDate(data["data_criacao"]) ?: Date()
                     
@@ -8558,7 +8584,7 @@ class SyncRepository(
                     val serverTimestamp = (data["lastModified"] as? com.google.firebase.Timestamp)?.toDate()?.time
                         ?: (data["dataCriacao"] as? com.google.firebase.Timestamp)?.toDate()?.time
                         ?: mesaReformada.dataCriacao.time
-                    val mesaReformadaLocal = mesasReformadasCache[mesaReformadaId]
+                    // ✅ CORREÇÃO: mesaReformadaLocal já foi obtido acima para preservar dataReforma
                     val localTimestamp = mesaReformadaLocal?.dataCriacao?.time ?: 0L
                     
                     // Sincronizar se: n�o existe localmente OU servidor � mais recente OU foi modificado desde �ltima sync
@@ -8573,10 +8599,22 @@ class SyncRepository(
                             return@forEach
                         }
                         
-                        if (mesaReformadaLocal == null) {
-                            appRepository.inserirMesaReformada(mesaReformada)
+                        // ✅ CORREÇÃO: Garantir que dataReforma local seja preservada (já foi preservada acima, mas garantir novamente)
+                        val hoje = System.currentTimeMillis()
+                        val inicioHoje = hoje - (hoje % 86400000)
+                        val dataLocalValida = mesaReformadaLocal?.dataReforma?.time?.let { it < inicioHoje } ?: false
+                        val mesaReformadaParaSalvar = if (mesaReformadaLocal != null && dataLocalValida && mesaReformada.dataReforma.time >= inicioHoje) {
+                            // Se a data do Firestore é de hoje (fallback) mas a local é válida, preservar local
+                            Log.d(TAG, "⚠️ Corrigindo dataReforma de fallback para data local válida: ${mesaReformadaLocal.dataReforma}")
+                            mesaReformada.copy(dataReforma = mesaReformadaLocal.dataReforma)
                         } else {
-                            appRepository.inserirMesaReformada(mesaReformada) // REPLACE atualiza se existir
+                            mesaReformada
+                        }
+                        
+                        if (mesaReformadaLocal == null) {
+                            appRepository.inserirMesaReformada(mesaReformadaParaSalvar)
+                        } else {
+                            appRepository.inserirMesaReformada(mesaReformadaParaSalvar) // REPLACE atualiza se existir
                         }
                         syncCount++
                         bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
@@ -8646,8 +8684,32 @@ class SyncRepository(
                     val data = doc.data ?: emptyMap()
                     val mesaReformadaId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
-                    val dataReforma = converterTimestampParaDate(data["dataReforma"])
-                        ?: converterTimestampParaDate(data["data_reforma"]) ?: Date()
+                    // ✅ CORREÇÃO: Verificar se já existe localmente para preservar dataReforma
+                    val mesaReformadaLocal = mesasReformadasCache[mesaReformadaId]
+                    
+                    // ✅ CORREÇÃO: Preservar dataReforma local se existir e for válida
+                    val dataReformaFirestore = converterTimestampParaDate(data["dataReforma"])
+                        ?: converterTimestampParaDate(data["data_reforma"])
+                    
+                    // Verificar se a data local não é de hoje (indicando que não é um fallback)
+                    val hoje = System.currentTimeMillis()
+                    val inicioHoje = hoje - (hoje % 86400000) // Início do dia em millis
+                    val dataLocalValida = mesaReformadaLocal?.dataReforma?.time?.let { it < inicioHoje } ?: false
+                    
+                    val dataReforma = when {
+                        // Se existe localmente com data válida (não é de hoje), preservar
+                        mesaReformadaLocal != null && dataLocalValida -> {
+                            Log.d(TAG, "⚠️ Preservando dataReforma local para mesa reformada ID=$mesaReformadaId: ${mesaReformadaLocal.dataReforma}")
+                            mesaReformadaLocal.dataReforma
+                        }
+                        // Se o Firestore tem dataReforma válida, usar ela
+                        dataReformaFirestore != null -> dataReformaFirestore
+                        // Se existe localmente mas sem data válida, usar a local mesmo assim
+                        mesaReformadaLocal != null -> mesaReformadaLocal.dataReforma
+                        // Fallback apenas se não existir localmente
+                        else -> Date()
+                    }
+                    
                     val dataCriacao = converterTimestampParaDate(data["dataCriacao"])
                         ?: converterTimestampParaDate(data["data_criacao"]) ?: Date()
                     
@@ -8657,6 +8719,7 @@ class SyncRepository(
                     val tamanhoMesaStr = (data["tamanhoMesa"] as? String) ?: (data["tamanho_mesa"] as? String) ?: "GRANDE"
                     val tamanhoMesa = try { TamanhoMesa.valueOf(tamanhoMesaStr) } catch (e: Exception) { TamanhoMesa.GRANDE }
                     
+                    // ✅ CORREÇÃO: Preservar dataReforma local quando já existe
                     val mesaReformada = MesaReformada(
                         id = mesaReformadaId,
                         mesaId = (data["mesaId"] as? Number)?.toLong() ?: (data["mesa_id"] as? Number)?.toLong() ?: 0L,
@@ -8679,7 +8742,6 @@ class SyncRepository(
                         return@forEach
                     }
                     
-                    val mesaReformadaLocal = mesasReformadasCache[mesaReformadaId]
                     if (mesaReformadaLocal == null) {
                         appRepository.inserirMesaReformada(mesaReformada)
                     } else {
