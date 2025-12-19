@@ -5740,12 +5740,12 @@ class SyncRepository(
                         dataCriacao = dataCriacao,
                         criadoPor = data["criadoPor"] as? String ?: data["criado_por"] as? String ?: "",
                         ativo = data["ativo"] as? Boolean ?: true,
-                        numeroProcuração = data["numeroProcuracao"] as? String
+                        numeroProcura��o = data["numeroProcura��o"] as? String
                             ?: data["numero_procuracao"] as? String ?: "",
-                        dataProcuração = dataProcuracao,
+                dataProcura��o = dataProcuracao,
                         poderesDelegados = data["poderesDelegados"] as? String
                             ?: data["poderes_delegados"] as? String ?: "",
-                        validadeProcuração = validadeProc,
+                validadeProcura��o = validadeProc,
                         totalUsos = (data["totalUsos"] as? Number)?.toInt()
                             ?: (data["total_usos"] as? Number)?.toInt() ?: 0,
                         ultimoUso = ultimoUso,

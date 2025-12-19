@@ -206,7 +206,8 @@ class AuthViewModel @Inject constructor(
                             val isSuperAdmin = email == "rossinys@gmail.com"
                             
                             // ✅ NOVO: Verificar se é primeiro acesso (exceto superadmin)
-                            if (!isSuperAdmin && colaborador.primeiroAcesso) {
+                            // Só é primeiro acesso se a flag for true E ainda não tiver senha definitiva salva
+                            if (!isSuperAdmin && colaborador.primeiroAcesso && colaborador.senhaHash == null) {
                                 android.util.Log.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO - Redirecionando para alteração de senha")
                                 _authState.value = AuthState.FirstAccessRequired(colaborador)
                                 return@launch
@@ -379,9 +380,11 @@ class AuthViewModel @Inject constructor(
                     
                     if (senhaValida) {
                         // ✅ CORREÇÃO: Verificar se é primeiro acesso (usando senha temporária) - exceto superadmin
-                        // Usar senha limpa para comparação
+                        // Usar senha limpa para comparação. 
+                        // SÓ é primeiro acesso se a flag for true E não houver senha definitiva (senhaHash)
                         val isPrimeiroAcesso = !isSuperAdmin && 
                                               colaborador.primeiroAcesso && 
+                                              colaborador.senhaHash == null &&
                                               senhaTemporariaLimpa != null && 
                                               senhaLimpa == senhaTemporariaLimpa
                         
@@ -441,6 +444,21 @@ class AuthViewModel @Inject constructor(
                             val firebaseOutcome = garantirAutenticacaoFirebase(colaboradorFinal, senhaLimpa)
                             colaboradorFinal = firebaseOutcome.colaboradorAtualizado
                             isOnlineLogin = firebaseOutcome.autenticado
+                            
+                            // ✅ NOVO: Forçar refresh de claims se logado online com espera ativa
+                            if (isOnlineLogin) {
+                                try {
+                                    android.util.Log.d("AuthViewModel", "🔄 Garantindo que o token tenha a claim 'companyId'...")
+                                    val claimFound = waitAndVerifyCompanyIdClaim()
+                                    if (claimFound) {
+                                        android.util.Log.d("AuthViewModel", "✅ Claim 'companyId' confirmada no token")
+                                    } else {
+                                        android.util.Log.w("AuthViewModel", "⚠️ Claim 'companyId' não encontrada após espera. Sincronização inicial pode falhar.")
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.w("AuthViewModel", "⚠️ Falha ao atualizar token: ${e.message}")
+                                }
+                            }
                         }
                         
                         android.util.Log.d("AuthViewModel", "✅ LOGIN ${if (isOnlineLogin) "ONLINE" else "OFFLINE"} SUCESSO! (Tipo: $tipoAutenticacao)")
@@ -706,20 +724,7 @@ class AuthViewModel @Inject constructor(
                     return@launch
                 }
                 
-                // Criar usuário no Firebase Authentication
-                android.util.Log.d("AuthViewModel", "Criando conta no Firebase...")
-                val result = firebaseAuth.createUserWithEmailAndPassword(email, senha).await()
-                
-                if (result.user == null) {
-                    android.util.Log.e("AuthViewModel", "Falha ao criar conta no Firebase")
-                    _errorMessage.value = "Falha ao criar conta"
-                    hideLoading()
-                    return@launch
-                }
-                
-                android.util.Log.d("AuthViewModel", "✅ Conta Firebase criada com sucesso! UID: ${result.user!!.uid}")
-                
-                // Criar colaborador pendente de aprovação
+                // 1. Criar novo objeto colaborador (Ainda sem firebaseUid)
                 val nomeColaborador = nome.ifBlank { email.substringBefore("@") }
                 val novoColaborador = Colaborador(
                     nome = nomeColaborador,
@@ -728,31 +733,54 @@ class AuthViewModel @Inject constructor(
                     cpf = "",
                     nivelAcesso = NivelAcesso.USER,
                     ativo = true,
-                    firebaseUid = result.user!!.uid,
+                    firebaseUid = null, // Será preenchido pela Cloud Function
                     aprovado = false, // Pendente de aprovação
                     primeiroAcesso = true,
                     dataCadastro = Date(),
                     dataUltimaAtualizacao = Date()
                 )
                 
-                android.util.Log.d("AuthViewModel", "Criando colaborador pendente: ${novoColaborador.nome}")
+                android.util.Log.d("AuthViewModel", "🔧 PASSO 1: Criando colaborador localmente: ${novoColaborador.nome}")
                 val colaboradorId = appRepository.inserirColaborador(novoColaborador)
                 val colaboradorComId = novoColaborador.copy(id = colaboradorId)
-                android.util.Log.d("AuthViewModel", "✅ Colaborador criado com ID: $colaboradorId")
+                android.util.Log.d("AuthViewModel", "✅ Colaborador criado no DB Local (ID: $colaboradorId)")
                 
-                // ✅ NOVO: Sincronizar colaborador para a nuvem imediatamente
+                // 2. Sincronizar para a nuvem ANTES de criar usuário Auth
+                // Isso garante que a Cloud Function encontre o documento ao ser disparada
                 if (isNetworkAvailable()) {
                     try {
-                        android.util.Log.d("AuthViewModel", "Sincronizando colaborador para a nuvem...")
-                        sincronizarColaboradorParaNuvem(colaboradorComId, "empresa_001") // Default company for new registrations
-                        android.util.Log.d("AuthViewModel", "✅ Colaborador sincronizado para a nuvem")
+                        android.util.Log.d("AuthViewModel", "🔄 PASSO 2: Sincronizando colaborador para a nuvem...")
+                        sincronizarColaboradorParaNuvem(colaboradorComId, "empresa_001") // Default para novos cadastros
+                        android.util.Log.d("AuthViewModel", "✅ Colaborador sincronizado no Firestore")
                     } catch (e: Exception) {
-                        android.util.Log.w("AuthViewModel", "⚠️ Erro ao sincronizar colaborador para a nuvem: ${e.message}")
-                        // Não falhar o cadastro se a sincronização falhar - será sincronizado depois
+                        android.util.Log.e("AuthViewModel", "❌ Falha CRÍTICA ao sincronizar: ${e.message}")
+                        _errorMessage.value = "Erro de conexão ao sincronizar perfil. Tente novamente."
+                        hideLoading()
+                        return@launch
                     }
                 } else {
-                    android.util.Log.d("AuthViewModel", "⚠️ Dispositivo offline - colaborador será sincronizado quando houver conexão")
+                    android.util.Log.e("AuthViewModel", "❌ Cadastro público requer internet")
+                    _errorMessage.value = "Conexão com internet necessária para cadastro."
+                    hideLoading()
+                    return@launch
                 }
+
+                // 3. Criar usuário no Firebase Authentication
+                // Isso disparará a Cloud Function onUserCreated na nuvem
+                android.util.Log.d("AuthViewModel", "🚀 PASSO 3: Criando conta no Firebase Auth...")
+                val result = firebaseAuth.createUserWithEmailAndPassword(email, senha).await()
+                
+                if (result.user == null) {
+                    android.util.Log.e("AuthViewModel", "❌ Falha ao criar conta no Firebase")
+                    _errorMessage.value = "Falha ao criar conta de autenticação"
+                    hideLoading()
+                    return@launch
+                }
+                
+                android.util.Log.d("AuthViewModel", "✅ Conta Firebase criada! UID: ${result.user!!.uid}")
+                
+                // Atualizar UID localmente para referência
+                appRepository.atualizarColaborador(colaboradorComId.copy(firebaseUid = result.user!!.uid))
                 
                 // Fazer logout do Firebase (usuário não deve ficar logado até ser aprovado)
                 firebaseAuth.signOut()
@@ -937,21 +965,43 @@ class AuthViewModel @Inject constructor(
                         dataUltimoAcesso = java.util.Date()
                     )
                     
-                    // ✅ SUPERADMIN: rossinys@gmail.com sempre é ADMIN e aprovado
+                    // ✅ SELF-HEALING: Se logou com sucesso e a senha é diferente da temporária, 
+                    // o primeiro acesso já foi concluído e a nuvem está com dado antigo.
+                    val senhaTemporariaLimpa = colaboradorAtualizado.senhaTemporaria?.trim()
+                    val isSecretlyFinished = !email.equals("rossinys@gmail.com", ignoreCase = true) && 
+                                            colaboradorAtualizado.primeiroAcesso && 
+                                            senha.isNotEmpty() && 
+                                            (senhaTemporariaLimpa == null || senha.trim() != senhaTemporariaLimpa)
+                    
                     val colaboradorFinal = if (email == "rossinys@gmail.com") {
-                        // ✅ CORREÇÃO CRÍTICA: Atualizar senhaHash com a senha atual para login offline funcionar
+                        // (rossinys@gmail.com logic remains the same)
                         val senhaParaHash = if (senha.isNotEmpty()) senha.trim() else colaboradorAtualizado.senhaHash
-                        android.util.Log.d("AuthViewModel", "🔧 SUPERADMIN (nuvem): Atualizando senhaHash para login offline")
-                        android.util.Log.d("AuthViewModel", "   SenhaHash novo: $senhaParaHash")
-                        
                         colaboradorAtualizado.copy(
                             nivelAcesso = NivelAcesso.ADMIN,
                             aprovado = true,
                             primeiroAcesso = false,
                             dataAprovacao = colaboradorAtualizado.dataAprovacao ?: java.util.Date(),
                             aprovadoPor = colaboradorAtualizado.aprovadoPor ?: "Sistema (Superadmin)",
-                            senhaHash = senhaParaHash // ✅ Atualizar senhaHash para login offline
+                            senhaHash = senhaParaHash
                         )
+                    } else if (isSecretlyFinished) {
+                        android.util.Log.d("AuthViewModel", "🩹 SELF-HEALING: Detectado que o primeiro acesso já foi feito (senha != temporária). Corrigindo flag...")
+                        colaboradorAtualizado.copy(
+                            primeiroAcesso = false,
+                            senhaHash = senha.trim(),
+                            senhaTemporaria = null,
+                            dataUltimaAtualizacao = java.util.Date()
+                        ).also { 
+                            // Sincronizar correção para a nuvem imediatamente
+                            viewModelScope.launch {
+                                try {
+                                    sincronizarColaboradorParaNuvem(it, detectedCompanyId)
+                                    android.util.Log.d("AuthViewModel", "✅ SELF-HEALING: Nuvem corrigida com sucesso")
+                                } catch (e: Exception) {
+                                    android.util.Log.e("AuthViewModel", "❌ SELF-HEALING: Erro ao sincronizar correção: ${e.message}")
+                                }
+                            }
+                        }
                     } else {
                         colaboradorAtualizado
                     }
@@ -1339,29 +1389,51 @@ class AuthViewModel @Inject constructor(
                 .get()
                 .await()
             
+            android.util.Log.d("AuthViewModel", "   Busca 1 (email exato): ${querySnapshot.size()} documentos encontrados")
             var doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
             
             // 2. Se não encontrou, tentar email normalizado
             if (doc == null && email != emailNormalizado) {
+                android.util.Log.d("AuthViewModel", "   Tentando busca 2 (email normalizado): $emailNormalizado")
                 querySnapshot = firestore.collectionGroup("items")
                     .whereEqualTo("email", emailNormalizado)
                     .get()
                     .await()
+                android.util.Log.d("AuthViewModel", "   Busca 2 (email normalizado): ${querySnapshot.size()} documentos encontrados")
                 doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
             }
             
-            // 3. Fallback para empresa_001 se collectionGroup falhar ou não encontrar
+            // 3. Se não encontrou, tentar busca via firebaseUid (mais robusto)
             if (doc == null) {
-                android.util.Log.d("AuthViewModel", "   Não encontrado via collectionGroup. Tentando fallback empresa_001...")
+                val firebaseUid = firebaseAuth.currentUser?.uid
+                if (firebaseUid != null) {
+                    android.util.Log.d("AuthViewModel", "   Tentando busca 3 (firebaseUid): $firebaseUid")
+                    querySnapshot = firestore.collectionGroup("items")
+                        .whereEqualTo("firebaseUid", firebaseUid)
+                        .get()
+                        .await()
+                    android.util.Log.d("AuthViewModel", "   Busca 3 (firebaseUid): ${querySnapshot.size()} documentos encontrados")
+                    doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
+                }
+            }
+            
+            // 4. Fallback para empresa_001 se collectionGroup falhar ou não encontrar
+            if (doc == null) {
+                android.util.Log.d("AuthViewModel", "   Não encontrado via collectionGroup ou PERMISSION_DENIED suspeito. Tentando fallback direto na empresa_001...")
                 val collectionRef = firestore.collection("empresas").document("empresa_001")
                     .collection("entidades").document("colaboradores").collection("items")
                 
-                querySnapshot = collectionRef.whereEqualTo("email", email).get().await()
-                doc = querySnapshot.documents.firstOrNull()
+                try {
+                    querySnapshot = collectionRef.whereEqualTo("email", email).get().await()
+                    doc = querySnapshot.documents.firstOrNull()
+                    android.util.Log.d("AuthViewModel", "   Fallback empresa_001: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
+                } catch (e: Exception) {
+                    android.util.Log.e("AuthViewModel", "   Erro no fallback empresa_001: ${e.message}")
+                }
             }
             
             if (doc == null) {
-                android.util.Log.d("AuthViewModel", "⚠️ Colaborador não encontrado na nuvem.")
+                android.util.Log.w("AuthViewModel", "⚠️ Colaborador não encontrado na nuvem em nenhuma coleção.")
                 return null
             }
 
@@ -1370,7 +1442,22 @@ class AuthViewModel @Inject constructor(
             val segments = path.split("/")
             val companyId = if (segments.size > 1 && segments[0] == "empresas") segments[1] else "empresa_001"
             
-            android.util.Log.d("AuthViewModel", "   Documento encontrado! Path: $path (Empresa: $companyId)")
+            android.util.Log.d("AuthViewModel", "DIAG: Documento encontrado na nuvem!")
+            android.util.Log.d("AuthViewModel", "DIAG: Path: $path")
+            android.util.Log.d("AuthViewModel", "DIAG: Empresa identificada: $companyId")
+            
+            // VERIFICACAO DE CLAIMS
+            val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+            if (currentUser != null) {
+                try {
+                    val tokenResult = currentUser.getIdToken(false).await()
+                    val claims = tokenResult.claims
+                    android.util.Log.d("AuthViewModel", "DIAG: Claims atuais no Token: $claims")
+                    android.util.Log.d("AuthViewModel", "DIAG: ID Token CompanyId: ${claims["companyId"]}")
+                } catch (e: Exception) {
+                    android.util.Log.w("AuthViewModel", "DIAG: Nao foi possivel ler as claims: ${e.message}")
+                }
+            }
 
             // Converter Timestamps para Date
             val dataConvertido = data.toMutableMap()
@@ -1386,6 +1473,21 @@ class AuthViewModel @Inject constructor(
             dataConvertido["dataAprovacao"] = toDate(data["dataAprovacao"]) ?: toDate(data["data_aprovacao"])
             dataConvertido["dataUltimoAcesso"] = toDate(data["dataUltimoAcesso"]) ?: toDate(data["data_ultimo_acesso"])
             dataConvertido["dataNascimento"] = toDate(data["dataNascimento"]) ?: toDate(data["data_nascimento"])
+            
+            // Robustez para primeiro acesso (boolean)
+            if (data["primeiroAcesso"] == null && data["primeiro_acesso"] != null) {
+                dataConvertido["primeiroAcesso"] = data["primeiro_acesso"]
+            }
+            
+            // Robustez para senhaHash (snake_case para camelCase)
+            if (data["senhaHash"] == null && data["senha_hash"] != null) {
+                dataConvertido["senhaHash"] = data["senha_hash"]
+            }
+
+            // Robustez para senhaTemporaria (snake_case para camelCase)
+            if (data["senhaTemporaria"] == null && data["senha_temporaria"] != null) {
+                dataConvertido["senhaTemporaria"] = data["senha_temporaria"]
+            }
 
             val colaboradorId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: 0L
             val colaborador = gson.fromJson(gson.toJson(dataConvertido), Colaborador::class.java).copy(id = colaboradorId)
@@ -1397,6 +1499,40 @@ class AuthViewModel @Inject constructor(
             android.util.Log.e("AuthViewModel", "❌ Erro na busca na nuvem: ${e.message}")
             null
         }
+    }
+    
+    /**
+     * ✅ NOVO: Aguarda e verifica a presença da claim 'companyId' no token do Firebase.
+     * Tenta por até 10 segundos (5 tentativas de 2 segundos).
+     * Essencial para evitar PERMISSION_DENIED em apps vazios logo após o login.
+     */
+    private suspend fun waitAndVerifyCompanyIdClaim(): Boolean {
+        val user = firebaseAuth.currentUser ?: return false
+        var attempts = 0
+        val maxAttempts = 5
+        
+        while (attempts < maxAttempts) {
+            attempts++
+            try {
+                android.util.Log.d("AuthViewModel", "DIAG: Verificando claims (Tentativa $attempts/$maxAttempts)...")
+                val tokenResult = user.getIdToken(true).await()
+                val claims = tokenResult.claims
+                val companyId = claims["companyId"] as? String
+                
+                if (!companyId.isNullOrBlank()) {
+                    android.util.Log.d("AuthViewModel", "DIAG: Claim 'companyId' encontrada: $companyId")
+                    return true
+                }
+                
+                android.util.Log.d("AuthViewModel", "DIAG: Claim 'companyId' ainda nao disponivel. Aguardando 2s...")
+                kotlinx.coroutines.delay(2000)
+            } catch (e: Exception) {
+                android.util.Log.e("AuthViewModel", "DIAG: Erro ao verificar claims na tentativa $attempts: ${e.message}")
+                kotlinx.coroutines.delay(2000)
+            }
+        }
+        
+        return false
     }
 
     
