@@ -80,13 +80,32 @@ service cloud.firestore {
                     request.auth.token.email == "rossinys@gmail.com"
                   ));
 
-      // ESCRITA: Admin Global, Admin Empresa ou o PRÓPRIO USUÁRIO (para atualizar seu status/senha)
-      allow write: if isAdmin() || isCompanyAdmin(empresaId) || 
-                   (request.auth != null && (
-                     request.auth.uid == resource.data.firebaseUid || 
-                     request.auth.token.email == resource.data.email ||
-                     request.auth.token.email == "rossinys@gmail.com"
-                   ));
+      // ESCRITA: 
+      // 1. Admin Global ou Admin Empresa
+      // 2. O PRÓPRIO USUÁRIO (para atualizar seu status/senha)
+      // 3. ✅ NOVO: Usuário anônimo pode CRIAR (para cadastros públicos sem login)
+      //    - Apenas criação (create), não atualização/deleção
+      //    - Apenas se aprovado = false (cadastro pendente)
+      //    - Verifica se é usuário anônimo (sem email no token)
+      allow create: if isAdmin() || isCompanyAdmin(empresaId) || 
+                    (request.auth != null && (
+                      request.auth.uid == resource.data.firebaseUid || 
+                      request.auth.token.email == resource.data.email ||
+                      request.auth.token.email == "rossinys@gmail.com" ||
+                      // Permitir criação anônima apenas para cadastros pendentes
+                      // Usuário anônimo: verifica se não tem email OU se email está vazio
+                      (request.auth.token.email == null || request.auth.token.email == "") &&
+                      request.resource.data.aprovado == false &&
+                      (request.resource.data.aprovadoPor == null || request.resource.data.aprovadoPor == "")
+                    ));
+      
+      // Atualização e deleção: apenas autenticados com permissão
+      allow update, delete: if isAdmin() || isCompanyAdmin(empresaId) || 
+                             (request.auth != null && (
+                               request.auth.uid == resource.data.firebaseUid || 
+                               request.auth.token.email == resource.data.email ||
+                               request.auth.token.email == "rossinys@gmail.com"
+                             ));
     }
 
     // Suporte para busca global via collectionGroup("items")

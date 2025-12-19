@@ -46,10 +46,10 @@ interface ColaboradorDao {
     @Delete
     suspend fun deletar(colaborador: Colaborador)
     
-    @Query("UPDATE colaboradores SET aprovado = 1, data_aprovacao = :dataAprovacao, aprovado_por = :aprovadoPor WHERE id = :colaboradorId")
+    @Query("UPDATE colaboradores SET aprovado = 1, data_aprovacao = :dataAprovacao, aprovado_por = :aprovadoPor, data_ultima_atualizacao = :dataAprovacao WHERE id = :colaboradorId")
     suspend fun aprovarColaborador(colaboradorId: Long, dataAprovacao: java.util.Date, aprovadoPor: String)
     
-    @Query("UPDATE colaboradores SET aprovado = 1, data_aprovacao = :dataAprovacao, aprovado_por = :aprovadoPor, email_acesso = :email, senha_temporaria = :senha, nivel_acesso = :nivelAcesso, observacoes = :observacoes, primeiro_acesso = 1, firebase_uid = :firebaseUid WHERE id = :colaboradorId")
+    @Query("UPDATE colaboradores SET aprovado = 1, data_aprovacao = :dataAprovacao, aprovado_por = :aprovadoPor, email_acesso = :email, senha_temporaria = :senha, nivel_acesso = :nivelAcesso, observacoes = :observacoes, primeiro_acesso = 1, firebase_uid = :firebaseUid, data_ultima_atualizacao = :dataAprovacao WHERE id = :colaboradorId")
     suspend fun aprovarColaboradorComCredenciais(
         colaboradorId: Long,
         email: String,

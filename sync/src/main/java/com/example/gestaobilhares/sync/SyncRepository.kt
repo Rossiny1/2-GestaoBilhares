@@ -3244,19 +3244,67 @@ class SyncRepository(
                 return ProcessResult.Skipped
             }
             
-            val colaboradorId = doc.id.toLongOrNull()
-                ?: (colaboradorData["roomId"] as? Number)?.toLong()
-                ?: (colaboradorData["id"] as? Number)?.toLong()
-                ?: run {
-                    Log.w(TAG, "?? Colaborador ${doc.id} sem ID v�lido - pulando")
-                    Log.w(TAG, "   doc.id: ${doc.id}")
-                    Log.w(TAG, "   roomId: ${colaboradorData["roomId"]}")
-                    Log.w(TAG, "   id: ${colaboradorData["id"]}")
-                    return ProcessResult.Skipped
-                }
-            
+            // ✅ CORREÇÃO CRÍTICA: Lidar com IDs não numéricos (ex: email-based IDs como "tio_gmail_com")
+            // Quando o doc.id não for numérico, SEMPRE buscar por email primeiro para evitar conflitos de ID
             val colaboradorEmail = (colaboradorData["email"] as? String) ?: ""
-            Log.d(TAG, "?? Processando colaborador: ID=$colaboradorId, Email=$colaboradorEmail")
+            val docIdIsNumeric = doc.id.toLongOrNull() != null
+            
+            val colaboradorId = if (!docIdIsNumeric && colaboradorEmail.isNotEmpty()) {
+                // ✅ CORREÇÃO: Se doc.id não é numérico, buscar por email primeiro
+                // Isso evita conflitos quando o campo "id" dentro dos dados pode ser conflitante
+                try {
+                    val colaboradorExistente = appRepository.obterColaboradorPorEmail(colaboradorEmail)
+                    if (colaboradorExistente != null) {
+                        Log.d(TAG, "✅ Colaborador encontrado por email (doc.id não numérico): $colaboradorEmail (ID local: ${colaboradorExistente.id}, DocID: ${doc.id})")
+                        colaboradorExistente.id
+                    } else {
+                        // Se não encontrou por email, gerar novo ID local
+                        val todosColaboradores = appRepository.obterTodosColaboradores().first()
+                        val novoId = (todosColaboradores.maxOfOrNull { it.id } ?: 0L) + 1L
+                        Log.d(TAG, "✅ Gerando novo ID local para colaborador com ID não numérico: $colaboradorEmail (Novo ID: $novoId, DocID: ${doc.id})")
+                        novoId
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Erro ao buscar colaborador por email: ${e.message}", e)
+                    // Se der erro, gerar novo ID
+                    val todosColaboradores = appRepository.obterTodosColaboradores().first()
+                    val novoId = (todosColaboradores.maxOfOrNull { it.id } ?: 0L) + 1L
+                    Log.d(TAG, "✅ Gerando novo ID local após erro: $colaboradorEmail (Novo ID: $novoId)")
+                    novoId
+                }
+            } else {
+                // Se doc.id é numérico, usar normalmente
+                doc.id.toLongOrNull()
+                    ?: (colaboradorData["roomId"] as? Number)?.toLong()
+                    ?: (colaboradorData["id"] as? Number)?.toLong()
+                    ?: run {
+                        if (colaboradorEmail.isNotEmpty()) {
+                            // Última tentativa: buscar por email
+                            try {
+                                val colaboradorExistente = appRepository.obterColaboradorPorEmail(colaboradorEmail)
+                                if (colaboradorExistente != null) {
+                                    Log.d(TAG, "✅ Colaborador encontrado por email (fallback): $colaboradorEmail (ID local: ${colaboradorExistente.id})")
+                                    return@run colaboradorExistente.id
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "❌ Erro ao buscar colaborador por email (fallback): ${e.message}", e)
+                            }
+                        }
+                        Log.w(TAG, "⚠️ Colaborador ${doc.id} sem ID válido e sem email encontrado - pulando")
+                        Log.w(TAG, "   doc.id: ${doc.id}")
+                        Log.w(TAG, "   roomId: ${colaboradorData["roomId"]}")
+                        Log.w(TAG, "   id: ${colaboradorData["id"]}")
+                        return@run -1L
+                    }
+            }
+            
+            // ✅ CORREÇÃO: Verificar se conseguiu obter um ID válido
+            if (colaboradorId <= 0L) {
+                Log.w(TAG, "⚠️ Colaborador ${doc.id} sem ID válido obtido - pulando")
+                return ProcessResult.Skipped
+            }
+            
+            Log.d(TAG, "✅ Processando colaborador: ID=$colaboradorId, Email=$colaboradorEmail, DocID=${doc.id}, DocIdIsNumeric=$docIdIsNumeric")
             
             val colaboradorJson = gson.toJson(colaboradorData)
             val colaboradorFirestore = gson.fromJson(colaboradorJson, Colaborador::class.java)?.copy(id = colaboradorId)
@@ -3339,10 +3387,10 @@ class SyncRepository(
                 }
                 // Se n�o encontrou nem por ID nem por email, inserir novo
                 else -> {
-                    Log.d(TAG, "? Inserindo novo colaborador: ID=$colaboradorId, Email=$colaboradorEmail")
+                    Log.d(TAG, "? Inserindo novo colaborador: ID=$colaboradorId, Email=$colaboradorEmail, Aprovado=${colaboradorFirestore.aprovado}")
                     try {
                         val insertedId = appRepository.inserirColaborador(colaboradorFirestore)
-                        Log.d(TAG, "? Colaborador inserido com sucesso: ID inserido=$insertedId, Email=$colaboradorEmail")
+                        Log.d(TAG, "? Colaborador inserido com sucesso: ID inserido=$insertedId, Email=$colaboradorEmail, Aprovado=${colaboradorFirestore.aprovado}, AprovadoPor=${colaboradorFirestore.aprovadoPor}")
                         // Atualizar cache com o ID real inserido (pode ser diferente se o banco gerou novo ID)
                         val colaboradorInserido = colaboradorFirestore.copy(id = insertedId)
                         colaboradoresCache[insertedId] = colaboradorInserido
@@ -6339,12 +6387,16 @@ class SyncRepository(
                     colaboradorMap["lastModified"] = FieldValue.serverTimestamp()
                     colaboradorMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
+                    // ✅ LOG: Verificar campos de aprovação antes de enviar
+                    Log.d(TAG, "📤 Enviando colaborador: ID=${colaborador.id}, Email=${colaborador.email}, Aprovado=${colaborador.aprovado}, AprovadoPor=${colaborador.aprovadoPor}, DataAprovacao=${colaborador.dataAprovacao}")
+                    
                     val collectionRef = getCollectionReference(firestore, COLLECTION_COLABORADORES)
                     collectionRef
                         .document(colaborador.id.toString())
                         .set(colaboradorMap)
                         .await()
                     
+                    Log.d(TAG, "✅ Colaborador enviado com sucesso: ID=${colaborador.id}, Aprovado=${colaborador.aprovado}")
                     syncCount++
                     bytesUploaded += colaboradorMap.toString().length.toLong()
                 } catch (e: Exception) {
