@@ -6428,6 +6428,11 @@ class SyncRepository(
                 } catch (e: Exception) {
                     errorCount++
                     Log.e(TAG, "Erro ao enviar ciclo ${ciclo.id}: ${e.message}", e)
+                    if (e is com.google.firebase.firestore.FirebaseFirestoreException) {
+                        if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                            Log.e(TAG, "   ⚠️ PERMISSION_DENIED ao enviar ciclo ${ciclo.id}: Verifique as regras do Firestore")
+                        }
+                    }
                 }
             }
             
