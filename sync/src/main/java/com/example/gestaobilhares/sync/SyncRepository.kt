@@ -3294,8 +3294,20 @@ class SyncRepository(
                 // Se encontrou por ID, usar l�gica normal de atualiza��o
                 localColaborador != null -> {
                     if (serverTimestamp > localTimestamp) {
-                        appRepository.atualizarColaborador(colaboradorFirestore)
-                        colaboradoresCache[colaboradorId] = colaboradorFirestore
+                        // ✅ CORREÇÃO: Preservar status de aprovação local se colaborador já estiver aprovado
+                        // Isso evita que aprovações locais sejam sobrescritas por dados antigos do Firestore
+                        val colaboradorParaAtualizar = if (localColaborador.aprovado && !colaboradorFirestore.aprovado) {
+                            Log.w(TAG, "⚠️ Preservando status de aprovação local para colaborador ${colaboradorEmail} (ID: $colaboradorId)")
+                            colaboradorFirestore.copy(
+                                aprovado = true,
+                                dataAprovacao = localColaborador.dataAprovacao,
+                                aprovadoPor = localColaborador.aprovadoPor
+                            )
+                        } else {
+                            colaboradorFirestore
+                        }
+                        appRepository.atualizarColaborador(colaboradorParaAtualizar)
+                        colaboradoresCache[colaboradorId] = colaboradorParaAtualizar
                         ProcessResult.Synced
                     } else {
                         ProcessResult.Skipped
@@ -3307,8 +3319,19 @@ class SyncRepository(
                     // Atualizar o colaborador existente com os dados do Firestore, mantendo o ID local
                     val colaboradorAtualizado = colaboradorFirestore.copy(id = localColaboradorPorEmail.id)
                     if (serverTimestamp > localColaboradorPorEmail.dataUltimaAtualizacao.time) {
-                        appRepository.atualizarColaborador(colaboradorAtualizado)
-                        colaboradoresCache[localColaboradorPorEmail.id] = colaboradorAtualizado
+                        // ✅ CORREÇÃO: Preservar status de aprovação local se colaborador já estiver aprovado
+                        val colaboradorParaAtualizar = if (localColaboradorPorEmail.aprovado && !colaboradorAtualizado.aprovado) {
+                            Log.w(TAG, "⚠️ Preservando status de aprovação local para colaborador ${colaboradorFirestore.email} (ID local: ${localColaboradorPorEmail.id})")
+                            colaboradorAtualizado.copy(
+                                aprovado = true,
+                                dataAprovacao = localColaboradorPorEmail.dataAprovacao,
+                                aprovadoPor = localColaboradorPorEmail.aprovadoPor
+                            )
+                        } else {
+                            colaboradorAtualizado
+                        }
+                        appRepository.atualizarColaborador(colaboradorParaAtualizar)
+                        colaboradoresCache[localColaboradorPorEmail.id] = colaboradorParaAtualizar
                         ProcessResult.Synced
                     } else {
                         ProcessResult.Skipped
