@@ -202,6 +202,29 @@ class AuthViewModel @Inject constructor(
                                 return@launch
                             }
                             
+                            // ✅ CORREÇÃO CRÍTICA: Verificar se o colaborador está aprovado e ativo ANTES de permitir login
+                            if (!colaborador.aprovado) {
+                                android.util.Log.w("AuthViewModel", "❌ Colaborador não está aprovado - bloqueando login")
+                                android.util.Log.w("AuthViewModel", "   Email: $email")
+                                android.util.Log.w("AuthViewModel", "   Nome: ${colaborador.nome}")
+                                android.util.Log.w("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
+                                firebaseAuth.signOut() // Fazer logout do Firebase
+                                _errorMessage.value = "Sua conta está aguardando aprovação do administrador."
+                                hideLoading()
+                                return@launch
+                            }
+                            
+                            if (!colaborador.ativo) {
+                                android.util.Log.w("AuthViewModel", "❌ Colaborador está inativo - bloqueando login")
+                                android.util.Log.w("AuthViewModel", "   Email: $email")
+                                android.util.Log.w("AuthViewModel", "   Nome: ${colaborador.nome}")
+                                android.util.Log.w("AuthViewModel", "   Ativo: ${colaborador.ativo}")
+                                firebaseAuth.signOut() // Fazer logout do Firebase
+                                _errorMessage.value = "Sua conta está inativa. Contate o administrador."
+                                hideLoading()
+                                return@launch
+                            }
+                            
                             // ✅ SUPERADMIN: rossinys@gmail.com nunca precisa alterar senha no primeiro acesso
                             val isSuperAdmin = email == "rossinys@gmail.com"
                             
@@ -676,126 +699,6 @@ class AuthViewModel @Inject constructor(
             } finally {
                 hideLoading()
                 android.util.Log.d("AuthViewModel", "=== FIM DO LOGIN HÍBRIDO ===")
-            }
-        }
-    }
-    
-    /**
-     * ✅ NOVO: Função para registrar novo usuário (cadastro público)
-     * Cria colaborador pendente de aprovação do administrador
-     */
-    fun register(email: String, senha: String, confirmarSenha: String, nome: String = "") {
-        android.util.Log.d("AuthViewModel", "=== INICIANDO CADASTRO ===")
-        android.util.Log.d("AuthViewModel", "Email: $email")
-        android.util.Log.d("AuthViewModel", "Nome: $nome")
-        
-        // Validação básica
-        if (email.isBlank() || senha.isBlank() || confirmarSenha.isBlank()) {
-            _errorMessage.value = "Todos os campos são obrigatórios"
-            return
-        }
-        
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _errorMessage.value = "Email inválido"
-            return
-        }
-        
-        if (senha.length < 6) {
-            _errorMessage.value = "Senha deve ter pelo menos 6 caracteres"
-            return
-        }
-        
-        if (senha != confirmarSenha) {
-            _errorMessage.value = "Senhas não coincidem"
-            return
-        }
-        
-        viewModelScope.launch {
-            try {
-                showLoading()
-                _errorMessage.value = ""
-                
-                // Verificar se já existe colaborador com este email
-                val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
-                if (colaboradorExistente != null) {
-                    android.util.Log.d("AuthViewModel", "Colaborador já existe com este email")
-                    _errorMessage.value = "Este email já está cadastrado. Faça login ou recupere sua senha."
-                    hideLoading()
-                    return@launch
-                }
-                
-                // 1. Criar novo objeto colaborador (Ainda sem firebaseUid)
-                val nomeColaborador = nome.ifBlank { email.substringBefore("@") }
-                val novoColaborador = Colaborador(
-                    nome = nomeColaborador,
-                    email = email,
-                    telefone = "",
-                    cpf = "",
-                    nivelAcesso = NivelAcesso.USER,
-                    ativo = true,
-                    firebaseUid = null, // Será preenchido pela Cloud Function
-                    aprovado = false, // Pendente de aprovação
-                    primeiroAcesso = true,
-                    dataCadastro = Date(),
-                    dataUltimaAtualizacao = Date()
-                )
-                
-                android.util.Log.d("AuthViewModel", "🔧 PASSO 1: Criando colaborador localmente: ${novoColaborador.nome}")
-                val colaboradorId = appRepository.inserirColaborador(novoColaborador)
-                val colaboradorComId = novoColaborador.copy(id = colaboradorId)
-                android.util.Log.d("AuthViewModel", "✅ Colaborador criado no DB Local (ID: $colaboradorId)")
-                
-                // 2. Sincronizar para a nuvem ANTES de criar usuário Auth
-                // Isso garante que a Cloud Function encontre o documento ao ser disparada
-                if (isNetworkAvailable()) {
-                    try {
-                        android.util.Log.d("AuthViewModel", "🔄 PASSO 2: Sincronizando colaborador para a nuvem...")
-                        sincronizarColaboradorParaNuvem(colaboradorComId, "empresa_001") // Default para novos cadastros
-                        android.util.Log.d("AuthViewModel", "✅ Colaborador sincronizado no Firestore")
-                    } catch (e: Exception) {
-                        android.util.Log.e("AuthViewModel", "❌ Falha CRÍTICA ao sincronizar: ${e.message}")
-                        _errorMessage.value = "Erro de conexão ao sincronizar perfil. Tente novamente."
-                        hideLoading()
-                        return@launch
-                    }
-                } else {
-                    android.util.Log.e("AuthViewModel", "❌ Cadastro público requer internet")
-                    _errorMessage.value = "Conexão com internet necessária para cadastro."
-                    hideLoading()
-                    return@launch
-                }
-
-                // 3. Criar usuário no Firebase Authentication
-                // Isso disparará a Cloud Function onUserCreated na nuvem
-                android.util.Log.d("AuthViewModel", "🚀 PASSO 3: Criando conta no Firebase Auth...")
-                val result = firebaseAuth.createUserWithEmailAndPassword(email, senha).await()
-                
-                if (result.user == null) {
-                    android.util.Log.e("AuthViewModel", "❌ Falha ao criar conta no Firebase")
-                    _errorMessage.value = "Falha ao criar conta de autenticação"
-                    hideLoading()
-                    return@launch
-                }
-                
-                android.util.Log.d("AuthViewModel", "✅ Conta Firebase criada! UID: ${result.user!!.uid}")
-                
-                // Atualizar UID localmente para referência
-                appRepository.atualizarColaborador(colaboradorComId.copy(firebaseUid = result.user!!.uid))
-                
-                // Fazer logout do Firebase (usuário não deve ficar logado até ser aprovado)
-                firebaseAuth.signOut()
-                
-                // ✅ CORREÇÃO: Mostrar mensagem de sucesso em diálogo (não Toast)
-                android.util.Log.d("AuthViewModel", "✅ CADASTRO CONCLUÍDO - Pendente de aprovação")
-                showMessage("Cadastro realizado com sucesso!\n\nSeu cadastro foi enviado para análise e está pendente de aprovação pelo administrador.")
-                _authState.value = AuthState.Unauthenticated
-                
-            } catch (e: Exception) {
-                android.util.Log.e("AuthViewModel", "❌ Erro no cadastro: ${e.message}", e)
-                _authState.value = AuthState.Unauthenticated
-                _errorMessage.value = getFirebaseErrorMessage(e)
-            } finally {
-                hideLoading()
             }
         }
     }
@@ -1300,8 +1203,8 @@ class AuthViewModel @Inject constructor(
     }
     
     /**
-     * ✅ NOVO: Sincroniza um colaborador específico para a nuvem (Firestore)
-     * Usado após criar um novo cadastro para que apareça na lista de pendentes do admin
+     * Sincroniza um colaborador específico para a nuvem (Firestore)
+     * Usado para sincronizar colaboradores criados ou atualizados localmente
      */
     private suspend fun sincronizarColaboradorParaNuvem(colaborador: Colaborador, companyId: String) {
         try {
@@ -1310,6 +1213,9 @@ class AuthViewModel @Inject constructor(
             android.util.Log.d("AuthViewModel", "   Nome: ${colaborador.nome}")
             android.util.Log.d("AuthViewModel", "   Email: ${colaborador.email}")
             android.util.Log.d("AuthViewModel", "   Empresa: $companyId")
+            android.util.Log.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
+            android.util.Log.d("AuthViewModel", "   Usuário atual: ${firebaseAuth.currentUser?.uid}")
+            android.util.Log.d("AuthViewModel", "   Email do token: ${firebaseAuth.currentUser?.email}")
             
             // Estrutura: empresas/empresa_001/entidades/colaboradores/items
             val collectionRef = firestore
@@ -1318,6 +1224,8 @@ class AuthViewModel @Inject constructor(
                 .collection("entidades")
                 .document("colaboradores")
                 .collection("items")
+            
+            android.util.Log.d("AuthViewModel", "   Caminho: empresas/$companyId/entidades/colaboradores/items")
             
             // Converter colaborador para Map
             val colaboradorMap = mutableMapOf<String, Any?>()
@@ -1342,32 +1250,57 @@ class AuthViewModel @Inject constructor(
             colaboradorMap["lastModified"] = FieldValue.serverTimestamp()
             colaboradorMap["syncTimestamp"] = FieldValue.serverTimestamp()
             
-            // ✅ CORREÇÃO: Verificar se já existe colaborador com este email no Firestore antes de criar
-            val existingQuery = collectionRef
-                .whereEqualTo("email", colaborador.email)
-                .limit(1)
-                .get()
-                .await()
+            android.util.Log.d("AuthViewModel", "   Map criado com ${colaboradorMap.size} campos")
             
-            if (!existingQuery.isEmpty) {
-                // Se já existe, atualizar o documento existente em vez de criar novo
-                val existingDoc = existingQuery.documents.first()
-                android.util.Log.d("AuthViewModel", "⚠️ Colaborador já existe no Firestore (ID: ${existingDoc.id}), atualizando...")
-                existingDoc.reference.set(colaboradorMap).await()
-                android.util.Log.d("AuthViewModel", "✅ Colaborador atualizado no Firestore")
-            } else {
-                // Se não existe, criar novo documento
+            // ✅ CORREÇÃO: Usar ID apropriado para evitar conflitos
+            // Prioridade: 1) Firebase UID (se disponível), 2) Email (para colaboradores pendentes sem UID), 3) ID numérico (fallback)
+            val documentId: String = colaborador.firebaseUid?.takeIf { it.isNotBlank() }
+                ?: if (colaborador.aprovado == false && colaborador.firebaseUid == null) {
+                    // Colaborador pendente sem UID: usar email como ID único para evitar conflitos
+                    colaborador.email.replace(".", "_").replace("@", "_")
+                } else {
+                    // Colaborador já aprovado ou com firebaseUid: usar ID numérico
+                    colaborador.id.toString()
+                }
+            
+            android.util.Log.d("AuthViewModel", "   Criando documento com ID: $documentId (ID local: ${colaborador.id}, firebaseUid: ${colaborador.firebaseUid}, email: ${colaborador.email}, aprovado: ${colaborador.aprovado})")
+            
+            try {
                 collectionRef
-                    .document(colaborador.id.toString())
+                    .document(documentId)
                     .set(colaboradorMap)
                     .await()
-                android.util.Log.d("AuthViewModel", "✅ Colaborador criado no Firestore")
+                android.util.Log.d("AuthViewModel", "✅ Colaborador criado no Firestore com sucesso! (ID: $documentId)")
+            } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                // Se o documento já existe, atualizar em vez de criar
+                if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.ALREADY_EXISTS) {
+                    android.util.Log.d("AuthViewModel", "⚠️ Documento já existe, atualizando...")
+                    collectionRef
+                        .document(documentId)
+                        .set(colaboradorMap)
+                        .await()
+                    android.util.Log.d("AuthViewModel", "✅ Colaborador atualizado no Firestore")
+                } else {
+                    throw e
+                }
             }
             
             android.util.Log.d("AuthViewModel", "✅ Colaborador sincronizado com sucesso para a nuvem")
             
         } catch (e: Exception) {
             android.util.Log.e("AuthViewModel", "❌ Erro ao sincronizar colaborador para a nuvem: ${e.message}", e)
+            android.util.Log.e("AuthViewModel", "   Tipo de erro: ${e.javaClass.simpleName}")
+            android.util.Log.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
+            
+            // Log específico para erros de permissão
+            if (e.message?.contains("PERMISSION_DENIED") == true || 
+                e.message?.contains("permission-denied") == true) {
+                android.util.Log.e("AuthViewModel", "❌ ERRO DE PERMISSÃO: Verifique as regras do Firestore")
+                android.util.Log.e("AuthViewModel", "   Usuário autenticado: ${firebaseAuth.currentUser != null}")
+                android.util.Log.e("AuthViewModel", "   UID: ${firebaseAuth.currentUser?.uid}")
+                android.util.Log.e("AuthViewModel", "   Email: ${firebaseAuth.currentUser?.email}")
+            }
+            
             throw e
         }
     }

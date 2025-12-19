@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:strokeColor="@color/primary_blue"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Data da Reforma -->
+        <TextView
+            android:id="@+id/tvDataReforma"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="10/12/2025"
+            android:textColor="@color/primary_blue"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Itens da Reforma -->
+        <TextView
+            android:id="@+id/tvItensReforma"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pintura e Troca de Pano"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Responsável -->
+        <TextView
+            android:id="@+id/tvResponsavel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Responsável: João Silva"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:layout_marginBottom="4dp" />
+
+        <!-- Observações (se houver) -->
+        <TextView
+            android:id="@+id/tvObservacoes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Observações sobre a reforma"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
+

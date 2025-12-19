@@ -90,11 +90,6 @@ class LoginFragment : Fragment() {
             authViewModel.login(email, password)
         }
 
-        // ✅ NOVO: Botão de cadastro
-        binding.registerButton.setOnClickListener {
-            mostrarDialogoCadastro()
-        }
-
         binding.forgotPasswordTextView.setOnClickListener {
             // ✅ NOVO: Implementar recuperação de senha
             mostrarDialogoRecuperacaoSenha()
@@ -198,60 +193,6 @@ class LoginFragment : Fragment() {
         }
     }
 
-    /**
-     * ✅ NOVO: Mostra diálogo para cadastro de novo usuário
-     */
-    private fun mostrarDialogoCadastro() {
-        val dialogView = layoutInflater.inflate(com.example.gestaobilhares.ui.R.layout.dialog_register, null)
-        
-        val nomeEditText = dialogView.findViewById<android.widget.EditText>(com.example.gestaobilhares.ui.R.id.nomeEditText)
-        val emailEditText = dialogView.findViewById<android.widget.EditText>(com.example.gestaobilhares.ui.R.id.emailEditText)
-        val senhaEditText = dialogView.findViewById<android.widget.EditText>(com.example.gestaobilhares.ui.R.id.senhaEditText)
-        val confirmarSenhaEditText = dialogView.findViewById<android.widget.EditText>(com.example.gestaobilhares.ui.R.id.confirmarSenhaEditText)
-        
-        val dialog = android.app.AlertDialog.Builder(requireContext())
-            .setTitle("Criar Conta")
-            .setView(dialogView)
-            .setPositiveButton("Cadastrar", null) // Definir listener depois para evitar fechamento automático
-            .setNegativeButton("Cancelar", null)
-            .create()
-        
-        dialog.setOnShowListener {
-            val positiveButton = dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)
-            positiveButton.setOnClickListener {
-                val nome = nomeEditText.text.toString().trim()
-                val email = emailEditText.text.toString().trim()
-                val senha = senhaEditText.text.toString()
-                val confirmarSenha = confirmarSenhaEditText.text.toString()
-                
-                if (email.isEmpty() || senha.isEmpty() || confirmarSenha.isEmpty()) {
-                    Toast.makeText(requireContext(), "Preencha todos os campos obrigatórios", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                
-                if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                    Toast.makeText(requireContext(), "Email inválido", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                
-                if (senha.length < 6) {
-                    Toast.makeText(requireContext(), "Senha deve ter pelo menos 6 caracteres", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                
-                if (senha != confirmarSenha) {
-                    Toast.makeText(requireContext(), "Senhas não coincidem", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                
-                authViewModel.register(email, senha, confirmarSenha, nome)
-                dialog.dismiss()
-            }
-        }
-        
-        dialog.show()
-    }
-    
     /**
      * ✅ NOVO: Mostra diálogo para recuperação de senha
      */
