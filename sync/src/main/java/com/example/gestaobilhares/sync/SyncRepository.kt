@@ -1,4 +1,4 @@
-package com.example.gestaobilhares.sync
+﻿package com.example.gestaobilhares.sync
 
 import android.content.Context
 import android.util.Log
@@ -5712,9 +5712,9 @@ class SyncRepository(
                         ?: (data["timestamp_criacao"] as? Number)?.toLong() ?: System.currentTimeMillis()
                     val dataCriacao = converterTimestampParaDate(data["dataCriacao"])
                         ?: converterTimestampParaDate(data["data_criacao"]) ?: Date()
-            val dataProcuracao = converterTimestampParaDate(data["dataProcura��o"])
+                    val dataProcuração = converterTimestampParaDate(data["dataProcuração"])
                         ?: converterTimestampParaDate(data["data_procuracao"]) ?: Date()
-            val validadeProc = converterTimestampParaDate(data["validadeProcura��o"])
+                    val validadeProc = converterTimestampParaDate(data["validadeProcuração"])
                         ?: converterTimestampParaDate(data["validade_procuracao"])
                     val ultimoUso = converterTimestampParaDate(data["ultimoUso"])
                         ?: converterTimestampParaDate(data["ultimo_uso"])
@@ -5740,12 +5740,12 @@ class SyncRepository(
                         dataCriacao = dataCriacao,
                         criadoPor = data["criadoPor"] as? String ?: data["criado_por"] as? String ?: "",
                         ativo = data["ativo"] as? Boolean ?: true,
-                        numeroProcura��o = data["numeroProcura��o"] as? String
+                        numeroProcuração = data["numeroProcuração"] as? String
                             ?: data["numero_procuracao"] as? String ?: "",
-                dataProcura��o = dataProcuracao,
+                        dataProcuração = dataProcuração,
                         poderesDelegados = data["poderesDelegados"] as? String
                             ?: data["poderes_delegados"] as? String ?: "",
-                validadeProcura��o = validadeProc,
+                        validadeProcuração = validadeProc,
                         totalUsos = (data["totalUsos"] as? Number)?.toInt()
                             ?: (data["total_usos"] as? Number)?.toInt() ?: 0,
                         ultimoUso = ultimoUso,
