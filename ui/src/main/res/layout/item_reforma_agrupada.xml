@@ -3,28 +3,44 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="6dp"
+    app:cardBackgroundColor="@color/surface_elevated"
     app:strokeColor="@color/primary_blue"
-    app:strokeWidth="1dp">
+    app:strokeWidth="2dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="18dp">
 
-        <!-- Data da Reforma -->
-        <TextView
-            android:id="@+id/tvDataReforma"
+        <!-- Header com data -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="10/12/2025"
-            android:textColor="@color/primary_blue"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+            
+            <View
+                android:layout_width="3dp"
+                android:layout_height="20dp"
+                android:background="@color/primary_blue"
+                android:layout_marginEnd="10dp" />
+            
+            <TextView
+                android:id="@+id/tvDataReforma"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="10-12-25"
+                android:textColor="@color/primary_blue"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.02" />
+        </LinearLayout>
 
         <!-- Itens da Reforma -->
         <TextView
@@ -33,18 +49,36 @@
             android:layout_height="wrap_content"
             android:text="Pintura e Troca de Pano"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            android:layout_marginBottom="8dp" />
+            android:textSize="15sp"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="10dp" />
 
         <!-- Responsável -->
-        <TextView
-            android:id="@+id/tvResponsavel"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Responsável: João Silva"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp"
-            android:layout_marginBottom="4dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Responsável:"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+            
+            <TextView
+                android:id="@+id/tvResponsavel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="João Silva"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginStart="4dp" />
+        </LinearLayout>
 
         <!-- Observações (se houver) -->
         <TextView
@@ -54,7 +88,9 @@
             android:text="Observações sobre a reforma"
             android:textColor="@color/text_secondary"
             android:textSize="12sp"
-            android:visibility="gone" />
+            android:lineSpacingExtra="2dp"
+            android:visibility="gone"
+            android:layout_marginTop="8dp" />
 
     </LinearLayout>
 

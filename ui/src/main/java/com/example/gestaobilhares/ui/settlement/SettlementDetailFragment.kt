@@ -51,6 +51,22 @@ class SettlementDetailFragment : Fragment() {
 
     private var mesaDetailAdapter: AcertoMesaDetailAdapter? = null
     private var currentSettlement: SettlementDetailViewModel.SettlementDetail? = null
+    
+    // ✅ NOVO: Callback para retry após permissões concedidas
+    var pendingPrintCallback: (() -> Unit)? = null
+        private set
+    val REQUEST_BLUETOOTH_PERMISSIONS = 1001
+    val bluetoothPermissions = arrayOf(
+        android.Manifest.permission.BLUETOOTH_CONNECT,
+        android.Manifest.permission.BLUETOOTH_SCAN
+    )
+    
+    /**
+     * ✅ NOVO: Define callback para ser executado após permissões concedidas
+     */
+    fun setPendingPrintCallback(callback: () -> Unit) {
+        pendingPrintCallback = callback
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -75,7 +91,29 @@ class SettlementDetailFragment : Fragment() {
         // ✅ REMOVIDO: setupBackButtonHandler() - Navigation Component gerencia automaticamente
     }
     
-    // ✅ REMOVIDO: Callback de permissões - agora centralizado no ReciboPrinterHelper
+    // ✅ NOVO: Tratamento de permissões Bluetooth para impressão
+    @Suppress("DEPRECATION")
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_BLUETOOTH_PERMISSIONS) {
+            if (grantResults.all { it == android.content.pm.PackageManager.PERMISSION_GRANTED }) {
+                // Permissões concedidas - executar callback pendente
+                pendingPrintCallback?.invoke()
+                pendingPrintCallback = null
+            } else {
+                android.widget.Toast.makeText(
+                    requireContext(),
+                    "Permissões Bluetooth necessárias para impressão",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+                pendingPrintCallback = null
+            }
+        }
+    }
 
     // @Suppress("DEPRECATION") -> Not needed anymore
     // private fun initializeViewModel() { ... } -> Removed
@@ -299,9 +337,9 @@ class SettlementDetailFragment : Fragment() {
                 val numeroContrato = obterNumeroContrato(settlement)
                 val valorFichaExibir = if (settlement.valorFicha > 0) settlement.valorFicha else if (settlement.comissaoFicha > 0) settlement.comissaoFicha else 0.0
                 
-                // ✅ USAR FUNÇÃO CENTRALIZADA
+                // ✅ CORREÇÃO: Passar Fragment para permitir solicitação de permissões
                 ReciboPrinterHelper.imprimirReciboUnificado(
-                    context = requireContext(),
+                    context = this@SettlementDetailFragment, // Passar Fragment em vez de Context
                     clienteNome = settlement.clienteNome,
                     clienteCpf = settlement.clienteCpf,
                     clienteTelefone = settlement.clienteTelefone,

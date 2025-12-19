@@ -90,11 +90,11 @@ class ReformaAgrupadaAdapter(
             
             binding.tvItensReforma.text = itensReforma.joinToString(" e ")
 
-            // Responsável: sempre usar nome do usuário logado
+            // Responsável: sempre usar nome do usuário logado (sem duplicar "Responsável:" pois já está no layout)
             val responsavel = if (nomeUsuarioLogado.isNotBlank()) nomeUsuarioLogado
                 else "Não informado"
             
-            binding.tvResponsavel.text = "Responsável: $responsavel"
+            binding.tvResponsavel.text = responsavel
 
             // Observações (se houver)
             val observacoes = reformaAgrupada.reforma?.observacoes

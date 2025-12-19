@@ -58,7 +58,8 @@ class DetalhesMesaReformadaComHistoricoDialog : DialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(STYLE_NORMAL, android.R.style.Theme_Material_Light_Dialog)
+        // Usar tema sem estilo para evitar faixa branca do Material Light Dialog
+        setStyle(STYLE_NORMAL, android.R.style.Theme_Material_NoActionBar)
         
         arguments?.let {
             val numeroMesa = it.getString("numeroMesa", "")
@@ -102,18 +103,19 @@ class DetalhesMesaReformadaComHistoricoDialog : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
-        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialog.window?.apply {
+            setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            // Remover qualquer padding/margin que cause faixa branca
+            setBackgroundDrawableResource(android.R.color.transparent)
+            // Configurar para tema escuro
+            statusBarColor = android.graphics.Color.TRANSPARENT
+            navigationBarColor = android.graphics.Color.TRANSPARENT
+        }
         return dialog
     }
 
     private fun setupUI() {
-        // Informações básicas da mesa
-        binding.tvNumeroMesa.text = "Mesa ${mesaComHistorico.numeroMesa}"
-        binding.tvTipoMesa.text = "${mesaComHistorico.tipoMesa} - ${mesaComHistorico.tamanhoMesa}"
-        
-        // Total de reformas
-        binding.tvTotalReformas.text = "${mesaComHistorico.totalReformas} reforma(s) realizada(s)"
-        
+        // Card de informações removido - apenas exibir histórico de reformas
         // Agrupar reformas e manutenções por data
         setupReformasAgrupadas()
     }
@@ -182,9 +184,7 @@ class DetalhesMesaReformadaComHistoricoDialog : DialogFragment() {
     }
 
     private fun setupClickListeners() {
-        binding.btnFechar.setOnClickListener {
-            dismiss()
-        }
+        // Botão fechar removido - usuário pode fechar tocando fora do dialog ou usando botão voltar
     }
 
     override fun onDestroyView() {
