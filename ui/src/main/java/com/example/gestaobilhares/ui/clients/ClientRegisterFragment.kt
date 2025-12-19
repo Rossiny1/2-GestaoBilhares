@@ -19,6 +19,7 @@ import androidx.navigation.fragment.navArgs
 import com.example.gestaobilhares.ui.databinding.FragmentClientRegisterBinding
 import dagger.hilt.android.AndroidEntryPoint
 import com.example.gestaobilhares.core.utils.DataValidator
+import com.example.gestaobilhares.core.utils.CpfCnpjTextWatcher
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -124,8 +125,14 @@ class ClientRegisterFragment : Fragment() {
             .format(java.util.Date())
         binding.etClienteDesde.setText(dataAtual)
 
+        // ✅ NOVO: Aplicar máscara CPF/CNPJ
+        binding.etCpfCnpj.addTextChangedListener(CpfCnpjTextWatcher(binding.etCpfCnpj))
+
         // ✅ NOVO: Configurar dropdowns de estado e cidade
         setupEstadoCidadeDropdowns()
+        
+        // ✅ NOVO: Definir Minas Gerais como padrão no estado
+        definirEstadoPadrao()
     }
 
     private fun observeViewModel() {
@@ -260,7 +267,8 @@ class ClientRegisterFragment : Fragment() {
             
             // Obter valores dos campos
             val name = binding.etClientName.text.toString().trim()
-            val cpfCnpj = binding.etCpfCnpj.text.toString().trim()
+            // ✅ NOVO: Remover máscara do CPF/CNPJ (manter apenas números)
+            val cpfCnpj = binding.etCpfCnpj.text.toString().trim().replace(Regex("[^0-9]"), "")
             val address = binding.etAddress.text.toString().trim()
             val bairro = binding.etBairro.text.toString().trim()
             val cidade = binding.actvCidade.text.toString().trim()
@@ -268,12 +276,20 @@ class ClientRegisterFragment : Fragment() {
             val phone = binding.etPhone.text.toString().trim()
             val phone2 = binding.etPhone2.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
-            val valorFicha = binding.etValorFicha.text.toString().trim().toDoubleOrNull() ?: 0.0
+            val valorFichaTexto = binding.etValorFicha.text.toString().trim()
+            val valorFicha = valorFichaTexto.toDoubleOrNull() ?: 0.0
             val comissaoFicha = binding.etComissaoFicha.text.toString().trim().toDoubleOrNull() ?: 0.0
             val numeroContrato = binding.etNumeroContrato.text.toString().trim()
             val observations = binding.etObservations.text.toString().trim()
             
             android.util.Log.d("ClientRegister", "Valores obtidos: nome=$name, endereco=$address")
+            
+            // ✅ NOVO: Validar valor da ficha obrigatório
+            if (valorFichaTexto.isEmpty() || valorFicha <= 0) {
+                binding.etValorFicha.error = "Valor da ficha é obrigatório"
+                binding.etValorFicha.requestFocus()
+                return
+            }
             
             // ✅ FASE 2: Usar DataValidator centralizado
             val resultadoValidacao = com.example.gestaobilhares.core.utils.DataValidator.validarCliente(
@@ -413,7 +429,16 @@ class ClientRegisterFragment : Fragment() {
         
         binding.apply {
             etClientName.setText(cliente.nome)
-            etCpfCnpj.setText(cliente.cpfCnpj ?: "")
+            // ✅ NOVO: Aplicar máscara ao CPF/CNPJ ao carregar dados
+            val cpfCnpjFormatado = cliente.cpfCnpj?.let { cpfCnpj ->
+                val cpfCnpjLimpo = cpfCnpj.replace(Regex("[^0-9]"), "")
+                when {
+                    cpfCnpjLimpo.length == 11 -> com.example.gestaobilhares.core.utils.StringUtils.formatarCPF(cpfCnpjLimpo)
+                    cpfCnpjLimpo.length == 14 -> com.example.gestaobilhares.core.utils.StringUtils.formatarCNPJ(cpfCnpjLimpo)
+                    else -> cpfCnpj
+                }
+            } ?: ""
+            etCpfCnpj.setText(cpfCnpjFormatado)
             etAddress.setText(cliente.endereco ?: "")
             etBairro.setText(cliente.bairro ?: "")
             actvCidade.setText(cliente.cidade ?: "")
@@ -525,6 +550,33 @@ class ClientRegisterFragment : Fragment() {
         } catch (e: Exception) {
             Log.e("ClientRegisterFragment", "Erro ao configurar dropdowns: ${e.message}")
             showErrorDialog("Erro ao carregar estados e cidades: ${e.message}")
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Define Minas Gerais como estado padrão
+     */
+    private fun definirEstadoPadrao() {
+        try {
+            // Só definir padrão se não estiver em modo edição e o campo estiver vazio
+            if (args.clienteId == 0L && binding.actvEstado.text.toString().isEmpty()) {
+                binding.actvEstado.setText("Minas Gerais")
+                
+                // Carregar cidades de Minas Gerais
+                val estadosCidades = com.example.gestaobilhares.data.model.EstadosCidades.carregarDados(requireContext())
+                val minasGerais = estadosCidades.estados.find { it.nome == "Minas Gerais" }
+                
+                if (minasGerais != null) {
+                    val cidadesAdapter = android.widget.ArrayAdapter(
+                        requireContext(),
+                        android.R.layout.simple_dropdown_item_1line,
+                        minasGerais.cidades.sorted()
+                    )
+                    binding.actvCidade.setAdapter(cidadesAdapter)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("ClientRegisterFragment", "Erro ao definir estado padrão: ${e.message}")
         }
     }
     

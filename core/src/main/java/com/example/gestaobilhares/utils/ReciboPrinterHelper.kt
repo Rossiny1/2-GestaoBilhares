@@ -270,9 +270,11 @@ object ReciboPrinterHelper {
     /**
      * ✅ NOVA FUNÇÃO CENTRALIZADA: Imprime recibo com dados unificados
      * FONTE ÚNICA DE VERDADE para impressão - elimina duplicação de código
+     * 
+     * @param context Context ou Fragment - se for Fragment, será usado para solicitar permissões
      */
     fun imprimirReciboUnificado(
-        context: Context,
+        context: Any, // ✅ CORREÇÃO: Aceita Context ou Fragment
         clienteNome: String,
         clienteCpf: String? = null,
         @Suppress("UNUSED_PARAMETER") clienteTelefone: String? = null,
@@ -290,6 +292,18 @@ object ReciboPrinterHelper {
         onErro: (String) -> Unit = {}
     ) {
         try {
+            // ✅ CORREÇÃO: Obter Context real e Fragment (se disponível)
+            val realContext = when (context) {
+                is Context -> context
+                is androidx.fragment.app.Fragment -> context.requireContext()
+                else -> throw IllegalArgumentException("Context deve ser Context ou Fragment")
+            }
+            
+            val fragment = when (context) {
+                is androidx.fragment.app.Fragment -> context
+                else -> null
+            }
+            
             // Verificar permissões Bluetooth
             val bluetoothPermissions = arrayOf(
                 android.Manifest.permission.BLUETOOTH_CONNECT,
@@ -297,13 +311,74 @@ object ReciboPrinterHelper {
             )
             
             val hasPermissions = bluetoothPermissions.all {
-                androidx.core.content.ContextCompat.checkSelfPermission(context, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                androidx.core.content.ContextCompat.checkSelfPermission(realContext, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
             }
             
             if (!hasPermissions) {
-                // ✅ NOVO: Solicitar permissões automaticamente
-                if (context is androidx.fragment.app.FragmentActivity) {
-                    solicitarPermissoesBluetooth(context, bluetoothPermissions, onSucesso, onErro)
+                // ✅ CORREÇÃO: Solicitar permissões automaticamente (suporta Activity e Fragment)
+                val activity = when {
+                    realContext is androidx.fragment.app.FragmentActivity -> realContext
+                    fragment != null -> fragment.activity as? androidx.fragment.app.FragmentActivity
+                    else -> null
+                }
+                
+                if (activity != null && fragment != null) {
+                    // ✅ NOVO: Para Fragment, usar método que armazena callback no Fragment
+                    solicitarPermissoesBluetoothComRetryFragment(
+                        fragment = fragment,
+                        activity = activity,
+                        permissions = bluetoothPermissions,
+                        onPermissoesConcedidas = {
+                            // Tentar imprimir novamente após permissões concedidas
+                            imprimirReciboUnificado(
+                                context = context,
+                                clienteNome = clienteNome,
+                                clienteCpf = clienteCpf,
+                                clienteTelefone = null,
+                                mesasCompletas = mesasCompletas,
+                                debitoAnterior = debitoAnterior,
+                                valorTotalMesas = valorTotalMesas,
+                                desconto = desconto,
+                                metodosPagamento = metodosPagamento,
+                                debitoAtual = debitoAtual,
+                                observacao = observacao,
+                                valorFicha = valorFicha,
+                                acertoId = acertoId,
+                                numeroContrato = numeroContrato,
+                                onSucesso = onSucesso,
+                                onErro = onErro
+                            )
+                        },
+                        onErro = onErro
+                    )
+                } else if (activity != null) {
+                    // Para Activity apenas
+                    solicitarPermissoesBluetoothComRetry(
+                        activity = activity,
+                        fragment = null,
+                        permissions = bluetoothPermissions,
+                        onPermissoesConcedidas = {
+                            imprimirReciboUnificado(
+                                context = context,
+                                clienteNome = clienteNome,
+                                clienteCpf = clienteCpf,
+                                clienteTelefone = null,
+                                mesasCompletas = mesasCompletas,
+                                debitoAnterior = debitoAnterior,
+                                valorTotalMesas = valorTotalMesas,
+                                desconto = desconto,
+                                metodosPagamento = metodosPagamento,
+                                debitoAtual = debitoAtual,
+                                observacao = observacao,
+                                valorFicha = valorFicha,
+                                acertoId = acertoId,
+                                numeroContrato = numeroContrato,
+                                onSucesso = onSucesso,
+                                onErro = onErro
+                            )
+                        },
+                        onErro = onErro
+                    )
                 } else {
                     onErro("Permissões Bluetooth necessárias para impressão. Vá em Configurações > Aplicativos > Gestão Bilhares > Permissões e ative o Bluetooth.")
                 }
@@ -333,12 +408,12 @@ object ReciboPrinterHelper {
             val deviceList = pairedDevices.toList()
             val deviceNames = deviceList.map { it.name ?: it.address }.toTypedArray()
             
-            androidx.appcompat.app.AlertDialog.Builder(context)
+            androidx.appcompat.app.AlertDialog.Builder(realContext)
                 .setTitle("Selecione a impressora")
                 .setItems(deviceNames) { _, which ->
                     val printerDevice = deviceList[which]
                     imprimirComImpressoraSelecionada(
-                        context = context,
+                        context = realContext,
                         printerDevice = printerDevice,
                         clienteNome = clienteNome,
                         clienteCpf = clienteCpf,
@@ -385,21 +460,42 @@ object ReciboPrinterHelper {
         onSucesso: () -> Unit,
         onErro: (String) -> Unit
     ) {
-        // Mostrar diálogo de loading
-        val loadingDialog = androidx.appcompat.app.AlertDialog.Builder(context)
-            .setMessage("Imprimindo recibo...")
-            .setCancelable(false)
-            .create()
-        loadingDialog.show()
+        // ✅ CORREÇÃO CRÍTICA: Usar Handler para garantir que o dialog seja sempre fechado
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        var loadingDialog: androidx.appcompat.app.AlertDialog? = null
+        
+        // Mostrar diálogo de loading na thread principal
+        handler.post {
+            loadingDialog = androidx.appcompat.app.AlertDialog.Builder(context)
+                .setMessage("Imprimindo recibo...")
+                .setCancelable(true) // ✅ Permitir cancelar para evitar travamento
+                .setOnCancelListener {
+                    // Se o usuário cancelar, tratar como erro
+                    onErro("Impressão cancelada pelo usuário")
+                }
+                .create()
+            loadingDialog?.show()
+        }
+        
+        // ✅ CORREÇÃO: Timeout para evitar travamento indefinido (30 segundos)
+        val timeoutHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        val timeoutRunnable = Runnable {
+            handler.post {
+                loadingDialog?.dismiss()
+                onErro("Timeout: A impressão está demorando muito. Verifique se a impressora está conectada e funcionando.")
+            }
+        }
+        timeoutHandler.postDelayed(timeoutRunnable, 30000) // 30 segundos
         
         // Executar impressão em thread separada
         Thread {
             var erro: String? = null
             var sucesso = false
+            var printerHelper: BluetoothPrinterHelper? = null
             try {
                 // ✅ CRÍTICO: Criar nova instância e conectar para cada impressão
                 // Isso garante que não há dados residuais de impressões anteriores
-                val printerHelper = BluetoothPrinterHelper(printerDevice)
+                printerHelper = BluetoothPrinterHelper(printerDevice)
                 
                 // ✅ CRÍTICO: Garantir que não há conexão anterior ativa
                 // Se houver, desconectar primeiro
@@ -520,12 +616,25 @@ object ReciboPrinterHelper {
                     else -> "Erro inesperado: ${e.message ?: "Desconhecido"}"
                 }
                 android.util.Log.e("ReciboPrinterHelper", "Erro na impressão", e)
-            }
-            
-            // Atualizar UI na thread principal
-            if (context is android.app.Activity) {
-                context.runOnUiThread {
-                    loadingDialog.dismiss()
+            } finally {
+                // ✅ CRÍTICO: Sempre desconectar e limpar recursos, mesmo em caso de erro
+                try {
+                    printerHelper?.disconnect()
+                } catch (e: Exception) {
+                    android.util.Log.w("ReciboPrinterHelper", "Erro ao desconectar impressora: ${e.message}")
+                }
+                
+                // ✅ CRÍTICO: Cancelar timeout se a operação terminou antes
+                timeoutHandler.removeCallbacks(timeoutRunnable)
+                
+                // ✅ CRÍTICO: Sempre fechar o dialog e atualizar UI na thread principal
+                handler.post {
+                    try {
+                        loadingDialog?.dismiss()
+                    } catch (e: Exception) {
+                        android.util.Log.w("ReciboPrinterHelper", "Erro ao fechar dialog: ${e.message}")
+                    }
+                    
                     if (sucesso) {
                         onSucesso()
                     } else {
@@ -698,12 +807,13 @@ object ReciboPrinterHelper {
     }
 
     /**
-     * ✅ NOVO: Solicita permissões Bluetooth automaticamente
+     * ✅ CORREÇÃO: Solicita permissões Bluetooth para Fragment (usa callback do Fragment)
      */
-    private fun solicitarPermissoesBluetooth(
+    private fun solicitarPermissoesBluetoothComRetryFragment(
+        fragment: androidx.fragment.app.Fragment,
         activity: androidx.fragment.app.FragmentActivity,
         permissions: Array<String>,
-        onSucesso: () -> Unit,
+        onPermissoesConcedidas: () -> Unit,
         onErro: (String) -> Unit
     ) {
         // Verificar se já temos permissões
@@ -712,21 +822,99 @@ object ReciboPrinterHelper {
         }
         
         if (hasPermissions) {
-            onSucesso()
+            onPermissoesConcedidas()
             return
         }
         
-        // Mostrar diálogo explicativo
+        // ✅ CORREÇÃO: Tentar usar método do Fragment se disponível (SettlementDetailFragment)
+        try {
+            val setCallbackMethod = fragment.javaClass.getMethod("setPendingPrintCallback", kotlin.jvm.functions.Function0::class.java)
+            setCallbackMethod.invoke(fragment, onPermissoesConcedidas)
+            
+            // Mostrar diálogo explicativo
+            androidx.appcompat.app.AlertDialog.Builder(activity)
+                .setTitle("🔗 Permissões Bluetooth Necessárias")
+                .setMessage("O app precisa de permissões Bluetooth para imprimir recibos na impressora térmica. Clique em 'Permitir' para continuar.")
+                .setPositiveButton("Permitir") { _, _ ->
+                    // Solicitar permissões usando método do Fragment
+                    @Suppress("DEPRECATION")
+                    fragment.requestPermissions(permissions, 1001)
+                }
+                .setNegativeButton("Cancelar") { _, _ ->
+                    onErro("Permissões Bluetooth necessárias para impressão")
+                }
+                .setCancelable(false)
+                .show()
+        } catch (e: Exception) {
+            // Fallback: usar método genérico
+            android.util.Log.w("ReciboPrinterHelper", "Fragment não suporta setPendingPrintCallback, usando fallback")
+            solicitarPermissoesBluetoothComRetry(activity, fragment, permissions, onPermissoesConcedidas, onErro)
+        }
+    }
+    
+    /**
+     * ✅ CORREÇÃO: Solicita permissões Bluetooth automaticamente com suporte a Fragment
+     * Após permissões concedidas, chama callback para tentar novamente
+     */
+    private fun solicitarPermissoesBluetoothComRetry(
+        activity: androidx.fragment.app.FragmentActivity,
+        fragment: androidx.fragment.app.Fragment?,
+        permissions: Array<String>,
+        onPermissoesConcedidas: () -> Unit,
+        onErro: (String) -> Unit
+    ) {
+        // Verificar se já temos permissões
+        val hasPermissions = permissions.all {
+            androidx.core.content.ContextCompat.checkSelfPermission(activity, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+        
+        if (hasPermissions) {
+            onPermissoesConcedidas()
+            return
+        }
+        
+        // ✅ CORREÇÃO: Usar método que funciona tanto para Activity quanto Fragment
+        // Mostrar diálogo explicativo primeiro
         androidx.appcompat.app.AlertDialog.Builder(activity)
             .setTitle("🔗 Permissões Bluetooth Necessárias")
             .setMessage("O app precisa de permissões Bluetooth para imprimir recibos na impressora térmica. Clique em 'Permitir' para continuar.")
             .setPositiveButton("Permitir") { _, _ ->
-                // Solicitar permissões
-                androidx.core.app.ActivityCompat.requestPermissions(
-                    activity,
-                    permissions,
-                    1001 // REQUEST_BLUETOOTH_PERMISSIONS
-                )
+                // Solicitar permissões usando método compatível
+                if (fragment != null) {
+                    // ✅ CORREÇÃO: Para Fragment, usar requestPermissions diretamente
+                    @Suppress("DEPRECATION")
+                    fragment.requestPermissions(permissions, 1001)
+                    
+                    // ✅ CORREÇÃO: Verificar resultado após um delay
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        val granted = permissions.all {
+                            androidx.core.content.ContextCompat.checkSelfPermission(activity, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                        }
+                        if (granted) {
+                            onPermissoesConcedidas()
+                        } else {
+                            onErro("Permissões Bluetooth necessárias para impressão. Vá em Configurações > Aplicativos > Gestão Bilhares > Permissões e ative o Bluetooth.")
+                        }
+                    }, 500)
+                } else {
+                    // Para Activity, usar ActivityCompat
+                    androidx.core.app.ActivityCompat.requestPermissions(
+                        activity,
+                        permissions,
+                        1001 // REQUEST_BLUETOOTH_PERMISSIONS
+                    )
+                    // ✅ CORREÇÃO: Verificar resultado após um delay (Activity precisa processar)
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        val granted = permissions.all {
+                            androidx.core.content.ContextCompat.checkSelfPermission(activity, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                        }
+                        if (granted) {
+                            onPermissoesConcedidas()
+                        } else {
+                            onErro("Permissões Bluetooth necessárias para impressão. Vá em Configurações > Aplicativos > Gestão Bilhares > Permissões e ative o Bluetooth.")
+                        }
+                    }, 500)
+                }
             }
             .setNegativeButton("Cancelar") { _, _ ->
                 onErro("Permissões Bluetooth necessárias para impressão")

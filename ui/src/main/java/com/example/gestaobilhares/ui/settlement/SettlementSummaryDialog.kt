@@ -36,6 +36,17 @@ class SettlementSummaryDialog : DialogFragment() {
         Manifest.permission.BLUETOOTH_CONNECT,
         Manifest.permission.BLUETOOTH_SCAN
     )
+    
+    // ✅ NOVO: Callback para retry após permissões concedidas
+    var pendingPrintCallback: (() -> Unit)? = null
+        private set
+    
+    /**
+     * ✅ NOVO: Define callback para ser executado após permissões concedidas
+     */
+    fun setPendingPrintCallback(callback: () -> Unit) {
+        pendingPrintCallback = callback
+    }
 
     companion object {
         fun newInstance(
@@ -153,7 +164,7 @@ class SettlementSummaryDialog : DialogFragment() {
         // ✅ BOTÃO IMPRIMIR UNIFICADO: Usa função centralizada
         view.findViewById<MaterialButton>(com.example.gestaobilhares.ui.R.id.btnImprimir).setOnClickListener {
             ReciboPrinterHelper.imprimirReciboUnificado(
-                context = requireContext(),
+                context = this@SettlementSummaryDialog, // ✅ CORREÇÃO: Passar Fragment para permitir solicitação de permissões
                 clienteNome = clienteNome,
                 clienteCpf = clienteCpf,
                 clienteTelefone = clienteTelefone,
@@ -355,16 +366,17 @@ class SettlementSummaryDialog : DialogFragment() {
     }
 
     // ✅ CORREÇÃO: onRequestPermissionsResult deprecated - usar registerForActivityResult
-    @Deprecated("Deprecated in Java", ReplaceWith("registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions())"))
+    @Suppress("DEPRECATION")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        @Suppress("DEPRECATION")
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_BLUETOOTH_PERMISSIONS) {
             if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                // Permissão concedida, pode tentar imprimir novamente
-                view?.findViewById<MaterialButton>(com.example.gestaobilhares.ui.R.id.btnImprimir)?.performClick()
+                // Permissão concedida - executar callback pendente ou tentar imprimir novamente
+                pendingPrintCallback?.invoke() ?: view?.findViewById<MaterialButton>(com.example.gestaobilhares.ui.R.id.btnImprimir)?.performClick()
+                pendingPrintCallback = null
             } else {
                 android.widget.Toast.makeText(requireContext(), getString(com.example.gestaobilhares.ui.R.string.impressao_permissao_necessaria), android.widget.Toast.LENGTH_LONG).show()
+                pendingPrintCallback = null
             }
         }
     }
