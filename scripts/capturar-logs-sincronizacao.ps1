@@ -55,9 +55,9 @@ Write-Host "  - Processamento da fila de sincronizacao (processSyncQueue)" -Fore
 Write-Host "  - Operacoes DELETE (inicio, execucao, verificacao pos-DELETE)" -ForegroundColor White
 Write-Host "  - Enfileiramento de operacoes (AppRepository)" -ForegroundColor White
 Write-Host "  - Mapeamento de entidades para colecoes Firestore" -ForegroundColor White
-Write-Host "  - Erros do Firestore (PERMISSION_DENIED, NOT_FOUND, etc.)" -ForegroundColor White
-Write-Host "  - Verificacao pos-DELETE (confirmacao de exclusao)" -ForegroundColor White
-Write-Host "  - Contagem de operacoes pendentes" -ForegroundColor White
+Write-Host "  - Monitoramento de Claims e Permissoes (Diagnostico 2025)" -ForegroundColor White
+Write-Host "  - Auditoria de Caminhos Firestore (empresas/ID/entidades/...)" -ForegroundColor White
+Write-Host "  - Espera ativa por custom claims (Wait & Retry)" -ForegroundColor White
 Write-Host "  - Stack traces e excecoes" -ForegroundColor White
 Write-Host ""
 Write-Host "Aguardando eventos de sincronizacao, login e exclusao..." -ForegroundColor Gray
@@ -126,6 +126,16 @@ Write-Host ""
     }
     elseif ($line -match "AuthViewModel.*Email|AuthViewModel.*Senha|AuthViewModel.*Validacao") {
         Write-Host $line -ForegroundColor DarkCyan
+    }
+    # Novos logs de Diagnostico 2025 - Claims e CompanyId
+    elseif ($line -match "DIAG:.*Waiting for companyId|DIAG:.*Verificando claims|DIAG:.*Claim 'companyId' confirmada|DIAG:.*Claims atuais no Token") {
+        Write-Host $line -ForegroundColor Magenta -BackgroundColor DarkBlue
+    }
+    elseif ($line -match "DIAG:.*Empresa identificada:|DIAG:.*Current Company ID in Sync:") {
+        Write-Host $line -ForegroundColor Yellow -BackgroundColor DarkCyan
+    }
+    elseif ($line -match "DIAG:.*getCollectionRef|DIAG:.*Full Path:") {
+        Write-Host $line -ForegroundColor Cyan -BackgroundColor Black
     }
     elseif ($line -match "LoginFragment.*ONCREATE|LoginFragment.*ONVIEWCREATED|LoginFragment.*inicializado") {
         Write-Host $line -ForegroundColor Cyan

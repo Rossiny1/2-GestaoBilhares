@@ -41,15 +41,21 @@ export const onUserCreated = functions.auth.user().onCreate(async (user: admin.a
     const pathSegments = doc.ref.path.split("/");
     const empresaId = pathSegments[1];
 
+    // Normalizar role para minúsculo para evitar problemas de case-sensitivity nas Security Rules
+    const rawRole = data.nivelAcesso || data.role || "collaborator";
+    const role = typeof rawRole === "string" ? rawRole.toLowerCase() : "collaborator";
+    const isAdmin = role === "admin";
+
     // Configura as claims que serão usadas nas Security Rules
     const claims = {
         companyId: empresaId,
         colaboradorId: doc.id,
-        role: data.nivelAcesso || data.role || "collaborator", // Ajustado para nivelAcesso (Kotlin enum)
+        role: role,
+        admin: isAdmin, // Claim explícita para facilitar regras
         approved: true
     };
 
-    console.log(`Atribuindo claims para ${email}:`, claims);
+    console.log(`Atribuindo claims para ${email}:`, JSON.stringify(claims));
     await admin.auth().setCustomUserClaims(user.uid, claims);
 
     // Atualizar o documento do colaborador com o UID do Auth
@@ -82,15 +88,21 @@ export const onCollaboratorUpdated = functions.firestore
             // Buscar usuário no Auth pelo email
             const userRecord = await admin.auth().getUserByEmail(email);
 
+            // Normalizar role para minúsculo
+            const rawRole = data.nivelAcesso || data.role || "collaborator";
+            const role = typeof rawRole === "string" ? rawRole.toLowerCase() : "collaborator";
+            const isAdmin = role === "admin";
+
             const claims = {
                 companyId: context.params.empresaId,
                 colaboradorId: context.params.docId,
-                role: data.nivelAcesso || data.role || "collaborator",
+                role: role,
+                admin: isAdmin,
                 approved: true
             };
 
             await admin.auth().setCustomUserClaims(userRecord.uid, claims);
-            console.log(`Claims atualizadas com sucesso para ${email} (UID: ${userRecord.uid})`);
+            console.log(`Claims atualizadas com sucesso para ${email}:`, JSON.stringify(claims));
 
             // Se o firebaseUid ainda não estiver no doc, salva agora
             if (!data.firebaseUid) {
