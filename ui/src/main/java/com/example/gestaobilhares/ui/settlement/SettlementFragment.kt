@@ -48,6 +48,7 @@ import com.example.gestaobilhares.ui.settlement.MesaDTO
 import com.example.gestaobilhares.ui.settlement.MesasAcertoAdapter
 import com.example.gestaobilhares.ui.clients.AcertoResumo
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.gestaobilhares.core.utils.MoneyTextWatcher
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.first
 import com.google.gson.Gson
@@ -389,14 +390,16 @@ class SettlementFragment : Fragment() {
             // ✅ CORREÇÃO: Débito anterior já foi carregado pelo buscarDebitoAnterior()
             Log.d("SettlementFragment", "🔍 Débito anterior já carregado pelo ViewModel: ${acerto.debitoAnterior}")
 
-            // Preencher valor recebido (sempre, mesmo se for 0)
+            // ✅ NOVO: Preencher valor recebido usando MoneyTextWatcher
             Log.d("SettlementFragment", "🔍 Preenchendo valor recebido: ${acerto.valorRecebido}")
-            binding.etAmountReceived.setText(acerto.valorRecebido.toString())
+            val valorRecebidoWatcher = MoneyTextWatcher(binding.etAmountReceived)
+            valorRecebidoWatcher.setValue(acerto.valorRecebido)
             Log.d("SettlementFragment", "✅ Valor recebido preenchido: ${acerto.valorRecebido}")
 
-            // Preencher desconto (sempre, mesmo se for 0)
+            // ✅ NOVO: Preencher desconto usando MoneyTextWatcher
             Log.d("SettlementFragment", "🔍 Preenchendo desconto: ${acerto.desconto}")
-            binding.etDesconto.setText(acerto.desconto.toString())
+            val descontoWatcher = MoneyTextWatcher(binding.etDesconto)
+            descontoWatcher.setValue(acerto.desconto)
             Log.d("SettlementFragment", "✅ Desconto preenchido: ${acerto.desconto}")
 
             // Preencher observações (sempre, mesmo se for vazio)
@@ -800,35 +803,39 @@ class SettlementFragment : Fragment() {
     }
     
     private fun setupCalculationListeners() {
-        // ✅ CORREÇÃO CRÍTICA: Listener para desconto
-        val descontoWatcher = object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                updateCalculations()
-            }
-        }
-        
+        // ✅ NOVO: Aplicar MoneyTextWatcher nos campos monetários
+        val descontoWatcher = MoneyTextWatcher(binding.etDesconto)
         binding.etDesconto.addTextChangedListener(descontoWatcher)
-        
-        // ✅ CORREÇÃO CRÍTICA: Listener específico para o campo Valor Recebido
-        val valorRecebidoWatcher = object : TextWatcher {
+        // Adicionar listener adicional para atualizar cálculos
+        binding.etDesconto.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 updateCalculations()
             }
-        }
+        })
         
-        // Adicionar listener ao campo Valor Recebido
-        binding.etAmountReceived.addTextChangedListener(valorRecebidoWatcher)
+        // ✅ NOVO: Valor Recebido também usa MoneyTextWatcher (quando editável)
+        if (binding.etAmountReceived.isFocusable) {
+            val valorRecebidoWatcher = MoneyTextWatcher(binding.etAmountReceived)
+            binding.etAmountReceived.addTextChangedListener(valorRecebidoWatcher)
+        }
+        // Adicionar listener adicional para atualizar cálculos (sempre)
+        binding.etAmountReceived.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                updateCalculations()
+            }
+        })
         
         Log.d("SettlementFragment", "✅ Listeners de cálculo configurados - débito atual será atualizado em tempo real")
     }
     
     private fun updateCalculations() {
         try {
-            val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
+            // ✅ NOVO: Obter valor monetário usando MoneyTextWatcher
+            val desconto = MoneyTextWatcher.parseValue(binding.etDesconto.text.toString())
             val subtotalMesas = if (::mesasAcertoAdapter.isInitialized) mesasAcertoAdapter.getSubtotal() else 0.0
             val debitoAnterior = viewModel.debitoAnterior.value
             val totalComDebito = subtotalMesas + debitoAnterior
@@ -862,15 +869,17 @@ class SettlementFragment : Fragment() {
             
             // Verificar se o valor recebido está sincronizado com paymentValues
             val somaPaymentValues = paymentValues.values.sum()
-            val valorRecebidoAtual = binding.etAmountReceived.text.toString().toDoubleOrNull() ?: 0.0
+            // ✅ NOVO: Obter valor monetário usando MoneyTextWatcher
+            val valorRecebidoAtual = MoneyTextWatcher.parseValue(binding.etAmountReceived.text.toString())
             
             if (Math.abs(somaPaymentValues - valorRecebidoAtual) > 0.01) {
                 Log.w("SettlementFragment", "⚠️ INCONSISTÊNCIA DETECTADA:")
                 Log.w("SettlementFragment", "Soma paymentValues: R$ $somaPaymentValues")
                 Log.w("SettlementFragment", "Valor no campo: R$ $valorRecebidoAtual")
                 
-                // Forçar sincronização
-                binding.etAmountReceived.setText(String.format("%.2f", somaPaymentValues))
+                // ✅ NOVO: Forçar sincronização usando MoneyTextWatcher
+                val valorRecebidoWatcher = MoneyTextWatcher(binding.etAmountReceived)
+                valorRecebidoWatcher.setValue(somaPaymentValues)
                 Log.d("SettlementFragment", "✅ Campo sincronizado com paymentValues")
             }
             
@@ -1013,8 +1022,9 @@ class SettlementFragment : Fragment() {
                 }
                 binding.actvPaymentMethod.setText(resumo, false)
                 
-                // Atualiza o campo Valor Recebido com a soma
-                binding.etAmountReceived.setText(String.format("%.2f", totalInformado))
+                // ✅ NOVO: Atualiza o campo Valor Recebido usando MoneyTextWatcher
+                val valorRecebidoWatcher = MoneyTextWatcher(binding.etAmountReceived)
+                valorRecebidoWatcher.setValue(totalInformado)
                 
                 Log.d("SettlementFragment", "Campo Valor Recebido atualizado para: '${binding.etAmountReceived.text}'")
                 
@@ -1309,7 +1319,8 @@ class SettlementFragment : Fragment() {
                 
                 // ✅ NOVO: Obter dados adicionais para o resumo
                 val debitoAnterior = viewModel.debitoAnterior.value
-                val desconto = binding.etDesconto.text.toString().toDoubleOrNull() ?: 0.0
+                // ✅ NOVO: Obter valor monetário usando MoneyTextWatcher
+            val desconto = MoneyTextWatcher.parseValue(binding.etDesconto.text.toString())
                 
                 // ✅ CORREÇÃO: Usar valor total das mesas do banco de dados
                 val valorTotalMesas = acerto.valorTotal

@@ -20,6 +20,7 @@ import com.example.gestaobilhares.ui.databinding.FragmentClientRegisterBinding
 import dagger.hilt.android.AndroidEntryPoint
 import com.example.gestaobilhares.core.utils.DataValidator
 import com.example.gestaobilhares.core.utils.CpfCnpjTextWatcher
+import com.example.gestaobilhares.core.utils.MoneyTextWatcher
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -127,6 +128,10 @@ class ClientRegisterFragment : Fragment() {
 
         // ✅ NOVO: Aplicar máscara CPF/CNPJ
         binding.etCpfCnpj.addTextChangedListener(CpfCnpjTextWatcher(binding.etCpfCnpj))
+        
+        // ✅ NOVO: Aplicar formatação monetária nos campos de valor
+        binding.etValorFicha.addTextChangedListener(MoneyTextWatcher(binding.etValorFicha))
+        binding.etComissaoFicha.addTextChangedListener(MoneyTextWatcher(binding.etComissaoFicha))
 
         // ✅ NOVO: Configurar dropdowns de estado e cidade
         setupEstadoCidadeDropdowns()
@@ -276,9 +281,19 @@ class ClientRegisterFragment : Fragment() {
             val phone = binding.etPhone.text.toString().trim()
             val phone2 = binding.etPhone2.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
+            // ✅ NOVO: Obter valores monetários usando MoneyTextWatcher ou parsing
             val valorFichaTexto = binding.etValorFicha.text.toString().trim()
-            val valorFicha = valorFichaTexto.toDoubleOrNull() ?: 0.0
-            val comissaoFicha = binding.etComissaoFicha.text.toString().trim().toDoubleOrNull() ?: 0.0
+            val valorFicha = if (valorFichaTexto.isNotEmpty()) {
+                MoneyTextWatcher.parseValue(valorFichaTexto)
+            } else {
+                0.0
+            }
+            val comissaoFichaTexto = binding.etComissaoFicha.text.toString().trim()
+            val comissaoFicha = if (comissaoFichaTexto.isNotEmpty()) {
+                MoneyTextWatcher.parseValue(comissaoFichaTexto)
+            } else {
+                0.0
+            }
             val numeroContrato = binding.etNumeroContrato.text.toString().trim()
             val observations = binding.etObservations.text.toString().trim()
             

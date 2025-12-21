@@ -50,19 +50,14 @@ import com.example.gestaobilhares.sync.SyncRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.fragment.app.viewModels
-// TODO: Dialogs não existem - comentar temporariamente
-// import com.example.gestaobilhares.ui.dialogs.AdicionarMesaDialogFragment
-// import com.example.gestaobilhares.ui.dialogs.AdicionarObservacaoDialogFragment
-// import com.example.gestaobilhares.ui.dialogs.ConfirmarRetiradaMesaDialogFragment
-// import com.example.gestaobilhares.ui.dialogs.GerarRelatorioDialogFragment
-// import com.example.gestaobilhares.ui.dialogs.RotaNaoIniciadaDialogFragment
+// Dialogs
+import com.example.gestaobilhares.ui.clients.ConfirmarRetiradaMesaDialogFragment
 import kotlinx.coroutines.flow.first
 import com.example.gestaobilhares.ui.clients.RetiradaStatus
 import com.example.gestaobilhares.data.entities.ContratoLocacao
 
-// TODO: Interfaces de dialogs não existem - remover temporariamente
 @AndroidEntryPoint
-class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.ConfirmarRetiradaDialogListener, AdicionarObservacaoDialogFragment.AdicionarObservacaoDialogListener, GerarRelatorioDialogFragment.GerarRelatorioDialogListener */ {
+class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.ConfirmarRetiradaDialogListener {
 
     private var _binding: FragmentClientDetailBinding? = null
     private val binding get() = _binding ?: throw IllegalStateException("Binding is null. Fragment may be destroyed.")
@@ -119,9 +114,7 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
                         RetiradaStatus.PODE_RETIRAR -> {
                             // Mesa foi acertada hoje - pode retirar
                             mesaParaRemover = mesa
-                            // TODO: ConfirmarRetiradaMesaDialogFragment não existe - usar Toast temporariamente
-                            Toast.makeText(requireContext(), "Funcionalidade de retirada de mesa será implementada em breve", Toast.LENGTH_SHORT).show()
-                            // ConfirmarRetiradaMesaDialogFragment.newInstance().show(childFragmentManager, ConfirmarRetiradaMesaDialogFragment.TAG)
+                            ConfirmarRetiradaMesaDialogFragment.newInstance().show(childFragmentManager, ConfirmarRetiradaMesaDialogFragment.TAG)
                         }
                         RetiradaStatus.PRECISA_ACERTO -> {
                             // Mesa não foi acertada hoje - precisa acertar primeiro
@@ -505,9 +498,7 @@ class ClientDetailFragment : Fragment() /*, ConfirmarRetiradaMesaDialogFragment.
     }
 
 
-    // TODO: Interface de dialog não existe - comentar temporariamente
-    // override fun onDialogPositiveClick(dialog: DialogFragment) {
-    private fun onDialogPositiveClick(@Suppress("UNUSED_PARAMETER") dialog: androidx.fragment.app.DialogFragment) {
+    override fun onDialogPositiveClick(dialog: DialogFragment) {
         mesaParaRemover?.let { mesa ->
             lifecycleScope.launch {
                 try {

@@ -321,15 +321,35 @@ class MesasDepositoFragment : Fragment() {
                                 
                                 val dialog = com.example.gestaobilhares.ui.contracts.AditivoDialog.newInstance(latest)
                                 dialog.setOnGerarAditivoClickListener { contrato ->
-                                    val mesasIds = longArrayOf(mesa.id)
-                                    val action = MesasDepositoFragmentDirections
-                                        .actionMesasDepositoFragmentToAditivoSignatureFragment(
-                                            contratoId = contrato.id,
-                                            mesasVinculadas = mesasIds
-                                        )
-                                    findNavController().navigate(action)
+                                    try {
+                                        android.util.Log.d("MesasDepositoFragment", "=== INICIANDO NAVEGAÇÃO PARA ADITIVO ===")
+                                        android.util.Log.d("MesasDepositoFragment", "Contrato ID: ${contrato.id}, Mesa ID: ${mesa.id}")
+                                        
+                                        val mesasIds = longArrayOf(mesa.id)
+                                        // ✅ CORREÇÃO: Passar aditivoTipo como "INCLUSAO" para adição de mesa
+                                        val action = MesasDepositoFragmentDirections
+                                            .actionMesasDepositoFragmentToAditivoSignatureFragment(
+                                                contratoId = contrato.id,
+                                                mesasVinculadas = mesasIds,
+                                                aditivoTipo = "INCLUSAO"
+                                            )
+                                        
+                                        android.util.Log.d("MesasDepositoFragment", "Action criada, navegando...")
+                                        // ✅ CORREÇÃO: Navegar ANTES de fechar o dialog para evitar crash
+                                        findNavController().navigate(action)
+                                        android.util.Log.d("MesasDepositoFragment", "Navegação executada com sucesso")
+                                        
+                                        // Fechar dialog após navegação bem-sucedida
+                                        dialog.dismiss()
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("MesasDepositoFragment", "Erro ao navegar para aditivo: ${e.message}", e)
+                                        Toast.makeText(requireContext(), "Erro ao abrir tela de aditivo: ${e.message}", Toast.LENGTH_LONG).show()
+                                        dialog.dismiss()
+                                    }
                                 }
                                 dialog.setOnCancelarClickListener {
+                                    android.util.Log.d("MesasDepositoFragment", "Dialog cancelado pelo usuário")
+                                    dialog.dismiss()
                                     findNavController().popBackStack()
                                 }
                                 dialog.show(parentFragmentManager, "AditivoDialog")

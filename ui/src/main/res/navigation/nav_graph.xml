@@ -660,6 +660,10 @@
         <argument
             android:name="mesasVinculadas"
             app:argType="long[]" />
+        <argument
+            android:name="aditivoTipo"
+            app:argType="string"
+            android:defaultValue="INCLUSAO" />
         <!-- ✅ NOVA AÇÃO: Retorno direto para lista de clientes após assinatura de aditivo -->
         <action
             android:id="@+id/action_aditivoSignatureFragment_to_clientListFragment"
