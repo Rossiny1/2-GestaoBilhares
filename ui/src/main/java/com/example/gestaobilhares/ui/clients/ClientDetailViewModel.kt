@@ -255,23 +255,47 @@ class ClientDetailViewModel @Inject constructor(
         }
     }
 
-    suspend fun verificarSeRetiradaEPermitida(mesaId: Long, _clienteId: Long): RetiradaStatus = try {
-        val ultimoAcertoMesa = appRepository.buscarUltimoAcertoPorMesa(mesaId)
-        val hoje = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.time
+    suspend fun verificarSeRetiradaEPermitida(mesaId: Long, _clienteId: Long): RetiradaStatus {
+        return try {
+            val ultimoAcertoMesa = appRepository.buscarUltimoAcertoPorMesa(mesaId)
+            
+            if (ultimoAcertoMesa == null) {
+                return RetiradaStatus.PRECISA_ACERTO
+            }
+            
+            // Verificar se o acerto foi feito hoje (mesma data)
+            val hoje = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            
+            val amanha = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+                add(Calendar.DAY_OF_MONTH, 1)
+            }
+            
+            val dataAcerto = Calendar.getInstance().apply {
+                time = ultimoAcertoMesa.dataAcerto
+            }
+            
+            // Verificar se o acerto foi feito hoje (entre hoje 00:00:00 e amanhã 00:00:00)
+            val acertoFoiHoje = dataAcerto.timeInMillis >= hoje.timeInMillis && 
+                               dataAcerto.timeInMillis < amanha.timeInMillis
 
-        if (ultimoAcertoMesa != null && ultimoAcertoMesa.dataAcerto.after(hoje)) {
-            RetiradaStatus.PODE_RETIRAR
-        } else {
+            if (acertoFoiHoje) {
+                RetiradaStatus.PODE_RETIRAR
+            } else {
+                RetiradaStatus.PRECISA_ACERTO
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao verificar status de retirada", e)
             RetiradaStatus.PRECISA_ACERTO
         }
-    } catch (e: Exception) {
-        Log.e(TAG, "Erro ao verificar status de retirada", e)
-        RetiradaStatus.PRECISA_ACERTO
     }
 
     fun retirarMesaDoCliente(mesaId: Long, clienteId: Long, relogioFinal: Int, valorRecebido: Double) {

@@ -71,9 +71,11 @@ class AditivoDialog : DialogFragment() {
     private fun setupClickListeners() {
         binding.btnGerarAditivo.setOnClickListener {
             contrato?.let { contrato ->
+                // ✅ CORREÇÃO: Invocar listener primeiro, deixar o dismiss para quem chama
+                // Isso evita que o dialog feche antes da navegação acontecer
                 onGerarAditivoClickListener?.invoke(contrato)
+                // O dismiss será chamado pelo fragment que navega
             }
-            dismiss()
         }
         
         binding.btnCancelar.setOnClickListener {

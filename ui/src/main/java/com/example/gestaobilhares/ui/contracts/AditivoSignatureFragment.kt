@@ -86,8 +86,9 @@ class AditivoSignatureFragment : Fragment() {
             
             // Carregar dados do aditivo
             contratoId = arguments?.getLong("contratoId") ?: 0L
-            val tipo = arguments?.getString("aditivoTipo")
-            tipo?.let { viewModel.setAditivoTipo(it) }
+            // ✅ CORREÇÃO: Garantir que o tipo seja sempre definido (default: INCLUSAO)
+            val tipo = arguments?.getString("aditivoTipo") ?: "INCLUSAO"
+            viewModel.setAditivoTipo(tipo)
         } catch (e: Exception) {
             android.util.Log.e("AditivoSignatureFragment", "Erro ao inicializar ViewModel: ${e.message}")
             // Mostrar erro para o usuário

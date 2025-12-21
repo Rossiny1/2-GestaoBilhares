@@ -26,6 +26,7 @@ import com.example.gestaobilhares.ui.databinding.FragmentExpenseRegisterBinding
 import com.example.gestaobilhares.core.utils.ImageCompressionUtils
 import com.example.gestaobilhares.core.utils.FirebaseImageUploader
 import com.example.gestaobilhares.core.utils.NetworkUtils
+import com.example.gestaobilhares.core.utils.MoneyTextWatcher
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import java.io.File
@@ -178,7 +179,9 @@ class ExpenseRegisterFragment : Fragment() {
     private fun preencherCamposComDespesa(despesa: com.example.gestaobilhares.data.entities.Despesa) {
         binding.apply {
             etDescricao.setText(despesa.descricao)
-            etValorDespesa.setText(String.format("%.2f", despesa.valor))
+            // ✅ NOVO: Usar MoneyTextWatcher para formatar valor monetário
+            val moneyWatcher = MoneyTextWatcher(etValorDespesa)
+            moneyWatcher.setValue(despesa.valor)
             etQuantidade.setText("1") // Por enquanto, sempre 1
             
             // Definir data da despesa
@@ -214,25 +217,8 @@ class ExpenseRegisterFragment : Fragment() {
             binding.tilCiclo.visibility = View.GONE
         }
 
-        // Configurar campo de valor
-        binding.etValorDespesa.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                s?.toString()?.let { text ->
-                    if (text.isNotEmpty()) {
-                        try {
-                            text.toDouble()
-                            binding.tilValorDespesa.prefixText = "R$ "
-                        } catch (e: NumberFormatException) {
-                            binding.tilValorDespesa.prefixText = ""
-                        }
-                    } else {
-                        binding.tilValorDespesa.prefixText = ""
-                    }
-                }
-            }
-        })
+        // ✅ NOVO: Configurar campo de valor com MoneyTextWatcher
+        binding.etValorDespesa.addTextChangedListener(MoneyTextWatcher(binding.etValorDespesa))
     }
 
     private fun setupClickListeners() {
@@ -725,11 +711,11 @@ class ExpenseRegisterFragment : Fragment() {
             return
         }
 
-        // ✅ FASE 2: Usar DataValidator centralizado
-        val valor = try {
-            valorText.toDouble()
-        } catch (e: NumberFormatException) {
-            binding.tilValorDespesa.error = "Valor inválido"
+        // ✅ NOVO: Obter valor monetário usando MoneyTextWatcher
+        val valor = MoneyTextWatcher.parseValue(valorText)
+        
+        if (valor <= 0) {
+            binding.tilValorDespesa.error = "Valor deve ser maior que zero"
             return
         }
 
@@ -740,6 +726,7 @@ class ExpenseRegisterFragment : Fragment() {
             return
         }
 
+        // ✅ FASE 2: Usar DataValidator centralizado
         val resultadoValidacao = com.example.gestaobilhares.core.utils.DataValidator.validarDespesa(
             valor = valor,
             quantidade = quantidade,

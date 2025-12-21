@@ -15,6 +15,8 @@ import com.example.gestaobilhares.data.entities.MesaVendida
 import com.example.gestaobilhares.ui.databinding.DialogVendaMesaBinding
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.repository.AppRepository
+import com.example.gestaobilhares.core.utils.CpfCnpjTextWatcher
+import com.example.gestaobilhares.core.utils.MoneyTextWatcher
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.room.withTransaction
 import kotlinx.coroutines.launch
@@ -104,6 +106,12 @@ class VendaMesaDialog : DialogFragment() {
 
         // Configurar campo de valor
         binding.etValorVenda.hint = "0,00"
+        
+        // ✅ NOVO: Aplicar máscara CPF/CNPJ
+        binding.etCpfCnpjComprador.addTextChangedListener(CpfCnpjTextWatcher(binding.etCpfCnpjComprador))
+        
+        // ✅ NOVO: Aplicar formatação monetária no campo de valor da venda
+        binding.etValorVenda.addTextChangedListener(MoneyTextWatcher(binding.etValorVenda))
     }
 
     private fun setupClickListeners() {
@@ -294,9 +302,11 @@ class VendaMesaDialog : DialogFragment() {
                     estadoConservacao = mesa.estadoConservacao,
                     nomeComprador = binding.etNomeComprador.text.toString().trim(),
                     telefoneComprador = binding.etTelefoneComprador.text.toString().trim().takeIf { it.isNotEmpty() },
-                    cpfCnpjComprador = binding.etCpfCnpjComprador.text.toString().trim().takeIf { it.isNotEmpty() },
+                    // ✅ NOVO: Remover máscara do CPF/CNPJ (manter apenas números)
+                    cpfCnpjComprador = binding.etCpfCnpjComprador.text.toString().trim().replace(Regex("[^0-9]"), "").takeIf { it.isNotEmpty() },
                     enderecoComprador = binding.etEnderecoComprador.text.toString().trim().takeIf { it.isNotEmpty() },
-                    valorVenda = binding.etValorVenda.text.toString().replace(",", ".").toDoubleOrNull() ?: 0.0,
+                    // ✅ NOVO: Obter valor monetário usando MoneyTextWatcher
+                    valorVenda = MoneyTextWatcher.parseValue(binding.etValorVenda.text.toString()),
                     dataVenda = dataVenda,
                     observacoes = binding.etObservacoes.text.toString().trim().takeIf { it.isNotEmpty() }
                 )
