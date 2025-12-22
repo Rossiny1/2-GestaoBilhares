@@ -32,6 +32,10 @@
 -keep class com.google.gson.reflect.TypeToken { *; }
 -keep class * extends com.google.gson.reflect.TypeToken
 
+# ✅ CORREÇÃO CRÍTICA: Preservar TypeToken específico do SyncRepository
+# Isso garante que as assinaturas genéricas sejam preservadas após otimização R8/ProGuard
+-keep class com.example.gestaobilhares.sync.SyncRepository$Companion$MapTypeToken { *; }
+
 # Generic signatures for all app classes (needed for Gson)
 -keepattributes Signature,InnerClasses,EnclosingMethod
 

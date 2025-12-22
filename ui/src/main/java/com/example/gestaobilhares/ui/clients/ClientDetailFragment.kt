@@ -28,6 +28,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import timber.log.Timber
 import com.example.gestaobilhares.data.entities.Cliente
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.ui.databinding.FragmentClientDetailBinding
@@ -44,8 +45,6 @@ import java.util.Calendar
 import java.util.Locale
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.data.repository.AppRepository
-import android.util.Log
-
 import com.example.gestaobilhares.sync.SyncRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -142,7 +141,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
             adapter = historicoAdapter
         }
         
-        Log.d("ClientDetailFragment", "RecyclerViews configurados - Mesas e Histórico")
+        Timber.d("ClientDetailFragment", "RecyclerViews configurados - Mesas e Histórico")
     }
 
     private fun observeViewModel() {
@@ -161,21 +160,21 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                 }
                 launch {
                     viewModel.settlementHistory.collect { historico ->
-                        Log.d("ClientDetailFragment", "=== HISTÓRICO RECEBIDO ===")
-                        Log.d("ClientDetailFragment", "Quantidade de acertos: ${historico.size}")
-                        Log.d("ClientDetailFragment", "Adapter inicializado? ${::historicoAdapter.isInitialized}")
+                        Timber.d("ClientDetailFragment", "=== HISTÓRICO RECEBIDO ===")
+                        Timber.d("ClientDetailFragment", "Quantidade de acertos: ${historico.size}")
+                        Timber.d("ClientDetailFragment", "Adapter inicializado? ${::historicoAdapter.isInitialized}")
                         historico.forEachIndexed { index, acerto ->
-                            Log.d("ClientDetailFragment", "Acerto $index: ID=${acerto.id}, Data=${acerto.data}, Valor=${acerto.valorTotal}")
+                            Timber.d("ClientDetailFragment", "Acerto $index: ID=${acerto.id}, Data=${acerto.data}, Valor=${acerto.valorTotal}")
                         }
                         if (::historicoAdapter.isInitialized) {
                             historicoAdapter.submitList(historico)
-                            Log.d("ClientDetailFragment", "Lista enviada para o adapter")
+                            Timber.d("ClientDetailFragment", "Lista enviada para o adapter")
                             // Garantir que o card e a lista fiquem visíveis quando houver dados
                             if (historico.isNotEmpty()) {
                                 binding.rvSettlementHistory.visibility = View.VISIBLE
                             }
                         } else {
-                            Log.e("ClientDetailFragment", "Adapter não inicializado!")
+                            Timber.e("ClientDetailFragment", "Adapter não inicializado!")
                         }
                     }
                 }
@@ -222,8 +221,8 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
         }
 
         binding.fabEdit.setOnClickListener {
-            Log.d("ClientDetailFragment", "=== NAVEGAÇÃO PARA EDIÇÃO ===")
-            Log.d("ClientDetailFragment", "clientId sendo passado: $clientId")
+            Timber.d("ClientDetailFragment", "=== NAVEGAÇÃO PARA EDIÇÃO ===")
+            Timber.d("ClientDetailFragment", "clientId sendo passado: $clientId")
             
             // ✅ CORREÇÃO CRÍTICA: Buscar rotaId diretamente do banco para evitar fallback hardcoded
             // Se o usuário clicar antes de loadClientDetails completar, viewModel.cliente.value será null
@@ -240,11 +239,11 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                         rotaId = rotaId,
                         clienteId = clientId
                     )
-                    Log.d("ClientDetailFragment", "Action criada com rotaId: $rotaId, clienteId: $clientId")
+                    Timber.d("ClientDetailFragment", "Action criada com rotaId: $rotaId, clienteId: $clientId")
                     findNavController().navigate(action)
                     recolherFabMenu()
                 } catch (e: Exception) {
-                    Log.e("ClientDetailFragment", "Erro ao buscar rotaId do cliente: ${e.message}", e)
+                    Timber.e("ClientDetailFragment", "Erro ao buscar rotaId do cliente: ${e.message}", e)
                     Toast.makeText(requireContext(), "Erro ao carregar dados do cliente.", Toast.LENGTH_SHORT).show()
                     recolherFabMenu()
                 }
@@ -305,7 +304,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                     recolherFabMenu()
 
                 } catch (e: Exception) {
-                    Log.e("ClientDetailFragment", "Erro ao iniciar novo acerto: ${e.message}")
+                    Timber.e("ClientDetailFragment", "Erro ao iniciar novo acerto: ${e.message}")
                     Toast.makeText(requireContext(), "Erro ao iniciar novo acerto.", Toast.LENGTH_SHORT).show()
                     recolherFabMenu()
                 }
@@ -398,7 +397,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                 .setCancelable(true)
                 .show()
         } catch (e: Exception) {
-            Log.e("ClientDetailFragment", "Erro ao mostrar diálogo de pendências: ${e.message}", e)
+            Timber.e("ClientDetailFragment", "Erro ao mostrar diálogo de pendências: ${e.message}", e)
         }
     }
 
@@ -525,7 +524,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                     
                     mesaParaRemover = null
                 } catch (e: Exception) {
-                    Log.e("ClientDetailFragment", "Erro ao retirar mesa e gerar documento", e)
+                    Timber.e("ClientDetailFragment", "Erro ao retirar mesa e gerar documento", e)
                     Toast.makeText(requireContext(), "Erro ao processar retirada da mesa: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
@@ -550,7 +549,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
 
     // TODO: Removido override - interface não existe mais
     private fun onObservacaoAdicionada(textoObservacao: String) {
-        Log.d("ClientDetailFragment", "Observação adicionada: $textoObservacao")
+        Timber.d("ClientDetailFragment", "Observação adicionada: $textoObservacao")
     }
 
     private suspend fun gerarDistratoAposRetiradaMesa(contrato: ContratoLocacao, @Suppress("UNUSED_PARAMETER") _mesaRemovida: Mesa) {
@@ -585,7 +584,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
             ).show()
             
         } catch (e: Exception) {
-            Log.e("ClientDetailFragment", "Erro ao processar distrato", e)
+            Timber.e("ClientDetailFragment", "Erro ao processar distrato", e)
             Toast.makeText(
                 requireContext(),
                 "Erro ao processar distrato: ${e.message}",
@@ -644,7 +643,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
             ).show()
             
         } catch (e: Exception) {
-            Log.e("ClientDetailFragment", "Erro ao processar aditivo", e)
+            Timber.e("ClientDetailFragment", "Erro ao processar aditivo", e)
             Toast.makeText(
                 requireContext(),
                 "Erro ao processar aditivo: ${e.message}",
@@ -695,7 +694,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                 intent.data = Uri.parse("tel:$numeroLimpo")
                 startActivity(intent)
             } catch (e: Exception) {
-                android.util.Log.e("ClientDetailFragment", "Erro ao abrir discador: ${e.message}", e)
+                Timber.e(e, "Erro ao abrir discador: %s", e.message)
                 Toast.makeText(requireContext(), "Não foi possível abrir o discador.", Toast.LENGTH_SHORT).show()
             }
         } else {
@@ -729,10 +728,10 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     startActivity(intentMaps)
-                    android.util.Log.d("ClientDetailFragment", "✅ Google Maps aberto via esquema nativo")
+                    Timber.d("ClientDetailFragment", "✅ Google Maps aberto via esquema nativo")
                     return
                 } catch (e: Exception) {
-                    android.util.Log.d("ClientDetailFragment", "Google Maps nativo não funcionou: ${e.message}")
+                    Timber.d("ClientDetailFragment", "Google Maps nativo não funcionou: ${e.message}")
                 }
                 
                 // ✅ ESTRATÉGIA 2: Geo URI (funciona com qualquer app de mapas)
@@ -742,10 +741,10 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     startActivity(intentGeo)
-                    android.util.Log.d("ClientDetailFragment", "✅ App de mapas aberto via geo URI")
+                    Timber.d("ClientDetailFragment", "✅ App de mapas aberto via geo URI")
                     return
                 } catch (e: Exception) {
-                    android.util.Log.d("ClientDetailFragment", "Geo URI não funcionou: ${e.message}")
+                    Timber.d("ClientDetailFragment", "Geo URI não funcionou: ${e.message}")
                 }
                 
                 // ✅ ESTRATÉGIA 3: Google Maps via URL web
@@ -756,10 +755,10 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     startActivity(intentWeb)
-                    android.util.Log.d("ClientDetailFragment", "✅ Google Maps aberto via URL web")
+                    Timber.d("ClientDetailFragment", "✅ Google Maps aberto via URL web")
                     return
                 } catch (e: Exception) {
-                    android.util.Log.d("ClientDetailFragment", "URL web não funcionou: ${e.message}")
+                    Timber.d("ClientDetailFragment", "URL web não funcionou: ${e.message}")
                 }
                 
                 // ✅ ESTRATÉGIA 4: Waze (se disponível)
@@ -770,18 +769,18 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     startActivity(intentWaze)
-                    android.util.Log.d("ClientDetailFragment", "✅ Waze aberto via esquema nativo")
+                    Timber.d("ClientDetailFragment", "✅ Waze aberto via esquema nativo")
                     return
                 } catch (e: Exception) {
-                    android.util.Log.d("ClientDetailFragment", "Waze não disponível: ${e.message}")
+                    Timber.d("ClientDetailFragment", "Waze não disponível: ${e.message}")
                 }
                 
                 // ✅ ÚLTIMA OPÇÃO: Mostrar mensagem de erro
                 Toast.makeText(requireContext(), "Não foi possível abrir aplicativo de navegação. Verifique se há algum app de mapas instalado.", Toast.LENGTH_LONG).show()
-                android.util.Log.e("ClientDetailFragment", "❌ Todas as estratégias de navegação falharam")
+                Timber.e("ClientDetailFragment", "❌ Todas as estratégias de navegação falharam")
                 
             } catch (e: Exception) {
-                android.util.Log.e("ClientDetailFragment", "Erro geral ao abrir navegação: ${e.message}")
+                Timber.e("ClientDetailFragment", "Erro geral ao abrir navegação: ${e.message}")
                 Toast.makeText(requireContext(), "Erro ao abrir navegação: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         } else {

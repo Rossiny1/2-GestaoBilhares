@@ -7,6 +7,7 @@ import android.view.View
 import com.example.gestaobilhares.data.entities.AcertoMesa
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.TipoMesa
+import timber.log.Timber
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -560,7 +561,7 @@ object ReciboPrinterHelper {
                             }
                         } else {
                             // Fallback: usar impressão direta com comandos ESC/POS
-                            android.util.Log.w("ReciboPrinterHelper", "Layout não encontrado, usando impressão direta")
+                            Timber.w("ReciboPrinterHelper", "Layout não encontrado, usando impressão direta")
                             
                             // Carregar logo do recibo
                             var logoBitmap: android.graphics.Bitmap? = null
@@ -570,7 +571,7 @@ object ReciboPrinterHelper {
                                     logoBitmap = android.graphics.BitmapFactory.decodeResource(resources, logoId)
                                 }
                             } catch (e: Exception) {
-                                android.util.Log.w("ReciboPrinterHelper", "Não foi possível carregar o logo: ${e.message}")
+                                Timber.w("ReciboPrinterHelper", "Não foi possível carregar o logo: ${e.message}")
                             }
                             
                             // Imprimir recibo usando comandos ESC/POS diretos
@@ -600,7 +601,7 @@ object ReciboPrinterHelper {
                             }
                         }
                     } catch (e: Exception) {
-                        android.util.Log.e("ReciboPrinterHelper", "Erro ao imprimir layout: ${e.message}", e)
+                        Timber.e(e, "Erro ao imprimir layout: %s", e.message)
                         erro = "Erro ao processar layout do recibo: ${e.message}"
                         printerHelper.disconnect()
                     }
@@ -615,13 +616,13 @@ object ReciboPrinterHelper {
                     e.message?.contains("permission", ignoreCase = true) == true -> "Permissões Bluetooth necessárias"
                     else -> "Erro inesperado: ${e.message ?: "Desconhecido"}"
                 }
-                android.util.Log.e("ReciboPrinterHelper", "Erro na impressão", e)
+                Timber.e(e, "Erro na impressão")
             } finally {
                 // ✅ CRÍTICO: Sempre desconectar e limpar recursos, mesmo em caso de erro
                 try {
                     printerHelper?.disconnect()
                 } catch (e: Exception) {
-                    android.util.Log.w("ReciboPrinterHelper", "Erro ao desconectar impressora: ${e.message}")
+                    Timber.w("ReciboPrinterHelper", "Erro ao desconectar impressora: ${e.message}")
                 }
                 
                 // ✅ CRÍTICO: Cancelar timeout se a operação terminou antes
@@ -632,7 +633,7 @@ object ReciboPrinterHelper {
                     try {
                         loadingDialog?.dismiss()
                     } catch (e: Exception) {
-                        android.util.Log.w("ReciboPrinterHelper", "Erro ao fechar dialog: ${e.message}")
+                        Timber.w("ReciboPrinterHelper", "Erro ao fechar dialog: ${e.message}")
                     }
                     
                     if (sucesso) {
@@ -847,7 +848,7 @@ object ReciboPrinterHelper {
                 .show()
         } catch (e: Exception) {
             // Fallback: usar método genérico
-            android.util.Log.w("ReciboPrinterHelper", "Fragment não suporta setPendingPrintCallback, usando fallback")
+            Timber.w("ReciboPrinterHelper", "Fragment não suporta setPendingPrintCallback, usando fallback")
             solicitarPermissoesBluetoothComRetry(activity, fragment, permissions, onPermissoesConcedidas, onErro)
         }
     }

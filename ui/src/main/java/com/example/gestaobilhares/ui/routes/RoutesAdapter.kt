@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.gestaobilhares.data.entities.RotaResumo
 import com.example.gestaobilhares.data.entities.StatusRota
 import com.example.gestaobilhares.ui.databinding.ItemRotaBinding
+import timber.log.Timber
 
 /**
  * Adapter para a lista de rotas no RecyclerView.
@@ -62,13 +63,13 @@ class RoutesAdapter(
                 }
                 
                 // ✅ NOVO: Log para debug do status
-                android.util.Log.d("RoutesAdapter", "Rota ${rotaResumo.rota.nome}: Status = ${rotaResumo.status} -> Texto = '${rotaStatus.text}'")
-                android.util.Log.d("RoutesAdapter", "🔍 DEBUG CICLO: cicloAtual=${rotaResumo.cicloAtual}, dataInicio=${rotaResumo.dataInicioCiclo}, dataFim=${rotaResumo.dataFimCiclo}")
-                android.util.Log.d("RoutesAdapter", "🔍 DADOS DA ENTIDADE ROTA: statusAtual=${rotaResumo.rota.statusAtual}, cicloAcertoAtual=${rotaResumo.rota.cicloAcertoAtual}")
+                Timber.d("RoutesAdapter", "Rota ${rotaResumo.rota.nome}: Status = ${rotaResumo.status} -> Texto = '${rotaStatus.text}'")
+                Timber.d("RoutesAdapter", "🔍 DEBUG CICLO: cicloAtual=${rotaResumo.cicloAtual}, dataInicio=${rotaResumo.dataInicioCiclo}, dataFim=${rotaResumo.dataFimCiclo}")
+                Timber.d("RoutesAdapter", "🔍 DADOS DA ENTIDADE ROTA: statusAtual=${rotaResumo.rota.statusAtual}, cicloAcertoAtual=${rotaResumo.rota.cicloAcertoAtual}")
 
                 // Informações do ciclo atual
                 rotaCiclo.text = rotaResumo.getCicloFormatado()
-                android.util.Log.d("RoutesAdapter", "🔍 TEXTO CICLO GERADO: '${rotaCiclo.text}'")
+                Timber.d("RoutesAdapter", "🔍 TEXTO CICLO GERADO: '${rotaCiclo.text}'")
 
                 // Informações da rota - inclui percentual e total de clientes
                 rotaInfo.text = "${rotaResumo.percentualAcertados}% de ${rotaResumo.clientesAtivos} clientes acertados"

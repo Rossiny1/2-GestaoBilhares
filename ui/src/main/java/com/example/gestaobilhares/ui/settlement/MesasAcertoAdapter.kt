@@ -12,7 +12,7 @@ import android.os.Looper
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -66,10 +66,10 @@ class MesasAcertoAdapter(
      * @return Número de fichas jogadas
      */
     private fun calcularFichasJogadas(relogioInicial: Int, relogioFinal: Int, relogioReiniciou: Boolean): Int {
-        Log.d("MesasAcertoAdapter", "=== CÁLCULO FICHAS JOGADAS ===")
-        Log.d("MesasAcertoAdapter", "Relógio inicial: $relogioInicial")
-        Log.d("MesasAcertoAdapter", "Relógio final: $relogioFinal")
-        Log.d("MesasAcertoAdapter", "Relógio reiniciou: $relogioReiniciou")
+        Timber.d("MesasAcertoAdapter", "=== CÁLCULO FICHAS JOGADAS ===")
+        Timber.d("MesasAcertoAdapter", "Relógio inicial: $relogioInicial")
+        Timber.d("MesasAcertoAdapter", "Relógio final: $relogioFinal")
+        Timber.d("MesasAcertoAdapter", "Relógio reiniciou: $relogioReiniciou")
         
         if (relogioReiniciou) {
             // Determinar o fator de ajuste baseado no número de dígitos do relógio inicial
@@ -79,22 +79,22 @@ class MesasAcertoAdapter(
                 else -> 0 // Não aplicável
             }
             
-            Log.d("MesasAcertoAdapter", "Fator de ajuste calculado: $fatorAjuste")
+            Timber.d("MesasAcertoAdapter", "Fator de ajuste calculado: $fatorAjuste")
             
             if (fatorAjuste > 0) {
                 val relogioFinalAjustado = relogioFinal + fatorAjuste
                 val fichasJogadas = relogioFinalAjustado - relogioInicial
-                Log.d("MesasAcertoAdapter", "✅ RELÓGIO REINICIOU: $relogioFinal + $fatorAjuste = $relogioFinalAjustado")
-                Log.d("MesasAcertoAdapter", "✅ FICHAS CALCULADAS: $relogioFinalAjustado - $relogioInicial = $fichasJogadas")
+                Timber.d("MesasAcertoAdapter", "✅ RELÓGIO REINICIOU: $relogioFinal + $fatorAjuste = $relogioFinalAjustado")
+                Timber.d("MesasAcertoAdapter", "✅ FICHAS CALCULADAS: $relogioFinalAjustado - $relogioInicial = $fichasJogadas")
                 return fichasJogadas.coerceAtLeast(0)
             } else {
-                Log.d("MesasAcertoAdapter", "⚠️ Relógio reiniciou ativado mas fator de ajuste é 0")
+                Timber.d("MesasAcertoAdapter", "⚠️ Relógio reiniciou ativado mas fator de ajuste é 0")
             }
         }
         
         // Cálculo normal
         val fichasJogadas = relogioFinal - relogioInicial
-        Log.d("MesasAcertoAdapter", "✅ CÁLCULO NORMAL: $relogioFinal - $relogioInicial = $fichasJogadas")
+        Timber.d("MesasAcertoAdapter", "✅ CÁLCULO NORMAL: $relogioFinal - $relogioInicial = $fichasJogadas")
         return fichasJogadas.coerceAtLeast(0)
     }
 
@@ -124,7 +124,7 @@ class MesasAcertoAdapter(
             try {
                 notifyItemChanged(position)
             } catch (e: IllegalStateException) {
-                Log.w("MesasAcertoAdapter", "Tentativa de notificar mudança durante layout, agendando para depois")
+                Timber.w("MesasAcertoAdapter", "Tentativa de notificar mudança durante layout, agendando para depois")
                 // Usar Handler para agendar a notificação para depois do layout
                 mainHandler.post {
                     try {
@@ -132,7 +132,7 @@ class MesasAcertoAdapter(
                             notifyItemChanged(position)
                         }
                     } catch (e: Exception) {
-                        Log.e("MesasAcertoAdapter", "Erro ao notificar mudança agendada: ${e.message}")
+                        Timber.e("MesasAcertoAdapter", "Erro ao notificar mudança agendada: ${e.message}")
                     }
                 }
             }
@@ -146,8 +146,8 @@ class MesasAcertoAdapter(
 
     override fun getItemCount(): Int {
         val count = super.getItemCount()
-        Log.d("MesasAcertoAdapter", "getItemCount() retornou: $count")
-        Log.d("MesasAcertoAdapter", "currentList.size: ${currentList.size}")
+        Timber.d("MesasAcertoAdapter", "getItemCount() retornou: $count")
+        Timber.d("MesasAcertoAdapter", "currentList.size: ${currentList.size}")
         return count
     }
 
@@ -155,8 +155,8 @@ class MesasAcertoAdapter(
         isBinding = true
         try {
             val mesa = getItem(position)
-            Log.d("MesasAcertoAdapter", "Binding mesa na posição $position: Mesa ${mesa.numero} (ID: ${mesa.id})")
-            Log.d("MesasAcertoAdapter", "ViewHolder: ${holder.hashCode()}")
+            Timber.d("MesasAcertoAdapter", "Binding mesa na posição $position: Mesa ${mesa.numero} (ID: ${mesa.id})")
+            Timber.d("MesasAcertoAdapter", "ViewHolder: ${holder.hashCode()}")
             holder.bind(mesa)
         } finally {
             isBinding = false
@@ -164,18 +164,18 @@ class MesasAcertoAdapter(
     }
 
     override fun submitList(list: List<MesaDTO>?) {
-        Log.d("MesasAcertoAdapter", "=== SUBMITLIST CHAMADO ===")
-        Log.d("MesasAcertoAdapter", "Lista recebida: ${list?.size ?: 0} itens")
-        Log.d("MesasAcertoAdapter", "Estados existentes antes do submit: ${mesaStates.size}")
+        Timber.d("MesasAcertoAdapter", "=== SUBMITLIST CHAMADO ===")
+        Timber.d("MesasAcertoAdapter", "Lista recebida: ${list?.size ?: 0} itens")
+        Timber.d("MesasAcertoAdapter", "Estados existentes antes do submit: ${mesaStates.size}")
         
         list?.forEachIndexed { index, mesa ->
-            Log.d("MesasAcertoAdapter", "Item $index: Mesa ${mesa.numero} (ID: ${mesa.id}, Tipo: ${mesa.tipoMesa})")
+            Timber.d("MesasAcertoAdapter", "Item $index: Mesa ${mesa.numero} (ID: ${mesa.id}, Tipo: ${mesa.tipoMesa})")
         }
         
         super.submitList(list)
         
-        Log.d("MesasAcertoAdapter", "Estados existentes após o submit: ${mesaStates.size}")
-        Log.d("MesasAcertoAdapter", "=== SUBMITLIST CONCLUÍDO ===")
+        Timber.d("MesasAcertoAdapter", "Estados existentes após o submit: ${mesaStates.size}")
+        Timber.d("MesasAcertoAdapter", "=== SUBMITLIST CONCLUÍDO ===")
     }
 
     inner class MesaAcertoViewHolder(private val binding: ItemMesaAcertoBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -184,7 +184,7 @@ class MesasAcertoAdapter(
         private var relogioFinalWatcher: TextWatcher? = null
 
         fun bind(mesa: MesaDTO) {
-            Log.d("MesasAcertoAdapter", "=== BIND MESA ${mesa.numero} ===")
+            Timber.d("MesasAcertoAdapter", "=== BIND MESA ${mesa.numero} ===")
             val state = mesaStates.getOrPut(mesa.id) {
                 MesaAcertoState(
                     mesaId = mesa.id,
@@ -259,8 +259,8 @@ class MesasAcertoAdapter(
 
             // ✅ CORREÇÃO: Listeners dos checkboxes com seleção exclusiva e validação de foto
             binding.cbRelogioDefeito.setOnCheckedChangeListener { _, isChecked ->
-                Log.d("MesasAcertoAdapter", "=== CHECKBOX RELÓGIO COM DEFEITO ===")
-                Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Relógio com defeito = $isChecked")
+                Timber.d("MesasAcertoAdapter", "=== CHECKBOX RELÓGIO COM DEFEITO ===")
+                Timber.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Relógio com defeito = $isChecked")
                 
                 if (state.comDefeito != isChecked) {
                     // ✅ NOVO: Seleção exclusiva - desmarcar o outro checkbox se este for marcado
@@ -278,11 +278,11 @@ class MesasAcertoAdapter(
                         // Calcular média se marcado
                         val media = onCalcularMedia(mesa.id)
                         state.mediaFichasJogadas = media
-                        Log.d("MesasAcertoAdapter", "Média calculada para mesa ${mesa.numero}: $media")
+                        Timber.d("MesasAcertoAdapter", "Média calculada para mesa ${mesa.numero}: $media")
                     } else {
                         // Limpar média se desmarcado
                         state.mediaFichasJogadas = 0.0
-                        Log.d("MesasAcertoAdapter", "Média limpa para mesa ${mesa.numero}")
+                        Timber.d("MesasAcertoAdapter", "Média limpa para mesa ${mesa.numero}")
                     }
                     
                     // Recalcular subtotal
@@ -359,7 +359,7 @@ class MesasAcertoAdapter(
         private fun capturarFotoRelogio(mesaId: Long) {
             currentMesaId = mesaId
             // Notificar o Fragment sobre a necessidade de capturar foto
-            Log.d("MesasAcertoAdapter", "Solicitando captura de foto para mesa ID: $mesaId")
+            Timber.d("MesasAcertoAdapter", "Solicitando captura de foto para mesa ID: $mesaId")
             
             // Usar o callback
             onSolicitarCapturaFoto?.invoke(mesaId)
@@ -394,7 +394,7 @@ class MesasAcertoAdapter(
                 if (!isFirebaseUrl && !caminhoFoto.startsWith("content://")) {
                     val file = File(caminhoFoto)
                     if (file.exists() && file.isFile) {
-                        Log.d("MesasAcertoAdapter", "✅ Carregando foto local: ${file.absolutePath}")
+                        Timber.d("MesasAcertoAdapter", "✅ Carregando foto local: ${file.absolutePath}")
                         val bitmap = BitmapFactory.decodeFile(caminhoFoto)
                         binding.ivFotoRelogio.setImageBitmap(bitmap)
                         binding.layoutFotoRelogio.visibility = View.VISIBLE
@@ -406,7 +406,7 @@ class MesasAcertoAdapter(
                         }
                         return
                     } else {
-                        Log.w("MesasAcertoAdapter", "⚠️ Arquivo local não existe: ${file.absolutePath}")
+                        Timber.w("MesasAcertoAdapter", "⚠️ Arquivo local não existe: ${file.absolutePath}")
                     }
                 }
                 
@@ -416,7 +416,7 @@ class MesasAcertoAdapter(
                         val uri = android.net.Uri.parse(caminhoFoto)
                         val inputStream = binding.root.context.contentResolver.openInputStream(uri)
                         if (inputStream != null) {
-                            Log.d("MesasAcertoAdapter", "✅ Carregando foto do content provider")
+                            Timber.d("MesasAcertoAdapter", "✅ Carregando foto do content provider")
                             val bitmap = BitmapFactory.decodeStream(inputStream)
                             inputStream.close()
                             binding.ivFotoRelogio.setImageBitmap(bitmap)
@@ -429,13 +429,13 @@ class MesasAcertoAdapter(
                             return
                         }
                     } catch (e: Exception) {
-                        Log.e("MesasAcertoAdapter", "Erro ao carregar do URI: ${e.message}")
+                        Timber.e("MesasAcertoAdapter", "Erro ao carregar do URI: ${e.message}")
                     }
                 }
                 
                 // ✅ CORREÇÃO: PRIORIDADE 3 - Se for URL do Firebase Storage, fazer download
                 if (isFirebaseUrl) {
-                    Log.d("MesasAcertoAdapter", "Detectada URL Firebase, fazendo download...")
+                    Timber.d("MesasAcertoAdapter", "Detectada URL Firebase, fazendo download...")
                     binding.layoutFotoRelogio.visibility = View.VISIBLE
                     binding.ivFotoRelogio.setImageResource(android.R.drawable.ic_menu_gallery) // Placeholder enquanto carrega
                     
@@ -446,7 +446,7 @@ class MesasAcertoAdapter(
                             withContext(Dispatchers.Main) {
                                 if (bitmap != null) {
                                     binding.ivFotoRelogio.setImageBitmap(bitmap)
-                                    Log.d("MesasAcertoAdapter", "✅ Foto carregada do Firebase Storage")
+                                    Timber.d("MesasAcertoAdapter", "✅ Foto carregada do Firebase Storage")
                                     
                                     // Mostrar data da foto
                                     dataFoto?.let {
@@ -454,12 +454,12 @@ class MesasAcertoAdapter(
                                         binding.tvDataFoto.text = "Capturada em: ${dateFormat.format(it)}"
                                     }
                                 } else {
-                                    Log.e("MesasAcertoAdapter", "Erro ao baixar foto do Firebase")
+                                    Timber.e("MesasAcertoAdapter", "Erro ao baixar foto do Firebase")
                                     binding.layoutFotoRelogio.visibility = View.GONE
                                 }
                             }
                         } catch (e: Exception) {
-                            Log.e("MesasAcertoAdapter", "Erro ao fazer download da foto: ${e.message}", e)
+                            Timber.e("MesasAcertoAdapter", "Erro ao fazer download da foto: ${e.message}", e)
                             withContext(Dispatchers.Main) {
                                 binding.layoutFotoRelogio.visibility = View.GONE
                             }
@@ -469,11 +469,11 @@ class MesasAcertoAdapter(
                 }
                 
                 // Se chegou aqui, não conseguiu carregar a foto
-                Log.e("MesasAcertoAdapter", "❌ Não foi possível carregar a foto: $caminhoFoto")
+                Timber.e("MesasAcertoAdapter", "❌ Não foi possível carregar a foto: $caminhoFoto")
                 binding.layoutFotoRelogio.visibility = View.GONE
                 
             } catch (e: Exception) {
-                Log.e("MesasAcertoAdapter", "Erro ao carregar foto: ${e.message}")
+                Timber.e("MesasAcertoAdapter", "Erro ao carregar foto: ${e.message}")
                 binding.layoutFotoRelogio.visibility = View.GONE
             }
         }
@@ -496,7 +496,7 @@ class MesasAcertoAdapter(
                 connection.disconnect()
                 bitmap
             } catch (e: Exception) {
-                Log.e("MesasAcertoAdapter", "Erro ao fazer download da imagem: ${e.message}", e)
+                Timber.e("MesasAcertoAdapter", "Erro ao fazer download da imagem: ${e.message}", e)
                 null
             }
         }
@@ -512,13 +512,13 @@ class MesasAcertoAdapter(
                 // Regra: sempre usar comissaoFicha para cálculo do subtotal
                 val subtotal = if (state.comDefeito && state.mediaFichasJogadas > 0) {
                     val subtotalCalculado = state.mediaFichasJogadas * mesa.comissaoFicha
-                    Log.d("MesasAcertoAdapter", "✅ SUBTOTAL COM MÉDIA: ${state.mediaFichasJogadas} × R$ ${mesa.comissaoFicha} = R$ $subtotalCalculado")
+                    Timber.d("MesasAcertoAdapter", "✅ SUBTOTAL COM MÉDIA: ${state.mediaFichasJogadas} × R$ ${mesa.comissaoFicha} = R$ $subtotalCalculado")
                     subtotalCalculado
                 } else {
                     val fichasJogadas = calcularFichasJogadas(state.relogioInicial, state.relogioFinal, state.relogioReiniciou)
                     state.fichasJogadas = fichasJogadas
                     val subtotalCalculado = fichasJogadas * mesa.comissaoFicha
-                    Log.d("MesasAcertoAdapter", "✅ SUBTOTAL NORMAL: $fichasJogadas × R$ ${mesa.comissaoFicha} = R$ $subtotalCalculado")
+                    Timber.d("MesasAcertoAdapter", "✅ SUBTOTAL NORMAL: $fichasJogadas × R$ ${mesa.comissaoFicha} = R$ $subtotalCalculado")
                     subtotalCalculado
                 }
                 
@@ -549,12 +549,12 @@ class MesasAcertoAdapter(
 
     fun getSubtotal(): Double {
         val subtotal = mesaStates.values.sumOf { it.subtotal }
-        Log.d("MesasAcertoAdapter", "=== GETSUBTOTAL CHAMADO ===")
-        Log.d("MesasAcertoAdapter", "Total de estados: ${mesaStates.size}")
+        Timber.d("MesasAcertoAdapter", "=== GETSUBTOTAL CHAMADO ===")
+        Timber.d("MesasAcertoAdapter", "Total de estados: ${mesaStates.size}")
         mesaStates.forEach { (mesaId, state) ->
-            Log.d("MesasAcertoAdapter", "Mesa ID $mesaId: subtotal=${state.subtotal}")
+            Timber.d("MesasAcertoAdapter", "Mesa ID $mesaId: subtotal=${state.subtotal}")
         }
-        Log.d("MesasAcertoAdapter", "Subtotal total calculado: $subtotal")
+        Timber.d("MesasAcertoAdapter", "Subtotal total calculado: $subtotal")
         return subtotal
     }
 
@@ -583,8 +583,8 @@ class MesasAcertoAdapter(
         bindingAdapterPosition: Int
     ) {
         binding.cbRelogioReiniciou.setOnCheckedChangeListener { _, isChecked ->
-            Log.d("MesasAcertoAdapter", "=== CHECKBOX RELÓGIO REINICIOU ===")
-            Log.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Relógio reiniciou = $isChecked")
+            Timber.d("MesasAcertoAdapter", "=== CHECKBOX RELÓGIO REINICIOU ===")
+            Timber.d("MesasAcertoAdapter", "Mesa ${mesa.numero}: Relógio reiniciou = $isChecked")
             
             if (state.relogioReiniciou != isChecked) {
                 // ✅ NOVO: Seleção exclusiva - desmarcar o outro checkbox se este for marcado
@@ -679,10 +679,10 @@ class MesasAcertoAdapter(
     }
 
     fun getMesasAcerto(): List<MesaAcertoState> {
-        Log.d("MesasAcertoAdapter", "=== GETMESASACERTO CHAMADO ===")
-        Log.d("SettlementFragment", "Total de estados de mesa: ${mesaStates.size}")
+        Timber.d("MesasAcertoAdapter", "=== GETMESASACERTO CHAMADO ===")
+        Timber.d("SettlementFragment", "Total de estados de mesa: ${mesaStates.size}")
         mesaStates.forEach { (mesaId, state) ->
-            Log.d("MesasAcertoAdapter", "Mesa ID $mesaId: relógio inicial=${state.relogioInicial}, final=${state.relogioFinal}, subtotal=${state.subtotal}")
+            Timber.d("MesasAcertoAdapter", "Mesa ID $mesaId: relógio inicial=${state.relogioInicial}, final=${state.relogioFinal}, subtotal=${state.subtotal}")
         }
         return mesaStates.values.toList()
     }
@@ -694,7 +694,7 @@ class MesasAcertoAdapter(
      */
     fun setFotoRelogio(mesaId: Long, caminhoFoto: String) {
         try {
-            Log.d("MesasAcertoAdapter", "Definindo foto para mesa $mesaId: $caminhoFoto")
+            Timber.d("MesasAcertoAdapter", "Definindo foto para mesa $mesaId: $caminhoFoto")
             
             // ✅ CORREÇÃO: Usar post para aguardar o layout ser concluído
             mainHandler.post {
@@ -704,31 +704,31 @@ class MesasAcertoAdapter(
                     if (mesaState != null) {
                         mesaState.fotoRelogioFinal = caminhoFoto
                         mesaState.dataFoto = Date()
-                        Log.d("MesasAcertoAdapter", "✅ Estado da mesa atualizado com foto: $caminhoFoto")
-                        Log.d("MesasAcertoAdapter", "✅ Data da foto: ${mesaState.dataFoto}")
+                        Timber.d("MesasAcertoAdapter", "✅ Estado da mesa atualizado com foto: $caminhoFoto")
+                        Timber.d("MesasAcertoAdapter", "✅ Data da foto: ${mesaState.dataFoto}")
                         
                         // ✅ CORREÇÃO: Usar safeNotifyItemChanged para evitar crashes
                         val position = currentList.indexOfFirst { it.id == mesaId }
                         if (position != -1) {
                             safeNotifyItemChanged(position)
-                            Log.d("MesasAcertoAdapter", "✅ Item atualizado na posição $position")
+                            Timber.d("MesasAcertoAdapter", "✅ Item atualizado na posição $position")
                             
                             // ✅ NOVO: Verificar se a foto foi salva corretamente
-                            Log.d("MesasAcertoAdapter", "Verificando se foto foi salva...")
-                            Log.d("MesasAcertoAdapter", "Estado da mesa após salvar: fotoRelogioFinal = ${mesaState.fotoRelogioFinal}")
-                            Log.d("MesasAcertoAdapter", "Estado da mesa após salvar: dataFoto = ${mesaState.dataFoto}")
+                            Timber.d("MesasAcertoAdapter", "Verificando se foto foi salva...")
+                            Timber.d("MesasAcertoAdapter", "Estado da mesa após salvar: fotoRelogioFinal = ${mesaState.fotoRelogioFinal}")
+                            Timber.d("MesasAcertoAdapter", "Estado da mesa após salvar: dataFoto = ${mesaState.dataFoto}")
                         } else {
-                            Log.w("MesasAcertoAdapter", "⚠️ Mesa não encontrada na lista: $mesaId")
+                            Timber.w("MesasAcertoAdapter", "⚠️ Mesa não encontrada na lista: $mesaId")
                         }
                     } else {
-                        Log.w("MesasAcertoAdapter", "⚠️ Estado da mesa não encontrado: $mesaId")
+                        Timber.w("MesasAcertoAdapter", "⚠️ Estado da mesa não encontrado: $mesaId")
                     }
                 } catch (e: Exception) {
-                    Log.e("MesasAcertoAdapter", "Erro ao definir foto: ${e.message}", e)
+                    Timber.e("MesasAcertoAdapter", "Erro ao definir foto: ${e.message}", e)
                 }
             }
         } catch (e: Exception) {
-            Log.e("MesasAcertoAdapter", "Erro crítico ao definir foto: ${e.message}", e)
+            Timber.e("MesasAcertoAdapter", "Erro crítico ao definir foto: ${e.message}", e)
         }
     }
     
@@ -737,14 +737,14 @@ class MesasAcertoAdapter(
      */
     fun setFotoRelogioFirebaseUrl(mesaId: Long, firebaseUrl: String) {
         try {
-            Log.d("MesasAcertoAdapter", "Definindo URL Firebase para mesa $mesaId: $firebaseUrl")
+            Timber.d("MesasAcertoAdapter", "Definindo URL Firebase para mesa $mesaId: $firebaseUrl")
             val mesaState = mesaStates[mesaId]
             mesaState?.let {
                 it.fotoRelogioFirebaseUrl = firebaseUrl
-                Log.d("MesasAcertoAdapter", "✅ URL Firebase salva para mesa $mesaId")
+                Timber.d("MesasAcertoAdapter", "✅ URL Firebase salva para mesa $mesaId")
             }
         } catch (e: Exception) {
-            Log.e("MesasAcertoAdapter", "Erro ao definir URL Firebase: ${e.message}", e)
+            Timber.e("MesasAcertoAdapter", "Erro ao definir URL Firebase: ${e.message}", e)
         }
     }
     
@@ -765,7 +765,7 @@ class MesasAcertoAdapter(
             val state = mesaStates[mesaId]
             state?.let {
                 it.mediaFichasJogadas = media
-                Log.d("MesasAcertoAdapter", "Média atualizada para mesa $mesaId: $media")
+                Timber.d("MesasAcertoAdapter", "Média atualizada para mesa $mesaId: $media")
                 
                 // Encontrar a posição da mesa na lista
                 val position = currentList.indexOfFirst { mesa -> mesa.id == mesaId }
@@ -774,7 +774,7 @@ class MesasAcertoAdapter(
                 }
             }
         } catch (e: Exception) {
-            Log.e("MesasAcertoAdapter", "Erro ao atualizar média: ${e.message}", e)
+            Timber.e("MesasAcertoAdapter", "Erro ao atualizar média: ${e.message}", e)
         }
     }
     
@@ -783,7 +783,7 @@ class MesasAcertoAdapter(
      */
     fun atualizarRelogioFinalMesas(acertoMesas: List<com.example.gestaobilhares.data.entities.AcertoMesa>) {
         try {
-            Log.d("MesasAcertoAdapter", "🔧 Atualizando relógio final das mesas para edição")
+            Timber.d("MesasAcertoAdapter", "🔧 Atualizando relógio final das mesas para edição")
             
             acertoMesas.forEach { acertoMesa ->
                 mesaStates[acertoMesa.mesaId]?.let { state ->
@@ -792,7 +792,7 @@ class MesasAcertoAdapter(
                     state.relogioFinal = acertoMesa.relogioFinal
                     state.relogioReiniciou = acertoMesa.relogioReiniciou
                     
-                    Log.d("MesasAcertoAdapter", "✅ Mesa ${acertoMesa.mesaId}: relógio inicial=${acertoMesa.relogioInicial}, final=${acertoMesa.relogioFinal}")
+                    Timber.d("MesasAcertoAdapter", "✅ Mesa ${acertoMesa.mesaId}: relógio inicial=${acertoMesa.relogioInicial}, final=${acertoMesa.relogioFinal}")
                     
                     // Encontrar a posição da mesa na lista e notificar mudança
                     val position = currentList.indexOfFirst { mesa -> mesa.id == acertoMesa.mesaId }
@@ -802,10 +802,10 @@ class MesasAcertoAdapter(
                 }
             }
             
-            Log.d("MesasAcertoAdapter", "✅ Relógio final das mesas atualizado com sucesso")
+            Timber.d("MesasAcertoAdapter", "✅ Relógio final das mesas atualizado com sucesso")
             
         } catch (e: Exception) {
-            Log.e("MesasAcertoAdapter", "Erro ao atualizar relógio final das mesas: ${e.message}", e)
+            Timber.e("MesasAcertoAdapter", "Erro ao atualizar relógio final das mesas: ${e.message}", e)
         }
     }
 }

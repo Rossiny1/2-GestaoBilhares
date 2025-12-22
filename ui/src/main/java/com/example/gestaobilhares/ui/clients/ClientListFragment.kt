@@ -27,7 +27,7 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import android.util.Log
+import timber.log.Timber
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -60,8 +60,8 @@ class ClientListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // ✅ LOG CRASH: Início da tela
-        Log.d("LOG_CRASH", "ClientListFragment.onViewCreated - INÍCIO")
-        android.util.Log.d("DEBUG_DIAG", "onViewCreated chamado - TESTE DE LOG")
+        Timber.d("LOG_CRASH", "ClientListFragment.onViewCreated - INÍCIO")
+        Timber.d("DEBUG_DIAG", "onViewCreated chamado - TESTE DE LOG")
         
         // ✅ REMOVIDO: Callback de botão voltar - Navigation Component gerencia automaticamente
         // O botão voltar agora é gerenciado globalmente pelo MainActivity
@@ -71,7 +71,7 @@ class ClientListFragment : Fragment() {
         try {
             // Verificar se binding está disponível
             if (_binding == null) {
-                android.util.Log.e("ClientListFragment", "Binding é null em onViewCreated")
+                Timber.e("ClientListFragment", "Binding é null em onViewCreated")
                 return
             }
             
@@ -86,7 +86,7 @@ class ClientListFragment : Fragment() {
             viewModel.carregarRota(rotaId)
             viewModel.carregarClientes(rotaId)
         } catch (e: Exception) {
-            android.util.Log.e("ClientListFragment", "Erro na inicialização: ${e.message}")
+            Timber.e("ClientListFragment", "Erro na inicialização: ${e.message}")
             // Mostrar erro para o usuário
             androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Erro")
@@ -101,7 +101,7 @@ class ClientListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         // ✅ CORREÇÃO: Usar a MESMA lógica que funciona no onViewCreated
-        android.util.Log.d("ClientListFragment", "🔄 onResume - Recarregando dados completos (mesma lógica do onViewCreated)")
+        Timber.d("ClientListFragment", "🔄 onResume - Recarregando dados completos (mesma lógica do onViewCreated)")
         
         // Recarregar dados da rota e clientes
         val rotaId = args.rotaId
@@ -111,30 +111,30 @@ class ClientListFragment : Fragment() {
         // ✅ CORREÇÃO: Usar recarregamento forçado para garantir que os dados apareçam
         viewModel.forcarRecarregamentoClientes(rotaId)
         
-        android.util.Log.d("ClientListFragment", "✅ onResume - Dados forçados recarregados para rotaId=$rotaId (mesma lógica do onViewCreated)")
+        Timber.d("ClientListFragment", "✅ onResume - Dados forçados recarregados para rotaId=$rotaId (mesma lógica do onViewCreated)")
     }
 
     override fun onStart() {
         super.onStart()
         // ✅ NOVO: Garantir que os dados sejam carregados quando o fragment fica visível
-        android.util.Log.d("ClientListFragment", "🔄 onStart - Garantindo carregamento de dados")
+        Timber.d("ClientListFragment", "🔄 onStart - Garantindo carregamento de dados")
         
         val rotaId = args.rotaId
         // ✅ CORREÇÃO: Usar recarregamento forçado para garantir que os dados apareçam
         viewModel.forcarRecarregamentoClientes(rotaId)
-        android.util.Log.d("ClientListFragment", "✅ onStart - Dados forçados recarregados para rotaId=$rotaId")
+        Timber.d("ClientListFragment", "✅ onStart - Dados forçados recarregados para rotaId=$rotaId")
     }
 
     private fun configurarRecyclerView() {
         // ✅ LOG CRASH: Início da configuração do RecyclerView
-        Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - INÍCIO")
+        Timber.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - INÍCIO")
         
         try {
             // ✅ NOVO: Usar appRepository já inicializado para verificar se cliente nunca foi acertado
             clientAdapter = ClientAdapter(
                 onClientClick = { cliente ->
                     // ✅ LOG CRASH: Clique em cliente
-                    Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Clique em cliente: ${cliente.id}")
+                    Timber.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Clique em cliente: ${cliente.id}")
                     
                     // ✅ NOVO: Sempre permitir navegação para detalhes do cliente, independente do status da rota
                     // O bloqueio deve acontecer apenas no botão "Novo Acerto" dentro dos detalhes
@@ -144,14 +144,14 @@ class ClientListFragment : Fragment() {
                                 clienteId = cliente.id,
                                 mostrarDialogoObservacoes = false // Não usar mais este parâmetro
                             )
-                        Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Navegando para detalhes do cliente")
+                        Timber.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Navegando para detalhes do cliente")
                         findNavController().navigate(action)
                         
                         // Definir o flag no SavedStateHandle do destino
                         findNavController().currentBackStackEntry?.savedStateHandle?.set("show_observations_dialog", true)
-                        Log.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Navegação bem-sucedida")
+                        Timber.d("LOG_CRASH", "ClientListFragment.configurarRecyclerView - Navegação bem-sucedida")
                     } catch (e: Exception) {
-                        Log.e("LOG_CRASH", "ClientListFragment.configurarRecyclerView - ERRO ao navegar para detalhes: ${e.message}", e)
+                        Timber.e("LOG_CRASH", "ClientListFragment.configurarRecyclerView - ERRO ao navegar para detalhes: ${e.message}", e)
                     }
                 },
                 verificarNuncaAcertado = { clienteId ->
@@ -168,19 +168,19 @@ class ClientListFragment : Fragment() {
                 layoutManager = LinearLayoutManager(requireContext())
             }
         } catch (e: Exception) {
-            Log.e("LOG_CRASH", "ClientListFragment.configurarRecyclerView - ERRO: ${e.message}", e)
+            Timber.e("LOG_CRASH", "ClientListFragment.configurarRecyclerView - ERRO: ${e.message}", e)
         }
     }
     
     private fun configurarBotoes() {
         // ✅ LOG CRASH: Início da configuração dos botões
-        Log.d("LOG_CRASH", "ClientListFragment.configurarBotoes - INÍCIO")
+        Timber.d("LOG_CRASH", "ClientListFragment.configurarBotoes - INÍCIO")
         
         _binding?.let { binding ->
             // ✅ CORREÇÃO: Botão voltar navega para tela de rotas
-            Log.d("LOG_CRASH", "ClientListFragment.configurarBotoes - Configurando botão voltar")
+            Timber.d("LOG_CRASH", "ClientListFragment.configurarBotoes - Configurando botão voltar")
             binding.btnBack.setOnClickListener {
-                Log.d("LOG_CRASH", "ClientListFragment.configurarBotoes - Clique no botão voltar")
+                Timber.d("LOG_CRASH", "ClientListFragment.configurarBotoes - Clique no botão voltar")
                 navegarParaRotas()
             }
             
@@ -201,7 +201,7 @@ class ClientListFragment : Fragment() {
                         .actionClientListFragmentToCycleHistoryFragment(args.rotaId)
                     findNavController().navigate(action)
                 } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao navegar para relatórios: ${e.message}")
+                    Timber.e("ClientListFragment", "Erro ao navegar para relatórios: ${e.message}")
                     mostrarFeedback("Erro ao abrir relatórios: ${e.message}", Snackbar.LENGTH_LONG)
                 }
             }
@@ -246,7 +246,7 @@ class ClientListFragment : Fragment() {
                 try {
                     rota?.let { atualizarInfoRota(it) }
                 } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar info da rota: ${e.message}")
+                    Timber.e("ClientListFragment", "Erro ao atualizar info da rota: ${e.message}")
                 }
             }
         }
@@ -257,7 +257,7 @@ class ClientListFragment : Fragment() {
                 try {
                     sincronizarEstadoVisualFiltros(filtroAtual)
                 } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao sincronizar filtros: ${e.message}")
+                    Timber.e("ClientListFragment", "Erro ao sincronizar filtros: ${e.message}")
                 }
             }
         }
@@ -268,7 +268,7 @@ class ClientListFragment : Fragment() {
                 try {
                     atualizarStatusRota(status)
                 } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar status da rota: ${e.message}")
+                    Timber.e("ClientListFragment", "Erro ao atualizar status da rota: ${e.message}")
                 }
             }
         }
@@ -282,7 +282,7 @@ class ClientListFragment : Fragment() {
                         _binding?.tvCycleTitle?.text = tituloCiclo
                         
                         // ✅ NOVO: Log para debug do ciclo
-                        android.util.Log.d("ClientListFragment", "🔄 Atualizando card do ciclo: $tituloCiclo (ID: ${ciclo.id}, Status: ${ciclo.status})")
+                        Timber.d("ClientListFragment", "🔄 Atualizando card do ciclo: $tituloCiclo (ID: ${ciclo.id}, Status: ${ciclo.status})")
                         
                         // ✅ NOVO: Tornar o título clicável
                         _binding?.tvCycleTitle?.setOnClickListener {
@@ -294,7 +294,7 @@ class ClientListFragment : Fragment() {
                             val ultimoCiclo = viewModel.buscarUltimoCicloFinalizado()
                             val tituloCiclo = if (ultimoCiclo != null) "${ultimoCiclo.numeroCiclo}º Acerto" else "1º Acerto"
                             _binding?.tvCycleTitle?.text = tituloCiclo
-                            android.util.Log.d("ClientListFragment", "🔄 Exibindo ciclo finalizado (fallback): $tituloCiclo")
+                            Timber.d("ClientListFragment", "🔄 Exibindo ciclo finalizado (fallback): $tituloCiclo")
                         }
                         
                         // ✅ NOVO: Tornar o título clicável
@@ -303,7 +303,7 @@ class ClientListFragment : Fragment() {
                         }
                     }
                 } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar ciclo de acerto: ${e.message}")
+                    Timber.e("ClientListFragment", "Erro ao atualizar ciclo de acerto: ${e.message}")
                 }
             }
         }
@@ -329,7 +329,7 @@ class ClientListFragment : Fragment() {
                         }
                     }
                 } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar lista de clientes: ${e.message}")
+                    Timber.e("ClientListFragment", "Erro ao atualizar lista de clientes: ${e.message}")
                 }
             }
         }
@@ -349,7 +349,7 @@ class ClientListFragment : Fragment() {
             viewLifecycleOwner
         ) { acertoSalvo ->
             if (acertoSalvo == true) {
-                Log.d("ClientListFragment", "[DEBUG] Evento acerto_salvo recebido, recarregando clientes para rotaId=${args.rotaId}")
+                Timber.d("ClientListFragment", "[DEBUG] Evento acerto_salvo recebido, recarregando clientes para rotaId=${args.rotaId}")
                 // ✅ CORREÇÃO: Usar carregarClientesOtimizado para garantir que os dados sejam atualizados
                 viewModel.carregarClientesOtimizado(args.rotaId)
                 findNavController().currentBackStackEntry?.savedStateHandle?.set("acerto_salvo", false)
@@ -360,8 +360,8 @@ class ClientListFragment : Fragment() {
     
     private fun atualizarInfoRota(rota: com.example.gestaobilhares.data.entities.Rota) {
         _binding?.let { binding ->
-            android.util.Log.d("ClientListFragment", "=== ATUALIZANDO INFO DA ROTA ===")
-            android.util.Log.d("ClientListFragment", "Rota: ${rota.nome} (ID: ${rota.id})")
+            Timber.d("ClientListFragment", "=== ATUALIZANDO INFO DA ROTA ===")
+            Timber.d("ClientListFragment", "Rota: ${rota.nome} (ID: ${rota.id})")
 
             binding.tvTitle.text = rota.nome
 
@@ -374,17 +374,17 @@ class ClientListFragment : Fragment() {
     private fun observarDadosRotaReais() {
         lifecycleScope.launch {
             viewModel.dadosRotaReais.collect { dados ->
-                android.util.Log.d("ClientListFragment", "=== RECEBENDO DADOS ROTA NO FRAGMENT ===")
-                android.util.Log.d("ClientListFragment", "Dados recebidos: ${dados.totalClientes} clientes, ${dados.totalMesas} mesas")
+                Timber.d("ClientListFragment", "=== RECEBENDO DADOS ROTA NO FRAGMENT ===")
+                Timber.d("ClientListFragment", "Dados recebidos: ${dados.totalClientes} clientes, ${dados.totalMesas} mesas")
 
                 try {
                     _binding?.let { binding ->
                         val textoAnterior = binding.tvRouteInfo.text.toString()
                         binding.tvRouteInfo.text = "${dados.totalClientes} clientes ativos • ${dados.totalMesas} mesas"
-                        android.util.Log.d("ClientListFragment", "UI atualizada: '$textoAnterior' -> '${binding.tvRouteInfo.text}'")
+                        Timber.d("ClientListFragment", "UI atualizada: '$textoAnterior' -> '${binding.tvRouteInfo.text}'")
                     }
                 } catch (e: Exception) {
-                    android.util.Log.e("ClientListFragment", "Erro ao atualizar dados da rota: ${e.message}")
+                    Timber.e("ClientListFragment", "Erro ao atualizar dados da rota: ${e.message}")
                 }
             }
         }
@@ -648,7 +648,7 @@ class ClientListFragment : Fragment() {
                 mostrarFeedback("Dados do ciclo não disponíveis", Snackbar.LENGTH_SHORT)
             }
         } catch (e: Exception) {
-            android.util.Log.e("ClientListFragment", "Erro ao mostrar diálogo de progresso: ${e.message}")
+            Timber.e("ClientListFragment", "Erro ao mostrar diálogo de progresso: ${e.message}")
             mostrarFeedback("Erro ao abrir detalhes do ciclo", Snackbar.LENGTH_SHORT)
         }
     }
@@ -811,7 +811,7 @@ class ClientListFragment : Fragment() {
                 }
             )
         } catch (e: Exception) {
-            android.util.Log.e("ClientListFragment", "Erro ao mostrar diálogo de filtros: ${e.message}")
+            Timber.e("ClientListFragment", "Erro ao mostrar diálogo de filtros: ${e.message}")
             mostrarFeedback("Erro ao abrir filtros: ${e.message}", Snackbar.LENGTH_LONG)
         }
     }
@@ -829,7 +829,7 @@ class ClientListFragment : Fragment() {
                 }
             )
         } catch (e: Exception) {
-            android.util.Log.e("ClientListFragment", "Erro ao mostrar diálogo de pesquisa: ${e.message}")
+            Timber.e("ClientListFragment", "Erro ao mostrar diálogo de pesquisa: ${e.message}")
             mostrarFeedback("Erro ao abrir pesquisa: ${e.message}", Snackbar.LENGTH_LONG)
         }
     }
@@ -853,9 +853,9 @@ class ClientListFragment : Fragment() {
         try {
             // Navegar diretamente para a tela de rotas
             findNavController().navigate(com.example.gestaobilhares.ui.R.id.routesFragment)
-            android.util.Log.d("ClientListFragment", "✅ Navegando para tela de rotas")
+            Timber.d("ClientListFragment", "✅ Navegando para tela de rotas")
         } catch (e: Exception) {
-            android.util.Log.w("ClientListFragment", "⚠️ Erro ao navegar para rotas: ${e.message}")
+            Timber.w("ClientListFragment", "⚠️ Erro ao navegar para rotas: ${e.message}")
             // Fallback: popBackStack normal
             findNavController().popBackStack()
         }

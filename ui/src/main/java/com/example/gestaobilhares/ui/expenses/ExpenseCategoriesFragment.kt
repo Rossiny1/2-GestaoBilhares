@@ -1,7 +1,7 @@
 ﻿package com.example.gestaobilhares.ui.expenses
 
 import android.os.Bundle
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -122,7 +122,7 @@ class ExpenseCategoriesFragment : Fragment() {
                     updateUI()
                 }
             } catch (e: Exception) {
-                Log.e("ExpenseCategoriesFragment", "Erro ao carregar categorias: ${e.message}", e)
+                Timber.e("ExpenseCategoriesFragment", "Erro ao carregar categorias: ${e.message}", e)
                 if (isAdded && context != null) {
                     Toast.makeText(requireContext(), "Erro ao carregar categorias: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -178,7 +178,7 @@ class ExpenseCategoriesFragment : Fragment() {
                     loadCategories()
                 }
             } catch (e: Exception) {
-                Log.e("ExpenseCategoriesFragment", "Erro ao adicionar categoria: ${e.message}", e)
+                Timber.e("ExpenseCategoriesFragment", "Erro ao adicionar categoria: ${e.message}", e)
                 if (isAdded && context != null) {
                     Toast.makeText(requireContext(), "Erro ao adicionar categoria: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -214,7 +214,7 @@ class ExpenseCategoriesFragment : Fragment() {
                     loadCategories()
                 }
             } catch (e: Exception) {
-                Log.e("ExpenseCategoriesFragment", "Erro ao atualizar categoria: ${e.message}", e)
+                Timber.e("ExpenseCategoriesFragment", "Erro ao atualizar categoria: ${e.message}", e)
                 if (isAdded && context != null) {
                     Toast.makeText(requireContext(), "Erro ao atualizar categoria: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -243,7 +243,7 @@ class ExpenseCategoriesFragment : Fragment() {
                     loadCategories()
                 }
             } catch (e: Exception) {
-                Log.e("ExpenseCategoriesFragment", "Erro ao deletar categoria: ${e.message}", e)
+                Timber.e("ExpenseCategoriesFragment", "Erro ao deletar categoria: ${e.message}", e)
                 if (isAdded && context != null) {
                     Toast.makeText(requireContext(), "Erro ao deletar categoria: ${e.message}", Toast.LENGTH_SHORT).show()
                 }

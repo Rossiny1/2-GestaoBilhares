@@ -1,7 +1,7 @@
-﻿package com.example.gestaobilhares.sync
+package com.example.gestaobilhares.sync
 
 import android.content.Context
-import android.util.Log
+import timber.log.Timber
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.sync.utils.NetworkUtils
 import com.example.gestaobilhares.data.entities.*
@@ -56,23 +56,27 @@ class SyncRepository(
     private val clienteRotaCache = mutableMapOf<Long, Long?>()
     private val mesaRotaCache = mutableMapOf<Long, Long?>()
     
-    // ? FIX: Mover inicializa��o est�tica para evitar ExceptionInInitializerError
+    // ✅ CORREÇÃO CRÍTICA: Mover inicialização estática para evitar ExceptionInInitializerError
     private val gson: Gson by lazy { 
         GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
             .create() 
     }
-    private val mapType: java.lang.reflect.Type by lazy { 
-        object : TypeToken<Map<String, Any?>>() {}.type 
-    }
+    
+    /**
+     * ✅ CORREÇÃO CRÍTICA: Usar classe estática interna ao invés de classe anônima
+     * Isso garante que o ProGuard/R8 preserve as assinaturas genéricas corretamente.
+     * O problema anterior era que classes anônimas perdem suas assinaturas genéricas após otimização.
+     */
+    private val mapType: java.lang.reflect.Type = Companion.mapTypeTokenInstance.type
     
     // ? NOVO: ID da empresa din�mico vindo da sess�o
     private val currentCompanyId: String
         get() = userSessionManager.getCurrentCompanyId()
 
     init {
-        Log.d(TAG, "SyncRepository inicializado (Empresa: $currentCompanyId)")
-        Log.d(TAG, "NetworkUtils.isConnected() inicial = ${networkUtils.isConnected()}")
+        Timber.tag(TAG).d("SyncRepository inicializado (Empresa: $currentCompanyId)")
+        Timber.tag(TAG).d("NetworkUtils.isConnected() inicial = ${networkUtils.isConnected()}")
     }
     
     /**
@@ -81,7 +85,7 @@ class SyncRepository(
      */
     private fun getCollectionRef(collectionName: String): CollectionReference {
         val companyId = currentCompanyId
-        Log.d(TAG, "?? getCollectionRef: $collectionName (Empresa: $companyId)")
+        Timber.tag(TAG).d("?? getCollectionRef: $collectionName (Empresa: $companyId)")
         return getCollectionReference(firestore, collectionName, companyId)
     }
     
@@ -92,6 +96,19 @@ class SyncRepository(
         private const val DEFAULT_BACKGROUND_IDLE_HOURS = 6L
         private const val FIRESTORE_WHERE_IN_LIMIT = 10
         private const val FIELD_ROTA_ID = "rotaId"
+        
+        /**
+         * ✅ CORREÇÃO CRÍTICA: Classe estática interna para TypeToken
+         * Isso garante que o ProGuard/R8 preserve as assinaturas genéricas.
+         * Classes anônimas perdem suas assinaturas genéricas após otimização.
+         */
+        private class MapTypeToken : TypeToken<Map<String, Any?>>()
+        
+        /**
+         * ✅ Instância singleton do TypeToken para acesso ao type
+         * Isso garante que apenas uma instância seja criada e reutilizada.
+         */
+        private val mapTypeTokenInstance = MapTypeToken()
         
         // Estrutura hier�rquica do Firestore: /empresas/{empresaId}/{entidade}
         private const val COLLECTION_EMPRESAS = "empresas"
@@ -166,18 +183,18 @@ class SyncRepository(
 
     internal fun documentToAcerto(doc: DocumentSnapshot): Acerto? {
         val acertoData = doc.data?.toMutableMap() ?: run {
-            Log.w(TAG, "?? Acerto ${doc.id} sem dados")
+            Timber.tag(TAG).w("?? Acerto ${doc.id} sem dados")
             return null
         }
 
         val acertoId = doc.id.toLongOrNull() ?: run {
-            Log.w(TAG, "?? Acerto ${doc.id} com ID inv�lido")
+            Timber.tag(TAG).w("?? Acerto ${doc.id} com ID inv�lido")
             return null
         }
 
         val clienteIdNormalizado = extrairClienteId(acertoData)
         if (clienteIdNormalizado == null || clienteIdNormalizado <= 0L) {
-            Log.e(TAG, "? Acerto $acertoId sem clienteId v�lido (dados brutos: ${acertoData["clienteId"] ?: acertoData["cliente_id"] ?: acertoData["clienteID"]})")
+            Timber.tag(TAG).e("? Acerto $acertoId sem clienteId v�lido (dados brutos: ${acertoData["clienteId"] ?: acertoData["cliente_id"] ?: acertoData["clienteID"]})")
             return null
         }
 
@@ -192,11 +209,11 @@ class SyncRepository(
         )
 
         if (acertoFirestore == null) {
-            Log.e(TAG, "? Falha ao converter acerto $acertoId do JSON")
+            Timber.tag(TAG).e("? Falha ao converter acerto $acertoId do JSON")
             return null
         }
 
-        Log.d(TAG, "? Acerto convertido: ID=${acertoFirestore.id}, clienteId=${acertoFirestore.clienteId}")
+        Timber.tag(TAG).d("? Acerto convertido: ID=${acertoFirestore.id}, clienteId=${acertoFirestore.clienteId}")
         return acertoFirestore
     }
 
@@ -218,7 +235,7 @@ class SyncRepository(
                         ?: doc.getTimestamp("data_acerto")?.toDate()?.time
                         ?: 0L
                 } catch (ex: Exception) {
-                    Log.w(TAG, "?? dataAcerto n�o � Timestamp (doc=${doc.id}): ${ex.message}")
+                    Timber.tag(TAG).w("?? dataAcerto n�o � Timestamp (doc=${doc.id}): ${ex.message}")
                     0L
                 }
             }
@@ -253,7 +270,7 @@ class SyncRepository(
             }
         }
 
-        Log.w(TAG, "?? N�o foi poss�vel converter dataAcerto '$value' usando formatos conhecidos")
+        Timber.tag(TAG).w("?? N�o foi poss�vel converter dataAcerto '$value' usando formatos conhecidos")
         return 0L
     }
 
@@ -273,7 +290,7 @@ class SyncRepository(
         try {
             appRepository.removerAcertosExcedentes(clienteId, limit)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro ao manter hist�rico de acertos local para cliente $clienteId: ${e.message}")
+            Timber.tag(TAG).w("?? Erro ao manter hist�rico de acertos local para cliente $clienteId: ${e.message}")
         }
     }
 
@@ -294,14 +311,14 @@ class SyncRepository(
 
             snapshot.mapNotNull { documentToAcerto(it) }
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro ao buscar acertos por per�odo: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro ao buscar acertos por per�odo: ${e.message}", e)
             emptyList()
         }
     }
 
     suspend fun fetchUltimosAcertos(clienteId: Long, limit: Int): List<Acerto> {
         return try {
-            Log.d(TAG, "?? Buscando �ltimos $limit acertos para cliente $clienteId no Firestore...")
+            Timber.tag(TAG).d("?? Buscando �ltimos $limit acertos para cliente $clienteId no Firestore...")
             val collectionRef = getCollectionRef(COLLECTION_ACERTOS)
             val snapshot = queryAcertosPorCampoCliente(
                 collectionRef = collectionRef,
@@ -310,13 +327,13 @@ class SyncRepository(
             )
 
             val acertos = snapshot.mapNotNull { documentToAcerto(it) }
-            Log.d(TAG, "? Busca conclu�da: ${acertos.size} acertos encontrados para cliente $clienteId (de ${snapshot.size} documentos do Firestore)")
+            Timber.tag(TAG).d("? Busca conclu�da: ${acertos.size} acertos encontrados para cliente $clienteId (de ${snapshot.size} documentos do Firestore)")
             if (acertos.size < snapshot.size) {
-                Log.w(TAG, "?? ATENCAO: ${snapshot.size - acertos.size} documentos do Firestore nao foram convertidos para Acerto (possivel problema na conversao)")
+                Timber.tag(TAG).w("?? ATENCAO: ${snapshot.size - acertos.size} documentos do Firestore nao foram convertidos para Acerto (possivel problema na conversao)")
             }
             acertos
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro ao buscar �ltimos acertos para cliente $clienteId: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro ao buscar �ltimos acertos para cliente $clienteId: ${e.message}", e)
             emptyList()
         }
     }
@@ -351,7 +368,7 @@ class SyncRepository(
         queryAcertosSemOrderBy(collectionRef, clienteIdentifier.toString(), limit)?.let { return it }
         
         // Se tudo falhar, retorna vazio
-        Log.w(TAG, "?? N�o foi poss�vel buscar acertos para cliente $clienteIdentifier com nenhuma estrat�gia")
+        Timber.tag(TAG).w("?? N�o foi poss�vel buscar acertos para cliente $clienteIdentifier com nenhuma estrat�gia")
         return emptyList()
     }
 
@@ -366,26 +383,26 @@ class SyncRepository(
         fieldValue: Any,
         limit: Int?
     ): List<DocumentSnapshot>? {
-        Log.d(TAG, "?? Tentando buscar acertos sem orderBy para cliente $fieldValue (limit: $limit)")
+        Timber.tag(TAG).d("?? Tentando buscar acertos sem orderBy para cliente $fieldValue (limit: $limit)")
         for (field in CLIENTE_ID_FIELDS) {
             try {
-                Log.d(TAG, "   Tentando campo '$field' com valor '$fieldValue' (tipo: ${fieldValue::class.simpleName})")
+                Timber.tag(TAG).d("   Tentando campo '$field' com valor '$fieldValue' (tipo: ${fieldValue::class.simpleName})")
                 // Query simples: apenas whereEqualTo (N�O requer �ndice composto)
                 var query: Query = collectionRef.whereEqualTo(field, fieldValue)
                 
                 // Buscar todos os documentos (sem limit no Firestore para evitar problemas)
                 val snapshot = query.get().await()
                 
-                Log.d(TAG, "   Resultado da query '$field=$fieldValue': ${snapshot.size()} documentos encontrados")
+                Timber.tag(TAG).d("   Resultado da query '$field=$fieldValue': ${snapshot.size()} documentos encontrados")
                 
                 if (!snapshot.isEmpty) {
-                    Log.d(TAG, "? Acertos encontrados usando campo '$field' sem orderBy (${snapshot.size()} docs) - ordenando em mem�ria")
+                    Timber.tag(TAG).d("? Acertos encontrados usando campo '$field' sem orderBy (${snapshot.size()} docs) - ordenando em mem�ria")
                     
                     // Log dos primeiros documentos para debug
                     snapshot.documents.take(3).forEachIndexed { index, doc ->
                         val acertoData = doc.data
                         val clienteIdValue = acertoData?.get("clienteId") ?: acertoData?.get("cliente_id") ?: acertoData?.get("clienteID")
-                        Log.d(TAG, "   Doc[$index] ID=${doc.id}, clienteId no doc=$clienteIdValue (tipo: ${clienteIdValue?.javaClass?.simpleName})")
+                        Timber.tag(TAG).d("   Doc[$index] ID=${doc.id}, clienteId no doc=$clienteIdValue (tipo: ${clienteIdValue?.javaClass?.simpleName})")
                     }
                     
                     // Ordenar em mem�ria por dataAcerto (descendente)
@@ -400,24 +417,24 @@ class SyncRepository(
                         documentosOrdenados
                     }
                     
-                    Log.d(TAG, "   ?? Retornando ${resultado.size} acertos ordenados (de ${documentosOrdenados.size} total)")
+                    Timber.tag(TAG).d("   ?? Retornando ${resultado.size} acertos ordenados (de ${documentosOrdenados.size} total)")
                     return resultado
                 } else {
-                    Log.d(TAG, "   ?? Query '$field=$fieldValue' retornou vazio (0 documentos)")
+                    Timber.tag(TAG).d("   ?? Query '$field=$fieldValue' retornou vazio (0 documentos)")
                 }
             } catch (ex: FirebaseFirestoreException) {
                 if (ex.code == FirebaseFirestoreException.Code.FAILED_PRECONDITION) {
                     // Mesmo sem orderBy, pode falhar se o campo n�o existir
-                    Log.w(TAG, "?? Campo '$field' com valor '$fieldValue' retornou FAILED_PRECONDITION: ${ex.message}")
+                    Timber.tag(TAG).w("?? Campo '$field' com valor '$fieldValue' retornou FAILED_PRECONDITION: ${ex.message}")
                 } else {
-                    Log.e(TAG, "? Erro ao consultar acertos sem orderBy ($field=$fieldValue): ${ex.message}", ex)
+                    Timber.tag(TAG).e("? Erro ao consultar acertos sem orderBy ($field=$fieldValue): ${ex.message}", ex)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "? Erro inesperado ao buscar acertos sem orderBy ($field=$fieldValue): ${e.message}", e)
-                Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
+                Timber.tag(TAG).e("? Erro inesperado ao buscar acertos sem orderBy ($field=$fieldValue): ${e.message}", e)
+                Timber.tag(TAG).e("   Stack trace: ${e.stackTraceToString()}")
             }
         }
-        Log.w(TAG, "?? Nenhum acerto encontrado para cliente $fieldValue ap�s tentar todos os campos: ${CLIENTE_ID_FIELDS.joinToString()}")
+        Timber.tag(TAG).w("?? Nenhum acerto encontrado para cliente $fieldValue ap�s tentar todos os campos: ${CLIENTE_ID_FIELDS.joinToString()}")
         return null
     }
 
@@ -436,15 +453,15 @@ class SyncRepository(
                 }
                 val snapshot = query.get().await()
                 if (!snapshot.isEmpty) {
-                    Log.d(TAG, "? Acertos encontrados usando campo '$field' com valor '$fieldValue' (${snapshot.size()} docs)")
+                    Timber.tag(TAG).d("? Acertos encontrados usando campo '$field' com valor '$fieldValue' (${snapshot.size()} docs)")
                     return snapshot.documents
                 }
             } catch (ex: FirebaseFirestoreException) {
                 if (ex.code == FirebaseFirestoreException.Code.FAILED_PRECONDITION) {
-                    Log.w(TAG, "?? Campo '$field' com valor '$fieldValue' sem �ndice para consulta: ${ex.message}")
+                    Timber.tag(TAG).w("?? Campo '$field' com valor '$fieldValue' sem �ndice para consulta: ${ex.message}")
                     // N�o retorna null aqui, continua tentando outros campos/estrat�gias
                 } else {
-                    Log.e(TAG, "? Erro ao consultar acertos ($field=$fieldValue): ${ex.message}", ex)
+                    Timber.tag(TAG).e("? Erro ao consultar acertos ($field=$fieldValue): ${ex.message}", ex)
                 }
             }
         }
@@ -480,7 +497,7 @@ class SyncRepository(
         return try {
             syncMetadataDao.obterUltimoTimestamp(entityType)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro ao obter timestamp de sincroniza��o para $entityType: ${e.message}")
+            Timber.tag(TAG).w("?? Erro ao obter timestamp de sincroniza��o para $entityType: ${e.message}")
             0L // Retorna 0 para primeira sincroniza��o completa
         }
     }
@@ -496,7 +513,7 @@ class SyncRepository(
         return try {
             syncMetadataDao.obterUltimoTimestamp("${entityType}_push")
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro ao obter timestamp de push para $entityType: ${e.message}")
+            Timber.tag(TAG).w("?? Erro ao obter timestamp de push para $entityType: ${e.message}")
             0L // Retorna 0 para primeira sincroniza��o completa
         }
     }
@@ -567,9 +584,9 @@ class SyncRepository(
             } else {
                 "timestamp=ATUAL:$timestamp"
             }
-            Log.d(TAG, "? Metadata de sincroniza��o salva para $entityType: $syncCount registros em ${durationMs}ms, $timestampInfo")
+            Timber.tag(TAG).d("? Metadata de sincroniza��o salva para $entityType: $syncCount registros em ${durationMs}ms, $timestampInfo")
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro ao salvar metadata de sincroniza��o para $entityType: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro ao salvar metadata de sincroniza��o para $entityType: ${e.message}", e)
         }
     }
 
@@ -585,28 +602,28 @@ class SyncRepository(
     ): Boolean {
         val pendingOps = runCatching { appRepository.contarOperacoesSyncPendentes() }.getOrDefault(0)
         if (pendingOps > pendingThreshold) {
-            Log.d(TAG, "?? Executando sync em background: $pendingOps opera��es pendentes")
+            Timber.tag(TAG).d("?? Executando sync em background: $pendingOps opera��es pendentes")
             return true
         }
 
         val failedOps = runCatching { appRepository.contarOperacoesSyncFalhadas() }.getOrDefault(0)
         if (failedOps > 0) {
-            Log.d(TAG, "?? Executando sync em background: $failedOps opera��es falhadas aguardando retry")
+            Timber.tag(TAG).d("?? Executando sync em background: $failedOps opera��es falhadas aguardando retry")
             return true
         }
 
         val lastGlobalSync = runCatching { syncMetadataDao.obterUltimoTimestamp(GLOBAL_SYNC_METADATA) }.getOrDefault(0L)
         if (lastGlobalSync == 0L) {
-            Log.d(TAG, "?? Nenhum registro de sincroniza��o global - executar agora")
+            Timber.tag(TAG).d("?? Nenhum registro de sincroniza��o global - executar agora")
             return true
         }
 
         val hoursSinceLastSync = (System.currentTimeMillis() - lastGlobalSync) / ONE_HOUR_IN_MS
         return if (hoursSinceLastSync >= maxIdleHours) {
-            Log.d(TAG, "?? �ltima sincroniza��o global h� $hoursSinceLastSync h (limite $maxIdleHours h) - executar")
+            Timber.tag(TAG).d("?? �ltima sincroniza��o global h� $hoursSinceLastSync h (limite $maxIdleHours h) - executar")
             true
         } else {
-            Log.d(TAG, "?? Sincroniza��o em background dispensada (pendentes=$pendingOps, horas=$hoursSinceLastSync)")
+            Timber.tag(TAG).d("?? Sincroniza��o em background dispensada (pendentes=$pendingOps, horas=$hoursSinceLastSync)")
             false
         }
     }
@@ -628,7 +645,7 @@ class SyncRepository(
         if (userSessionManager.isAdmin()) {
             allowRouteBootstrap = false
             accessibleRouteIdsCache = emptySet()
-            Log.d(TAG, "?? ADMIN: Bootstrap desabilitado, acessando todas as rotas")
+            Timber.tag(TAG).d("?? ADMIN: Bootstrap desabilitado, acessando todas as rotas")
             return accessibleRouteIdsCache!!
         }
 
@@ -636,17 +653,17 @@ class SyncRepository(
         val routes = userSessionManager.getUserAccessibleRoutes(context)
         val hasLocalAssignments = userSessionManager.hasAnyRouteAssignments(context)
 
-        Log.d(TAG, "?? USER ID $userId: rotas acess�veis=${routes.size}, tem atribui��es locais=$hasLocalAssignments, bootstrap ser�=${routes.isEmpty() && !hasLocalAssignments}")
+        Timber.tag(TAG).d("?? USER ID $userId: rotas acess�veis=${routes.size}, tem atribui��es locais=$hasLocalAssignments, bootstrap ser�=${routes.isEmpty() && !hasLocalAssignments}")
 
         allowRouteBootstrap = routes.isEmpty() && !hasLocalAssignments
         accessibleRouteIdsCache = routes.toSet()
 
         if (allowRouteBootstrap) {
-            Log.w(TAG, "?? Usu�rio ID $userId sem rotas locais sincronizadas ainda. Aplicando bootstrap tempor�rio sem filtro de rota.")
+            Timber.tag(TAG).w("?? Usu�rio ID $userId sem rotas locais sincronizadas ainda. Aplicando bootstrap tempor�rio sem filtro de rota.")
         } else if (routes.isNotEmpty()) {
-            Log.d(TAG, "? Usu�rio ID $userId tem ${routes.size} rotas atribu�das: ${routes.joinToString()}")
+            Timber.tag(TAG).d("? Usu�rio ID $userId tem ${routes.size} rotas atribu�das: ${routes.joinToString()}")
         } else {
-            Log.w(TAG, "?? Usu�rio ID $userId sem rotas atribu�das e sem dados locais - nenhum dado ser� sincronizado")
+            Timber.tag(TAG).w("?? Usu�rio ID $userId sem rotas atribu�das e sem dados locais - nenhum dado ser� sincronizado")
         }
 
         return accessibleRouteIdsCache!!
@@ -711,7 +728,7 @@ class SyncRepository(
                 "cliente" -> {
                     val exists = appRepository.obterClientePorId(entityId) != null
                     if (!exists) {
-                        Log.w(TAG, "?? Cliente $entityId n�o encontrado localmente - tentando buscar do Firestore")
+                        Timber.tag(TAG).w("?? Cliente $entityId n�o encontrado localmente - tentando buscar do Firestore")
                         return tryFetchMissingCliente(entityId)
                     }
                     true
@@ -719,7 +736,7 @@ class SyncRepository(
                 "mesa" -> {
                     val exists = appRepository.obterMesaPorId(entityId) != null
                     if (!exists) {
-                        Log.w(TAG, "?? Mesa $entityId n�o encontrada localmente - tentando buscar do Firestore")
+                        Timber.tag(TAG).w("?? Mesa $entityId n�o encontrada localmente - tentando buscar do Firestore")
                         return tryFetchMissingMesa(entityId)
                     }
                     true
@@ -729,18 +746,18 @@ class SyncRepository(
                         appRepository.buscarTodosContratos().first().find { it.id == entityId }
                     }.getOrNull()
                     if (contrato == null) {
-                        Log.w(TAG, "?? Contrato $entityId n�o encontrado localmente - tentando buscar do Firestore")
+                        Timber.tag(TAG).w("?? Contrato $entityId n�o encontrado localmente - tentando buscar do Firestore")
                         return tryFetchMissingContrato(entityId)
                     }
                     true
                 }
                 else -> {
-                    Log.w(TAG, "?? Tipo de entidade desconhecido: $entityType")
+                    Timber.tag(TAG).w("?? Tipo de entidade desconhecido: $entityType")
                     false
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro ao validar FK para $entityType $entityId: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro ao validar FK para $entityType $entityId: ${e.message}", e)
             false
         }
     }
@@ -753,7 +770,7 @@ class SyncRepository(
                 .await()
             
             if (!doc.exists()) {
-                Log.w(TAG, "?? Cliente $clienteId n�o existe no Firestore")
+                Timber.tag(TAG).w("?? Cliente $clienteId n�o existe no Firestore")
                 return false
             }
             
@@ -763,10 +780,10 @@ class SyncRepository(
                 ?: return false
             
             appRepository.inserirCliente(cliente)
-            Log.d(TAG, "? Cliente $clienteId buscado e inserido com sucesso")
+            Timber.tag(TAG).d("? Cliente $clienteId buscado e inserido com sucesso")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "? Falha ao buscar cliente $clienteId: ${e.message}", e)
+            Timber.tag(TAG).e("? Falha ao buscar cliente $clienteId: ${e.message}", e)
             false
         }
     }
@@ -779,7 +796,7 @@ class SyncRepository(
                 .await()
             
             if (!doc.exists()) {
-                Log.w(TAG, "?? Mesa $mesaId n�o existe no Firestore")
+                Timber.tag(TAG).w("?? Mesa $mesaId n�o existe no Firestore")
                 return false
             }
             
@@ -791,20 +808,20 @@ class SyncRepository(
             // Validar que o cliente da mesa existe
             val clienteId = mesa.clienteId
             if (clienteId == null || clienteId <= 0L) {
-                Log.w(TAG, "?? Mesa $mesaId tem clienteId inv�lido: $clienteId")
+                Timber.tag(TAG).w("?? Mesa $mesaId tem clienteId inv�lido: $clienteId")
                 return false
             }
             
             if (!ensureEntityExists("cliente", clienteId)) {
-                Log.w(TAG, "?? Mesa $mesaId referencia cliente $clienteId que n�o existe")
+                Timber.tag(TAG).w("?? Mesa $mesaId referencia cliente $clienteId que n�o existe")
                 return false
             }
             
             appRepository.inserirMesa(mesa)
-            Log.d(TAG, "? Mesa $mesaId buscada e inserida com sucesso")
+            Timber.tag(TAG).d("? Mesa $mesaId buscada e inserida com sucesso")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "? Falha ao buscar mesa $mesaId: ${e.message}", e)
+            Timber.tag(TAG).e("? Falha ao buscar mesa $mesaId: ${e.message}", e)
             false
         }
     }
@@ -817,7 +834,7 @@ class SyncRepository(
                 .await()
             
             if (!doc.exists()) {
-                Log.w(TAG, "?? Contrato $contratoId n�o existe no Firestore")
+                Timber.tag(TAG).w("?? Contrato $contratoId n�o existe no Firestore")
                 return false
             }
             
@@ -828,15 +845,15 @@ class SyncRepository(
             
             // Validar que o cliente do contrato existe
             if (!ensureEntityExists("cliente", contrato.clienteId)) {
-                Log.w(TAG, "?? Contrato $contratoId referencia cliente ${contrato.clienteId} que n�o existe")
+                Timber.tag(TAG).w("?? Contrato $contratoId referencia cliente ${contrato.clienteId} que n�o existe")
                 return false
             }
             
             appRepository.inserirContrato(contrato)
-            Log.d(TAG, "? Contrato $contratoId buscado e inserido com sucesso")
+            Timber.tag(TAG).d("? Contrato $contratoId buscado e inserido com sucesso")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "? Falha ao buscar contrato $contratoId: ${e.message}", e)
+            Timber.tag(TAG).e("? Falha ao buscar contrato $contratoId: ${e.message}", e)
             false
         }
     }
@@ -882,19 +899,19 @@ class SyncRepository(
                 processor(documents)
                 
                 totalProcessed += documents.size
-                Log.d(TAG, "?? Processado lote: ${documents.size} documentos (total: $totalProcessed)")
+                Timber.tag(TAG).d("?? Processado lote: ${documents.size} documentos (total: $totalProcessed)")
                 
                 // Verificar se h� mais documentos
                 hasMore = documents.size == batchSize
                 lastDocument = documents.lastOrNull()
                 
             } catch (e: Exception) {
-                Log.e(TAG, "? Erro ao processar lote paginado: ${e.message}", e)
+                Timber.tag(TAG).e("? Erro ao processar lote paginado: ${e.message}", e)
                 hasMore = false
             }
         }
         
-        Log.d(TAG, "? Pagina��o conclu�da: $totalProcessed documentos processados")
+        Timber.tag(TAG).d("? Pagina��o conclu�da: $totalProcessed documentos processados")
         return totalProcessed
     }
     
@@ -924,10 +941,10 @@ class SyncRepository(
         val accessibleRoutes = getAccessibleRouteIdsInternal()
         if (accessibleRoutes.isEmpty()) {
             return if (allowRouteBootstrap) {
-                Log.w(TAG, "?? Bootstrap de rotas: baixando todas as rotas temporariamente para popular acessos locais.")
+                Timber.tag(TAG).w("?? Bootstrap de rotas: baixando todas as rotas temporariamente para popular acessos locais.")
                 listOf(applyTimestampFilter(collectionRef, lastSyncTimestamp, timestampField))
             } else {
-                Log.w(TAG, "?? Usu�rio sem rotas atribu�das - nenhuma query ser� executada para $routeField")
+                Timber.tag(TAG).w("?? Usu�rio sem rotas atribu�das - nenhuma query ser� executada para $routeField")
                 emptyList()
             }
         }
@@ -971,10 +988,10 @@ class SyncRepository(
         val accessibleRoutes = getAccessibleRouteIdsInternal()
         if (accessibleRoutes.isEmpty()) {
             return if (allowRouteBootstrap) {
-                Log.w(TAG, "?? Bootstrap de rotas: baixando todas as rotas temporariamente para popular acessos locais.")
+                Timber.tag(TAG).w("?? Bootstrap de rotas: baixando todas as rotas temporariamente para popular acessos locais.")
                 collectionRef.get().await().documents
             } else {
-                Log.w(TAG, "?? Nenhuma rota atribu�da ao usu�rio - resultado vazio para $routeField")
+                Timber.tag(TAG).w("?? Nenhuma rota atribu�da ao usu�rio - resultado vazio para $routeField")
                 emptyList()
             }
         }
@@ -1012,13 +1029,13 @@ class SyncRepository(
         
         return if (lastSyncTimestamp > 0L) {
             // Sincroniza��o incremental: apenas documentos modificados desde a �ltima sync
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL para $entityType (desde ${Date(lastSyncTimestamp)})")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL para $entityType (desde ${Date(lastSyncTimestamp)})")
             collectionRef
                 .whereGreaterThan(timestampField, Timestamp(Date(lastSyncTimestamp)))
                 .orderBy(timestampField) // OBRIGAT�RIO: Firestore requer orderBy com whereGreaterThan
         } else {
             // Primeira sincroniza��o: buscar todos (mas ainda com orderBy para pagina��o)
-            Log.d(TAG, "?? Primeira sincroniza��o COMPLETA para $entityType")
+            Timber.tag(TAG).d("?? Primeira sincroniza��o COMPLETA para $entityType")
             collectionRef.orderBy(timestampField)
         }
     }
@@ -1033,34 +1050,34 @@ class SyncRepository(
         progressTracker: ProgressTracker? = null,
         timestampOverride: Long? = null // ? NOVO: timestamp capturado antes do push (propagado para todas as entidades)
     ): Result<Unit> {
-        Log.d(TAG, "?? syncPull() CHAMADO - IN�CIO")
+        Timber.tag(TAG).d("?? syncPull() CHAMADO - IN�CIO")
         return try {
-            Log.d(TAG, "?? ========== INICIANDO SINCRONIZA��O PULL ==========")
-            Log.d(TAG, "?? Verificando conectividade...")
+            Timber.tag(TAG).d("?? ========== INICIANDO SINCRONIZA��O PULL ==========")
+            Timber.tag(TAG).d("?? Verificando conectividade...")
             
             resetRouteFilters()
             val accessibleRoutes = getAccessibleRouteIdsInternal()
             if (userSessionManager.isAdmin()) {
-                Log.d(TAG, "?? Usu�rio ADMIN - sincronizando todas as rotas dispon�veis.")
+                Timber.tag(TAG).d("?? Usu�rio ADMIN - sincronizando todas as rotas dispon�veis.")
             } else if (accessibleRoutes.isEmpty()) {
-                Log.w(TAG, "?? Usu�rio sem rotas atribu�das - nenhum dado espec�fico de rota ser� sincronizado.")
+                Timber.tag(TAG).w("?? Usu�rio sem rotas atribu�das - nenhum dado espec�fico de rota ser� sincronizado.")
             } else {
-                Log.d(TAG, "?? Rotas permitidas para este usu�rio: ${accessibleRoutes.joinToString()}")
+                Timber.tag(TAG).d("?? Rotas permitidas para este usu�rio: ${accessibleRoutes.joinToString()}")
             }
             
             val isConnected = networkUtils.isConnected()
-            Log.d(TAG, "?? NetworkUtils.isConnected() = $isConnected")
+            Timber.tag(TAG).d("?? NetworkUtils.isConnected() = $isConnected")
             
             // Tentar mesmo se NetworkUtils reportar offline (pode ser falso negativo)
             // O Firestore vai falhar se realmente estiver offline
             if (!isConnected) {
-                Log.w(TAG, "?? NetworkUtils reporta offline, mas tentando mesmo assim...")
-                Log.w(TAG, "?? Firestore vai falhar se realmente estiver offline")
+                Timber.tag(TAG).w("?? NetworkUtils reporta offline, mas tentando mesmo assim...")
+                Timber.tag(TAG).w("?? Firestore vai falhar se realmente estiver offline")
             } else {
-                Log.d(TAG, "? Dispositivo online confirmado")
+                Timber.tag(TAG).d("? Dispositivo online confirmado")
             }
             
-            Log.d(TAG, "? Prosseguindo com sincroniza��o PULL")
+            Timber.tag(TAG).d("? Prosseguindo com sincroniza��o PULL")
             
             _syncStatus.value = _syncStatus.value.copy(
                 isSyncing = true,
@@ -1068,7 +1085,7 @@ class SyncRepository(
                 error = null
             )
             
-            Log.d(TAG, "?? Conectando ao Firestore...")
+            Timber.tag(TAG).d("?? Conectando ao Firestore...")
             
             var totalSyncCount = 0
             var failedCount = 0
@@ -1079,11 +1096,11 @@ class SyncRepository(
             pullRotas(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Rotas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Pull Rotas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Rotas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Rotas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando rotas...")
@@ -1091,11 +1108,11 @@ class SyncRepository(
             pullClientes(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Clientes: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull Clientes: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Clientes falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Clientes falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando clientes...")
@@ -1103,11 +1120,11 @@ class SyncRepository(
             pullMesas(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Mesas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Pull Mesas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Mesas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Mesas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando mesas...")
@@ -1115,11 +1132,11 @@ class SyncRepository(
             pullColaboradores(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Colaboradores: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull Colaboradores: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Colaboradores falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Colaboradores falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando colaboradores...")
@@ -1127,11 +1144,11 @@ class SyncRepository(
             pullCiclos(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Ciclos: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull Ciclos: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Ciclos falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Ciclos falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando ciclos...")
@@ -1139,11 +1156,11 @@ class SyncRepository(
             pullAcertos(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Acertos: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull Acertos: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Acertos falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Acertos falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando acertos...")
@@ -1151,11 +1168,11 @@ class SyncRepository(
             pullDespesas(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Despesas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Pull Despesas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Despesas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Despesas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando despesas...")
@@ -1163,11 +1180,11 @@ class SyncRepository(
             pullContratos(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Contratos: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull Contratos: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Contratos falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Contratos falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando contratos...")
@@ -1176,11 +1193,11 @@ class SyncRepository(
             pullCategoriasDespesa().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Categorias Despesa: $count sincronizadas")
+                    Timber.tag(TAG).d("? Pull Categorias Despesa: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Categorias Despesa falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Categorias Despesa falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando categorias de despesa...")
@@ -1188,11 +1205,11 @@ class SyncRepository(
             pullTiposDespesa().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Tipos Despesa: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull Tipos Despesa: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Tipos Despesa falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Tipos Despesa falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando tipos de despesa...")
@@ -1200,11 +1217,11 @@ class SyncRepository(
             pullMetas().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Metas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Pull Metas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Metas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Metas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando metas...")
@@ -1212,11 +1229,11 @@ class SyncRepository(
             pullMetaColaborador().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Meta Colaborador: $count sincronizadas")
+                    Timber.tag(TAG).d("? Pull Meta Colaborador: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Meta Colaborador falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Meta Colaborador falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando metas por colaborador...")
@@ -1224,11 +1241,11 @@ class SyncRepository(
             pullEquipments().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Equipments: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull Equipments: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Equipments falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Equipments falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando equipamentos...")
@@ -1236,11 +1253,11 @@ class SyncRepository(
             pullColaboradorRotas().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Colaborador Rotas: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull Colaborador Rotas: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Colaborador Rotas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Colaborador Rotas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando colaborador rotas...")
@@ -1248,11 +1265,11 @@ class SyncRepository(
             pullAditivoMesas().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Aditivo Mesas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Pull Aditivo Mesas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Aditivo Mesas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Aditivo Mesas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando aditivos de mesa...")
@@ -1260,11 +1277,11 @@ class SyncRepository(
             pullContratoMesas().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Contrato Mesas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Pull Contrato Mesas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Contrato Mesas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Contrato Mesas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando contratos de mesa...")
@@ -1272,11 +1289,11 @@ class SyncRepository(
             pullAssinaturasRepresentanteLegal().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Assinaturas Representante Legal: $count sincronizadas")
+                    Timber.tag(TAG).d("? Pull Assinaturas Representante Legal: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Assinaturas Representante Legal falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Assinaturas Representante Legal falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando assinaturas do representante legal...")
@@ -1284,11 +1301,11 @@ class SyncRepository(
             pullLogsAuditoria().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Logs Auditoria: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull Logs Auditoria: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Logs Auditoria falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Logs Auditoria falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando logs de auditoria...")
@@ -1297,11 +1314,11 @@ class SyncRepository(
             pullPanoEstoque().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull PanoEstoque: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull PanoEstoque: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull PanoEstoque falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull PanoEstoque falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando panos em estoque...")
@@ -1309,11 +1326,11 @@ class SyncRepository(
             pullMesaVendida().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull MesaVendida: $count sincronizadas")
+                    Timber.tag(TAG).d("? Pull MesaVendida: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull MesaVendida falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull MesaVendida falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando mesas vendidas...")
@@ -1321,11 +1338,11 @@ class SyncRepository(
             pullStockItem().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull StockItem: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull StockItem: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull StockItem falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull StockItem falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando itens de estoque...")
@@ -1333,11 +1350,11 @@ class SyncRepository(
             pullMesaReformada(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull MesaReformada: $count sincronizadas")
+                    Timber.tag(TAG).d("? Pull MesaReformada: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull MesaReformada falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull MesaReformada falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando mesas reformadas...")
@@ -1345,11 +1362,11 @@ class SyncRepository(
             pullPanoMesa(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull PanoMesa: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull PanoMesa: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull PanoMesa falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull PanoMesa falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando panos de mesa...")
@@ -1357,11 +1374,11 @@ class SyncRepository(
             pullHistoricoManutencaoMesa(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull HistoricoManutencaoMesa: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull HistoricoManutencaoMesa: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull HistoricoManutencaoMesa falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull HistoricoManutencaoMesa falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando hist�rico de manuten��o das mesas...")
@@ -1369,11 +1386,11 @@ class SyncRepository(
             pullHistoricoManutencaoVeiculo(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull HistoricoManutencaoVeiculo: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull HistoricoManutencaoVeiculo: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull HistoricoManutencaoVeiculo falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull HistoricoManutencaoVeiculo falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando hist�rico de manuten��o de ve�culos...")
@@ -1381,11 +1398,11 @@ class SyncRepository(
             pullHistoricoCombustivelVeiculo(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull HistoricoCombustivelVeiculo: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull HistoricoCombustivelVeiculo: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull HistoricoCombustivelVeiculo falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull HistoricoCombustivelVeiculo falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando hist�rico de combust�vel dos ve�culos...")
@@ -1393,11 +1410,11 @@ class SyncRepository(
             pullVeiculos(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Pull Veiculos: $count sincronizados")
+                    Timber.tag(TAG).d("? Pull Veiculos: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Pull Veiculos falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Pull Veiculos falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Importando ve�culos...")
@@ -1408,15 +1425,15 @@ class SyncRepository(
                 failedOperations = failedCount
             )
             
-            Log.d(TAG, "? ========== SINCRONIZA��O PULL CONCLU�DA ==========")
-            Log.d(TAG, "?? Total sincronizado: $totalSyncCount itens")
-            Log.d(TAG, "? Total de falhas: $failedCount dom�nios")
-            Log.d(TAG, "? Timestamp: ${System.currentTimeMillis()}")
+            Timber.tag(TAG).d("? ========== SINCRONIZA��O PULL CONCLU�DA ==========")
+            Timber.tag(TAG).d("?? Total sincronizado: $totalSyncCount itens")
+            Timber.tag(TAG).d("? Total de falhas: $failedCount dom�nios")
+            Timber.tag(TAG).d("? Timestamp: ${System.currentTimeMillis()}")
             
             Result.success(Unit)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro na sincroniza��o Pull: ${e.message}", e)
+            Timber.tag(TAG).e("Erro na sincroniza��o Pull: ${e.message}", e)
             _syncStatus.value = _syncStatus.value.copy(
                 isSyncing = false,
                 error = e.message
@@ -1432,16 +1449,16 @@ class SyncRepository(
      * Offline-first: Enfileira opera��es quando offline.
      */
     suspend fun syncPush(progressTracker: ProgressTracker? = null): Result<Unit> {
-        Log.d(TAG, "?? ========== INICIANDO SINCRONIZA��O PUSH ==========")
-        Log.d(TAG, "   ? Timestamp: ${System.currentTimeMillis()} (${java.util.Date()})")
-        Log.d(TAG, "   ?? Stack trace: ${Thread.currentThread().stackTrace.take(5).joinToString("\n") { it.toString() }}")
+        Timber.tag(TAG).d("?? ========== INICIANDO SINCRONIZA��O PUSH ==========")
+        Timber.tag(TAG).d("   ? Timestamp: ${System.currentTimeMillis()} (${java.util.Date()})")
+        Timber.tag(TAG).d("   ?? Stack trace: ${Thread.currentThread().stackTrace.take(5).joinToString("\n") { it.toString() }}")
         return try {
             if (!networkUtils.isConnected()) {
-                Log.w(TAG, "?? Sincroniza��o Push cancelada: dispositivo offline")
+                Timber.tag(TAG).w("?? Sincroniza��o Push cancelada: dispositivo offline")
                 return Result.failure(Exception("Dispositivo offline"))
             }
 
-            Log.d(TAG, "? Dispositivo online - prosseguindo com sincroniza��o")
+            Timber.tag(TAG).d("? Dispositivo online - prosseguindo com sincroniza��o")
 
             _syncStatus.value = _syncStatus.value.copy(
                 isSyncing = true,
@@ -1449,32 +1466,32 @@ class SyncRepository(
                 error = null
             )
             
-            Log.d(TAG, "?? ========== PROCESSANDO FILA DE SINCRONIZA��O ==========")
+            Timber.tag(TAG).d("?? ========== PROCESSANDO FILA DE SINCRONIZA��O ==========")
             // ? CORRE��O: Verificar quantas opera��es existem na fila antes de processar
             val pendingCountBefore = runCatching { appRepository.contarOperacoesSyncPendentes() }.getOrDefault(0)
             val failedCountBefore = runCatching { appRepository.contarOperacoesSyncFalhadas() }.getOrDefault(0)
-            Log.d(TAG, "?? Estado da fila ANTES do processamento:")
-            Log.d(TAG, "   - Opera��es pendentes: $pendingCountBefore")
-            Log.d(TAG, "   - Opera��es falhadas: $failedCountBefore")
+            Timber.tag(TAG).d("?? Estado da fila ANTES do processamento:")
+            Timber.tag(TAG).d("   - Opera��es pendentes: $pendingCountBefore")
+            Timber.tag(TAG).d("   - Opera��es falhadas: $failedCountBefore")
             
             if (pendingCountBefore > 0) {
-                Log.d(TAG, "   ?? H� $pendingCountBefore opera��o(�es) pendente(s) na fila!")
+                Timber.tag(TAG).d("   ?? H� $pendingCountBefore opera��o(�es) pendente(s) na fila!")
             } else {
-                Log.d(TAG, "   ?? Nenhuma opera��o pendente na fila")
+                Timber.tag(TAG).d("   ?? Nenhuma opera��o pendente na fila")
             }
             
             val queueProcessResult = processSyncQueue()
             if (queueProcessResult.isFailure) {
-                Log.e(TAG, "? Falha ao processar fila de sincroniza��o: ${queueProcessResult.exceptionOrNull()?.message}")
+                Timber.tag(TAG).e("? Falha ao processar fila de sincroniza��o: ${queueProcessResult.exceptionOrNull()?.message}")
                 // N�o retornamos falha aqui, tentamos o push direto mesmo assim
             } else {
                 val pendingCountAfter = runCatching { appRepository.contarOperacoesSyncPendentes() }.getOrDefault(0)
                 val failedCountAfter = runCatching { appRepository.contarOperacoesSyncFalhadas() }.getOrDefault(0)
-                Log.d(TAG, "? Fila de sincroniza��o processada com sucesso.")
-                Log.d(TAG, "?? Estado da fila DEPOIS do processamento: pendentes=$pendingCountAfter, falhadas=$failedCountAfter")
+                Timber.tag(TAG).d("? Fila de sincroniza��o processada com sucesso.")
+                Timber.tag(TAG).d("?? Estado da fila DEPOIS do processamento: pendentes=$pendingCountAfter, falhadas=$failedCountAfter")
             }
 
-            Log.d(TAG, "Iniciando push de dados locais para o Firestore...")
+            Timber.tag(TAG).d("Iniciando push de dados locais para o Firestore...")
             
             var totalSyncCount = 0
             var failedCount = 0
@@ -1483,11 +1500,11 @@ class SyncRepository(
             pushClientes().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Clientes: $count sincronizados")
+                    Timber.tag(TAG).d("? Push Clientes: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Clientes falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Clientes falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando clientes...")
@@ -1495,11 +1512,11 @@ class SyncRepository(
             pushRotas().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Rotas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Push Rotas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Rotas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Rotas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando rotas...")
@@ -1507,11 +1524,11 @@ class SyncRepository(
             pushMesas().fold(
                 onSuccess = { count: Int -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Mesas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Push Mesas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Mesas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Mesas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando mesas...")
@@ -1519,11 +1536,11 @@ class SyncRepository(
             pushColaboradores().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Colaboradores: $count sincronizados")
+                    Timber.tag(TAG).d("? Push Colaboradores: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Colaboradores falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Colaboradores falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando colaboradores...")
@@ -1531,11 +1548,11 @@ class SyncRepository(
             pushCiclos().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Ciclos: $count sincronizados")
+                    Timber.tag(TAG).d("? Push Ciclos: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Ciclos falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Ciclos falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando ciclos...")
@@ -1543,11 +1560,11 @@ class SyncRepository(
             pushAcertos().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Acertos: $count sincronizados")
+                    Timber.tag(TAG).d("? Push Acertos: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Acertos falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Acertos falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando acertos...")
@@ -1555,11 +1572,11 @@ class SyncRepository(
             pushDespesas().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Despesas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Push Despesas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Despesas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Despesas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando despesas...")
@@ -1567,11 +1584,11 @@ class SyncRepository(
             pushContratos().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Contratos: $count sincronizados")
+                    Timber.tag(TAG).d("? Push Contratos: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Contratos falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Contratos falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando contratos...")
@@ -1580,11 +1597,11 @@ class SyncRepository(
             pushCategoriasDespesa().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Categorias Despesa: $count sincronizadas")
+                    Timber.tag(TAG).d("? Push Categorias Despesa: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Categorias Despesa falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Categorias Despesa falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando categorias de despesa...")
@@ -1592,11 +1609,11 @@ class SyncRepository(
             pushTiposDespesa().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Tipos Despesa: $count sincronizados")
+                    Timber.tag(TAG).d("? Push Tipos Despesa: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Tipos Despesa falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Tipos Despesa falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando tipos de despesa...")
@@ -1604,11 +1621,11 @@ class SyncRepository(
             pushMetas().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Metas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Push Metas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Metas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Metas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando metas...")
@@ -1616,11 +1633,11 @@ class SyncRepository(
             pushColaboradorRotas().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Colaborador Rotas: $count sincronizados")
+                    Timber.tag(TAG).d("? Push Colaborador Rotas: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Colaborador Rotas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Colaborador Rotas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando colaborador rotas...")
@@ -1628,11 +1645,11 @@ class SyncRepository(
             pushAditivoMesas().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Aditivo Mesas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Push Aditivo Mesas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Aditivo Mesas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Aditivo Mesas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando aditivos de mesa...")
@@ -1640,11 +1657,11 @@ class SyncRepository(
             pushContratoMesas().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Contrato Mesas: $count sincronizadas")
+                    Timber.tag(TAG).d("? Push Contrato Mesas: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Contrato Mesas falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Contrato Mesas falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando contratos de mesa...")
@@ -1652,11 +1669,11 @@ class SyncRepository(
             pushAssinaturasRepresentanteLegal().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Assinaturas Representante Legal: $count sincronizadas")
+                    Timber.tag(TAG).d("? Push Assinaturas Representante Legal: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Assinaturas Representante Legal falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Assinaturas Representante Legal falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando assinaturas do representante legal...")
@@ -1664,11 +1681,11 @@ class SyncRepository(
             pushLogsAuditoria().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Logs Auditoria: $count sincronizados")
+                    Timber.tag(TAG).d("? Push Logs Auditoria: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Logs Auditoria falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Logs Auditoria falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando logs de auditoria...")
@@ -1677,11 +1694,11 @@ class SyncRepository(
             pushPanoEstoque().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push PanoEstoque: $count sincronizados")
+                    Timber.tag(TAG).d("? Push PanoEstoque: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push PanoEstoque falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push PanoEstoque falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando panos em estoque...")
@@ -1689,11 +1706,11 @@ class SyncRepository(
             pushMesaVendida().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push MesaVendida: $count sincronizadas")
+                    Timber.tag(TAG).d("? Push MesaVendida: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push MesaVendida falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push MesaVendida falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando mesas vendidas...")
@@ -1701,11 +1718,11 @@ class SyncRepository(
             pushStockItem().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push StockItem: $count sincronizados")
+                    Timber.tag(TAG).d("? Push StockItem: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push StockItem falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push StockItem falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando itens de estoque...")
@@ -1713,11 +1730,11 @@ class SyncRepository(
             pushMesaReformada().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push MesaReformada: $count sincronizadas")
+                    Timber.tag(TAG).d("? Push MesaReformada: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push MesaReformada falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push MesaReformada falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando mesas reformadas...")
@@ -1725,11 +1742,11 @@ class SyncRepository(
             pushPanoMesa().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push PanoMesa: $count sincronizados")
+                    Timber.tag(TAG).d("? Push PanoMesa: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push PanoMesa falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push PanoMesa falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando panos de mesa...")
@@ -1737,11 +1754,11 @@ class SyncRepository(
             pushHistoricoManutencaoMesa().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push HistoricoManutencaoMesa: $count sincronizados")
+                    Timber.tag(TAG).d("? Push HistoricoManutencaoMesa: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push HistoricoManutencaoMesa falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push HistoricoManutencaoMesa falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando hist�rico de manuten��o das mesas...")
@@ -1749,11 +1766,11 @@ class SyncRepository(
             pushHistoricoManutencaoVeiculo().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push HistoricoManutencaoVeiculo: $count sincronizados")
+                    Timber.tag(TAG).d("? Push HistoricoManutencaoVeiculo: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push HistoricoManutencaoVeiculo falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push HistoricoManutencaoVeiculo falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando hist�rico de manuten��o de ve�culos...")
@@ -1761,11 +1778,11 @@ class SyncRepository(
             pushHistoricoCombustivelVeiculo().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push HistoricoCombustivelVeiculo: $count sincronizados")
+                    Timber.tag(TAG).d("? Push HistoricoCombustivelVeiculo: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push HistoricoCombustivelVeiculo falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push HistoricoCombustivelVeiculo falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando hist�rico de combust�vel dos ve�culos...")
@@ -1773,11 +1790,11 @@ class SyncRepository(
             pushVeiculos().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Veiculos: $count sincronizados")
+                    Timber.tag(TAG).d("? Push Veiculos: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Veiculos falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Veiculos falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando ve�culos...")
@@ -1785,11 +1802,11 @@ class SyncRepository(
             pushMetaColaborador().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Meta Colaborador: $count sincronizadas")
+                    Timber.tag(TAG).d("? Push Meta Colaborador: $count sincronizadas")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Meta Colaborador falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Meta Colaborador falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando metas por colaborador...")
@@ -1797,11 +1814,11 @@ class SyncRepository(
             pushEquipments().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
-                    Log.d(TAG, "? Push Equipments: $count sincronizados")
+                    Timber.tag(TAG).d("? Push Equipments: $count sincronizados")
                 },
                 onFailure = { e ->
                     failedCount++
-                    Log.e(TAG, "? Push Equipments falhou: ${e.message}", e)
+                    Timber.tag(TAG).e("? Push Equipments falhou: ${e.message}", e)
                 }
             )
             progressTracker?.advance("Enviando equipamentos...")
@@ -1813,15 +1830,15 @@ class SyncRepository(
                 failedOperations = appRepository.contarOperacoesSyncFalhadas()
             )
             
-            Log.d(TAG, "? ========== SINCRONIZA��O PUSH CONCLU�DA ==========")
-            Log.d(TAG, "?? Total enviado: $totalSyncCount itens")
-            Log.d(TAG, "? Total de falhas: $failedCount dom�nios")
-            Log.d(TAG, "? Timestamp: ${System.currentTimeMillis()}")
+            Timber.tag(TAG).d("? ========== SINCRONIZA��O PUSH CONCLU�DA ==========")
+            Timber.tag(TAG).d("?? Total enviado: $totalSyncCount itens")
+            Timber.tag(TAG).d("? Total de falhas: $failedCount dom�nios")
+            Timber.tag(TAG).d("? Timestamp: ${System.currentTimeMillis()}")
             
             Result.success(Unit)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro na sincroniza��o Push: ${e.message}", e)
+            Timber.tag(TAG).e("Erro na sincroniza��o Push: ${e.message}", e)
             _syncStatus.value = _syncStatus.value.copy(
                 isSyncing = false,
                 error = e.message
@@ -1839,15 +1856,15 @@ class SyncRepository(
     suspend fun hasDataInCloud(): Boolean {
         return try {
             if (!networkUtils.isConnected()) {
-                Log.d(TAG, "?? Verificando dados na nuvem: dispositivo offline")
+                Timber.tag(TAG).d("?? Verificando dados na nuvem: dispositivo offline")
                 return false
             }
             
-            Log.d(TAG, "?? Verificando se h� dados na nuvem...")
+            Timber.tag(TAG).d("?? Verificando se h� dados na nuvem...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_ROTAS)
             val snapshot = collectionRef.limit(1).get().await()
             val hasData = !snapshot.isEmpty
-            Log.d(TAG, "?? Dados na nuvem encontrados: $hasData")
+            Timber.tag(TAG).d("?? Dados na nuvem encontrados: $hasData")
             hasData
         } catch (e: FirebaseFirestoreException) {
             // ? CORRE��O: Se for PERMISSION_DENIED e usu�rio est� logado localmente,
@@ -1855,15 +1872,15 @@ class SyncRepository(
             if (e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
                 val userId = userSessionManager.getCurrentUserId()
                 if (userId != 0L) {
-                    Log.w(TAG, "?? PERMISSION_DENIED ao verificar nuvem, mas usu�rio est� logado localmente (ID: $userId)")
-                    Log.w(TAG, "?? Assumindo que h� dados na nuvem para permitir sincroniza��o")
+                    Timber.tag(TAG).w("?? PERMISSION_DENIED ao verificar nuvem, mas usu�rio est� logado localmente (ID: $userId)")
+                    Timber.tag(TAG).w("?? Assumindo que h� dados na nuvem para permitir sincroniza��o")
                     return true // Assumir que h� dados para permitir tentar sincronizar
                 }
             }
-            Log.e(TAG, "? Erro ao verificar dados na nuvem: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro ao verificar dados na nuvem: ${e.message}", e)
             false
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro ao verificar dados na nuvem: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro ao verificar dados na nuvem: ${e.message}", e)
             false
         }
     }
@@ -1877,61 +1894,61 @@ class SyncRepository(
      * - PULL depois: Baixa atualiza��es da nuvem (n�o sobrescreve se local for mais recente)
      */
     suspend fun syncBidirectional(onProgress: ((SyncProgress) -> Unit)? = null): Result<Unit> {
-        Log.d(TAG, "?? syncBidirectional() CHAMADO - IN�CIO")
+        Timber.tag(TAG).d("?? syncBidirectional() CHAMADO - IN�CIO")
         return try {
-            Log.d(TAG, "?? ========== INICIANDO SINCRONIZA��O BIDIRECIONAL ==========")
-            Log.d(TAG, "Iniciando sincroniza��o bidirecional...")
+            Timber.tag(TAG).d("?? ========== INICIANDO SINCRONIZA��O BIDIRECIONAL ==========")
+            Timber.tag(TAG).d("Iniciando sincroniza��o bidirecional...")
             
             // ? CORRE��O CR�TICA: Capturar timestamp ANTES de fazer PUSH
             // Isso garante que pr�xima sync incremental n�o perca dados que foram enviados agora
             val timestampBeforePush = System.currentTimeMillis()
-            Log.d(TAG, "   ? Timestamp capturado ANTES do push: $timestampBeforePush (${Date(timestampBeforePush)})")
+            Timber.tag(TAG).d("   ? Timestamp capturado ANTES do push: $timestampBeforePush (${Date(timestampBeforePush)})")
             
             val progressTracker = onProgress?.let { ProgressTracker(TOTAL_SYNC_OPERATIONS, it).apply { start() } }
             
             // ? CORRIGIDO: 1. PUSH primeiro (enviar dados locais para preservar)
             // Isso garante que dados novos locais sejam enviados antes de baixar da nuvem
-            Log.d(TAG, "?? Passo 1: Executando PUSH (enviar dados locais para nuvem)...")
+            Timber.tag(TAG).d("?? Passo 1: Executando PUSH (enviar dados locais para nuvem)...")
             val pushResult = syncPush(progressTracker)
             if (pushResult.isFailure) {
-                Log.w(TAG, "?? Push falhou: ${pushResult.exceptionOrNull()?.message}")
-                Log.w(TAG, "?? Continuando com Pull mesmo assim...")
+                Timber.tag(TAG).w("?? Push falhou: ${pushResult.exceptionOrNull()?.message}")
+                Timber.tag(TAG).w("?? Continuando com Pull mesmo assim...")
             } else {
-                Log.d(TAG, "? Push conclu�do com sucesso - dados locais preservados na nuvem")
+                Timber.tag(TAG).d("? Push conclu�do com sucesso - dados locais preservados na nuvem")
             }
             
             // ? CORRE��O: Aguardar pequeno delay para garantir que Firestore processou
             // Isso evita race condition onde PULL ocorre antes que Firestore salve dados do PUSH
-            Log.d(TAG, "   ?? Aguardando 500ms para propaga��o do Firestore...")
+            Timber.tag(TAG).d("   ?? Aguardando 500ms para propaga��o do Firestore...")
             kotlinx.coroutines.delay(500) // Meio segundo para propaga��o
             
             // ? CORRIGIDO: 2. PULL depois (atualizar dados locais da nuvem)
             // O pull n�o sobrescreve dados locais mais recentes (verifica��o de timestamp)
-            Log.d(TAG, "?? Passo 2: Executando PULL (importar atualiza��es da nuvem)...")
-            Log.d(TAG, "   ?? Usando timestamp capturado ANTES do push: $timestampBeforePush")
+            Timber.tag(TAG).d("?? Passo 2: Executando PULL (importar atualiza��es da nuvem)...")
+            Timber.tag(TAG).d("   ?? Usando timestamp capturado ANTES do push: $timestampBeforePush")
             val pullResult = syncPull(progressTracker, timestampBeforePush)
             if (pullResult.isFailure) {
-                Log.w(TAG, "?? Pull falhou: ${pullResult.exceptionOrNull()?.message}")
-                Log.w(TAG, "?? Mas Push pode ter sido bem-sucedido")
+                Timber.tag(TAG).w("?? Pull falhou: ${pullResult.exceptionOrNull()?.message}")
+                Timber.tag(TAG).w("?? Mas Push pode ter sido bem-sucedido")
             } else {
-                Log.d(TAG, "? Pull conclu�do com sucesso - dados locais atualizados")
+                Timber.tag(TAG).d("? Pull conclu�do com sucesso - dados locais atualizados")
             }
             
             if (pullResult.isSuccess && pushResult.isSuccess) {
-                Log.d(TAG, "? ========== SINCRONIZA��O BIDIRECIONAL CONCLU�DA COM SUCESSO ==========")
+                Timber.tag(TAG).d("? ========== SINCRONIZA��O BIDIRECIONAL CONCLU�DA COM SUCESSO ==========")
                 // ? N�O salvar global metadata aqui - j� foi salvo por entidade com timestampOverride
                 progressTracker?.complete()
                 Result.success(Unit)
             } else {
                 val errorMsg = "Sincroniza��o parcial: Push=${pushResult.isSuccess}, Pull=${pullResult.isSuccess}"
-                Log.w(TAG, "?? $errorMsg")
+                Timber.tag(TAG).w("?? $errorMsg")
                 progressTracker?.completeWithMessage("Sincroniza��o parcial conclu�da")
                 Result.failure(Exception(errorMsg))
             }
             
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro na sincroniza��o bidirecional: ${e.message}", e)
-            Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
+            Timber.tag(TAG).e("? Erro na sincroniza��o bidirecional: ${e.message}", e)
+            Timber.tag(TAG).e("   Stack trace: ${e.stackTraceToString()}")
             onProgress?.invoke(SyncProgress(100, "Sincroniza��o falhou"))
             Result.failure(e)
         }
@@ -1957,9 +1974,9 @@ class SyncRepository(
             appRepository.inserirOperacaoSync(entity)
             val pendingCount = runCatching { appRepository.contarOperacoesSyncPendentes() }.getOrDefault(_syncStatus.value.pendingOperations + 1)
             _syncStatus.value = _syncStatus.value.copy(pendingOperations = pendingCount)
-            Log.d(TAG, "?? Opera��o enfileirada: ${operation.type} - entidade=${operation.entityType}, id=${operation.entityId}")
+            Timber.tag(TAG).d("?? Opera��o enfileirada: ${operation.type} - entidade=${operation.entityType}, id=${operation.entityId}")
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro ao enfileirar opera��o ${operation.entityId}: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro ao enfileirar opera��o ${operation.entityId}: ${e.message}", e)
         }
     }
     
@@ -1968,18 +1985,18 @@ class SyncRepository(
      */
     suspend fun processSyncQueue(): Result<Unit> {
         return try {
-            Log.d(TAG, "?? processSyncQueue() INICIADO")
+            Timber.tag(TAG).d("?? processSyncQueue() INICIADO")
             if (!networkUtils.isConnected()) {
-                Log.w(TAG, "?? Fila de sincroniza��o n�o processada: dispositivo offline")
+                Timber.tag(TAG).w("?? Fila de sincroniza��o n�o processada: dispositivo offline")
                 return Result.failure(Exception("Dispositivo offline - fila pendente"))
             }
             
             // ? CORRE��O: Verificar quantas opera��es existem antes de processar
             val totalPendingBefore = runCatching { appRepository.contarOperacoesSyncPendentes() }.getOrDefault(0)
-            Log.d(TAG, "?? Total de opera��es pendentes na fila: $totalPendingBefore")
+            Timber.tag(TAG).d("?? Total de opera��es pendentes na fila: $totalPendingBefore")
             
             if (totalPendingBefore == 0) {
-                Log.d(TAG, "?? Nenhuma opera��o pendente na fila - encerrando processamento")
+                Timber.tag(TAG).d("?? Nenhuma opera��o pendente na fila - encerrando processamento")
                 return Result.success(Unit)
             }
             
@@ -1990,24 +2007,24 @@ class SyncRepository(
             
             while (true) {
                 // ? CORRE��O: Log antes de buscar opera��es
-                Log.d(TAG, "   ?? Buscando opera��es pendentes (limite: $QUEUE_BATCH_SIZE)...")
+                Timber.tag(TAG).d("   ?? Buscando opera��es pendentes (limite: $QUEUE_BATCH_SIZE)...")
                 val operations = appRepository.obterOperacoesSyncPendentesLimitadas(QUEUE_BATCH_SIZE)
-                Log.d(TAG, "   ?? Opera��es encontradas: ${operations.size}")
+                Timber.tag(TAG).d("   ?? Opera��es encontradas: ${operations.size}")
                 
                 if (operations.isEmpty()) {
                     if (batchNumber == 0) {
-                        Log.d(TAG, "?? Nenhuma opera��o pendente na fila")
+                        Timber.tag(TAG).d("?? Nenhuma opera��o pendente na fila")
                     } else {
-                        Log.d(TAG, "? Fila completamente processada ap�s $batchNumber lote(s)")
+                        Timber.tag(TAG).d("? Fila completamente processada ap�s $batchNumber lote(s)")
                     }
                     break
                 }
                 
                 batchNumber++
-                Log.d(TAG, "?? Processando lote $batchNumber: ${operations.size} opera��es pendentes")
+                Timber.tag(TAG).d("?? Processando lote $batchNumber: ${operations.size} opera��es pendentes")
                 // ? CORRE��O: Log detalhado de cada opera��o encontrada
                 operations.forEachIndexed { index, op ->
-                    Log.d(TAG, "   ?? Opera��o ${index + 1}: tipo=${op.operationType}, entidade=${op.entityType}, id=${op.entityId}, status=${op.status}")
+                    Timber.tag(TAG).d("   ?? Opera��o ${index + 1}: tipo=${op.operationType}, entidade=${op.entityType}, id=${op.entityId}, status=${op.status}")
                 }
                 var batchSuccessCount = 0
                 var batchFailureCount = 0
@@ -2017,13 +2034,13 @@ class SyncRepository(
                     appRepository.atualizarOperacaoSync(processingEntity)
                     
                     try {
-                        Log.d(TAG, "?? Processando opera��o: tipo=${entity.operationType}, entidade=${entity.entityType}, id=${entity.entityId}")
-                        Log.d(TAG, "   ?? Operation ID: ${entity.id}, Status: ${entity.status}, Retry: ${entity.retryCount}")
+                        Timber.tag(TAG).d("?? Processando opera��o: tipo=${entity.operationType}, entidade=${entity.entityType}, id=${entity.entityId}")
+                        Timber.tag(TAG).d("   ?? Operation ID: ${entity.id}, Status: ${entity.status}, Retry: ${entity.retryCount}")
                         processSingleSyncOperation(processingEntity)
                         appRepository.deletarOperacaoSync(processingEntity)
                         batchSuccessCount++
                         totalSuccessCount++
-                        Log.d(TAG, "? Opera��o processada com sucesso: tipo=${entity.operationType}, entidade=${entity.entityType}, id=${entity.entityId}")
+                        Timber.tag(TAG).d("? Opera��o processada com sucesso: tipo=${entity.operationType}, entidade=${entity.entityType}, id=${entity.entityId}")
                     } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
                         batchFailureCount++
                         totalFailureCount++
@@ -2033,10 +2050,10 @@ class SyncRepository(
                         } else {
                             SyncOperationStatus.PENDING.name
                         }
-                        Log.e(TAG, "? Erro do Firestore ao processar opera��o ${processingEntity.id} (tentativa $newRetryCount/${processingEntity.maxRetries}): ${e.code} - ${e.message}", e)
-                        Log.e(TAG, "   Tipo: ${processingEntity.operationType}, Entidade: ${processingEntity.entityType}, ID: ${processingEntity.entityId}")
+                        Timber.tag(TAG).e("? Erro do Firestore ao processar opera��o ${processingEntity.id} (tentativa $newRetryCount/${processingEntity.maxRetries}): ${e.code} - ${e.message}", e)
+                        Timber.tag(TAG).e("   Tipo: ${processingEntity.operationType}, Entidade: ${processingEntity.entityType}, ID: ${processingEntity.entityId}")
                         if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
-                            Log.e(TAG, "   ?? PERMISSION_DENIED: Verifique as regras do Firestore para ${processingEntity.operationType} em ${processingEntity.entityType}")
+                            Timber.tag(TAG).e("   ?? PERMISSION_DENIED: Verifique as regras do Firestore para ${processingEntity.operationType} em ${processingEntity.entityType}")
                         }
                         appRepository.atualizarOperacaoSync(
                             processingEntity.copy(
@@ -2054,9 +2071,9 @@ class SyncRepository(
                         } else {
                             SyncOperationStatus.PENDING.name
                         }
-                        Log.e(TAG, "? Erro ao processar opera��o ${processingEntity.id} (tentativa $newRetryCount/${processingEntity.maxRetries}): ${e.message}", e)
-                        Log.e(TAG, "   Tipo: ${processingEntity.operationType}, Entidade: ${processingEntity.entityType}, ID: ${processingEntity.entityId}")
-                        Log.e(TAG, "   ?? Stack trace: ${e.stackTraceToString()}")
+                        Timber.tag(TAG).e("? Erro ao processar opera��o ${processingEntity.id} (tentativa $newRetryCount/${processingEntity.maxRetries}): ${e.message}", e)
+                        Timber.tag(TAG).e("   Tipo: ${processingEntity.operationType}, Entidade: ${processingEntity.entityType}, ID: ${processingEntity.entityId}")
+                        Timber.tag(TAG).e("   ?? Stack trace: ${e.stackTraceToString()}")
                         appRepository.atualizarOperacaoSync(
                             processingEntity.copy(
                                 status = newStatus,
@@ -2067,7 +2084,7 @@ class SyncRepository(
                     }
                 }
                 
-                Log.d(TAG, "?? Lote $batchNumber processado: sucesso=$batchSuccessCount, falhas=$batchFailureCount")
+                Timber.tag(TAG).d("?? Lote $batchNumber processado: sucesso=$batchSuccessCount, falhas=$batchFailureCount")
             }
             
             val pendingCount = runCatching { appRepository.contarOperacoesSyncPendentes() }.getOrDefault(0)
@@ -2077,10 +2094,10 @@ class SyncRepository(
                 failedOperations = failedCount
             )
             
-            Log.d(TAG, "?? Fila completamente processada: total sucesso=$totalSuccessCount, total falhas=$totalFailureCount, pendentes=$pendingCount, falhadas=$failedCount")
+            Timber.tag(TAG).d("?? Fila completamente processada: total sucesso=$totalSuccessCount, total falhas=$totalFailureCount, pendentes=$pendingCount, falhadas=$failedCount")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro ao processar fila de sincroniza��o: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro ao processar fila de sincroniza��o: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -2095,11 +2112,11 @@ class SyncRepository(
         }
         
         // ? CORRE��O: Logs detalhados para debug
-        Log.d(TAG, "?? Processando opera��o �nica:")
-        Log.d(TAG, "   Tipo: ${operation.operationType}")
-        Log.d(TAG, "   Entidade: ${operation.entityType}")
-        Log.d(TAG, "   Document ID: $documentId")
-        Log.d(TAG, "   Collection Path: ${collectionRef.path}")
+        Timber.tag(TAG).d("?? Processando opera��o �nica:")
+        Timber.tag(TAG).d("   Tipo: ${operation.operationType}")
+        Timber.tag(TAG).d("   Entidade: ${operation.entityType}")
+        Timber.tag(TAG).d("   Document ID: $documentId")
+        Timber.tag(TAG).d("   Collection Path: ${collectionRef.path}")
         
         when (operationType) {
             SyncOperationType.CREATE, SyncOperationType.UPDATE -> {
@@ -2107,56 +2124,56 @@ class SyncRepository(
                 val mutableData = rawMap.toMutableMap()
                 mutableData["lastModified"] = FieldValue.serverTimestamp()
                 mutableData["syncTimestamp"] = FieldValue.serverTimestamp()
-                Log.d(TAG, "?? Executando ${operation.operationType} no documento $documentId")
+                Timber.tag(TAG).d("?? Executando ${operation.operationType} no documento $documentId")
                 collectionRef.document(documentId).set(mutableData).await()
-                Log.d(TAG, "? ${operation.operationType} executado com sucesso no documento $documentId")
+                Timber.tag(TAG).d("? ${operation.operationType} executado com sucesso no documento $documentId")
             }
             SyncOperationType.DELETE -> {
-                Log.d(TAG, "??? ========== INICIANDO DELETE ==========")
-                Log.d(TAG, "   Tipo de entidade: ${operation.entityType}")
-                Log.d(TAG, "   Document ID: $documentId")
-                Log.d(TAG, "   Collection Path: ${collectionRef.path}")
-                Log.d(TAG, "   Collection Name: ${collectionRef.id}")
-                Log.d(TAG, "   Document Path completo: ${collectionRef.path}/$documentId")
+                Timber.tag(TAG).d("??? ========== INICIANDO DELETE ==========")
+                Timber.tag(TAG).d("   Tipo de entidade: ${operation.entityType}")
+                Timber.tag(TAG).d("   Document ID: $documentId")
+                Timber.tag(TAG).d("   Collection Path: ${collectionRef.path}")
+                Timber.tag(TAG).d("   Collection Name: ${collectionRef.id}")
+                Timber.tag(TAG).d("   Document Path completo: ${collectionRef.path}/$documentId")
                 
                 val documentRef = collectionRef.document(documentId)
                 
                 // ? CORRE��O: Verificar se o documento existe antes de deletar
                 try {
-                    Log.d(TAG, "   ?? Verificando exist�ncia do documento...")
+                    Timber.tag(TAG).d("   ?? Verificando exist�ncia do documento...")
                     val snapshot = documentRef.get().await()
                     if (snapshot.exists()) {
-                        Log.d(TAG, "   ?? Documento encontrado no Firestore!")
-                        Log.d(TAG, "   ?? Dados do documento: ${snapshot.data?.keys?.joinToString()}")
-                        Log.d(TAG, "   ??? Executando DELETE...")
+                        Timber.tag(TAG).d("   ?? Documento encontrado no Firestore!")
+                        Timber.tag(TAG).d("   ?? Dados do documento: ${snapshot.data?.keys?.joinToString()}")
+                        Timber.tag(TAG).d("   ??? Executando DELETE...")
                         documentRef.delete().await()
-                        Log.d(TAG, "? DELETE executado com sucesso no documento $documentId")
-                        Log.d(TAG, "   ? Verificando se foi deletado...")
+                        Timber.tag(TAG).d("? DELETE executado com sucesso no documento $documentId")
+                        Timber.tag(TAG).d("   ? Verificando se foi deletado...")
                         val verifySnapshot = documentRef.get().await()
                         if (!verifySnapshot.exists()) {
-                            Log.d(TAG, "   ? Confirmado: Documento foi deletado com sucesso")
+                            Timber.tag(TAG).d("   ? Confirmado: Documento foi deletado com sucesso")
                         } else {
-                            Log.w(TAG, "   ?? ATEN��O: Documento ainda existe ap�s DELETE!")
+                            Timber.tag(TAG).w("   ?? ATEN��O: Documento ainda existe ap�s DELETE!")
                         }
                     } else {
-                        Log.w(TAG, "?? Documento $documentId n�o existe no Firestore")
-                        Log.w(TAG, "   Caminho verificado: ${collectionRef.path}/$documentId")
-                        Log.w(TAG, "   Poss�veis causas: j� foi deletado, nunca existiu, ou caminho incorreto")
+                        Timber.tag(TAG).w("?? Documento $documentId n�o existe no Firestore")
+                        Timber.tag(TAG).w("   Caminho verificado: ${collectionRef.path}/$documentId")
+                        Timber.tag(TAG).w("   Poss�veis causas: j� foi deletado, nunca existiu, ou caminho incorreto")
                         // N�o lan�ar exce��o - considerar sucesso se j� n�o existe
                     }
                 } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
-                    Log.e(TAG, "? Erro do Firestore ao deletar documento $documentId:", e)
-                    Log.e(TAG, "   C�digo: ${e.code}")
-                    Log.e(TAG, "   Mensagem: ${e.message}")
-                    Log.e(TAG, "   Caminho: ${collectionRef.path}/$documentId")
+                    Timber.tag(TAG).e("? Erro do Firestore ao deletar documento $documentId:", e)
+                    Timber.tag(TAG).e("   C�digo: ${e.code}")
+                    Timber.tag(TAG).e("   Mensagem: ${e.message}")
+                    Timber.tag(TAG).e("   Caminho: ${collectionRef.path}/$documentId")
                     throw e
                 } catch (e: Exception) {
-                    Log.e(TAG, "? Erro geral ao deletar documento $documentId: ${e.message}", e)
-                    Log.e(TAG, "   Tipo: ${e.javaClass.simpleName}")
-                    Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
+                    Timber.tag(TAG).e("? Erro geral ao deletar documento $documentId: ${e.message}", e)
+                    Timber.tag(TAG).e("   Tipo: ${e.javaClass.simpleName}")
+                    Timber.tag(TAG).e("   Stack trace: ${e.stackTraceToString()}")
                     throw e
                 }
-                Log.d(TAG, "??? ========== DELETE FINALIZADO ==========")
+                Timber.tag(TAG).d("??? ========== DELETE FINALIZADO ==========")
             }
         }
     }
@@ -2187,11 +2204,11 @@ class SyncRepository(
             COLLECTION_CICLOS -> COLLECTION_CICLOS
             COLLECTION_METAS -> COLLECTION_METAS
             else -> {
-                Log.w(TAG, "?? Tipo de entidade desconhecido: $entityType (normalizado: $normalized), usando como nome de cole��o")
+                Timber.tag(TAG).w("?? Tipo de entidade desconhecido: $entityType (normalizado: $normalized), usando como nome de cole��o")
                 normalized
             }
         }
-        Log.d(TAG, "?? Mapeamento de entidade: '$entityType' -> cole��o '$collectionName'")
+        Timber.tag(TAG).d("?? Mapeamento de entidade: '$entityType' -> cole��o '$collectionName'")
         return getCollectionReference(firestore, collectionName)
     }
     
@@ -2211,7 +2228,7 @@ class SyncRepository(
         val entityType = COLLECTION_CLIENTES
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de clientes...")
+            Timber.tag(TAG).d("?? Iniciando pull de clientes...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_CLIENTES)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -2220,7 +2237,7 @@ class SyncRepository(
             
             if (canUseIncremental) {
                 // Tentar sincroniza��o incremental
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullClientesIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 
                 if (incrementalResult != null) {
@@ -2231,20 +2248,20 @@ class SyncRepository(
                         // Incremental adicionou registros ou j� existe base local
                         return incrementalResult
                     }
-                    Log.w(TAG, "?? Incremental retornou 0 clientes e base local est� vazia - executando pull COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Incremental retornou 0 clientes e base local est� vazia - executando pull COMPLETO como fallback")
                 } else {
                     // Incremental falhou, usar m�todo completo
-                    Log.w(TAG, "?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o - usando m�todo COMPLETO")
             }
             
             // M�todo completo (sempre funciona, mesmo c�digo que estava antes)
             pullClientesComplete(collectionRef, entityType, startTime, timestampOverride)
             
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de clientes: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de clientes: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -2270,7 +2287,7 @@ class SyncRepository(
                     lastSyncTimestamp = lastSyncTimestamp
                 )
             } catch (e: Exception) {
-                Log.w(TAG, "?? Erro ao executar query incremental de clientes: ${e.message}")
+                Timber.tag(TAG).w("?? Erro ao executar query incremental de clientes: ${e.message}")
                 return null
             }
             
@@ -2284,12 +2301,12 @@ class SyncRepository(
                 return Result.success(0)
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL (clientes) com filtro de rota: $totalDocuments documentos")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL (clientes) com filtro de rota: $totalDocuments documentos")
             
             val cacheStartTime = System.currentTimeMillis()
             val todosClientes = appRepository.obterTodosClientes().first()
             val clientesCache = todosClientes.associateBy { it.id }
-            Log.d(TAG, "   ?? Cache de clientes carregado: ${clientesCache.size} em ${System.currentTimeMillis() - cacheStartTime}ms")
+            Timber.tag(TAG).d("   ?? Cache de clientes carregado: ${clientesCache.size} em ${System.currentTimeMillis() - cacheStartTime}ms")
             
             val processStartTime = System.currentTimeMillis()
             var processedCount = 0
@@ -2303,7 +2320,7 @@ class SyncRepository(
                 processedCount++
                 if (processedCount % 50 == 0) {
                     val elapsed = System.currentTimeMillis() - processStartTime
-                    Log.d(TAG, "   ?? Progresso: $processedCount/$totalDocuments documentos processados (${elapsed}ms)")
+                    Timber.tag(TAG).d("   ?? Progresso: $processedCount/$totalDocuments documentos processados (${elapsed}ms)")
                 }
             }
             
@@ -2317,10 +2334,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull Clientes (INCREMENTAL) conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, docs=$totalDocuments")
+            Timber.tag(TAG).d("? Pull Clientes (INCREMENTAL) conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, docs=$totalDocuments")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro na sincroniza��o incremental: ${e.message}")
+            Timber.tag(TAG).w("?? Erro na sincroniza��o incremental: ${e.message}")
             null // Falhou, usar m�todo completo
         }
     }
@@ -2337,14 +2354,14 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val documents = fetchAllDocumentsWithRouteFilter(collectionRef, FIELD_ROTA_ID)
-            Log.d(TAG, "?? Total de clientes no Firestore (ap�s filtro de rota): ${documents.size}")
+            Timber.tag(TAG).d("?? Total de clientes no Firestore (ap�s filtro de rota): ${documents.size}")
             
             // ? OTIMIZADO: Carregar todos os clientes uma vez e criar cache em mem�ria
             val cacheStartTime = System.currentTimeMillis()
             val todosClientes = appRepository.obterTodosClientes().first()
             val clientesCache = todosClientes.associateBy { it.id }
             val cacheDuration = System.currentTimeMillis() - cacheStartTime
-            Log.d(TAG, "   ?? Cache de clientes carregado: ${clientesCache.size} clientes (${cacheDuration}ms)")
+            Timber.tag(TAG).d("   ?? Cache de clientes carregado: ${clientesCache.size} clientes (${cacheDuration}ms)")
             
             var syncCount = 0
             var skippedCount = 0
@@ -2363,11 +2380,11 @@ class SyncRepository(
                 // Log de progresso a cada 50 documentos
                 if (processedCount % 50 == 0) {
                     val elapsed = System.currentTimeMillis() - processStartTime
-                    Log.d(TAG, "   ?? Progresso: $processedCount/${documents.size} documentos processados (${elapsed}ms)")
+                    Timber.tag(TAG).d("   ?? Progresso: $processedCount/${documents.size} documentos processados (${elapsed}ms)")
                 }
             }
             val processDuration = System.currentTimeMillis() - processStartTime
-            Log.d(TAG, "   ?? Processamento de documentos: ${processDuration}ms")
+            Timber.tag(TAG).d("   ?? Processamento de documentos: ${processDuration}ms")
             
             val durationMs = System.currentTimeMillis() - startTime
             
@@ -2381,10 +2398,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull Clientes (COMPLETO) conclu�do: $syncCount sincronizados, $skippedCount pulados, $errorCount erros")
+            Timber.tag(TAG).d("? Pull Clientes (COMPLETO) conclu�do: $syncCount sincronizados, $skippedCount pulados, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de clientes: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull completo de clientes: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -2506,7 +2523,7 @@ class SyncRepository(
                     }
                     }
                 } catch (e: Exception) {
-            Log.e(TAG, "? Erro ao processar cliente ${doc.id}: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro ao processar cliente ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }
@@ -2563,38 +2580,38 @@ class SyncRepository(
         val entityType = COLLECTION_ROTAS
 
         return try {
-            Log.d(TAG, "?? Iniciando pull de rotas...")
+            Timber.tag(TAG).d("?? Iniciando pull de rotas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_ROTAS)
 
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
 
-            Log.d(TAG, "?? Rotas: lastSyncTimestamp=$lastSyncTimestamp, canUseIncremental=$canUseIncremental, allowRouteBootstrap=$allowRouteBootstrap")
+            Timber.tag(TAG).d("?? Rotas: lastSyncTimestamp=$lastSyncTimestamp, canUseIncremental=$canUseIncremental, allowRouteBootstrap=$allowRouteBootstrap")
 
             var incrementalExecutado = false
             if (canUseIncremental) {
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL de rotas (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL de rotas (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullRotasIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 incrementalExecutado = incrementalResult != null
                 if (incrementalResult != null) {
                     val syncedCount = incrementalResult.getOrElse { return incrementalResult }
                     val localCount = runCatching { appRepository.obterTodasRotas().first().size }.getOrDefault(0)
-                    Log.d(TAG, "?? Rotas incremental: syncedCount=$syncedCount, localCount=$localCount")
+                    Timber.tag(TAG).d("?? Rotas incremental: syncedCount=$syncedCount, localCount=$localCount")
                     if (syncedCount > 0 || localCount > 0) {
                         return incrementalResult
                     }
-                    Log.w(TAG, "?? Rotas: incremental trouxe $syncedCount registros com base local $localCount - executando pull completo")
+                    Timber.tag(TAG).w("?? Rotas: incremental trouxe $syncedCount registros com base local $localCount - executando pull completo")
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de rotas falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de rotas falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de rotas - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de rotas - usando m�todo COMPLETO")
             }
 
             return pullRotasComplete(collectionRef, entityType, startTime, incrementalExecutado, timestampOverride)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de rotas: ${e.message}", e)
-            Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
+            Timber.tag(TAG).e("? Erro no pull de rotas: ${e.message}", e)
+            Timber.tag(TAG).e("   Stack trace: ${e.stackTraceToString()}")
             Result.failure(e)
         }
     }
@@ -2608,10 +2625,10 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.get().await()
-            Log.d(TAG, "?? Pull COMPLETO de rotas - documentos recebidos: ${snapshot.documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de rotas - documentos recebidos: ${snapshot.documents.size}")
             
             if (snapshot.isEmpty) {
-                Log.w(TAG, "?? Nenhuma rota encontrada no Firestore")
+                Timber.tag(TAG).w("?? Nenhuma rota encontrada no Firestore")
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
                 return Result.success(0)
             }
@@ -2628,10 +2645,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull de rotas conclu�do (fallback incremental=$incrementalFallback): sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de rotas conclu�do (fallback incremental=$incrementalFallback): sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de rotas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull completo de rotas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -2649,16 +2666,16 @@ class SyncRepository(
                     .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
                     .orderBy("lastModified")
             } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao criar query incremental para rotas: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao criar query incremental para rotas: ${e.message}")
                 return null
             }
             
             val snapshot = incrementalQuery.get().await()
             val documents = snapshot.documents
-            Log.d(TAG, "?? Rotas - incremental retornou ${documents.size} documentos")
+            Timber.tag(TAG).d("?? Rotas - incremental retornou ${documents.size} documentos")
             
             if (documents.isEmpty()) {
-                Log.d(TAG, "? Nenhuma rota nova/alterada desde a �ltima sincroniza��o")
+                Timber.tag(TAG).d("? Nenhuma rota nova/alterada desde a �ltima sincroniza��o")
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
                 return Result.success(0)
             }
@@ -2675,10 +2692,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de rotas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de rotas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull incremental de rotas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull incremental de rotas: ${e.message}", e)
             null // For�ar fallback para m�todo completo
         }
     }
@@ -2716,7 +2733,7 @@ class SyncRepository(
                     
             // ? CORRE��O: Durante bootstrap, permitir todas as rotas temporariamente
             if (roomId != null && !allowRouteBootstrap && !shouldSyncRouteData(roomId, allowUnknown = false)) {
-                Log.d(TAG, "?? Rota ignorada por falta de acesso: ID=$roomId")
+                Timber.tag(TAG).d("?? Rota ignorada por falta de acesso: ID=$roomId")
                 return ProcessResult.Skipped
             }
             
@@ -2729,7 +2746,7 @@ class SyncRepository(
                             ?: System.currentTimeMillis()
                         
             if (roomId == null) {
-                Log.w(TAG, "?? Rota ${doc.id} sem roomId v�lido - criando registro local com ID autogerado")
+                Timber.tag(TAG).w("?? Rota ${doc.id} sem roomId v�lido - criando registro local com ID autogerado")
                         val rotaNova = Rota(
                             nome = nome,
                             descricao = rotaData["descricao"] as? String ?: "",
@@ -2743,7 +2760,7 @@ class SyncRepository(
                         )
                         val insertedId = appRepository.inserirRota(rotaNova)
                 rotasCache[insertedId] = rotaNova.copy(id = insertedId)
-                Log.d(TAG, "? Rota criada sem roomId: ${rotaNova.nome} (ID Room: $insertedId)")
+                Timber.tag(TAG).d("? Rota criada sem roomId: ${rotaNova.nome} (ID Room: $insertedId)")
                 ProcessResult.Synced
             } else {
                     val rotaFirestore = Rota(
@@ -2766,15 +2783,15 @@ class SyncRepository(
                 return if (localRota == null || serverTimestamp > localTimestamp) {
                     appRepository.inserirRota(rotaFirestore)
                     rotasCache[roomId] = rotaFirestore
-                    Log.d(TAG, "?? Rota sincronizada: ${rotaFirestore.nome} (ID=$roomId)")
+                    Timber.tag(TAG).d("?? Rota sincronizada: ${rotaFirestore.nome} (ID=$roomId)")
                     ProcessResult.Synced
                 } else {
-                    Log.d(TAG, "?? Rota mantida localmente (mais recente): ${rotaFirestore.nome} (ID=$roomId)")
+                    Timber.tag(TAG).d("?? Rota mantida localmente (mais recente): ${rotaFirestore.nome} (ID=$roomId)")
                     ProcessResult.Skipped
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro ao processar rota ${doc.id}: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro ao processar rota ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }
@@ -2788,7 +2805,7 @@ class SyncRepository(
         val entityType = COLLECTION_MESAS
         
         return try {
-            Log.d(TAG, "Iniciando pull de mesas...")
+            Timber.tag(TAG).d("Iniciando pull de mesas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -2797,13 +2814,13 @@ class SyncRepository(
             
             if (canUseIncremental) {
                 // Tentar sincroniza��o incremental
-                Log.d(TAG, "?? [DIAGNOSTICO] Iniciando Incremental Mesas")
-                Log.d(TAG, "?? [DIAGNOSTICO] lastSyncTimestamp (Long): $lastSyncTimestamp")
-                Log.d(TAG, "?? [DIAGNOSTICO] lastSyncTimestamp (Date): ${Date(lastSyncTimestamp)}")
-                Log.d(TAG, "?? [DIAGNOSTICO] timestampOverride: $timestampOverride")
-                Log.d(TAG, "?? [DIAGNOSTICO] CurrentTime: ${System.currentTimeMillis()}")
+                Timber.tag(TAG).d("?? [DIAGNOSTICO] Iniciando Incremental Mesas")
+                Timber.tag(TAG).d("?? [DIAGNOSTICO] lastSyncTimestamp (Long): $lastSyncTimestamp")
+                Timber.tag(TAG).d("?? [DIAGNOSTICO] lastSyncTimestamp (Date): ${Date(lastSyncTimestamp)}")
+                Timber.tag(TAG).d("?? [DIAGNOSTICO] timestampOverride: $timestampOverride")
+                Timber.tag(TAG).d("?? [DIAGNOSTICO] CurrentTime: ${System.currentTimeMillis()}")
                 
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullMesasIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 
                 if (incrementalResult != null) {
@@ -2812,24 +2829,24 @@ class SyncRepository(
                     
                     // ? VALIDA��O: Se incremental retornou 0 mas h� mesas locais, for�ar completo
                     if (syncedCount == 0 && localCount > 0) {
-                        Log.w(TAG, "?? Incremental retornou 0 mesas mas h� $localCount locais - executando pull COMPLETO como valida��o")
+                        Timber.tag(TAG).w("?? Incremental retornou 0 mesas mas h� $localCount locais - executando pull COMPLETO como valida��o")
                         return pullMesasComplete(collectionRef, entityType, startTime, timestampOverride)
                     }
                     
                     return incrementalResult
                 } else {
                     // Incremental falhou, usar m�todo completo
-                    Log.w(TAG, "?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o - usando m�todo COMPLETO")
             }
             
             // M�todo completo (sempre funciona, mesmo c�digo que estava antes)
             pullMesasComplete(collectionRef, entityType, startTime, timestampOverride)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de mesas: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull de mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -2854,10 +2871,10 @@ class SyncRepository(
             resetRouteFilters()
             val todasMesas = appRepository.obterTodasMesas().first()
             val mesasCache = todasMesas.associateBy { it.id }
-            Log.d(TAG, "   ?? Cache de mesas carregado: ${mesasCache.size} mesas locais")
+            Timber.tag(TAG).d("   ?? Cache de mesas carregado: ${mesasCache.size} mesas locais")
             
             // Tentar query incremental primeiro (otimiza��o)
-            Log.d(TAG, "?? [DIAGNOSTICO] Executando Query: collectionRef.whereGreaterThan('lastModified', ${Date(lastSyncTimestamp)})")
+            Timber.tag(TAG).d("?? [DIAGNOSTICO] Executando Query: collectionRef.whereGreaterThan('lastModified', ${Date(lastSyncTimestamp)})")
             val incrementalMesas = try {
                 collectionRef
                     .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
@@ -2866,30 +2883,30 @@ class SyncRepository(
                     .await()
                     .documents
             } catch (e: Exception) {
-                Log.w(TAG, "?? Query incremental falhou, buscando todas as mesas: ${e.message}")
+                Timber.tag(TAG).w("?? Query incremental falhou, buscando todas as mesas: ${e.message}")
                 emptyList()
             }
             
-            Log.d(TAG, "?? [DIAGNOSTICO] Query retornou ${incrementalMesas.size} documentos")
+            Timber.tag(TAG).d("?? [DIAGNOSTICO] Query retornou ${incrementalMesas.size} documentos")
             incrementalMesas.forEach { doc ->
                 val lm = doc.getTimestamp("lastModified")?.toDate()
-                Log.d(TAG, "?? [DIAGNOSTICO] Doc encontrado: ${doc.id}, lastModified: $lm (${lm?.time})")
+                Timber.tag(TAG).d("?? [DIAGNOSTICO] Doc encontrado: ${doc.id}, lastModified: $lm (${lm?.time})")
             }
             
             // ? CORRE��O: Se incremental retornou 0 mas h� mesas locais, buscar TODAS
             val allMesas = if (incrementalMesas.isEmpty() && mesasCache.isNotEmpty()) {
-                Log.w(TAG, "?? Incremental retornou 0 mesas mas h� ${mesasCache.size} locais - buscando TODAS para garantir sincroniza��o")
+                Timber.tag(TAG).w("?? Incremental retornou 0 mesas mas h� ${mesasCache.size} locais - buscando TODAS para garantir sincroniza��o")
                 try {
                     collectionRef.get().await().documents
                 } catch (e: Exception) {
-                    Log.w(TAG, "?? Erro ao buscar todas as mesas: ${e.message}")
+                    Timber.tag(TAG).w("?? Erro ao buscar todas as mesas: ${e.message}")
                     return null
                 }
             } else {
                 incrementalMesas
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL: ${allMesas.size} documentos encontrados")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL: ${allMesas.size} documentos encontrados")
             
             var syncCount = 0
             var skippedCount = 0
@@ -2950,12 +2967,12 @@ class SyncRepository(
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao sincronizar mesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao sincronizar mesa ${doc.id}: ${e.message}", e)
                 }
             }
             
             val processDuration = System.currentTimeMillis() - processStartTime
-            Log.d(TAG, "   ?? Processamento de documentos: ${processDuration}ms")
+            Timber.tag(TAG).d("   ?? Processamento de documentos: ${processDuration}ms")
             
             val durationMs = System.currentTimeMillis() - startTime
             
@@ -2969,13 +2986,13 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull Mesas (INCREMENTAL) conclu�do:")
-            Log.d(TAG, "   ?? $syncCount sincronizadas, $skippedCount puladas, $errorCount erros")
-            Log.d(TAG, "   ?? Dura��o: ${durationMs}ms")
+            Timber.tag(TAG).d("? Pull Mesas (INCREMENTAL) conclu�do:")
+            Timber.tag(TAG).d("   ?? $syncCount sincronizadas, $skippedCount puladas, $errorCount erros")
+            Timber.tag(TAG).d("   ?? Dura��o: ${durationMs}ms")
             
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro na sincroniza��o incremental: ${e.message}")
+            Timber.tag(TAG).w("?? Erro na sincroniza��o incremental: ${e.message}")
             null // Falhou, usar m�todo completo
         }
     }
@@ -3037,7 +3054,7 @@ class SyncRepository(
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "Erro ao sincronizar mesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao sincronizar mesa ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -3053,10 +3070,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull Mesas (COMPLETO) conclu�do: $syncCount sincronizadas, $skippedCount puladas, $errorCount erros")
+            Timber.tag(TAG).d("? Pull Mesas (COMPLETO) conclu�do: $syncCount sincronizadas, $skippedCount puladas, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de mesas: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull de mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -3069,37 +3086,37 @@ class SyncRepository(
         val entityType = COLLECTION_COLABORADORES
 
         return try {
-            Log.d(TAG, "Iniciando pull de colaboradores...")
+            Timber.tag(TAG).d("Iniciando pull de colaboradores...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_COLABORADORES)
 
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
 
-            Log.d(TAG, "?? Colaboradores: lastSyncTimestamp=$lastSyncTimestamp, canUseIncremental=$canUseIncremental, allowRouteBootstrap=$allowRouteBootstrap")
+            Timber.tag(TAG).d("?? Colaboradores: lastSyncTimestamp=$lastSyncTimestamp, canUseIncremental=$canUseIncremental, allowRouteBootstrap=$allowRouteBootstrap")
 
             var incrementalExecutado = false
             if (canUseIncremental) {
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL de colaboradores (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL de colaboradores (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullColaboradoresIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 incrementalExecutado = incrementalResult != null
                 if (incrementalResult != null) {
                     val syncedCount = incrementalResult.getOrElse { return incrementalResult }
                     val localCount = runCatching { appRepository.obterTodosColaboradores().first().size }.getOrDefault(0)
-                    Log.d(TAG, "?? Colaboradores incremental: syncedCount=$syncedCount, localCount=$localCount")
+                    Timber.tag(TAG).d("?? Colaboradores incremental: syncedCount=$syncedCount, localCount=$localCount")
                     if (syncedCount > 0 || localCount > 0) {
                         return incrementalResult
                     }
-                    Log.w(TAG, "?? Colaboradores: incremental trouxe $syncedCount registros com base local $localCount - executando pull COMPLETO")
+                    Timber.tag(TAG).w("?? Colaboradores: incremental trouxe $syncedCount registros com base local $localCount - executando pull COMPLETO")
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de colaboradores falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de colaboradores falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de colaboradores - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de colaboradores - usando m�todo COMPLETO")
             }
 
             return pullColaboradoresComplete(collectionRef, entityType, startTime, incrementalExecutado, timestampOverride)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de colaboradores: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull de colaboradores: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -3113,26 +3130,26 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.get().await()
-            Log.d(TAG, "?? Pull COMPLETO de colaboradores - documentos recebidos: ${snapshot.documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de colaboradores - documentos recebidos: ${snapshot.documents.size}")
             
             if (snapshot.isEmpty) {
-                Log.w(TAG, "?? Nenhum colaborador encontrado no Firestore")
+                Timber.tag(TAG).w("?? Nenhum colaborador encontrado no Firestore")
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
                 return Result.success(0)
             }
             
             // ? LOG DETALHADO: Listar todos os documentos recebidos
-            Log.d(TAG, "?? Documentos de colaboradores recebidos:")
+            Timber.tag(TAG).d("?? Documentos de colaboradores recebidos:")
             snapshot.documents.forEachIndexed { index, doc ->
                 val email = (doc.data?.get("email") as? String) ?: "sem email"
                 val nome = (doc.data?.get("nome") as? String) ?: "sem nome"
-                Log.d(TAG, "   ${index + 1}. ID=${doc.id}, Email=$email, Nome=$nome")
+                Timber.tag(TAG).d("   ${index + 1}. ID=${doc.id}, Email=$email, Nome=$nome")
             }
             
             val colaboradoresCache = appRepository.obterTodosColaboradores().first().associateBy { it.id }.toMutableMap()
-            Log.d(TAG, "?? Cache local de colaboradores: ${colaboradoresCache.size} colaboradores")
+            Timber.tag(TAG).d("?? Cache local de colaboradores: ${colaboradoresCache.size} colaboradores")
             colaboradoresCache.values.forEach { col ->
-                Log.d(TAG, "   - ID=${col.id}, Email=${col.email}, Nome=${col.nome}")
+                Timber.tag(TAG).d("   - ID=${col.id}, Email=${col.email}, Nome=${col.nome}")
             }
             
             val (syncCount, skippedCount, errorCount) = processColaboradoresDocuments(snapshot.documents, colaboradoresCache)
@@ -3146,10 +3163,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull de colaboradores conclu�do (fallback incremental=$incrementalFallback): sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de colaboradores conclu�do (fallback incremental=$incrementalFallback): sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull completo de colaboradores: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull completo de colaboradores: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -3167,13 +3184,13 @@ class SyncRepository(
                     .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
                     .orderBy("lastModified")
                 } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao criar query incremental para colaboradores: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao criar query incremental para colaboradores: ${e.message}")
                 return null
             }
             
             val snapshot = incrementalQuery.get().await()
             val documents = snapshot.documents
-            Log.d(TAG, "?? Colaboradores - incremental retornou ${documents.size} documentos")
+            Timber.tag(TAG).d("?? Colaboradores - incremental retornou ${documents.size} documentos")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
@@ -3192,10 +3209,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de colaboradores: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de colaboradores: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull incremental de colaboradores: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull incremental de colaboradores: ${e.message}", e)
             null
         }
     }
@@ -3208,29 +3225,29 @@ class SyncRepository(
         var skippedCount = 0
         var errorCount = 0
         
-        Log.d(TAG, "?? Processando ${documents.size} documentos de colaboradores...")
+        Timber.tag(TAG).d("?? Processando ${documents.size} documentos de colaboradores...")
         
         documents.forEachIndexed { index, doc ->
             val email = (doc.data?.get("email") as? String) ?: "sem email"
-            Log.d(TAG, "   [${index + 1}/${documents.size}] Processando: Email=$email, DocID=${doc.id}")
+            Timber.tag(TAG).d("   [${index + 1}/${documents.size}] Processando: Email=$email, DocID=${doc.id}")
             
             when (processColaboradorDocument(doc, colaboradoresCache)) {
                 ProcessResult.Synced -> {
                     syncCount++
-                    Log.d(TAG, "   ? Sincronizado: Email=$email")
+                    Timber.tag(TAG).d("   ? Sincronizado: Email=$email")
                 }
                 ProcessResult.Skipped -> {
                     skippedCount++
-                    Log.d(TAG, "   ?? Pulado: Email=$email")
+                    Timber.tag(TAG).d("   ?? Pulado: Email=$email")
                 }
                 ProcessResult.Error -> {
                     errorCount++
-                    Log.e(TAG, "   ? Erro: Email=$email")
+                    Timber.tag(TAG).e("   ? Erro: Email=$email")
                 }
             }
         }
         
-        Log.d(TAG, "?? Resultado do processamento: sync=$syncCount, skipped=$skippedCount, errors=$errorCount")
+        Timber.tag(TAG).d("?? Resultado do processamento: sync=$syncCount, skipped=$skippedCount, errors=$errorCount")
         return Triple(syncCount, skippedCount, errorCount)
     }
 
@@ -3240,7 +3257,7 @@ class SyncRepository(
     ): ProcessResult {
         return try {
             val colaboradorData = doc.data ?: run {
-                Log.w(TAG, "?? Colaborador ${doc.id} sem dados - pulando")
+                Timber.tag(TAG).w("?? Colaborador ${doc.id} sem dados - pulando")
                 return ProcessResult.Skipped
             }
             
@@ -3255,21 +3272,21 @@ class SyncRepository(
                 try {
                     val colaboradorExistente = appRepository.obterColaboradorPorEmail(colaboradorEmail)
                     if (colaboradorExistente != null) {
-                        Log.d(TAG, "✅ Colaborador encontrado por email (doc.id não numérico): $colaboradorEmail (ID local: ${colaboradorExistente.id}, DocID: ${doc.id})")
+                        Timber.tag(TAG).d("✅ Colaborador encontrado por email (doc.id não numérico): $colaboradorEmail (ID local: ${colaboradorExistente.id}, DocID: ${doc.id})")
                         colaboradorExistente.id
                     } else {
                         // Se não encontrou por email, gerar novo ID local
                         val todosColaboradores = appRepository.obterTodosColaboradores().first()
                         val novoId = (todosColaboradores.maxOfOrNull { it.id } ?: 0L) + 1L
-                        Log.d(TAG, "✅ Gerando novo ID local para colaborador com ID não numérico: $colaboradorEmail (Novo ID: $novoId, DocID: ${doc.id})")
+                        Timber.tag(TAG).d("✅ Gerando novo ID local para colaborador com ID não numérico: $colaboradorEmail (Novo ID: $novoId, DocID: ${doc.id})")
                         novoId
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "❌ Erro ao buscar colaborador por email: ${e.message}", e)
+                    Timber.tag(TAG).e("❌ Erro ao buscar colaborador por email: ${e.message}", e)
                     // Se der erro, gerar novo ID
                     val todosColaboradores = appRepository.obterTodosColaboradores().first()
                     val novoId = (todosColaboradores.maxOfOrNull { it.id } ?: 0L) + 1L
-                    Log.d(TAG, "✅ Gerando novo ID local após erro: $colaboradorEmail (Novo ID: $novoId)")
+                    Timber.tag(TAG).d("✅ Gerando novo ID local após erro: $colaboradorEmail (Novo ID: $novoId)")
                     novoId
                 }
             } else {
@@ -3283,34 +3300,34 @@ class SyncRepository(
                             try {
                                 val colaboradorExistente = appRepository.obterColaboradorPorEmail(colaboradorEmail)
                                 if (colaboradorExistente != null) {
-                                    Log.d(TAG, "✅ Colaborador encontrado por email (fallback): $colaboradorEmail (ID local: ${colaboradorExistente.id})")
+                                    Timber.tag(TAG).d("✅ Colaborador encontrado por email (fallback): $colaboradorEmail (ID local: ${colaboradorExistente.id})")
                                     return@run colaboradorExistente.id
                                 }
                             } catch (e: Exception) {
-                                Log.e(TAG, "❌ Erro ao buscar colaborador por email (fallback): ${e.message}", e)
+                                Timber.tag(TAG).e("❌ Erro ao buscar colaborador por email (fallback): ${e.message}", e)
                             }
                         }
-                        Log.w(TAG, "⚠️ Colaborador ${doc.id} sem ID válido e sem email encontrado - pulando")
-                        Log.w(TAG, "   doc.id: ${doc.id}")
-                        Log.w(TAG, "   roomId: ${colaboradorData["roomId"]}")
-                        Log.w(TAG, "   id: ${colaboradorData["id"]}")
+                        Timber.tag(TAG).w("⚠️ Colaborador ${doc.id} sem ID válido e sem email encontrado - pulando")
+                        Timber.tag(TAG).w("   doc.id: ${doc.id}")
+                        Timber.tag(TAG).w("   roomId: ${colaboradorData["roomId"]}")
+                        Timber.tag(TAG).w("   id: ${colaboradorData["id"]}")
                         return@run -1L
                     }
             }
             
             // ✅ CORREÇÃO: Verificar se conseguiu obter um ID válido
             if (colaboradorId <= 0L) {
-                Log.w(TAG, "⚠️ Colaborador ${doc.id} sem ID válido obtido - pulando")
+                Timber.tag(TAG).w("⚠️ Colaborador ${doc.id} sem ID válido obtido - pulando")
                 return ProcessResult.Skipped
             }
             
-            Log.d(TAG, "✅ Processando colaborador: ID=$colaboradorId, Email=$colaboradorEmail, DocID=${doc.id}, DocIdIsNumeric=$docIdIsNumeric")
+            Timber.tag(TAG).d("✅ Processando colaborador: ID=$colaboradorId, Email=$colaboradorEmail, DocID=${doc.id}, DocIdIsNumeric=$docIdIsNumeric")
             
             val colaboradorJson = gson.toJson(colaboradorData)
             val colaboradorFirestore = gson.fromJson(colaboradorJson, Colaborador::class.java)?.copy(id = colaboradorId)
                 ?: run {
-                    Log.e(TAG, "? Erro ao converter colaborador ${doc.id} do Firestore para objeto")
-                    Log.e(TAG, "   JSON gerado: $colaboradorJson")
+                    Timber.tag(TAG).e("? Erro ao converter colaborador ${doc.id} do Firestore para objeto")
+                    Timber.tag(TAG).e("   JSON gerado: $colaboradorJson")
                     return ProcessResult.Error
                 }
             
@@ -3327,11 +3344,11 @@ class SyncRepository(
                 try {
                     val encontrado = appRepository.obterColaboradorPorEmail(colaboradorFirestore.email)
                     if (encontrado != null) {
-                        Log.d(TAG, "?? Colaborador encontrado por email: ${colaboradorFirestore.email} (ID local: ${encontrado.id})")
+                        Timber.tag(TAG).d("?? Colaborador encontrado por email: ${colaboradorFirestore.email} (ID local: ${encontrado.id})")
                     }
                     encontrado
                 } catch (e: Exception) {
-                    Log.e(TAG, "? Erro ao buscar colaborador por email: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao buscar colaborador por email: ${e.message}", e)
                     null
                 }
             } else {
@@ -3345,7 +3362,7 @@ class SyncRepository(
                         // ✅ CORREÇÃO: Preservar status de aprovação local se colaborador já estiver aprovado
                         // Isso evita que aprovações locais sejam sobrescritas por dados antigos do Firestore
                         val colaboradorParaAtualizar = if (localColaborador.aprovado && !colaboradorFirestore.aprovado) {
-                            Log.w(TAG, "⚠️ Preservando status de aprovação local para colaborador ${colaboradorEmail} (ID: $colaboradorId)")
+                            Timber.tag(TAG).w("⚠️ Preservando status de aprovação local para colaborador ${colaboradorEmail} (ID: $colaboradorId)")
                             colaboradorFirestore.copy(
                                 aprovado = true,
                                 dataAprovacao = localColaborador.dataAprovacao,
@@ -3363,13 +3380,13 @@ class SyncRepository(
                 }
                 // ? CORRE��O: Se encontrou por email mas com ID diferente, atualizar o existente
                 localColaboradorPorEmail != null -> {
-                    Log.d(TAG, "?? Colaborador duplicado encontrado por email: ${colaboradorFirestore.email} (ID local: ${localColaboradorPorEmail.id}, ID Firestore: $colaboradorId)")
+                    Timber.tag(TAG).d("?? Colaborador duplicado encontrado por email: ${colaboradorFirestore.email} (ID local: ${localColaboradorPorEmail.id}, ID Firestore: $colaboradorId)")
                     // Atualizar o colaborador existente com os dados do Firestore, mantendo o ID local
                     val colaboradorAtualizado = colaboradorFirestore.copy(id = localColaboradorPorEmail.id)
                     if (serverTimestamp > localColaboradorPorEmail.dataUltimaAtualizacao.time) {
                         // ✅ CORREÇÃO: Preservar status de aprovação local se colaborador já estiver aprovado
                         val colaboradorParaAtualizar = if (localColaboradorPorEmail.aprovado && !colaboradorAtualizado.aprovado) {
-                            Log.w(TAG, "⚠️ Preservando status de aprovação local para colaborador ${colaboradorFirestore.email} (ID local: ${localColaboradorPorEmail.id})")
+                            Timber.tag(TAG).w("⚠️ Preservando status de aprovação local para colaborador ${colaboradorFirestore.email} (ID local: ${localColaboradorPorEmail.id})")
                             colaboradorAtualizado.copy(
                                 aprovado = true,
                                 dataAprovacao = localColaboradorPorEmail.dataAprovacao,
@@ -3387,25 +3404,25 @@ class SyncRepository(
                 }
                 // Se n�o encontrou nem por ID nem por email, inserir novo
                 else -> {
-                    Log.d(TAG, "? Inserindo novo colaborador: ID=$colaboradorId, Email=$colaboradorEmail, Aprovado=${colaboradorFirestore.aprovado}")
+                    Timber.tag(TAG).d("? Inserindo novo colaborador: ID=$colaboradorId, Email=$colaboradorEmail, Aprovado=${colaboradorFirestore.aprovado}")
                     try {
                         val insertedId = appRepository.inserirColaborador(colaboradorFirestore)
-                        Log.d(TAG, "? Colaborador inserido com sucesso: ID inserido=$insertedId, Email=$colaboradorEmail, Aprovado=${colaboradorFirestore.aprovado}, AprovadoPor=${colaboradorFirestore.aprovadoPor}")
+                        Timber.tag(TAG).d("? Colaborador inserido com sucesso: ID inserido=$insertedId, Email=$colaboradorEmail, Aprovado=${colaboradorFirestore.aprovado}, AprovadoPor=${colaboradorFirestore.aprovadoPor}")
                         // Atualizar cache com o ID real inserido (pode ser diferente se o banco gerou novo ID)
                         val colaboradorInserido = colaboradorFirestore.copy(id = insertedId)
                         colaboradoresCache[insertedId] = colaboradorInserido
                         ProcessResult.Synced
                     } catch (e: Exception) {
-                        Log.e(TAG, "? ERRO ao inserir colaborador: ${e.message}", e)
-                        Log.e(TAG, "   Colaborador: ID=$colaboradorId, Email=$colaboradorEmail")
-                        Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
+                        Timber.tag(TAG).e("? ERRO ao inserir colaborador: ${e.message}", e)
+                        Timber.tag(TAG).e("   Colaborador: ID=$colaboradorId, Email=$colaboradorEmail")
+                        Timber.tag(TAG).e("   Stack trace: ${e.stackTraceToString()}")
                         ProcessResult.Error
                     }
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "? ERRO ao processar colaborador ${doc.id}: ${e.message}", e)
-            Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
+            Timber.tag(TAG).e("? ERRO ao processar colaborador ${doc.id}: ${e.message}", e)
+            Timber.tag(TAG).e("   Stack trace: ${e.stackTraceToString()}")
             ProcessResult.Error
         }
     }
@@ -3418,14 +3435,14 @@ class SyncRepository(
         val entityType = COLLECTION_CICLOS
         
         return try {
-            Log.d(TAG, "Iniciando pull de ciclos...")
+            Timber.tag(TAG).d("Iniciando pull de ciclos...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_CICLOS)
             
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
             
             if (canUseIncremental) {
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL de ciclos (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL de ciclos (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullCiclosIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 if (incrementalResult != null) {
                     val syncedCount = incrementalResult.getOrElse { return incrementalResult }
@@ -3433,17 +3450,17 @@ class SyncRepository(
                     if (syncedCount > 0 || localCount > 0) {
                         return incrementalResult
                     }
-                    Log.w(TAG, "?? Incremental de ciclos trouxe $syncedCount registros e base local possui $localCount - executando pull COMPLETO")
+                    Timber.tag(TAG).w("?? Incremental de ciclos trouxe $syncedCount registros e base local possui $localCount - executando pull COMPLETO")
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de ciclos falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de ciclos falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de ciclos - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de ciclos - usando m�todo COMPLETO")
             }
             
             pullCiclosComplete(collectionRef, entityType, startTime, timestampOverride)
                     } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de ciclos: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull de ciclos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -3462,12 +3479,12 @@ class SyncRepository(
             val needsBootstrap = accessibleRoutes.isEmpty() && !allowRouteBootstrap
             
             if (needsBootstrap) {
-                Log.w(TAG, "?? Bootstrap necess�rio para ciclos: habilitando temporariamente")
+                Timber.tag(TAG).w("?? Bootstrap necess�rio para ciclos: habilitando temporariamente")
                 allowRouteBootstrap = true
             }
             
             val documents = fetchAllDocumentsWithRouteFilter(collectionRef, FIELD_ROTA_ID)
-            Log.d(TAG, "?? Pull COMPLETO de ciclos - documentos recebidos: ${documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de ciclos - documentos recebidos: ${documents.size}")
             
             // Restaurar estado de bootstrap
             if (needsBootstrap) {
@@ -3492,10 +3509,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull de ciclos conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de ciclos conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull completo de ciclos: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull completo de ciclos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -3515,10 +3532,10 @@ class SyncRepository(
                     lastSyncTimestamp = lastSyncTimestamp
                 )
             } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao executar query incremental para ciclos: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao executar query incremental para ciclos: ${e.message}")
                 return null
             }
-            Log.d(TAG, "?? Ciclos - incremental retornou ${documents.size} documentos (ap�s filtro de rota)")
+            Timber.tag(TAG).d("?? Ciclos - incremental retornou ${documents.size} documentos (ap�s filtro de rota)")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
@@ -3538,10 +3555,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de ciclos: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de ciclos: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull incremental de ciclos: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull incremental de ciclos: ${e.message}", e)
             null
         }
     }
@@ -3601,7 +3618,7 @@ class SyncRepository(
                 ProcessResult.Skipped
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao processar ciclo ${doc.id}: ${e.message}", e)
+            Timber.tag(TAG).e("Erro ao processar ciclo ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }
@@ -3616,7 +3633,7 @@ class SyncRepository(
         val entityType = COLLECTION_ACERTOS
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de acertos...")
+            Timber.tag(TAG).d("?? Iniciando pull de acertos...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_ACERTOS)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -3624,7 +3641,7 @@ class SyncRepository(
             val canUseIncremental = lastSyncTimestamp > 0L
             
             if (canUseIncremental) {
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullAcertosIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 if (incrementalResult != null) {
                     val resultadoIncremental = incrementalResult.fold(
@@ -3633,7 +3650,7 @@ class SyncRepository(
                             if (syncedCount > 0 || localCount > 0) {
                                 Result.success(syncedCount)
                             } else {
-                                Log.w(TAG, "?? Incremental de acertos trouxe $syncedCount registros com base local $localCount - executando pull completo")
+                                Timber.tag(TAG).w("?? Incremental de acertos trouxe $syncedCount registros com base local $localCount - executando pull completo")
                                 null // Indica que precisa fazer pull completo
                             }
                         },
@@ -3646,16 +3663,16 @@ class SyncRepository(
                         return resultadoIncremental
                     }
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de acertos falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de acertos falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de acertos - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de acertos - usando m�todo COMPLETO")
             }
 
             return pullAcertosComplete(collectionRef, entityType, startTime, timestampOverride)
 
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de acertos: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de acertos: ${e.message}", e)
             return Result.failure(e)
         }
     }
@@ -3681,7 +3698,7 @@ class SyncRepository(
                     lastSyncTimestamp = lastSyncTimestamp
                 )
             } catch (e: Exception) {
-                Log.w(TAG, "?? Erro ao executar query incremental de acertos: ${e.message}")
+                Timber.tag(TAG).w("?? Erro ao executar query incremental de acertos: ${e.message}")
                 return null
             }
             
@@ -3695,7 +3712,7 @@ class SyncRepository(
                 return Result.success(0)
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL de acertos (ap�s filtro de rota): $totalDocuments documentos")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL de acertos (ap�s filtro de rota): $totalDocuments documentos")
             
             val processStartTime = System.currentTimeMillis()
             var processedCount = 0
@@ -3722,12 +3739,12 @@ class SyncRepository(
                 val updateCount = appRepository.atualizarAcerto(acertoFirestore)
                 
                 if (updateCount > 0) {
-                    Log.d(TAG, "?? (Incremental) Acerto atualizado ID: ${acertoFirestore.id}")
+                    Timber.tag(TAG).d("?? (Incremental) Acerto atualizado ID: ${acertoFirestore.id}")
                     // ? REMOVIDO: maintainLocalAcertoHistory - PULL n�o deve deletar dados locais (offline-first)
                     syncCount++
                     pullAcertoMesas(acertoFirestore.id)
                 } else {
-                    Log.d(TAG, "? (Incremental) Acerto novo inserido ID: ${acertoFirestore.id}")
+                    Timber.tag(TAG).d("? (Incremental) Acerto novo inserido ID: ${acertoFirestore.id}")
                     appRepository.inserirAcerto(acertoFirestore)
                     // ? REMOVIDO: maintainLocalAcertoHistory - PULL n�o deve deletar dados locais (offline-first)
                     syncCount++
@@ -3736,15 +3753,15 @@ class SyncRepository(
                     processedCount++
                     if (processedCount % 50 == 0) {
                         val elapsed = System.currentTimeMillis() - processStartTime
-                        Log.d(TAG, "   ?? Progresso: $processedCount/$totalDocuments documentos processados (${elapsed}ms)")
+                        Timber.tag(TAG).d("   ?? Progresso: $processedCount/$totalDocuments documentos processados (${elapsed}ms)")
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao sincronizar acerto ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao sincronizar acerto ${doc.id}: ${e.message}", e)
                 }
             }
             val processDuration = System.currentTimeMillis() - processStartTime
-            Log.d(TAG, "   ?? Processamento de documentos: ${processDuration}ms")
+            Timber.tag(TAG).d("   ?? Processamento de documentos: ${processDuration}ms")
             
             val durationMs = System.currentTimeMillis() - startTime
             
@@ -3758,14 +3775,14 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull Acertos (INCREMENTAL) conclu�do:")
-            Log.d(TAG, "   ?? $syncCount sincronizados, $skippedCount pulados, $errorCount erros")
-            Log.d(TAG, "   ?? $totalDocuments documentos processados")
-            Log.d(TAG, "   ?? Dura��o: ${durationMs}ms")
+            Timber.tag(TAG).d("? Pull Acertos (INCREMENTAL) conclu�do:")
+            Timber.tag(TAG).d("   ?? $syncCount sincronizados, $skippedCount pulados, $errorCount erros")
+            Timber.tag(TAG).d("   ?? $totalDocuments documentos processados")
+            Timber.tag(TAG).d("   ?? Dura��o: ${durationMs}ms")
             
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro na sincroniza��o incremental: ${e.message}")
+            Timber.tag(TAG).w("?? Erro na sincroniza��o incremental: ${e.message}")
             null // Falhou, usar m�todo completo
         }
     }
@@ -3782,7 +3799,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val documents = fetchAllDocumentsWithRouteFilter(collectionRef, FIELD_ROTA_ID)
-            Log.d(TAG, "?? Total de acertos no Firestore (ap�s filtro de rota): ${documents.size}")
+            Timber.tag(TAG).d("?? Total de acertos no Firestore (ap�s filtro de rota): ${documents.size}")
             
             var syncCount = 0
             var skippedCount = 0
@@ -3812,12 +3829,12 @@ class SyncRepository(
                 val updateCount = appRepository.atualizarAcerto(acertoFirestore)
                 
                 if (updateCount > 0) {
-                    Log.d(TAG, "?? Acerto atualizado com sucesso ID: ${acertoFirestore.id}")
+                    Timber.tag(TAG).d("?? Acerto atualizado com sucesso ID: ${acertoFirestore.id}")
                     // ? REMOVIDO: maintainLocalAcertoHistory - PULL n�o deve deletar dados locais (offline-first)
                     syncCount++
                     pullAcertoMesas(acertoFirestore.id)
                 } else {
-                    Log.d(TAG, "? Acerto n�o encontrado para update, inserindo novo ID: ${acertoFirestore.id}")
+                    Timber.tag(TAG).d("? Acerto n�o encontrado para update, inserindo novo ID: ${acertoFirestore.id}")
                     appRepository.inserirAcerto(acertoFirestore)
                     // ? REMOVIDO: maintainLocalAcertoHistory - PULL n�o deve deletar dados locais (offline-first)
                     syncCount++
@@ -3825,8 +3842,8 @@ class SyncRepository(
                 }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao sincronizar acerto ${doc.id}: ${e.message}", e)
-                    Log.e(TAG, "? Stack trace: ${e.stackTraceToString()}")
+                    Timber.tag(TAG).e("? Erro ao sincronizar acerto ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Stack trace: ${e.stackTraceToString()}")
                 }
             }
             
@@ -3842,10 +3859,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull Acertos (COMPLETO) conclu�do: $syncCount sincronizados, $skippedCount pulados, $errorCount erros")
+            Timber.tag(TAG).d("? Pull Acertos (COMPLETO) conclu�do: $syncCount sincronizados, $skippedCount pulados, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de acertos: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de acertos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -3886,11 +3903,11 @@ class SyncRepository(
                                                !firebaseImageUploader.isFirebaseStorageUrl(acertoMesaExistente.fotoRelogioFinal)) {
                             val arquivoExistente = java.io.File(acertoMesaExistente.fotoRelogioFinal!!)
                             if (arquivoExistente.exists()) {
-                                Log.d(TAG, "? Reutilizando foto local existente: ${acertoMesaExistente.fotoRelogioFinal}")
+                                Timber.tag(TAG).d("? Reutilizando foto local existente: ${acertoMesaExistente.fotoRelogioFinal}")
                                 acertoMesaExistente.fotoRelogioFinal
                             } else {
                                 // Arquivo foi deletado, baixar novamente
-                                Log.d(TAG, "?? Arquivo local n�o existe mais, baixando novamente para mesa ${acertoMesa.mesaId}")
+                                Timber.tag(TAG).d("?? Arquivo local n�o existe mais, baixando novamente para mesa ${acertoMesa.mesaId}")
                                 firebaseImageUploader.downloadMesaRelogio(
                                     fotoRelogioFinal,
                                     acertoMesa.mesaId,
@@ -3899,7 +3916,7 @@ class SyncRepository(
                             }
                         } else {
                             // N�o existe foto local, baixar
-                            Log.d(TAG, "?? Fazendo download de foto do rel�gio para mesa ${acertoMesa.mesaId}")
+                            Timber.tag(TAG).d("?? Fazendo download de foto do rel�gio para mesa ${acertoMesa.mesaId}")
                             firebaseImageUploader.downloadMesaRelogio(
                                 fotoRelogioFinal,
                                 acertoMesa.mesaId,
@@ -3912,20 +3929,20 @@ class SyncRepository(
                             acertoMesa = acertoMesa.copy(
                                 fotoRelogioFinal = caminhoLocal
                             )
-                            Log.d(TAG, "? Foto salva localmente: $caminhoLocal")
+                            Timber.tag(TAG).d("? Foto salva localmente: $caminhoLocal")
                         } else {
-                            Log.w(TAG, "?? Falha ao baixar foto, mantendo URL do Firebase: $fotoRelogioFinal")
+                            Timber.tag(TAG).w("?? Falha ao baixar foto, mantendo URL do Firebase: $fotoRelogioFinal")
                         }
                     }
                     
                     // Inserir ou atualizar AcertoMesa (inserirAcertoMesa usa OnConflictStrategy.REPLACE)
                     appRepository.inserirAcertoMesa(acertoMesa)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Erro ao sincronizar AcertoMesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao sincronizar AcertoMesa ${doc.id}: ${e.message}", e)
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de AcertoMesas para acerto $acertoId: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull de AcertoMesas para acerto $acertoId: ${e.message}", e)
         }
     }
     
@@ -3938,7 +3955,7 @@ class SyncRepository(
         val entityType = COLLECTION_DESPESAS
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de despesas...")
+            Timber.tag(TAG).d("?? Iniciando pull de despesas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_DESPESAS)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -3947,7 +3964,7 @@ class SyncRepository(
             
             if (canUseIncremental) {
                 // Tentar sincroniza��o incremental
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullDespesasIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 
                 if (incrementalResult != null) {
@@ -3955,17 +3972,17 @@ class SyncRepository(
                     return incrementalResult
                 } else {
                     // Incremental falhou, usar m�todo completo
-                    Log.w(TAG, "?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o - usando m�todo COMPLETO")
             }
             
             // M�todo completo (sempre funciona, mesmo c�digo que estava antes)
             pullDespesasComplete(collectionRef, entityType, startTime, timestampOverride)
             
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de despesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de despesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -3992,7 +4009,7 @@ class SyncRepository(
                     lastSyncTimestamp = lastSyncTimestamp
                 )
             } catch (e: Exception) {
-                Log.w(TAG, "?? Erro ao executar query incremental de despesas: ${e.message}")
+                Timber.tag(TAG).w("?? Erro ao executar query incremental de despesas: ${e.message}")
                 return null
             }
             val totalDocuments = documents.size
@@ -4002,7 +4019,7 @@ class SyncRepository(
                 return Result.success(0)
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL de despesas (ap�s filtro de rota): $totalDocuments documentos")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL de despesas (ap�s filtro de rota): $totalDocuments documentos")
                 
                 // Processar documentos
                 val processStartTime = System.currentTimeMillis()
@@ -4080,15 +4097,15 @@ class SyncRepository(
                         processedCount++
                         if (processedCount % 50 == 0) {
                             val elapsed = System.currentTimeMillis() - processStartTime
-                            Log.d(TAG, "   ?? Progresso: $processedCount/$totalDocuments documentos processados (${elapsed}ms)")
+                            Timber.tag(TAG).d("   ?? Progresso: $processedCount/$totalDocuments documentos processados (${elapsed}ms)")
                         }
                     } catch (e: Exception) {
                         errorCount++
-                        Log.e(TAG, "? Erro ao sincronizar despesa ${doc.id}: ${e.message}", e)
+                        Timber.tag(TAG).e("? Erro ao sincronizar despesa ${doc.id}: ${e.message}", e)
                     }
                 }
                 val processDuration = System.currentTimeMillis() - processStartTime
-                Log.d(TAG, "   ?? Processamento de documentos: ${processDuration}ms")
+                Timber.tag(TAG).d("   ?? Processamento de documentos: ${processDuration}ms")
             
             val durationMs = System.currentTimeMillis() - startTime
             
@@ -4102,14 +4119,14 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull Despesas (INCREMENTAL) conclu�do:")
-            Log.d(TAG, "   ?? $syncCount sincronizadas, $skipCount ignoradas, $errorCount erros")
-            Log.d(TAG, "   ?? $totalDocuments documentos processados")
-            Log.d(TAG, "   ?? Dura��o: ${durationMs}ms")
+            Timber.tag(TAG).d("? Pull Despesas (INCREMENTAL) conclu�do:")
+            Timber.tag(TAG).d("   ?? $syncCount sincronizadas, $skipCount ignoradas, $errorCount erros")
+            Timber.tag(TAG).d("   ?? $totalDocuments documentos processados")
+            Timber.tag(TAG).d("   ?? Dura��o: ${durationMs}ms")
             
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro na sincroniza��o incremental: ${e.message}")
+            Timber.tag(TAG).w("?? Erro na sincroniza��o incremental: ${e.message}")
             null // Falhou, usar m�todo completo
         }
     }
@@ -4126,7 +4143,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val documents = fetchAllDocumentsWithRouteFilter(collectionRef, FIELD_ROTA_ID)
-            Log.d(TAG, "?? Total de despesas no Firestore (ap�s filtro de rota): ${documents.size}")
+            Timber.tag(TAG).d("?? Total de despesas no Firestore (ap�s filtro de rota): ${documents.size}")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
@@ -4140,7 +4157,7 @@ class SyncRepository(
             documents.forEach { doc ->
                 try {
                     val despesaData = doc.data ?: emptyMap()
-                    Log.d(TAG, "?? Processando despesa: ID=${doc.id}")
+                    Timber.tag(TAG).d("?? Processando despesa: ID=${doc.id}")
                     
                     val despesaId = (despesaData["roomId"] as? Long) 
                         ?: (despesaData["id"] as? Long) 
@@ -4148,7 +4165,7 @@ class SyncRepository(
                         ?: 0L
                     
                     if (despesaId == 0L) {
-                        Log.w(TAG, "?? ID inv�lido para despesa ${doc.id} - pulando")
+                        Timber.tag(TAG).w("?? ID inv�lido para despesa ${doc.id} - pulando")
                         skipCount++
                         return@forEach
                     }
@@ -4184,7 +4201,7 @@ class SyncRepository(
                     }
                     
                     if (despesaFirestore.descricao.isBlank() || despesaFirestore.rotaId == 0L) {
-                        Log.w(TAG, "?? Despesa ${doc.id} com dados inv�lidos - pulando")
+                        Timber.tag(TAG).w("?? Despesa ${doc.id} com dados inv�lidos - pulando")
                         skipCount++
                         return@forEach
                     }
@@ -4201,21 +4218,21 @@ class SyncRepository(
                         despesaLocal == null -> {
                             appRepository.inserirDespesa(despesaFirestore)
                             syncCount++
-                            Log.d(TAG, "? Despesa inserida: ID=$despesaId, Descri��o=${despesaFirestore.descricao}, CicloId=${despesaFirestore.cicloId}")
+                            Timber.tag(TAG).d("? Despesa inserida: ID=$despesaId, Descri��o=${despesaFirestore.descricao}, CicloId=${despesaFirestore.cicloId}")
                         }
                         serverTimestamp > (localTimestamp + 1000) -> {
                             appRepository.atualizarDespesa(despesaFirestore)
                             syncCount++
-                            Log.d(TAG, "? Despesa atualizada: ID=$despesaId (servidor: $serverTimestamp, local: $localTimestamp)")
+                            Timber.tag(TAG).d("? Despesa atualizada: ID=$despesaId (servidor: $serverTimestamp, local: $localTimestamp)")
                         }
                         else -> {
                             skipCount++
-                            Log.d(TAG, "?? Despesa local mais recente ou igual, mantendo: ID=$despesaId (servidor: $serverTimestamp, local: $localTimestamp)")
+                            Timber.tag(TAG).d("?? Despesa local mais recente ou igual, mantendo: ID=$despesaId (servidor: $serverTimestamp, local: $localTimestamp)")
                         }
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao sincronizar despesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao sincronizar despesa ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -4231,10 +4248,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull Despesas (COMPLETO) conclu�do: $syncCount sincronizadas, $skipCount ignoradas, $errorCount erros")
+            Timber.tag(TAG).d("? Pull Despesas (COMPLETO) conclu�do: $syncCount sincronizadas, $skipCount ignoradas, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de despesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de despesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -4248,7 +4265,7 @@ class SyncRepository(
         val entityType = COLLECTION_CONTRATOS
         
         return try {
-            Log.d(TAG, "Iniciando pull de contratos...")
+            Timber.tag(TAG).d("Iniciando pull de contratos...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_CONTRATOS)
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
@@ -4261,21 +4278,21 @@ class SyncRepository(
                     
                     // ? VALIDA��O: Se incremental retornou 0 mas h� contratos locais, for�ar completo
                     if (syncedCount == 0 && localCount > 0) {
-                        Log.w(TAG, "?? Incremental retornou 0 contratos mas h� $localCount locais - executando pull COMPLETO como valida��o")
+                        Timber.tag(TAG).w("?? Incremental retornou 0 contratos mas h� $localCount locais - executando pull COMPLETO como valida��o")
                     return pullContratosComplete(collectionRef, entityType, startTime, timestampOverride)
                     }
                     
                     return incrementalResult
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de contratos falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de contratos falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de contratos - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de contratos - usando m�todo COMPLETO")
             }
             
             pullContratosComplete(collectionRef, entityType, startTime, timestampOverride)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de contratos: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull de contratos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -4288,7 +4305,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.get().await()
-            Log.d(TAG, "?? Pull COMPLETO de contratos - documentos recebidos: ${snapshot.documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de contratos - documentos recebidos: ${snapshot.documents.size}")
             
             val (syncCount, skippedCount, errorCount) = processContratosDocuments(snapshot.documents)
             val durationMs = System.currentTimeMillis() - startTime
@@ -4299,10 +4316,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o" else null,
                 timestampOverride = timestampOverride
             )
-            Log.d(TAG, "? Pull de contratos conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de contratos conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull completo de contratos: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull completo de contratos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -4323,7 +4340,7 @@ class SyncRepository(
             resetRouteFilters()
             val todosContratos = appRepository.buscarTodosContratos().first()
             val contratosCache = todosContratos.associateBy { it.id }
-            Log.d(TAG, "   ?? Cache de contratos carregado: ${contratosCache.size} contratos locais")
+            Timber.tag(TAG).d("   ?? Cache de contratos carregado: ${contratosCache.size} contratos locais")
             
             // Tentar query incremental primeiro (otimiza��o)
             val incrementalContratos = try {
@@ -4334,24 +4351,24 @@ class SyncRepository(
                     .await()
                     .documents
             } catch (e: Exception) {
-                Log.w(TAG, "?? Query incremental falhou, buscando todos os contratos: ${e.message}")
+                Timber.tag(TAG).w("?? Query incremental falhou, buscando todos os contratos: ${e.message}")
                 emptyList()
             }
             
             // ? CORRE��O: Se incremental retornou 0 mas h� contratos locais, buscar TODOS
             val allContratos = if (incrementalContratos.isEmpty() && contratosCache.isNotEmpty()) {
-                Log.w(TAG, "?? Incremental retornou 0 contratos mas h� ${contratosCache.size} locais - buscando TODOS para garantir sincroniza��o")
+                Timber.tag(TAG).w("?? Incremental retornou 0 contratos mas h� ${contratosCache.size} locais - buscando TODOS para garantir sincroniza��o")
                 try {
                     collectionRef.get().await().documents
                 } catch (e: Exception) {
-                    Log.w(TAG, "?? Erro ao buscar todos os contratos: ${e.message}")
+                    Timber.tag(TAG).w("?? Erro ao buscar todos os contratos: ${e.message}")
                     return null
                 }
             } else {
                 incrementalContratos
             }
             
-            Log.d(TAG, "?? Contratos - incremental: ${allContratos.size} documentos encontrados (antes do filtro de rota)")
+            Timber.tag(TAG).d("?? Contratos - incremental: ${allContratos.size} documentos encontrados (antes do filtro de rota)")
             
             var syncCount = 0
             var skippedCount = 0
@@ -4394,7 +4411,7 @@ class SyncRepository(
                     if (shouldSync) {
                         // ? VALIDAR FK: Verificar que o cliente existe antes de inserir
                         if (!ensureEntityExists("cliente", contratoFirestore.clienteId)) {
-                            Log.w(TAG, "? Contrato $contratoId skipado: cliente ${contratoFirestore.clienteId} n�o existe")
+                            Timber.tag(TAG).w("? Contrato $contratoId skipado: cliente ${contratoFirestore.clienteId} n�o existe")
                             skippedCount++
                             return@forEach
                         }
@@ -4411,7 +4428,7 @@ class SyncRepository(
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "Erro ao sincronizar contrato ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao sincronizar contrato ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -4423,10 +4440,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o incremental" else null,
                 timestampOverride = timestampOverride
             )
-            Log.d(TAG, "? Pull INCREMENTAL de contratos: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de contratos: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull incremental de contratos: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull incremental de contratos: ${e.message}", e)
             null
         }
     }
@@ -4472,7 +4489,7 @@ class SyncRepository(
                 if (shouldSync) {
                     // ? VALIDAR FK: Verificar que o cliente existe antes de inserir
                     if (!ensureEntityExists("cliente", contratoFirestore.clienteId)) {
-                        Log.w(TAG, "? Contrato $contratoId skipado: cliente ${contratoFirestore.clienteId} n�o existe")
+                        Timber.tag(TAG).w("? Contrato $contratoId skipado: cliente ${contratoFirestore.clienteId} n�o existe")
                         errorCount++
                         return@forEach
                     }
@@ -4489,10 +4506,10 @@ class SyncRepository(
                         errorCount++
                         val isFkError = e.message?.contains("FOREIGN KEY", ignoreCase = true) == true
                         if (isFkError) {
-                            Log.e(TAG, "?? FK CONSTRAINT VIOLATION ao inserir contrato $contratoId: ${e.message}")
-                            Log.e(TAG, "   ? Verifique se cliente ${contratoFirestore.clienteId} existe localmente")
+                            Timber.tag(TAG).e("?? FK CONSTRAINT VIOLATION ao inserir contrato $contratoId: ${e.message}")
+                            Timber.tag(TAG).e("   ? Verifique se cliente ${contratoFirestore.clienteId} existe localmente")
                         } else {
-                            Log.e(TAG, "? Erro ao inserir contrato $contratoId: ${e.message}", e)
+                            Timber.tag(TAG).e("? Erro ao inserir contrato $contratoId: ${e.message}", e)
                         }
                     }
                 } else {
@@ -4500,7 +4517,7 @@ class SyncRepository(
                     }
                 } catch (e: Exception) {
                 errorCount++
-                    Log.e(TAG, "Erro ao sincronizar contrato ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao sincronizar contrato ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -4527,11 +4544,11 @@ class SyncRepository(
                     
                     appRepository.inserirAditivo(aditivo)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Erro ao sincronizar aditivo ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao sincronizar aditivo ${doc.id}: ${e.message}", e)
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de aditivos para contrato $contratoId: ${e.message}", e)
+            Timber.tag(TAG).e("Erro no pull de aditivos para contrato $contratoId: ${e.message}", e)
         }
     }
     
@@ -4545,7 +4562,7 @@ class SyncRepository(
         val entityType = COLLECTION_CATEGORIAS_DESPESA
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de categorias despesa...")
+            Timber.tag(TAG).d("?? Iniciando pull de categorias despesa...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_CATEGORIAS_DESPESA)
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
@@ -4555,15 +4572,15 @@ class SyncRepository(
                 if (incrementalResult != null) {
                     return incrementalResult
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de categorias falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de categorias falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de categorias - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de categorias - usando m�todo COMPLETO")
             }
             
             pullCategoriasDespesaComplete(collectionRef, entityType, startTime)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de categorias despesa: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de categorias despesa: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -4575,7 +4592,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.get().await()
-            Log.d(TAG, "?? Pull COMPLETO de categorias - documentos recebidos: ${snapshot.documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de categorias - documentos recebidos: ${snapshot.documents.size}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -4593,10 +4610,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o" else null
             )
             
-            Log.d(TAG, "? Pull de categorias conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de categorias conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de categorias: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull completo de categorias: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -4613,13 +4630,13 @@ class SyncRepository(
                     .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
                     .orderBy("lastModified")
             } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao criar query incremental para categorias: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao criar query incremental para categorias: ${e.message}")
                 return null
             }
             
             val snapshot = incrementalQuery.get().await()
             val documents = snapshot.documents
-            Log.d(TAG, "?? Categorias - incremental retornou ${documents.size} documentos")
+            Timber.tag(TAG).d("?? Categorias - incremental retornou ${documents.size} documentos")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -4637,10 +4654,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o incremental" else null
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de categorias: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de categorias: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull incremental de categorias: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull incremental de categorias: ${e.message}", e)
             null
         }
     }
@@ -4708,7 +4725,7 @@ class SyncRepository(
                 ProcessResult.Skipped
             }
                 } catch (e: Exception) {
-                    Log.e(TAG, "? Erro ao processar categoria despesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar categoria despesa ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }
@@ -4721,7 +4738,7 @@ class SyncRepository(
         val entityType = COLLECTION_TIPOS_DESPESA
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de tipos despesa...")
+            Timber.tag(TAG).d("?? Iniciando pull de tipos despesa...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_TIPOS_DESPESA)
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
@@ -4731,15 +4748,15 @@ class SyncRepository(
                 if (incrementalResult != null) {
                     return incrementalResult
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de tipos falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de tipos falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de tipos - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de tipos - usando m�todo COMPLETO")
             }
             
             pullTiposDespesaComplete(collectionRef, entityType, startTime)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de tipos despesa: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de tipos despesa: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -4751,7 +4768,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.get().await()
-            Log.d(TAG, "?? Pull COMPLETO de tipos - documentos recebidos: ${snapshot.documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de tipos - documentos recebidos: ${snapshot.documents.size}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -4769,10 +4786,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o" else null
             )
             
-            Log.d(TAG, "? Pull de tipos conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de tipos conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de tipos despesa: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull completo de tipos despesa: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -4789,13 +4806,13 @@ class SyncRepository(
                     .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
                     .orderBy("lastModified")
             } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao criar query incremental para tipos: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao criar query incremental para tipos: ${e.message}")
                 return null
             }
             
             val snapshot = incrementalQuery.get().await()
             val documents = snapshot.documents
-            Log.d(TAG, "?? Tipos - incremental retornou ${documents.size} documentos")
+            Timber.tag(TAG).d("?? Tipos - incremental retornou ${documents.size} documentos")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -4813,10 +4830,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o incremental" else null
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de tipos: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de tipos: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull incremental de tipos despesa: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull incremental de tipos despesa: ${e.message}", e)
             null
         }
     }
@@ -4888,7 +4905,7 @@ class SyncRepository(
                 ProcessResult.Skipped
             }
                 } catch (e: Exception) {
-                    Log.e(TAG, "? Erro ao processar tipo despesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar tipo despesa ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }
@@ -4901,7 +4918,7 @@ class SyncRepository(
         val entityType = COLLECTION_METAS
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de metas...")
+            Timber.tag(TAG).d("?? Iniciando pull de metas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_METAS)
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
@@ -4911,15 +4928,15 @@ class SyncRepository(
                 if (incrementalResult != null) {
                     return incrementalResult
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de metas falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de metas falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de metas - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de metas - usando m�todo COMPLETO")
             }
             
             pullMetasComplete(collectionRef, entityType, startTime)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de metas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de metas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -4931,7 +4948,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val documents = fetchAllDocumentsWithRouteFilter(collectionRef, FIELD_ROTA_ID)
-            Log.d(TAG, "?? Pull COMPLETO de metas - documentos recebidos: ${documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de metas - documentos recebidos: ${documents.size}")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -4949,10 +4966,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o" else null
             )
             
-            Log.d(TAG, "? Pull de metas conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de metas conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de metas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull completo de metas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -4971,11 +4988,11 @@ class SyncRepository(
                     lastSyncTimestamp = lastSyncTimestamp
                 )
             } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao executar query incremental para metas: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao executar query incremental para metas: ${e.message}")
                 return null
             }
             
-            Log.d(TAG, "?? Metas - incremental retornou ${documents.size} documentos (ap�s filtro de rota)")
+            Timber.tag(TAG).d("?? Metas - incremental retornou ${documents.size} documentos (ap�s filtro de rota)")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -4993,10 +5010,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o incremental" else null
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de metas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de metas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull incremental de metas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull incremental de metas: ${e.message}", e)
             null
         }
     }
@@ -5086,7 +5103,7 @@ class SyncRepository(
                 ProcessResult.Skipped
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "? Erro ao processar meta ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar meta ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }
@@ -5099,27 +5116,27 @@ class SyncRepository(
         val entityType = COLLECTION_COLABORADOR_ROTA
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de colaborador rotas...")
+            Timber.tag(TAG).d("?? Iniciando pull de colaborador rotas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_COLABORADOR_ROTA)
             
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
             
             if (canUseIncremental) {
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL de colaborador rotas (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL de colaborador rotas (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullColaboradorRotasIncremental(collectionRef, entityType, lastSyncTimestamp, startTime)
                 if (incrementalResult != null) {
                     return incrementalResult
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de colaborador rotas falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de colaborador rotas falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de colaborador rotas - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de colaborador rotas - usando m�todo COMPLETO")
             }
             
             pullColaboradorRotasComplete(collectionRef, entityType, startTime)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de colaborador rotas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de colaborador rotas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -5131,7 +5148,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val documents = fetchAllDocumentsWithRouteFilter(collectionRef, FIELD_ROTA_ID)
-            Log.d(TAG, "?? Pull COMPLETO de colaborador rotas - documentos recebidos: ${documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de colaborador rotas - documentos recebidos: ${documents.size}")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -5151,10 +5168,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o" else null
             )
             
-            Log.d(TAG, "? Pull de colaborador rotas conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de colaborador rotas conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de colaborador rotas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull completo de colaborador rotas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -5173,10 +5190,10 @@ class SyncRepository(
                     lastSyncTimestamp = lastSyncTimestamp
                 )
             } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao executar query incremental para colaborador rotas: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao executar query incremental para colaborador rotas: ${e.message}")
                 return null
             }
-            Log.d(TAG, "?? Colaborador rotas - incremental retornou ${documents.size} documentos (ap�s filtro de rota)")
+            Timber.tag(TAG).d("?? Colaborador rotas - incremental retornou ${documents.size} documentos (ap�s filtro de rota)")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -5196,10 +5213,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o incremental" else null
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de colaborador rotas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de colaborador rotas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull incremental de colaborador rotas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull incremental de colaborador rotas: ${e.message}", e)
             null
         }
     }
@@ -5268,7 +5285,7 @@ class SyncRepository(
                 ProcessResult.Skipped
             }
                 } catch (e: Exception) {
-                    Log.e(TAG, "? Erro ao processar colaborador rota ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar colaborador rota ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }
@@ -5284,7 +5301,7 @@ class SyncRepository(
         val entityType = COLLECTION_ADITIVO_MESAS
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de aditivo mesas...")
+            Timber.tag(TAG).d("?? Iniciando pull de aditivo mesas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_ADITIVO_MESAS)
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
@@ -5294,15 +5311,15 @@ class SyncRepository(
                 if (incrementalResult != null) {
                     return incrementalResult
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de aditivo mesas falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de aditivo mesas falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de aditivo mesas - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de aditivo mesas - usando m�todo COMPLETO")
             }
             
             pullAditivoMesasComplete(collectionRef, entityType, startTime)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de aditivo mesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de aditivo mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -5314,7 +5331,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.get().await()
-            Log.d(TAG, "?? Pull COMPLETO de aditivo mesas - documentos recebidos: ${snapshot.documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de aditivo mesas - documentos recebidos: ${snapshot.documents.size}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -5332,10 +5349,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o" else null
             )
             
-            Log.d(TAG, "? Pull de aditivo mesas conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de aditivo mesas conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de aditivo mesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull completo de aditivo mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -5352,13 +5369,13 @@ class SyncRepository(
                     .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
                     .orderBy("lastModified")
             } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao criar query incremental para aditivo mesas: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao criar query incremental para aditivo mesas: ${e.message}")
                 return null
             }
             
             val snapshot = incrementalQuery.get().await()
             val documents = snapshot.documents
-            Log.d(TAG, "?? Aditivo mesas - incremental retornou ${documents.size} documentos")
+            Timber.tag(TAG).d("?? Aditivo mesas - incremental retornou ${documents.size} documentos")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -5376,10 +5393,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o incremental" else null
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de aditivo mesas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de aditivo mesas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull incremental de aditivo mesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull incremental de aditivo mesas: ${e.message}", e)
             null
         }
     }
@@ -5444,7 +5461,7 @@ class SyncRepository(
                 ProcessResult.Synced
             }
                 } catch (e: Exception) {
-                    Log.e(TAG, "? Erro ao processar aditivo mesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar aditivo mesa ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }
@@ -5457,7 +5474,7 @@ class SyncRepository(
         val entityType = COLLECTION_CONTRATO_MESAS
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de contrato mesas...")
+            Timber.tag(TAG).d("?? Iniciando pull de contrato mesas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_CONTRATO_MESAS)
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
@@ -5467,15 +5484,15 @@ class SyncRepository(
                 if (incrementalResult != null) {
                     return incrementalResult
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de contrato mesas falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de contrato mesas falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de contrato mesas - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de contrato mesas - usando m�todo COMPLETO")
             }
             
             pullContratoMesasComplete(collectionRef, entityType, startTime)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de contrato mesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de contrato mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -5487,7 +5504,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.get().await()
-            Log.d(TAG, "?? Pull COMPLETO de contrato mesas - documentos recebidos: ${snapshot.documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de contrato mesas - documentos recebidos: ${snapshot.documents.size}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -5505,10 +5522,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o" else null
             )
             
-            Log.d(TAG, "? Pull de contrato mesas conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de contrato mesas conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de contrato mesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull completo de contrato mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -5525,13 +5542,13 @@ class SyncRepository(
                     .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
                     .orderBy("lastModified")
             } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao criar query incremental para contrato mesas: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao criar query incremental para contrato mesas: ${e.message}")
                 return null
             }
             
             val snapshot = incrementalQuery.get().await()
             val documents = snapshot.documents
-            Log.d(TAG, "?? Contrato mesas - incremental retornou ${documents.size} documentos")
+            Timber.tag(TAG).d("?? Contrato mesas - incremental retornou ${documents.size} documentos")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -5549,10 +5566,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o incremental" else null
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de contrato mesas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de contrato mesas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull incremental de contrato mesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull incremental de contrato mesas: ${e.message}", e)
             null
         }
     }
@@ -5612,11 +5629,11 @@ class SyncRepository(
                     
             // ? VALIDAR FK: Verificar que contrato e mesa existem antes de inserir
             if (!ensureEntityExists("contrato", contratoId)) {
-                Log.w(TAG, "? ContratoMesa $contratoMesaId skipada: contrato $contratoId n�o existe")
+                Timber.tag(TAG).w("? ContratoMesa $contratoMesaId skipada: contrato $contratoId n�o existe")
                 return ProcessResult.Skipped
             }
             if (!ensureEntityExists("mesa", mesaId)) {
-                Log.w(TAG, "? ContratoMesa $contratoMesaId skipada: mesa $mesaId n�o existe")
+                Timber.tag(TAG).w("? ContratoMesa $contratoMesaId skipada: mesa $mesaId n�o existe")
                 return ProcessResult.Skipped
             }
             
@@ -5628,15 +5645,15 @@ class SyncRepository(
             } catch (e: Exception) {
                 val isFkError = e.message?.contains("FOREIGN KEY", ignoreCase = true) == true
                 if (isFkError) {
-                    Log.e(TAG, "?? FK CONSTRAINT VIOLATION ao inserir contrato mesa $contratoMesaId: ${e.message}")
-                    Log.e(TAG, "   ? Contrato: $contratoId, Mesa: $mesaId")
+                    Timber.tag(TAG).e("?? FK CONSTRAINT VIOLATION ao inserir contrato mesa $contratoMesaId: ${e.message}")
+                    Timber.tag(TAG).e("   ? Contrato: $contratoId, Mesa: $mesaId")
                 } else {
-                    Log.e(TAG, "? Erro ao inserir contrato mesa $contratoMesaId: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao inserir contrato mesa $contratoMesaId: ${e.message}", e)
                 }
                 ProcessResult.Error
             }
                 } catch (e: Exception) {
-                    Log.e(TAG, "? Erro ao processar contrato mesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar contrato mesa ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }
@@ -5649,7 +5666,7 @@ class SyncRepository(
         val entityType = COLLECTION_ASSINATURAS
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de assinaturas representante legal...")
+            Timber.tag(TAG).d("?? Iniciando pull de assinaturas representante legal...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_ASSINATURAS)
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
@@ -5659,15 +5676,15 @@ class SyncRepository(
                 if (incrementalResult != null) {
                     return incrementalResult
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de assinaturas falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de assinaturas falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de assinaturas - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de assinaturas - usando m�todo COMPLETO")
             }
             
             pullAssinaturasComplete(collectionRef, entityType, startTime)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de assinaturas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de assinaturas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -5679,7 +5696,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.get().await()
-            Log.d(TAG, "?? Pull COMPLETO de assinaturas - documentos recebidos: ${snapshot.documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de assinaturas - documentos recebidos: ${snapshot.documents.size}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -5697,10 +5714,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o" else null
             )
             
-            Log.d(TAG, "? Pull de assinaturas conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de assinaturas conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de assinaturas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull completo de assinaturas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -5717,13 +5734,13 @@ class SyncRepository(
                     .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
                     .orderBy("lastModified")
             } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao criar query incremental para assinaturas: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao criar query incremental para assinaturas: ${e.message}")
                 return null
             }
             
             val snapshot = incrementalQuery.get().await()
             val documents = snapshot.documents
-            Log.d(TAG, "?? Assinaturas - incremental retornou ${documents.size} documentos")
+            Timber.tag(TAG).d("?? Assinaturas - incremental retornou ${documents.size} documentos")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -5741,10 +5758,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o incremental" else null
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de assinaturas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de assinaturas: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull incremental de assinaturas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull incremental de assinaturas: ${e.message}", e)
             null
         }
     }
@@ -5842,7 +5859,7 @@ class SyncRepository(
                 ProcessResult.Skipped
             }
                 } catch (e: Exception) {
-                    Log.e(TAG, "? Erro ao processar assinatura ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar assinatura ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }
@@ -5855,7 +5872,7 @@ class SyncRepository(
         val entityType = COLLECTION_LOGS_AUDITORIA
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de logs auditoria...")
+            Timber.tag(TAG).d("?? Iniciando pull de logs auditoria...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_LOGS_AUDITORIA)
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
@@ -5865,15 +5882,15 @@ class SyncRepository(
                 if (incrementalResult != null) {
                     return incrementalResult
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de logs auditoria falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de logs auditoria falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de logs auditoria - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de logs auditoria - usando m�todo COMPLETO")
             }
             
             pullLogsAuditoriaComplete(collectionRef, entityType, startTime)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de logs auditoria: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull de logs auditoria: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -5885,7 +5902,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.get().await()
-            Log.d(TAG, "?? Pull COMPLETO de logs auditoria - documentos recebidos: ${snapshot.documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de logs auditoria - documentos recebidos: ${snapshot.documents.size}")
             
             val (syncCount, skippedCount, errorCount) = processLogsAuditoriaDocuments(snapshot.documents)
             val durationMs = System.currentTimeMillis() - startTime
@@ -5895,10 +5912,10 @@ class SyncRepository(
                 durationMs = durationMs,
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o" else null
             )
-            Log.d(TAG, "? Pull de logs auditoria conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de logs auditoria conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de logs auditoria: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull completo de logs auditoria: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -5920,7 +5937,7 @@ class SyncRepository(
             
             val snapshot = incrementalQuery.get().await()
             val documents = snapshot.documents
-            Log.d(TAG, "?? Logs auditoria - incremental retornou ${documents.size} documentos")
+            Timber.tag(TAG).d("?? Logs auditoria - incremental retornou ${documents.size} documentos")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -5935,10 +5952,10 @@ class SyncRepository(
                 durationMs = durationMs,
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o incremental" else null
             )
-            Log.d(TAG, "? Pull INCREMENTAL de logs auditoria: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de logs auditoria: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull incremental de logs auditoria: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no pull incremental de logs auditoria: ${e.message}", e)
             null
         }
     }
@@ -6024,7 +6041,7 @@ class SyncRepository(
                     syncCount++
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar log auditoria ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar log auditoria ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -6043,14 +6060,14 @@ class SyncRepository(
         val entityType = COLLECTION_CLIENTES
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de clientes...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de clientes...")
             
             // ? NOVO: Obter �ltimo timestamp de push para filtrar apenas modificados
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val clientesLocais = appRepository.obterTodosClientes().first()
-            Log.d(TAG, "?? Total de clientes locais encontrados: ${clientesLocais.size}")
+            Timber.tag(TAG).d("?? Total de clientes locais encontrados: ${clientesLocais.size}")
             
             // ? NOVO: Filtrar apenas clientes modificados desde �ltimo push
             val clientesParaEnviar = if (canUseIncremental) {
@@ -6058,17 +6075,17 @@ class SyncRepository(
                     val clienteTimestamp = cliente.dataUltimaAtualizacao.time
                     clienteTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} clientes modificados desde ${Date(lastPushTimestamp)} (de ${clientesLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} clientes modificados desde ${Date(lastPushTimestamp)} (de ${clientesLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${clientesLocais.size} clientes")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${clientesLocais.size} clientes")
                 clientesLocais
             }
             
             if (clientesParaEnviar.isEmpty()) {
                 val durationMs = System.currentTimeMillis() - startTime
                 savePushMetadata(entityType, 0, durationMs)
-                Log.d(TAG, "? Nenhum cliente para enviar - push conclu�do")
+                Timber.tag(TAG).d("? Nenhum cliente para enviar - push conclu�do")
                 return Result.success(0)
             }
             
@@ -6125,10 +6142,10 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += clienteMap.toString().length.toLong() // Estimativa de bytes
-                    Log.d(TAG, "? Cliente enviado para nuvem: ${cliente.nome} (ID: ${cliente.id}) - Timestamp local sincronizado com servidor: ${serverTimestamp.time}")
+                    Timber.tag(TAG).d("? Cliente enviado para nuvem: ${cliente.nome} (ID: ${cliente.id}) - Timestamp local sincronizado com servidor: ${serverTimestamp.time}")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar cliente ${cliente.id} (${cliente.nome}): ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar cliente ${cliente.id} (${cliente.nome}): ${e.message}", e)
                 }
             }
             
@@ -6143,12 +6160,12 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante push" else null
             )
             
-            Log.d(TAG, "? Push INCREMENTAL de clientes conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de clientes conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de clientes: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de clientes: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -6162,30 +6179,30 @@ class SyncRepository(
         val entityType = COLLECTION_ROTAS
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de rotas...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de rotas...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val rotasLocais = appRepository.obterTodasRotas().first()
-            Log.d(TAG, "?? Total de rotas locais encontradas: ${rotasLocais.size}")
+            Timber.tag(TAG).d("?? Total de rotas locais encontradas: ${rotasLocais.size}")
             
             // Filtrar apenas rotas modificadas desde �ltimo push
             val rotasParaEnviar = if (canUseIncremental) {
                 rotasLocais.filter { rota ->
                     rota.dataAtualizacao > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} rotas modificadas desde ${Date(lastPushTimestamp)} (de ${rotasLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} rotas modificadas desde ${Date(lastPushTimestamp)} (de ${rotasLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todas as ${rotasLocais.size} rotas")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todas as ${rotasLocais.size} rotas")
                 rotasLocais
             }
             
             if (rotasParaEnviar.isEmpty()) {
                 val durationMs = System.currentTimeMillis() - startTime
                 savePushMetadata(entityType, 0, durationMs)
-                Log.d(TAG, "? Nenhuma rota para enviar - push conclu�do")
+                Timber.tag(TAG).d("? Nenhuma rota para enviar - push conclu�do")
                 return Result.success(0)
             }
             
@@ -6195,10 +6212,10 @@ class SyncRepository(
             
             rotasParaEnviar.forEach { rota ->
                 try {
-                    Log.d(TAG, "?? Processando rota: ID=${rota.id}, Nome=${rota.nome}")
+                    Timber.tag(TAG).d("?? Processando rota: ID=${rota.id}, Nome=${rota.nome}")
                     
                     val rotaMap = entityToMap(rota)
-                    Log.d(TAG, "   Mapa criado com ${rotaMap.size} campos")
+                    Timber.tag(TAG).d("   Mapa criado com ${rotaMap.size} campos")
                     
                     // ? CR�TICO: Adicionar roomId para compatibilidade com pull
                     // O pull espera encontrar roomId no documento do Firestore
@@ -6211,8 +6228,8 @@ class SyncRepository(
                     
                     val documentId = rota.id.toString()
                     val collectionRef = getCollectionReference(firestore, COLLECTION_ROTAS)
-                    Log.d(TAG, "   Enviando para Firestore: empresas/$currentCompanyId/entidades/${COLLECTION_ROTAS}/items, document=$documentId")
-                    Log.d(TAG, "   Campos no mapa: ${rotaMap.keys}")
+                    Timber.tag(TAG).d("   Enviando para Firestore: empresas/$currentCompanyId/entidades/${COLLECTION_ROTAS}/items, document=$documentId")
+                    Timber.tag(TAG).d("   Campos no mapa: ${rotaMap.keys}")
                     collectionRef
                         .document(documentId)
                         .set(rotaMap)
@@ -6220,23 +6237,23 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += rotaMap.toString().length.toLong()
-                    Log.d(TAG, "? Rota enviada com sucesso: ${rota.nome} (ID: ${rota.id})")
+                    Timber.tag(TAG).d("? Rota enviada com sucesso: ${rota.nome} (ID: ${rota.id})")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar rota ${rota.id} (${rota.nome}): ${e.message}", e)
-                    Log.e(TAG, "   Stack trace: ${e.stackTraceToString()}")
+                    Timber.tag(TAG).e("? Erro ao enviar rota ${rota.id} (${rota.nome}): ${e.message}", e)
+                    Timber.tag(TAG).e("   Stack trace: ${e.stackTraceToString()}")
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de rotas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de rotas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de rotas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de rotas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -6250,7 +6267,7 @@ class SyncRepository(
         val entityType = COLLECTION_MESAS
         
         return try {
-            Log.d(TAG, "Iniciando push INCREMENTAL de mesas...")
+            Timber.tag(TAG).d("Iniciando push INCREMENTAL de mesas...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
@@ -6263,10 +6280,10 @@ class SyncRepository(
                     val mesaTimestamp = mesa.dataUltimaLeitura.time
                     mesaTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} mesas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} mesas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todas as ${mesasLocais.size} mesas")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todas as ${mesasLocais.size} mesas")
                 mesasLocais
             }
             
@@ -6290,7 +6307,7 @@ class SyncRepository(
                     mesaMap["lastModified"] = FieldValue.serverTimestamp()
                     mesaMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
-                    Log.d(TAG, "?? [DIAGNOSTICO] Enviando Mesa ${mesa.id}. lastModified definido como serverTimestamp()")
+                    Timber.tag(TAG).d("?? [DIAGNOSTICO] Enviando Mesa ${mesa.id}. lastModified definido como serverTimestamp()")
                     
                     val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS)
                     val docRef = collectionRef.document(mesa.id.toString())
@@ -6310,20 +6327,20 @@ class SyncRepository(
                     // Os dados locais devem permanecer inalterados na exporta��o
                     // A atualiza��o dos dados locais acontece apenas na importa��o (pull)
                     // quando h� dados novos no servidor que devem ser sincronizados
-                    Log.d(TAG, "? Mesa ${mesa.id} exportada com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
+                    Timber.tag(TAG).d("? Mesa ${mesa.id} exportada com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += mesaMap.toString().length.toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "Erro ao enviar mesa ${mesa.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao enviar mesa ${mesa.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de mesas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms. MaxServerTimestamp: ${Date(maxServerTimestamp)}")
+            Timber.tag(TAG).d("? Push INCREMENTAL de mesas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms. MaxServerTimestamp: ${Date(maxServerTimestamp)}")
             
             // Retornar o maior timestamp encontrado (ou 0 se nenhum)
             // Usamos um Result customizado ou passamos via Pair? 
@@ -6336,7 +6353,7 @@ class SyncRepository(
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "Erro no push de mesas: ${e.message}", e)
+            Timber.e( "Erro no push de mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -6349,7 +6366,7 @@ class SyncRepository(
         val entityType = COLLECTION_COLABORADORES
         
         return try {
-            Log.d(TAG, "Iniciando push INCREMENTAL de colaboradores...")
+            Timber.tag(TAG).d("Iniciando push INCREMENTAL de colaboradores...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
@@ -6361,10 +6378,10 @@ class SyncRepository(
                     val colaboradorTimestamp = colaborador.dataUltimaAtualizacao.time
                     colaboradorTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} colaboradores modificados desde ${Date(lastPushTimestamp)} (de ${colaboradoresLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} colaboradores modificados desde ${Date(lastPushTimestamp)} (de ${colaboradoresLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${colaboradoresLocais.size} colaboradores")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${colaboradoresLocais.size} colaboradores")
                 colaboradoresLocais
             }
             
@@ -6388,7 +6405,7 @@ class SyncRepository(
                     colaboradorMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     // ✅ LOG: Verificar campos de aprovação antes de enviar
-                    Log.d(TAG, "📤 Enviando colaborador: ID=${colaborador.id}, Email=${colaborador.email}, Aprovado=${colaborador.aprovado}, AprovadoPor=${colaborador.aprovadoPor}, DataAprovacao=${colaborador.dataAprovacao}")
+                    Timber.tag(TAG).d("📤 Enviando colaborador: ID=${colaborador.id}, Email=${colaborador.email}, Aprovado=${colaborador.aprovado}, AprovadoPor=${colaborador.aprovadoPor}, DataAprovacao=${colaborador.dataAprovacao}")
                     
                     val collectionRef = getCollectionReference(firestore, COLLECTION_COLABORADORES)
                     collectionRef
@@ -6396,24 +6413,24 @@ class SyncRepository(
                         .set(colaboradorMap)
                         .await()
                     
-                    Log.d(TAG, "✅ Colaborador enviado com sucesso: ID=${colaborador.id}, Aprovado=${colaborador.aprovado}")
+                    Timber.tag(TAG).d("✅ Colaborador enviado com sucesso: ID=${colaborador.id}, Aprovado=${colaborador.aprovado}")
                     syncCount++
                     bytesUploaded += colaboradorMap.toString().length.toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "Erro ao enviar colaborador ${colaborador.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao enviar colaborador ${colaborador.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de colaboradores conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de colaboradores conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "Erro no push de colaboradores: ${e.message}", e)
+            Timber.e( "Erro no push de colaboradores: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -6429,8 +6446,8 @@ class SyncRepository(
         val entityType = COLLECTION_CICLOS
         
         return try {
-            Log.d(TAG, "?? ===== INICIANDO PUSH DE CICLOS =====")
-            Log.d(TAG, "Iniciando push INCREMENTAL de ciclos...")
+            Timber.tag(TAG).d("?? ===== INICIANDO PUSH DE CICLOS =====")
+            Timber.tag(TAG).d("Iniciando push INCREMENTAL de ciclos...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
@@ -6439,13 +6456,13 @@ class SyncRepository(
             val ciclosLocais = try {
                 appRepository.obterTodosCiclos().first()
             } catch (e: Exception) {
-                Log.w(TAG, "M�todo obterTodosCiclos n�o dispon�vel, tentando alternativa...")
+                Timber.tag(TAG).w("M�todo obterTodosCiclos n�o dispon�vel, tentando alternativa...")
                 emptyList<CicloAcertoEntity>()
             }
             
-            Log.d(TAG, "   ?? Total de ciclos locais: ${ciclosLocais.size}")
+            Timber.tag(TAG).d("   ?? Total de ciclos locais: ${ciclosLocais.size}")
             ciclosLocais.forEach { ciclo ->
-                Log.d(TAG, "      - Ciclo ${ciclo.numeroCiclo}/${ciclo.ano}: status=${ciclo.status}, dataInicio=${ciclo.dataInicio}, dataAtualizacao=${ciclo.dataAtualizacao}")
+                Timber.tag(TAG).d("      - Ciclo ${ciclo.numeroCiclo}/${ciclo.ano}: status=${ciclo.status}, dataInicio=${ciclo.dataInicio}, dataAtualizacao=${ciclo.dataAtualizacao}")
             }
             
             val ciclosParaEnviar = if (canUseIncremental) {
@@ -6453,13 +6470,13 @@ class SyncRepository(
                     val cicloTimestamp = ciclo.dataAtualizacao.time
                     cicloTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} ciclos modificados desde ${Date(lastPushTimestamp)} (de ${ciclosLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} ciclos modificados desde ${Date(lastPushTimestamp)} (de ${ciclosLocais.size} total)")
                     it.forEach { ciclo ->
-                        Log.d(TAG, "      ? Enviando ciclo ${ciclo.numeroCiclo}/${ciclo.ano}")
+                        Timber.tag(TAG).d("      ? Enviando ciclo ${ciclo.numeroCiclo}/${ciclo.ano}")
                     }
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${ciclosLocais.size} ciclos")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${ciclosLocais.size} ciclos")
                 ciclosLocais
             }
             
@@ -6496,16 +6513,16 @@ class SyncRepository(
                     // Os dados locais devem permanecer inalterados na exporta��o
                     // A atualiza��o dos dados locais acontece apenas na importa��o (pull)
                     // quando h� dados novos no servidor que devem ser sincronizados
-                    Log.d(TAG, "? Ciclo ${ciclo.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
+                    Timber.tag(TAG).d("? Ciclo ${ciclo.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += cicloMap.toString().length.toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "Erro ao enviar ciclo ${ciclo.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao enviar ciclo ${ciclo.id}: ${e.message}", e)
                     if (e is com.google.firebase.firestore.FirebaseFirestoreException) {
                         if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.PERMISSION_DENIED) {
-                            Log.e(TAG, "   ⚠️ PERMISSION_DENIED ao enviar ciclo ${ciclo.id}: Verifique as regras do Firestore")
+                            Timber.tag(TAG).e("   ⚠️ PERMISSION_DENIED ao enviar ciclo ${ciclo.id}: Verifique as regras do Firestore")
                         }
                     }
                 }
@@ -6513,13 +6530,13 @@ class SyncRepository(
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
-            Log.d(TAG, "? Push INCREMENTAL de ciclos conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de ciclos conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "Erro no push de ciclos: ${e.message}", e)
+            Timber.e( "Erro no push de ciclos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -6534,7 +6551,7 @@ class SyncRepository(
         val entityType = COLLECTION_ACERTOS
         
         return try {
-            Log.d(TAG, "Iniciando push INCREMENTAL de acertos...")
+            Timber.tag(TAG).d("Iniciando push INCREMENTAL de acertos...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
@@ -6547,10 +6564,10 @@ class SyncRepository(
                     val acertoTimestamp = acerto.dataAcerto.time
                     acertoTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} acertos modificados desde ${Date(lastPushTimestamp)} (de ${acertosLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} acertos modificados desde ${Date(lastPushTimestamp)} (de ${acertosLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${acertosLocais.size} acertos")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${acertosLocais.size} acertos")
                 acertosLocais
             }
             
@@ -6586,7 +6603,7 @@ class SyncRepository(
                     pushAcertoMesas(acerto.id)
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "Erro ao enviar acerto ${acerto.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao enviar acerto ${acerto.id}: ${e.message}", e)
                 }
             }
             
@@ -6594,25 +6611,25 @@ class SyncRepository(
             // Chamar apenas UMA VEZ por cliente �nico, evitando m�ltiplas execu��es
             // que podem causar race conditions e deletar dados incorretamente
             val clientesAfetados = acertosParaEnviar.map { it.clienteId }.distinct()
-            Log.d(TAG, "?? Limpando hist�rico para ${clientesAfetados.size} cliente(s) �nico(s)...")
+            Timber.tag(TAG).d("?? Limpando hist�rico para ${clientesAfetados.size} cliente(s) �nico(s)...")
             clientesAfetados.forEach { clienteId ->
                 try {
                     maintainLocalAcertoHistory(clienteId, limit = 15)
-                    Log.d(TAG, "   ? Hist�rico mantido para cliente $clienteId (�ltimos 15 acertos)")
+                    Timber.tag(TAG).d("   ? Hist�rico mantido para cliente $clienteId (�ltimos 15 acertos)")
                 } catch (e: Exception) {
-                    Log.e(TAG, "   ? Erro ao manter hist�rico do cliente $clienteId: ${e.message}", e)
+                    Timber.tag(TAG).e("   ? Erro ao manter hist�rico do cliente $clienteId: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de acertos conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de acertos conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "Erro no push de acertos: ${e.message}", e)
+            Timber.e( "Erro no push de acertos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -6633,7 +6650,7 @@ class SyncRepository(
                     if (!fotoParaEnviar.isNullOrEmpty() && 
                         !firebaseImageUploader.isFirebaseStorageUrl(fotoParaEnviar)) {
                         
-                        Log.d(TAG, "?? Fazendo upload de foto local para Firebase Storage (mesa ${acertoMesa.mesaId})")
+                        Timber.tag(TAG).d("?? Fazendo upload de foto local para Firebase Storage (mesa ${acertoMesa.mesaId})")
                         try {
                             val uploadedUrl = firebaseImageUploader.uploadMesaRelogio(
                                 fotoParaEnviar,
@@ -6642,7 +6659,7 @@ class SyncRepository(
                             
                             if (uploadedUrl != null) {
                                 fotoParaEnviar = uploadedUrl
-                                Log.d(TAG, "? Foto enviada para Firebase Storage: $uploadedUrl")
+                                Timber.tag(TAG).d("? Foto enviada para Firebase Storage: $uploadedUrl")
                                 
                                 // ? Atualizar o AcertoMesa local com a URL do Firebase
                                 val acertoMesaAtualizado = acertoMesa.copy(
@@ -6650,10 +6667,10 @@ class SyncRepository(
                                 )
                                 appRepository.inserirAcertoMesa(acertoMesaAtualizado)
                             } else {
-                                Log.w(TAG, "?? Falha no upload da foto, enviando caminho local")
+                                Timber.tag(TAG).w("?? Falha no upload da foto, enviando caminho local")
                             }
                         } catch (e: Exception) {
-                            Log.e(TAG, "Erro ao fazer upload da foto: ${e.message}", e)
+                            Timber.tag(TAG).e("Erro ao fazer upload da foto: ${e.message}", e)
                             // Continuar mesmo se o upload falhar, enviando o caminho local
                         }
                     }
@@ -6682,13 +6699,13 @@ class SyncRepository(
                         .set(mutableMap)
                         .await()
                     
-                    Log.d(TAG, "? AcertoMesa ${acertoMesa.acertoId}_${acertoMesa.mesaId} enviado com foto: ${if (fotoParaEnviar != null) "sim" else "n�o"}")
+                    Timber.tag(TAG).d("? AcertoMesa ${acertoMesa.acertoId}_${acertoMesa.mesaId} enviado com foto: ${if (fotoParaEnviar != null) "sim" else "n�o"}")
                 } catch (e: Exception) {
-                    Log.e(TAG, "Erro ao enviar AcertoMesa ${acertoMesa.acertoId}_${acertoMesa.mesaId}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao enviar AcertoMesa ${acertoMesa.acertoId}_${acertoMesa.mesaId}: ${e.message}", e)
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no push de AcertoMesas para acerto $acertoId: ${e.message}", e)
+            Timber.e( "Erro no push de AcertoMesas para acerto $acertoId: ${e.message}", e)
         }
     }
     
@@ -6701,13 +6718,13 @@ class SyncRepository(
         val entityType = COLLECTION_DESPESAS
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de despesas...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de despesas...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val despesasLocais = appRepository.obterTodasDespesas().first()
-            Log.d(TAG, "?? Total de despesas locais encontradas: ${despesasLocais.size}")
+            Timber.tag(TAG).d("?? Total de despesas locais encontradas: ${despesasLocais.size}")
             
             // Filtrar apenas despesas modificadas (usar dataHora convertida para timestamp)
             val despesasParaEnviar = if (canUseIncremental) {
@@ -6715,10 +6732,10 @@ class SyncRepository(
                     val despesaTimestamp = despesa.dataHora.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
                     despesaTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} despesas modificadas desde ${Date(lastPushTimestamp)} (de ${despesasLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} despesas modificadas desde ${Date(lastPushTimestamp)} (de ${despesasLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todas as ${despesasLocais.size} despesas")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todas as ${despesasLocais.size} despesas")
                 despesasLocais
             }
             
@@ -6734,7 +6751,7 @@ class SyncRepository(
             
             despesasParaEnviar.forEach { despesa ->
                 try {
-                    Log.d(TAG, "?? Processando despesa: ID=${despesa.id}, Descri��o=${despesa.descricao}, CicloId=${despesa.cicloId}")
+                    Timber.tag(TAG).d("?? Processando despesa: ID=${despesa.id}, Descri��o=${despesa.descricao}, CicloId=${despesa.cicloId}")
                     
                     val despesaMap = entityToMap(despesa)
                     // ? CR�TICO: Adicionar roomId para compatibilidade com pull
@@ -6759,22 +6776,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += despesaMap.toString().length.toLong()
-                    Log.d(TAG, "? Despesa enviada para nuvem: ${despesa.descricao} (ID: ${despesa.id}) - Timestamp local atualizado")
+                    Timber.tag(TAG).d("? Despesa enviada para nuvem: ${despesa.descricao} (ID: ${despesa.id}) - Timestamp local atualizado")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar despesa ${despesa.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar despesa ${despesa.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de despesas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de despesas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de despesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de despesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -6788,7 +6805,7 @@ class SyncRepository(
         val entityType = COLLECTION_CONTRATOS
         
         return try {
-            Log.d(TAG, "Iniciando push INCREMENTAL de contratos...")
+            Timber.tag(TAG).d("Iniciando push INCREMENTAL de contratos...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
@@ -6800,10 +6817,10 @@ class SyncRepository(
                     val contratoTimestamp = contrato.dataAtualizacao.time
                     contratoTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} contratos modificados desde ${Date(lastPushTimestamp)} (de ${contratosLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} contratos modificados desde ${Date(lastPushTimestamp)} (de ${contratosLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${contratosLocais.size} contratos")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${contratosLocais.size} contratos")
                 contratosLocais
             }
             
@@ -6840,7 +6857,7 @@ class SyncRepository(
                     // Os dados locais devem permanecer inalterados na exporta��o
                     // A atualiza��o dos dados locais acontece apenas na importa��o (pull)
                     // quando h� dados novos no servidor que devem ser sincronizados
-                    Log.d(TAG, "? Contrato ${contrato.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
+                    Timber.tag(TAG).d("? Contrato ${contrato.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += contratoMap.toString().length.toLong()
@@ -6849,19 +6866,19 @@ class SyncRepository(
                     pushAditivosContrato(contrato.id)
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "Erro ao enviar contrato ${contrato.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao enviar contrato ${contrato.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de contratos conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de contratos conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "Erro no push de contratos: ${e.message}", e)
+            Timber.e( "Erro no push de contratos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -6887,11 +6904,11 @@ class SyncRepository(
                         .set(aditivoMap)
                         .await()
                 } catch (e: Exception) {
-                    Log.e(TAG, "Erro ao enviar aditivo ${aditivo.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao enviar aditivo ${aditivo.id}: ${e.message}", e)
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no push de aditivos para contrato $contratoId: ${e.message}", e)
+            Timber.e( "Erro no push de aditivos para contrato $contratoId: ${e.message}", e)
         }
     }
     
@@ -6905,23 +6922,23 @@ class SyncRepository(
         val entityType = COLLECTION_CATEGORIAS_DESPESA
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de categorias despesa...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de categorias despesa...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val categoriasLocais = appRepository.buscarCategoriasAtivas().first()
-            Log.d(TAG, "?? Total de categorias despesa locais encontradas: ${categoriasLocais.size}")
+            Timber.tag(TAG).d("?? Total de categorias despesa locais encontradas: ${categoriasLocais.size}")
             
             val categoriasParaEnviar = if (canUseIncremental) {
                 categoriasLocais.filter { categoria ->
                     val categoriaTimestamp = categoria.dataAtualizacao.time
                     categoriaTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} categorias modificadas desde ${Date(lastPushTimestamp)} (de ${categoriasLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} categorias modificadas desde ${Date(lastPushTimestamp)} (de ${categoriasLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todas as ${categoriasLocais.size} categorias")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todas as ${categoriasLocais.size} categorias")
                 categoriasLocais
             }
             
@@ -6937,7 +6954,7 @@ class SyncRepository(
             
             categoriasParaEnviar.forEach { categoria ->
                 try {
-                    Log.d(TAG, "?? Processando categoria despesa: ID=${categoria.id}, Nome=${categoria.nome}")
+                    Timber.tag(TAG).d("?? Processando categoria despesa: ID=${categoria.id}, Nome=${categoria.nome}")
                     
                     val categoriaMap = entityToMap(categoria)
                     categoriaMap["roomId"] = categoria.id
@@ -6955,22 +6972,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += categoriaMap.toString().length.toLong()
-                    Log.d(TAG, "? Categoria despesa enviada com sucesso: ${categoria.nome} (ID: ${categoria.id})")
+                    Timber.tag(TAG).d("? Categoria despesa enviada com sucesso: ${categoria.nome} (ID: ${categoria.id})")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar categoria despesa ${categoria.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar categoria despesa ${categoria.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de categorias despesa conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de categorias despesa conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de categorias despesa: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de categorias despesa: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -6983,24 +7000,24 @@ class SyncRepository(
         val entityType = COLLECTION_TIPOS_DESPESA
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de tipos despesa...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de tipos despesa...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val tiposLocais = appRepository.buscarTiposAtivosComCategoria().first()
                 .map { it.tipoDespesa }
-            Log.d(TAG, "?? Total de tipos despesa locais encontrados: ${tiposLocais.size}")
+            Timber.tag(TAG).d("?? Total de tipos despesa locais encontrados: ${tiposLocais.size}")
             
             val tiposParaEnviar = if (canUseIncremental) {
                 tiposLocais.filter { tipo ->
                     val tipoTimestamp = tipo.dataAtualizacao.time
                     tipoTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} tipos modificados desde ${Date(lastPushTimestamp)} (de ${tiposLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} tipos modificados desde ${Date(lastPushTimestamp)} (de ${tiposLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${tiposLocais.size} tipos")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${tiposLocais.size} tipos")
                 tiposLocais
             }
             
@@ -7016,7 +7033,7 @@ class SyncRepository(
             
             tiposParaEnviar.forEach { tipo ->
                 try {
-                    Log.d(TAG, "?? Processando tipo despesa: ID=${tipo.id}, Nome=${tipo.nome}")
+                    Timber.tag(TAG).d("?? Processando tipo despesa: ID=${tipo.id}, Nome=${tipo.nome}")
                     
                     val tipoMap = entityToMap(tipo)
                     tipoMap["roomId"] = tipo.id
@@ -7034,22 +7051,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += tipoMap.toString().length.toLong()
-                    Log.d(TAG, "? Tipo despesa enviado com sucesso: ${tipo.nome} (ID: ${tipo.id})")
+                    Timber.tag(TAG).d("? Tipo despesa enviado com sucesso: ${tipo.nome} (ID: ${tipo.id})")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar tipo despesa ${tipo.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar tipo despesa ${tipo.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de tipos despesa conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de tipos despesa conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de tipos despesa: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de tipos despesa: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -7062,13 +7079,13 @@ class SyncRepository(
         val entityType = COLLECTION_METAS
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de metas...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de metas...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val metasLocais = appRepository.obterTodasMetas().first()
-            Log.d(TAG, "?? Total de metas locais encontradas: ${metasLocais.size}")
+            Timber.tag(TAG).d("?? Total de metas locais encontradas: ${metasLocais.size}")
             
             // Meta n�o tem dataAtualizacao, usar dataInicio como proxy
             val metasParaEnviar = if (canUseIncremental) {
@@ -7076,10 +7093,10 @@ class SyncRepository(
                     val metaTimestamp = meta.dataInicio.time
                     metaTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} metas modificadas desde ${Date(lastPushTimestamp)} (de ${metasLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} metas modificadas desde ${Date(lastPushTimestamp)} (de ${metasLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todas as ${metasLocais.size} metas")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todas as ${metasLocais.size} metas")
                 metasLocais
             }
             
@@ -7095,10 +7112,10 @@ class SyncRepository(
             
             metasParaEnviar.forEach { meta ->
                 try {
-                    Log.d(TAG, "?? Processando meta: ID=${meta.id}, Nome=${meta.nome}, Tipo=${meta.tipo}")
+                    Timber.tag(TAG).d("?? Processando meta: ID=${meta.id}, Nome=${meta.nome}, Tipo=${meta.tipo}")
                     
                     val metaMap = entityToMap(meta)
-                    Log.d(TAG, "   Mapa criado com ${metaMap.size} campos")
+                    Timber.tag(TAG).d("   Mapa criado com ${metaMap.size} campos")
                     
                     // ? CR�TICO: Adicionar roomId para compatibilidade com pull
                     metaMap["roomId"] = meta.id
@@ -7110,7 +7127,7 @@ class SyncRepository(
                     
                     val documentId = meta.id.toString()
                     val collectionRef = getCollectionReference(firestore, COLLECTION_METAS)
-                    Log.d(TAG, "   Enviando para Firestore: empresas/$currentCompanyId/entidades/${COLLECTION_METAS}/items, document=$documentId")
+                    Timber.tag(TAG).d("   Enviando para Firestore: empresas/$currentCompanyId/entidades/${COLLECTION_METAS}/items, document=$documentId")
                     
                     collectionRef
                         .document(documentId)
@@ -7119,22 +7136,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += metaMap.toString().length.toLong()
-                    Log.d(TAG, "? Meta enviada com sucesso: ${meta.nome} (ID: ${meta.id})")
+                    Timber.tag(TAG).d("? Meta enviada com sucesso: ${meta.nome} (ID: ${meta.id})")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar meta ${meta.id} (${meta.nome}): ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar meta ${meta.id} (${meta.nome}): ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de metas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de metas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de metas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de metas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -7147,23 +7164,23 @@ class SyncRepository(
         val entityType = COLLECTION_COLABORADOR_ROTA
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de colaborador rotas...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de colaborador rotas...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val colaboradorRotasLocais = appRepository.obterTodosColaboradorRotas()
-            Log.d(TAG, "?? Total de colaborador rotas locais encontradas: ${colaboradorRotasLocais.size}")
+            Timber.tag(TAG).d("?? Total de colaborador rotas locais encontradas: ${colaboradorRotasLocais.size}")
             
             val colaboradorRotasParaEnviar = if (canUseIncremental) {
                 colaboradorRotasLocais.filter { colaboradorRota ->
                     val vinculacaoTimestamp = colaboradorRota.dataVinculacao.time
                     vinculacaoTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} vincula��es modificadas desde ${Date(lastPushTimestamp)} (de ${colaboradorRotasLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} vincula��es modificadas desde ${Date(lastPushTimestamp)} (de ${colaboradorRotasLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todas as ${colaboradorRotasLocais.size} vincula��es")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todas as ${colaboradorRotasLocais.size} vincula��es")
                 colaboradorRotasLocais
             }
             
@@ -7197,22 +7214,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += colaboradorRotaMap.toString().length.toLong()
-                    Log.d(TAG, "? ColaboradorRota enviado: Colaborador ${colaboradorRota.colaboradorId}, Rota ${colaboradorRota.rotaId} (ID: $compositeId)")
+                    Timber.tag(TAG).d("? ColaboradorRota enviado: Colaborador ${colaboradorRota.colaboradorId}, Rota ${colaboradorRota.rotaId} (ID: $compositeId)")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar colaborador rota ${colaboradorRota.colaboradorId}_${colaboradorRota.rotaId}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar colaborador rota ${colaboradorRota.colaboradorId}_${colaboradorRota.rotaId}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de colaborador rotas conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de colaborador rotas conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de colaborador rotas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de colaborador rotas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -7226,11 +7243,11 @@ class SyncRepository(
         val entityType = COLLECTION_ADITIVO_MESAS
         
         return try {
-            Log.d(TAG, "?? Iniciando push de aditivo mesas...")
+            Timber.tag(TAG).d("?? Iniciando push de aditivo mesas...")
             // Nota: AditivoMesa n�o tem campo de timestamp, ent�o sempre enviar todos
             // (geralmente s�o poucos registros, impacto baixo)
             val aditivoMesasLocais = appRepository.obterTodosAditivoMesas()
-            Log.d(TAG, "?? Total de aditivo mesas locais encontradas: ${aditivoMesasLocais.size}")
+            Timber.tag(TAG).d("?? Total de aditivo mesas locais encontradas: ${aditivoMesasLocais.size}")
             
             if (aditivoMesasLocais.isEmpty()) {
                 val durationMs = System.currentTimeMillis() - startTime
@@ -7260,22 +7277,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += aditivoMesaMap.toString().length.toLong()
-                    Log.d(TAG, "? AditivoMesa enviado: Aditivo ${aditivoMesa.aditivoId}, Mesa ${aditivoMesa.mesaId} (ID: ${aditivoMesa.id})")
+                    Timber.tag(TAG).d("? AditivoMesa enviado: Aditivo ${aditivoMesa.aditivoId}, Mesa ${aditivoMesa.mesaId} (ID: ${aditivoMesa.id})")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar aditivo mesa ${aditivoMesa.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar aditivo mesa ${aditivoMesa.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push de aditivo mesas conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push de aditivo mesas conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de aditivo mesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de aditivo mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -7289,11 +7306,11 @@ class SyncRepository(
         val entityType = COLLECTION_CONTRATO_MESAS
         
         return try {
-            Log.d(TAG, "?? Iniciando push de contrato mesas...")
+            Timber.tag(TAG).d("?? Iniciando push de contrato mesas...")
             // Nota: ContratoMesa n�o tem campo de timestamp, ent�o sempre enviar todos
             // (geralmente s�o poucos registros, impacto baixo)
             val contratoMesasLocais = appRepository.obterTodosContratoMesas()
-            Log.d(TAG, "?? Total de contrato mesas locais encontradas: ${contratoMesasLocais.size}")
+            Timber.tag(TAG).d("?? Total de contrato mesas locais encontradas: ${contratoMesasLocais.size}")
             
             if (contratoMesasLocais.isEmpty()) {
                 val durationMs = System.currentTimeMillis() - startTime
@@ -7323,22 +7340,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += contratoMesaMap.toString().length.toLong()
-                    Log.d(TAG, "? ContratoMesa enviado: Contrato ${contratoMesa.contratoId}, Mesa ${contratoMesa.mesaId} (ID: ${contratoMesa.id})")
+                    Timber.tag(TAG).d("? ContratoMesa enviado: Contrato ${contratoMesa.contratoId}, Mesa ${contratoMesa.mesaId} (ID: ${contratoMesa.id})")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar contrato mesa ${contratoMesa.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar contrato mesa ${contratoMesa.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push de contrato mesas conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push de contrato mesas conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de contrato mesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de contrato mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -7351,13 +7368,13 @@ class SyncRepository(
         val entityType = COLLECTION_ASSINATURAS
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de assinaturas representante legal...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de assinaturas representante legal...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val assinaturasLocais = appRepository.obterTodasAssinaturasRepresentanteLegal()
-            Log.d(TAG, "?? Total de assinaturas locais encontradas: ${assinaturasLocais.size}")
+            Timber.tag(TAG).d("?? Total de assinaturas locais encontradas: ${assinaturasLocais.size}")
             
             val assinaturasParaEnviar = if (canUseIncremental) {
                 assinaturasLocais.filter { assinatura ->
@@ -7366,10 +7383,10 @@ class SyncRepository(
                         ?: assinatura.dataCriacao.time
                     assinaturaTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} assinaturas modificadas desde ${Date(lastPushTimestamp)} (de ${assinaturasLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} assinaturas modificadas desde ${Date(lastPushTimestamp)} (de ${assinaturasLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todas as ${assinaturasLocais.size} assinaturas")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todas as ${assinaturasLocais.size} assinaturas")
                 assinaturasLocais
             }
             
@@ -7385,7 +7402,7 @@ class SyncRepository(
             
             assinaturasParaEnviar.forEach { assinatura ->
                 try {
-                    Log.d(TAG, "?? Processando assinatura: ID=${assinatura.id}, Nome=${assinatura.nomeRepresentante}")
+                    Timber.tag(TAG).d("?? Processando assinatura: ID=${assinatura.id}, Nome=${assinatura.nomeRepresentante}")
                     
                     val assinaturaMap = entityToMap(assinatura)
                     assinaturaMap["roomId"] = assinatura.id
@@ -7403,22 +7420,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += assinaturaMap.toString().length.toLong()
-                    Log.d(TAG, "? Assinatura enviada com sucesso: ${assinatura.nomeRepresentante} (ID: ${assinatura.id})")
+                    Timber.tag(TAG).d("? Assinatura enviada com sucesso: ${assinatura.nomeRepresentante} (ID: ${assinatura.id})")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar assinatura ${assinatura.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar assinatura ${assinatura.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de assinaturas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de assinaturas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de assinaturas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de assinaturas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -7434,13 +7451,13 @@ class SyncRepository(
         val entityType = COLLECTION_LOGS_AUDITORIA
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de logs auditoria...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de logs auditoria...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val logsLocais = appRepository.obterTodosLogsAuditoria()
-            Log.d(TAG, "?? Total de logs auditoria locais encontrados: ${logsLocais.size}")
+            Timber.tag(TAG).d("?? Total de logs auditoria locais encontrados: ${logsLocais.size}")
             
             val logsParaEnviar = if (canUseIncremental) {
                 logsLocais.filter { log ->
@@ -7449,10 +7466,10 @@ class SyncRepository(
                         ?: log.dataOperacao.time
                     logTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} logs modificados desde ${Date(lastPushTimestamp)} (de ${logsLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} logs modificados desde ${Date(lastPushTimestamp)} (de ${logsLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${logsLocais.size} logs")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${logsLocais.size} logs")
                 logsLocais
             }
             
@@ -7468,7 +7485,7 @@ class SyncRepository(
             
             logsParaEnviar.forEach { log ->
                 try {
-                    Log.d(TAG, "?? Processando log auditoria: ID=${log.id}, Tipo=${log.tipoOperacao}")
+                    Timber.tag(TAG).d("?? Processando log auditoria: ID=${log.id}, Tipo=${log.tipoOperacao}")
                     
                     val logMap = entityToMap(log)
                     logMap["roomId"] = log.id
@@ -7486,22 +7503,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += logMap.toString().length.toLong()
-                    Log.d(TAG, "? Log auditoria enviado com sucesso: ${log.tipoOperacao} (ID: ${log.id})")
+                    Timber.tag(TAG).d("? Log auditoria enviado com sucesso: ${log.tipoOperacao} (ID: ${log.id})")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar log auditoria ${log.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar log auditoria ${log.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de logs auditoria conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de logs auditoria conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de logs auditoria: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de logs auditoria: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -7562,9 +7579,9 @@ class SyncRepository(
     suspend fun limparOperacoesAntigas() {
         try {
             appRepository.limparOperacoesSyncCompletadas(dias = 7)
-            Log.d(TAG, "Opera��es antigas limpas")
+            Timber.tag(TAG).d("Opera��es antigas limpas")
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao limpar opera��es antigas: ${e.message}", e)
+            Timber.e( "Erro ao limpar opera��es antigas: ${e.message}", e)
         }
     }
     
@@ -7582,11 +7599,11 @@ class SyncRepository(
         val entityType = COLLECTION_PANOS_ESTOQUE
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de panos estoque...")
+            Timber.tag(TAG).d("?? Iniciando pull de panos estoque...")
             // Nota: PanoEstoque n�o tem campo de timestamp, ent�o sempre buscar todos
             val collectionRef = getCollectionReference(firestore, COLLECTION_PANOS_ESTOQUE)
             val snapshot = collectionRef.get().await()
-            Log.d(TAG, "?? Total de panos estoque no Firestore: ${snapshot.size()}")
+            Timber.tag(TAG).d("?? Total de panos estoque no Firestore: ${snapshot.size()}")
             
             var syncCount = 0
             var skipCount = 0
@@ -7596,7 +7613,7 @@ class SyncRepository(
             snapshot.documents.forEach { doc ->
                 try {
                     val data = doc.data ?: emptyMap()
-                    Log.d(TAG, "?? Processando pano estoque: ID=${doc.id}")
+                    Timber.tag(TAG).d("?? Processando pano estoque: ID=${doc.id}")
                     
                     val panoId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
@@ -7611,7 +7628,7 @@ class SyncRepository(
                     )
                     
                     if (pano.numero.isBlank()) {
-                        Log.w(TAG, "?? Pano estoque ID $panoId sem n�mero - pulando")
+                        Timber.tag(TAG).w("?? Pano estoque ID $panoId sem n�mero - pulando")
                         skipCount++
                         return@forEach
                     }
@@ -7619,22 +7636,22 @@ class SyncRepository(
                     appRepository.inserirPanoEstoque(pano)
                     syncCount++
                     bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
-                    Log.d(TAG, "? PanoEstoque sincronizado: ${pano.numero} (ID: $panoId)")
+                    Timber.tag(TAG).d("? PanoEstoque sincronizado: ${pano.numero} (ID: $panoId)")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar pano estoque ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar pano estoque ${doc.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             saveSyncMetadata(entityType, syncCount, durationMs, bytesDownloaded = bytesDownloaded, error = if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Pull de panos estoque conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de panos estoque conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             saveSyncMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no pull de panos estoque: ${e.message}", e)
+            Timber.e( "? Erro no pull de panos estoque: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -7651,11 +7668,11 @@ class SyncRepository(
         val entityType = COLLECTION_PANOS_ESTOQUE
         
         return try {
-            Log.d(TAG, "?? Iniciando push de panos estoque...")
+            Timber.tag(TAG).d("?? Iniciando push de panos estoque...")
             // Nota: PanoEstoque n�o tem campo de timestamp, ent�o sempre enviar todos
             // (geralmente s�o poucos registros, impacto baixo)
             val panosLocais = appRepository.obterTodosPanosEstoque().first()
-            Log.d(TAG, "?? Total de panos estoque locais encontrados: ${panosLocais.size}")
+            Timber.tag(TAG).d("?? Total de panos estoque locais encontrados: ${panosLocais.size}")
             
             if (panosLocais.isEmpty()) {
                 val durationMs = System.currentTimeMillis() - startTime
@@ -7669,7 +7686,7 @@ class SyncRepository(
             
             panosLocais.forEach { pano ->
                 try {
-                    Log.d(TAG, "?? Processando pano estoque: ID=${pano.id}")
+                    Timber.tag(TAG).d("?? Processando pano estoque: ID=${pano.id}")
                     
                     val panoMap = entityToMap(pano)
                     panoMap["roomId"] = pano.id
@@ -7687,22 +7704,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += panoMap.toString().length.toLong()
-                    Log.d(TAG, "? PanoEstoque enviado com sucesso: ${pano.numero} (ID: ${pano.id})")
+                    Timber.tag(TAG).d("? PanoEstoque enviado com sucesso: ${pano.numero} (ID: ${pano.id})")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar pano estoque ${pano.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar pano estoque ${pano.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de panos estoque conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de panos estoque conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de panos estoque: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de panos estoque: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -7715,7 +7732,7 @@ class SyncRepository(
         val entityType = COLLECTION_MESAS_VENDIDAS
         
         return try {
-            Log.d(TAG, "Iniciando pull de mesas vendidas...")
+            Timber.tag(TAG).d("Iniciando pull de mesas vendidas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS_VENDIDAS)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -7724,7 +7741,7 @@ class SyncRepository(
             
             if (canUseIncremental) {
                 // Tentar sincroniza��o incremental
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullMesaVendidaIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 
                 if (incrementalResult != null) {
@@ -7733,24 +7750,24 @@ class SyncRepository(
                     
                     // ? VALIDA��O: Se incremental retornou 0 mas h� mesas vendidas locais, for�ar completo
                     if (syncedCount == 0 && localCount > 0) {
-                        Log.w(TAG, "?? Incremental retornou 0 mesas vendidas mas h� $localCount locais - executando pull COMPLETO como valida��o")
+                        Timber.tag(TAG).w("?? Incremental retornou 0 mesas vendidas mas h� $localCount locais - executando pull COMPLETO como valida��o")
                         return pullMesaVendidaComplete(collectionRef, entityType, startTime, timestampOverride)
                     }
                     
                     return incrementalResult
                 } else {
                     // Incremental falhou, usar m�todo completo
-                    Log.w(TAG, "?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o - usando m�todo COMPLETO")
             }
             
             // M�todo completo (sempre funciona, mesmo c�digo que estava antes)
             pullMesaVendidaComplete(collectionRef, entityType, startTime, timestampOverride)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de mesas vendidas: ${e.message}", e)
+            Timber.e( "Erro no pull de mesas vendidas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -7775,7 +7792,7 @@ class SyncRepository(
             resetRouteFilters()
             val todasMesasVendidas = appRepository.obterTodasMesasVendidas().first()
             val mesasVendidasCache = todasMesasVendidas.associateBy { it.id }
-            Log.d(TAG, "   ?? Cache de mesas vendidas carregado: ${mesasVendidasCache.size} mesas vendidas locais")
+            Timber.tag(TAG).d("   ?? Cache de mesas vendidas carregado: ${mesasVendidasCache.size} mesas vendidas locais")
             
             // Tentar query incremental primeiro (otimiza��o)
             val incrementalMesasVendidas = try {
@@ -7786,24 +7803,24 @@ class SyncRepository(
                     .await()
                     .documents
             } catch (e: Exception) {
-                Log.w(TAG, "?? Query incremental falhou, buscando todas as mesas vendidas: ${e.message}")
+                Timber.tag(TAG).w("?? Query incremental falhou, buscando todas as mesas vendidas: ${e.message}")
                 emptyList()
             }
             
             // ? CORRE��O: Se incremental retornou 0 mas h� mesas vendidas locais, buscar TODAS
             val allMesasVendidas = if (incrementalMesasVendidas.isEmpty() && mesasVendidasCache.isNotEmpty()) {
-                Log.w(TAG, "?? Incremental retornou 0 mesas vendidas mas h� ${mesasVendidasCache.size} locais - buscando TODAS para garantir sincroniza��o")
+                Timber.tag(TAG).w("?? Incremental retornou 0 mesas vendidas mas h� ${mesasVendidasCache.size} locais - buscando TODAS para garantir sincroniza��o")
                 try {
                     collectionRef.get().await().documents
                 } catch (e: Exception) {
-                    Log.w(TAG, "?? Erro ao buscar todas as mesas vendidas: ${e.message}")
+                    Timber.tag(TAG).w("?? Erro ao buscar todas as mesas vendidas: ${e.message}")
                     return null
                 }
             } else {
                 incrementalMesasVendidas
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL: ${allMesasVendidas.size} documentos encontrados")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL: ${allMesasVendidas.size} documentos encontrados")
             
             var syncCount = 0
             var skipCount = 0
@@ -7813,7 +7830,7 @@ class SyncRepository(
             allMesasVendidas.forEach { doc ->
                 try {
                     val data = doc.data ?: emptyMap()
-                    Log.d(TAG, "?? Processando mesa vendida: ID=${doc.id}")
+                    Timber.tag(TAG).d("?? Processando mesa vendida: ID=${doc.id}")
                     
                     val mesaVendidaId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
@@ -7880,7 +7897,7 @@ class SyncRepository(
                         }
                         
                         if (mesaVendida.numeroMesa.isBlank()) {
-                            Log.w(TAG, "?? Mesa vendida ID $mesaVendidaId sem n�mero - pulando")
+                            Timber.tag(TAG).w("?? Mesa vendida ID $mesaVendidaId sem n�mero - pulando")
                             skipCount++
                             return@forEach
                         }
@@ -7892,14 +7909,14 @@ class SyncRepository(
                         }
                         syncCount++
                         bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
-                        Log.d(TAG, "? MesaVendida sincronizada: ${mesaVendida.numeroMesa} (ID: $mesaVendidaId)")
+                        Timber.tag(TAG).d("? MesaVendida sincronizada: ${mesaVendida.numeroMesa} (ID: $mesaVendidaId)")
                     } else {
                         skipCount++
-                        Log.d(TAG, "?? Mesa vendida local mais recente ou igual, mantendo: ID=$mesaVendidaId (servidor: $serverTimestamp, local: $localTimestamp)")
+                        Timber.tag(TAG).d("?? Mesa vendida local mais recente ou igual, mantendo: ID=$mesaVendidaId (servidor: $serverTimestamp, local: $localTimestamp)")
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar mesa vendida ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar mesa vendida ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -7913,10 +7930,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de mesas vendidas: sync=$syncCount, skipped=$skipCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de mesas vendidas: sync=$syncCount, skipped=$skipCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Falha na sincroniza��o incremental de mesas vendidas: ${e.message}")
+            Timber.tag(TAG).w("?? Falha na sincroniza��o incremental de mesas vendidas: ${e.message}")
             return null // Retorna null para usar fallback completo
         }
     }
@@ -7932,7 +7949,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.orderBy("lastModified").get().await()
-            Log.d(TAG, "?? Pull COMPLETO de mesas vendidas - documentos recebidos: ${snapshot.size()}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de mesas vendidas - documentos recebidos: ${snapshot.size()}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
@@ -8003,7 +8020,7 @@ class SyncRepository(
                     bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar mesa vendida ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar mesa vendida ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -8017,10 +8034,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull COMPLETO de mesas vendidas: sync=$syncCount, skipped=$skipCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull COMPLETO de mesas vendidas: sync=$syncCount, skipped=$skipCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de mesas vendidas: ${e.message}", e)
+            Timber.e( "? Erro no pull completo de mesas vendidas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -8034,13 +8051,13 @@ class SyncRepository(
         val entityType = COLLECTION_MESAS_VENDIDAS
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de mesas vendidas...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de mesas vendidas...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val mesasVendidasLocais = appRepository.obterTodasMesasVendidas().first()
-            Log.d(TAG, "?? Total de mesas vendidas locais encontradas: ${mesasVendidasLocais.size}")
+            Timber.tag(TAG).d("?? Total de mesas vendidas locais encontradas: ${mesasVendidasLocais.size}")
             
             // ? Filtrar apenas mesas vendidas modificadas desde �ltimo push
             val mesasParaEnviar = if (canUseIncremental) {
@@ -8048,10 +8065,10 @@ class SyncRepository(
                     val mesaTimestamp = mesaVendida.dataCriacao.time
                     mesaTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} mesas vendidas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasVendidasLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} mesas vendidas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasVendidasLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todas as ${mesasVendidasLocais.size} mesas vendidas")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todas as ${mesasVendidasLocais.size} mesas vendidas")
                 mesasVendidasLocais
             }
             
@@ -8088,25 +8105,25 @@ class SyncRepository(
                     // Os dados locais devem permanecer inalterados na exporta��o
                     // A atualiza��o dos dados locais acontece apenas na importa��o (pull)
                     // quando h� dados novos no servidor que devem ser sincronizados
-                    Log.d(TAG, "? Mesa vendida ${mesaVendida.id} exportada com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
+                    Timber.tag(TAG).d("? Mesa vendida ${mesaVendida.id} exportada com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += mesaVendidaMap.toString().length.toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "Erro ao enviar mesa vendida ${mesaVendida.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao enviar mesa vendida ${mesaVendida.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de mesas vendidas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de mesas vendidas conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "Erro no push de mesas vendidas: ${e.message}", e)
+            Timber.e( "Erro no push de mesas vendidas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -8120,7 +8137,7 @@ class SyncRepository(
         val entityType = COLLECTION_STOCK_ITEMS
         
         return try {
-            Log.d(TAG, "Iniciando pull de stock items...")
+            Timber.tag(TAG).d("Iniciando pull de stock items...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_STOCK_ITEMS)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -8129,7 +8146,7 @@ class SyncRepository(
             
             if (canUseIncremental) {
                 // Tentar sincroniza��o incremental
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullStockItemIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 
                 if (incrementalResult != null) {
@@ -8138,24 +8155,24 @@ class SyncRepository(
                     
                     // ? VALIDA��O: Se incremental retornou 0 mas h� stock items locais, for�ar completo
                     if (syncedCount == 0 && localCount > 0) {
-                        Log.w(TAG, "?? Incremental retornou 0 stock items mas h� $localCount locais - executando pull COMPLETO como valida��o")
+                        Timber.tag(TAG).w("?? Incremental retornou 0 stock items mas h� $localCount locais - executando pull COMPLETO como valida��o")
                         return pullStockItemComplete(collectionRef, entityType, startTime, timestampOverride)
                     }
                     
                     return incrementalResult
                 } else {
                     // Incremental falhou, usar m�todo completo
-                    Log.w(TAG, "?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o - usando m�todo COMPLETO")
             }
             
             // M�todo completo (sempre funciona, mesmo c�digo que estava antes)
             pullStockItemComplete(collectionRef, entityType, startTime, timestampOverride)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de stock items: ${e.message}", e)
+            Timber.e( "Erro no pull de stock items: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -8176,7 +8193,7 @@ class SyncRepository(
             resetRouteFilters()
             val todosStockItems = appRepository.obterTodosStockItems().first()
             val stockItemsCache = todosStockItems.associateBy { it.id }
-            Log.d(TAG, "   ?? Cache de stock items carregado: ${stockItemsCache.size} stock items locais")
+            Timber.tag(TAG).d("   ?? Cache de stock items carregado: ${stockItemsCache.size} stock items locais")
             
             // Tentar query incremental primeiro (otimiza��o)
             val incrementalStockItems = try {
@@ -8187,24 +8204,24 @@ class SyncRepository(
                     .await()
                     .documents
             } catch (e: Exception) {
-                Log.w(TAG, "?? Query incremental falhou, buscando todos os stock items: ${e.message}")
+                Timber.tag(TAG).w("?? Query incremental falhou, buscando todos os stock items: ${e.message}")
                 emptyList()
             }
             
             // ? CORRE��O: Se incremental retornou 0 mas h� stock items locais, buscar TODOS
             val allStockItems = if (incrementalStockItems.isEmpty() && stockItemsCache.isNotEmpty()) {
-                Log.w(TAG, "?? Incremental retornou 0 stock items mas h� ${stockItemsCache.size} locais - buscando TODOS para garantir sincroniza��o")
+                Timber.tag(TAG).w("?? Incremental retornou 0 stock items mas h� ${stockItemsCache.size} locais - buscando TODOS para garantir sincroniza��o")
                 try {
                     collectionRef.get().await().documents
                 } catch (e: Exception) {
-                    Log.w(TAG, "?? Erro ao buscar todos os stock items: ${e.message}")
+                    Timber.tag(TAG).w("?? Erro ao buscar todos os stock items: ${e.message}")
                     return null
                 }
             } else {
                 incrementalStockItems
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL: ${allStockItems.size} documentos encontrados")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL: ${allStockItems.size} documentos encontrados")
             
             var syncCount = 0
             var skipCount = 0
@@ -8214,7 +8231,7 @@ class SyncRepository(
             allStockItems.forEach { doc ->
                 try {
                     val data = doc.data ?: emptyMap()
-                    Log.d(TAG, "?? Processando stock item: ID=${doc.id}")
+                    Timber.tag(TAG).d("?? Processando stock item: ID=${doc.id}")
                     
                     val stockItemId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
@@ -8248,7 +8265,7 @@ class SyncRepository(
                     
                     if (shouldSync) {
                         if (stockItem.name.isBlank()) {
-                            Log.w(TAG, "?? Stock item ID $stockItemId sem nome - pulando")
+                            Timber.tag(TAG).w("?? Stock item ID $stockItemId sem nome - pulando")
                             skipCount++
                             return@forEach
                         }
@@ -8260,14 +8277,14 @@ class SyncRepository(
                         }
                         syncCount++
                         bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
-                        Log.d(TAG, "? StockItem sincronizado: ${stockItem.name} (ID: $stockItemId)")
+                        Timber.tag(TAG).d("? StockItem sincronizado: ${stockItem.name} (ID: $stockItemId)")
                     } else {
                         skipCount++
-                        Log.d(TAG, "?? Stock item local mais recente ou igual, mantendo: ID=$stockItemId (servidor: $serverTimestamp, local: $localTimestamp)")
+                        Timber.tag(TAG).d("?? Stock item local mais recente ou igual, mantendo: ID=$stockItemId (servidor: $serverTimestamp, local: $localTimestamp)")
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar stock item ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar stock item ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -8281,10 +8298,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de stock items: sync=$syncCount, skipped=$skipCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de stock items: sync=$syncCount, skipped=$skipCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Falha na sincroniza��o incremental de stock items: ${e.message}")
+            Timber.tag(TAG).w("?? Falha na sincroniza��o incremental de stock items: ${e.message}")
             return null // Retorna null para usar fallback completo
         }
     }
@@ -8300,7 +8317,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.orderBy("lastModified").get().await()
-            Log.d(TAG, "?? Pull COMPLETO de stock items - documentos recebidos: ${snapshot.size()}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de stock items - documentos recebidos: ${snapshot.size()}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
@@ -8350,7 +8367,7 @@ class SyncRepository(
                     bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar stock item ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar stock item ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -8364,10 +8381,10 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull COMPLETO de stock items: sync=$syncCount, skipped=$skipCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull COMPLETO de stock items: sync=$syncCount, skipped=$skipCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de stock items: ${e.message}", e)
+            Timber.e( "? Erro no pull completo de stock items: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -8381,13 +8398,13 @@ class SyncRepository(
         val entityType = COLLECTION_STOCK_ITEMS
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de stock items...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de stock items...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val stockItemsLocais = appRepository.obterTodosStockItems().first()
-            Log.d(TAG, "?? Total de stock items locais encontrados: ${stockItemsLocais.size}")
+            Timber.tag(TAG).d("?? Total de stock items locais encontrados: ${stockItemsLocais.size}")
             
             // ? Filtrar apenas stock items modificados desde �ltimo push (usar updatedAt)
             val itemsParaEnviar = if (canUseIncremental) {
@@ -8395,10 +8412,10 @@ class SyncRepository(
                     val itemTimestamp = stockItem.updatedAt.time
                     itemTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} stock items modificados desde ${Date(lastPushTimestamp)} (de ${stockItemsLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} stock items modificados desde ${Date(lastPushTimestamp)} (de ${stockItemsLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${stockItemsLocais.size} stock items")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${stockItemsLocais.size} stock items")
                 stockItemsLocais
             }
             
@@ -8435,25 +8452,25 @@ class SyncRepository(
                     // Os dados locais devem permanecer inalterados na exporta��o
                     // A atualiza��o dos dados locais acontece apenas na importa��o (pull)
                     // quando h� dados novos no servidor que devem ser sincronizados
-                    Log.d(TAG, "? Stock item ${stockItem.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
+                    Timber.tag(TAG).d("? Stock item ${stockItem.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += stockItemMap.toString().length.toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "Erro ao enviar stock item ${stockItem.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("Erro ao enviar stock item ${stockItem.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de stock items conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de stock items conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "Erro no push de stock items: ${e.message}", e)
+            Timber.e( "Erro no push de stock items: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -8466,7 +8483,7 @@ class SyncRepository(
         val entityType = COLLECTION_MESAS_REFORMADAS
         
         return try {
-            Log.d(TAG, "Iniciando pull de mesas reformadas...")
+            Timber.tag(TAG).d("Iniciando pull de mesas reformadas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_MESAS_REFORMADAS)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -8475,7 +8492,7 @@ class SyncRepository(
             
             if (canUseIncremental) {
                 // Tentar sincroniza��o incremental
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullMesaReformadaIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 
                 if (incrementalResult != null) {
@@ -8484,24 +8501,24 @@ class SyncRepository(
                     
                     // ? VALIDA��O: Se incremental retornou 0 mas h� mesas reformadas locais, for�ar completo
                     if (syncedCount == 0 && localCount > 0) {
-                        Log.w(TAG, "?? Incremental retornou 0 mesas reformadas mas h� $localCount locais - executando pull COMPLETO como valida��o")
+                        Timber.tag(TAG).w("?? Incremental retornou 0 mesas reformadas mas h� $localCount locais - executando pull COMPLETO como valida��o")
                         return pullMesaReformadaComplete(collectionRef, entityType, startTime, timestampOverride)
                     }
                     
                     return incrementalResult
                 } else {
                     // Incremental falhou, usar m�todo completo
-                    Log.w(TAG, "?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o - usando m�todo COMPLETO")
             }
             
             // M�todo completo (sempre funciona, mesmo c�digo que estava antes)
             pullMesaReformadaComplete(collectionRef, entityType, startTime, timestampOverride)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de mesas reformadas: ${e.message}", e)
+            Timber.e( "Erro no pull de mesas reformadas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -8527,7 +8544,7 @@ class SyncRepository(
             resetRouteFilters()
             val todasMesasReformadas = appRepository.obterTodasMesasReformadas().first()
             val mesasReformadasCache = todasMesasReformadas.associateBy { it.id }
-            Log.d(TAG, "   ?? Cache de mesas reformadas carregado: ${mesasReformadasCache.size} mesas reformadas locais")
+            Timber.tag(TAG).d("   ?? Cache de mesas reformadas carregado: ${mesasReformadasCache.size} mesas reformadas locais")
             
             // Tentar query incremental primeiro (otimiza��o)
             val incrementalMesasReformadas = try {
@@ -8538,24 +8555,24 @@ class SyncRepository(
                     .await()
                     .documents
             } catch (e: Exception) {
-                Log.w(TAG, "?? Query incremental falhou, buscando todas as mesas reformadas: ${e.message}")
+                Timber.tag(TAG).w("?? Query incremental falhou, buscando todas as mesas reformadas: ${e.message}")
                 emptyList()
             }
             
             // ? CORRE��O: Se incremental retornou 0 mas h� mesas reformadas locais, buscar TODAS
             val allMesasReformadas = if (incrementalMesasReformadas.isEmpty() && mesasReformadasCache.isNotEmpty()) {
-                Log.w(TAG, "?? Incremental retornou 0 mesas reformadas mas h� ${mesasReformadasCache.size} locais - buscando TODAS para garantir sincroniza��o")
+                Timber.tag(TAG).w("?? Incremental retornou 0 mesas reformadas mas h� ${mesasReformadasCache.size} locais - buscando TODAS para garantir sincroniza��o")
                 try {
                     collectionRef.get().await().documents
                 } catch (e: Exception) {
-                    Log.w(TAG, "?? Erro ao buscar todas as mesas reformadas: ${e.message}")
+                    Timber.tag(TAG).w("?? Erro ao buscar todas as mesas reformadas: ${e.message}")
                     return null
                 }
             } else {
                 incrementalMesasReformadas
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL: ${allMesasReformadas.size} documentos encontrados")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL: ${allMesasReformadas.size} documentos encontrados")
             
             var syncCount = 0
             var skipCount = 0
@@ -8565,7 +8582,7 @@ class SyncRepository(
             allMesasReformadas.forEach { doc ->
                 try {
                     val data = doc.data ?: emptyMap()
-                    Log.d(TAG, "?? Processando mesa reformada: ID=${doc.id}")
+                    Timber.tag(TAG).d("?? Processando mesa reformada: ID=${doc.id}")
                     
                     val mesaReformadaId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
@@ -8586,7 +8603,7 @@ class SyncRepository(
                     val dataReforma = when {
                         // Se existe localmente com data válida (não é de hoje), preservar
                         mesaReformadaLocal != null && dataLocalValida -> {
-                            Log.d(TAG, "⚠️ Preservando dataReforma local para mesa reformada ID=$mesaReformadaId: ${mesaReformadaLocal.dataReforma}")
+                            Timber.tag(TAG).d("⚠️ Preservando dataReforma local para mesa reformada ID=$mesaReformadaId: ${mesaReformadaLocal.dataReforma}")
                             mesaReformadaLocal.dataReforma
                         }
                         // Se o Firestore tem dataReforma válida, usar ela
@@ -8646,7 +8663,7 @@ class SyncRepository(
                     
                     if (shouldSync) {
                         if (mesaReformada.numeroMesa.isBlank()) {
-                            Log.w(TAG, "?? Mesa reformada ID $mesaReformadaId sem n�mero - pulando")
+                            Timber.tag(TAG).w("?? Mesa reformada ID $mesaReformadaId sem n�mero - pulando")
                             skipCount++
                             return@forEach
                         }
@@ -8657,7 +8674,7 @@ class SyncRepository(
                         val dataLocalValida = mesaReformadaLocal?.dataReforma?.time?.let { it < inicioHoje } ?: false
                         val mesaReformadaParaSalvar = if (mesaReformadaLocal != null && dataLocalValida && mesaReformada.dataReforma.time >= inicioHoje) {
                             // Se a data do Firestore é de hoje (fallback) mas a local é válida, preservar local
-                            Log.d(TAG, "⚠️ Corrigindo dataReforma de fallback para data local válida: ${mesaReformadaLocal.dataReforma}")
+                            Timber.tag(TAG).d("⚠️ Corrigindo dataReforma de fallback para data local válida: ${mesaReformadaLocal.dataReforma}")
                             mesaReformada.copy(dataReforma = mesaReformadaLocal.dataReforma)
                         } else {
                             mesaReformada
@@ -8670,14 +8687,14 @@ class SyncRepository(
                         }
                         syncCount++
                         bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
-                        Log.d(TAG, "? MesaReformada sincronizada: ${mesaReformada.numeroMesa} (ID: $mesaReformadaId)")
+                        Timber.tag(TAG).d("? MesaReformada sincronizada: ${mesaReformada.numeroMesa} (ID: $mesaReformadaId)")
                     } else {
                         skipCount++
-                        Log.d(TAG, "?? Mesa reformada local mais recente ou igual, mantendo: ID=$mesaReformadaId (servidor: $serverTimestamp, local: $localTimestamp)")
+                        Timber.tag(TAG).d("?? Mesa reformada local mais recente ou igual, mantendo: ID=$mesaReformadaId (servidor: $serverTimestamp, local: $localTimestamp)")
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar mesa reformada ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar mesa reformada ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -8693,13 +8710,13 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull MesasReformadas (INCREMENTAL) conclu�do:")
-            Log.d(TAG, "   ?? $syncCount sincronizadas, $skipCount puladas, $errorCount erros")
-            Log.d(TAG, "   ?? Dura��o: ${durationMs}ms")
+            Timber.tag(TAG).d("? Pull MesasReformadas (INCREMENTAL) conclu�do:")
+            Timber.tag(TAG).d("   ?? $syncCount sincronizadas, $skipCount puladas, $errorCount erros")
+            Timber.tag(TAG).d("   ?? Dura��o: ${durationMs}ms")
             
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro na sincroniza��o incremental de mesas reformadas: ${e.message}")
+            Timber.tag(TAG).w("?? Erro na sincroniza��o incremental de mesas reformadas: ${e.message}")
             null // Falhou, usar m�todo completo
         }
     }
@@ -8716,7 +8733,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.orderBy("lastModified").get().await()
-            Log.d(TAG, "?? Pull COMPLETO de mesas reformadas - documentos recebidos: ${snapshot.size()}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de mesas reformadas - documentos recebidos: ${snapshot.size()}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
@@ -8751,7 +8768,7 @@ class SyncRepository(
                     val dataReforma = when {
                         // Se existe localmente com data válida (não é de hoje), preservar
                         mesaReformadaLocal != null && dataLocalValida -> {
-                            Log.d(TAG, "⚠️ Preservando dataReforma local para mesa reformada ID=$mesaReformadaId: ${mesaReformadaLocal.dataReforma}")
+                            Timber.tag(TAG).d("⚠️ Preservando dataReforma local para mesa reformada ID=$mesaReformadaId: ${mesaReformadaLocal.dataReforma}")
                             mesaReformadaLocal.dataReforma
                         }
                         // Se o Firestore tem dataReforma válida, usar ela
@@ -8803,7 +8820,7 @@ class SyncRepository(
                     bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar mesa reformada ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar mesa reformada ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -8817,12 +8834,12 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull MesasReformadas (COMPLETO) conclu�do: $syncCount sincronizadas, $skipCount ignoradas, $errorCount erros")
+            Timber.tag(TAG).d("? Pull MesasReformadas (COMPLETO) conclu�do: $syncCount sincronizadas, $skipCount ignoradas, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             saveSyncMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no pull completo de mesas reformadas: ${e.message}", e)
+            Timber.e( "? Erro no pull completo de mesas reformadas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -8838,23 +8855,23 @@ class SyncRepository(
         val entityType = COLLECTION_MESAS_REFORMADAS
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de mesas reformadas...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de mesas reformadas...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val mesasReformadasLocais = appRepository.obterTodasMesasReformadas().first()
-            Log.d(TAG, "?? Total de mesas reformadas locais encontradas: ${mesasReformadasLocais.size}")
+            Timber.tag(TAG).d("?? Total de mesas reformadas locais encontradas: ${mesasReformadasLocais.size}")
             
             val mesasParaEnviar = if (canUseIncremental) {
                 mesasReformadasLocais.filter { mesaReformada ->
                     val mesaTimestamp = mesaReformada.dataCriacao.time
                     mesaTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} mesas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasReformadasLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} mesas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasReformadasLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todas as ${mesasReformadasLocais.size} mesas")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todas as ${mesasReformadasLocais.size} mesas")
                 mesasReformadasLocais
             }
             
@@ -8892,25 +8909,25 @@ class SyncRepository(
                     // Os dados locais devem permanecer inalterados na exporta��o
                     // A atualiza��o dos dados locais acontece apenas na importa��o (pull)
                     // quando h� dados novos no servidor que devem ser sincronizados
-                    Log.d(TAG, "? MesaReformada ${mesaReformada.id} exportada com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
+                    Timber.tag(TAG).d("? MesaReformada ${mesaReformada.id} exportada com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += mesaReformadaMap.toString().length.toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar mesa reformada ${mesaReformada.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar mesa reformada ${mesaReformada.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de mesas reformadas conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de mesas reformadas conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de mesas reformadas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de mesas reformadas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -8927,7 +8944,7 @@ class SyncRepository(
         val entityType = COLLECTION_PANO_MESAS
         
         return try {
-            Log.d(TAG, "Iniciando pull de pano mesas...")
+            Timber.tag(TAG).d("Iniciando pull de pano mesas...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_PANO_MESAS)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -8936,7 +8953,7 @@ class SyncRepository(
             
             if (canUseIncremental) {
                 // Tentar sincroniza��o incremental
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullPanoMesaIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 
                 if (incrementalResult != null) {
@@ -8945,24 +8962,24 @@ class SyncRepository(
                     
                     // ? VALIDA��O: Se incremental retornou 0 mas h� pano mesas locais, for�ar completo
                     if (syncedCount == 0 && localCount > 0) {
-                        Log.w(TAG, "?? Incremental retornou 0 pano mesas mas h� $localCount locais - executando pull COMPLETO como valida��o")
+                        Timber.tag(TAG).w("?? Incremental retornou 0 pano mesas mas h� $localCount locais - executando pull COMPLETO como valida��o")
                         return pullPanoMesaComplete(collectionRef, entityType, startTime, timestampOverride)
                     }
                     
                     return incrementalResult
                 } else {
                     // Incremental falhou, usar m�todo completo
-                    Log.w(TAG, "?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o - usando m�todo COMPLETO")
             }
             
             // M�todo completo (sempre funciona, mesmo c�digo que estava antes)
             pullPanoMesaComplete(collectionRef, entityType, startTime, timestampOverride)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de pano mesas: ${e.message}", e)
+            Timber.e( "Erro no pull de pano mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -8984,7 +9001,7 @@ class SyncRepository(
             resetRouteFilters()
             val todosPanoMesas = appRepository.obterTodosPanoMesa()
             val panoMesasCache = todosPanoMesas.associateBy { it.id }
-            Log.d(TAG, "   ?? Cache de pano mesas carregado: ${panoMesasCache.size} pano mesas locais")
+            Timber.tag(TAG).d("   ?? Cache de pano mesas carregado: ${panoMesasCache.size} pano mesas locais")
             
             // Tentar query incremental primeiro (otimiza��o)
             val incrementalPanoMesas = try {
@@ -8995,24 +9012,24 @@ class SyncRepository(
                     .await()
                     .documents
             } catch (e: Exception) {
-                Log.w(TAG, "?? Query incremental falhou, buscando todas as pano mesas: ${e.message}")
+                Timber.tag(TAG).w("?? Query incremental falhou, buscando todas as pano mesas: ${e.message}")
                 emptyList()
             }
             
             // ? CORRE��O: Se incremental retornou 0 mas h� pano mesas locais, buscar TODAS
             val allPanoMesas = if (incrementalPanoMesas.isEmpty() && panoMesasCache.isNotEmpty()) {
-                Log.w(TAG, "?? Incremental retornou 0 pano mesas mas h� ${panoMesasCache.size} locais - buscando TODAS para garantir sincroniza��o")
+                Timber.tag(TAG).w("?? Incremental retornou 0 pano mesas mas h� ${panoMesasCache.size} locais - buscando TODAS para garantir sincroniza��o")
                 try {
                     collectionRef.get().await().documents
                 } catch (e: Exception) {
-                    Log.w(TAG, "?? Erro ao buscar todas as pano mesas: ${e.message}")
+                    Timber.tag(TAG).w("?? Erro ao buscar todas as pano mesas: ${e.message}")
                     return null
                 }
             } else {
                 incrementalPanoMesas
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL: ${allPanoMesas.size} documentos encontrados")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL: ${allPanoMesas.size} documentos encontrados")
             
             var syncCount = 0
             var skipCount = 0
@@ -9022,7 +9039,7 @@ class SyncRepository(
             allPanoMesas.forEach { doc ->
                 try {
                     val data = doc.data ?: emptyMap()
-                    Log.d(TAG, "?? Processando pano mesa: ID=${doc.id}")
+                    Timber.tag(TAG).d("?? Processando pano mesa: ID=${doc.id}")
                     
                     val panoMesaId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
@@ -9055,7 +9072,7 @@ class SyncRepository(
                     
                     if (shouldSync) {
                         if (panoMesa.mesaId == 0L || panoMesa.panoId == 0L) {
-                            Log.w(TAG, "?? Pano mesa ID $panoMesaId sem mesaId ou panoId - pulando")
+                            Timber.tag(TAG).w("?? Pano mesa ID $panoMesaId sem mesaId ou panoId - pulando")
                             skipCount++
                             return@forEach
                         }
@@ -9067,14 +9084,14 @@ class SyncRepository(
                         }
                         syncCount++
                         bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
-                        Log.d(TAG, "? PanoMesa sincronizado: Mesa ${panoMesa.mesaId}, Pano ${panoMesa.panoId} (ID: $panoMesaId)")
+                        Timber.tag(TAG).d("? PanoMesa sincronizado: Mesa ${panoMesa.mesaId}, Pano ${panoMesa.panoId} (ID: $panoMesaId)")
                     } else {
                         skipCount++
-                        Log.d(TAG, "?? Pano mesa local mais recente ou igual, mantendo: ID=$panoMesaId (servidor: $serverTimestamp, local: $localTimestamp)")
+                        Timber.tag(TAG).d("?? Pano mesa local mais recente ou igual, mantendo: ID=$panoMesaId (servidor: $serverTimestamp, local: $localTimestamp)")
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar pano mesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar pano mesa ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -9090,13 +9107,13 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull PanoMesas (INCREMENTAL) conclu�do:")
-            Log.d(TAG, "   ?? $syncCount sincronizados, $skipCount pulados, $errorCount erros")
-            Log.d(TAG, "   ?? Dura��o: ${durationMs}ms")
+            Timber.tag(TAG).d("? Pull PanoMesas (INCREMENTAL) conclu�do:")
+            Timber.tag(TAG).d("   ?? $syncCount sincronizados, $skipCount pulados, $errorCount erros")
+            Timber.tag(TAG).d("   ?? Dura��o: ${durationMs}ms")
             
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro na sincroniza��o incremental de pano mesas: ${e.message}")
+            Timber.tag(TAG).w("?? Erro na sincroniza��o incremental de pano mesas: ${e.message}")
             null // Falhou, usar m�todo completo
         }
     }
@@ -9113,7 +9130,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.orderBy("lastModified").get().await()
-            Log.d(TAG, "?? Pull COMPLETO de pano mesas - documentos recebidos: ${snapshot.size()}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de pano mesas - documentos recebidos: ${snapshot.size()}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
@@ -9163,7 +9180,7 @@ class SyncRepository(
                     bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar pano mesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar pano mesa ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -9177,12 +9194,12 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull PanoMesas (COMPLETO) conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            Timber.tag(TAG).d("? Pull PanoMesas (COMPLETO) conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             saveSyncMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no pull completo de pano mesas: ${e.message}", e)
+            Timber.e( "? Erro no pull completo de pano mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -9196,13 +9213,13 @@ class SyncRepository(
         val entityType = COLLECTION_PANO_MESAS
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de pano mesas...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de pano mesas...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val panoMesasLocais = appRepository.obterTodosPanoMesa()
-            Log.d(TAG, "?? Total de pano mesas locais encontrados: ${panoMesasLocais.size}")
+            Timber.tag(TAG).d("?? Total de pano mesas locais encontrados: ${panoMesasLocais.size}")
             
             // ? Filtrar apenas pano mesas modificados desde �ltimo push (usar dataCriacao)
             val panoMesasParaEnviar = if (canUseIncremental) {
@@ -9210,10 +9227,10 @@ class SyncRepository(
                     val panoMesaTimestamp = panoMesa.dataCriacao.time
                     panoMesaTimestamp > lastPushTimestamp
                 }.also { filteredList ->
-                    Log.d(TAG, "?? Push INCREMENTAL: ${filteredList.size} pano mesas modificados desde ${Date(lastPushTimestamp)} (de ${panoMesasLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${filteredList.size} pano mesas modificados desde ${Date(lastPushTimestamp)} (de ${panoMesasLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${panoMesasLocais.size} pano mesas")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${panoMesasLocais.size} pano mesas")
                 panoMesasLocais
             }
             
@@ -9250,25 +9267,25 @@ class SyncRepository(
                     // Os dados locais devem permanecer inalterados na exporta��o
                     // A atualiza��o dos dados locais acontece apenas na importa��o (pull)
                     // quando h� dados novos no servidor que devem ser sincronizados
-                    Log.d(TAG, "? PanoMesa ${panoMesa.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
+                    Timber.tag(TAG).d("? PanoMesa ${panoMesa.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += panoMesaMap.toString().length.toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar pano mesa ${panoMesa.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar pano mesa ${panoMesa.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de pano mesas conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de pano mesas conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de pano mesas: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de pano mesas: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -9282,7 +9299,7 @@ class SyncRepository(
         val entityType = COLLECTION_HISTORICO_MANUTENCAO_MESA
         
         return try {
-            Log.d(TAG, "Iniciando pull de hist�rico manuten��o mesa...")
+            Timber.tag(TAG).d("Iniciando pull de hist�rico manuten��o mesa...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_MANUTENCAO_MESA)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -9291,7 +9308,7 @@ class SyncRepository(
             
             if (canUseIncremental) {
                 // Tentar sincroniza��o incremental
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullHistoricoManutencaoMesaIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 
                 if (incrementalResult != null) {
@@ -9300,24 +9317,24 @@ class SyncRepository(
                     
                     // ? VALIDA��O: Se incremental retornou 0 mas h� hist�ricos locais, for�ar completo
                     if (syncedCount == 0 && localCount > 0) {
-                        Log.w(TAG, "?? Incremental retornou 0 hist�ricos mas h� $localCount locais - executando pull COMPLETO como valida��o")
+                        Timber.tag(TAG).w("?? Incremental retornou 0 hist�ricos mas h� $localCount locais - executando pull COMPLETO como valida��o")
                         return pullHistoricoManutencaoMesaComplete(collectionRef, entityType, startTime, timestampOverride)
                     }
                     
                     return incrementalResult
                 } else {
                     // Incremental falhou, usar m�todo completo
-                    Log.w(TAG, "?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o - usando m�todo COMPLETO")
             }
             
             // M�todo completo (sempre funciona, mesmo c�digo que estava antes)
             pullHistoricoManutencaoMesaComplete(collectionRef, entityType, startTime, timestampOverride)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de hist�rico manuten��o mesa: ${e.message}", e)
+            Timber.e( "Erro no pull de hist�rico manuten��o mesa: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -9339,7 +9356,7 @@ class SyncRepository(
             resetRouteFilters()
             val todosHistoricos = appRepository.obterTodosHistoricoManutencaoMesa().first()
             val historicosCache = todosHistoricos.associateBy { it.id }
-            Log.d(TAG, "   ?? Cache de hist�ricos manuten��o mesa carregado: ${historicosCache.size} hist�ricos locais")
+            Timber.tag(TAG).d("   ?? Cache de hist�ricos manuten��o mesa carregado: ${historicosCache.size} hist�ricos locais")
             
             // Tentar query incremental primeiro (otimiza��o)
             val incrementalHistoricos = try {
@@ -9350,24 +9367,24 @@ class SyncRepository(
                     .await()
                     .documents
             } catch (e: Exception) {
-                Log.w(TAG, "?? Query incremental falhou, buscando todos os hist�ricos: ${e.message}")
+                Timber.tag(TAG).w("?? Query incremental falhou, buscando todos os hist�ricos: ${e.message}")
                 emptyList()
             }
             
             // ? CORRE��O: Se incremental retornou 0 mas h� hist�ricos locais, buscar TODOS
             val allHistoricos = if (incrementalHistoricos.isEmpty() && historicosCache.isNotEmpty()) {
-                Log.w(TAG, "?? Incremental retornou 0 hist�ricos mas h� ${historicosCache.size} locais - buscando TODOS para garantir sincroniza��o")
+                Timber.tag(TAG).w("?? Incremental retornou 0 hist�ricos mas h� ${historicosCache.size} locais - buscando TODOS para garantir sincroniza��o")
                 try {
                     collectionRef.get().await().documents
                 } catch (e: Exception) {
-                    Log.w(TAG, "?? Erro ao buscar todos os hist�ricos: ${e.message}")
+                    Timber.tag(TAG).w("?? Erro ao buscar todos os hist�ricos: ${e.message}")
                     return null
                 }
             } else {
                 incrementalHistoricos
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL: ${allHistoricos.size} documentos encontrados")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL: ${allHistoricos.size} documentos encontrados")
             
             var syncCount = 0
             var skipCount = 0
@@ -9377,7 +9394,7 @@ class SyncRepository(
             allHistoricos.forEach { doc ->
                 try {
                     val data = doc.data ?: emptyMap()
-                    Log.d(TAG, "?? Processando hist�rico manuten��o mesa: ID=${doc.id}")
+                    Timber.tag(TAG).d("?? Processando hist�rico manuten��o mesa: ID=${doc.id}")
                     
                     val historicoId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
@@ -9423,7 +9440,7 @@ class SyncRepository(
                     
                     if (shouldSync) {
                         if (historico.mesaId == 0L) {
-                            Log.w(TAG, "?? Hist�rico manuten��o mesa ID $historicoId sem mesaId - pulando")
+                            Timber.tag(TAG).w("?? Hist�rico manuten��o mesa ID $historicoId sem mesaId - pulando")
                             skipCount++
                             return@forEach
                         }
@@ -9435,14 +9452,14 @@ class SyncRepository(
                         }
                         syncCount++
                         bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
-                        Log.d(TAG, "? HistoricoManutencaoMesa sincronizado: Mesa ${historico.numeroMesa} (ID: $historicoId)")
+                        Timber.tag(TAG).d("? HistoricoManutencaoMesa sincronizado: Mesa ${historico.numeroMesa} (ID: $historicoId)")
                     } else {
                         skipCount++
-                        Log.d(TAG, "?? Hist�rico local mais recente ou igual, mantendo: ID=$historicoId (servidor: $serverTimestamp, local: $localTimestamp)")
+                        Timber.tag(TAG).d("?? Hist�rico local mais recente ou igual, mantendo: ID=$historicoId (servidor: $serverTimestamp, local: $localTimestamp)")
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar hist�rico manuten��o mesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar hist�rico manuten��o mesa ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -9458,13 +9475,13 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull HistoricoManutencaoMesa (INCREMENTAL) conclu�do:")
-            Log.d(TAG, "   ?? $syncCount sincronizados, $skipCount pulados, $errorCount erros")
-            Log.d(TAG, "   ?? Dura��o: ${durationMs}ms")
+            Timber.tag(TAG).d("? Pull HistoricoManutencaoMesa (INCREMENTAL) conclu�do:")
+            Timber.tag(TAG).d("   ?? $syncCount sincronizados, $skipCount pulados, $errorCount erros")
+            Timber.tag(TAG).d("   ?? Dura��o: ${durationMs}ms")
             
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro na sincroniza��o incremental de hist�rico manuten��o mesa: ${e.message}")
+            Timber.tag(TAG).w("?? Erro na sincroniza��o incremental de hist�rico manuten��o mesa: ${e.message}")
             null // Falhou, usar m�todo completo
         }
     }
@@ -9481,7 +9498,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.orderBy("lastModified").get().await()
-            Log.d(TAG, "?? Pull COMPLETO de hist�rico manuten��o mesa - documentos recebidos: ${snapshot.size()}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de hist�rico manuten��o mesa - documentos recebidos: ${snapshot.size()}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
@@ -9539,7 +9556,7 @@ class SyncRepository(
                     bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar hist�rico manuten��o mesa ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar hist�rico manuten��o mesa ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -9553,12 +9570,12 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull HistoricoManutencaoMesa (COMPLETO) conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            Timber.tag(TAG).d("? Pull HistoricoManutencaoMesa (COMPLETO) conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             saveSyncMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no pull completo de hist�rico manuten��o mesa: ${e.message}", e)
+            Timber.e( "? Erro no pull completo de hist�rico manuten��o mesa: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -9574,23 +9591,23 @@ class SyncRepository(
         val entityType = COLLECTION_HISTORICO_MANUTENCAO_MESA
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de hist�rico manuten��o mesa...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de hist�rico manuten��o mesa...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val historicosLocais = appRepository.obterTodosHistoricoManutencaoMesa().first()
-            Log.d(TAG, "?? Total de hist�rico manuten��o mesa locais encontrados: ${historicosLocais.size}")
+            Timber.tag(TAG).d("?? Total de hist�rico manuten��o mesa locais encontrados: ${historicosLocais.size}")
             
             val historicosParaEnviar = if (canUseIncremental) {
                 historicosLocais.filter { historico ->
                     val historicoTimestamp = historico.dataCriacao.time
                     historicoTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} hist�ricos modificados desde ${Date(lastPushTimestamp)} (de ${historicosLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} hist�ricos modificados desde ${Date(lastPushTimestamp)} (de ${historicosLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${historicosLocais.size} hist�ricos")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${historicosLocais.size} hist�ricos")
                 historicosLocais
             }
             
@@ -9606,7 +9623,7 @@ class SyncRepository(
             
             historicosParaEnviar.forEach { historico ->
                 try {
-                    Log.d(TAG, "?? Processando hist�rico manuten��o mesa: ID=${historico.id}")
+                    Timber.tag(TAG).d("?? Processando hist�rico manuten��o mesa: ID=${historico.id}")
                     
                     val historicoMap = entityToMap(historico)
                     historicoMap["roomId"] = historico.id
@@ -9630,25 +9647,25 @@ class SyncRepository(
                     // Os dados locais devem permanecer inalterados na exporta��o
                     // A atualiza��o dos dados locais acontece apenas na importa��o (pull)
                     // quando h� dados novos no servidor que devem ser sincronizados
-                    Log.d(TAG, "? HistoricoManutencaoMesa ${historico.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
+                    Timber.tag(TAG).d("? HistoricoManutencaoMesa ${historico.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += historicoMap.toString().length.toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar hist�rico manuten��o mesa ${historico.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar hist�rico manuten��o mesa ${historico.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de hist�rico manuten��o mesa conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de hist�rico manuten��o mesa conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de hist�rico manuten��o mesa: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de hist�rico manuten��o mesa: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -9662,7 +9679,7 @@ class SyncRepository(
         val entityType = COLLECTION_HISTORICO_MANUTENCAO_VEICULO
         
         return try {
-            Log.d(TAG, "Iniciando pull de hist�rico manuten��o ve�culo...")
+            Timber.tag(TAG).d("Iniciando pull de hist�rico manuten��o ve�culo...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_MANUTENCAO_VEICULO)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -9671,7 +9688,7 @@ class SyncRepository(
             
             if (canUseIncremental) {
                 // Tentar sincroniza��o incremental
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullHistoricoManutencaoVeiculoIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 
                 if (incrementalResult != null) {
@@ -9680,24 +9697,24 @@ class SyncRepository(
                     
                     // ? VALIDA��O: Se incremental retornou 0 mas h� hist�ricos locais, for�ar completo
                     if (syncedCount == 0 && localCount > 0) {
-                        Log.w(TAG, "?? Incremental retornou 0 hist�ricos mas h� $localCount locais - executando pull COMPLETO como valida��o")
+                        Timber.tag(TAG).w("?? Incremental retornou 0 hist�ricos mas h� $localCount locais - executando pull COMPLETO como valida��o")
                         return pullHistoricoManutencaoVeiculoComplete(collectionRef, entityType, startTime, timestampOverride)
                     }
                     
                     return incrementalResult
                 } else {
                     // Incremental falhou, usar m�todo completo
-                    Log.w(TAG, "?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o - usando m�todo COMPLETO")
             }
             
             // M�todo completo (sempre funciona, mesmo c�digo que estava antes)
             pullHistoricoManutencaoVeiculoComplete(collectionRef, entityType, startTime, timestampOverride)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de hist�rico manuten��o ve�culo: ${e.message}", e)
+            Timber.e( "Erro no pull de hist�rico manuten��o ve�culo: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -9719,7 +9736,7 @@ class SyncRepository(
             resetRouteFilters()
             val todosHistoricos = appRepository.obterTodosHistoricoManutencaoVeiculo()
             val historicosCache = todosHistoricos.associateBy { it.id }
-            Log.d(TAG, "   ?? Cache de hist�ricos manuten��o ve�culo carregado: ${historicosCache.size} hist�ricos locais")
+            Timber.tag(TAG).d("   ?? Cache de hist�ricos manuten��o ve�culo carregado: ${historicosCache.size} hist�ricos locais")
             
             // Tentar query incremental primeiro (otimiza��o)
             val incrementalHistoricos = try {
@@ -9730,24 +9747,24 @@ class SyncRepository(
                     .await()
                     .documents
             } catch (e: Exception) {
-                Log.w(TAG, "?? Query incremental falhou, buscando todos os hist�ricos: ${e.message}")
+                Timber.tag(TAG).w("?? Query incremental falhou, buscando todos os hist�ricos: ${e.message}")
                 emptyList()
             }
             
             // ? CORRE��O: Se incremental retornou 0 mas h� hist�ricos locais, buscar TODOS
             val allHistoricos = if (incrementalHistoricos.isEmpty() && historicosCache.isNotEmpty()) {
-                Log.w(TAG, "?? Incremental retornou 0 hist�ricos mas h� ${historicosCache.size} locais - buscando TODOS para garantir sincroniza��o")
+                Timber.tag(TAG).w("?? Incremental retornou 0 hist�ricos mas h� ${historicosCache.size} locais - buscando TODOS para garantir sincroniza��o")
                 try {
                     collectionRef.get().await().documents
                 } catch (e: Exception) {
-                    Log.w(TAG, "?? Erro ao buscar todos os hist�ricos: ${e.message}")
+                    Timber.tag(TAG).w("?? Erro ao buscar todos os hist�ricos: ${e.message}")
                     return null
                 }
             } else {
                 incrementalHistoricos
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL: ${allHistoricos.size} documentos encontrados")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL: ${allHistoricos.size} documentos encontrados")
             
             var syncCount = 0
             var skipCount = 0
@@ -9757,7 +9774,7 @@ class SyncRepository(
             allHistoricos.forEach { doc ->
                 try {
                     val data = doc.data ?: emptyMap()
-                    Log.d(TAG, "?? Processando hist�rico manuten��o ve�culo: ID=${doc.id}")
+                    Timber.tag(TAG).d("?? Processando hist�rico manuten��o ve�culo: ID=${doc.id}")
                     
                     val historicoId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
@@ -9793,7 +9810,7 @@ class SyncRepository(
                     
                     if (shouldSync) {
                         if (historico.veiculoId == 0L) {
-                            Log.w(TAG, "?? Hist�rico manuten��o ve�culo ID $historicoId sem veiculoId - pulando")
+                            Timber.tag(TAG).w("?? Hist�rico manuten��o ve�culo ID $historicoId sem veiculoId - pulando")
                             skipCount++
                             return@forEach
                         }
@@ -9805,14 +9822,14 @@ class SyncRepository(
                         }
                         syncCount++
                         bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
-                        Log.d(TAG, "? HistoricoManutencaoVeiculo sincronizado: Ve�culo ${historico.veiculoId} (ID: $historicoId)")
+                        Timber.tag(TAG).d("? HistoricoManutencaoVeiculo sincronizado: Ve�culo ${historico.veiculoId} (ID: $historicoId)")
                     } else {
                         skipCount++
-                        Log.d(TAG, "?? Hist�rico local mais recente ou igual, mantendo: ID=$historicoId (servidor: $serverTimestamp, local: $localTimestamp)")
+                        Timber.tag(TAG).d("?? Hist�rico local mais recente ou igual, mantendo: ID=$historicoId (servidor: $serverTimestamp, local: $localTimestamp)")
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar hist�rico manuten��o ve�culo ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar hist�rico manuten��o ve�culo ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -9828,13 +9845,13 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull HistoricoManutencaoVeiculo (INCREMENTAL) conclu�do:")
-            Log.d(TAG, "   ?? $syncCount sincronizados, $skipCount pulados, $errorCount erros")
-            Log.d(TAG, "   ?? Dura��o: ${durationMs}ms")
+            Timber.tag(TAG).d("? Pull HistoricoManutencaoVeiculo (INCREMENTAL) conclu�do:")
+            Timber.tag(TAG).d("   ?? $syncCount sincronizados, $skipCount pulados, $errorCount erros")
+            Timber.tag(TAG).d("   ?? Dura��o: ${durationMs}ms")
             
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro na sincroniza��o incremental de hist�rico manuten��o ve�culo: ${e.message}")
+            Timber.tag(TAG).w("?? Erro na sincroniza��o incremental de hist�rico manuten��o ve�culo: ${e.message}")
             null // Falhou, usar m�todo completo
         }
     }
@@ -9851,7 +9868,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.orderBy("lastModified").get().await()
-            Log.d(TAG, "?? Pull COMPLETO de hist�rico manuten��o ve�culo - documentos recebidos: ${snapshot.size()}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de hist�rico manuten��o ve�culo - documentos recebidos: ${snapshot.size()}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
@@ -9904,7 +9921,7 @@ class SyncRepository(
                     bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar hist�rico manuten��o ve�culo ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar hist�rico manuten��o ve�culo ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -9918,12 +9935,12 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull HistoricoManutencaoVeiculo (COMPLETO) conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            Timber.tag(TAG).d("? Pull HistoricoManutencaoVeiculo (COMPLETO) conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             saveSyncMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no pull completo de hist�rico manuten��o ve�culo: ${e.message}", e)
+            Timber.e( "? Erro no pull completo de hist�rico manuten��o ve�culo: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -9939,23 +9956,23 @@ class SyncRepository(
         val entityType = COLLECTION_HISTORICO_MANUTENCAO_VEICULO
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de hist�rico manuten��o ve�culo...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de hist�rico manuten��o ve�culo...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val historicosLocais = appRepository.obterTodosHistoricoManutencaoVeiculo()
-            Log.d(TAG, "?? Total de hist�ricos de manuten��o locais encontrados: ${historicosLocais.size}")
+            Timber.tag(TAG).d("?? Total de hist�ricos de manuten��o locais encontrados: ${historicosLocais.size}")
             
             val historicosParaEnviar = if (canUseIncremental) {
                 historicosLocais.filter { historico ->
                     val historicoTimestamp = historico.dataCriacao.time
                     historicoTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} hist�ricos modificados desde ${Date(lastPushTimestamp)} (de ${historicosLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} hist�ricos modificados desde ${Date(lastPushTimestamp)} (de ${historicosLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${historicosLocais.size} hist�ricos")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${historicosLocais.size} hist�ricos")
                 historicosLocais
             }
             
@@ -9971,7 +9988,7 @@ class SyncRepository(
             
             historicosParaEnviar.forEach { historico ->
                 try {
-                    Log.d(TAG, "?? Processando hist�rico manuten��o: ID=${historico.id}, Ve�culo=${historico.veiculoId}")
+                    Timber.tag(TAG).d("?? Processando hist�rico manuten��o: ID=${historico.id}, Ve�culo=${historico.veiculoId}")
                     
                     val historicoMap = entityToMap(historico)
                     
@@ -9999,25 +10016,25 @@ class SyncRepository(
                     // Os dados locais devem permanecer inalterados na exporta��o
                     // A atualiza��o dos dados locais acontece apenas na importa��o (pull)
                     // quando h� dados novos no servidor que devem ser sincronizados
-                    Log.d(TAG, "? HistoricoManutencaoVeiculo ${historico.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
+                    Timber.tag(TAG).d("? HistoricoManutencaoVeiculo ${historico.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += historicoMap.toString().length.toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar hist�rico manuten��o ${historico.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar hist�rico manuten��o ${historico.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de hist�rico manuten��o ve�culo conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de hist�rico manuten��o ve�culo conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de hist�rico manuten��o ve�culo: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de hist�rico manuten��o ve�culo: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -10031,7 +10048,7 @@ class SyncRepository(
         val entityType = COLLECTION_HISTORICO_COMBUSTIVEL_VEICULO
         
         return try {
-            Log.d(TAG, "Iniciando pull de hist�rico combust�vel ve�culo...")
+            Timber.tag(TAG).d("Iniciando pull de hist�rico combust�vel ve�culo...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_HISTORICO_COMBUSTIVEL_VEICULO)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -10040,7 +10057,7 @@ class SyncRepository(
             
             if (canUseIncremental) {
                 // Tentar sincroniza��o incremental
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullHistoricoCombustivelVeiculoIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 
                 if (incrementalResult != null) {
@@ -10049,24 +10066,24 @@ class SyncRepository(
                     
                     // ? VALIDA��O: Se incremental retornou 0 mas h� hist�ricos locais, for�ar completo
                     if (syncedCount == 0 && localCount > 0) {
-                        Log.w(TAG, "?? Incremental retornou 0 hist�ricos mas h� $localCount locais - executando pull COMPLETO como valida��o")
+                        Timber.tag(TAG).w("?? Incremental retornou 0 hist�ricos mas h� $localCount locais - executando pull COMPLETO como valida��o")
                         return pullHistoricoCombustivelVeiculoComplete(collectionRef, entityType, startTime, timestampOverride)
                     }
                     
                     return incrementalResult
                 } else {
                     // Incremental falhou, usar m�todo completo
-                    Log.w(TAG, "?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o - usando m�todo COMPLETO")
             }
             
             // M�todo completo (sempre funciona, mesmo c�digo que estava antes)
             pullHistoricoCombustivelVeiculoComplete(collectionRef, entityType, startTime, timestampOverride)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de hist�rico combust�vel ve�culo: ${e.message}", e)
+            Timber.e( "Erro no pull de hist�rico combust�vel ve�culo: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -10088,7 +10105,7 @@ class SyncRepository(
             resetRouteFilters()
             val todosHistoricos = appRepository.obterTodosHistoricoCombustivelVeiculo()
             val historicosCache = todosHistoricos.associateBy { it.id }
-            Log.d(TAG, "   ?? Cache de hist�ricos combust�vel ve�culo carregado: ${historicosCache.size} hist�ricos locais")
+            Timber.tag(TAG).d("   ?? Cache de hist�ricos combust�vel ve�culo carregado: ${historicosCache.size} hist�ricos locais")
             
             // Tentar query incremental primeiro (otimiza��o)
             val incrementalHistoricos = try {
@@ -10099,24 +10116,24 @@ class SyncRepository(
                     .await()
                     .documents
             } catch (e: Exception) {
-                Log.w(TAG, "?? Query incremental falhou, buscando todos os hist�ricos: ${e.message}")
+                Timber.tag(TAG).w("?? Query incremental falhou, buscando todos os hist�ricos: ${e.message}")
                 emptyList()
             }
             
             // ? CORRE��O: Se incremental retornou 0 mas h� hist�ricos locais, buscar TODOS
             val allHistoricos = if (incrementalHistoricos.isEmpty() && historicosCache.isNotEmpty()) {
-                Log.w(TAG, "?? Incremental retornou 0 hist�ricos mas h� ${historicosCache.size} locais - buscando TODOS para garantir sincroniza��o")
+                Timber.tag(TAG).w("?? Incremental retornou 0 hist�ricos mas h� ${historicosCache.size} locais - buscando TODOS para garantir sincroniza��o")
                 try {
                     collectionRef.get().await().documents
                 } catch (e: Exception) {
-                    Log.w(TAG, "?? Erro ao buscar todos os hist�ricos: ${e.message}")
+                    Timber.tag(TAG).w("?? Erro ao buscar todos os hist�ricos: ${e.message}")
                     return null
                 }
             } else {
                 incrementalHistoricos
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL: ${allHistoricos.size} documentos encontrados")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL: ${allHistoricos.size} documentos encontrados")
             
             var syncCount = 0
             var skipCount = 0
@@ -10126,7 +10143,7 @@ class SyncRepository(
             allHistoricos.forEach { doc ->
                 try {
                     val data = doc.data ?: emptyMap()
-                    Log.d(TAG, "?? Processando hist�rico combust�vel ve�culo: ID=${doc.id}")
+                    Timber.tag(TAG).d("?? Processando hist�rico combust�vel ve�culo: ID=${doc.id}")
                     
                     val historicoId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
@@ -10162,7 +10179,7 @@ class SyncRepository(
                     
                     if (shouldSync) {
                         if (historico.veiculoId == 0L) {
-                            Log.w(TAG, "?? Hist�rico combust�vel ve�culo ID $historicoId sem veiculoId - pulando")
+                            Timber.tag(TAG).w("?? Hist�rico combust�vel ve�culo ID $historicoId sem veiculoId - pulando")
                             skipCount++
                             return@forEach
                         }
@@ -10174,14 +10191,14 @@ class SyncRepository(
                         }
                         syncCount++
                         bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
-                        Log.d(TAG, "? HistoricoCombustivelVeiculo sincronizado: Ve�culo ${historico.veiculoId} (ID: $historicoId)")
+                        Timber.tag(TAG).d("? HistoricoCombustivelVeiculo sincronizado: Ve�culo ${historico.veiculoId} (ID: $historicoId)")
                     } else {
                         skipCount++
-                        Log.d(TAG, "?? Hist�rico local mais recente ou igual, mantendo: ID=$historicoId (servidor: $serverTimestamp, local: $localTimestamp)")
+                        Timber.tag(TAG).d("?? Hist�rico local mais recente ou igual, mantendo: ID=$historicoId (servidor: $serverTimestamp, local: $localTimestamp)")
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar hist�rico combust�vel ve�culo ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar hist�rico combust�vel ve�culo ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -10197,13 +10214,13 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull HistoricoCombustivelVeiculo (INCREMENTAL) conclu�do:")
-            Log.d(TAG, "   ?? $syncCount sincronizados, $skipCount pulados, $errorCount erros")
-            Log.d(TAG, "   ?? Dura��o: ${durationMs}ms")
+            Timber.tag(TAG).d("? Pull HistoricoCombustivelVeiculo (INCREMENTAL) conclu�do:")
+            Timber.tag(TAG).d("   ?? $syncCount sincronizados, $skipCount pulados, $errorCount erros")
+            Timber.tag(TAG).d("   ?? Dura��o: ${durationMs}ms")
             
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro na sincroniza��o incremental de hist�rico combust�vel ve�culo: ${e.message}")
+            Timber.tag(TAG).w("?? Erro na sincroniza��o incremental de hist�rico combust�vel ve�culo: ${e.message}")
             null // Falhou, usar m�todo completo
         }
     }
@@ -10220,7 +10237,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.orderBy("lastModified").get().await()
-            Log.d(TAG, "?? Pull COMPLETO de hist�rico combust�vel ve�culo - documentos recebidos: ${snapshot.size()}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de hist�rico combust�vel ve�culo - documentos recebidos: ${snapshot.size()}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
@@ -10273,7 +10290,7 @@ class SyncRepository(
                     bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar hist�rico combust�vel ve�culo ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar hist�rico combust�vel ve�culo ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -10287,12 +10304,12 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull HistoricoCombustivelVeiculo (COMPLETO) conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            Timber.tag(TAG).d("? Pull HistoricoCombustivelVeiculo (COMPLETO) conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             saveSyncMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no pull completo de hist�rico combust�vel ve�culo: ${e.message}", e)
+            Timber.e( "? Erro no pull completo de hist�rico combust�vel ve�culo: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -10306,7 +10323,7 @@ class SyncRepository(
         val entityType = COLLECTION_VEICULOS
         
         return try {
-            Log.d(TAG, "Iniciando pull de ve�culos...")
+            Timber.tag(TAG).d("Iniciando pull de ve�culos...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_VEICULOS)
             
             // Verificar se podemos tentar sincroniza��o incremental
@@ -10315,7 +10332,7 @@ class SyncRepository(
             
             if (canUseIncremental) {
                 // Tentar sincroniza��o incremental
-                Log.d(TAG, "?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
+                Timber.tag(TAG).d("?? Tentando sincroniza��o INCREMENTAL (�ltima sync: ${Date(lastSyncTimestamp)})")
                 val incrementalResult = tryPullVeiculosIncremental(collectionRef, entityType, lastSyncTimestamp, startTime, timestampOverride)
                 
                 if (incrementalResult != null) {
@@ -10324,24 +10341,24 @@ class SyncRepository(
                     
                     // ? VALIDA��O: Se incremental retornou 0 mas h� ve�culos locais, for�ar completo
                     if (syncedCount == 0 && localCount > 0) {
-                        Log.w(TAG, "?? Incremental retornou 0 ve�culos mas h� $localCount locais - executando pull COMPLETO como valida��o")
+                        Timber.tag(TAG).w("?? Incremental retornou 0 ve�culos mas h� $localCount locais - executando pull COMPLETO como valida��o")
                         return pullVeiculosComplete(collectionRef, entityType, startTime, timestampOverride)
                     }
                     
                     return incrementalResult
                 } else {
                     // Incremental falhou, usar m�todo completo
-                    Log.w(TAG, "?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental falhou, usando m�todo COMPLETO como fallback")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o - usando m�todo COMPLETO")
             }
             
             // M�todo completo (sempre funciona, mesmo c�digo que estava antes)
             pullVeiculosComplete(collectionRef, entityType, startTime, timestampOverride)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no pull de ve�culos: ${e.message}", e)
+            Timber.e( "Erro no pull de ve�culos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -10363,7 +10380,7 @@ class SyncRepository(
             resetRouteFilters()
             val todosVeiculos = appRepository.obterTodosVeiculos().first()
             val veiculosCache = todosVeiculos.associateBy { it.id }
-            Log.d(TAG, "   ?? Cache de ve�culos carregado: ${veiculosCache.size} ve�culos locais")
+            Timber.tag(TAG).d("   ?? Cache de ve�culos carregado: ${veiculosCache.size} ve�culos locais")
             
             // Tentar query incremental primeiro (otimiza��o)
             val incrementalVeiculos = try {
@@ -10374,24 +10391,24 @@ class SyncRepository(
                     .await()
                     .documents
             } catch (e: Exception) {
-                Log.w(TAG, "?? Query incremental falhou, buscando todos os ve�culos: ${e.message}")
+                Timber.tag(TAG).w("?? Query incremental falhou, buscando todos os ve�culos: ${e.message}")
                 emptyList()
             }
             
             // ? CORRE��O: Se incremental retornou 0 mas h� ve�culos locais, buscar TODOS
             val allVeiculos = if (incrementalVeiculos.isEmpty() && veiculosCache.isNotEmpty()) {
-                Log.w(TAG, "?? Incremental retornou 0 ve�culos mas h� ${veiculosCache.size} locais - buscando TODOS para garantir sincroniza��o")
+                Timber.tag(TAG).w("?? Incremental retornou 0 ve�culos mas h� ${veiculosCache.size} locais - buscando TODOS para garantir sincroniza��o")
                 try {
                     collectionRef.get().await().documents
                 } catch (e: Exception) {
-                    Log.w(TAG, "?? Erro ao buscar todos os ve�culos: ${e.message}")
+                    Timber.tag(TAG).w("?? Erro ao buscar todos os ve�culos: ${e.message}")
                     return null
                 }
             } else {
                 incrementalVeiculos
             }
             
-            Log.d(TAG, "?? Sincroniza��o INCREMENTAL: ${allVeiculos.size} documentos encontrados")
+            Timber.tag(TAG).d("?? Sincroniza��o INCREMENTAL: ${allVeiculos.size} documentos encontrados")
             
             var syncCount = 0
             var skipCount = 0
@@ -10401,11 +10418,11 @@ class SyncRepository(
             allVeiculos.forEach { doc ->
                 try {
                     val data = doc.data ?: emptyMap()
-                    Log.d(TAG, "?? Processando ve�culo: ID=${doc.id}, Placa=${data["placa"]}")
+                    Timber.tag(TAG).d("?? Processando ve�culo: ID=${doc.id}, Placa=${data["placa"]}")
                     
                     val veiculoId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     if (veiculoId == 0L) {
-                        Log.w(TAG, "?? ID inv�lido para ve�culo ${doc.id} - pulando")
+                        Timber.tag(TAG).w("?? ID inv�lido para ve�culo ${doc.id} - pulando")
                         skipCount++
                         return@forEach
                     }
@@ -10441,7 +10458,7 @@ class SyncRepository(
                     
                     if (shouldSync) {
                         if (veiculo.placa.isBlank()) {
-                            Log.w(TAG, "?? Ve�culo ID $veiculoId sem placa - pulando")
+                            Timber.tag(TAG).w("?? Ve�culo ID $veiculoId sem placa - pulando")
                             skipCount++
                             return@forEach
                         }
@@ -10453,14 +10470,14 @@ class SyncRepository(
                         }
                         syncCount++
                         bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
-                        Log.d(TAG, "? Ve�culo sincronizado: ${veiculo.placa} (ID: ${veiculo.id})")
+                        Timber.tag(TAG).d("? Ve�culo sincronizado: ${veiculo.placa} (ID: ${veiculo.id})")
                     } else {
                         skipCount++
-                        Log.d(TAG, "?? Ve�culo local mais recente ou igual, mantendo: ID=$veiculoId (servidor: $serverTimestamp, local: $localTimestamp)")
+                        Timber.tag(TAG).d("?? Ve�culo local mais recente ou igual, mantendo: ID=$veiculoId (servidor: $serverTimestamp, local: $localTimestamp)")
                     }
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar ve�culo ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar ve�culo ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -10476,13 +10493,13 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull Veiculos (INCREMENTAL) conclu�do:")
-            Log.d(TAG, "   ?? $syncCount sincronizados, $skipCount pulados, $errorCount erros")
-            Log.d(TAG, "   ?? Dura��o: ${durationMs}ms")
+            Timber.tag(TAG).d("? Pull Veiculos (INCREMENTAL) conclu�do:")
+            Timber.tag(TAG).d("   ?? $syncCount sincronizados, $skipCount pulados, $errorCount erros")
+            Timber.tag(TAG).d("   ?? Dura��o: ${durationMs}ms")
             
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.w(TAG, "?? Erro na sincroniza��o incremental de ve�culos: ${e.message}")
+            Timber.tag(TAG).w("?? Erro na sincroniza��o incremental de ve�culos: ${e.message}")
             null // Falhou, usar m�todo completo
         }
     }
@@ -10499,7 +10516,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.orderBy("lastModified").get().await()
-            Log.d(TAG, "?? Pull COMPLETO de ve�culos - documentos recebidos: ${snapshot.size()}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de ve�culos - documentos recebidos: ${snapshot.size()}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)
@@ -10555,7 +10572,7 @@ class SyncRepository(
                     bytesDownloaded += (doc.data?.toString()?.length ?: 0).toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao processar ve�culo ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar ve�culo ${doc.id}: ${e.message}", e)
                 }
             }
             
@@ -10569,12 +10586,12 @@ class SyncRepository(
                 timestampOverride = timestampOverride
             )
             
-            Log.d(TAG, "? Pull Veiculos (COMPLETO) conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
+            Timber.tag(TAG).d("? Pull Veiculos (COMPLETO) conclu�do: $syncCount sincronizados, $skipCount ignorados, $errorCount erros")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             saveSyncMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no pull completo de ve�culos: ${e.message}", e)
+            Timber.e( "? Erro no pull completo de ve�culos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -10594,23 +10611,23 @@ class SyncRepository(
         val entityType = COLLECTION_HISTORICO_COMBUSTIVEL_VEICULO
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de hist�rico combust�vel ve�culo...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de hist�rico combust�vel ve�culo...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val historicosLocais = appRepository.obterTodosHistoricoCombustivelVeiculo()
-            Log.d(TAG, "?? Total de hist�ricos de combust�vel locais encontrados: ${historicosLocais.size}")
+            Timber.tag(TAG).d("?? Total de hist�ricos de combust�vel locais encontrados: ${historicosLocais.size}")
             
             val historicosParaEnviar = if (canUseIncremental) {
                 historicosLocais.filter { historico ->
                     val historicoTimestamp = historico.dataCriacao.time
                     historicoTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} hist�ricos modificados desde ${Date(lastPushTimestamp)} (de ${historicosLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} hist�ricos modificados desde ${Date(lastPushTimestamp)} (de ${historicosLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${historicosLocais.size} hist�ricos")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${historicosLocais.size} hist�ricos")
                 historicosLocais
             }
             
@@ -10626,7 +10643,7 @@ class SyncRepository(
             
             historicosParaEnviar.forEach { historico ->
                 try {
-                    Log.d(TAG, "?? Processando hist�rico combust�vel: ID=${historico.id}, Ve�culo=${historico.veiculoId}")
+                    Timber.tag(TAG).d("?? Processando hist�rico combust�vel: ID=${historico.id}, Ve�culo=${historico.veiculoId}")
                     
                     val historicoMap = entityToMap(historico)
                     
@@ -10654,25 +10671,25 @@ class SyncRepository(
                     // Os dados locais devem permanecer inalterados na exporta��o
                     // A atualiza��o dos dados locais acontece apenas na importa��o (pull)
                     // quando h� dados novos no servidor que devem ser sincronizados
-                    Log.d(TAG, "? HistoricoCombustivelVeiculo ${historico.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
+                    Timber.tag(TAG).d("? HistoricoCombustivelVeiculo ${historico.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += historicoMap.toString().length.toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar hist�rico combust�vel ${historico.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar hist�rico combust�vel ${historico.id}: ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de hist�rico combust�vel ve�culo conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de hist�rico combust�vel ve�culo conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de hist�rico combust�vel ve�culo: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de hist�rico combust�vel ve�culo: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -10689,13 +10706,13 @@ class SyncRepository(
         val entityType = COLLECTION_VEICULOS
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de ve�culos...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de ve�culos...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val veiculosLocais = appRepository.obterTodosVeiculos().first()
-            Log.d(TAG, "?? Total de ve�culos locais encontrados: ${veiculosLocais.size}")
+            Timber.tag(TAG).d("?? Total de ve�culos locais encontrados: ${veiculosLocais.size}")
             
             // ? Filtrar apenas ve�culos modificados desde �ltimo push (usar dataCompra ou timestamp)
             val veiculosParaEnviar = if (canUseIncremental) {
@@ -10703,10 +10720,10 @@ class SyncRepository(
                     val veiculoTimestamp = veiculo.dataCompra?.time ?: System.currentTimeMillis()
                     veiculoTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} ve�culos modificados desde ${Date(lastPushTimestamp)} (de ${veiculosLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} ve�culos modificados desde ${Date(lastPushTimestamp)} (de ${veiculosLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todos os ${veiculosLocais.size} ve�culos")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todos os ${veiculosLocais.size} ve�culos")
                 veiculosLocais
             }
             
@@ -10722,10 +10739,10 @@ class SyncRepository(
             
             veiculosParaEnviar.forEach { veiculo ->
                 try {
-                    Log.d(TAG, "?? Processando ve�culo: ID=${veiculo.id}, Nome=${veiculo.nome}, Placa=${veiculo.placa}")
+                    Timber.tag(TAG).d("?? Processando ve�culo: ID=${veiculo.id}, Nome=${veiculo.nome}, Placa=${veiculo.placa}")
                     
                     val veiculoMap = entityToMap(veiculo)
-                    Log.d(TAG, "   Mapa criado com ${veiculoMap.size} campos")
+                    Timber.tag(TAG).d("   Mapa criado com ${veiculoMap.size} campos")
                     
                     // ? CR�TICO: Adicionar roomId para compatibilidade com pull
                     veiculoMap["roomId"] = veiculo.id
@@ -10737,7 +10754,7 @@ class SyncRepository(
                     
                     val documentId = veiculo.id.toString()
                     val collectionRef = getCollectionReference(firestore, COLLECTION_VEICULOS)
-                    Log.d(TAG, "   Enviando para Firestore: empresas/$currentCompanyId/entidades/${COLLECTION_VEICULOS}/items, document=$documentId")
+                    Timber.tag(TAG).d("   Enviando para Firestore: empresas/$currentCompanyId/entidades/${COLLECTION_VEICULOS}/items, document=$documentId")
                     
                     val docRef = collectionRef.document(documentId)
                     
@@ -10752,25 +10769,25 @@ class SyncRepository(
                     // Os dados locais devem permanecer inalterados na exporta��o
                     // A atualiza��o dos dados locais acontece apenas na importa��o (pull)
                     // quando h� dados novos no servidor que devem ser sincronizados
-                    Log.d(TAG, "? Veiculo ${veiculo.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
+                    Timber.tag(TAG).d("? Veiculo ${veiculo.id} exportado com sucesso para nuvem (timestamp servidor: $serverTimestamp). Dados locais preservados.")
                     
                     syncCount++
                     bytesUploaded += veiculoMap.toString().length.toLong()
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar ve�culo ${veiculo.id} (${veiculo.nome}): ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar ve�culo ${veiculo.id} (${veiculo.nome}): ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de ve�culos conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de ve�culos conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de ve�culos: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de ve�culos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -10786,23 +10803,23 @@ class SyncRepository(
         val entityType = COLLECTION_META_COLABORADOR
         
         return try {
-            Log.d(TAG, "?? Iniciando push INCREMENTAL de meta colaborador...")
+            Timber.tag(TAG).d("?? Iniciando push INCREMENTAL de meta colaborador...")
             
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val canUseIncremental = lastPushTimestamp > 0L
             
             val metasLocais = appRepository.obterTodasMetaColaborador().first()
-            Log.d(TAG, "?? Total de meta colaborador locais encontradas: ${metasLocais.size}")
+            Timber.tag(TAG).d("?? Total de meta colaborador locais encontradas: ${metasLocais.size}")
             
             val metasParaEnviar = if (canUseIncremental) {
                 metasLocais.filter { meta ->
                     val metaTimestamp = meta.dataCriacao.time
                     metaTimestamp > lastPushTimestamp
                 }.also {
-                    Log.d(TAG, "?? Push INCREMENTAL: ${it.size} metas modificadas desde ${Date(lastPushTimestamp)} (de ${metasLocais.size} total)")
+                    Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} metas modificadas desde ${Date(lastPushTimestamp)} (de ${metasLocais.size} total)")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o PUSH - enviando todas as ${metasLocais.size} metas")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o PUSH - enviando todas as ${metasLocais.size} metas")
                 metasLocais
             }
             
@@ -10818,10 +10835,10 @@ class SyncRepository(
             
             metasParaEnviar.forEach { meta ->
                 try {
-                    Log.d(TAG, "?? Processando meta colaborador: ID=${meta.id}, Tipo=${meta.tipoMeta}, ColaboradorId=${meta.colaboradorId}")
+                    Timber.tag(TAG).d("?? Processando meta colaborador: ID=${meta.id}, Tipo=${meta.tipoMeta}, ColaboradorId=${meta.colaboradorId}")
                     
                     val metaMap = entityToMap(meta)
-                    Log.d(TAG, "   Mapa criado com ${metaMap.size} campos")
+                    Timber.tag(TAG).d("   Mapa criado com ${metaMap.size} campos")
                     
                     // ? CR�TICO: Adicionar roomId para compatibilidade com pull
                     metaMap["roomId"] = meta.id
@@ -10833,7 +10850,7 @@ class SyncRepository(
                     
                     val documentId = meta.id.toString()
                     val collectionRef = getCollectionReference(firestore, COLLECTION_META_COLABORADOR)
-                    Log.d(TAG, "   Enviando para Firestore: empresas/$currentCompanyId/entidades/${COLLECTION_META_COLABORADOR}/items, document=$documentId")
+                    Timber.tag(TAG).d("   Enviando para Firestore: empresas/$currentCompanyId/entidades/${COLLECTION_META_COLABORADOR}/items, document=$documentId")
                     
                     collectionRef
                         .document(documentId)
@@ -10842,22 +10859,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += metaMap.toString().length.toLong()
-                    Log.d(TAG, "? Meta colaborador enviada com sucesso: ${meta.tipoMeta} (ID: ${meta.id})")
+                    Timber.tag(TAG).d("? Meta colaborador enviada com sucesso: ${meta.tipoMeta} (ID: ${meta.id})")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar meta colaborador ${meta.id} (${meta.tipoMeta}): ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar meta colaborador ${meta.id} (${meta.tipoMeta}): ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push INCREMENTAL de meta colaborador conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push INCREMENTAL de meta colaborador conclu�do: $syncCount enviadas, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de meta colaborador: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de meta colaborador: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -10870,7 +10887,7 @@ class SyncRepository(
         val entityType = COLLECTION_META_COLABORADOR
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de meta colaborador...")
+            Timber.tag(TAG).d("?? Iniciando pull de meta colaborador...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_META_COLABORADOR)
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
@@ -10880,15 +10897,15 @@ class SyncRepository(
                 if (incrementalResult != null) {
                     return incrementalResult
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de meta colaborador falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de meta colaborador falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de meta colaborador - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de meta colaborador - usando m�todo COMPLETO")
             }
             
             pullMetaColaboradorComplete(collectionRef, entityType, startTime)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de meta colaborador: ${e.message}", e)
+            Timber.e( "? Erro no pull de meta colaborador: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -10900,7 +10917,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val documents = fetchAllDocumentsWithRouteFilter(collectionRef, FIELD_ROTA_ID)
-            Log.d(TAG, "?? Pull COMPLETO de meta colaborador - documentos recebidos: ${documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de meta colaborador - documentos recebidos: ${documents.size}")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -10919,10 +10936,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o" else null
             )
             
-            Log.d(TAG, "? Pull de meta colaborador conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de meta colaborador conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de meta colaborador: ${e.message}", e)
+            Timber.e( "? Erro no pull completo de meta colaborador: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -10941,10 +10958,10 @@ class SyncRepository(
                     lastSyncTimestamp = lastSyncTimestamp
                 )
             } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao executar query incremental para meta colaborador: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao executar query incremental para meta colaborador: ${e.message}")
                 return null
             }
-            Log.d(TAG, "?? Meta colaborador - incremental retornou ${documents.size} documentos (ap�s filtro de rota)")
+            Timber.tag(TAG).d("?? Meta colaborador - incremental retornou ${documents.size} documentos (ap�s filtro de rota)")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -10963,10 +10980,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o incremental" else null
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de meta colaborador: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de meta colaborador: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull incremental de meta colaborador: ${e.message}", e)
+            Timber.e( "? Erro no pull incremental de meta colaborador: ${e.message}", e)
             null
         }
     }
@@ -11049,7 +11066,7 @@ class SyncRepository(
                 ProcessResult.Skipped
             }
                 } catch (e: Exception) {
-                    Log.e(TAG, "? Erro ao processar meta colaborador ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar meta colaborador ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }
@@ -11066,11 +11083,11 @@ class SyncRepository(
         val entityType = COLLECTION_EQUIPMENTS
         
         return try {
-            Log.d(TAG, "?? Iniciando push de equipamentos...")
+            Timber.tag(TAG).d("?? Iniciando push de equipamentos...")
             // Nota: Equipment n�o tem campo de timestamp, ent�o sempre enviar todos
             // (geralmente s�o poucos registros, impacto baixo)
             val equipmentsLocais = appRepository.obterTodosEquipments().first()
-            Log.d(TAG, "?? Total de equipamentos locais encontrados: ${equipmentsLocais.size}")
+            Timber.tag(TAG).d("?? Total de equipamentos locais encontrados: ${equipmentsLocais.size}")
             
             if (equipmentsLocais.isEmpty()) {
                 val durationMs = System.currentTimeMillis() - startTime
@@ -11084,10 +11101,10 @@ class SyncRepository(
             
             equipmentsLocais.forEach { equipment ->
                 try {
-                    Log.d(TAG, "?? Processando equipamento: ID=${equipment.id}, Nome=${equipment.name}")
+                    Timber.tag(TAG).d("?? Processando equipamento: ID=${equipment.id}, Nome=${equipment.name}")
                     
                     val equipmentMap = entityToMap(equipment)
-                    Log.d(TAG, "   Mapa criado com ${equipmentMap.size} campos")
+                    Timber.tag(TAG).d("   Mapa criado com ${equipmentMap.size} campos")
                     
                     // ? CR�TICO: Adicionar roomId para compatibilidade com pull
                     equipmentMap["roomId"] = equipment.id
@@ -11099,7 +11116,7 @@ class SyncRepository(
                     
                     val documentId = equipment.id.toString()
                     val collectionRef = getCollectionReference(firestore, COLLECTION_EQUIPMENTS)
-                    Log.d(TAG, "   Enviando para Firestore: empresas/$currentCompanyId/entidades/${COLLECTION_EQUIPMENTS}/items, document=$documentId")
+                    Timber.tag(TAG).d("   Enviando para Firestore: empresas/$currentCompanyId/entidades/${COLLECTION_EQUIPMENTS}/items, document=$documentId")
                     
                     collectionRef
                         .document(documentId)
@@ -11108,22 +11125,22 @@ class SyncRepository(
                     
                     syncCount++
                     bytesUploaded += equipmentMap.toString().length.toLong()
-                    Log.d(TAG, "? Equipamento enviado com sucesso: ${equipment.name} (ID: ${equipment.id})")
+                    Timber.tag(TAG).d("? Equipamento enviado com sucesso: ${equipment.name} (ID: ${equipment.id})")
                 } catch (e: Exception) {
                     errorCount++
-                    Log.e(TAG, "? Erro ao enviar equipamento ${equipment.id} (${equipment.name}): ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao enviar equipamento ${equipment.id} (${equipment.name}): ${e.message}", e)
                 }
             }
             
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, syncCount, durationMs, bytesUploaded, if (errorCount > 0) "$errorCount erros" else null)
             
-            Log.d(TAG, "? Push de equipamentos conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
+            Timber.tag(TAG).d("? Push de equipamentos conclu�do: $syncCount enviados, $errorCount erros, ${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
             val durationMs = System.currentTimeMillis() - startTime
             savePushMetadata(entityType, 0, durationMs, error = e.message)
-            Log.e(TAG, "? Erro no push de equipamentos: ${e.message}", e)
+            Timber.tag(TAG).e("? Erro no push de equipamentos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -11136,7 +11153,7 @@ class SyncRepository(
         val entityType = COLLECTION_EQUIPMENTS
         
         return try {
-            Log.d(TAG, "?? Iniciando pull de equipamentos...")
+            Timber.tag(TAG).d("?? Iniciando pull de equipamentos...")
             val collectionRef = getCollectionReference(firestore, COLLECTION_EQUIPMENTS)
             val lastSyncTimestamp = getLastSyncTimestamp(entityType)
             val canUseIncremental = lastSyncTimestamp > 0L
@@ -11146,15 +11163,15 @@ class SyncRepository(
                 if (incrementalResult != null) {
                     return incrementalResult
                 } else {
-                    Log.w(TAG, "?? Sincroniza��o incremental de equipamentos falhou, usando m�todo COMPLETO")
+                    Timber.tag(TAG).w("?? Sincroniza��o incremental de equipamentos falhou, usando m�todo COMPLETO")
                 }
             } else {
-                Log.d(TAG, "?? Primeira sincroniza��o de equipamentos - usando m�todo COMPLETO")
+                Timber.tag(TAG).d("?? Primeira sincroniza��o de equipamentos - usando m�todo COMPLETO")
             }
             
             pullEquipmentsComplete(collectionRef, entityType, startTime)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull de equipamentos: ${e.message}", e)
+            Timber.e( "? Erro no pull de equipamentos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -11166,7 +11183,7 @@ class SyncRepository(
     ): Result<Int> {
         return try {
             val snapshot = collectionRef.get().await()
-            Log.d(TAG, "?? Pull COMPLETO de equipamentos - documentos recebidos: ${snapshot.documents.size}")
+            Timber.tag(TAG).d("?? Pull COMPLETO de equipamentos - documentos recebidos: ${snapshot.documents.size}")
             
             if (snapshot.isEmpty) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -11184,10 +11201,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o" else null
             )
             
-            Log.d(TAG, "? Pull de equipamentos conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull de equipamentos conclu�do: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull completo de equipamentos: ${e.message}", e)
+            Timber.e( "? Erro no pull completo de equipamentos: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -11204,13 +11221,13 @@ class SyncRepository(
                     .whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
                     .orderBy("lastModified")
             } catch (e: Exception) {
-                Log.w(TAG, "?? Falha ao criar query incremental para equipamentos: ${e.message}")
+                Timber.tag(TAG).w("?? Falha ao criar query incremental para equipamentos: ${e.message}")
                 return null
             }
             
             val snapshot = incrementalQuery.get().await()
             val documents = snapshot.documents
-            Log.d(TAG, "?? Equipamentos - incremental retornou ${documents.size} documentos")
+            Timber.tag(TAG).d("?? Equipamentos - incremental retornou ${documents.size} documentos")
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime)
@@ -11228,10 +11245,10 @@ class SyncRepository(
                 error = if (errorCount > 0) "$errorCount erros durante sincroniza��o incremental" else null
             )
             
-            Log.d(TAG, "? Pull INCREMENTAL de equipamentos: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
+            Timber.tag(TAG).d("? Pull INCREMENTAL de equipamentos: sync=$syncCount, skipped=$skippedCount, errors=$errorCount, duration=${durationMs}ms")
             Result.success(syncCount)
         } catch (e: Exception) {
-            Log.e(TAG, "? Erro no pull incremental de equipamentos: ${e.message}", e)
+            Timber.e( "? Erro no pull incremental de equipamentos: ${e.message}", e)
             null
         }
     }
@@ -11282,7 +11299,7 @@ class SyncRepository(
             equipmentsCache[equipmentId] = equipment
             ProcessResult.Synced
                 } catch (e: Exception) {
-                    Log.e(TAG, "? Erro ao processar equipamento ${doc.id}: ${e.message}", e)
+                    Timber.tag(TAG).e("? Erro ao processar equipamento ${doc.id}: ${e.message}", e)
             ProcessResult.Error
         }
     }

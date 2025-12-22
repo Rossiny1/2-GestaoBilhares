@@ -4,8 +4,8 @@ import com.example.gestaobilhares.ui.R
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Base64
-import android.util.Log
 import android.view.LayoutInflater
+import timber.log.Timber
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -77,7 +77,7 @@ class AditivoSignatureFragment : Fragment() {
                 documentIntegrityManager = com.example.gestaobilhares.core.utils.DocumentIntegrityManager(requireContext())
                 metadataCollector = com.example.gestaobilhares.core.utils.SignatureMetadataCollector(requireContext())
             } catch (e: Exception) {
-                android.util.Log.w("AditivoSignatureFragment", "Managers não inicializados: ${e.message}")
+                Timber.w("AditivoSignatureFragment", "Managers não inicializados: ${e.message}")
             }
             
             setupUI()
@@ -90,7 +90,7 @@ class AditivoSignatureFragment : Fragment() {
             val tipo = arguments?.getString("aditivoTipo") ?: "INCLUSAO"
             viewModel.setAditivoTipo(tipo)
         } catch (e: Exception) {
-            android.util.Log.e("AditivoSignatureFragment", "Erro ao inicializar ViewModel: ${e.message}")
+            Timber.e("AditivoSignatureFragment", "Erro ao inicializar ViewModel: ${e.message}")
             // Mostrar erro para o usuário
             androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Erro")
@@ -189,7 +189,7 @@ class AditivoSignatureFragment : Fragment() {
                 Toast.makeText(requireContext(), "Assinatura confirmada com sucesso!", Toast.LENGTH_SHORT).show()
                 
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao confirmar assinatura", e)
+                Timber.e(e, "Erro ao confirmar assinatura")
                 Toast.makeText(requireContext(), "Erro ao confirmar assinatura: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
@@ -210,13 +210,13 @@ class AditivoSignatureFragment : Fragment() {
         // ✅ LOGS PARA MONITORAR CARREGAMENTO DO CONTRATO
         viewModel.contrato.observe(viewLifecycleOwner) { contrato ->
             contrato?.let {
-                android.util.Log.d("AditivoSignatureFragment", "📋 CONTRATO CARREGADO:")
-                android.util.Log.d("AditivoSignatureFragment", "  - ID: ${it.id}")
-                android.util.Log.d("AditivoSignatureFragment", "  - Número: ${it.numeroContrato}")
-                android.util.Log.d("AditivoSignatureFragment", "  - Cliente ID: ${it.clienteId}")
-                android.util.Log.d("AditivoSignatureFragment", "  - Status: ${it.status}")
+                Timber.d("AditivoSignatureFragment", "📋 CONTRATO CARREGADO:")
+                Timber.d("AditivoSignatureFragment", "  - ID: ${it.id}")
+                Timber.d("AditivoSignatureFragment", "  - Número: ${it.numeroContrato}")
+                Timber.d("AditivoSignatureFragment", "  - Cliente ID: ${it.clienteId}")
+                Timber.d("AditivoSignatureFragment", "  - Status: ${it.status}")
             } ?: run {
-                android.util.Log.w("AditivoSignatureFragment", "⚠️ Contrato é null no observer")
+                Timber.w("AditivoSignatureFragment", "⚠️ Contrato é null no observer")
             }
         }
         
@@ -224,14 +224,14 @@ class AditivoSignatureFragment : Fragment() {
             // Habilitar botão assim que existir aditivo; idealmente após assinatura
             binding.btnEnviarWhatsApp.isEnabled = aditivo?.assinaturaLocatario != null
             if (aditivo?.assinaturaLocatario != null) {
-                android.util.Log.d("AditivoSignatureFragment", "✅ Aditivo assinado - botão habilitado")
+                Timber.d("AditivoSignatureFragment", "✅ Aditivo assinado - botão habilitado")
                 Toast.makeText(requireContext(), "Aditivo assinado. Você pode enviar pelo WhatsApp.", Toast.LENGTH_SHORT).show()
             }
         }
         
         viewModel.error.observe(viewLifecycleOwner) { error ->
             if (error != null) {
-                android.util.Log.e("AditivoSignatureFragment", "❌ Erro no ViewModel: $error")
+                Timber.e("AditivoSignatureFragment", "❌ Erro no ViewModel: $error")
                 Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
             }
         }
@@ -244,15 +244,15 @@ class AditivoSignatureFragment : Fragment() {
 
     private fun enviarAditivoViaWhatsApp() {
         // ✅ LOGS PARA MONITORAR ESTADO ANTES DO ENVIO
-        android.util.Log.d("AditivoSignatureFragment", "=== INÍCIO ENVIO ADITIVO VIA WHATSAPP ===")
-        android.util.Log.d("AditivoSignatureFragment", "Timestamp: ${System.currentTimeMillis()}")
-        android.util.Log.d("AditivoSignatureFragment", "Fragment ativo: isAdded=$isAdded, isDetached=$isDetached, isRemoving=$isRemoving")
+        Timber.d("AditivoSignatureFragment", "=== INÍCIO ENVIO ADITIVO VIA WHATSAPP ===")
+        Timber.d("AditivoSignatureFragment", "Timestamp: ${System.currentTimeMillis()}")
+        Timber.d("AditivoSignatureFragment", "Fragment ativo: isAdded=$isAdded, isDetached=$isDetached, isRemoving=$isRemoving")
         
         val contratoAtual = viewModel.contrato.value
-        android.util.Log.d("AditivoSignatureFragment", "📋 ESTADO DO CONTRATO ANTES DO ENVIO:")
-        android.util.Log.d("AditivoSignatureFragment", "  - Contrato: $contratoAtual")
-        android.util.Log.d("AditivoSignatureFragment", "  - Cliente ID: ${contratoAtual?.clienteId}")
-        android.util.Log.d("AditivoSignatureFragment", "  - Número: ${contratoAtual?.numeroContrato}")
+        Timber.d("AditivoSignatureFragment", "📋 ESTADO DO CONTRATO ANTES DO ENVIO:")
+        Timber.d("AditivoSignatureFragment", "  - Contrato: $contratoAtual")
+        Timber.d("AditivoSignatureFragment", "  - Cliente ID: ${contratoAtual?.clienteId}")
+        Timber.d("AditivoSignatureFragment", "  - Número: ${contratoAtual?.numeroContrato}")
         
         lifecycleScope.launch {
             try {
@@ -293,14 +293,14 @@ class AditivoSignatureFragment : Fragment() {
                 // ✅ NOVO: Navegar para tela de detalhes do cliente após envio do aditivo
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ 
                     // ✅ LOGS DETALHADOS PARA DIAGNÓSTICO
-                    android.util.Log.d("AditivoSignatureFragment", "=== INÍCIO NAVEGAÇÃO APÓS ENVIO ADITIVO ===")
-                    android.util.Log.d("AditivoSignatureFragment", "Timestamp: ${System.currentTimeMillis()}")
-                    android.util.Log.d("AditivoSignatureFragment", "Fragment ativo: isAdded=$isAdded, isDetached=$isDetached, isRemoving=$isRemoving")
+                    Timber.d("AditivoSignatureFragment", "=== INÍCIO NAVEGAÇÃO APÓS ENVIO ADITIVO ===")
+                    Timber.d("AditivoSignatureFragment", "Timestamp: ${System.currentTimeMillis()}")
+                    Timber.d("AditivoSignatureFragment", "Fragment ativo: isAdded=$isAdded, isDetached=$isDetached, isRemoving=$isRemoving")
                     
                     // Verificar se o Fragment ainda está ativo
                     if (!isAdded || isDetached || isRemoving) {
-                        android.util.Log.w("AditivoSignatureFragment", "❌ Fragment não está mais ativo - cancelando navegação")
-                        android.util.Log.w("AditivoSignatureFragment", "isAdded: $isAdded, isDetached: $isDetached, isRemoving: $isRemoving")
+                        Timber.w("AditivoSignatureFragment", "❌ Fragment não está mais ativo - cancelando navegação")
+                        Timber.w("AditivoSignatureFragment", "isAdded: $isAdded, isDetached: $isDetached, isRemoving: $isRemoving")
                         return@postDelayed
                     }
                     
@@ -319,7 +319,7 @@ class AditivoSignatureFragment : Fragment() {
                                 val repo = appRepository // Use injected repository
                                     val contratoCompleto = repo.buscarContratoPorId(contratoId)
                                     val novoClienteId = contratoCompleto?.clienteId ?: 0L
-                                    android.util.Log.d("AditivoSignatureFragment", "✅ ClienteId obtido do banco: $novoClienteId")
+                                    Timber.d("AditivoSignatureFragment", "✅ ClienteId obtido do banco: $novoClienteId")
                                     
                                     // Se conseguiu obter o clienteId, tentar navegação novamente
                                     if (novoClienteId > 0L) {
@@ -327,33 +327,33 @@ class AditivoSignatureFragment : Fragment() {
                                             val bundle = android.os.Bundle().apply {
                                                 putLong("clienteId", novoClienteId)
                                             }
-                                            android.util.Log.d("AditivoSignatureFragment", "📦 Tentando navegação com bundle após fallback: $bundle")
+                                            Timber.d("AditivoSignatureFragment", "📦 Tentando navegação com bundle após fallback: $bundle")
                                             findNavController().navigate(
                                                 com.example.gestaobilhares.ui.R.id.clientDetailFragment, 
                                                 bundle
                                             )
-                                            android.util.Log.d("AditivoSignatureFragment", "✅ Navegação com bundle após fallback executada com sucesso!")
+                                            Timber.d("AditivoSignatureFragment", "✅ Navegação com bundle após fallback executada com sucesso!")
                                             return@fallbackLaunch
                                         } catch (e: Exception) {
-                                            android.util.Log.w("AditivoSignatureFragment", "⚠️ Navegação com bundle após fallback falhou: ${e.message}")
+                                            Timber.w("AditivoSignatureFragment", "⚠️ Navegação com bundle após fallback falhou: ${e.message}")
                                         }
                                     }
                                 }
                             } catch (e: Exception) {
-                                android.util.Log.w("AditivoSignatureFragment", "⚠️ Erro ao obter clienteId do banco: ${e.message}")
+                                Timber.w("AditivoSignatureFragment", "⚠️ Erro ao obter clienteId do banco: ${e.message}")
                             }
                         }
                     }
                     
-                    android.util.Log.d("AditivoSignatureFragment", "📊 DADOS DO CONTRATO/ADITIVO:")
-                    android.util.Log.d("AditivoSignatureFragment", "  - clienteId: $clienteId")
-                    android.util.Log.d("AditivoSignatureFragment", "  - contratoNumero: $contratoNumero")
-                    android.util.Log.d("AditivoSignatureFragment", "  - contratoId: $contratoId")
+                    Timber.d("AditivoSignatureFragment", "📊 DADOS DO CONTRATO/ADITIVO:")
+                    Timber.d("AditivoSignatureFragment", "  - clienteId: $clienteId")
+                    Timber.d("AditivoSignatureFragment", "  - contratoNumero: $contratoNumero")
+                    Timber.d("AditivoSignatureFragment", "  - contratoId: $contratoId")
                     
                     // ✅ CORREÇÃO: Remover todas as telas intermediárias (depósito, contrato) do back stack
                     // Isso garante que ao clicar em voltar na tela de detalhes, volte para a lista de clientes
                     try {
-                        android.util.Log.d("AditivoSignatureFragment", "🚀 NAVEGANDO PARA ClientDetailFragment E LIMPANDO BACK STACK")
+                        Timber.d("AditivoSignatureFragment", "🚀 NAVEGANDO PARA ClientDetailFragment E LIMPANDO BACK STACK")
                         
                         if (clienteId > 0) {
                             val navController = findNavController()
@@ -370,7 +370,7 @@ class AditivoSignatureFragment : Fragment() {
                                     
                                     if (rotaId != null && rotaId > 0L) {
                                         // Limpar back stack até clientListFragment
-                                        android.util.Log.d("AditivoSignatureFragment", "📦 Removendo todas as telas intermediárias do back stack até clientListFragment")
+                                        Timber.d("AditivoSignatureFragment", "📦 Removendo todas as telas intermediárias do back stack até clientListFragment")
                                         
                                         val navOptions = NavOptions.Builder()
                                             .setPopUpTo(com.example.gestaobilhares.ui.R.id.clientListFragment, false)
@@ -381,10 +381,10 @@ class AditivoSignatureFragment : Fragment() {
                                             bundle,
                                             navOptions
                                         )
-                                        android.util.Log.d("AditivoSignatureFragment", "✅ Navegação executada com sucesso!")
+                                        Timber.d("AditivoSignatureFragment", "✅ Navegação executada com sucesso!")
                                     } else {
                                         // Fallback: limpar até contractGenerationFragment
-                                        android.util.Log.w("AditivoSignatureFragment", "⚠️ RotaId não encontrado, usando fallback")
+                                        Timber.w("AditivoSignatureFragment", "⚠️ RotaId não encontrado, usando fallback")
                                         
                                         val navOptions = NavOptions.Builder()
                                             .setPopUpTo(com.example.gestaobilhares.ui.R.id.contractGenerationFragment, true)
@@ -397,7 +397,7 @@ class AditivoSignatureFragment : Fragment() {
                                         )
                                     }
                                 } catch (e: Exception) {
-                                    android.util.Log.e("AditivoSignatureFragment", "❌ Erro ao buscar rotaId: ${e.message}", e)
+                                    Timber.e("AditivoSignatureFragment", "❌ Erro ao buscar rotaId: ${e.message}", e)
                                     // Fallback: limpar até contractGenerationFragment
                                     val bundle = android.os.Bundle().apply {
                                         putLong("clienteId", clienteId)
@@ -415,19 +415,19 @@ class AditivoSignatureFragment : Fragment() {
                                 }
                             }
                         } else {
-                            android.util.Log.w("AditivoSignatureFragment", "⚠️ ClienteId inválido: $clienteId")
+                            Timber.w("AditivoSignatureFragment", "⚠️ ClienteId inválido: $clienteId")
                             findNavController().popBackStack()
                         }
                         
                     } catch (e: Exception) {
-                        android.util.Log.e("AditivoSignatureFragment", "❌ Erro na navegação: ${e.message}", e)
+                        Timber.e("AditivoSignatureFragment", "❌ Erro na navegação: ${e.message}", e)
                         findNavController().popBackStack()
                     }
                     
-                    android.util.Log.d("AditivoSignatureFragment", "=== FIM NAVEGAÇÃO APÓS ENVIO ADITIVO ===")
+                    Timber.d("AditivoSignatureFragment", "=== FIM NAVEGAÇÃO APÓS ENVIO ADITIVO ===")
                 }, 2000)
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao enviar aditivo", e)
+                Timber.e(e, "Erro ao enviar aditivo")
                 Toast.makeText(requireContext(), "Erro ao enviar aditivo: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }

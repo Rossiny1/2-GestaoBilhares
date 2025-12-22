@@ -12,7 +12,7 @@ import com.example.gestaobilhares.data.entities.Mesa
 import com.google.android.material.button.MaterialButton
 import java.text.NumberFormat
 import java.util.*
-import android.util.Log
+import timber.log.Timber
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
@@ -255,9 +255,9 @@ class SettlementSummaryDialog : DialogFragment() {
                 numeroLimpo
             }
             
-            Log.d("SettlementSummaryDialog", "Número original: $telefone")
-            Log.d("SettlementSummaryDialog", "Número limpo: $numeroLimpo")
-            Log.d("SettlementSummaryDialog", "Número completo: $numeroCompleto")
+            Timber.d("SettlementSummaryDialog", "Número original: $telefone")
+            Timber.d("SettlementSummaryDialog", "Número limpo: $numeroLimpo")
+            Timber.d("SettlementSummaryDialog", "Número completo: $numeroCompleto")
             
             // ✅ ESTRATÉGIA 1: Esquema nativo whatsapp://send (FORÇA direcionamento direto)
             try {
@@ -270,10 +270,10 @@ class SettlementSummaryDialog : DialogFragment() {
                 }
                 
                 startActivity(intentWhatsApp)
-                Log.d("SettlementSummaryDialog", "✅ WhatsApp aberto diretamente via esquema nativo")
+                Timber.d("SettlementSummaryDialog", "✅ WhatsApp aberto diretamente via esquema nativo")
                 return
             } catch (e: Exception) {
-                Log.d("SettlementSummaryDialog", "Esquema nativo não funcionou: ${e.message}")
+                Timber.d("SettlementSummaryDialog", "Esquema nativo não funcionou: ${e.message}")
             }
             
             // ✅ ESTRATÉGIA 2: URL wa.me (funciona mesmo sem app instalado)
@@ -287,10 +287,10 @@ class SettlementSummaryDialog : DialogFragment() {
                 }
                 
                 startActivity(intentUrl)
-                Log.d("SettlementSummaryDialog", "✅ WhatsApp aberto via URL wa.me")
+                Timber.d("SettlementSummaryDialog", "✅ WhatsApp aberto via URL wa.me")
                 return
             } catch (e: Exception) {
-                Log.d("SettlementSummaryDialog", "URL wa.me não funcionou: ${e.message}")
+                Timber.d("SettlementSummaryDialog", "URL wa.me não funcionou: ${e.message}")
             }
             
             // ✅ ESTRATÉGIA 3: Tentar WhatsApp Business via esquema nativo
@@ -303,10 +303,10 @@ class SettlementSummaryDialog : DialogFragment() {
                 }
                 
                 startActivity(intentBusiness)
-                Log.d("SettlementSummaryDialog", "✅ WhatsApp Business aberto via esquema nativo")
+                Timber.d("SettlementSummaryDialog", "✅ WhatsApp Business aberto via esquema nativo")
                 return
             } catch (e: Exception) {
-                Log.d("SettlementSummaryDialog", "WhatsApp Business não disponível: ${e.message}")
+                Timber.d("SettlementSummaryDialog", "WhatsApp Business não disponível: ${e.message}")
             }
             
             // ✅ ESTRATÉGIA 4: Intent direto com ACTION_SEND mas SEM chooser
@@ -320,18 +320,18 @@ class SettlementSummaryDialog : DialogFragment() {
                 }
                 
                 startActivity(intentDirect)
-                Log.d("SettlementSummaryDialog", "✅ WhatsApp aberto via intent direto")
+                Timber.d("SettlementSummaryDialog", "✅ WhatsApp aberto via intent direto")
                 return
             } catch (e: Exception) {
-                Log.d("SettlementSummaryDialog", "Intent direto falhou: ${e.message}")
+                Timber.d("SettlementSummaryDialog", "Intent direto falhou: ${e.message}")
             }
             
             // ✅ ÚLTIMA OPÇÃO: Mostrar mensagem de erro
             android.widget.Toast.makeText(requireContext(), "Não foi possível abrir o WhatsApp. Verifique se está instalado.", android.widget.Toast.LENGTH_LONG).show()
-            Log.e("SettlementSummaryDialog", "❌ Todas as estratégias falharam")
+            Timber.e("SettlementSummaryDialog", "❌ Todas as estratégias falharam")
             
         } catch (e: Exception) {
-            Log.e("SettlementSummaryDialog", "Erro geral ao abrir WhatsApp: ${e.message}", e)
+            Timber.e("SettlementSummaryDialog", "Erro geral ao abrir WhatsApp: ${e.message}", e)
             android.widget.Toast.makeText(requireContext(), "Erro ao abrir WhatsApp: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
         }
     }

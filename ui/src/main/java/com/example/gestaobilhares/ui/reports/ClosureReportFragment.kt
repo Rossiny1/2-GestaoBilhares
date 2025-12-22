@@ -18,6 +18,7 @@ import com.example.gestaobilhares.ui.databinding.FragmentClosureReportBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.text.NumberFormat
 import java.util.Locale
+import timber.log.Timber
 
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -155,7 +156,7 @@ class ClosureReportFragment : Fragment() {
                             }
                         }
                     } catch (e: Exception) {
-                        android.util.Log.e("ClosureReportFragment", "Erro ao gerar dados dos gráficos: ${e.message}", e)
+                        Timber.e(e, "Erro ao gerar dados dos gráficos: %s", e.message)
                         Toast.makeText(requireContext(), "Erro ao gerar gráficos: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }

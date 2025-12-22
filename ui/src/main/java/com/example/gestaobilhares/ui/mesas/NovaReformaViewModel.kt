@@ -1,6 +1,6 @@
 ﻿package com.example.gestaobilhares.ui.mesas
 
-import android.util.Log
+import timber.log.Timber
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
 import androidx.lifecycle.viewModelScope
@@ -77,11 +77,11 @@ class NovaReformaViewModel @Inject constructor(
     fun marcarPanoComoUsado(panoId: Long, motivo: String = "Usado em reforma") {
         viewModelScope.launch {
             try {
-                Log.d("NovaReformaViewModel", "Marcando pano $panoId como usado: $motivo")
+                Timber.d("NovaReformaViewModel", "Marcando pano $panoId como usado: $motivo")
                 appRepository.marcarPanoComoUsado(panoId)
-                Log.d("NovaReformaViewModel", "Pano $panoId marcado como usado com sucesso")
+                Timber.d("NovaReformaViewModel", "Pano $panoId marcado como usado com sucesso")
             } catch (e: Exception) {
-                Log.e("NovaReformaViewModel", "Erro ao marcar pano como usado: ${e.message}", e)
+                Timber.e("NovaReformaViewModel", "Erro ao marcar pano como usado: ${e.message}", e)
                 _errorMessage.value = "Erro ao marcar pano como usado: ${e.message}"
             }
         }
@@ -95,10 +95,10 @@ class NovaReformaViewModel @Inject constructor(
     fun atualizarPanoDaMesaEmReforma(mesaId: Long, panoId: Long) {
         viewModelScope.launch {
             try {
-                Log.d("NovaReformaViewModel", "Atualizando mesa $mesaId com pano $panoId (reforma)")
+                Timber.d("NovaReformaViewModel", "Atualizando mesa $mesaId com pano $panoId (reforma)")
                 val mesa = appRepository.obterMesaPorId(mesaId)
                 if (mesa == null) {
-                    Log.e("NovaReformaViewModel", "Mesa $mesaId não encontrada para atualizar pano em reforma")
+                    Timber.e("NovaReformaViewModel", "Mesa $mesaId não encontrada para atualizar pano em reforma")
                     return@launch
                 }
                 val atualizada = mesa.copy(
@@ -106,9 +106,9 @@ class NovaReformaViewModel @Inject constructor(
                     dataUltimaTrocaPano = Date()
                 )
                 appRepository.atualizarMesa(atualizada)
-                Log.d("NovaReformaViewModel", "Mesa $mesaId atualizada com pano $panoId (reforma) com sucesso")
+                Timber.d("NovaReformaViewModel", "Mesa $mesaId atualizada com pano $panoId (reforma) com sucesso")
             } catch (e: Exception) {
-                Log.e("NovaReformaViewModel", "Erro ao atualizar pano da mesa em reforma: ${e.message}", e)
+                Timber.e("NovaReformaViewModel", "Erro ao atualizar pano da mesa em reforma: ${e.message}", e)
                 _errorMessage.value = "Erro ao atualizar pano da mesa: ${e.message}"
             }
         }

@@ -7,6 +7,7 @@
     android:padding="24dp"
     android:background="@drawable/background_dialog">
 
+    <!-- ✅ REFATORAÇÃO RADICAL: Usando apenas componentes base do Android para evitar InflateException por falta de atributos MD3 -->
     <TextView
         android:id="@+id/tvDialogTitle"
         android:layout_width="match_parent"
@@ -14,7 +15,7 @@
         android:text="Adicionar Equipamentos"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="@color/text_primary"
         android:gravity="center"
         android:layout_marginBottom="16dp" />
 
@@ -24,7 +25,7 @@
         android:layout_height="wrap_content"
         android:text="O cliente já possui um contrato ativo. Deseja adicionar novos equipamentos através de um aditivo contratual?"
         android:textSize="16sp"
-        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textColor="@color/text_secondary"
         android:gravity="center"
         android:layout_marginBottom="24dp" />
 
@@ -32,56 +33,44 @@
         android:id="@+id/tvContratoInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Contrato: CONTRATO-001/2024"
+        android:text="Contrato: ..."
         android:textSize="14sp"
-        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textColor="@color/text_secondary"
         android:gravity="center"
         android:layout_marginBottom="16dp"
         android:background="@android:color/transparent"
         android:padding="12dp" />
 
-    <!-- ✅ CORREÇÃO: Botões padronizados com altura e cores do projeto -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:weightSum="2">
 
+        <!-- Botões podem permanecer MaterialButton pois eles têm estilos bem definidos no projeto -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCancelar"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             android:text="Cancelar"
-            android:textSize="12sp"
-            android:minHeight="48dp"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="12dp"
-            app:icon="@drawable/ic_close"
-            app:iconGravity="textStart"
-            app:iconPadding="6dp"
-            app:strokeColor="@color/gray_600"
             android:textColor="@color/gray_600"
+            app:strokeColor="@color/gray_600"
+            app:icon="@drawable/ic_close"
             app:cornerRadius="8dp"
             style="@style/Widget.Material3.Button.OutlinedButton" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnGerarAditivo"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:text="Gerar aditivo"
-            android:textSize="12sp"
-            android:minHeight="48dp"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="12dp"
-            app:icon="@drawable/ic_contract"
-            app:iconGravity="textStart"
-            app:iconPadding="6dp"
             android:backgroundTint="@color/accent_teal"
             android:textColor="@color/white"
+            app:icon="@drawable/ic_contract"
             app:cornerRadius="8dp"
             style="@style/Widget.Material3.Button" />
 

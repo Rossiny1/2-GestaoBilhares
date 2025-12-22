@@ -1,7 +1,7 @@
 ﻿package com.example.gestaobilhares.ui.expenses
 
 import android.os.Bundle
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -136,7 +136,7 @@ class ExpenseTypesFragment : Fragment() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e("ExpenseTypesFragment", "Erro ao carregar dados: ${e.message}", e)
+                Timber.e("ExpenseTypesFragment", "Erro ao carregar dados: ${e.message}", e)
                 if (isAdded && context != null) {
                     Toast.makeText(requireContext(), "Erro ao carregar dados: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -195,7 +195,7 @@ class ExpenseTypesFragment : Fragment() {
                     loadData()
                 }
             } catch (e: Exception) {
-                Log.e("ExpenseTypesFragment", "Erro ao adicionar tipo: ${e.message}", e)
+                Timber.e("ExpenseTypesFragment", "Erro ao adicionar tipo: ${e.message}", e)
                 if (isAdded && context != null) {
                     Toast.makeText(requireContext(), "Erro ao adicionar tipo: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -232,7 +232,7 @@ class ExpenseTypesFragment : Fragment() {
                     loadData()
                 }
             } catch (e: Exception) {
-                Log.e("ExpenseTypesFragment", "Erro ao atualizar tipo: ${e.message}", e)
+                Timber.e("ExpenseTypesFragment", "Erro ao atualizar tipo: ${e.message}", e)
                 if (isAdded && context != null) {
                     Toast.makeText(requireContext(), "Erro ao atualizar tipo: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -261,7 +261,7 @@ class ExpenseTypesFragment : Fragment() {
                     loadData()
                 }
             } catch (e: Exception) {
-                Log.e("ExpenseTypesFragment", "Erro ao deletar tipo: ${e.message}", e)
+                Timber.e("ExpenseTypesFragment", "Erro ao deletar tipo: ${e.message}", e)
                 if (isAdded && context != null) {
                     Toast.makeText(requireContext(), "Erro ao deletar tipo: ${e.message}", Toast.LENGTH_SHORT).show()
                 }

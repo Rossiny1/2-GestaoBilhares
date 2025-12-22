@@ -17,6 +17,7 @@ import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
 import com.example.gestaobilhares.ui.databinding.FragmentLoginBinding
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 /**
  * Fragmento responsável pela tela de login com Firebase Authentication.
  * Utiliza ViewBinding, ViewModel e navegação segura.
@@ -30,51 +31,51 @@ class LoginFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        android.util.Log.d("LoginFragment", "🚨 LOGINFRAGMENT ONCREATE CHAMADO")
-        android.util.Log.d("LoginFragment", "🚨 SavedInstanceState: ${savedInstanceState != null}")
+        Timber.d("LoginFragment", "🚨 LOGINFRAGMENT ONCREATE CHAMADO")
+        Timber.d("LoginFragment", "🚨 SavedInstanceState: ${savedInstanceState != null}")
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        android.util.Log.d("LoginFragment", "🚨 LOGINFRAGMENT ONCREATEVIEW CHAMADO")
-        android.util.Log.d("LoginFragment", "🚨 Container: ${container?.javaClass?.simpleName}")
-        android.util.Log.d("LoginFragment", "🚨 SavedInstanceState: ${savedInstanceState != null}")
+        Timber.d("LoginFragment", "🚨 LOGINFRAGMENT ONCREATEVIEW CHAMADO")
+        Timber.d("LoginFragment", "🚨 Container: ${container?.javaClass?.simpleName}")
+        Timber.d("LoginFragment", "🚨 SavedInstanceState: ${savedInstanceState != null}")
         
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
-        android.util.Log.d("LoginFragment", "✅ Binding criado com sucesso")
+        Timber.d("LoginFragment", "✅ Binding criado com sucesso")
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        android.util.Log.d("LoginFragment", "🚨 LOGINFRAGMENT ONVIEWCREATED CHAMADO")
-        android.util.Log.d("LoginFragment", "🚨 Context: ${requireContext()}")
-        android.util.Log.d("LoginFragment", "🚨 View: ${view.javaClass.simpleName}")
+        Timber.d("LoginFragment", "🚨 LOGINFRAGMENT ONVIEWCREATED CHAMADO")
+        Timber.d("LoginFragment", "🚨 Context: ${requireContext()}")
+        Timber.d("LoginFragment", "🚨 View: ${view.javaClass.simpleName}")
 
         try {
-            android.util.Log.d("LoginFragment", "=== INICIANDO LOGINFRAGMENT ===")
+            Timber.d("LoginFragment", "=== INICIANDO LOGINFRAGMENT ===")
             
             // ✅ CORREÇÃO: ViewModel injetado via Hilt, não precisa inicializar manualmente
             // authViewModel injetado automaticamente pelo Hilt
-            android.util.Log.d("LoginFragment", "✅ AuthViewModel injetado via Hilt")
+            Timber.d("LoginFragment", "✅ AuthViewModel injetado via Hilt")
             
             // Não precisa mais chamar initializeRepository - Hilt injeta dependências
             // authViewModel.initializeRepository(requireContext()) // Removido - Hilt injeta dependências
-            android.util.Log.d("LoginFragment", "✅ Dependências injetadas via Hilt")
+            Timber.d("LoginFragment", "✅ Dependências injetadas via Hilt")
             
             setupClickListeners()
-            android.util.Log.d("LoginFragment", "✅ Click listeners configurados")
+            Timber.d("LoginFragment", "✅ Click listeners configurados")
             
             observeAuthState()
-            android.util.Log.d("LoginFragment", "✅ Observers configurados")
+            Timber.d("LoginFragment", "✅ Observers configurados")
             
-            android.util.Log.d("LoginFragment", "✅ LoginFragment inicializado com sucesso")
+            Timber.d("LoginFragment", "✅ LoginFragment inicializado com sucesso")
         } catch (e: Exception) {
-            android.util.Log.e("LoginFragment", "ERRO CRÍTICO ao inicializar LoginFragment: ${e.message}")
-            android.util.Log.e("LoginFragment", "Stack trace: ${e.stackTraceToString()}")
+            Timber.e("LoginFragment", "ERRO CRÍTICO ao inicializar LoginFragment: ${e.message}")
+            Timber.e("LoginFragment", "Stack trace: ${e.stackTraceToString()}")
             // Mostrar mensagem de erro para o usuário
             android.widget.Toast.makeText(requireContext(), "Erro crítico ao inicializar o app. Reinicie o aplicativo.", android.widget.Toast.LENGTH_LONG).show()
         }
@@ -111,7 +112,7 @@ class LoginFragment : Fragment() {
                         }
                         is AuthState.FirstAccessRequired -> {
                             // ✅ NOVO: Redirecionar para tela de alteração de senha obrigatória
-                            android.util.Log.d("LoginFragment", "Primeiro acesso detectado. Navegando para ChangePasswordFragment...")
+                            Timber.d("LoginFragment", "Primeiro acesso detectado. Navegando para ChangePasswordFragment...")
                             findNavController().navigate(
                                 com.example.gestaobilhares.ui.R.id.action_loginFragment_to_changePasswordFragment
                             )

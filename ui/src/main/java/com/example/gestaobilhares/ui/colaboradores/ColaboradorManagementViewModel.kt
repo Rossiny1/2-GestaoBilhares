@@ -20,6 +20,7 @@ import java.util.Date
 
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import timber.log.Timber
 
 /**
  * ViewModel para gerenciamento de colaboradores.
@@ -115,7 +116,7 @@ class ColaboradorManagementViewModel @Inject constructor(
             _pendentesAprovacao.value = pendentes.size
             
         } catch (e: Exception) {
-            android.util.Log.e("ColaboradorManagementViewModel", "Erro ao carregar estatísticas: ${e.message}")
+            Timber.e("ColaboradorManagementViewModel", "Erro ao carregar estatísticas: ${e.message}")
         }
     }
     
@@ -201,7 +202,7 @@ class ColaboradorManagementViewModel @Inject constructor(
                 // ✅ CORREÇÃO: Buscar colaborador para obter o email ORIGINAL
                 val colaborador = appRepository.obterColaboradorPorId(colaboradorId)
                 if (colaborador == null) {
-                    android.util.Log.e("ColaboradorManagementViewModel", "Colaborador não encontrado: $colaboradorId")
+                    Timber.e("ColaboradorManagementViewModel", "Colaborador não encontrado: $colaboradorId")
                     _errorMessage.value = "Colaborador não encontrado"
                     hideLoading()
                     return@launch
@@ -210,8 +211,8 @@ class ColaboradorManagementViewModel @Inject constructor(
                 // ✅ CORREÇÃO CRÍTICA: Usar o email ORIGINAL do colaborador (não o emailAcesso sugerido)
                 // O email original é o que foi fornecido no cadastro e já pode ter um usuário Firebase criado
                 val emailParaFirebase = colaborador.email
-                android.util.Log.d("ColaboradorManagementViewModel", "Email original do colaborador: $emailParaFirebase")
-                android.util.Log.d("ColaboradorManagementViewModel", "Email sugerido (emailAcesso): $email")
+                Timber.d("ColaboradorManagementViewModel", "Email original do colaborador: $emailParaFirebase")
+                Timber.d("ColaboradorManagementViewModel", "Email sugerido (emailAcesso): $email")
                 
                 // ✅ CORREÇÃO: Se o colaborador já tem firebaseUid, usar esse (não criar novo usuário)
                 var firebaseUid: String? = colaborador.firebaseUid
@@ -219,33 +220,33 @@ class ColaboradorManagementViewModel @Inject constructor(
                 // Se não tem firebaseUid, criar conta no Firebase Authentication com o email ORIGINAL
                 if (firebaseUid == null) {
                     try {
-                        android.util.Log.d("ColaboradorManagementViewModel", "Criando conta Firebase para email ORIGINAL: $emailParaFirebase")
+                        Timber.d("ColaboradorManagementViewModel", "Criando conta Firebase para email ORIGINAL: $emailParaFirebase")
                         val result = firebaseAuth.createUserWithEmailAndPassword(emailParaFirebase, senha).await()
                         firebaseUid = result.user?.uid
-                        android.util.Log.d("ColaboradorManagementViewModel", "✅ Conta Firebase criada com sucesso! UID: $firebaseUid")
+                        Timber.d("ColaboradorManagementViewModel", "✅ Conta Firebase criada com sucesso! UID: $firebaseUid")
                     } catch (e: Exception) {
-                        android.util.Log.e("ColaboradorManagementViewModel", "Erro ao criar conta Firebase: ${e.message}")
+                        Timber.e("ColaboradorManagementViewModel", "Erro ao criar conta Firebase: ${e.message}")
                         // Se o usuário já existe no Firebase, tentar obter o UID
                         try {
                             val user = firebaseAuth.currentUser
                             if (user?.email == emailParaFirebase) {
                                 firebaseUid = user.uid
-                                android.util.Log.d("ColaboradorManagementViewModel", "Usuário já existe no Firebase, UID: $firebaseUid")
+                                Timber.d("ColaboradorManagementViewModel", "Usuário já existe no Firebase, UID: $firebaseUid")
                             } else {
                                 // Tentar fazer login para obter o UID
                                 val signInResult = firebaseAuth.signInWithEmailAndPassword(emailParaFirebase, senha).await()
                                 firebaseUid = signInResult.user?.uid
-                                android.util.Log.d("ColaboradorManagementViewModel", "Login realizado para obter UID: $firebaseUid")
+                                Timber.d("ColaboradorManagementViewModel", "Login realizado para obter UID: $firebaseUid")
                                 // Fazer logout para não manter sessão
                                 firebaseAuth.signOut()
                             }
                         } catch (e2: Exception) {
-                            android.util.Log.w("ColaboradorManagementViewModel", "Não foi possível obter UID do Firebase: ${e2.message}")
+                            Timber.w("ColaboradorManagementViewModel", "Não foi possível obter UID do Firebase: ${e2.message}")
                             // Continuar sem Firebase UID (modo offline)
                         }
                     }
                 } else {
-                    android.util.Log.d("ColaboradorManagementViewModel", "✅ Colaborador já tem Firebase UID: $firebaseUid (não criando novo usuário)")
+                    Timber.d("ColaboradorManagementViewModel", "✅ Colaborador já tem Firebase UID: $firebaseUid (não criando novo usuário)")
                 }
                 
                 // ✅ FASE 12.1: Hashear senha antes de armazenar (nunca texto plano)
@@ -269,7 +270,7 @@ class ColaboradorManagementViewModel @Inject constructor(
                 carregarDados() // Recarregar dados
                 
             } catch (e: Exception) {
-                android.util.Log.e("ColaboradorManagementViewModel", "Erro ao aprovar colaborador: ${e.message}", e)
+                Timber.e("ColaboradorManagementViewModel", "Erro ao aprovar colaborador: ${e.message}", e)
                 _errorMessage.value = "Erro ao aprovar colaborador: ${e.message}"
             } finally {
                 hideLoading()
@@ -340,17 +341,17 @@ class ColaboradorManagementViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 showLoading()
-                android.util.Log.d("ColaboradorManagementViewModel", "=== APROVANDO COLABORADOR DO AUTHENTICATION ===")
-                android.util.Log.d("ColaboradorManagementViewModel", "   Email: $email")
+                Timber.d("ColaboradorManagementViewModel", "=== APROVANDO COLABORADOR DO AUTHENTICATION ===")
+                Timber.d("ColaboradorManagementViewModel", "   Email: $email")
                 
                 // 1. Buscar usuário no Firebase Authentication pelo email
                 val userRecord = try {
                     // Usar Admin SDK via Cloud Function ou buscar diretamente
                     // Como não temos Admin SDK no app, vamos buscar no Firestore primeiro
-                    android.util.Log.d("ColaboradorManagementViewModel", "   Buscando usuário no Authentication...")
+                    Timber.d("ColaboradorManagementViewModel", "   Buscando usuário no Authentication...")
                     null // Será implementado via Cloud Function
                 } catch (e: Exception) {
-                    android.util.Log.e("ColaboradorManagementViewModel", "   Erro ao buscar usuário: ${e.message}")
+                    Timber.e("ColaboradorManagementViewModel", "   Erro ao buscar usuário: ${e.message}")
                     throw Exception("Usuário não encontrado no Firebase Authentication: ${e.message}")
                 }
                 
@@ -364,13 +365,13 @@ class ColaboradorManagementViewModel @Inject constructor(
                     .document("colaboradores")
                     .collection("items")
                 
-                android.util.Log.d("ColaboradorManagementViewModel", "   Buscando documento no Firestore: $documentId")
+                Timber.d("ColaboradorManagementViewModel", "   Buscando documento no Firestore: $documentId")
                 
                 val docSnapshot = collectionRef.document(documentId).get().await()
                 
                 if (!docSnapshot.exists()) {
                     // Se não existe, criar novo documento
-                    android.util.Log.d("ColaboradorManagementViewModel", "   Documento não existe. Criando novo...")
+                    Timber.d("ColaboradorManagementViewModel", "   Documento não existe. Criando novo...")
                     
                     val colaboradorMap = mutableMapOf<String, Any?>()
                     colaboradorMap["id"] = System.currentTimeMillis() // ID temporário único
@@ -400,14 +401,14 @@ class ColaboradorManagementViewModel @Inject constructor(
                         // A Cloud Function vai preencher depois
                         colaboradorMap["firebaseUid"] = null
                     } catch (e: Exception) {
-                        android.util.Log.w("ColaboradorManagementViewModel", "   Não foi possível obter firebaseUid: ${e.message}")
+                        Timber.w("ColaboradorManagementViewModel", "   Não foi possível obter firebaseUid: ${e.message}")
                     }
                     
                     collectionRef.document(documentId).set(colaboradorMap).await()
-                    android.util.Log.d("ColaboradorManagementViewModel", "✅ Documento criado no Firestore")
+                    Timber.d("ColaboradorManagementViewModel", "✅ Documento criado no Firestore")
                 } else {
                     // Se existe, atualizar com dados de aprovação
-                    android.util.Log.d("ColaboradorManagementViewModel", "   Documento existe. Atualizando...")
+                    Timber.d("ColaboradorManagementViewModel", "   Documento existe. Atualizando...")
                     
                     val updateMap = mutableMapOf<String, Any?>()
                     updateMap["aprovado"] = true
@@ -422,14 +423,14 @@ class ColaboradorManagementViewModel @Inject constructor(
                     updateMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
                     collectionRef.document(documentId).update(updateMap).await()
-                    android.util.Log.d("ColaboradorManagementViewModel", "✅ Documento atualizado no Firestore")
+                    Timber.d("ColaboradorManagementViewModel", "✅ Documento atualizado no Firestore")
                 }
                 
                 showMessage("Colaborador aprovado com sucesso! O documento foi criado/atualizado no Firestore.")
                 carregarDados() // Recarregar dados
                 
             } catch (e: Exception) {
-                android.util.Log.e("ColaboradorManagementViewModel", "Erro ao aprovar colaborador do Authentication: ${e.message}", e)
+                Timber.e("ColaboradorManagementViewModel", "Erro ao aprovar colaborador do Authentication: ${e.message}", e)
                 _errorMessage.value = "Erro ao aprovar colaborador: ${e.message}"
             } finally {
                 hideLoading()

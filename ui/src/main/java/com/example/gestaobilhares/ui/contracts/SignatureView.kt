@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.util.Base64
-import android.util.Log
+import timber.log.Timber
 import android.view.MotionEvent
 import android.view.View
 import com.example.gestaobilhares.core.utils.SignaturePoint
@@ -147,7 +147,7 @@ class SignatureView @JvmOverloads constructor(
         
         signaturePoints.add(point)
         
-        Log.d(TAG, "Ponto capturado: x=$x, y=$y, pressure=$pressure, velocity=$velocity, total=${signaturePoints.size}")
+        Timber.d(TAG, "Ponto capturado: x=$x, y=$y, pressure=$pressure, velocity=$velocity, total=${signaturePoints.size}")
     }
     
     fun clear() {
@@ -213,7 +213,7 @@ class SignatureView @JvmOverloads constructor(
             signaturePoints.map { it.velocity }.average()
         } else 0.0
         
-        Log.d(TAG, "Estatísticas calculadas: pontos=$totalPoints, duração=${duration}ms, pressão=${averagePressure}, velocidade=${averageVelocity}")
+        Timber.d(TAG, "Estatísticas calculadas: pontos=$totalPoints, duração=${duration}ms, pressão=${averagePressure}, velocidade=${averageVelocity}")
         
         return mapOf(
             "totalPoints" to totalPoints,
@@ -243,7 +243,7 @@ class SignatureView @JvmOverloads constructor(
             
             Base64.encodeToString(byteArray, Base64.DEFAULT)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao converter assinatura para Base64", e)
+            Timber.e(TAG, "Erro ao converter assinatura para Base64", e)
             ""
         }
     }

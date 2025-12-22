@@ -38,10 +38,19 @@ class GestaoBilharesApplication : Application() {
             // Continuar mesmo se Firebase falhar (modo offline)
         }
         
+        // ✅ PRODUÇÃO: Configurar Timber com integração Crashlytics
         if (BuildConfig.DEBUG) {
+            // Em DEBUG: Usar DebugTree para logs locais + CrashlyticsTree para testar integração
             Timber.plant(Timber.DebugTree())
+            Timber.plant(CrashlyticsTree()) // Também em debug para testar integração
+            Timber.i("Timber configurado: DebugTree + CrashlyticsTree (DEBUG)")
+            
+            // ✅ TESTE: Enviar um log de informação para o Crashlytics para confirmar conexão
+            com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance().log("App iniciado em modo DEBUG - Crashlytics Ativo")
         } else {
+            // Em RELEASE: Usar CrashlyticsTree para enviar logs para produção
             Timber.plant(CrashlyticsTree())
+            Timber.d("Timber configurado: CrashlyticsTree (RELEASE)")
         }
         Timber.d("Aplicacao iniciada com sucesso")
         

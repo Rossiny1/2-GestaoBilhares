@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import timber.log.Timber
 
 /**
  * ViewModel para cadastro de metas
@@ -45,9 +46,9 @@ class MetaCadastroViewModel @Inject constructor(
             try {
                 val rotasAtivas = appRepository.obterTodasRotas().first().filter { rota -> rota.ativa }
                 _rotas.value = rotasAtivas
-                android.util.Log.d("MetaCadastroViewModel", "Rotas carregadas: ${rotasAtivas.size}")
+                Timber.d("Rotas carregadas: %d", rotasAtivas.size)
             } catch (e: Exception) {
-                android.util.Log.e("MetaCadastroViewModel", "Erro ao carregar rotas: ${e.message}", e)
+                Timber.e(e, "Erro ao carregar rotas: %s", e.message)
                 _message.value = "Erro ao carregar rotas: ${e.message}"
             }
         }
@@ -62,14 +63,14 @@ class MetaCadastroViewModel @Inject constructor(
                 val rota = appRepository.buscarRotaPorId(rotaId)
                 if (rota != null) {
                     _rotas.value = listOf(rota)
-                    android.util.Log.d("MetaCadastroViewModel", "Rota carregada: ${rota.nome}")
+                    Timber.d("Rota carregada: %s", rota.nome)
                     // Carregar ciclos da rota automaticamente
                     carregarCiclosPorRota(rotaId)
                 } else {
                     _message.value = "Rota não encontrada"
                 }
             } catch (e: Exception) {
-                android.util.Log.e("MetaCadastroViewModel", "Erro ao carregar rota: ${e.message}", e)
+                Timber.e(e, "Erro ao carregar rota: %s", e.message)
                 _message.value = "Erro ao carregar rota: ${e.message}"
             }
         }
@@ -81,11 +82,11 @@ class MetaCadastroViewModel @Inject constructor(
     fun carregarCiclosPorRota(rotaId: Long) {
         viewModelScope.launch {
             try {
-                android.util.Log.d("MetaCadastroViewModel", "Carregando ciclos para rota $rotaId")
+                Timber.d("Carregando ciclos para rota %d", rotaId)
                 
                 // Buscar TODOS os ciclos da rota primeiro
                 val todosCiclos = appRepository.buscarCiclosPorRota(rotaId)
-                android.util.Log.d("MetaCadastroViewModel", "Total de ciclos encontrados: ${todosCiclos.size}")
+                Timber.d("Total de ciclos encontrados: %d", todosCiclos.size)
                 
                 // Filtrar apenas ciclos que podem ter metas (EM_ANDAMENTO ou PLANEJADO)
                 val ciclosParaMetas = todosCiclos.filter { ciclo ->
@@ -93,17 +94,17 @@ class MetaCadastroViewModel @Inject constructor(
                     ciclo.status == com.example.gestaobilhares.data.entities.StatusCicloAcerto.PLANEJADO
                 }
                 
-                android.util.Log.d("MetaCadastroViewModel", "Ciclos filtrados para metas: ${ciclosParaMetas.size}")
+                Timber.d("Ciclos filtrados para metas: %d", ciclosParaMetas.size)
                 
                 _ciclos.value = ciclosParaMetas
                 
                 if (ciclosParaMetas.isEmpty()) {
-                    android.util.Log.w("MetaCadastroViewModel", "Nenhum ciclo disponível para metas. Todos os ciclos: ${todosCiclos.map { "${it.numeroCiclo}/${it.ano} (${it.status})" }}")
+                    Timber.w("Nenhum ciclo disponível para metas. Total de ciclos: %d", todosCiclos.size)
                     _message.value = "Nenhum ciclo disponível para metas. Crie um ciclo primeiro."
                 }
                 
             } catch (e: Exception) {
-                android.util.Log.e("MetaCadastroViewModel", "Erro ao carregar ciclos: ${e.message}", e)
+                Timber.e(e, "Erro ao carregar ciclos: %s", e.message)
                 _message.value = "Erro ao carregar ciclos: ${e.message}"
             }
         }
@@ -115,7 +116,7 @@ class MetaCadastroViewModel @Inject constructor(
     fun salvarMeta(meta: MetaColaborador) {
         viewModelScope.launch {
             try {
-                android.util.Log.d("MetaCadastroViewModel", "Salvando meta: ${meta.tipoMeta} para rota ${meta.rotaId ?: "todas"}, ciclo ${meta.cicloId}")
+                Timber.d("Salvando meta: %s para rota %d, ciclo %d", meta.tipoMeta, meta.rotaId ?: 0L, meta.cicloId)
                 
                 // Impedir meta duplicada do mesmo tipo para mesma rota e ciclo
                 val rotaId = meta.rotaId ?: 0L
@@ -132,9 +133,9 @@ class MetaCadastroViewModel @Inject constructor(
                 val colaboradorId = colaboradorResponsavel?.id ?: 0L
                 
                 if (colaboradorId == 0L) {
-                    android.util.Log.d("MetaCadastroViewModel", "Meta será salva sem colaborador específico (colaboradorId = 0)")
+                    Timber.d("Meta será salva sem colaborador específico (colaboradorId = 0)")
                 } else {
-                    android.util.Log.d("MetaCadastroViewModel", "Meta será salva com colaborador ID: $colaboradorId")
+                    Timber.d("Meta será salva com colaborador ID: %d", colaboradorId)
                 }
                 
                 // Definir o colaborador na meta
@@ -143,7 +144,7 @@ class MetaCadastroViewModel @Inject constructor(
                 // Salvar a meta
                 val metaId = appRepository.inserirMeta(metaComColaborador)
                 
-                android.util.Log.d("MetaCadastroViewModel", "Meta salva com ID: $metaId")
+                Timber.d("Meta salva com ID: %d", metaId)
                 _metaSalva.value = true
                 
                 // Reset rápido do flag para permitir nova criação imediata se necessário
@@ -151,7 +152,7 @@ class MetaCadastroViewModel @Inject constructor(
                 _metaSalva.value = true
                 
             } catch (e: Exception) {
-                android.util.Log.e("MetaCadastroViewModel", "Erro ao salvar meta: ${e.message}", e)
+                Timber.e(e, "Erro ao salvar meta: %s", e.message)
                 _message.value = "Erro ao salvar meta: ${e.message}"
             }
         }
@@ -170,7 +171,7 @@ class MetaCadastroViewModel @Inject constructor(
     fun criarCicloParaRota(rotaId: Long) {
         viewModelScope.launch {
             try {
-                android.util.Log.d("MetaCadastroViewModel", "Criando ciclo para rota $rotaId")
+                Timber.d("Criando ciclo para rota %d", rotaId)
                 
                 // Buscar próximo número de ciclo
                 val proximoNumero = appRepository.buscarProximoNumeroCiclo(rotaId, 2024)
@@ -186,7 +187,7 @@ class MetaCadastroViewModel @Inject constructor(
                 )
                 
                 val cicloId = appRepository.inserirCicloAcerto(novoCiclo)
-                android.util.Log.d("MetaCadastroViewModel", "Ciclo criado com ID: $cicloId")
+                Timber.d("Ciclo criado com ID: %d", cicloId)
                 
                 _cicloCriado.value = true
                 _message.value = "Ciclo criado com sucesso! Recarregando..."
@@ -195,7 +196,7 @@ class MetaCadastroViewModel @Inject constructor(
                 carregarCiclosPorRota(rotaId)
                 
             } catch (e: Exception) {
-                android.util.Log.e("MetaCadastroViewModel", "Erro ao criar ciclo: ${e.message}", e)
+                Timber.e(e, "Erro ao criar ciclo: %s", e.message)
                 _message.value = "Erro ao criar ciclo: ${e.message}"
             }
         }
@@ -207,7 +208,7 @@ class MetaCadastroViewModel @Inject constructor(
     fun criarCicloFuturoParaRota(rotaId: Long) {
         viewModelScope.launch {
             try {
-                android.util.Log.d("MetaCadastroViewModel", "Criando ciclo futuro para rota $rotaId")
+                Timber.d("Criando ciclo futuro para rota %d", rotaId)
                 
                 // Buscar próximo número de ciclo
                 val proximoNumero = appRepository.buscarProximoNumeroCiclo(rotaId, 2024)
@@ -223,7 +224,7 @@ class MetaCadastroViewModel @Inject constructor(
                 )
                 
                 val cicloId = appRepository.inserirCicloAcerto(novoCiclo)
-                android.util.Log.d("MetaCadastroViewModel", "Ciclo futuro criado com ID: $cicloId")
+                Timber.d("Ciclo futuro criado com ID: %d", cicloId)
                 
                 _cicloCriado.value = true
                 _message.value = "Ciclo futuro criado com sucesso! Recarregando..."
@@ -232,7 +233,7 @@ class MetaCadastroViewModel @Inject constructor(
                 carregarCiclosPorRota(rotaId)
                 
             } catch (e: Exception) {
-                android.util.Log.e("MetaCadastroViewModel", "Erro ao criar ciclo futuro: ${e.message}", e)
+                Timber.e(e, "Erro ao criar ciclo futuro: %s", e.message)
                 _message.value = "Erro ao criar ciclo futuro: ${e.message}"
             }
         }

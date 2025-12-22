@@ -2,7 +2,7 @@
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -122,7 +122,7 @@ class SettlementDetailFragment : Fragment() {
         // Observer para dados do acerto
         viewModel.settlementDetail.observe(viewLifecycleOwner) { settlement ->
             settlement?.let {
-                android.util.Log.d("SettlementDetailFragment", "Detalhes carregados: $it")
+                Timber.d("SettlementDetailFragment", "Detalhes carregados: $it")
                 currentSettlement = it
                 updateUI(it)
             }
@@ -133,7 +133,7 @@ class SettlementDetailFragment : Fragment() {
             viewModel.isLoading.collect { isLoading ->
                 // TODO: Mostrar loading se necessário
                 if (isLoading) {
-                    android.util.Log.d("SettlementDetailFragment", "Carregando detalhes...")
+                    Timber.d("SettlementDetailFragment", "Carregando detalhes...")
                 }
             }
         }
@@ -152,11 +152,11 @@ class SettlementDetailFragment : Fragment() {
                 try {
                     findNavController().popBackStack()
                 } catch (e: Exception) {
-                    Log.e("SettlementDetailFragment", "Erro ao voltar: ${e.message}")
+                    Timber.e("SettlementDetailFragment", "Erro ao voltar: ${e.message}")
                 }
             }
         } catch (e: Exception) {
-            Log.e("SettlementDetailFragment", "Erro ao configurar UI: ${e.message}")
+            Timber.e("SettlementDetailFragment", "Erro ao configurar UI: ${e.message}")
         }
         
         // Botão editar
@@ -214,28 +214,28 @@ class SettlementDetailFragment : Fragment() {
 
     private fun setupMesasRecyclerView(settlement: SettlementDetailViewModel.SettlementDetail) {
         // ✅ DIAGNÓSTICO CRÍTICO: Logs extensos para identificar problema com múltiplas mesas
-        android.util.Log.d("SettlementDetailFragment", "=== CONFIGURANDO RECYCLERVIEW DAS MESAS ===")
-        android.util.Log.d("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
-        android.util.Log.d("SettlementDetailFragment", "Total mesas no settlement: ${settlement.acertoMesas.size}")
-        android.util.Log.d("SettlementDetailFragment", "Total mesas esperadas (totalMesas): ${settlement.totalMesas}")
+        Timber.d("SettlementDetailFragment", "=== CONFIGURANDO RECYCLERVIEW DAS MESAS ===")
+        Timber.d("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
+        Timber.d("SettlementDetailFragment", "Total mesas no settlement: ${settlement.acertoMesas.size}")
+        Timber.d("SettlementDetailFragment", "Total mesas esperadas (totalMesas): ${settlement.totalMesas}")
         
         // ✅ VERIFICAÇÃO CRÍTICA: Se não há mesas, isso é um problema
         if (settlement.acertoMesas.isEmpty()) {
-            android.util.Log.d("SettlementDetailFragment", "❌ PROBLEMA CRÍTICO: settlement.acertoMesas está vazio!")
-            android.util.Log.d("SettlementDetailFragment", "Isso indica problema na busca das mesas no banco de dados")
+            Timber.d("SettlementDetailFragment", "❌ PROBLEMA CRÍTICO: settlement.acertoMesas está vazio!")
+            Timber.d("SettlementDetailFragment", "Isso indica problema na busca das mesas no banco de dados")
             return
         }
         
         settlement.acertoMesas.forEachIndexed { index, acertoMesa ->
-            android.util.Log.d("SettlementDetailFragment", "=== MESA ${index + 1} PARA EXIBIÇÃO ===")
-            android.util.Log.d("SettlementDetailFragment", "Mesa ID: ${acertoMesa.mesaId}")
-            android.util.Log.d("SettlementDetailFragment", "Acerto ID: ${acertoMesa.acertoId}")
-            android.util.Log.d("SettlementDetailFragment", "Relógio: ${acertoMesa.relogioInicial} → ${acertoMesa.relogioFinal}")
-            android.util.Log.d("SettlementDetailFragment", "Fichas jogadas: ${acertoMesa.fichasJogadas}")
-            android.util.Log.d("SettlementDetailFragment", "Valor fixo: R$ ${acertoMesa.valorFixo}")
-            android.util.Log.d("SettlementDetailFragment", "Subtotal: R$ ${acertoMesa.subtotal}")
-            android.util.Log.d("SettlementDetailFragment", "Com defeito: ${acertoMesa.comDefeito}")
-            android.util.Log.d("SettlementDetailFragment", "Relógio reiniciou: ${acertoMesa.relogioReiniciou}")
+            Timber.d("SettlementDetailFragment", "=== MESA ${index + 1} PARA EXIBIÇÃO ===")
+            Timber.d("SettlementDetailFragment", "Mesa ID: ${acertoMesa.mesaId}")
+            Timber.d("SettlementDetailFragment", "Acerto ID: ${acertoMesa.acertoId}")
+            Timber.d("SettlementDetailFragment", "Relógio: ${acertoMesa.relogioInicial} → ${acertoMesa.relogioFinal}")
+            Timber.d("SettlementDetailFragment", "Fichas jogadas: ${acertoMesa.fichasJogadas}")
+            Timber.d("SettlementDetailFragment", "Valor fixo: R$ ${acertoMesa.valorFixo}")
+            Timber.d("SettlementDetailFragment", "Subtotal: R$ ${acertoMesa.subtotal}")
+            Timber.d("SettlementDetailFragment", "Com defeito: ${acertoMesa.comDefeito}")
+            Timber.d("SettlementDetailFragment", "Relógio reiniciou: ${acertoMesa.relogioReiniciou}")
         }
         
         // ✅ MELHORIA: Buscar dados completos das mesas para exibir numeração correta
@@ -244,24 +244,24 @@ class SettlementDetailFragment : Fragment() {
                 // val appRepository - USAR INJECTED (Já injetado via Hilt)
                 val mesasCompletas = mutableMapOf<Long, AcertoMesaDetailAdapter.MesaCompleta>()
                 
-                android.util.Log.d("SettlementDetailFragment", "=== BUSCANDO DADOS COMPLETOS DAS MESAS ===")
+                Timber.d("SettlementDetailFragment", "=== BUSCANDO DADOS COMPLETOS DAS MESAS ===")
                 for (acertoMesa in settlement.acertoMesas) {
-                    android.util.Log.d("SettlementDetailFragment", "Buscando mesa ID: ${acertoMesa.mesaId}")
+                    Timber.d("SettlementDetailFragment", "Buscando mesa ID: ${acertoMesa.mesaId}")
                     val mesaCompleta = appRepository.obterMesaPorId(acertoMesa.mesaId)
                     if (mesaCompleta != null) {
-                        android.util.Log.d("SettlementDetailFragment", "Mesa encontrada: ${mesaCompleta.numero} (${mesaCompleta.tipoMesa.name})")
+                        Timber.d("SettlementDetailFragment", "Mesa encontrada: ${mesaCompleta.numero} (${mesaCompleta.tipoMesa.name})")
                         mesasCompletas[acertoMesa.mesaId] = AcertoMesaDetailAdapter.MesaCompleta(
                             numero = mesaCompleta.numero,
                             tipo = mesaCompleta.tipoMesa.name
                         )
                     } else {
-                        android.util.Log.d("SettlementDetailFragment", "Mesa não encontrada para ID: ${acertoMesa.mesaId}")
+                        Timber.d("SettlementDetailFragment", "Mesa não encontrada para ID: ${acertoMesa.mesaId}")
                     }
                 }
                 
-                android.util.Log.d("SettlementDetailFragment", "=== CONFIGURANDO ADAPTER ===")
-                android.util.Log.d("SettlementDetailFragment", "Mesas para adapter: ${settlement.acertoMesas.size}")
-                android.util.Log.d("SettlementDetailFragment", "Mesas completas encontradas: ${mesasCompletas.size}")
+                Timber.d("SettlementDetailFragment", "=== CONFIGURANDO ADAPTER ===")
+                Timber.d("SettlementDetailFragment", "Mesas para adapter: ${settlement.acertoMesas.size}")
+                Timber.d("SettlementDetailFragment", "Mesas completas encontradas: ${mesasCompletas.size}")
                 
                 // Configurar adapter com dados completos
                 mesaDetailAdapter = AcertoMesaDetailAdapter(
@@ -274,7 +274,7 @@ class SettlementDetailFragment : Fragment() {
                         try {
                             visualizarFotoRelogio(caminhoFoto, dataFoto)
                         } catch (e: Exception) {
-                            Log.e("SettlementDetailFragment", "Erro ao visualizar foto: ${e.message}")
+                            Timber.e("SettlementDetailFragment", "Erro ao visualizar foto: ${e.message}")
                             android.widget.Toast.makeText(
                                 requireContext(),
                                 "Erro ao visualizar foto: ${e.message}",
@@ -284,7 +284,7 @@ class SettlementDetailFragment : Fragment() {
                     }
                 )
                 
-                android.util.Log.d("SettlementDetailFragment", "=== CONFIGURANDO RECYCLERVIEW ===")
+                Timber.d("SettlementDetailFragment", "=== CONFIGURANDO RECYCLERVIEW ===")
                 binding.rvMesasDetalhe.apply {
                     layoutManager = LinearLayoutManager(requireContext())
                     adapter = mesaDetailAdapter
@@ -293,10 +293,10 @@ class SettlementDetailFragment : Fragment() {
                     setHasFixedSize(false)
                 }
                 
-                android.util.Log.d("SettlementDetailFragment", "Adapter configurado com ${mesaDetailAdapter?.itemCount ?: 0} itens")
+                Timber.d("SettlementDetailFragment", "Adapter configurado com ${mesaDetailAdapter?.itemCount ?: 0} itens")
                 
             } catch (e: Exception) {
-                android.util.Log.d("SettlementDetailFragment", "Erro ao carregar dados das mesas: ${e.message}")
+                Timber.d("SettlementDetailFragment", "Erro ao carregar dados das mesas: ${e.message}")
                 // Fallback para adapter básico
                 mesaDetailAdapter = AcertoMesaDetailAdapter(
                     mesas = settlement.acertoMesas,
@@ -307,7 +307,7 @@ class SettlementDetailFragment : Fragment() {
                         try {
                             visualizarFotoRelogio(caminhoFoto, dataFoto)
                         } catch (e: Exception) {
-                            Log.e("SettlementDetailFragment", "Erro ao visualizar foto: ${e.message}")
+                            Timber.e("SettlementDetailFragment", "Erro ao visualizar foto: ${e.message}")
                             android.widget.Toast.makeText(
                                 requireContext(),
                                 "Erro ao visualizar foto: ${e.message}",
@@ -369,7 +369,7 @@ class SettlementDetailFragment : Fragment() {
                 )
                 
             } catch (e: Exception) {
-                android.util.Log.d("SettlementDetailFragment", "Erro ao preparar impressão: ${e.message}")
+                Timber.d("SettlementDetailFragment", "Erro ao preparar impressão: ${e.message}")
                 android.widget.Toast.makeText(requireContext(), "Erro ao preparar impressão: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
@@ -389,15 +389,15 @@ class SettlementDetailFragment : Fragment() {
                 val valorFichaExibir = if (settlement.valorFicha > 0) settlement.valorFicha else if (settlement.comissaoFicha > 0) settlement.comissaoFicha else 0.0
                 
                 // ✅ LOGS CRÍTICOS: Verificar dados antes do WhatsApp
-                android.util.Log.d("SettlementDetailFragment", "=== DADOS PARA WHATSAPP ===")
-                android.util.Log.d("SettlementDetailFragment", "Cliente Nome: '${settlement.clienteNome}'")
-                android.util.Log.d("SettlementDetailFragment", "Cliente CPF: '${settlement.clienteCpf}'")
-                android.util.Log.d("SettlementDetailFragment", "ValorFicha original: ${settlement.valorFicha}")
-                android.util.Log.d("SettlementDetailFragment", "ComissaoFicha original: ${settlement.comissaoFicha}")
-                android.util.Log.d("SettlementDetailFragment", "Valor Ficha Exibir (CORRIGIDO): $valorFichaExibir")
-                android.util.Log.d("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
-                android.util.Log.d("SettlementDetailFragment", "Número Contrato: '$numeroContrato'")
-                android.util.Log.d("SettlementDetailFragment", "Mesas Completas: ${mesasCompletas.size}")
+                Timber.d("SettlementDetailFragment", "=== DADOS PARA WHATSAPP ===")
+                Timber.d("SettlementDetailFragment", "Cliente Nome: '${settlement.clienteNome}'")
+                Timber.d("SettlementDetailFragment", "Cliente CPF: '${settlement.clienteCpf}'")
+                Timber.d("SettlementDetailFragment", "ValorFicha original: ${settlement.valorFicha}")
+                Timber.d("SettlementDetailFragment", "ComissaoFicha original: ${settlement.comissaoFicha}")
+                Timber.d("SettlementDetailFragment", "Valor Ficha Exibir (CORRIGIDO): $valorFichaExibir")
+                Timber.d("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
+                Timber.d("SettlementDetailFragment", "Número Contrato: '$numeroContrato'")
+                Timber.d("SettlementDetailFragment", "Mesas Completas: ${mesasCompletas.size}")
                 
                 // ✅ USAR FUNÇÃO CENTRALIZADA
                 ReciboPrinterHelper.enviarWhatsAppUnificado(
@@ -424,7 +424,7 @@ class SettlementDetailFragment : Fragment() {
                 )
                 
             } catch (e: Exception) {
-                android.util.Log.d("SettlementDetailFragment", "Erro ao compartilhar via WhatsApp: ${e.message}")
+                Timber.d("SettlementDetailFragment", "Erro ao compartilhar via WhatsApp: ${e.message}")
                 android.widget.Toast.makeText(requireContext(), "Erro ao compartilhar via WhatsApp", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
@@ -437,26 +437,26 @@ class SettlementDetailFragment : Fragment() {
         // val appRepository - USAR INJECTED (Já injetado via Hilt)
         val mesasCompletas = mutableListOf<Mesa>()
         
-        android.util.Log.d("SettlementDetailFragment", "=== BUSCANDO MESAS COMPLETAS ===")
-        android.util.Log.d("SettlementDetailFragment", "Total acertoMesas: ${settlement.acertoMesas.size}")
+        Timber.d("SettlementDetailFragment", "=== BUSCANDO MESAS COMPLETAS ===")
+        Timber.d("SettlementDetailFragment", "Total acertoMesas: ${settlement.acertoMesas.size}")
         
         for (acertoMesa in settlement.acertoMesas) {
-            android.util.Log.d("SettlementDetailFragment", "Buscando mesa ID: ${acertoMesa.mesaId}")
+            Timber.d("SettlementDetailFragment", "Buscando mesa ID: ${acertoMesa.mesaId}")
             val mesaCompleta = appRepository.obterMesaPorId(acertoMesa.mesaId)
             if (mesaCompleta != null) {
-                android.util.Log.d("SettlementDetailFragment", "Mesa encontrada: ${mesaCompleta.numero} (${mesaCompleta.tipoMesa})")
+                Timber.d("SettlementDetailFragment", "Mesa encontrada: ${mesaCompleta.numero} (${mesaCompleta.tipoMesa})")
                 val mesaComAcerto = mesaCompleta.copy(
                     relogioInicial = acertoMesa.relogioInicial,
                     relogioFinal = acertoMesa.relogioFinal
                 )
                 mesasCompletas.add(mesaComAcerto)
-                android.util.Log.d("SettlementDetailFragment", "Mesa adicionada: ${mesaComAcerto.numero} - ${mesaComAcerto.relogioInicial} → ${mesaComAcerto.relogioFinal}")
+                Timber.d("SettlementDetailFragment", "Mesa adicionada: ${mesaComAcerto.numero} - ${mesaComAcerto.relogioInicial} → ${mesaComAcerto.relogioFinal}")
             } else {
-                android.util.Log.d("SettlementDetailFragment", "❌ Mesa não encontrada: ${acertoMesa.mesaId}")
+                Timber.d("SettlementDetailFragment", "❌ Mesa não encontrada: ${acertoMesa.mesaId}")
             }
         }
         
-        android.util.Log.d("SettlementDetailFragment", "Total mesas completas: ${mesasCompletas.size}")
+        Timber.d("SettlementDetailFragment", "Total mesas completas: ${mesasCompletas.size}")
         return mesasCompletas
     }
     
@@ -469,11 +469,11 @@ class SettlementDetailFragment : Fragment() {
         val contratoAtivo = acertoCompleto?.let { 
             viewModel.buscarContratoAtivoPorCliente(it.clienteId) 
         }
-        android.util.Log.d("SettlementDetailFragment", "=== BUSCA CONTRATO ===")
-        android.util.Log.d("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
-        android.util.Log.d("SettlementDetailFragment", "Cliente ID: ${acertoCompleto?.clienteId}")
-        android.util.Log.d("SettlementDetailFragment", "Contrato encontrado: ${contratoAtivo != null}")
-        android.util.Log.d("SettlementDetailFragment", "Número do contrato: ${contratoAtivo?.numeroContrato}")
+        Timber.d("SettlementDetailFragment", "=== BUSCA CONTRATO ===")
+        Timber.d("SettlementDetailFragment", "Acerto ID: ${settlement.id}")
+        Timber.d("SettlementDetailFragment", "Cliente ID: ${acertoCompleto?.clienteId}")
+        Timber.d("SettlementDetailFragment", "Contrato encontrado: ${contratoAtivo != null}")
+        Timber.d("SettlementDetailFragment", "Número do contrato: ${contratoAtivo?.numeroContrato}")
         return contratoAtivo?.numeroContrato
     }
 
@@ -486,7 +486,7 @@ class SettlementDetailFragment : Fragment() {
             // val appRepository - USAR INJECTED (Já injetado via Hilt)
             appRepository.obterMesaPorId(mesaId)
         } catch (e: Exception) {
-            Log.e("SettlementDetailFragment", "Erro ao buscar mesa: ${e.message}")
+            Timber.e("SettlementDetailFragment", "Erro ao buscar mesa: ${e.message}")
             null
         }
     }
@@ -508,8 +508,8 @@ class SettlementDetailFragment : Fragment() {
     private fun verificarPermissaoEdicao() {
         lifecycleScope.launch {
             try {
-                android.util.Log.d("SettlementDetailFragment", "=== VERIFICANDO PERMISSÃO DE EDIÇÃO ===")
-                android.util.Log.d("SettlementDetailFragment", "Acerto ID: ${args.acertoId}")
+                Timber.d("SettlementDetailFragment", "=== VERIFICANDO PERMISSÃO DE EDIÇÃO ===")
+                Timber.d("SettlementDetailFragment", "Acerto ID: ${args.acertoId}")
                 
                 // Mostrar loading
                 binding.btnEdit.isEnabled = false
@@ -522,7 +522,7 @@ class SettlementDetailFragment : Fragment() {
                 
                 when (permissao) {
                     is PermissaoEdicao.Permitido -> {
-                        android.util.Log.d("SettlementDetailFragment", "✅ Edição permitida. Navegando para tela de edição...")
+                        Timber.d("SettlementDetailFragment", "✅ Edição permitida. Navegando para tela de edição...")
                         navegarParaEdicao()
                     }
                     is PermissaoEdicao.CicloInativo -> {
@@ -552,7 +552,7 @@ class SettlementDetailFragment : Fragment() {
                 }
                 
             } catch (e: Exception) {
-                android.util.Log.d("SettlementDetailFragment", "❌ Erro ao verificar permissão: ${e.message}")
+                Timber.d("SettlementDetailFragment", "❌ Erro ao verificar permissão: ${e.message}")
                 mostrarDialogoPermissaoNegada(
                     "Erro",
                     "Ocorreu um erro inesperado: ${e.message}"
@@ -574,7 +574,7 @@ class SettlementDetailFragment : Fragment() {
         return try {
             val acerto = appRepository.buscarPorId(acertoId)
             if (acerto == null) {
-                android.util.Log.d("SettlementDetailFragment", "❌ Acerto não encontrado para edição: ID=$acertoId")
+                Timber.d("SettlementDetailFragment", "❌ Acerto não encontrado para edição: ID=$acertoId")
                 return PermissaoEdicao.AcertoNaoEncontrado
             }
 
@@ -582,7 +582,7 @@ class SettlementDetailFragment : Fragment() {
             val rotaId = acerto.rotaId ?: return PermissaoEdicao.ErroValidacao("Acerto não possui rota associada")
             val cicloAtivo = appRepository.buscarCicloAtivo(rotaId)
             if (cicloAtivo == null || cicloAtivo.id != acerto.cicloId) {
-                android.util.Log.d("SettlementDetailFragment", "❌ Ciclo não está ativo para edição: cicloId=${acerto.cicloId}, rotaId=$rotaId")
+                Timber.d("SettlementDetailFragment", "❌ Ciclo não está ativo para edição: cicloId=${acerto.cicloId}, rotaId=$rotaId")
                 return PermissaoEdicao.CicloInativo("O ciclo deste acerto não está mais ativo.")
             }
 
@@ -591,15 +591,15 @@ class SettlementDetailFragment : Fragment() {
             val ultimoAcerto = acertosRota.maxByOrNull { it.dataAcerto.time }
             
             if (ultimoAcerto == null || ultimoAcerto.id != acertoId) {
-                android.util.Log.d("SettlementDetailFragment", "❌ Não é o último acerto da rota. Último: ${ultimoAcerto?.id}, Solicitado: $acertoId")
+                Timber.d("SettlementDetailFragment", "❌ Não é o último acerto da rota. Último: ${ultimoAcerto?.id}, Solicitado: $acertoId")
                 return PermissaoEdicao.NaoEhUltimoAcerto("Apenas o último acerto da rota pode ser editado.")
             }
 
-            android.util.Log.d("SettlementDetailFragment", "✅ Acerto pode ser editado: ID=$acertoId")
+            Timber.d("SettlementDetailFragment", "✅ Acerto pode ser editado: ID=$acertoId")
             PermissaoEdicao.Permitido
             
         } catch (e: Exception) {
-            android.util.Log.e("SettlementDetailFragment", "Erro ao verificar permissão: ${e.message}", e)
+            Timber.e("SettlementDetailFragment", "Erro ao verificar permissão: ${e.message}", e)
             PermissaoEdicao.ErroValidacao(e.message ?: "Erro desconhecido")
         }
     }
@@ -647,7 +647,7 @@ class SettlementDetailFragment : Fragment() {
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.d("SettlementDetailFragment", "Erro ao navegar para edição: ${e.message}")
+            Timber.d("SettlementDetailFragment", "Erro ao navegar para edição: ${e.message}")
             android.widget.Toast.makeText(
                 requireContext(),
                 "Erro ao abrir tela de edição: ${e.message}",
@@ -661,8 +661,8 @@ class SettlementDetailFragment : Fragment() {
      */
     private fun visualizarFotoRelogio(caminhoFoto: String, dataFoto: Date?) {
         try {
-            android.util.Log.d("SettlementDetailFragment", "=== VISUALIZANDO FOTO ===")
-            android.util.Log.d("SettlementDetailFragment", "Caminho da foto: $caminhoFoto")
+            Timber.d("SettlementDetailFragment", "=== VISUALIZANDO FOTO ===")
+            Timber.d("SettlementDetailFragment", "Caminho da foto: $caminhoFoto")
 
             // ✅ CORREÇÃO: Verificar se é URL do Firebase Storage
             val isFirebaseUrl = caminhoFoto.startsWith("https://") && 
@@ -673,27 +673,27 @@ class SettlementDetailFragment : Fragment() {
             if (!isFirebaseUrl && !caminhoFoto.startsWith("content://")) {
                 val file = java.io.File(caminhoFoto)
                 if (file.exists() && file.isFile) {
-                    android.util.Log.d("SettlementDetailFragment", "✅ Carregando foto local: ${file.absolutePath}")
+                    Timber.d("SettlementDetailFragment", "✅ Carregando foto local: ${file.absolutePath}")
                     mostrarFotoDialog(file, dataFoto)
                     return
                 } else {
-                    android.util.Log.d("SettlementDetailFragment", "⚠️ Arquivo local não existe: ${file.absolutePath}")
+                    Timber.d("SettlementDetailFragment", "⚠️ Arquivo local não existe: ${file.absolutePath}")
                 }
             }
             
             // ✅ CORREÇÃO: PRIORIDADE 2 - Se for URI content://, tentar carregar do content provider
             if (caminhoFoto.startsWith("content://")) {
-                android.util.Log.d("SettlementDetailFragment", "Tentando carregar foto do content provider...")
+                Timber.d("SettlementDetailFragment", "Tentando carregar foto do content provider...")
                 try {
                     val uri = android.net.Uri.parse(caminhoFoto)
                     val inputStream = requireContext().contentResolver.openInputStream(uri)
                     if (inputStream != null) {
-                        android.util.Log.d("SettlementDetailFragment", "✅ Carregando foto diretamente do URI")
+                        Timber.d("SettlementDetailFragment", "✅ Carregando foto diretamente do URI")
                         mostrarFotoDialog(inputStream, dataFoto)
                         return
                     }
                 } catch (e: Exception) {
-                    android.util.Log.d("SettlementDetailFragment", "Erro ao carregar do URI: ${e.message}")
+                    Timber.d("SettlementDetailFragment", "Erro ao carregar do URI: ${e.message}")
                 }
                 
                 // Tentar converter URI para caminho real
@@ -712,7 +712,7 @@ class SettlementDetailFragment : Fragment() {
                             val columnIndex = it.getColumnIndex(android.provider.MediaStore.Images.Media.DATA)
                             if (columnIndex != -1) {
                                 val path = it.getString(columnIndex)
-                                android.util.Log.d("SettlementDetailFragment", "Caminho real encontrado via cursor: $path")
+                                Timber.d("SettlementDetailFragment", "Caminho real encontrado via cursor: $path")
                                 val file = java.io.File(path)
                                 if (file.exists()) {
                                     mostrarFotoDialog(file, dataFoto)
@@ -722,19 +722,19 @@ class SettlementDetailFragment : Fragment() {
                         }
                     }
                 } catch (e: Exception) {
-                    android.util.Log.d("SettlementDetailFragment", "Erro ao converter URI: ${e.message}")
+                    Timber.d("SettlementDetailFragment", "Erro ao converter URI: ${e.message}")
                 }
             }
             
             // ✅ CORREÇÃO: PRIORIDADE 3 - Se for URL do Firebase Storage, fazer download
             if (isFirebaseUrl) {
-                android.util.Log.d("SettlementDetailFragment", "Detectada URL do Firebase Storage, fazendo download...")
+                Timber.d("SettlementDetailFragment", "Detectada URL do Firebase Storage, fazendo download...")
                 lifecycleScope.launch {
                     try {
                         val bitmap = downloadImageFromUrl(caminhoFoto)
                         if (bitmap != null) {
                             mostrarFotoDialog(bitmap, dataFoto)
-                            android.util.Log.d("SettlementDetailFragment", "✅ Foto carregada do Firebase Storage")
+                            Timber.d("SettlementDetailFragment", "✅ Foto carregada do Firebase Storage")
                         } else {
                             android.widget.Toast.makeText(
                                 requireContext(),
@@ -743,7 +743,7 @@ class SettlementDetailFragment : Fragment() {
                             ).show()
                         }
                     } catch (e: Exception) {
-                        android.util.Log.d("SettlementDetailFragment", "Erro ao fazer download da foto: ${e.message}")
+                        Timber.d("SettlementDetailFragment", "Erro ao fazer download da foto: ${e.message}")
                         android.widget.Toast.makeText(
                             requireContext(),
                             "Erro ao carregar foto: ${e.message}",
@@ -755,7 +755,7 @@ class SettlementDetailFragment : Fragment() {
             }
             
             // ✅ Se chegou aqui, não conseguiu carregar a foto
-            android.util.Log.d("SettlementDetailFragment", "❌ Não foi possível carregar a foto: $caminhoFoto")
+            Timber.d("SettlementDetailFragment", "❌ Não foi possível carregar a foto: $caminhoFoto")
             android.widget.Toast.makeText(
                 requireContext(),
                 "Arquivo de foto não encontrado: $caminhoFoto",
@@ -763,7 +763,7 @@ class SettlementDetailFragment : Fragment() {
             ).show()
 
         } catch (e: Exception) {
-            android.util.Log.d("SettlementDetailFragment", "Erro ao visualizar foto: ${e.message}")
+            Timber.d("SettlementDetailFragment", "Erro ao visualizar foto: ${e.message}")
             android.widget.Toast.makeText(
                 requireContext(),
                 "Erro ao visualizar foto: ${e.message}",
@@ -790,7 +790,7 @@ class SettlementDetailFragment : Fragment() {
             connection.disconnect()
             bitmap
         } catch (e: Exception) {
-            android.util.Log.d("SettlementDetailFragment", "Erro ao fazer download da imagem: ${e.message}")
+            Timber.d("SettlementDetailFragment", "Erro ao fazer download da imagem: ${e.message}")
             null
         }
     }
@@ -867,7 +867,7 @@ class SettlementDetailFragment : Fragment() {
             }
             dialog.show()
         } catch (e: Exception) {
-            android.util.Log.d("SettlementDetailFragment", "Erro ao mostrar diálogo da foto: ${e.message}")
+            Timber.d("SettlementDetailFragment", "Erro ao mostrar diálogo da foto: ${e.message}")
             android.widget.Toast.makeText(
                 requireContext(),
                 "Erro ao exibir foto: ${e.message}",
@@ -904,13 +904,13 @@ class SettlementDetailFragment : Fragment() {
 
             // Carregar e exibir a foto
             try {
-                android.util.Log.d("SettlementDetailFragment", "Tentando carregar foto do arquivo: ${file.absolutePath}")
+                Timber.d("SettlementDetailFragment", "Tentando carregar foto do arquivo: ${file.absolutePath}")
                 val bitmap = android.graphics.BitmapFactory.decodeFile(file.absolutePath)
                 if (bitmap != null) {
-                    android.util.Log.d("SettlementDetailFragment", "✅ Foto carregada com sucesso")
+                    Timber.d("SettlementDetailFragment", "✅ Foto carregada com sucesso")
                     imageView.setImageBitmap(bitmap)
                 } else {
-                    android.util.Log.d("SettlementDetailFragment", "❌ Bitmap é nulo")
+                    Timber.d("SettlementDetailFragment", "❌ Bitmap é nulo")
                     imageView.setImageResource(com.example.gestaobilhares.ui.R.drawable.ic_camera)
                     android.widget.Toast.makeText(
                         requireContext(),
@@ -919,7 +919,7 @@ class SettlementDetailFragment : Fragment() {
                     ).show()
                 }
             } catch (e: Exception) {
-                android.util.Log.d("SettlementDetailFragment", "❌ Erro ao carregar foto: ${e.message}")
+                Timber.d("SettlementDetailFragment", "❌ Erro ao carregar foto: ${e.message}")
                 imageView.setImageResource(com.example.gestaobilhares.ui.R.drawable.ic_camera)
                 android.widget.Toast.makeText(
                     requireContext(),
@@ -975,7 +975,7 @@ class SettlementDetailFragment : Fragment() {
             dialog.show()
 
         } catch (e: Exception) {
-            android.util.Log.d("SettlementDetailFragment", "Erro ao criar diálogo: ${e.message}")
+            Timber.d("SettlementDetailFragment", "Erro ao criar diálogo: ${e.message}")
             android.widget.Toast.makeText(
                 requireContext(),
                 "Erro ao exibir foto: ${e.message}",
@@ -1012,13 +1012,13 @@ class SettlementDetailFragment : Fragment() {
 
             // Carregar e exibir a foto do InputStream
             try {
-                android.util.Log.d("SettlementDetailFragment", "Tentando carregar foto do InputStream")
+                Timber.d("SettlementDetailFragment", "Tentando carregar foto do InputStream")
                 val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
                 if (bitmap != null) {
-                    android.util.Log.d("SettlementDetailFragment", "✅ Foto carregada com sucesso do InputStream")
+                    Timber.d("SettlementDetailFragment", "✅ Foto carregada com sucesso do InputStream")
                     imageView.setImageBitmap(bitmap)
                 } else {
-                    android.util.Log.d("SettlementDetailFragment", "❌ Bitmap é nulo do InputStream")
+                    Timber.d("SettlementDetailFragment", "❌ Bitmap é nulo do InputStream")
                     imageView.setImageResource(com.example.gestaobilhares.ui.R.drawable.ic_camera)
                     android.widget.Toast.makeText(
                         requireContext(),
@@ -1027,7 +1027,7 @@ class SettlementDetailFragment : Fragment() {
                     ).show()
                 }
             } catch (e: Exception) {
-                android.util.Log.d("SettlementDetailFragment", "❌ Erro ao carregar foto do InputStream: ${e.message}")
+                Timber.d("SettlementDetailFragment", "❌ Erro ao carregar foto do InputStream: ${e.message}")
                 imageView.setImageResource(com.example.gestaobilhares.ui.R.drawable.ic_camera)
                 android.widget.Toast.makeText(
                     requireContext(),
@@ -1083,7 +1083,7 @@ class SettlementDetailFragment : Fragment() {
             dialog.show()
 
         } catch (e: Exception) {
-            android.util.Log.d("SettlementDetailFragment", "Erro ao criar diálogo do InputStream: ${e.message}")
+            Timber.d("SettlementDetailFragment", "Erro ao criar diálogo do InputStream: ${e.message}")
             android.widget.Toast.makeText(
                 requireContext(),
                 "Erro ao exibir foto: ${e.message}",
