@@ -1,8 +1,9 @@
 # 1️⃣ STATUS GERAL & SETUP
 
 > **Propósito**: Visão imediata do projeto, saúde técnica e primeiros passos.  
-> **Última Atualização**: 18 Dezembro 2025  
-> **Versão**: 1.0 (Consolidada)
+> **Última Atualização**: Janeiro 2025  
+> **Versão**: 2.0 (Atualizada)  
+> **Distribuição**: Firebase App Distribution (uso interno, máximo 10 usuários)
 
 ---
 
@@ -12,6 +13,12 @@
 ```powershell
 # 🔨 Build e Instalação (Debug)
 ./gradlew installDebug
+
+# 📦 Build de Release (para distribuição)
+./gradlew assembleRelease
+
+# 📤 Distribuir via Firebase App Distribution
+firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk --groups testers
 
 # 🧪 Rodar Todos os Testes
 ./gradlew test
@@ -27,43 +34,70 @@
 *   [Console Firebase](https://console.firebase.google.com/project/gestaobilhares)
 *   [Crashlytics](https://console.firebase.google.com/project/gestaobilhares/crashlytics)
 *   [Performance Monitoring](https://console.firebase.google.com/project/gestaobilhares/performance)
+*   [App Distribution](https://console.firebase.google.com/project/gestaobilhares/appdistribution)
+
+### 📦 Distribuição do App
+*   **Método**: Firebase App Distribution (uso interno)
+*   **Escopo**: Máximo 10 usuários
+*   **Build Release**: `./gradlew assembleRelease`
+*   **Upload**: `firebase appdistribution:distribute app-release.apk --groups testers`
+*   **Nota**: App não será publicado na Play Store (uso interno apenas)
+
+### Monitoramento via MCP Crashlytics
+*   **MCP Configurado**: Servidor MCP do Firebase Crashlytics ativo
+*   **Acesso via IA**: O assistente pode consultar crashes e problemas diretamente
+*   **Documentação**: Ver `documentation/CONFIGURACAO-MCP-CRASHLYTICS.md`
+*   **Exemplos de Uso**:
+    - "Quais são os 10 problemas mais críticos no Crashlytics?"
+    - "Analise o problema [ISSUE_ID] no Crashlytics"
+    - "Mostre crashes da versão 1.0.0"
 
 ---
 
 ## 📈 SAÚDE DO PROJETO (AVALIAÇÃO SÊNIOR)
 
-### Nota Geral: **8.2/10** ⭐⭐⭐⭐
-> **Status**: Pronto para produção técnica. Restam apenas polimentos e refatoração preventiva.
+### Nota Geral: **8.0/10** ⭐⭐⭐⭐
+> **Status**: Quase pronto para produção. Requer correções críticas de segurança antes do deploy.
 
 | Critério | Nota | Comentário |
 | :--- | :--- | :--- |
-| **Arquitetura** | 9.5 | Modularização, DI (Hilt) e Facades excelentes. |
-| **Sincronização** | 9.0 | Sistema incremental robusto (98% economia). |
-| **Monitoramento** | 9.5 | Crashlytics e Timber bem integrados. |
-| **Qualidade de Código** | 9.0 | Logs e stack traces removidos. R8 ativo. |
-| **Testes** | 8.5 | 49 testes estáveis (100% sucesso). Cobertura configurada. |
+| **Arquitetura** | 9.0 | Modularização completa (5 módulos), Hilt DI, arquitetura híbrida. |
+| **Sincronização** | 9.0 | Sistema incremental robusto com WorkManager. |
+| **Monitoramento** | 9.0 | Crashlytics e Timber configurados. |
+| **Qualidade de Código** | 7.5 | 20+ arquivos ainda usam `android.util.Log` diretamente. |
+| **Testes** | 8.5 | 49 testes estáveis (100% sucesso). JaCoCo configurado. |
+| **Segurança** | 6.0 | ⚠️ Firestore Rules permissivas em coleções LEGADO. |
 
 ### ✅ Pontos Fortes
-*   Modularização completa (5 módulos).
-*   Offline-first bem arquitetado (Room + Firestore).
-*   Migração Hilt 100% concluída.
-*   Remoção completa de logs de debug e `printStackTrace()`.
-*   49 testes unitários estáveis (100% pass rate).
+*   **Modularização completa**: 5 módulos (`app`, `core`, `data`, `ui`, `sync`).
+*   **Offline-first**: Room como fonte da verdade, sincronização incremental.
+*   **Hilt DI**: 100% migrado, injeção de dependências moderna.
+*   **Arquitetura híbrida**: AppRepository como Facade, repositories especializados em `domain/`.
+*   **Sincronização**: Sistema incremental com 98% de economia de dados.
+*   **Testes**: 49 testes unitários passando (100% sucesso).
 
-### ⚠️ Áreas de Atenção
-1.  **AppRepository**: "God Object" com ~2000 linhas (Refatoração recomendada em Q1/2026).
-2.  **Migração Compose**: 35.8% concluída (43 telas pendentes).
-3.  **Cobertura entre Módulos**: JaCoCo reportando 0% global por necessidade de merge de builds (Execuções individuais em 100%).
+### ⚠️ Áreas de Atenção Críticas
+1.  **🔴 SEGURANÇA**: Firestore Rules das coleções LEGADO muito permissivas (qualquer usuário autenticado pode acessar dados de qualquer empresa).
+2.  **🔴 SEGURANÇA**: Dados sensíveis em `SharedPreferences` padrão (deveria usar `EncryptedSharedPreferences`).
+3.  **🟡 Logs**: 20+ arquivos ainda usam `android.util.Log` diretamente (deveria usar apenas Timber).
+4.  **🟡 AppRepository**: ~1910 linhas (meta: 200-300 linhas como Facade). Repositories especializados existem mas não estão totalmente integrados.
+5.  **🟡 Migração Compose**: ~35.8% concluída (43 telas pendentes).
 
 ---
 
 ## 🚨 ALERTAS DE PRODUÇÃO (AGORA)
 
-> [!TIP]
-> **STATUS DE RELEASE: VERDE ✅**
-> 1. **Logs**: Todos removidos.
-> 2. **Stack Traces**: Todos removidos/substituídos por Timber.
-> 3. **Testes**: 49/49 Passing.
+> [!WARNING]
+> **STATUS DE RELEASE: 🟡 QUASE PRONTO - REQUER CORREÇÕES CRÍTICAS**
+> 
+> ### 🔴 BLOQUEADORES CRÍTICOS:
+> 1. **Firestore Rules**: Coleções LEGADO (`ciclos`, `despesas`, `acertos`, `mesas`, `rotas`, `clientes`) com regras muito permissivas.
+> 2. **Segurança**: Dados sensíveis em `SharedPreferences` padrão (deveria usar `EncryptedSharedPreferences`).
+> 
+> ### 🟡 IMPORTANTE:
+> 3. **Logs**: 20+ arquivos ainda usam `android.util.Log` diretamente.
+> 4. **Testes**: 49/49 Passing ✅
+> 5. **Stack Traces**: Removidos/substituídos por Timber ✅
 
 ---
 

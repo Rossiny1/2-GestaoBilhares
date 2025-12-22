@@ -1,7 +1,7 @@
 package com.example.gestaobilhares.ui.clients
 
 import android.os.Parcelable
-import android.util.Log
+import timber.log.Timber
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.example.gestaobilhares.data.entities.Acerto
@@ -144,7 +144,7 @@ class ClientDetailViewModel @Inject constructor(
                 // ✅ Verificar pendências do cliente após carregar os dados
                 verificarPendenciasCliente(cliente)
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao carregar detalhes do cliente", e)
+                Timber.e(TAG, "Erro ao carregar detalhes do cliente", e)
                 showError("Erro ao carregar detalhes do cliente: ${e.message}", e)
             } finally {
                 hideLoading()
@@ -224,7 +224,7 @@ class ClientDetailViewModel @Inject constructor(
                     logDebug("Nenhuma pendência detectada")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao verificar pendências do cliente", e)
+                Timber.e(TAG, "Erro ao verificar pendências do cliente", e)
                 _pendenciasCliente.value = emptyList()
             }
         }
@@ -239,7 +239,7 @@ class ClientDetailViewModel @Inject constructor(
                     logDebug("Mesas atualizadas: ${mesas.size}")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao observar mesas do cliente", e)
+                Timber.e(TAG, "Erro ao observar mesas do cliente", e)
             }
         }
     }
@@ -250,7 +250,7 @@ class ClientDetailViewModel @Inject constructor(
                 appRepository.vincularMesaACliente(mesaId, clienteId)
                 loadClientDetails(clienteId)
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao adicionar mesa ao cliente", e)
+                Timber.e(TAG, "Erro ao adicionar mesa ao cliente", e)
             }
         }
     }
@@ -293,7 +293,7 @@ class ClientDetailViewModel @Inject constructor(
                 RetiradaStatus.PRECISA_ACERTO
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao verificar status de retirada", e)
+            Timber.e(TAG, "Erro ao verificar status de retirada", e)
             RetiradaStatus.PRECISA_ACERTO
         }
     }
@@ -306,7 +306,7 @@ class ClientDetailViewModel @Inject constructor(
                 logDebug("Mesa $mesaId retirada. Relógio final: $relogioFinal, valor recebido: $valorRecebido")
                 loadClientDetails(clienteId)
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao retirar mesa", e)
+                Timber.e(TAG, "Erro ao retirar mesa", e)
             }
         }
     }
@@ -318,7 +318,7 @@ class ClientDetailViewModel @Inject constructor(
                     _mesasDisponiveis.value = mesas
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao carregar mesas disponíveis", e)
+                Timber.e(TAG, "Erro ao carregar mesas disponíveis", e)
             }
         }
     }
@@ -331,7 +331,7 @@ class ClientDetailViewModel @Inject constructor(
                 logDebug("Solicitação de salvar observação para cliente $clienteId: $observacao")
                 loadClientDetails(clienteId)
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao salvar observação do cliente", e)
+                Timber.e(TAG, "Erro ao salvar observação do cliente", e)
             }
         }
     }
@@ -376,19 +376,19 @@ class ClientDetailViewModel @Inject constructor(
                     acertos = syncRepository?.fetchUltimosAcertos(clienteId, quantidade)
                     if (acertos.isNullOrEmpty()) {
                         buscaRemotaFalhou = true
-                        Log.d(TAG, "Busca remota retornou vazio, tentando fallback local...")
+                        Timber.d(TAG, "Busca remota retornou vazio, tentando fallback local...")
                     } else {
-                        Log.d(TAG, "Histórico remoto carregado: ${acertos.size} itens")
+                        Timber.d(TAG, "Histórico remoto carregado: ${acertos.size} itens")
                     }
                 } catch (e: Exception) {
                     buscaRemotaFalhou = true
-                    Log.w(TAG, "Busca remota falhou (possível falta de índice Firestore), tentando fallback local: ${e.message}")
+                    Timber.w(TAG, "Busca remota falhou (possível falta de índice Firestore), tentando fallback local: ${e.message}")
                 }
                 
                 // 2. Se remoto falhou, tentar buscar localmente como fallback temporário
                 // (pode ter mais que 3 se ainda não foi feita a limpeza)
                 if (buscaRemotaFalhou) {
-                    Log.d(TAG, "Busca remota falhou, tentando buscar localmente como fallback...")
+                    Timber.d(TAG, "Busca remota falhou, tentando buscar localmente como fallback...")
                     val acertosLocais = appRepository.obterAcertosRecentesPorCliente(clienteId, quantidade).first()
                     
                     if (acertosLocais.isEmpty()) {
@@ -398,12 +398,12 @@ class ClientDetailViewModel @Inject constructor(
                         // Encontrou menos que o solicitado localmente
                         // Isso pode acontecer se a política de retenção já removeu os mais antigos
                         acertos = acertosLocais
-                        Log.d(TAG, "Histórico local carregado: ${acertosLocais.size} itens (menos que os ${quantidade} solicitados)")
+                        Timber.d(TAG, "Histórico local carregado: ${acertosLocais.size} itens (menos que os ${quantidade} solicitados)")
                         _historyError.value = "Encontrados apenas ${acertosLocais.size} acertos armazenados localmente. A política de retenção mantém apenas os últimos 3 acertos. Para ver mais, sincronize novamente."
                     } else {
                         // Encontrou quantidade suficiente localmente (ainda não foi limpo)
                         acertos = acertosLocais
-                        Log.d(TAG, "Histórico local carregado: ${acertosLocais.size} itens (fallback temporário)")
+                        Timber.d(TAG, "Histórico local carregado: ${acertosLocais.size} itens (fallback temporário)")
                     }
                 }
                 
@@ -417,7 +417,7 @@ class ClientDetailViewModel @Inject constructor(
                 }
                 _settlementHistory.value = mapAcertosParaResumo(acertos)
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao carregar histórico adicional", e)
+                Timber.e(TAG, "Erro ao carregar histórico adicional", e)
                 _historyError.value = "Erro ao buscar acertos adicionais: ${e.message}"
             } finally {
                 _historyLoading.value = false
@@ -433,7 +433,7 @@ class ClientDetailViewModel @Inject constructor(
                     logDebug("Histórico recente atualizado: ${_settlementHistory.value.size} itens")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao carregar histórico recente de acertos", e)
+                Timber.e(TAG, "Erro ao carregar histórico recente de acertos", e)
             }
         }
     }
@@ -452,7 +452,7 @@ class ClientDetailViewModel @Inject constructor(
                 val formatter = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
                 callback(ultimoAcerto?.let { formatter.format(it.dataAcerto) } ?: "Nunca")
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao buscar último acerto", e)
+                Timber.e(TAG, "Erro ao buscar último acerto", e)
                 callback("Nunca")
             }
         }
@@ -475,35 +475,35 @@ class ClientDetailViewModel @Inject constructor(
     suspend fun buscarRelogioFinalUltimoAcerto(@Suppress("UNUSED_PARAMETER") mesaId: Long): Int? = try {
         null
     } catch (e: Exception) {
-        Log.e(TAG, "Erro ao buscar relógio final do último acerto", e)
+        Timber.e(TAG, "Erro ao buscar relógio final do último acerto", e)
         null
     }
 
     suspend fun buscarCicloIdPorAcerto(@Suppress("UNUSED_PARAMETER") acertoId: Long): Long? = try {
         null
     } catch (e: Exception) {
-        Log.e(TAG, "Erro ao buscar ciclo do acerto", e)
+        Timber.e(TAG, "Erro ao buscar ciclo do acerto", e)
         null
     }
 
     suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? = try {
         appRepository.buscarRotaIdPorCliente(clienteId)
     } catch (e: Exception) {
-        Log.e(TAG, "Erro ao buscar rota do cliente", e)
+        Timber.e(TAG, "Erro ao buscar rota do cliente", e)
         null
     }
 
     suspend fun buscarUltimoAcerto(clienteId: Long): Acerto? = try {
         appRepository.buscarUltimoAcertoPorCliente(clienteId)
     } catch (e: Exception) {
-        Log.e(TAG, "Erro ao buscar último acerto do cliente", e)
+        Timber.e(TAG, "Erro ao buscar último acerto do cliente", e)
         null
     }
 
     suspend fun buscarCicloAtualPorRota(rotaId: Long): CicloAcertoEntity? = try {
         appRepository.buscarCicloAtualPorRota(rotaId)
     } catch (e: Exception) {
-        Log.e(TAG, "Erro ao buscar ciclo atual por rota", e)
+        Timber.e(TAG, "Erro ao buscar ciclo atual por rota", e)
         null
     }
 
@@ -512,7 +512,7 @@ class ClientDetailViewModel @Inject constructor(
             try {
                 _cliente.value = appRepository.obterClientePorId(clienteId)
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao carregar cliente completo", e)
+                Timber.e(TAG, "Erro ao carregar cliente completo", e)
                 _cliente.value = null
             }
         }
@@ -527,7 +527,7 @@ class ClientDetailViewModel @Inject constructor(
                 }
                 _temContratoAtivo.value = temAtivo
             } catch (e: Exception) {
-                Log.e(TAG, "Erro ao verificar contratos do cliente", e)
+                Timber.e(TAG, "Erro ao verificar contratos do cliente", e)
                 _temContratoAtivo.value = false
             }
         }
@@ -535,7 +535,7 @@ class ClientDetailViewModel @Inject constructor(
 
     private fun logDebug(message: String) {
         if (debugLogsEnabled) {
-            Log.d(TAG, message)
+            Timber.d(TAG, message)
         }
     }
 
@@ -597,7 +597,7 @@ class ClientDetailViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao calcular mensagem de pendência: ${e.message}", e)
+            Timber.e(TAG, "Erro ao calcular mensagem de pendência: ${e.message}", e)
             null
         }
     }

@@ -4,7 +4,7 @@ import android.app.Dialog
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -58,7 +58,7 @@ class PanoSelectionDialog : DialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        Log.d("PanoSelectionDialog", "Criando diálogo de seleção de panos")
+        Timber.d("PanoSelectionDialog", "Criando diálogo de seleção de panos")
         
         _binding = DialogSelectPanoBinding.inflate(LayoutInflater.from(requireContext()))
 
@@ -70,12 +70,12 @@ class PanoSelectionDialog : DialogFragment() {
             .setView(binding.root)
             .setPositiveButton("Confirmar") { _, _ ->
                 selectedPano?.let { pano ->
-                    Log.d("PanoSelectionDialog", "[PANO] Confirmar selecionado: ${pano.numero} (${pano.cor}/${pano.tamanho})")
+                    Timber.d("PanoSelectionDialog", "[PANO] Confirmar selecionado: ${pano.numero} (${pano.cor}/${pano.tamanho})")
                     onPanoSelected?.invoke(pano)
                 }
             }
             .setNegativeButton("Cancelar") { _, _ ->
-                Log.d("PanoSelectionDialog", "[PANO] Diálogo cancelado pelo usuário")
+                Timber.d("PanoSelectionDialog", "[PANO] Diálogo cancelado pelo usuário")
                 dismiss()
             }
             .create()
@@ -85,7 +85,7 @@ class PanoSelectionDialog : DialogFragment() {
             loadPanos()
         }
             
-        Log.d("PanoSelectionDialog", "Diálogo criado com sucesso")
+        Timber.d("PanoSelectionDialog", "Diálogo criado com sucesso")
         return dialog
     }
 
@@ -135,14 +135,14 @@ class PanoSelectionDialog : DialogFragment() {
                          tamanho != null && tamanho.equals(tamanhoMesa, ignoreCase = true) 
                     }
                     adapter.submitList(panosFiltrados)
-                    Log.d("PanoSelectionDialog", "[PANO] Panos carregados (filtrados por $tamanhoMesa): ${panosFiltrados.size}")
+                    Timber.d("PanoSelectionDialog", "[PANO] Panos carregados (filtrados por $tamanhoMesa): ${panosFiltrados.size}")
                 } else {
                     // Carregar todos os panos disponíveis
                     adapter.submitList(panos)
-                    Log.d("PanoSelectionDialog", "[PANO] Panos carregados (todos): ${panos.size}")
+                    Timber.d("PanoSelectionDialog", "[PANO] Panos carregados (todos): ${panos.size}")
                 }
             } catch (e: Exception) {
-                android.util.Log.e("PanoSelectionDialog", "Erro ao carregar panos: ${e.message}", e)
+                Timber.e(e, "Erro ao carregar panos: %s", e.message)
                 // Fallback para dados mock em caso de erro
                 loadPanosMock()
             }
@@ -243,7 +243,7 @@ class PanoSelectionAdapter(
                 selectedPano = pano
                 onPanoClick(pano)
                 notifyDataSetChanged()
-                android.util.Log.d("PanoSelectionDialog", "[PANO] Item clicado: ${pano.numero} (${pano.cor}/${pano.tamanho})")
+                Timber.d("PanoSelectionDialog", "[PANO] Item clicado: ${pano.numero} (${pano.cor}/${pano.tamanho})")
             }
         }
     }

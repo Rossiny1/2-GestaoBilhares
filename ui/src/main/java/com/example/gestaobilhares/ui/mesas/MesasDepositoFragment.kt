@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import timber.log.Timber
 
 // Hilt removido - usando instanciação direta -> Hilt restaurado
 @AndroidEntryPoint
@@ -120,7 +121,7 @@ class MesasDepositoFragment : Fragment() {
         // Ocultar FAB "Adicionar Mesa" para usuários USER
         binding.fabAddMesa.visibility = if (canManageTables) View.VISIBLE else View.GONE
         
-        android.util.Log.d("MesasDepositoFragment", 
+        Timber.d("MesasDepositoFragment", 
             "🔒 Controle de acesso aplicado - Usuário: ${userSessionManager.getCurrentUserName()}, " +
             "Pode gerenciar mesas: $canManageTables, FAB visível: ${binding.fabAddMesa.visibility == View.VISIBLE}")
     }
@@ -128,23 +129,23 @@ class MesasDepositoFragment : Fragment() {
     private fun observeViewModel() {
         lifecycleScope.launch {
             viewModel.mesasFiltradas.collect { mesas ->
-                android.util.Log.d("MesasDepositoFragment", "=== MESAS RECEBIDAS NO FRAGMENT ===")
-                android.util.Log.d("MesasDepositoFragment", "📱 Mesas recebidas do ViewModel: ${mesas.size}")
+                Timber.d("MesasDepositoFragment", "=== MESAS RECEBIDAS NO FRAGMENT ===")
+                Timber.d("MesasDepositoFragment", "📱 Mesas recebidas do ViewModel: ${mesas.size}")
                 mesas.forEach { mesa ->
-                    android.util.Log.d("MesasDepositoFragment", "Mesa: ${mesa.numero} | ID: ${mesa.id} | Ativa: ${mesa.ativa} | ClienteId: ${mesa.clienteId}")
+                    Timber.d("MesasDepositoFragment", "Mesa: ${mesa.numero} | ID: ${mesa.id} | Ativa: ${mesa.ativa} | ClienteId: ${mesa.clienteId}")
                 }
                 
                 _binding?.let { binding ->
-                    android.util.Log.d("MesasDepositoFragment", "🔄 Atualizando adapter com ${mesas.size} mesas")
+                    Timber.d("MesasDepositoFragment", "🔄 Atualizando adapter com ${mesas.size} mesas")
                     adapter.submitList(mesas)
                     
                     val isEmpty = mesas.isEmpty()
-                    android.util.Log.d("MesasDepositoFragment", "📊 Lista vazia: $isEmpty")
+                    Timber.d("MesasDepositoFragment", "📊 Lista vazia: $isEmpty")
                     
                     binding.tvEmptyState.visibility = if (isEmpty) View.VISIBLE else View.GONE
                     binding.rvMesasDeposito.visibility = if (isEmpty) View.GONE else View.VISIBLE
                     
-                    android.util.Log.d("MesasDepositoFragment", "✅ UI atualizada - EmptyState: ${binding.tvEmptyState.visibility}, RecyclerView: ${binding.rvMesasDeposito.visibility}")
+                    Timber.d("MesasDepositoFragment", "✅ UI atualizada - EmptyState: ${binding.tvEmptyState.visibility}, RecyclerView: ${binding.rvMesasDeposito.visibility}")
                 }
             }
         }
@@ -160,7 +161,7 @@ class MesasDepositoFragment : Fragment() {
                         binding.tvTotalPembolim.text = stats.mesasPembolim.toString()
                     } catch (e: Exception) {
                         // Log do erro para debug posterior
-                        android.util.Log.e("MesasDepositoFragment", "Erro ao atualizar estatísticas", e)
+                        Timber.e("MesasDepositoFragment", "Erro ao atualizar estatísticas", e)
                     }
                 }
             }
@@ -203,7 +204,7 @@ class MesasDepositoFragment : Fragment() {
      * Usado quando acessado pelo Gerenciar Mesas
      */
     private fun navigateToEditMesa(mesa: Mesa) {
-        android.util.Log.d("MesasDepositoFragment", "Navegando para edição da mesa: ${mesa.numero} (ID: ${mesa.id})")
+        Timber.d("MesasDepositoFragment", "Navegando para edição da mesa: ${mesa.numero} (ID: ${mesa.id})")
 
         try {
             val action = MesasDepositoFragmentDirections.actionMesasDepositoFragmentToEditMesaFragment(
@@ -211,7 +212,7 @@ class MesasDepositoFragment : Fragment() {
             )
             findNavController().navigate(action)
         } catch (e: Exception) {
-            android.util.Log.e("MesasDepositoFragment", "Erro ao navegar para edição da mesa: ${e.message}", e)
+            Timber.e("MesasDepositoFragment", "Erro ao navegar para edição da mesa: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao abrir edição da mesa", Toast.LENGTH_SHORT).show()
         }
     }
@@ -250,19 +251,19 @@ class MesasDepositoFragment : Fragment() {
             // ✅ CORREÇÃO CRÍTICA: Verificar status ANTES de vincular a mesa
             viewLifecycleOwner.lifecycleScope.launch {
                     try {
-                        android.util.Log.d("MesasDepositoFragment", "Decidindo diálogo pós-vinculação para cliente $clienteId / mesa ${mesa.id}")
+                        Timber.d("MesasDepositoFragment", "Decidindo diálogo pós-vinculação para cliente $clienteId / mesa ${mesa.id}")
                         
                         val db = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
                         
                         // ✅ FORÇAR REFRESH DO BANCO ANTES DA DECISÃO
                         kotlinx.coroutines.delay(100) // Pequeno delay para garantir sincronização
                         val todos = db.contratoLocacaoDao().buscarContratosPorCliente(clienteId).first()
-                        android.util.Log.d("MesasDepositoFragment", "Total contratos cliente $clienteId: ${todos.size}")
+                        Timber.d("MesasDepositoFragment", "Total contratos cliente $clienteId: ${todos.size}")
                         
                         // ✅ REGRA DEFINITIVA: Verificação completa do status do cliente
-                        android.util.Log.d("MesasDepositoFragment", "=== ANÁLISE COMPLETA DOS CONTRATOS ===")
+                        Timber.d("MesasDepositoFragment", "=== ANÁLISE COMPLETA DOS CONTRATOS ===")
                         todos.forEachIndexed { idx, c ->
-                            android.util.Log.d("MesasDepositoFragment", 
+                            Timber.d("MesasDepositoFragment", 
                                 "Contrato #$idx -> id=${c.id} status='${c.status}' " +
                                 "criacao=${c.dataCriacao} encerramento=${c.dataEncerramento}")
                         }
@@ -281,7 +282,7 @@ class MesasDepositoFragment : Fragment() {
                             c.dataEncerramento?.time ?: c.dataCriacao.time 
                         }
                         
-                        android.util.Log.d("MesasDepositoFragment", 
+                        Timber.d("MesasDepositoFragment", 
                             "=== ANÁLISE DE STATUS ===\n" +
                             "temContratoEncerrado=$temContratoEncerrado\n" +
                             "temDistratoFisico=$temDistratoFisico\n" +
@@ -296,7 +297,7 @@ class MesasDepositoFragment : Fragment() {
                             val mesasAtivasCliente = db.mesaDao().obterMesasPorClienteDireto(clienteId).filter { it.ativa }
                             val temMesasAtivas = mesasAtivasCliente.isNotEmpty()
                             
-                            android.util.Log.d("MesasDepositoFragment", 
+                            Timber.d("MesasDepositoFragment", 
                                 "Mesas ativas cliente $clienteId: ${mesasAtivasCliente.size} -> $temMesasAtivas")
                             
                             // ✅ CORREÇÃO: Lógica simplificada - se o último contrato é ATIVO, permite aditivo
@@ -306,7 +307,7 @@ class MesasDepositoFragment : Fragment() {
                             // 3. Cliente tem mesas ativas
                             val deveAbrirAditivo = isLatestActive && !hasEncerramento && temMesasAtivas
                             
-                            android.util.Log.d("MesasDepositoFragment", 
+                            Timber.d("MesasDepositoFragment", 
                                 "=== DECISÃO FINAL ===\n" +
                                 "isLatestActive=$isLatestActive\n" +
                                 "hasEncerramento=$hasEncerramento\n" +
@@ -314,7 +315,7 @@ class MesasDepositoFragment : Fragment() {
                                 "RESULTADO: deveAbrirAditivo=$deveAbrirAditivo")
                             
                             if (deveAbrirAditivo) {
-                                android.util.Log.d("MesasDepositoFragment", "ABRINDO ADITIVO: Documento mais recente é ATIVO sem encerramento")
+                                Timber.d("MesasDepositoFragment", "ABRINDO ADITIVO: Documento mais recente é ATIVO sem encerramento")
                                 
                                 // ✅ VINCULAR MESA APENAS QUANDO FOR ADITIVO
                                 viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)
@@ -322,8 +323,8 @@ class MesasDepositoFragment : Fragment() {
                                 val dialog = com.example.gestaobilhares.ui.contracts.AditivoDialog.newInstance(latest)
                                 dialog.setOnGerarAditivoClickListener { contrato ->
                                     try {
-                                        android.util.Log.d("MesasDepositoFragment", "=== INICIANDO NAVEGAÇÃO PARA ADITIVO ===")
-                                        android.util.Log.d("MesasDepositoFragment", "Contrato ID: ${contrato.id}, Mesa ID: ${mesa.id}")
+                                        Timber.d("MesasDepositoFragment", "=== INICIANDO NAVEGAÇÃO PARA ADITIVO ===")
+                                        Timber.d("MesasDepositoFragment", "Contrato ID: ${contrato.id}, Mesa ID: ${mesa.id}")
                                         
                                         val mesasIds = longArrayOf(mesa.id)
                                         // ✅ CORREÇÃO: Passar aditivoTipo como "INCLUSAO" para adição de mesa
@@ -334,46 +335,46 @@ class MesasDepositoFragment : Fragment() {
                                                 aditivoTipo = "INCLUSAO"
                                             )
                                         
-                                        android.util.Log.d("MesasDepositoFragment", "Action criada, navegando...")
+                                        Timber.d("MesasDepositoFragment", "Action criada, navegando...")
                                         // ✅ CORREÇÃO: Navegar ANTES de fechar o dialog para evitar crash
                                         findNavController().navigate(action)
-                                        android.util.Log.d("MesasDepositoFragment", "Navegação executada com sucesso")
+                                        Timber.d("MesasDepositoFragment", "Navegação executada com sucesso")
                                         
                                         // Fechar dialog após navegação bem-sucedida
                                         dialog.dismiss()
                                     } catch (e: Exception) {
-                                        android.util.Log.e("MesasDepositoFragment", "Erro ao navegar para aditivo: ${e.message}", e)
+                                        Timber.e("MesasDepositoFragment", "Erro ao navegar para aditivo: ${e.message}", e)
                                         Toast.makeText(requireContext(), "Erro ao abrir tela de aditivo: ${e.message}", Toast.LENGTH_LONG).show()
                                         dialog.dismiss()
                                     }
                                 }
                                 dialog.setOnCancelarClickListener {
-                                    android.util.Log.d("MesasDepositoFragment", "Dialog cancelado pelo usuário")
+                                    Timber.d("MesasDepositoFragment", "Dialog cancelado pelo usuário")
                                     dialog.dismiss()
                                     findNavController().popBackStack()
                                 }
                                 dialog.show(parentFragmentManager, "AditivoDialog")
                             } else {
-                                android.util.Log.d("MesasDepositoFragment", 
+                                Timber.d("MesasDepositoFragment", 
                                     "ABRINDO NOVO CONTRATO: Documento mais recente não é ATIVO vigente " +
                                     "(status=${latest.status}, hasEncerramento=$hasEncerramento)")
                                 
                                 // ✅ VINCULAR MESA ANTES DO NOVO CONTRATO
-                                android.util.Log.d("MesasDepositoFragment", "Vinculando mesa ${mesa.id} ao cliente $clienteId antes do novo contrato")
+                                Timber.d("MesasDepositoFragment", "Vinculando mesa ${mesa.id} ao cliente $clienteId antes do novo contrato")
                                 
                                 // Executar vinculação de forma síncrona
                                 try {
                                     if (tipoFixo && valorFixo != null) {
                                     } else {
                                     }
-                                    android.util.Log.d("MesasDepositoFragment", "Mesa vinculada com sucesso")
+                                    Timber.d("MesasDepositoFragment", "Mesa vinculada com sucesso")
                                     
                                     // Aguardar um pouco para sincronização
                                     kotlinx.coroutines.delay(200)
                                     
                                     val todasMesasVinculadas = viewModel.obterTodasMesasVinculadasAoCliente(clienteId)
                                     val mesasIds = todasMesasVinculadas.map { it.id }
-                                    android.util.Log.d("MesasDepositoFragment", "Mesas vinculadas encontradas: ${mesasIds.size} -> $mesasIds")
+                                    Timber.d("MesasDepositoFragment", "Mesas vinculadas encontradas: ${mesasIds.size} -> $mesasIds")
                                     val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
                                         clienteId = clienteId,
                                         mesasVinculadas = mesasIds,
@@ -382,7 +383,7 @@ class MesasDepositoFragment : Fragment() {
                                     )
                                     dialog.show(parentFragmentManager, "ContractFinalizationDialog")
                                 } catch (e: Exception) {
-                                    android.util.Log.e("MesasDepositoFragment", "Erro ao vincular mesa para novo contrato", e)
+                                    Timber.e("MesasDepositoFragment", "Erro ao vincular mesa para novo contrato", e)
                                     // Usar apenas a mesa atual se houver erro
                                     val mesasIds = listOf(mesa.id)
                                     val dialog = com.example.gestaobilhares.ui.contracts.ContractFinalizationDialog.newInstance(
@@ -395,7 +396,7 @@ class MesasDepositoFragment : Fragment() {
                                 }
                             }
                         } else {
-                            android.util.Log.d("MesasDepositoFragment", "ABRINDO NOVO CONTRATO: Nenhum contrato encontrado para cliente")
+                            Timber.d("MesasDepositoFragment", "ABRINDO NOVO CONTRATO: Nenhum contrato encontrado para cliente")
                             
                             // ✅ VINCULAR MESA ANTES DO NOVO CONTRATO
                             viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)
@@ -410,7 +411,7 @@ class MesasDepositoFragment : Fragment() {
                         }
                         
                     } catch (e: Exception) {
-                        android.util.Log.e("MesasDepositoFragment", "Erro ao decidir diálogo pós-vinculação", e)
+                        Timber.e("MesasDepositoFragment", "Erro ao decidir diálogo pós-vinculação", e)
                         
                         // ✅ VINCULAR MESA EM CASO DE ERRO (FALLBACK)
                         viewModel.vincularMesaAoCliente(mesa.id, clienteId, tipoFixo, valorFixo)

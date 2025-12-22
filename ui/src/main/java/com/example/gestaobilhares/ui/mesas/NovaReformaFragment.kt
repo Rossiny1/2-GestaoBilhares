@@ -4,7 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -81,30 +81,30 @@ class NovaReformaFragment : Fragment() {
         if (success) {
             try {
                 fotoUri?.let { uri ->
-                    Log.d("NovaReformaFragment", "Foto capturada com sucesso: $uri")
+                    Timber.d("NovaReformaFragment", "Foto capturada com sucesso: $uri")
                     
                     binding.root.post {
                         try {
                             val caminhoReal = obterCaminhoRealFoto(uri)
                             if (caminhoReal != null) {
-                                Log.d("NovaReformaFragment", "Caminho real da foto: $caminhoReal")
+                                Timber.d("NovaReformaFragment", "Caminho real da foto: $caminhoReal")
                                 fotoPath = caminhoReal
                                 binding.ivFotoMesa.setImageURI(uri)
                                 binding.ivFotoMesa.visibility = View.VISIBLE
                                 binding.btnRemoverFoto.visibility = View.VISIBLE
                                 Toast.makeText(requireContext(), "Foto da mesa reformada capturada com sucesso!", Toast.LENGTH_SHORT).show()
                             } else {
-                                Log.e("NovaReformaFragment", "Não foi possível obter o caminho real da foto")
+                                Timber.e("NovaReformaFragment", "Não foi possível obter o caminho real da foto")
                                 Toast.makeText(requireContext(), "Erro: não foi possível salvar a foto", Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
-                            Log.e("NovaReformaFragment", "Erro ao processar foto: ${e.message}", e)
+                            Timber.e("NovaReformaFragment", "Erro ao processar foto: ${e.message}", e)
                             Toast.makeText(requireContext(), "Erro ao processar foto: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.e("NovaReformaFragment", "Erro crítico após captura de foto: ${e.message}", e)
+                Timber.e("NovaReformaFragment", "Erro crítico após captura de foto: ${e.message}", e)
                 Toast.makeText(requireContext(), "Erro ao processar foto capturada", Toast.LENGTH_LONG).show()
             }
         } else {
@@ -260,7 +260,7 @@ class NovaReformaFragment : Fragment() {
             takePictureLauncher.launch(fotoUri)
             
         } catch (e: Exception) {
-            Log.e("NovaReformaFragment", "Erro ao abrir câmera: ${e.message}", e)
+            Timber.e("NovaReformaFragment", "Erro ao abrir câmera: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao abrir câmera: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
@@ -283,17 +283,17 @@ class NovaReformaFragment : Fragment() {
 
     private fun obterCaminhoRealFoto(uri: Uri): String? {
         return try {
-            Log.d("NovaReformaFragment", "Obtendo caminho real para URI: $uri")
+            Timber.d("NovaReformaFragment", "Obtendo caminho real para URI: $uri")
             
             // ✅ CORREÇÃO: Tentar comprimir a imagem com fallback seguro
             try {
                 val compressedPath = imageCompressionUtils.compressImageFromUri(uri)
                 if (compressedPath != null) {
-                    Log.d("NovaReformaFragment", "Imagem comprimida com sucesso: $compressedPath")
+                    Timber.d("NovaReformaFragment", "Imagem comprimida com sucesso: $compressedPath")
                     return compressedPath
                 }
             } catch (e: Exception) {
-                Log.w("NovaReformaFragment", "Compressão falhou, usando método original: ${e.message}")
+                Timber.w("NovaReformaFragment", "Compressão falhou, usando método original: ${e.message}")
             }
             
             // Tentativa 1: Converter URI para caminho real via ContentResolver
@@ -311,17 +311,17 @@ class NovaReformaFragment : Fragment() {
                     if (columnIndex >= 0) {
                         val path = it.getString(columnIndex)
                         if (path != null && File(path).exists()) {
-                            Log.d("NovaReformaFragment", "Caminho real encontrado via cursor: $path")
+                            Timber.d("NovaReformaFragment", "Caminho real encontrado via cursor: $path")
                             
                             // ✅ CORREÇÃO: Tentar comprimir com fallback
                             try {
                                 val compressedPath = imageCompressionUtils.compressImageFromPath(path)
                                 if (compressedPath != null) {
-                                    Log.d("NovaReformaFragment", "Imagem comprimida do arquivo: $compressedPath")
+                                    Timber.d("NovaReformaFragment", "Imagem comprimida do arquivo: $compressedPath")
                                     return compressedPath
                                 }
                             } catch (e: Exception) {
-                                Log.w("NovaReformaFragment", "Compressão do arquivo falhou: ${e.message}")
+                                Timber.w("NovaReformaFragment", "Compressão do arquivo falhou: ${e.message}")
                             }
                             
                             return path
@@ -331,35 +331,35 @@ class NovaReformaFragment : Fragment() {
             }
             
             // Tentativa 2: Se o cursor não funcionou, criar arquivo temporário
-            Log.d("NovaReformaFragment", "Cursor não funcionou, criando arquivo temporário...")
+            Timber.d("NovaReformaFragment", "Cursor não funcionou, criando arquivo temporário...")
             val inputStream = requireContext().contentResolver.openInputStream(uri)
             if (inputStream != null) {
                 val tempFile = File.createTempFile("reforma_foto_", ".jpg", requireContext().cacheDir)
                 tempFile.outputStream().use { outputStream ->
                     inputStream.copyTo(outputStream)
                 }
-                Log.d("NovaReformaFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
+                Timber.d("NovaReformaFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
                 
                 // ✅ CORREÇÃO: Tentar comprimir com fallback
                 try {
                     val compressedPath = imageCompressionUtils.compressImageFromPath(tempFile.absolutePath)
                     if (compressedPath != null) {
-                        Log.d("NovaReformaFragment", "Arquivo temporário comprimido: $compressedPath")
+                        Timber.d("NovaReformaFragment", "Arquivo temporário comprimido: $compressedPath")
                         return compressedPath
                     }
                 } catch (e: Exception) {
-                    Log.w("NovaReformaFragment", "Compressão do arquivo temporário falhou: ${e.message}")
+                    Timber.w("NovaReformaFragment", "Compressão do arquivo temporário falhou: ${e.message}")
                 }
                 
                 return tempFile.absolutePath
             }
             
             // Tentativa 3: Fallback para URI como string
-            Log.d("NovaReformaFragment", "Usando URI como fallback: $uri")
+            Timber.d("NovaReformaFragment", "Usando URI como fallback: $uri")
             uri.toString()
             
         } catch (e: Exception) {
-            Log.e("NovaReformaFragment", "Erro ao obter caminho real da foto: ${e.message}", e)
+            Timber.e("NovaReformaFragment", "Erro ao obter caminho real da foto: ${e.message}", e)
             null
         }
     }
@@ -401,16 +401,16 @@ class NovaReformaFragment : Fragment() {
                 // Se há foto e não é URL do Firebase Storage, fazer upload
                 if (finalFotoPath != null && !firebaseImageUploader.isFirebaseStorageUrl(finalFotoPath)) {
                     if (networkUtils.isConnected()) {
-                        Log.d("NovaReformaFragment", "Fazendo upload da foto para Firebase Storage...")
+                        Timber.d("NovaReformaFragment", "Fazendo upload da foto para Firebase Storage...")
                         val uploadedUrl = firebaseImageUploader.uploadMesaReforma(finalFotoPath, mesaSelecionada!!.id)
                         if (uploadedUrl != null) {
                             finalFotoPath = uploadedUrl
-                            Log.d("NovaReformaFragment", "✅ Foto enviada para Firebase Storage: $finalFotoPath")
+                            Timber.d("NovaReformaFragment", "✅ Foto enviada para Firebase Storage: $finalFotoPath")
                         } else {
-                            Log.w("NovaReformaFragment", "⚠️ Falha no upload, usando caminho local")
+                            Timber.w("NovaReformaFragment", "⚠️ Falha no upload, usando caminho local")
                         }
                     } else {
-                        Log.d("NovaReformaFragment", "📴 Sem conexão, foto será sincronizada depois")
+                        Timber.d("NovaReformaFragment", "📴 Sem conexão, foto será sincronizada depois")
                     }
                 }
                 
@@ -434,7 +434,7 @@ class NovaReformaFragment : Fragment() {
                 // ✅ NOVO: Registrar no histórico de manutenção
                 registrarManutencoesNoHistorico(mesaReformada)
             } catch (e: Exception) {
-                Log.e("NovaReformaFragment", "Erro ao salvar reforma: ${e.message}", e)
+                Timber.e("NovaReformaFragment", "Erro ao salvar reforma: ${e.message}", e)
                 Toast.makeText(requireContext(), "Erro ao salvar reforma: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
@@ -512,7 +512,7 @@ class NovaReformaFragment : Fragment() {
      * ✅ NOVO: Mostra seleção de panos para reforma
      */
     private fun mostrarSelecaoPanosReforma() {
-        Log.d("NovaReformaFragment", "[PANO] Solicitado abrir seleção de panos (manutenção)")
+        Timber.d("NovaReformaFragment", "[PANO] Solicitado abrir seleção de panos (manutenção)")
         
         if (mesaSelecionada == null) {
             Toast.makeText(requireContext(), "Selecione uma mesa primeiro", Toast.LENGTH_SHORT).show()
@@ -528,23 +528,23 @@ class NovaReformaFragment : Fragment() {
             }
         }
         
-        Log.d("NovaReformaFragment", "[PANO] Contexto mesa para seleção: tamanho=$tamanhoMesaStr, mesa=${mesaSelecionada?.numero}")
+        Timber.d("NovaReformaFragment", "[PANO] Contexto mesa para seleção: tamanho=$tamanhoMesaStr, mesa=${mesaSelecionada?.numero}")
         
         try {
             val dialog = PanoSelectionDialog.newInstance(
                 onPanoSelected = { panoSelecionado ->
-                    Log.d("NovaReformaFragment", "Pano selecionado: ${panoSelecionado.numero}")
+                    Timber.d("NovaReformaFragment", "Pano selecionado: ${panoSelecionado.numero}")
                     // Registrar uso do pano na reforma
                     registrarPanoReforma(panoSelecionado)
                 },
                 tamanhoMesa = tamanhoMesaStr
             )
             
-            Log.d("NovaReformaFragment", "[PANO] Abrindo PanoSelectionDialog (manutenção)")
+            Timber.d("NovaReformaFragment", "[PANO] Abrindo PanoSelectionDialog (manutenção)")
             dialog.show(childFragmentManager, "select_pano_reforma")
             
         } catch (e: Exception) {
-            Log.e("NovaReformaFragment", "Erro ao mostrar diálogo de seleção de panos: ${e.message}", e)
+            Timber.e("NovaReformaFragment", "Erro ao mostrar diálogo de seleção de panos: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao abrir seleção de panos: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
@@ -553,7 +553,7 @@ class NovaReformaFragment : Fragment() {
      * ✅ NOVO: Registra o uso do pano na reforma
      */
     private fun registrarPanoReforma(panoSelecionado: com.example.gestaobilhares.data.entities.PanoEstoque) {
-        Log.d("NovaReformaFragment", "Registrando pano ${panoSelecionado.numero} para reforma")
+        Timber.d("NovaReformaFragment", "Registrando pano ${panoSelecionado.numero} para reforma")
         
         // Marcar pano como usado no estoque
         viewModel.marcarPanoComoUsado(panoSelecionado.id, "Usado em reforma da mesa ${mesaSelecionada?.numero}")
@@ -561,11 +561,11 @@ class NovaReformaFragment : Fragment() {
         // ✅ NOVO: Atualizar a mesa com o pano e data de troca (persistência na entidade Mesa)
         mesaSelecionada?.let { mesa ->
             viewModel.atualizarPanoDaMesaEmReforma(mesa.id, panoSelecionado.id)
-            Log.d("NovaReformaFragment", "Mesa ${mesa.numero} atualizada com pano ${panoSelecionado.numero} (reforma)")
+            Timber.d("NovaReformaFragment", "Mesa ${mesa.numero} atualizada com pano ${panoSelecionado.numero} (reforma)")
         }
         
         numeroPanoSelecionado = panoSelecionado.numero
-        Log.d("NovaReformaFragment", "Pano selecionado armazenado: $numeroPanoSelecionado")
+        Timber.d("NovaReformaFragment", "Pano selecionado armazenado: $numeroPanoSelecionado")
         Toast.makeText(requireContext(), "Pano ${panoSelecionado.numero} selecionado", Toast.LENGTH_SHORT).show()
     }
 

@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import timber.log.Timber
 
 /**
  * ViewModel para gerenciar a transferência de clientes entre rotas.
@@ -66,8 +67,8 @@ class TransferClientViewModel @Inject constructor(
                 appRepository.atualizarCliente(clienteAtualizado)
 
                 // ✅ NOVO: Log para debug da transferência
-                android.util.Log.d("TransferClientViewModel", "✅ Cliente '${cliente.nome}' transferido de '${rotaOrigem.nome}' para '${rotaDestino.nome}'")
-                android.util.Log.d("TransferClientViewModel", "📊 Mesas transferidas: ${mesas.size} mesas")
+                Timber.d("TransferClientViewModel", "✅ Cliente '${cliente.nome}' transferido de '${rotaOrigem.nome}' para '${rotaDestino.nome}'")
+                Timber.d("TransferClientViewModel", "📊 Mesas transferidas: ${mesas.size} mesas")
 
                 // As mesas não precisam ser atualizadas pois já estão vinculadas ao cliente
                 // que foi transferido para a nova rota

@@ -27,7 +27,7 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
-import android.util.Log
+import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -88,15 +88,15 @@ class ClientRegisterFragment : Fragment() {
         observeViewModel()
         
         // Carregar dados do cliente se estiver editando
-        Log.d("ClientRegisterFragment", "=== DEBUG NAVEGAÇÃO ===")
-        Log.d("ClientRegisterFragment", "args.clienteId: ${args.clienteId}")
-        Log.d("ClientRegisterFragment", "args.rotaId: ${args.rotaId}")
+        Timber.d("ClientRegisterFragment", "=== DEBUG NAVEGAÇÃO ===")
+        Timber.d("ClientRegisterFragment", "args.clienteId: ${args.clienteId}")
+        Timber.d("ClientRegisterFragment", "args.rotaId: ${args.rotaId}")
         
         if (args.clienteId != 0L) {
-            Log.d("ClientRegisterFragment", "Modo EDIÇÃO - Carregando cliente ID: ${args.clienteId}")
+            Timber.d("ClientRegisterFragment", "Modo EDIÇÃO - Carregando cliente ID: ${args.clienteId}")
             carregarDadosClienteParaEdicao()
         } else {
-            Log.d("ClientRegisterFragment", "Modo NOVO CADASTRO")
+            Timber.d("ClientRegisterFragment", "Modo NOVO CADASTRO")
         }
     }
 
@@ -188,7 +188,7 @@ class ClientRegisterFragment : Fragment() {
                             showErrorDialog("Erro ao exibir confirmação: ${e.localizedMessage}")
                         } catch (dialogException: Exception) {
                             // Se não conseguir mostrar o dialog, pelo menos logar o erro
-                            android.util.Log.e("ClientRegister", "Erro ao mostrar dialog: ${dialogException.message}")
+                            Timber.e(dialogException, "Erro ao mostrar dialog: %s", dialogException.message)
                         }
                     }
                 }
@@ -265,7 +265,7 @@ class ClientRegisterFragment : Fragment() {
 
     private fun saveClient() {
         try {
-            android.util.Log.d("ClientRegister", "Iniciando salvamento do cliente")
+            Timber.d("ClientRegister", "Iniciando salvamento do cliente")
             
             // Limpar erros anteriores
             clearErrors()
@@ -297,7 +297,7 @@ class ClientRegisterFragment : Fragment() {
             val numeroContrato = binding.etNumeroContrato.text.toString().trim()
             val observations = binding.etObservations.text.toString().trim()
             
-            android.util.Log.d("ClientRegister", "Valores obtidos: nome=$name, endereco=$address")
+            Timber.d("ClientRegister", "Valores obtidos: nome=$name, endereco=$address")
             
             // ✅ NOVO: Validar valor da ficha obrigatório
             if (valorFichaTexto.isEmpty() || valorFicha <= 0) {
@@ -348,7 +348,7 @@ class ClientRegisterFragment : Fragment() {
                 return
             }
             
-            android.util.Log.d("ClientRegister", "Validações passaram, criando entidade Cliente")
+            Timber.d("ClientRegister", "Validações passaram, criando entidade Cliente")
             
             // Mostrar loading
             binding.progressBar.visibility = View.VISIBLE
@@ -380,11 +380,11 @@ class ClientRegisterFragment : Fragment() {
                 }
             )
             
-            android.util.Log.d("ClientRegister", "Entidade Cliente criada, chamando viewModel.cadastrarCliente")
+            Timber.d("ClientRegister", "Entidade Cliente criada, chamando viewModel.cadastrarCliente")
             viewModel.cadastrarCliente(cliente)
             
         } catch (e: Exception) {
-            android.util.Log.e("ClientRegister", "Erro ao salvar cliente: ${e.message}", e)
+            Timber.e(e, "Erro ao salvar cliente: %s", e.message)
             // Tratar erro e restaurar UI
             binding.progressBar.visibility = View.GONE
             binding.btnSave.isEnabled = true
@@ -436,11 +436,11 @@ class ClientRegisterFragment : Fragment() {
      * ✅ IMPLEMENTADO: Preenche campos com dados do cliente
      */
     private fun preencherCamposComDadosCliente(cliente: com.example.gestaobilhares.data.entities.Cliente) {
-        Log.d("ClientRegisterFragment", "=== PREENCHENDO CAMPOS ===")
-        Log.d("ClientRegisterFragment", "Cliente recebido: ${cliente.nome}")
-        Log.d("ClientRegisterFragment", "ID: ${cliente.id}")
-        Log.d("ClientRegisterFragment", "CPF/CNPJ: ${cliente.cpfCnpj}")
-        Log.d("ClientRegisterFragment", "Endereço: ${cliente.endereco}")
+        Timber.d("ClientRegisterFragment", "=== PREENCHENDO CAMPOS ===")
+        Timber.d("ClientRegisterFragment", "Cliente recebido: ${cliente.nome}")
+        Timber.d("ClientRegisterFragment", "ID: ${cliente.id}")
+        Timber.d("ClientRegisterFragment", "CPF/CNPJ: ${cliente.cpfCnpj}")
+        Timber.d("ClientRegisterFragment", "Endereço: ${cliente.endereco}")
         
         binding.apply {
             etClientName.setText(cliente.nome)
@@ -466,7 +466,7 @@ class ClientRegisterFragment : Fragment() {
             etNumeroContrato.setText(cliente.numeroContrato ?: "")
             etObservations.setText(cliente.observacoes ?: "")
             
-            Log.d("ClientRegisterFragment", "Campos preenchidos com sucesso!")
+            Timber.d("ClientRegisterFragment", "Campos preenchidos com sucesso!")
             
             // ✅ NOVO: Preencher data de cadastro
             val _dataCadastro = if (cliente.dataCadastro != null) {
@@ -543,7 +543,7 @@ class ClientRegisterFragment : Fragment() {
                     }
                 }
                 
-                Log.d("ClientRegisterFragment", "Estado selecionado: ${estadoSelecionado.nome}, ${estadoSelecionado.cidades.size} cidades carregadas")
+                Timber.d("ClientRegisterFragment", "Estado selecionado: ${estadoSelecionado.nome}, ${estadoSelecionado.cidades.size} cidades carregadas")
             }
             
             // Configurar adapter inicial para cidades (vazio)
@@ -563,7 +563,7 @@ class ClientRegisterFragment : Fragment() {
             }
             
         } catch (e: Exception) {
-            Log.e("ClientRegisterFragment", "Erro ao configurar dropdowns: ${e.message}")
+            Timber.e("ClientRegisterFragment", "Erro ao configurar dropdowns: ${e.message}")
             showErrorDialog("Erro ao carregar estados e cidades: ${e.message}")
         }
     }
@@ -591,7 +591,7 @@ class ClientRegisterFragment : Fragment() {
                 }
             }
         } catch (e: Exception) {
-            Log.e("ClientRegisterFragment", "Erro ao definir estado padrão: ${e.message}")
+            Timber.e("ClientRegisterFragment", "Erro ao definir estado padrão: ${e.message}")
         }
     }
     
@@ -664,7 +664,7 @@ class ClientRegisterFragment : Fragment() {
                     // Feedback de sucesso
                     Toast.makeText(requireContext(), "Localização realizada com sucesso", Toast.LENGTH_LONG).show()
                     
-                    Log.d("Geolocation", "Localização capturada: ${location.latitude}, ${location.longitude}")
+                    Timber.d("Geolocation", "Localização capturada: ${location.latitude}, ${location.longitude}")
                 } else {
                     // Feedback de erro
                     Toast.makeText(
@@ -674,7 +674,7 @@ class ClientRegisterFragment : Fragment() {
                     ).show()
                 }
             }.addOnFailureListener { exception ->
-                Log.e("Geolocation", "Erro ao capturar localização", exception)
+                Timber.e("Geolocation", "Erro ao capturar localização", exception)
                 Toast.makeText(
                     requireContext(),
                     "Erro ao capturar localização: ${exception.message}",
@@ -682,7 +682,7 @@ class ClientRegisterFragment : Fragment() {
                 ).show()
             }
         } catch (e: Exception) {
-            Log.e("Geolocation", "Erro inesperado", e)
+            Timber.e("Geolocation", "Erro inesperado", e)
             Toast.makeText(
                 requireContext(),
                 "Erro inesperado: ${e.message}",

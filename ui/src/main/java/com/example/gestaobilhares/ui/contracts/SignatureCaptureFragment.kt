@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Base64
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -62,12 +62,12 @@ class SignatureCaptureFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // ✅ LOG CRASH: Início da tela
-        android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.onViewCreated - INÍCIO")
+        Timber.d("LOG_CRASH", "SignatureCaptureFragment.onViewCreated - INÍCIO")
         
         // ✅ CORREÇÃO: Inicializar ViewModel antes de usar
         try {
             // ✅ LOG CRASH: Inicializando ViewModel
-            android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.onViewCreated - Inicializando ViewModel")
+            Timber.d("LOG_CRASH", "SignatureCaptureFragment.onViewCreated - Inicializando ViewModel")
             // ViewModel initialized by Hilt
             
                     // ✅ CORREÇÃO: Inicializar managers de forma segura
@@ -75,9 +75,9 @@ class SignatureCaptureFragment : Fragment() {
                         legalLogger = com.example.gestaobilhares.core.utils.LegalLogger(requireContext())
                         documentIntegrityManager = com.example.gestaobilhares.core.utils.DocumentIntegrityManager(requireContext())
                         metadataCollector = com.example.gestaobilhares.core.utils.SignatureMetadataCollector(requireContext())
-                        android.util.Log.d("SignatureCaptureFragment", "✅ Todos os managers inicializados com sucesso")
+                        Timber.d("SignatureCaptureFragment", "✅ Todos os managers inicializados com sucesso")
                     } catch (e: Exception) {
-                        android.util.Log.e("SignatureCaptureFragment", "❌ Erro ao inicializar managers: ${e.message}", e)
+                        Timber.e("SignatureCaptureFragment", "❌ Erro ao inicializar managers: ${e.message}", e)
                         // ✅ CORREÇÃO CRÍTICA: Garantir que os managers sejam inicializados mesmo com erro
                         legalLogger = null
                         documentIntegrityManager = null
@@ -104,7 +104,7 @@ class SignatureCaptureFragment : Fragment() {
                     .show()
             }
         } catch (e: Exception) {
-            android.util.Log.e("SignatureCaptureFragment", "Erro ao inicializar ViewModel: ${e.message}")
+            Timber.e("SignatureCaptureFragment", "Erro ao inicializar ViewModel: ${e.message}")
             // Mostrar erro para o usuário
             androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Erro")
@@ -181,10 +181,10 @@ class SignatureCaptureFragment : Fragment() {
     
     private fun salvarAssinatura() {
         // ✅ LOG CRASH: Início do salvamento da assinatura
-        android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - INÍCIO")
+        Timber.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - INÍCIO")
         
         if (!binding.signatureView.hasSignature()) {
-            android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - Nenhuma assinatura detectada")
+            Timber.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - Nenhuma assinatura detectada")
             Toast.makeText(requireContext(), "Por favor, assine", Toast.LENGTH_SHORT).show()
             return
         }
@@ -193,8 +193,8 @@ class SignatureCaptureFragment : Fragment() {
         val totalPoints = statistics["totalPoints"] as? Int ?: 0
         val duration = statistics["duration"] as? Long ?: 0L
         val isValid = totalPoints >= 1
-        Log.d(TAG, "Assinatura válida: $isValid")
-        Log.d(TAG, "Total points: $totalPoints, duration: $duration")
+        Timber.d(TAG, "Assinatura válida: $isValid")
+        Timber.d(TAG, "Total points: $totalPoints, duration: $duration")
         
         // ✅ CORREÇÃO: Validação mais permissiva
         if (totalPoints < 1) {
@@ -244,7 +244,7 @@ class SignatureCaptureFragment : Fragment() {
         val assinaturaBase64 = bitmapToBase64(signatureBitmap!!)
         if (assinaturaContexto == "DISTRATO") {
             // ✅ LOG CRASH: Salvando assinatura de distrato
-            android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - Salvando assinatura de distrato")
+            Timber.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - Salvando assinatura de distrato")
             viewModel.salvarAssinaturaDistrato(assinaturaBase64)
             
             // ✅ CORREÇÃO CRÍTICA: Atualizar status do contrato SEMPRE que distrato for assinado
@@ -256,23 +256,23 @@ class SignatureCaptureFragment : Fragment() {
                     val repo = appRepository
                     val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
                     val agora = java.util.Date()
-                    android.util.Log.d("DistratoFlow", "✅ ATUALIZAR STATUS ao salvar assinatura: contrato ${contratoAtual.id} para $novoStatus em $agora")
+                    Timber.d("DistratoFlow", "✅ ATUALIZAR STATUS ao salvar assinatura: contrato ${contratoAtual.id} para $novoStatus em $agora")
                     repo.atualizarContrato(contratoAtual.copy(status = novoStatus, dataEncerramento = agora))
                     
                     // Verificação imediata
                     try {
                         val apos = repo.buscarContratosPorCliente(contratoAtual.clienteId).first()
-                        android.util.Log.d("DistratoFlow", "✅ Após salvar assinatura distrato: ${apos.size} contratos encontrados")
+                        Timber.d("DistratoFlow", "✅ Após salvar assinatura distrato: ${apos.size} contratos encontrados")
                     } catch (e: Exception) {
-                        android.util.Log.e("DistratoFlow", "Falha verificação pós-assinatura distrato", e)
+                        Timber.e("DistratoFlow", "Falha verificação pós-assinatura distrato", e)
                     }
                 } catch (e: Exception) {
-                    android.util.Log.e("DistratoFlow", "Falha ao atualizar status na assinatura do distrato", e)
+                    Timber.e("DistratoFlow", "Falha ao atualizar status na assinatura do distrato", e)
                 }
             }
         } else {
             // ✅ LOG CRASH: Salvando assinatura de contrato
-            android.util.Log.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - Salvando assinatura de contrato")
+            Timber.d("LOG_CRASH", "SignatureCaptureFragment.salvarAssinatura - Salvando assinatura de contrato")
             // ✅ CONFORMIDADE JURÍDICA CLÁUSULA 9.3: Salvar assinatura com metadados completos
             viewModel.salvarAssinaturaComMetadados(
                 assinaturaBase64 = assinaturaBase64,
@@ -301,16 +301,16 @@ class SignatureCaptureFragment : Fragment() {
     
     private fun enviarContratoViaWhatsApp() {
         // ✅ LOGS PARA MONITORAR ESTADO ANTES DO ENVIO
-        android.util.Log.d("SignatureCaptureFragment", "=== INÍCIO ENVIO CONTRATO VIA WHATSAPP ===")
-        android.util.Log.d("SignatureCaptureFragment", "Timestamp: ${System.currentTimeMillis()}")
-        android.util.Log.d("SignatureCaptureFragment", "Fragment ativo: isAdded=$isAdded, isDetached=$isDetached, isRemoving=$isRemoving")
+        Timber.d("SignatureCaptureFragment", "=== INÍCIO ENVIO CONTRATO VIA WHATSAPP ===")
+        Timber.d("SignatureCaptureFragment", "Timestamp: ${System.currentTimeMillis()}")
+        Timber.d("SignatureCaptureFragment", "Fragment ativo: isAdded=$isAdded, isDetached=$isDetached, isRemoving=$isRemoving")
         
         val contratoAtual = viewModel.contrato.value
-        android.util.Log.d("SignatureCaptureFragment", "📋 ESTADO DO CONTRATO ANTES DO ENVIO:")
-        android.util.Log.d("SignatureCaptureFragment", "  - Contrato: $contratoAtual")
-        android.util.Log.d("SignatureCaptureFragment", "  - Cliente ID: ${contratoAtual?.clienteId}")
-        android.util.Log.d("SignatureCaptureFragment", "  - Número: ${contratoAtual?.numeroContrato}")
-        android.util.Log.d("SignatureCaptureFragment", "  - Contexto: $assinaturaContexto")
+        Timber.d("SignatureCaptureFragment", "📋 ESTADO DO CONTRATO ANTES DO ENVIO:")
+        Timber.d("SignatureCaptureFragment", "  - Contrato: $contratoAtual")
+        Timber.d("SignatureCaptureFragment", "  - Cliente ID: ${contratoAtual?.clienteId}")
+        Timber.d("SignatureCaptureFragment", "  - Número: ${contratoAtual?.numeroContrato}")
+        Timber.d("SignatureCaptureFragment", "  - Contexto: $assinaturaContexto")
         
         viewLifecycleOwner.lifecycleScope.launch {
             try {
@@ -353,14 +353,14 @@ class SignatureCaptureFragment : Fragment() {
                 startActivity(android.content.Intent.createChooser(intent, "Enviar contrato via"))
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ 
                     // ✅ LOGS DETALHADOS PARA DIAGNÓSTICO
-                    android.util.Log.d("SignatureCaptureFragment", "=== INÍCIO NAVEGAÇÃO APÓS ENVIO CONTRATO ===")
-                    android.util.Log.d("SignatureCaptureFragment", "Timestamp: ${System.currentTimeMillis()}")
-                    android.util.Log.d("SignatureCaptureFragment", "Fragment ativo: isAdded=$isAdded, isDetached=$isDetached, isRemoving=$isRemoving")
+                    Timber.d("SignatureCaptureFragment", "=== INÍCIO NAVEGAÇÃO APÓS ENVIO CONTRATO ===")
+                    Timber.d("SignatureCaptureFragment", "Timestamp: ${System.currentTimeMillis()}")
+                    Timber.d("SignatureCaptureFragment", "Fragment ativo: isAdded=$isAdded, isDetached=$isDetached, isRemoving=$isRemoving")
                     
                     // Verificar se o Fragment ainda está ativo
                     if (!isAdded || isDetached || isRemoving) {
-                        android.util.Log.w("SignatureCaptureFragment", "❌ Fragment não está mais ativo - cancelando navegação")
-                        android.util.Log.w("SignatureCaptureFragment", "isAdded: $isAdded, isDetached: $isDetached, isRemoving: $isRemoving")
+                        Timber.w("SignatureCaptureFragment", "❌ Fragment não está mais ativo - cancelando navegação")
+                        Timber.w("SignatureCaptureFragment", "isAdded: $isAdded, isDetached: $isDetached, isRemoving: $isRemoving")
                         return@postDelayed
                     }
                     
@@ -369,16 +369,16 @@ class SignatureCaptureFragment : Fragment() {
                     val contratoNumero = viewModel.contrato.value?.numeroContrato
                     val contratoId = viewModel.contrato.value?.id
                     
-                    android.util.Log.d("SignatureCaptureFragment", "📊 DADOS DO CONTRATO:")
-                    android.util.Log.d("SignatureCaptureFragment", "  - clienteId: $clienteId")
-                    android.util.Log.d("SignatureCaptureFragment", "  - contratoNumero: $contratoNumero")
-                    android.util.Log.d("SignatureCaptureFragment", "  - contratoId: $contratoId")
-                    android.util.Log.d("SignatureCaptureFragment", "  - assinaturaContexto: $assinaturaContexto")
+                    Timber.d("SignatureCaptureFragment", "📊 DADOS DO CONTRATO:")
+                    Timber.d("SignatureCaptureFragment", "  - clienteId: $clienteId")
+                    Timber.d("SignatureCaptureFragment", "  - contratoNumero: $contratoNumero")
+                    Timber.d("SignatureCaptureFragment", "  - contratoId: $contratoId")
+                    Timber.d("SignatureCaptureFragment", "  - assinaturaContexto: $assinaturaContexto")
                     
                     // ✅ CORREÇÃO: Remover todas as telas intermediárias (depósito, contrato) do back stack
                     // Isso garante que ao clicar em voltar na tela de detalhes, volte para a lista de clientes
                     try {
-                        android.util.Log.d("SignatureCaptureFragment", "🚀 NAVEGANDO PARA ClientDetailFragment E LIMPANDO BACK STACK")
+                        Timber.d("SignatureCaptureFragment", "🚀 NAVEGANDO PARA ClientDetailFragment E LIMPANDO BACK STACK")
                         
                         if (clienteId > 0) {
                             val navController = findNavController()
@@ -397,7 +397,7 @@ class SignatureCaptureFragment : Fragment() {
                                     
                                     if (rotaId != null && rotaId > 0L) {
                                         // Limpar back stack até clientListFragment antes de navegar para clientDetailFragment
-                                        android.util.Log.d("SignatureCaptureFragment", "📦 Removendo todas as telas intermediárias do back stack até clientListFragment")
+                                        Timber.d("SignatureCaptureFragment", "📦 Removendo todas as telas intermediárias do back stack até clientListFragment")
                                         
                                         val navOptions = NavOptions.Builder()
                                             .setPopUpTo(com.example.gestaobilhares.ui.R.id.clientListFragment, false)
@@ -409,10 +409,10 @@ class SignatureCaptureFragment : Fragment() {
                                             navOptions
                                         )
                                         
-                                        android.util.Log.d("SignatureCaptureFragment", "✅ Navegação executada com sucesso!")
+                                        Timber.d("SignatureCaptureFragment", "✅ Navegação executada com sucesso!")
                                     } else {
                                         // Fallback: limpar até contractGenerationFragment se não conseguir rotaId
-                                        android.util.Log.w("SignatureCaptureFragment", "⚠️ RotaId não encontrado, usando fallback")
+                                        Timber.w("SignatureCaptureFragment", "⚠️ RotaId não encontrado, usando fallback")
                                         
                                         val navOptions = NavOptions.Builder()
                                             .setPopUpTo(com.example.gestaobilhares.ui.R.id.contractGenerationFragment, true)
@@ -425,7 +425,7 @@ class SignatureCaptureFragment : Fragment() {
                                         )
                                     }
                                 } catch (e: Exception) {
-                                    android.util.Log.e("SignatureCaptureFragment", "❌ Erro ao buscar rotaId: ${e.message}", e)
+                                    Timber.e("SignatureCaptureFragment", "❌ Erro ao buscar rotaId: ${e.message}", e)
                                     // Fallback: limpar até contractGenerationFragment
                                     val bundle = android.os.Bundle().apply {
                                         putLong("clienteId", clienteId)
@@ -443,19 +443,19 @@ class SignatureCaptureFragment : Fragment() {
                                 }
                             }
                         } else {
-                            android.util.Log.w("SignatureCaptureFragment", "⚠️ ClienteId inválido: $clienteId")
+                            Timber.w("SignatureCaptureFragment", "⚠️ ClienteId inválido: $clienteId")
                             findNavController().popBackStack()
                         }
                         
                     } catch (e: Exception) {
-                        android.util.Log.e("SignatureCaptureFragment", "❌ Erro na navegação: ${e.message}", e)
+                        Timber.e("SignatureCaptureFragment", "❌ Erro na navegação: ${e.message}", e)
                         findNavController().popBackStack()
                     }
                     
-                    android.util.Log.d("SignatureCaptureFragment", "=== FIM NAVEGAÇÃO APÓS ENVIO CONTRATO ===")
+                    Timber.d("SignatureCaptureFragment", "=== FIM NAVEGAÇÃO APÓS ENVIO CONTRATO ===")
                 }, 2000)
             } catch (e: Exception) {
-                android.util.Log.e("SignatureCaptureFragment", "Erro ao enviar contrato", e)
+                Timber.e("SignatureCaptureFragment", "Erro ao enviar contrato", e)
                 Toast.makeText(requireContext(), "Erro ao enviar contrato: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
@@ -488,17 +488,17 @@ class SignatureCaptureFragment : Fragment() {
                     val repo = appRepository
                     val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
                     val agora = java.util.Date()
-                    android.util.Log.d("DistratoFlow", "Encerrar direto contrato ${contrato.id} para $novoStatus em $agora")
+                    Timber.d("DistratoFlow", "Encerrar direto contrato ${contrato.id} para $novoStatus em $agora")
                     repo.atualizarContrato(contrato.copy(status = novoStatus, dataEncerramento = agora))
                     // Verificação imediata (diagnóstico)
                     try {
                         val apos = repo.buscarContratosPorCliente(contrato.clienteId).first()
-                        android.util.Log.d("DistratoFlow", "Após atualizar (SignatureCapture): ${apos.size} contratos encontrados")
+                        Timber.d("DistratoFlow", "Após atualizar (SignatureCapture): ${apos.size} contratos encontrados")
                     } catch (e: Exception) {
-                        android.util.Log.e("DistratoFlow", "Falha verificação pós-atualização (SignatureCapture)", e)
+                        Timber.e("DistratoFlow", "Falha verificação pós-atualização (SignatureCapture)", e)
                     }
                 } catch (e: Exception) {
-                    android.util.Log.e("DistratoFlow", "Falha ao atualizar contrato como encerrado", e)
+                    Timber.e("DistratoFlow", "Falha ao atualizar contrato como encerrado", e)
                 }
 
                 val pdfUri = androidx.core.content.FileProvider.getUriForFile(
@@ -556,7 +556,7 @@ class SignatureCaptureFragment : Fragment() {
                                     )
                                 }
                             } catch (e: Exception) {
-                                android.util.Log.e("SignatureCaptureFragment", "❌ Erro ao buscar rotaId no distrato: ${e.message}", e)
+                                Timber.e("SignatureCaptureFragment", "❌ Erro ao buscar rotaId no distrato: ${e.message}", e)
                                 // Fallback: limpar até contractGenerationFragment
                                 val bundle = android.os.Bundle().apply {
                                     putLong("clienteId", clienteId)
@@ -578,7 +578,7 @@ class SignatureCaptureFragment : Fragment() {
                     }
                 }, 2000)
             } catch (e: Exception) {
-                android.util.Log.e(TAG, "Erro ao enviar distrato", e)
+                Timber.e(TAG, "Erro ao enviar distrato", e)
                 Toast.makeText(requireContext(), "Erro ao enviar distrato: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }

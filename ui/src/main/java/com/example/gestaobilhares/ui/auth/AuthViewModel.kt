@@ -28,6 +28,7 @@ import kotlinx.coroutines.tasks.await
 import java.util.Date
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import timber.log.Timber
 
 /**
  * ViewModel responsável pela lógica de autenticação híbrida (Firebase + Local).
@@ -82,7 +83,7 @@ class AuthViewModel @Inject constructor(
                     // Quando necessário, pode ser acionada manualmente via UI
                 }
             } catch (e: Exception) {
-                android.util.Log.e("AuthViewModel", "Erro ao observar conectividade: ${e.message}")
+                Timber.e(e, "Erro ao observar conectividade: %s", e.message)
             }
         }
     }
@@ -98,25 +99,25 @@ class AuthViewModel @Inject constructor(
      * Função para realizar login híbrido (online/offline)
      */
     fun login(email: String, senha: String) {
-        android.util.Log.d("AuthViewModel", "=== INICIANDO LOGIN HÍBRIDO ===")
-        android.util.Log.d("AuthViewModel", "Email: $email")
-        android.util.Log.d("AuthViewModel", "Senha: ${senha.length} caracteres")
+        Timber.d("AuthViewModel", "=== INICIANDO LOGIN HÍBRIDO ===")
+        Timber.d("AuthViewModel", "Email: $email")
+        Timber.d("AuthViewModel", "Senha: ${senha.length} caracteres")
         
         // Validação básica
         if (email.isBlank() || senha.isBlank()) {
-            android.util.Log.e("AuthViewModel", "Email ou senha em branco")
+            Timber.e("Email ou senha em branco")
             _errorMessage.value = "Email e senha são obrigatórios"
             return
         }
         
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            android.util.Log.e("AuthViewModel", "Email inválido: $email")
+            Timber.e("Email inválido: %s", email)
             _errorMessage.value = "Email inválido"
             return
         }
         
         if (senha.length < 6) {
-            android.util.Log.e("AuthViewModel", "Senha muito curta: ${senha.length} caracteres")
+            Timber.e("Senha muito curta: %d caracteres", senha.length)
             _errorMessage.value = "Senha deve ter pelo menos 6 caracteres"
             return
         }
@@ -132,38 +133,38 @@ class AuthViewModel @Inject constructor(
                 
                 if (online) {
                     // Tentar login online primeiro
-                    android.util.Log.d("AuthViewModel", "Tentando login online...")
+                    Timber.d("AuthViewModel", "Tentando login online...")
                     try {
                         val result = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
                         
                         if (result.user != null) {
-                            android.util.Log.d("AuthViewModel", "✅ LOGIN ONLINE SUCESSO!")
+                            Timber.d("AuthViewModel", "✅ LOGIN ONLINE SUCESSO!")
 
                             // ✅ NOVO: Emitir log específico para criação automática de dados após login
-                            android.util.Log.w(
+                            Timber.w(
                                 "🔍 DB_POPULATION",
                                 "🚨 LOGIN ONLINE CONCLUÍDO - DISPARANDO CARREGAMENTO INICIAL DE DADOS"
                             )
     
                             // ✅ NOVO: Criar/atualizar colaborador para usuário online
-                            android.util.Log.d("AuthViewModel", "🔍 Chamando criarOuAtualizarColaboradorOnline...")
+                            Timber.d("AuthViewModel", "🔍 Chamando criarOuAtualizarColaboradorOnline...")
                             var colaborador = criarOuAtualizarColaboradorOnline(result.user!!, senha)
-                            android.util.Log.d("AuthViewModel", "   Resultado: ${if (colaborador != null) "SUCESSO - ${colaborador.nome}" else "NULL - não encontrado"}")
+                            Timber.d("AuthViewModel", "   Resultado: ${if (colaborador != null) "SUCESSO - ${colaborador.nome}" else "NULL - não encontrado"}")
                             
                             // ✅ SUPERADMIN: Se for rossinys@gmail.com e não encontrou, criar automaticamente
                             if (colaborador == null && email == "rossinys@gmail.com") {
-                                android.util.Log.d("AuthViewModel", "🔧 Criando SUPERADMIN automaticamente para: $email")
+                                Timber.d("AuthViewModel", "🔧 Criando SUPERADMIN automaticamente para: $email")
                                 colaborador = criarSuperAdminAutomatico(email, result.user!!.uid, senha)
                             }
                             
                             if (colaborador == null) {
-                                android.util.Log.w("AuthViewModel", "⚠️ Colaborador não encontrado após criarOuAtualizarColaboradorOnline")
-                                android.util.Log.w("AuthViewModel", "   Tentando busca direta na nuvem como fallback...")
+                                Timber.w("AuthViewModel", "⚠️ Colaborador não encontrado após criarOuAtualizarColaboradorOnline")
+                                Timber.w("AuthViewModel", "   Tentando busca direta na nuvem como fallback...")
                                 try {
                                     val fallbackResult = buscarColaboradorNaNuvemPorEmail(email)
                                     if (fallbackResult != null) {
                                         val (colaboradorFallback, fallbackCompanyId) = fallbackResult
-                                        android.util.Log.d("AuthViewModel", "✅ Colaborador encontrado no fallback: ${colaboradorFallback.nome}")
+                                        Timber.d("AuthViewModel", "✅ Colaborador encontrado no fallback: ${colaboradorFallback.nome}")
                                         // Atualizar firebaseUid e salvar localmente
                                         val colaboradorComUid = colaboradorFallback.copy(
                                             firebaseUid = result.user!!.uid,
@@ -179,35 +180,35 @@ class AuthViewModel @Inject constructor(
                                                 colaborador = colaboradorComUid
                                             }
                                             userSessionManager.startSession(colaborador!!, fallbackCompanyId)
-                                            android.util.Log.d("AuthViewModel", "✅ Colaborador salvo e sessão iniciada no fallback")
+                                            Timber.d("AuthViewModel", "✅ Colaborador salvo e sessão iniciada no fallback")
                                         } catch (e: Exception) {
-                                            android.util.Log.e("AuthViewModel", "❌ Erro ao salvar colaborador no fallback: ${e.message}", e)
+                                            Timber.e(e, "❌ Erro ao salvar colaborador no fallback: %s", e.message)
                                             // Mesmo com erro, tentar usar o colaborador da nuvem
                                             userSessionManager.startSession(colaboradorComUid, fallbackCompanyId)
                                             colaborador = colaboradorComUid
                                         }
                                     } else {
-                                        android.util.Log.e("AuthViewModel", "❌ Colaborador também não encontrado no fallback")
+                                        Timber.e("AuthViewModel", "❌ Colaborador também não encontrado no fallback")
                                     }
                                 } catch (e: Exception) {
-                                    android.util.Log.e("AuthViewModel", "❌ Erro no fallback: ${e.message}", e)
+                                    Timber.e(e, "❌ Erro no fallback: %s", e.message)
                                 }
                             }
                             
                             if (colaborador == null) {
-                                android.util.Log.e("AuthViewModel", "❌ ERRO FINAL: Colaborador não encontrado após todas as tentativas")
-                                android.util.Log.e("AuthViewModel", "   Email: $email")
-                                android.util.Log.e("AuthViewModel", "   Firebase UID: ${result.user!!.uid}")
+                                Timber.e("AuthViewModel", "❌ ERRO FINAL: Colaborador não encontrado após todas as tentativas")
+                                Timber.e("AuthViewModel", "   Email: $email")
+                                Timber.e("AuthViewModel", "   Firebase UID: ${result.user!!.uid}")
                                 _errorMessage.value = "Usuário não encontrado. Contate o administrador."
                                 return@launch
                             }
                             
                             // ✅ CORREÇÃO CRÍTICA: Verificar se o colaborador está aprovado e ativo ANTES de permitir login
                             if (!colaborador.aprovado) {
-                                android.util.Log.w("AuthViewModel", "❌ Colaborador não está aprovado - bloqueando login")
-                                android.util.Log.w("AuthViewModel", "   Email: $email")
-                                android.util.Log.w("AuthViewModel", "   Nome: ${colaborador.nome}")
-                                android.util.Log.w("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
+                                Timber.w("AuthViewModel", "❌ Colaborador não está aprovado - bloqueando login")
+                                Timber.w("AuthViewModel", "   Email: $email")
+                                Timber.w("AuthViewModel", "   Nome: ${colaborador.nome}")
+                                Timber.w("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
                                 firebaseAuth.signOut() // Fazer logout do Firebase
                                 _errorMessage.value = "Sua conta está aguardando aprovação do administrador."
                                 hideLoading()
@@ -215,10 +216,10 @@ class AuthViewModel @Inject constructor(
                             }
                             
                             if (!colaborador.ativo) {
-                                android.util.Log.w("AuthViewModel", "❌ Colaborador está inativo - bloqueando login")
-                                android.util.Log.w("AuthViewModel", "   Email: $email")
-                                android.util.Log.w("AuthViewModel", "   Nome: ${colaborador.nome}")
-                                android.util.Log.w("AuthViewModel", "   Ativo: ${colaborador.ativo}")
+                                Timber.w("AuthViewModel", "❌ Colaborador está inativo - bloqueando login")
+                                Timber.w("AuthViewModel", "   Email: $email")
+                                Timber.w("AuthViewModel", "   Nome: ${colaborador.nome}")
+                                Timber.w("AuthViewModel", "   Ativo: ${colaborador.ativo}")
                                 firebaseAuth.signOut() // Fazer logout do Firebase
                                 _errorMessage.value = "Sua conta está inativa. Contate o administrador."
                                 hideLoading()
@@ -231,7 +232,7 @@ class AuthViewModel @Inject constructor(
                             // ✅ NOVO: Verificar se é primeiro acesso (exceto superadmin)
                             // Só é primeiro acesso se a flag for true E ainda não tiver senha definitiva salva
                             if (!isSuperAdmin && colaborador.primeiroAcesso && colaborador.senhaHash == null) {
-                                android.util.Log.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO - Redirecionando para alteração de senha")
+                                Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO - Redirecionando para alteração de senha")
                                 _authState.value = AuthState.FirstAccessRequired(colaborador)
                                 return@launch
                             }
@@ -240,9 +241,9 @@ class AuthViewModel @Inject constructor(
                             // A função criarOuAtualizarColaboradorOnline já inicia a sessão, mas vamos verificar
                             val nomeSessao = userSessionManager.getCurrentUserName()
                             val idSessao = userSessionManager.getCurrentUserId()
-                            android.util.Log.d("AuthViewModel", "🔍 Verificação da sessão online:")
-                            android.util.Log.d("AuthViewModel", "   Nome na sessão: $nomeSessao")
-                            android.util.Log.d("AuthViewModel", "   ID na sessão: $idSessao")
+                            Timber.d("AuthViewModel", "🔍 Verificação da sessão online:")
+                            Timber.d("AuthViewModel", "   Nome na sessão: $nomeSessao")
+                            Timber.d("AuthViewModel", "   ID na sessão: $idSessao")
                             
                             // ✅ CORREÇÃO: Se a sessão não foi iniciada, iniciar agora
                             if (idSessao == 0L) {
@@ -258,32 +259,32 @@ class AuthViewModel @Inject constructor(
                             )
                             
                             _authState.value = AuthState.Authenticated(localUser, true)
-                            android.util.Log.d("AuthViewModel", "✅ Estado de autenticação definido - sessão ativa")
+                            Timber.d("AuthViewModel", "✅ Estado de autenticação definido - sessão ativa")
                             return@launch
                         }
                     } catch (e: Exception) {
-                        android.util.Log.w("AuthViewModel", "Login online falhou: ${e.message}")
-                        android.util.Log.w("AuthViewModel", "Tipo de erro: ${e.javaClass.simpleName}")
+                        Timber.w("AuthViewModel", "Login online falhou: ${e.message}")
+                        Timber.w("AuthViewModel", "Tipo de erro: ${e.javaClass.simpleName}")
                         
                         // ✅ CORREÇÃO: Se o erro for "wrong password" ou "user not found", 
                         // continuar para tentar login offline (pode ser senha temporária)
                         val errorCode = (e as? com.google.firebase.auth.FirebaseAuthException)?.errorCode
-                        android.util.Log.d("AuthViewModel", "Código de erro Firebase: $errorCode")
+                        Timber.d("AuthViewModel", "Código de erro Firebase: $errorCode")
                         
                         // Se for erro de credenciais inválidas, pode ser senha temporária
                         // Continuar para tentar login offline
                         if (errorCode == "ERROR_WRONG_PASSWORD" || errorCode == "ERROR_USER_NOT_FOUND" || errorCode == "ERROR_INVALID_EMAIL") {
-                            android.util.Log.d("AuthViewModel", "Erro de credenciais - tentando login offline com senha temporária...")
+                            Timber.d("AuthViewModel", "Erro de credenciais - tentando login offline com senha temporária...")
                         } else {
                             // Para outros erros (rede, etc), também tentar offline
-                            android.util.Log.d("AuthViewModel", "Erro de conexão ou outro - tentando login offline...")
+                            Timber.d("AuthViewModel", "Erro de conexão ou outro - tentando login offline...")
                         }
                     }
                 }
                 
                 // Se online falhou ou está offline, tentar login local
-                android.util.Log.d("AuthViewModel", "Tentando login offline...")
-                android.util.Log.d("AuthViewModel", "Email para busca: $email")
+                Timber.d("AuthViewModel", "Tentando login offline...")
+                Timber.d("AuthViewModel", "Email para busca: $email")
                 
                 // ✅ CORREÇÃO: Buscar colaborador por email ou firebaseUid
                 var colaborador = appRepository.obterColaboradorPorEmail(email)
@@ -295,58 +296,58 @@ class AuthViewModel @Inject constructor(
                 
                 // ✅ CORREÇÃO CRÍTICA: Se não encontrou localmente E estiver online, buscar na nuvem
                 if (colaborador == null && online) {
-                    android.util.Log.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
+                    Timber.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
                     val result = buscarColaboradorNaNuvemPorEmail(email)
                     if (result != null) {
                         colaborador = result.first
-                        android.util.Log.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaborador.nome}")
+                        Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaborador.nome}")
                         // Salvar colaborador localmente para próximos logins offline
                         try {
                             appRepository.inserirColaborador(colaborador)
-                            android.util.Log.d("AuthViewModel", "✅ Colaborador salvo localmente")
+                            Timber.d("AuthViewModel", "✅ Colaborador salvo localmente")
                         } catch (e: Exception) {
-                            android.util.Log.w("AuthViewModel", "⚠️ Erro ao salvar colaborador localmente: ${e.message}")
+                            Timber.w("AuthViewModel", "⚠️ Erro ao salvar colaborador localmente: ${e.message}")
                         }
                     }
                 } else if (colaborador != null && online) {
                     // ✅ NOVO: Se encontrou localmente E estiver online, verificar se há atualizações na nuvem
-                    android.util.Log.d("AuthViewModel", "🔍 Colaborador encontrado localmente. Verificando atualizações na nuvem...")
+                    Timber.d("AuthViewModel", "🔍 Colaborador encontrado localmente. Verificando atualizações na nuvem...")
                     val result = buscarColaboradorNaNuvemPorEmail(email)
                     if (result != null) {
                         val colaboradorNuvem = result.first
-                        android.util.Log.d("AuthViewModel", "✅ Colaborador encontrado na nuvem. Atualizando dados locais...")
+                        Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem. Atualizando dados locais...")
                         // Atualizar colaborador local com dados da nuvem (preservando ID local)
                         val colaboradorAtualizado = colaboradorNuvem.copy(id = colaborador.id)
                         try {
                             appRepository.atualizarColaborador(colaboradorAtualizado)
                             colaborador = colaboradorAtualizado
-                            android.util.Log.d("AuthViewModel", "✅ Colaborador atualizado com dados da nuvem")
+                            Timber.d("AuthViewModel", "✅ Colaborador atualizado com dados da nuvem")
                         } catch (e: Exception) {
-                            android.util.Log.w("AuthViewModel", "⚠️ Erro ao atualizar colaborador local: ${e.message}")
+                            Timber.w("AuthViewModel", "⚠️ Erro ao atualizar colaborador local: ${e.message}")
                         }
                     }
                 }
                 
-                android.util.Log.d("AuthViewModel", "🔍 Colaborador encontrado: ${colaborador?.nome ?: "NÃO ENCONTRADO"}")
+                Timber.d("AuthViewModel", "🔍 Colaborador encontrado: ${colaborador?.nome ?: "NÃO ENCONTRADO"}")
                 if (colaborador != null) {
-                    android.util.Log.d("AuthViewModel", "   ID: ${colaborador.id}")
-                    android.util.Log.d("AuthViewModel", "   Email: ${colaborador.email}")
-                    android.util.Log.d("AuthViewModel", "   Nível: ${colaborador.nivelAcesso}")
-                    android.util.Log.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
-                    android.util.Log.d("AuthViewModel", "   Ativo: ${colaborador.ativo}")
-                    android.util.Log.d("AuthViewModel", "   Senha temporária: ${colaborador.senhaTemporaria}")
-                    android.util.Log.d("AuthViewModel", "   Firebase UID: ${colaborador.firebaseUid}")
+                    Timber.d("AuthViewModel", "   ID: ${colaborador.id}")
+                    Timber.d("AuthViewModel", "   Email: ${colaborador.email}")
+                    Timber.d("AuthViewModel", "   Nível: ${colaborador.nivelAcesso}")
+                    Timber.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
+                    Timber.d("AuthViewModel", "   Ativo: ${colaborador.ativo}")
+                    Timber.d("AuthViewModel", "   Senha temporária: ${colaborador.senhaTemporaria}")
+                    Timber.d("AuthViewModel", "   Firebase UID: ${colaborador.firebaseUid}")
                     
                     // ✅ CORREÇÃO: Verificar se o colaborador está aprovado e ativo
                     if (!colaborador.aprovado) {
-                        android.util.Log.w("AuthViewModel", "❌ Colaborador não está aprovado")
+                        Timber.w("AuthViewModel", "❌ Colaborador não está aprovado")
                         _errorMessage.value = "Sua conta está aguardando aprovação do administrador."
                         hideLoading()
                         return@launch
                     }
                     
                     if (!colaborador.ativo) {
-                        android.util.Log.w("AuthViewModel", "❌ Colaborador está inativo")
+                        Timber.w("AuthViewModel", "❌ Colaborador está inativo")
                         _errorMessage.value = "Sua conta está inativa. Contate o administrador."
                         hideLoading()
                         return@launch
@@ -361,34 +362,34 @@ class AuthViewModel @Inject constructor(
                     val senhaHashLimpa = colaborador.senhaHash?.trim()
                     val senhaTemporariaLimpa = colaborador.senhaTemporaria?.trim()
                     
-                    android.util.Log.d("AuthViewModel", "🔍 Validação de senha OFFLINE (DETALHADA):")
-                    android.util.Log.d("AuthViewModel", "   Senha fornecida: '${senhaLimpa}' (${senhaLimpa.length} caracteres)")
-                    android.util.Log.d("AuthViewModel", "   Hash armazenado: ${if (senhaHashLimpa != null) "'$senhaHashLimpa' (${senhaHashLimpa.length} caracteres)" else "ausente"}")
-                    android.util.Log.d("AuthViewModel", "   Senha temporária: ${if (senhaTemporariaLimpa != null) "'$senhaTemporariaLimpa' (${senhaTemporariaLimpa.length} caracteres)" else "ausente"}")
-                    android.util.Log.d("AuthViewModel", "   Primeiro acesso: ${colaborador.primeiroAcesso}")
-                    android.util.Log.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
-                    android.util.Log.d("AuthViewModel", "   Firebase UID: ${if (colaborador.firebaseUid != null) "presente" else "ausente"}")
+                    Timber.d("AuthViewModel", "🔍 Validação de senha OFFLINE (DETALHADA):")
+                    Timber.d("AuthViewModel", "   Senha fornecida: '${senhaLimpa}' (${senhaLimpa.length} caracteres)")
+                    Timber.d("AuthViewModel", "   Hash armazenado: ${if (senhaHashLimpa != null) "'$senhaHashLimpa' (${senhaHashLimpa.length} caracteres)" else "ausente"}")
+                    Timber.d("AuthViewModel", "   Senha temporária: ${if (senhaTemporariaLimpa != null) "'$senhaTemporariaLimpa' (${senhaTemporariaLimpa.length} caracteres)" else "ausente"}")
+                    Timber.d("AuthViewModel", "   Primeiro acesso: ${colaborador.primeiroAcesso}")
+                    Timber.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
+                    Timber.d("AuthViewModel", "   Firebase UID: ${if (colaborador.firebaseUid != null) "presente" else "ausente"}")
                     
                     val senhaValida = when {
                         // ✅ Verificar senha pessoal (hash) - para logins após primeiro acesso
                         senhaHashLimpa != null && 
                         senhaLimpa == senhaHashLimpa -> {
-                            android.util.Log.d("AuthViewModel", "✅ Senha pessoal válida")
+                            Timber.d("AuthViewModel", "✅ Senha pessoal válida")
                             true
                         }
                         // ✅ Verificar senha temporária - para primeiro acesso
                         senhaTemporariaLimpa != null && 
                         senhaLimpa == senhaTemporariaLimpa -> {
-                            android.util.Log.d("AuthViewModel", "✅ Senha temporária válida")
+                            Timber.d("AuthViewModel", "✅ Senha temporária válida")
                             true
                         }
                         else -> {
-                            android.util.Log.d("AuthViewModel", "❌ Senha inválida")
+                            Timber.d("AuthViewModel", "❌ Senha inválida")
                             false
                         }
                     }
                     
-                    android.util.Log.d("AuthViewModel", "   Resultado final: $senhaValida")
+                    Timber.d("AuthViewModel", "   Resultado final: $senhaValida")
                     
                     // ✅ SEGURANÇA: Superadmin também deve validar senha corretamente
                     // Seguindo melhores práticas de segurança, não permitir login com qualquer senha
@@ -396,7 +397,7 @@ class AuthViewModel @Inject constructor(
                     
                     // ✅ CORREÇÃO DE SEGURANÇA: Superadmin deve ter senha válida como qualquer usuário
                     if (!senhaValida) {
-                        android.util.Log.w("AuthViewModel", "❌ Senha inválida para ${if (isSuperAdmin) "SUPERADMIN" else "usuário"}")
+                        Timber.w("AuthViewModel", "❌ Senha inválida para ${if (isSuperAdmin) "SUPERADMIN" else "usuário"}")
                         _errorMessage.value = "Senha incorreta"
                         return@launch
                     }
@@ -411,30 +412,30 @@ class AuthViewModel @Inject constructor(
                                               senhaTemporariaLimpa != null && 
                                               senhaLimpa == senhaTemporariaLimpa
                         
-                        android.util.Log.d("AuthViewModel", "🔍 Verificação de primeiro acesso:")
-                        android.util.Log.d("AuthViewModel", "   É superadmin: $isSuperAdmin")
-                        android.util.Log.d("AuthViewModel", "   Primeiro acesso flag: ${colaborador.primeiroAcesso}")
-                        android.util.Log.d("AuthViewModel", "   Senha temporária presente: ${senhaTemporariaLimpa != null}")
-                        android.util.Log.d("AuthViewModel", "   Senha corresponde à temporária: ${senhaLimpa == senhaTemporariaLimpa}")
-                        android.util.Log.d("AuthViewModel", "   É primeiro acesso: $isPrimeiroAcesso")
-                        android.util.Log.d("AuthViewModel", "   Status online: $online")
+                        Timber.d("AuthViewModel", "🔍 Verificação de primeiro acesso:")
+                        Timber.d("AuthViewModel", "   É superadmin: $isSuperAdmin")
+                        Timber.d("AuthViewModel", "   Primeiro acesso flag: ${colaborador.primeiroAcesso}")
+                        Timber.d("AuthViewModel", "   Senha temporária presente: ${senhaTemporariaLimpa != null}")
+                        Timber.d("AuthViewModel", "   Senha corresponde à temporária: ${senhaLimpa == senhaTemporariaLimpa}")
+                        Timber.d("AuthViewModel", "   É primeiro acesso: $isPrimeiroAcesso")
+                        Timber.d("AuthViewModel", "   Status online: $online")
                         
                         // ✅ CORREÇÃO: Se estiver online e for primeiro acesso, redirecionar para alteração de senha
                         // Se estiver offline, bloquear e pedir conexão
                         if (isPrimeiroAcesso) {
                             if (online) {
-                                android.util.Log.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO ONLINE - Redirecionando para alteração de senha")
+                                Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO ONLINE - Redirecionando para alteração de senha")
                                 
                                 // ✅ CORREÇÃO CRÍTICA: Iniciar sessão ANTES de redirecionar
                                 // Isso é necessário para que o ChangePasswordFragment possa acessar le colaborador
                                 val cloudInfo = buscarColaboradorNaNuvemPorEmail(colaborador.email)
                                 userSessionManager.startSession(colaborador, cloudInfo?.second ?: "empresa_001")
-                                android.util.Log.d("AuthViewModel", "✅ Sessão iniciada para primeiro acesso: ${colaborador.nome}")
+                                Timber.d("AuthViewModel", "✅ Sessão iniciada para primeiro acesso: ${colaborador.nome}")
                                 
                                 _authState.value = AuthState.FirstAccessRequired(colaborador)
                                 return@launch
                             } else {
-                                android.util.Log.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO OFFLINE - Requer conexão online")
+                                Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO OFFLINE - Requer conexão online")
                                 _errorMessage.value = "Primeiro acesso requer conexão com internet. Conecte-se e tente novamente."
                                 return@launch
                             }
@@ -450,7 +451,7 @@ class AuthViewModel @Inject constructor(
                                 senhaHash = senhaLimpa // ✅ Atualizar com senha válida para login offline
                             ).also {
                                 appRepository.atualizarColaborador(it)
-                                android.util.Log.d("AuthViewModel", "✅ SUPERADMIN: Dados atualizados (senha válida confirmada)")
+                                Timber.d("AuthViewModel", "✅ SUPERADMIN: Dados atualizados (senha válida confirmada)")
                             }
                         } else {
                             colaborador
@@ -463,7 +464,7 @@ class AuthViewModel @Inject constructor(
                         // Isso é necessário para que o Firestore permita acesso (regras de segurança)
                         // Seguindo o mesmo padrão do login Google que funciona
                         if (online) {
-                            android.util.Log.d("AuthViewModel", "🔍 Dispositivo online. Garantindo autenticação no Firebase...")
+                            Timber.d("AuthViewModel", "🔍 Dispositivo online. Garantindo autenticação no Firebase...")
                             val firebaseOutcome = garantirAutenticacaoFirebase(colaboradorFinal, senhaLimpa)
                             colaboradorFinal = firebaseOutcome.colaboradorAtualizado
                             isOnlineLogin = firebaseOutcome.autenticado
@@ -471,31 +472,31 @@ class AuthViewModel @Inject constructor(
                             // ✅ NOVO: Forçar refresh de claims se logado online com espera ativa
                             if (isOnlineLogin) {
                                 try {
-                                    android.util.Log.d("AuthViewModel", "🔄 Garantindo que o token tenha a claim 'companyId'...")
+                                    Timber.d("AuthViewModel", "🔄 Garantindo que o token tenha a claim 'companyId'...")
                                     val claimFound = waitAndVerifyCompanyIdClaim()
                                     if (claimFound) {
-                                        android.util.Log.d("AuthViewModel", "✅ Claim 'companyId' confirmada no token")
+                                        Timber.d("AuthViewModel", "✅ Claim 'companyId' confirmada no token")
                                     } else {
-                                        android.util.Log.w("AuthViewModel", "⚠️ Claim 'companyId' não encontrada após espera. Sincronização inicial pode falhar.")
+                                        Timber.w("AuthViewModel", "⚠️ Claim 'companyId' não encontrada após espera. Sincronização inicial pode falhar.")
                                     }
                                 } catch (e: Exception) {
-                                    android.util.Log.w("AuthViewModel", "⚠️ Falha ao atualizar token: ${e.message}")
+                                    Timber.w("AuthViewModel", "⚠️ Falha ao atualizar token: ${e.message}")
                                 }
                             }
                         }
                         
-                        android.util.Log.d("AuthViewModel", "✅ LOGIN ${if (isOnlineLogin) "ONLINE" else "OFFLINE"} SUCESSO! (Tipo: $tipoAutenticacao)")
+                        Timber.d("AuthViewModel", "✅ LOGIN ${if (isOnlineLogin) "ONLINE" else "OFFLINE"} SUCESSO! (Tipo: $tipoAutenticacao)")
 
-                        android.util.Log.w(
+                        Timber.w(
                             "🔍 DB_POPULATION",
                             "🚨 LOGIN ${if (isOnlineLogin) "ONLINE" else "OFFLINE"} CONCLUÍDO - REALIZANDO CONFIGURAÇÃO LOCAL (POTENCIAL POPULAÇÃO)"
                         )
                         
-                        android.util.Log.d("AuthViewModel", "🔍 Iniciando sessão para: ${colaboradorFinal.nome}")
-                        android.util.Log.d("AuthViewModel", "   ID: ${colaboradorFinal.id}")
-                        android.util.Log.d("AuthViewModel", "   Email: ${colaboradorFinal.email}")
-                        android.util.Log.d("AuthViewModel", "   Status online: $isOnlineLogin")
-                        android.util.Log.d("AuthViewModel", "   Firebase Auth autenticado: ${firebaseAuth.currentUser != null}")
+                        Timber.d("AuthViewModel", "🔍 Iniciando sessão para: ${colaboradorFinal.nome}")
+                        Timber.d("AuthViewModel", "   ID: ${colaboradorFinal.id}")
+                        Timber.d("AuthViewModel", "   Email: ${colaboradorFinal.email}")
+                        Timber.d("AuthViewModel", "   Status online: $isOnlineLogin")
+                        Timber.d("AuthViewModel", "   Firebase Auth autenticado: ${firebaseAuth.currentUser != null}")
                         
                         // ✅ NOVO: Iniciar sessão do usuário
                         // Iniciar sessão do usuário com companyId via busca na nuvem
@@ -505,9 +506,9 @@ class AuthViewModel @Inject constructor(
                         // ✅ NOVO: Verificar se a sessão foi iniciada corretamente
                         val nomeSessao = userSessionManager.getCurrentUserName()
                         val idSessao = userSessionManager.getCurrentUserId()
-                        android.util.Log.d("AuthViewModel", "🔍 Verificação da sessão:")
-                        android.util.Log.d("AuthViewModel", "   Nome na sessão: $nomeSessao")
-                        android.util.Log.d("AuthViewModel", "   ID na sessão: $idSessao")
+                        Timber.d("AuthViewModel", "🔍 Verificação da sessão:")
+                        Timber.d("AuthViewModel", "   Nome na sessão: $nomeSessao")
+                        Timber.d("AuthViewModel", "   ID na sessão: $idSessao")
                         
                         // Criar usuário local simulado
                         val localUser = LocalUser(
@@ -523,30 +524,30 @@ class AuthViewModel @Inject constructor(
                         if (isOnlineLogin) {
                             val firebaseUser = firebaseAuth.currentUser
                             if (firebaseUser == null) {
-                                android.util.Log.e("AuthViewModel", "❌ ERRO CRÍTICO: Tentando marcar como online mas Firebase Auth não está autenticado!")
-                                android.util.Log.e("AuthViewModel", "❌ Forçando como OFFLINE para evitar erros de sincronização")
+                                Timber.e("AuthViewModel", "❌ ERRO CRÍTICO: Tentando marcar como online mas Firebase Auth não está autenticado!")
+                                Timber.e("AuthViewModel", "❌ Forçando como OFFLINE para evitar erros de sincronização")
                                 isOnlineLogin = false
                             } else {
-                                android.util.Log.d("AuthViewModel", "✅ Firebase Auth confirmado autenticado - UID: ${firebaseUser.uid}")
+                                Timber.d("AuthViewModel", "✅ Firebase Auth confirmado autenticado - UID: ${firebaseUser.uid}")
                             }
                         }
                         
                         _authState.value = AuthState.Authenticated(localUser, isOnlineLogin)
-                        android.util.Log.d("AuthViewModel", "✅ Estado de autenticação definido - online: $isOnlineLogin")
-                        android.util.Log.d("AuthViewModel", "   Firebase Auth autenticado: ${firebaseAuth.currentUser != null}")
-                        android.util.Log.d("AuthViewModel", "   Firebase UID: ${firebaseAuth.currentUser?.uid ?: "não autenticado"}")
+                        Timber.d("AuthViewModel", "✅ Estado de autenticação definido - online: $isOnlineLogin")
+                        Timber.d("AuthViewModel", "   Firebase Auth autenticado: ${firebaseAuth.currentUser != null}")
+                        Timber.d("AuthViewModel", "   Firebase UID: ${firebaseAuth.currentUser?.uid ?: "não autenticado"}")
                         return@launch
                     } else {
                         _errorMessage.value = "Senha incorreta"
                     }
                 } else {
                     // ✅ NOVO: Se não encontrou localmente e está online, buscar na nuvem
-                    android.util.Log.d("AuthViewModel", "🔍 Colaborador não encontrado localmente")
-                    android.util.Log.d("AuthViewModel", "   Status online: $online")
-                    android.util.Log.d("AuthViewModel", "   Email: $email")
+                    Timber.d("AuthViewModel", "🔍 Colaborador não encontrado localmente")
+                    Timber.d("AuthViewModel", "   Status online: $online")
+                    Timber.d("AuthViewModel", "   Email: $email")
                     
                     if (online) {
-                        android.util.Log.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
+                        Timber.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
                         // Se não encontrou aprovado, tentar encontrar mesmo não aprovado para verificação
                         val result = buscarColaboradorNaNuvemPorEmail(email)
                         
@@ -554,8 +555,8 @@ class AuthViewModel @Inject constructor(
                             val colaboradorNuvem = result.first
                             val detectedCompanyId = result.second
 
-                            android.util.Log.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaboradorNuvem.nome}")
-                            android.util.Log.d("AuthViewModel", "   Aprovado: ${colaboradorNuvem.aprovado}")
+                            Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaboradorNuvem.nome}")
+                            Timber.d("AuthViewModel", "   Aprovado: ${colaboradorNuvem.aprovado}")
                             
                             // Salvar colaborador localmente para próximos logins offline
                             appRepository.inserirColaborador(colaboradorNuvem)
@@ -567,24 +568,24 @@ class AuthViewModel @Inject constructor(
                                 val senhaHashLimpa = colaboradorNuvem.senhaHash?.trim()
                                 val senhaTemporariaLimpa = colaboradorNuvem.senhaTemporaria?.trim()
                                 
-                                android.util.Log.d("AuthViewModel", "🔍 Validação de senha (DADOS DA NUVEM):")
-                                android.util.Log.d("AuthViewModel", "   Senha fornecida: '${senhaLimpa}' (${senhaLimpa.length} caracteres)")
-                                android.util.Log.d("AuthViewModel", "   Hash armazenado: ${if (senhaHashLimpa != null) "'$senhaHashLimpa' (${senhaHashLimpa.length} caracteres)" else "ausente"}")
-                                android.util.Log.d("AuthViewModel", "   Senha temporária: ${if (senhaTemporariaLimpa != null) "'$senhaTemporariaLimpa' (${senhaTemporariaLimpa.length} caracteres)" else "ausente"}")
+                                Timber.d("AuthViewModel", "🔍 Validação de senha (DADOS DA NUVEM):")
+                                Timber.d("AuthViewModel", "   Senha fornecida: '${senhaLimpa}' (${senhaLimpa.length} caracteres)")
+                                Timber.d("AuthViewModel", "   Hash armazenado: ${if (senhaHashLimpa != null) "'$senhaHashLimpa' (${senhaHashLimpa.length} caracteres)" else "ausente"}")
+                                Timber.d("AuthViewModel", "   Senha temporária: ${if (senhaTemporariaLimpa != null) "'$senhaTemporariaLimpa' (${senhaTemporariaLimpa.length} caracteres)" else "ausente"}")
                                 
                                 val senhaValida = when {
                                     // ✅ Verificar senha pessoal (hash) - para logins após primeiro acesso
                                     senhaHashLimpa != null && senhaLimpa == senhaHashLimpa -> {
-                                        android.util.Log.d("AuthViewModel", "✅ Senha pessoal válida")
+                                        Timber.d("AuthViewModel", "✅ Senha pessoal válida")
                                         true
                                     }
                                     // ✅ Verificar senha temporária - para primeiro acesso
                                     senhaTemporariaLimpa != null && senhaLimpa == senhaTemporariaLimpa -> {
-                                        android.util.Log.d("AuthViewModel", "✅ Senha temporária válida")
+                                        Timber.d("AuthViewModel", "✅ Senha temporária válida")
                                         true
                                     }
                                     else -> {
-                                        android.util.Log.d("AuthViewModel", "❌ Senha inválida")
+                                        Timber.d("AuthViewModel", "❌ Senha inválida")
                                         false
                                     }
                                 }
@@ -595,13 +596,13 @@ class AuthViewModel @Inject constructor(
                                 
                                 // ✅ CORREÇÃO DE SEGURANÇA: Superadmin deve ter senha válida como qualquer usuário
                                 if (!senhaValida) {
-                                    android.util.Log.w("AuthViewModel", "❌ Senha inválida para ${if (isSuperAdmin) "SUPERADMIN" else "usuário"} (dados da nuvem)")
+                                    Timber.w("AuthViewModel", "❌ Senha inválida para ${if (isSuperAdmin) "SUPERADMIN" else "usuário"} (dados da nuvem)")
                                     _errorMessage.value = "Senha incorreta"
                                     return@launch
                                 }
                                 
                                 if (senhaValida) {
-                                    android.util.Log.d("AuthViewModel", "✅ LOGIN COM DADOS DA NUVEM SUCESSO!")
+                                    Timber.d("AuthViewModel", "✅ LOGIN COM DADOS DA NUVEM SUCESSO!")
                                     
                                     // ✅ CORREÇÃO: Verificar se é primeiro acesso (exceto superadmin)
                                     var colaboradorNuvemAtualizado = colaboradorNuvem
@@ -611,7 +612,7 @@ class AuthViewModel @Inject constructor(
                                                           senhaLimpa == senhaTemporariaLimpa
                                     
                                     if (isPrimeiroAcesso) {
-                                        android.util.Log.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO - Redirecionando para alteração de senha")
+                                        Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO - Redirecionando para alteração de senha")
                                         userSessionManager.startSession(colaboradorNuvemAtualizado, detectedCompanyId)
                                         _authState.value = AuthState.FirstAccessRequired(colaboradorNuvemAtualizado)
                                         return@launch
@@ -642,18 +643,18 @@ class AuthViewModel @Inject constructor(
                                     if (isOnlineLogin) {
                                         val firebaseUser = firebaseAuth.currentUser
                                         if (firebaseUser == null) {
-                                            android.util.Log.e("AuthViewModel", "❌ ERRO CRÍTICO: Tentando marcar como online mas Firebase Auth não está autenticado!")
-                                            android.util.Log.e("AuthViewModel", "❌ Forçando como OFFLINE para evitar erros de sincronização")
+                                            Timber.e("AuthViewModel", "❌ ERRO CRÍTICO: Tentando marcar como online mas Firebase Auth não está autenticado!")
+                                            Timber.e("AuthViewModel", "❌ Forçando como OFFLINE para evitar erros de sincronização")
                                             isOnlineLogin = false
                                         } else {
-                                            android.util.Log.d("AuthViewModel", "✅ Firebase Auth confirmado autenticado - UID: ${firebaseUser.uid}")
+                                            Timber.d("AuthViewModel", "✅ Firebase Auth confirmado autenticado - UID: ${firebaseUser.uid}")
                                         }
                                     }
                                     
                                     _authState.value = AuthState.Authenticated(localUser, isOnlineLogin)
-                                    android.util.Log.d("AuthViewModel", "✅ Estado de autenticação definido - online: $isOnlineLogin (dados da nuvem)")
-                                    android.util.Log.d("AuthViewModel", "   Firebase Auth autenticado: ${firebaseAuth.currentUser != null}")
-                                    android.util.Log.d("AuthViewModel", "   Firebase UID: ${firebaseAuth.currentUser?.uid ?: "não autenticado"}")
+                                    Timber.d("AuthViewModel", "✅ Estado de autenticação definido - online: $isOnlineLogin (dados da nuvem)")
+                                    Timber.d("AuthViewModel", "   Firebase Auth autenticado: ${firebaseAuth.currentUser != null}")
+                                    Timber.d("AuthViewModel", "   Firebase UID: ${firebaseAuth.currentUser?.uid ?: "não autenticado"}")
                                     return@launch
                                 } else {
                                     _errorMessage.value = "Senha incorreta"
@@ -668,7 +669,7 @@ class AuthViewModel @Inject constructor(
                     
                     // ✅ SUPERADMIN: Se não existe colaborador local, criar automaticamente para rossinys@gmail.com
                     if (email == "rossinys@gmail.com") {
-                        android.util.Log.d("AuthViewModel", "🔧 Criando SUPERADMIN automaticamente (offline) para: $email")
+                        Timber.d("AuthViewModel", "🔧 Criando SUPERADMIN automaticamente (offline) para: $email")
                         val colaboradorSuperAdmin = criarSuperAdminAutomatico(email, null, senha)
                         
                         if (colaboradorSuperAdmin != null) {
@@ -693,12 +694,12 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.Unauthenticated
                 
             } catch (e: Exception) {
-                android.util.Log.e("AuthViewModel", "❌ ERRO NO LOGIN: ${e.message}", e)
+                Timber.e(e, "❌ ERRO NO LOGIN: %s", e.message)
                 _authState.value = AuthState.Unauthenticated
                 _errorMessage.value = getFirebaseErrorMessage(e)
             } finally {
                 hideLoading()
-                android.util.Log.d("AuthViewModel", "=== FIM DO LOGIN HÍBRIDO ===")
+                Timber.d("AuthViewModel", "=== FIM DO LOGIN HÍBRIDO ===")
             }
         }
     }
@@ -789,9 +790,9 @@ class AuthViewModel @Inject constructor(
             val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
             
             if (colaboradorExistente != null) {
-                android.util.Log.d("AuthViewModel", "Colaborador existente encontrado: ${colaboradorExistente.nome}")
+                Timber.d("AuthViewModel", "Colaborador existente encontrado: ${colaboradorExistente.nome}")
 
-                android.util.Log.w(
+                Timber.w(
                     "🔍 DB_POPULATION",
                     "🚨 ATUALIZANDO COLABORADOR LOCAL APÓS LOGIN ONLINE: ${colaboradorExistente.email}"
                 )
@@ -801,10 +802,10 @@ class AuthViewModel @Inject constructor(
                     // Superadmin - sempre ADMIN, aprovado, sem primeiro acesso
                     // ✅ CORREÇÃO CRÍTICA: Atualizar senhaHash com a senha atual para login offline funcionar
                     val senhaParaHash = if (senha.isNotEmpty()) senha.trim() else colaboradorExistente.senhaHash
-                    android.util.Log.d("AuthViewModel", "🔧 SUPERADMIN: Atualizando senhaHash para login offline")
-                    android.util.Log.d("AuthViewModel", "   Senha fornecida: ${if (senha.isNotEmpty()) "presente (${senha.length} caracteres)" else "ausente"}")
-                    android.util.Log.d("AuthViewModel", "   SenhaHash anterior: ${colaboradorExistente.senhaHash}")
-                    android.util.Log.d("AuthViewModel", "   SenhaHash novo: $senhaParaHash")
+                    Timber.d("AuthViewModel", "🔧 SUPERADMIN: Atualizando senhaHash para login offline")
+                    Timber.d("AuthViewModel", "   Senha fornecida: ${if (senha.isNotEmpty()) "presente (${senha.length} caracteres)" else "ausente"}")
+                    Timber.d("AuthViewModel", "   SenhaHash anterior: ${colaboradorExistente.senhaHash}")
+                    Timber.d("AuthViewModel", "   SenhaHash novo: $senhaParaHash")
                     
                     colaboradorExistente.copy(
                         nome = firebaseUser.displayName ?: colaboradorExistente.nome,
@@ -830,37 +831,37 @@ class AuthViewModel @Inject constructor(
                 // Salvar atualizações no banco local
                 appRepository.atualizarColaborador(colaboradorAtualizado)
                 
-                android.util.Log.d("AuthViewModel", "✅ Colaborador sincronizado:")
-                android.util.Log.d("AuthViewModel", "   Nome: ${colaboradorAtualizado.nome}")
-                android.util.Log.d("AuthViewModel", "   Email: ${colaboradorAtualizado.email}")
-                android.util.Log.d("AuthViewModel", "   Nível: ${colaboradorAtualizado.nivelAcesso}")
-                android.util.Log.d("AuthViewModel", "   Aprovado: ${colaboradorAtualizado.aprovado}")
-                android.util.Log.d("AuthViewModel", "   É admin especial: ${email == "rossinys@gmail.com"}")
+                Timber.d("AuthViewModel", "✅ Colaborador sincronizado:")
+                Timber.d("AuthViewModel", "   Nome: ${colaboradorAtualizado.nome}")
+                Timber.d("AuthViewModel", "   Email: ${colaboradorAtualizado.email}")
+                Timber.d("AuthViewModel", "   Nível: ${colaboradorAtualizado.nivelAcesso}")
+                Timber.d("AuthViewModel", "   Aprovado: ${colaboradorAtualizado.aprovado}")
+                Timber.d("AuthViewModel", "   É admin especial: ${email == "rossinys@gmail.com"}")
 
                 userSessionManager.startSession(colaboradorAtualizado, userSessionManager.getCurrentCompanyId()) // Assuming companyId is already set or default
                 return colaboradorAtualizado
             } else {
-                android.util.Log.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
-                android.util.Log.d("AuthViewModel", "   Email para busca: $email")
-                android.util.Log.d("AuthViewModel", "   Firebase UID: ${firebaseUser.uid}")
+                Timber.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
+                Timber.d("AuthViewModel", "   Email para busca: $email")
+                Timber.d("AuthViewModel", "   Firebase UID: ${firebaseUser.uid}")
                 
                 // ✅ CORREÇÃO CRÍTICA: Buscar colaborador na nuvem quando não encontrar localmente
                 var colaboradorNuvemResult: Pair<Colaborador, String>? = null
                 try {
                     colaboradorNuvemResult = buscarColaboradorNaNuvemPorEmail(email)
-                    android.util.Log.d("AuthViewModel", "   Resultado da busca na nuvem: ${if (colaboradorNuvemResult != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
+                    Timber.d("AuthViewModel", "   Resultado da busca na nuvem: ${if (colaboradorNuvemResult != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
                 } catch (e: Exception) {
-                    android.util.Log.e("AuthViewModel", "❌ ERRO ao buscar colaborador na nuvem: ${e.message}", e)
+                    Timber.e(e, "❌ ERRO ao buscar colaborador na nuvem: %s", e.message)
                 }
                 
                 if (colaboradorNuvemResult != null) {
                     val colaboradorNuvem = colaboradorNuvemResult.first
                     val detectedCompanyId = colaboradorNuvemResult.second
 
-                    android.util.Log.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaboradorNuvem.nome}")
-                    android.util.Log.d("AuthViewModel", "   ID: ${colaboradorNuvem.id}")
-                    android.util.Log.d("AuthViewModel", "   Email: ${colaboradorNuvem.email}")
-                    android.util.Log.d("AuthViewModel", "   Aprovado: ${colaboradorNuvem.aprovado}")
+                    Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaboradorNuvem.nome}")
+                    Timber.d("AuthViewModel", "   ID: ${colaboradorNuvem.id}")
+                    Timber.d("AuthViewModel", "   Email: ${colaboradorNuvem.email}")
+                    Timber.d("AuthViewModel", "   Aprovado: ${colaboradorNuvem.aprovado}")
                     
                     // ✅ Atualizar firebaseUid com o UID do Firebase Authentication
                     val colaboradorAtualizado = colaboradorNuvem.copy(
@@ -888,7 +889,7 @@ class AuthViewModel @Inject constructor(
                             senhaHash = senhaParaHash
                         )
                     } else if (isSecretlyFinished) {
-                        android.util.Log.d("AuthViewModel", "🩹 SELF-HEALING: Detectado que o primeiro acesso já foi feito (senha != temporária). Corrigindo flag...")
+                        Timber.d("AuthViewModel", "🩹 SELF-HEALING: Detectado que o primeiro acesso já foi feito (senha != temporária). Corrigindo flag...")
                         colaboradorAtualizado.copy(
                             primeiroAcesso = false,
                             senhaHash = senha.trim(),
@@ -899,9 +900,9 @@ class AuthViewModel @Inject constructor(
                             viewModelScope.launch {
                                 try {
                                     sincronizarColaboradorParaNuvem(it, detectedCompanyId)
-                                    android.util.Log.d("AuthViewModel", "✅ SELF-HEALING: Nuvem corrigida com sucesso")
+                                    Timber.d("AuthViewModel", "✅ SELF-HEALING: Nuvem corrigida com sucesso")
                                 } catch (e: Exception) {
-                                    android.util.Log.e("AuthViewModel", "❌ SELF-HEALING: Erro ao sincronizar correção: ${e.message}")
+                                    Timber.e("AuthViewModel", "❌ SELF-HEALING: Erro ao sincronizar correção: ${e.message}")
                                 }
                             }
                         }
@@ -914,30 +915,30 @@ class AuthViewModel @Inject constructor(
                         // Verificar se já existe por ID (pode ter sido criado com ID diferente)
                         val colaboradorExistentePorId = appRepository.obterColaboradorPorId(colaboradorFinal.id)
                         if (colaboradorExistentePorId != null) {
-                            android.util.Log.d("AuthViewModel", "Colaborador já existe localmente (por ID), atualizando...")
+                            Timber.d("AuthViewModel", "Colaborador já existe localmente (por ID), atualizando...")
                             appRepository.atualizarColaborador(colaboradorFinal)
                         } else {
                             // Verificar se existe por email (pode ter ID diferente)
                             val colaboradorExistentePorEmail = appRepository.obterColaboradorPorEmail(email)
                             if (colaboradorExistentePorEmail != null) {
-                                android.util.Log.d("AuthViewModel", "Colaborador já existe localmente (por email), atualizando com ID da nuvem...")
+                                Timber.d("AuthViewModel", "Colaborador já existe localmente (por email), atualizando com ID da nuvem...")
                                 // Atualizar o existente com os dados da nuvem, mantendo o ID local
                                 val colaboradorMesclado = colaboradorFinal.copy(id = colaboradorExistentePorEmail.id)
                                 appRepository.atualizarColaborador(colaboradorMesclado)
                                 userSessionManager.startSession(colaboradorMesclado, detectedCompanyId)
                                 return colaboradorMesclado
                             } else {
-                                android.util.Log.d("AuthViewModel", "Colaborador não existe localmente, inserindo...")
+                                Timber.d("AuthViewModel", "Colaborador não existe localmente, inserindo...")
                                 appRepository.inserirColaborador(colaboradorFinal)
                             }
                         }
                         
-                        android.util.Log.d("AuthViewModel", "✅ Colaborador salvo localmente com sucesso")
+                        Timber.d("AuthViewModel", "✅ Colaborador salvo localmente com sucesso")
                         userSessionManager.startSession(colaboradorFinal, detectedCompanyId)
                         return colaboradorFinal
                         
                     } catch (e: Exception) {
-                        android.util.Log.e("AuthViewModel", "❌ Erro ao salvar colaborador localmente: ${e.message}", e)
+                        Timber.e(e, "❌ Erro ao salvar colaborador localmente: %s", e.message)
                         // Mesmo com erro ao salvar, tentar iniciar sessão com dados da nuvem
                         userSessionManager.startSession(colaboradorFinal, detectedCompanyId)
                         return colaboradorFinal
@@ -946,24 +947,24 @@ class AuthViewModel @Inject constructor(
                 
                 // ✅ SUPERADMIN: Criar automaticamente para rossinys@gmail.com se não encontrou na nuvem
                 if (email == "rossinys@gmail.com") {
-                    android.util.Log.d("AuthViewModel", "🔧 Criando SUPERADMIN automaticamente para: $email")
+                    Timber.d("AuthViewModel", "🔧 Criando SUPERADMIN automaticamente para: $email")
                     val colaborador = criarSuperAdminAutomatico(email, firebaseUser.uid, "")
                     if (colaborador != null) {
                         return colaborador
                     }
                 }
                 
-                android.util.Log.d("AuthViewModel", "❌ Colaborador não encontrado nem localmente nem na nuvem")
+                Timber.d("AuthViewModel", "❌ Colaborador não encontrado nem localmente nem na nuvem")
                 _errorMessage.value = "Usuário não encontrado. Contate o administrador para criar sua conta."
                 _authState.value = AuthState.Unauthenticated
                 return null
             }
             
         } catch (e: Exception) {
-            android.util.Log.e("AuthViewModel", "❌ ERRO ao criar/atualizar colaborador online: ${e.message}", e)
-            android.util.Log.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
-            android.util.Log.e("AuthViewModel", "   Email: ${firebaseUser.email}")
-            android.util.Log.e("AuthViewModel", "   Firebase UID: ${firebaseUser.uid}")
+            Timber.e(e, "❌ ERRO ao criar/atualizar colaborador online: %s", e.message)
+            Timber.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
+            Timber.e("AuthViewModel", "   Email: ${firebaseUser.email}")
+            Timber.e("AuthViewModel", "   Firebase UID: ${firebaseUser.uid}")
             return null
         }
     }
@@ -997,7 +998,7 @@ class AuthViewModel @Inject constructor(
                 // Quando o login online falha, não há usuário no Firebase, mas há sessão local
                 val colaboradorId = userSessionManager.getCurrentUserId()
                 if (colaboradorId == 0L) {
-                    android.util.Log.w("AuthViewModel", "⚠️ Nenhum colaborador na sessão local (ID: $colaboradorId)")
+                    Timber.w("AuthViewModel", "⚠️ Nenhum colaborador na sessão local (ID: $colaboradorId)")
                     _errorMessage.value = "Sessão expirada. Faça login novamente."
                     _authState.value = AuthState.Unauthenticated
                     return@launch
@@ -1005,7 +1006,7 @@ class AuthViewModel @Inject constructor(
                 
                 val colaborador = appRepository.obterColaboradorPorId(colaboradorId)
                 if (colaborador == null) {
-                    android.util.Log.w("AuthViewModel", "⚠️ Colaborador não encontrado na sessão")
+                    Timber.w("AuthViewModel", "⚠️ Colaborador não encontrado na sessão")
                     _errorMessage.value = "Colaborador não encontrado. Faça login novamente."
                     _authState.value = AuthState.Unauthenticated
                     return@launch
@@ -1015,27 +1016,27 @@ class AuthViewModel @Inject constructor(
                 // Isso é necessário para atualizar a senha no Firebase
                 var firebaseUser = firebaseAuth.currentUser
                 if (firebaseUser == null && isNetworkAvailable() && colaborador.firebaseUid != null) {
-                    android.util.Log.d("AuthViewModel", "🔧 Usuário não autenticado no Firebase. Tentando autenticar...")
+                    Timber.d("AuthViewModel", "🔧 Usuário não autenticado no Firebase. Tentando autenticar...")
                     // Não podemos autenticar sem senha, então vamos criar/atualizar a conta
                     // Se a conta não existir, será criada quando o usuário fizer login novamente
-                    android.util.Log.d("AuthViewModel", "⚠️ Não é possível atualizar senha no Firebase sem autenticação")
-                    android.util.Log.d("AuthViewModel", "   A senha será atualizada localmente e no Firebase na próxima sincronização")
+                    Timber.d("AuthViewModel", "⚠️ Não é possível atualizar senha no Firebase sem autenticação")
+                    Timber.d("AuthViewModel", "   A senha será atualizada localmente e no Firebase na próxima sincronização")
                 }
                 
                 // ✅ CORREÇÃO: Atualizar senha no Firebase se estiver autenticado
                 if (isNetworkAvailable() && firebaseUser != null) {
                     try {
                         firebaseUser.updatePassword(novaSenha).await()
-                        android.util.Log.d("AuthViewModel", "✅ Senha atualizada no Firebase")
+                        Timber.d("AuthViewModel", "✅ Senha atualizada no Firebase")
                     } catch (e: Exception) {
-                        android.util.Log.w("AuthViewModel", "⚠️ Erro ao atualizar senha no Firebase: ${e.message}")
-                        android.util.Log.d("AuthViewModel", "   Continuando para atualizar senha localmente...")
+                        Timber.w("AuthViewModel", "⚠️ Erro ao atualizar senha no Firebase: ${e.message}")
+                        Timber.d("AuthViewModel", "   Continuando para atualizar senha localmente...")
                         // Não falhar se não conseguir atualizar no Firebase
                         // A senha será atualizada na próxima sincronização
                     }
                 } else {
-                    android.util.Log.d("AuthViewModel", "⚠️ Não é possível atualizar senha no Firebase (offline ou não autenticado)")
-                    android.util.Log.d("AuthViewModel", "   A senha será atualizada localmente e sincronizada depois")
+                    Timber.d("AuthViewModel", "⚠️ Não é possível atualizar senha no Firebase (offline ou não autenticado)")
+                    Timber.d("AuthViewModel", "   A senha será atualizada localmente e sincronizada depois")
                 }
                 
                 // ✅ OFFLINE-FIRST: Salvar hash da senha no banco local para login offline
@@ -1045,7 +1046,7 @@ class AuthViewModel @Inject constructor(
                 // Marcar primeiro acesso como concluído e salvar hash
                 appRepository.marcarPrimeiroAcessoConcluido(colaborador.id, senhaHash)
                 
-                android.util.Log.d("AuthViewModel", "✅ Senha atualizada e primeiro acesso concluído")
+                Timber.d("AuthViewModel", "✅ Senha atualizada e primeiro acesso concluído")
                 
                 // Atualizar colaborador local
                 val colaboradorAtualizado = colaborador.copy(
@@ -1059,18 +1060,18 @@ class AuthViewModel @Inject constructor(
                 // Isso garante que a senha alterada esteja disponível para login em app vazio
                 if (isNetworkAvailable()) {
                     try {
-                        android.util.Log.d("AuthViewModel", "🔄 Sincronizando colaborador atualizado com a nuvem após alteração de senha...")
+                        Timber.d("AuthViewModel", "🔄 Sincronizando colaborador atualizado com a nuvem após alteração de senha...")
                         sincronizarColaboradorParaNuvem(colaboradorAtualizado, userSessionManager.getCurrentCompanyId())
-                        android.util.Log.d("AuthViewModel", "✅ Colaborador sincronizado com sucesso (senha atualizada na nuvem)")
+                        Timber.d("AuthViewModel", "✅ Colaborador sincronizado com sucesso (senha atualizada na nuvem)")
                     } catch (e: Exception) {
-                        android.util.Log.w("AuthViewModel", "⚠️ Erro ao sincronizar colaborador após alteração de senha: ${e.message}")
-                        android.util.Log.d("AuthViewModel", "   A senha foi atualizada localmente, mas não foi sincronizada com a nuvem")
-                        android.util.Log.d("AuthViewModel", "   O colaborador precisará fazer login novamente para sincronizar")
+                        Timber.w("AuthViewModel", "⚠️ Erro ao sincronizar colaborador após alteração de senha: ${e.message}")
+                        Timber.d("AuthViewModel", "   A senha foi atualizada localmente, mas não foi sincronizada com a nuvem")
+                        Timber.d("AuthViewModel", "   O colaborador precisará fazer login novamente para sincronizar")
                         // Não falhar o processo se a sincronização falhar - a senha já foi atualizada localmente
                     }
                 } else {
-                    android.util.Log.d("AuthViewModel", "⚠️ Dispositivo offline - senha atualizada localmente")
-                    android.util.Log.d("AuthViewModel", "   A senha será sincronizada com a nuvem quando o dispositivo estiver online")
+                    Timber.d("AuthViewModel", "⚠️ Dispositivo offline - senha atualizada localmente")
+                    Timber.d("AuthViewModel", "   A senha será sincronizada com a nuvem quando o dispositivo estiver online")
                 }
                 
                 // Reiniciar sessão
@@ -1088,7 +1089,7 @@ class AuthViewModel @Inject constructor(
                 showMessage("Senha alterada com sucesso!")
                 
             } catch (e: Exception) {
-                android.util.Log.e("AuthViewModel", "Erro ao alterar senha: ${e.message}", e)
+                Timber.e(e, "Erro ao alterar senha: %s", e.message)
                 _errorMessage.value = "Erro ao alterar senha: ${e.message}"
             } finally {
                 hideLoading()
@@ -1123,7 +1124,7 @@ class AuthViewModel @Inject constructor(
         colaborador: Colaborador,
         senhaValidada: String
     ): FirebaseAuthOutcome {
-        android.util.Log.d("AuthViewModel", "🔐 Garantindo autenticação Firebase para ${colaborador.email}")
+        Timber.d("AuthViewModel", "🔐 Garantindo autenticação Firebase para ${colaborador.email}")
         var colaboradorAtualizado = colaborador
         
         val firebaseUser = firebaseAuth.currentUser
@@ -1151,13 +1152,13 @@ class AuthViewModel @Inject constructor(
                 colaboradorAtualizado = atualizarFirebaseUidLocalESync(colaboradorAtualizado, user.uid)
                 FirebaseAuthOutcome(true, colaboradorAtualizado)
             } else {
-                android.util.Log.w("AuthViewModel", "⚠️ SignInFirebase retornou usuário nulo")
+                Timber.w("AuthViewModel", "⚠️ SignInFirebase retornou usuário nulo")
                 FirebaseAuthOutcome(false, colaboradorAtualizado)
             }
         } catch (e: Exception) {
             val errorCode = (e as? com.google.firebase.auth.FirebaseAuthException)?.errorCode
             if (errorCode == "ERROR_USER_NOT_FOUND") {
-                android.util.Log.w("AuthViewModel", "⚠️ Usuário não existe no Firebase. Criando automaticamente: ${colaborador.email}")
+                Timber.w("AuthViewModel", "⚠️ Usuário não existe no Firebase. Criando automaticamente: ${colaborador.email}")
                 return try {
                     val createResult = firebaseAuth.createUserWithEmailAndPassword(colaborador.email, senhaValidada).await()
                     val newUser = createResult.user
@@ -1165,15 +1166,15 @@ class AuthViewModel @Inject constructor(
                         colaboradorAtualizado = atualizarFirebaseUidLocalESync(colaboradorAtualizado, newUser.uid)
                         FirebaseAuthOutcome(true, colaboradorAtualizado)
                     } else {
-                        android.util.Log.w("AuthViewModel", "⚠️ Criação do usuário retornou nulo")
+                        Timber.w("AuthViewModel", "⚠️ Criação do usuário retornou nulo")
                         FirebaseAuthOutcome(false, colaboradorAtualizado)
                     }
                 } catch (createError: Exception) {
-                    android.util.Log.e("AuthViewModel", "❌ Falha ao criar usuário no Firebase: ${createError.message}")
+                    Timber.e("AuthViewModel", "❌ Falha ao criar usuário no Firebase: ${createError.message}")
                     FirebaseAuthOutcome(false, colaboradorAtualizado)
                 }
             } else {
-                android.util.Log.w(
+                Timber.w(
                     "AuthViewModel",
                     "⚠️ Erro ao autenticar no Firebase (${errorCode ?: e.javaClass.simpleName}): ${e.message}"
                 )
@@ -1196,7 +1197,7 @@ class AuthViewModel @Inject constructor(
         runCatching {
             sincronizarColaboradorParaNuvem(colaboradorAtualizado, userSessionManager.getCurrentCompanyId()) // Assuming companyId is already set or default
         }.onFailure {
-            android.util.Log.w("AuthViewModel", "⚠️ Falha ao sincronizar colaborador com novo Firebase UID: ${it.message}")
+            Timber.w("AuthViewModel", "⚠️ Falha ao sincronizar colaborador com novo Firebase UID: ${it.message}")
         }
         
         return colaboradorAtualizado
@@ -1208,14 +1209,14 @@ class AuthViewModel @Inject constructor(
      */
     private suspend fun sincronizarColaboradorParaNuvem(colaborador: Colaborador, companyId: String) {
         try {
-            android.util.Log.d("AuthViewModel", "=== SINCRONIZANDO COLABORADOR PARA NUVEM ===")
-            android.util.Log.d("AuthViewModel", "   ID: ${colaborador.id}")
-            android.util.Log.d("AuthViewModel", "   Nome: ${colaborador.nome}")
-            android.util.Log.d("AuthViewModel", "   Email: ${colaborador.email}")
-            android.util.Log.d("AuthViewModel", "   Empresa: $companyId")
-            android.util.Log.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
-            android.util.Log.d("AuthViewModel", "   Usuário atual: ${firebaseAuth.currentUser?.uid}")
-            android.util.Log.d("AuthViewModel", "   Email do token: ${firebaseAuth.currentUser?.email}")
+            Timber.d("AuthViewModel", "=== SINCRONIZANDO COLABORADOR PARA NUVEM ===")
+            Timber.d("AuthViewModel", "   ID: ${colaborador.id}")
+            Timber.d("AuthViewModel", "   Nome: ${colaborador.nome}")
+            Timber.d("AuthViewModel", "   Email: ${colaborador.email}")
+            Timber.d("AuthViewModel", "   Empresa: $companyId")
+            Timber.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
+            Timber.d("AuthViewModel", "   Usuário atual: ${firebaseAuth.currentUser?.uid}")
+            Timber.d("AuthViewModel", "   Email do token: ${firebaseAuth.currentUser?.email}")
             
             // Estrutura: empresas/empresa_001/entidades/colaboradores/items
             val collectionRef = firestore
@@ -1225,7 +1226,7 @@ class AuthViewModel @Inject constructor(
                 .document("colaboradores")
                 .collection("items")
             
-            android.util.Log.d("AuthViewModel", "   Caminho: empresas/$companyId/entidades/colaboradores/items")
+            Timber.d("AuthViewModel", "   Caminho: empresas/$companyId/entidades/colaboradores/items")
             
             // Converter colaborador para Map
             val colaboradorMap = mutableMapOf<String, Any?>()
@@ -1250,7 +1251,7 @@ class AuthViewModel @Inject constructor(
             colaboradorMap["lastModified"] = FieldValue.serverTimestamp()
             colaboradorMap["syncTimestamp"] = FieldValue.serverTimestamp()
             
-            android.util.Log.d("AuthViewModel", "   Map criado com ${colaboradorMap.size} campos")
+            Timber.d("AuthViewModel", "   Map criado com ${colaboradorMap.size} campos")
             
             // ✅ CORREÇÃO: Usar ID apropriado para evitar conflitos
             // Prioridade: 1) Firebase UID (se disponível), 2) Email (para colaboradores pendentes sem UID), 3) ID numérico (fallback)
@@ -1263,42 +1264,42 @@ class AuthViewModel @Inject constructor(
                     colaborador.id.toString()
                 }
             
-            android.util.Log.d("AuthViewModel", "   Criando documento com ID: $documentId (ID local: ${colaborador.id}, firebaseUid: ${colaborador.firebaseUid}, email: ${colaborador.email}, aprovado: ${colaborador.aprovado})")
+            Timber.d("AuthViewModel", "   Criando documento com ID: $documentId (ID local: ${colaborador.id}, firebaseUid: ${colaborador.firebaseUid}, email: ${colaborador.email}, aprovado: ${colaborador.aprovado})")
             
             try {
                 collectionRef
                     .document(documentId)
                     .set(colaboradorMap)
                     .await()
-                android.util.Log.d("AuthViewModel", "✅ Colaborador criado no Firestore com sucesso! (ID: $documentId)")
+                Timber.d("AuthViewModel", "✅ Colaborador criado no Firestore com sucesso! (ID: $documentId)")
             } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
                 // Se o documento já existe, atualizar em vez de criar
                 if (e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.ALREADY_EXISTS) {
-                    android.util.Log.d("AuthViewModel", "⚠️ Documento já existe, atualizando...")
+                    Timber.d("AuthViewModel", "⚠️ Documento já existe, atualizando...")
                     collectionRef
                         .document(documentId)
                         .set(colaboradorMap)
                         .await()
-                    android.util.Log.d("AuthViewModel", "✅ Colaborador atualizado no Firestore")
+                    Timber.d("AuthViewModel", "✅ Colaborador atualizado no Firestore")
                 } else {
                     throw e
                 }
             }
             
-            android.util.Log.d("AuthViewModel", "✅ Colaborador sincronizado com sucesso para a nuvem")
+            Timber.d("AuthViewModel", "✅ Colaborador sincronizado com sucesso para a nuvem")
             
         } catch (e: Exception) {
-            android.util.Log.e("AuthViewModel", "❌ Erro ao sincronizar colaborador para a nuvem: ${e.message}", e)
-            android.util.Log.e("AuthViewModel", "   Tipo de erro: ${e.javaClass.simpleName}")
-            android.util.Log.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
+            Timber.e(e, "❌ Erro ao sincronizar colaborador para a nuvem: %s", e.message)
+            Timber.e("AuthViewModel", "   Tipo de erro: ${e.javaClass.simpleName}")
+            Timber.e("AuthViewModel", "   Stack trace: ${e.stackTraceToString()}")
             
             // Log específico para erros de permissão
             if (e.message?.contains("PERMISSION_DENIED") == true || 
                 e.message?.contains("permission-denied") == true) {
-                android.util.Log.e("AuthViewModel", "❌ ERRO DE PERMISSÃO: Verifique as regras do Firestore")
-                android.util.Log.e("AuthViewModel", "   Usuário autenticado: ${firebaseAuth.currentUser != null}")
-                android.util.Log.e("AuthViewModel", "   UID: ${firebaseAuth.currentUser?.uid}")
-                android.util.Log.e("AuthViewModel", "   Email: ${firebaseAuth.currentUser?.email}")
+                Timber.e("AuthViewModel", "❌ ERRO DE PERMISSÃO: Verifique as regras do Firestore")
+                Timber.e("AuthViewModel", "   Usuário autenticado: ${firebaseAuth.currentUser != null}")
+                Timber.e("AuthViewModel", "   UID: ${firebaseAuth.currentUser?.uid}")
+                Timber.e("AuthViewModel", "   Email: ${firebaseAuth.currentUser?.email}")
             }
             
             throw e
@@ -1311,8 +1312,8 @@ class AuthViewModel @Inject constructor(
      */
     private suspend fun buscarColaboradorNaNuvemPorEmail(email: String): Pair<Colaborador, String>? {
         return try {
-            android.util.Log.d("AuthViewModel", "🔍 === INICIANDO BUSCA GLOBAL NA NUVEM ===")
-            android.util.Log.d("AuthViewModel", "   Email: $email")
+            Timber.d("AuthViewModel", "🔍 === INICIANDO BUSCA GLOBAL NA NUVEM ===")
+            Timber.d("AuthViewModel", "   Email: $email")
             
             val emailNormalizado = email.trim().lowercase()
             
@@ -1322,17 +1323,17 @@ class AuthViewModel @Inject constructor(
                 .get()
                 .await()
             
-            android.util.Log.d("AuthViewModel", "   Busca 1 (email exato): ${querySnapshot.size()} documentos encontrados")
+            Timber.d("AuthViewModel", "   Busca 1 (email exato): ${querySnapshot.size()} documentos encontrados")
             var doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
             
             // 2. Se não encontrou, tentar email normalizado
             if (doc == null && email != emailNormalizado) {
-                android.util.Log.d("AuthViewModel", "   Tentando busca 2 (email normalizado): $emailNormalizado")
+                Timber.d("AuthViewModel", "   Tentando busca 2 (email normalizado): $emailNormalizado")
                 querySnapshot = firestore.collectionGroup("items")
                     .whereEqualTo("email", emailNormalizado)
                     .get()
                     .await()
-                android.util.Log.d("AuthViewModel", "   Busca 2 (email normalizado): ${querySnapshot.size()} documentos encontrados")
+                Timber.d("AuthViewModel", "   Busca 2 (email normalizado): ${querySnapshot.size()} documentos encontrados")
                 doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
             }
             
@@ -1340,33 +1341,33 @@ class AuthViewModel @Inject constructor(
             if (doc == null) {
                 val firebaseUid = firebaseAuth.currentUser?.uid
                 if (firebaseUid != null) {
-                    android.util.Log.d("AuthViewModel", "   Tentando busca 3 (firebaseUid): $firebaseUid")
+                    Timber.d("AuthViewModel", "   Tentando busca 3 (firebaseUid): $firebaseUid")
                     querySnapshot = firestore.collectionGroup("items")
                         .whereEqualTo("firebaseUid", firebaseUid)
                         .get()
                         .await()
-                    android.util.Log.d("AuthViewModel", "   Busca 3 (firebaseUid): ${querySnapshot.size()} documentos encontrados")
+                    Timber.d("AuthViewModel", "   Busca 3 (firebaseUid): ${querySnapshot.size()} documentos encontrados")
                     doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
                 }
             }
             
             // 4. Fallback para empresa_001 se collectionGroup falhar ou não encontrar
             if (doc == null) {
-                android.util.Log.d("AuthViewModel", "   Não encontrado via collectionGroup ou PERMISSION_DENIED suspeito. Tentando fallback direto na empresa_001...")
+                Timber.d("AuthViewModel", "   Não encontrado via collectionGroup ou PERMISSION_DENIED suspeito. Tentando fallback direto na empresa_001...")
                 val collectionRef = firestore.collection("empresas").document("empresa_001")
                     .collection("entidades").document("colaboradores").collection("items")
                 
                 try {
                     querySnapshot = collectionRef.whereEqualTo("email", email).get().await()
                     doc = querySnapshot.documents.firstOrNull()
-                    android.util.Log.d("AuthViewModel", "   Fallback empresa_001: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
+                    Timber.d("AuthViewModel", "   Fallback empresa_001: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
                 } catch (e: Exception) {
-                    android.util.Log.e("AuthViewModel", "   Erro no fallback empresa_001: ${e.message}")
+                    Timber.e("AuthViewModel", "   Erro no fallback empresa_001: ${e.message}")
                 }
             }
             
             if (doc == null) {
-                android.util.Log.w("AuthViewModel", "⚠️ Colaborador não encontrado na nuvem em nenhuma coleção.")
+                Timber.w("AuthViewModel", "⚠️ Colaborador não encontrado na nuvem em nenhuma coleção.")
                 return null
             }
 
@@ -1375,9 +1376,9 @@ class AuthViewModel @Inject constructor(
             val segments = path.split("/")
             val companyId = if (segments.size > 1 && segments[0] == "empresas") segments[1] else "empresa_001"
             
-            android.util.Log.d("AuthViewModel", "DIAG: Documento encontrado na nuvem!")
-            android.util.Log.d("AuthViewModel", "DIAG: Path: $path")
-            android.util.Log.d("AuthViewModel", "DIAG: Empresa identificada: $companyId")
+            Timber.d("AuthViewModel", "DIAG: Documento encontrado na nuvem!")
+            Timber.d("AuthViewModel", "DIAG: Path: $path")
+            Timber.d("AuthViewModel", "DIAG: Empresa identificada: $companyId")
             
             // VERIFICACAO DE CLAIMS
             val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
@@ -1385,10 +1386,10 @@ class AuthViewModel @Inject constructor(
                 try {
                     val tokenResult = currentUser.getIdToken(false).await()
                     val claims = tokenResult.claims
-                    android.util.Log.d("AuthViewModel", "DIAG: Claims atuais no Token: $claims")
-                    android.util.Log.d("AuthViewModel", "DIAG: ID Token CompanyId: ${claims["companyId"]}")
+                    Timber.d("AuthViewModel", "DIAG: Claims atuais no Token: $claims")
+                    Timber.d("AuthViewModel", "DIAG: ID Token CompanyId: ${claims["companyId"]}")
                 } catch (e: Exception) {
-                    android.util.Log.w("AuthViewModel", "DIAG: Nao foi possivel ler as claims: ${e.message}")
+                    Timber.w("AuthViewModel", "DIAG: Nao foi possivel ler as claims: ${e.message}")
                 }
             }
 
@@ -1425,11 +1426,11 @@ class AuthViewModel @Inject constructor(
             val colaboradorId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: 0L
             val colaborador = gson.fromJson(gson.toJson(dataConvertido), Colaborador::class.java).copy(id = colaboradorId)
             
-            android.util.Log.d("AuthViewModel", "✅ Colaborador processado: ${colaborador.nome}")
+            Timber.d("AuthViewModel", "✅ Colaborador processado: ${colaborador.nome}")
             Pair(colaborador, companyId)
             
         } catch (e: Exception) {
-            android.util.Log.e("AuthViewModel", "❌ Erro na busca na nuvem: ${e.message}")
+            Timber.e("AuthViewModel", "❌ Erro na busca na nuvem: ${e.message}")
             null
         }
     }
@@ -1447,20 +1448,20 @@ class AuthViewModel @Inject constructor(
         while (attempts < maxAttempts) {
             attempts++
             try {
-                android.util.Log.d("AuthViewModel", "DIAG: Verificando claims (Tentativa $attempts/$maxAttempts)...")
+                Timber.d("AuthViewModel", "DIAG: Verificando claims (Tentativa $attempts/$maxAttempts)...")
                 val tokenResult = user.getIdToken(true).await()
                 val claims = tokenResult.claims
                 val companyId = claims["companyId"] as? String
                 
                 if (!companyId.isNullOrBlank()) {
-                    android.util.Log.d("AuthViewModel", "DIAG: Claim 'companyId' encontrada: $companyId")
+                    Timber.d("AuthViewModel", "DIAG: Claim 'companyId' encontrada: $companyId")
                     return true
                 }
                 
-                android.util.Log.d("AuthViewModel", "DIAG: Claim 'companyId' ainda nao disponivel. Aguardando 2s...")
+                Timber.d("AuthViewModel", "DIAG: Claim 'companyId' ainda nao disponivel. Aguardando 2s...")
                 kotlinx.coroutines.delay(2000)
             } catch (e: Exception) {
-                android.util.Log.e("AuthViewModel", "DIAG: Erro ao verificar claims na tentativa $attempts: ${e.message}")
+                Timber.e("AuthViewModel", "DIAG: Erro ao verificar claims na tentativa $attempts: ${e.message}")
                 kotlinx.coroutines.delay(2000)
             }
         }
@@ -1479,7 +1480,7 @@ class AuthViewModel @Inject constructor(
         senha: String
     ): Colaborador? {
         try {
-            android.util.Log.d("AuthViewModel", "🔧 Criando SUPERADMIN: $email")
+            Timber.d("AuthViewModel", "🔧 Criando SUPERADMIN: $email")
             
             // Verificar se já existe
             val existente = appRepository.obterColaboradorPorEmail(email)
@@ -1498,7 +1499,7 @@ class AuthViewModel @Inject constructor(
                 )
                 appRepository.atualizarColaborador(atualizado)
                 userSessionManager.startSession(atualizado)
-                android.util.Log.d("AuthViewModel", "✅ SUPERADMIN atualizado: ${atualizado.nome}")
+                Timber.d("AuthViewModel", "✅ SUPERADMIN atualizado: ${atualizado.nome}")
                 return atualizado
             }
             
@@ -1522,17 +1523,17 @@ class AuthViewModel @Inject constructor(
             val colaboradorId = appRepository.inserirColaborador(novoColaborador)
             val colaboradorComId = novoColaborador.copy(id = colaboradorId)
             
-            android.util.Log.d("AuthViewModel", "✅ SUPERADMIN criado: ${colaboradorComId.nome}")
+            Timber.d("AuthViewModel", "✅ SUPERADMIN criado: ${colaboradorComId.nome}")
             
             // ✅ NOVO: Sincronizar superadmin para a nuvem imediatamente
             // Isso dispara a Cloud Function que define as Custom Claims (admin=true)
             if (isNetworkAvailable()) {
                 try {
-                    android.util.Log.d("AuthViewModel", "🔄 Sincronizando SUPERADMIN para a nuvem...")
+                    Timber.d("AuthViewModel", "🔄 Sincronizando SUPERADMIN para a nuvem...")
                     sincronizarColaboradorParaNuvem(colaboradorComId, "empresa_001")
-                    android.util.Log.d("AuthViewModel", "✅ SUPERADMIN sincronizado")
+                    Timber.d("AuthViewModel", "✅ SUPERADMIN sincronizado")
                 } catch (e: Exception) {
-                    android.util.Log.w("AuthViewModel", "⚠️ Erro ao sincronizar SUPERADMIN: ${e.message}")
+                    Timber.w("AuthViewModel", "⚠️ Erro ao sincronizar SUPERADMIN: ${e.message}")
                 }
             }
             
@@ -1541,7 +1542,7 @@ class AuthViewModel @Inject constructor(
             return colaboradorComId
             
         } catch (e: Exception) {
-            android.util.Log.e("AuthViewModel", "Erro ao criar superadmin: ${e.message}", e)
+            Timber.e(e, "Erro ao criar superadmin: %s", e.message)
             return null
         }
     }

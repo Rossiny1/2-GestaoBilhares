@@ -1,8 +1,8 @@
 # 6️⃣ ANÁLISE PARA PRODUÇÃO
 
 > **Propósito**: Checklist crítico de itens essenciais antes da publicação em produção.  
-> **Data da Análise**: 18 Dezembro 2025  
-> **Versão**: 1.0
+> **Data da Análise**: Janeiro 2025  
+> **Versão**: 2.0 (Atualizada)
 
 ---
 
@@ -10,36 +10,33 @@
 
 ### 1. ⚠️ **SEGURANÇA: Firestore Rules - Coleções LEGADO**
 
-**Status**: ❌ **PENDENTE**  
+**Status**: ⚠️ **PARCIALMENTE CORRIGIDO** (mas ainda permissivo)  
 **Prioridade**: 🔴 **CRÍTICA**
 
 **Problema Identificado**:
-As coleções LEGADO (`ciclos`, `despesas`, `acertos`, `mesas`, `rotas`, `clientes`) estão com regras muito permissivas:
+As coleções LEGADO (`ciclos`, `despesas`, `acertos`, `mesas`, `rotas`, `clientes`) têm regras com fallback permissivo:
 ```firestore
 match /ciclos/{cicloId} {
-  allow read, write: if request.auth != null; 
+  allow read: if request.auth != null; // ⚠️ Qualquer usuário autenticado
+  allow create: if request.auth != null && (
+    isAdmin() ||
+    !('companyId' in request.auth.token) || // ⚠️ Fallback permissivo
+    hasCompanyAccess(request.resource.data.empresaId)
+  );
 }
 ```
 
 **Risco**:
-- Qualquer usuário autenticado pode ler/escrever dados de qualquer empresa
-- Violação de multi-tenancy
-- Possível acesso não autorizado a dados sensíveis
+- ⚠️ Fallback permite acesso quando `companyId` não está no token (compatibilidade, mas inseguro)
+- Qualquer usuário autenticado pode ler dados de qualquer empresa se não tiver `companyId` no token
+- Violação de multi-tenancy em cenários de tokens sem claims configurados
 
 **Ação Necessária**:
-Restringir acesso baseado em `companyId` ou `rotaId` do usuário:
-```firestore
-match /ciclos/{cicloId} {
-  allow read: if request.auth != null && (
-    isAdmin() || 
-    belongsToCompany(resource.data.empresaId) ||
-    resource.data.rotaId in request.auth.token.rotasAtribuidas
-  );
-  allow write: if isAdmin() || isCompanyAdmin(resource.data.empresaId);
-}
-```
+1. **URGENTE**: Configurar Custom Claims no Firebase Auth para todos os usuários (`companyId`, `rotasAtribuidas`).
+2. **URGENTE**: Remover fallback permissivo das regras após configurar claims.
+3. **Recomendado**: Migrar dados das coleções LEGADO para estrutura multi-tenancy (`empresas/{empresaId}/entidades/`).
 
-**Impacto**: 🔴 **ALTO** - Vulnerabilidade de segurança crítica
+**Impacto**: 🔴 **CRÍTICO** - Vulnerabilidade de segurança que permite acesso não autorizado a dados
 
 ---
 
@@ -52,19 +49,22 @@ match /ciclos/{cicloId} {
 
 **Situação Atual**:
 - ✅ Timber configurado corretamente (DebugTree em debug, CrashlyticsTree em release)
-- ⚠️ Ainda existem imports de `android.util.Log` em vários arquivos
-- ⚠️ Alguns arquivos podem ter uso direto de `Log.d()`, `Log.e()`, etc.
+- ⚠️ **~10 arquivos** ainda usam `android.util.Log` diretamente (não são apenas imports não utilizados)
+- ⚠️ Uso real de `Log.d()`, `Log.e()`, `Log.w()` em código de produção
 
-**Arquivos com Imports de Log** (10+ arquivos):
-- `ui/src/main/java/com/example/gestaobilhares/ui/clients/ClientRegisterFragment.kt`
-- `ui/src/main/java/com/example/gestaobilhares/ui/settlement/SettlementSummaryDialog.kt`
-- `ui/src/main/java/com/example/gestaobilhares/ui/settlement/SettlementDetailFragment.kt`
-- E outros...
+**Arquivos com Uso Real de Log** (confirmados):
+- `sync/src/main/java/com/example/gestaobilhares/sync/SyncRepository.kt` - Usa `Log.d()`, `Log.w()`, `Log.e()`
+- `data/src/main/java/com/example/gestaobilhares/data/repository/domain/RotaRepository.kt` - Usa `Log.d()`
+- `data/src/main/java/com/example/gestaobilhares/data/repository/domain/MesaRepository.kt` - Usa `Log.w()`
+- `core/src/main/java/com/example/gestaobilhares/utils/SignatureMetadataCollector.kt` - Usa `Log.d()`, `Log.e()`
+- `app/src/main/java/com/example/gestaobilhares/MainActivity.kt` - Usa `Log.d()`, `Log.e()`, `Log.w()`
+- E outros arquivos em `core/utils/` e `data/repository/domain/`
 
 **Ação Necessária**:
-1. Verificar se há uso direto de `android.util.Log` (não apenas imports)
-2. Substituir todos os usos por `Timber.d()`, `Timber.e()`, etc.
-3. Remover imports não utilizados
+1. Substituir todos os `android.util.Log.*` por `Timber.*` correspondente
+2. Remover imports não utilizados de `android.util.Log`
+3. Garantir que logs não exponham dados sensíveis (CPF, valores, senhas)
+4. Usar script `scripts/substituir-logs-por-timber.ps1` se disponível
 
 **Impacto**: 🟡 **MÉDIO** - Pode expor informações sensíveis em logs de produção
 
@@ -72,35 +72,44 @@ match /ciclos/{cicloId} {
 
 ### 3. 🔐 **Segurança: EncryptedSharedPreferences para Tokens**
 
-**Status**: ⚠️ **NÃO IMPLEMENTADO**  
-**Prioridade**: 🟡 **MÉDIA**
+**Status**: ✅ **IMPLEMENTADO E FUNCIONANDO**  
+**Prioridade**: ✅ **CONCLUÍDO**
 
 **Situação Atual**:
-- Tokens e credenciais podem estar armazenados em `SharedPreferences` padrão
-- Dados sensíveis podem ser acessíveis em dispositivos comprometidos
+- ✅ `SecurePreferencesHelper` implementado com criptografia AES256_GCM
+- ✅ `UserSessionManager` usa `SecurePreferencesHelper.getSecurePreferences()` 
+- ✅ Migração automática de dados antigos implementada
+- ✅ Dependência `androidx.security:security-crypto:1.1.0-alpha06` configurada
 
-**Ação Necessária**:
-Implementar `EncryptedSharedPreferences` para:
-- Tokens de autenticação Firebase
-- Senhas temporárias
-- Dados sensíveis de sessão
+**Arquivos Implementados**:
+- ✅ `core/src/main/java/com/example/gestaobilhares/utils/SecurePreferencesHelper.kt` - Implementado
+- ✅ `core/src/main/java/com/example/gestaobilhares/utils/UserSessionManager.kt` - Usa EncryptedSharedPreferences
 
-**Impacto**: 🟡 **MÉDIO** - Melhora segurança em dispositivos comprometidos
+**Impacto**: ✅ **CONCLUÍDO** - Dados sensíveis agora estão criptografados
 
 ---
 
-### 4. 📱 **Política de Privacidade e Termos de Uso**
+### 4. 📦 **Distribuição via Firebase App Distribution**
 
-**Status**: ❓ **NÃO VERIFICADO**  
-**Prioridade**: 🟡 **MÉDIA**
+**Status**: ✅ **CONFIGURADO**  
+**Prioridade**: ✅ **CONCLUÍDO**
 
-**Ação Necessária**:
-- Criar política de privacidade (LGPD compliance)
-- Criar termos de uso
-- Adicionar links na Play Store e dentro do app
-- Verificar compliance com LGPD (Lei Geral de Proteção de Dados)
+**Situação Atual**:
+- ✅ Firebase App Distribution configurado no `build.gradle.kts`
+- ✅ Plugin `com.google.firebase.appdistribution` aplicado
+- ✅ Configuração de grupos de testadores no Firebase Console
+- ✅ Distribuição interna para até 10 usuários
 
-**Impacto**: 🟡 **MÉDIO** - Requisito legal para publicação na Play Store
+**Nota**: Como o app é para uso interno (máximo 10 pessoas) e não será publicado na Play Store, não são necessários:
+- ❌ Política de Privacidade (LGPD não se aplica para uso interno)
+- ❌ Termos de Uso públicos
+- ❌ Compliance com requisitos da Play Store
+
+**Processo de Distribuição**:
+1. Build release: `./gradlew assembleRelease`
+2. Upload: `firebase appdistribution:distribute app-release.apk --groups testers`
+3. Testadores recebem link via email
+4. Instalação direta no dispositivo Android
 
 ---
 
@@ -134,58 +143,85 @@ Implementar `EncryptedSharedPreferences` para:
 
 ## 📊 RESUMO EXECUTIVO
 
-### Status Geral: 🟡 **QUASE PRONTO**
+### Status Geral: 🟡 **QUASE PRONTO - REQUER CORREÇÕES CRÍTICAS**
 
-| Categoria | Status | Bloqueadores |
-|-----------|--------|--------------|
-| **Segurança** | 🟡 | 1 crítico (Firestore Rules) |
-| **Build** | ✅ | Nenhum |
-| **Qualidade** | ✅ | Nenhum |
-| **Monitoramento** | ✅ | Nenhum |
-| **Legal** | 🟡 | Política de Privacidade |
+| Categoria | Status | Bloqueadores | Prioridade |
+|-----------|--------|--------------|------------|
+| **Segurança** | 🔴 | 1 crítico (Firestore Rules). EncryptedSharedPreferences já implementado. | 🔴 CRÍTICA |
+| **Build** | ✅ | Nenhum | - |
+| **Qualidade** | 🟡 | Logs de debug (20+ arquivos) | 🟡 MÉDIA |
+| **Monitoramento** | ✅ | Nenhum | - |
+| **Distribuição** | ✅ | Firebase App Distribution configurado | ✅ CONCLUÍDO |
 
 ### Próximos Passos Críticos:
 
-1. **URGENTE**: Restringir Firestore Rules das coleções LEGADO
-2. **IMPORTANTE**: Auditar e remover logs de debug restantes
-3. **RECOMENDADO**: Implementar EncryptedSharedPreferences
-4. **LEGAL**: Criar Política de Privacidade e Termos de Uso
+1. **URGENTE**: Restringir Firestore Rules das coleções LEGADO (configurar Custom Claims e remover fallback)
+2. **IMPORTANTE**: Substituir `android.util.Log` por Timber nos ~10 arquivos restantes
+3. **DISTRIBUIÇÃO**: Configurar grupos de testadores no Firebase App Distribution (se ainda não feito)
 
 ---
 
 ## 🎯 RECOMENDAÇÃO FINAL
 
-**NÃO PUBLICAR EM PRODUÇÃO** até resolver:
-1. ✅ Restringir Firestore Rules (CRÍTICO)
-2. ✅ Auditar logs de debug (IMPORTANTE)
+**❌ NÃO PUBLICAR EM PRODUÇÃO** até resolver:
+1. 🔴 **CRÍTICO**: Restringir Firestore Rules das coleções LEGADO (configurar Custom Claims e remover fallback permissivo)
 
-**Pode publicar em BETA/TESTING** após:
-- Resolver Firestore Rules
-- Verificar logs críticos
+**✅ Pode publicar em BETA/TESTING** após:
+- Resolver Firestore Rules (configurar Custom Claims) - **~1-2 horas via IA**
+- Substituir `android.util.Log` por Timber nos arquivos críticos (~10 arquivos) - **~30-60 min via IA**
 
-**Pronto para produção completa** após:
-- Todos os itens acima
-- Política de Privacidade
-- EncryptedSharedPreferences (opcional, mas recomendado)
+**✅ Pronto para produção completa** após:
+- Todos os itens acima (**Tempo total: 1.5-3 horas via IA**)
+- Testes de segurança realizados
+- Logs de debug removidos/substituídos (~10 arquivos)
+- Grupos de testadores configurados no Firebase App Distribution (se necessário)
+
+**Nota**: Como o app é para uso interno (máximo 10 pessoas) via Firebase App Distribution, não são necessários documentos legais (LGPD, Política de Privacidade, Termos de Uso).
+
+**⚡ Vantagem da Implementação via IA:**
+- As correções críticas podem ser concluídas em **1.5-3 horas** ao invés de semanas
+- Trabalho contínuo sem pausas
+- Refatoração consistente e paralela em múltiplos arquivos
 
 ---
 
-## 📅 TIMELINE SUGERIDA
+## 📅 TIMELINE SUGERIDA (Implementação via IA)
 
-### Semana 1 (Crítico)
-- [ ] Restringir Firestore Rules das coleções LEGADO
-- [ ] Testar regras em ambiente de staging
-- [ ] Deploy das novas regras
+> **Nota**: Os tempos abaixo são estimativas para implementação via IA assistente, não para programador humano. A IA pode trabalhar de forma contínua e paralela, reduzindo significativamente o tempo total.
 
-### Semana 2 (Importante)
-- [ ] Auditar e remover logs de debug
-- [ ] Testes de segurança básicos
-- [ ] Verificação final de build release
+### Fase 1: Segurança Crítica (CRÍTICO - BLOQUEADOR)
+**Tempo Estimado: 1-2 horas**
 
-### Semana 3 (Recomendado)
-- [ ] Implementar EncryptedSharedPreferences
-- [ ] Criar Política de Privacidade
-- [ ] Preparar documentação para Play Store
+- [ ] **30-45 min**: Configurar Custom Claims no Firebase Auth para todos os usuários (`companyId`, `rotasAtribuidas`)
+  - A IA pode gerar script/instruções para configurar via Firebase Console ou Admin SDK
+- [ ] **15-30 min**: Atualizar Firestore Rules removendo fallback permissivo
+  - A IA atualiza o arquivo `firestore.rules` diretamente
+- [ ] **15-30 min**: Testar regras e validar (deploy e testes básicos)
+  - A IA pode gerar testes ou instruções de validação
+
+### Fase 2: Qualidade de Código (IMPORTANTE)
+**Tempo Estimado: 30-60 minutos**
+
+- [ ] **20-30 min**: Substituir `android.util.Log` por Timber nos ~10 arquivos críticos
+  - A IA pode fazer todas as substituições em paralelo
+- [ ] **10-15 min**: Remover imports não utilizados de `android.util.Log`
+- [ ] **10-15 min**: Validar que nenhum dado sensível está sendo logado
+  - A IA pode fazer busca e análise automática
+
+### Fase 3: Distribuição (OPCIONAL - Se necessário)
+**Tempo Estimado: 15-30 minutos**
+
+- [ ] **15-30 min**: Configurar grupos de testadores no Firebase App Distribution (se ainda não feito)
+  - Pode ser feito manualmente no console ou via script gerado pela IA
+
+### ⏱️ TEMPO TOTAL ESTIMADO: 1.5 - 3 horas
+
+**Vantagens da implementação via IA:**
+- ✅ Trabalho contínuo sem pausas
+- ✅ Múltiplas tarefas podem ser feitas em paralelo
+- ✅ Sem erros de digitação ou esquecimento
+- ✅ Refatoração consistente em todos os arquivos
+- ✅ Documentação atualizada automaticamente
 
 ---
 

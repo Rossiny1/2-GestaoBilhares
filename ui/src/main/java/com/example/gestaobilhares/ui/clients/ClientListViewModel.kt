@@ -11,7 +11,7 @@ import com.example.gestaobilhares.data.entities.Despesa
 import com.example.gestaobilhares.data.repository.AppRepository
 // TODO: PaginationManager não existe - comentar referências temporariamente
 // import com.example.gestaobilhares.core.utils.PaginationManager
-import android.util.Log
+import timber.log.Timber
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -129,9 +129,9 @@ class ClientListViewModel @Inject constructor(
                     // Encontrar a rota atualizada na lista
                     val rotaAtualizada = rotasResumo.find { it.rota.id == rotaAtual.id }?.rota
                     if (rotaAtualizada != null && rotaAtualizada != rotaAtual) {
-                        android.util.Log.d("ClientListViewModel", "🔄 Rota sincronizada automaticamente: ${rotaAtualizada.nome}")
-                        android.util.Log.d("ClientListViewModel", "   Status: ${rotaAtualizada.statusAtual}")
-                        android.util.Log.d("ClientListViewModel", "   Ciclo: ${rotaAtualizada.cicloAcertoAtual}")
+                        Timber.d("ClientListViewModel", "🔄 Rota sincronizada automaticamente: ${rotaAtualizada.nome}")
+                        Timber.d("ClientListViewModel", "   Status: ${rotaAtualizada.statusAtual}")
+                        Timber.d("ClientListViewModel", "   Ciclo: ${rotaAtualizada.cicloAcertoAtual}")
                         
                         _rotaInfo.value = rotaAtualizada
                         carregarCicloAcertoReal(rotaAtualizada)
@@ -151,7 +151,7 @@ class ClientListViewModel @Inject constructor(
                 // Observar ciclo ativo da rota
                 flowOf(appRepository.buscarCicloAtualPorRota(rotaId))
             }.collect { ciclo ->
-                android.util.Log.d("DEBUG_DIAG", "[CARD] cicloAtivo retornado: id=${ciclo?.id}, status=${ciclo?.status}, dataInicio=${ciclo?.dataInicio}, dataFim=${ciclo?.dataFim}")
+                Timber.d("DEBUG_DIAG", "[CARD] cicloAtivo retornado: id=${ciclo?.id}, status=${ciclo?.status}, dataInicio=${ciclo?.dataInicio}, dataFim=${ciclo?.dataFim}")
                 _cicloAtivo.value = ciclo
             }
         }
@@ -235,7 +235,7 @@ class ClientListViewModel @Inject constructor(
                     carregarStatusRota()
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao carregar rota: ${e.message}", e)
+                Timber.e("ClientListViewModel", "Erro ao carregar rota: ${e.message}", e)
                 showError("Erro ao carregar informações da rota: ${e.message}", e)
                 // Definir valores padrão para evitar crash
                 _rotaInfo.value = Rota(id = rotaId, nome = "Rota $rotaId", ativa = true)
@@ -251,7 +251,7 @@ class ClientListViewModel @Inject constructor(
      * ✅ FASE 2D: Carrega clientes com query otimizada (performance melhorada)
      */
     fun carregarClientesOtimizado(rotaId: Long) {
-        android.util.Log.d("ClientListVM", "carregarClientesOtimizado chamado para rotaId: $rotaId")
+        Timber.d("ClientListVM", "carregarClientesOtimizado chamado para rotaId: $rotaId")
         
         // Atualizar o rotaId no fluxo se necessário
         if (_rotaIdFlow.value != rotaId) {
@@ -263,17 +263,17 @@ class ClientListViewModel @Inject constructor(
                 showLoading()
                 
                 // ✅ FASE 2D: Usar query otimizada com débito atual calculado
-                android.util.Log.d("ClientListViewModel", "📊 Buscando clientes com débito atual para rotaId: $rotaId")
+                Timber.d("ClientListViewModel", "📊 Buscando clientes com débito atual para rotaId: $rotaId")
                 val clientes = appRepository.obterClientesPorRotaComDebitoAtual(rotaId).first()
-                android.util.Log.d("ClientListViewModel", "✅ Clientes recebidos: ${clientes.size} clientes")
+                Timber.d("ClientListViewModel", "✅ Clientes recebidos: ${clientes.size} clientes")
                 
                 // ✅ DEBUG: Log detalhado do débito de cada cliente
                 clientes.forEach { cliente ->
-                    android.util.Log.d("ClientListViewModel", "   Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
+                    Timber.d("ClientListViewModel", "   Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
                 }
                 
                 _clientesTodos.value = clientes
-                android.util.Log.d("ClientListViewModel", "📋 Aplicando filtros combinados...")
+                Timber.d("ClientListViewModel", "📋 Aplicando filtros combinados...")
                 aplicarFiltrosCombinados() // Aplicar filtros após carregar
                 
                 // ✅ NOVO: Calcular dados do card de progresso
@@ -283,15 +283,15 @@ class ClientListViewModel @Inject constructor(
                 appRepository.obterClientesPorRotaComDebitoAtual(rotaId).collect { clientesAtualizados ->
                     val clientesAnteriores = _clientesTodos.value
                     if (clientesAtualizados != clientesAnteriores) {
-                        android.util.Log.d("ClientListViewModel", "🔄 Clientes atualizados detectados: ${clientesAtualizados.size} clientes")
+                        Timber.d("ClientListViewModel", "🔄 Clientes atualizados detectados: ${clientesAtualizados.size} clientes")
                         
                         // ✅ DEBUG: Log detalhado do débito de cada cliente atualizado
                         clientesAtualizados.forEach { cliente ->
-                            android.util.Log.d("ClientListViewModel", "   Cliente atualizado: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
+                            Timber.d("ClientListViewModel", "   Cliente atualizado: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
                         }
                         
                         _clientesTodos.value = clientesAtualizados
-                        android.util.Log.d("ClientListViewModel", "📋 Reaplicando filtros após atualização de clientes...")
+                        Timber.d("ClientListViewModel", "📋 Reaplicando filtros após atualização de clientes...")
                         aplicarFiltrosCombinados()
                         calcularDadosProgressoCiclo(clientesAtualizados)
                     }
@@ -314,7 +314,7 @@ class ClientListViewModel @Inject constructor(
      * ✅ CORREÇÃO: Usar query com débito atual para garantir dados atualizados imediatamente
      */
     fun carregarClientes(rotaId: Long) {
-        android.util.Log.d("ClientListVM", "carregarClientes chamado para rotaId: $rotaId")
+        Timber.d("ClientListVM", "carregarClientes chamado para rotaId: $rotaId")
         
         // Atualizar o rotaId no fluxo se necessário
         if (_rotaIdFlow.value != rotaId) {
@@ -334,7 +334,7 @@ class ClientListViewModel @Inject constructor(
                 // ✅ NOVO: Calcular dados do card de progresso
                 calcularDadosProgressoCiclo(clientes)
                 
-                android.util.Log.d("ClientListViewModel", "✅ Clientes carregados imediatamente: ${clientes.size} clientes")
+                Timber.d("ClientListViewModel", "✅ Clientes carregados imediatamente: ${clientes.size} clientes")
                 
                 // ✅ NOVO: Continuar observando mudanças com query otimizada
                 appRepository.obterClientesPorRotaComDebitoAtual(rotaId).collect { clientesAtualizados ->
@@ -342,7 +342,7 @@ class ClientListViewModel @Inject constructor(
                         _clientesTodos.value = clientesAtualizados
                         aplicarFiltrosCombinados()
                         calcularDadosProgressoCiclo(clientesAtualizados)
-                        android.util.Log.d("ClientListViewModel", "🔄 Clientes atualizados: ${clientesAtualizados.size} clientes")
+                        Timber.d("ClientListViewModel", "🔄 Clientes atualizados: ${clientesAtualizados.size} clientes")
                     }
                 }
             } catch (e: Exception) {
@@ -361,7 +361,7 @@ class ClientListViewModel @Inject constructor(
      * ✅ FASE 2D: Teste de performance - compara query original vs otimizada
      */
     fun testarPerformanceQueries(rotaId: Long) {
-        android.util.Log.d("ClientListVM", "testarPerformanceQueries iniciado para rotaId: $rotaId")
+        Timber.d("ClientListVM", "testarPerformanceQueries iniciado para rotaId: $rotaId")
         
         viewModelScope.launch {
             try {
@@ -376,14 +376,14 @@ class ClientListViewModel @Inject constructor(
                 val tempoOtimizada = System.currentTimeMillis() - inicioOtimizada
                 
                 // Log dos resultados
-                android.util.Log.d("ClientListVM", "=== TESTE DE PERFORMANCE ===")
-                android.util.Log.d("ClientListVM", "Query Original: ${tempoOriginal}ms - ${clientesOriginal.size} clientes")
-                android.util.Log.d("ClientListVM", "Query Otimizada: ${tempoOtimizada}ms - ${clientesOtimizada.size} clientes")
-                android.util.Log.d("ClientListVM", "Melhoria: ${((tempoOriginal - tempoOtimizada).toDouble() / tempoOriginal * 100).toInt()}%")
-                android.util.Log.d("ClientListVM", "==========================")
+                Timber.d("ClientListVM", "=== TESTE DE PERFORMANCE ===")
+                Timber.d("ClientListVM", "Query Original: ${tempoOriginal}ms - ${clientesOriginal.size} clientes")
+                Timber.d("ClientListVM", "Query Otimizada: ${tempoOtimizada}ms - ${clientesOtimizada.size} clientes")
+                Timber.d("ClientListVM", "Melhoria: ${((tempoOriginal - tempoOtimizada).toDouble() / tempoOriginal * 100).toInt()}%")
+                Timber.d("ClientListVM", "==========================")
                 
             } catch (e: Exception) {
-                android.util.Log.d("ClientListVM", "Erro no teste de performance: ${e.message}")
+                Timber.d("ClientListVM", "Erro no teste de performance: ${e.message}")
             }
         }
     }
@@ -395,7 +395,7 @@ class ClientListViewModel @Inject constructor(
      * ✅ FASE 2D: Força recarregamento com query otimizada
      */
     fun forcarRecarregamentoClientesOtimizado(rotaId: Long) {
-        android.util.Log.d("ClientListVM", "forcarRecarregamentoClientesOtimizado chamado para rotaId: $rotaId")
+        Timber.d("ClientListVM", "forcarRecarregamentoClientesOtimizado chamado para rotaId: $rotaId")
         
         viewModelScope.launch {
             try {
@@ -405,15 +405,15 @@ class ClientListViewModel @Inject constructor(
                 aplicarFiltrosCombinados()
                 calcularDadosProgressoCiclo(clientes)
                 
-                android.util.Log.d("ClientListViewModel", "✅ Dados otimizados recarregados: ${clientes.size} clientes")
+                Timber.d("ClientListViewModel", "✅ Dados otimizados recarregados: ${clientes.size} clientes")
             } catch (e: Exception) {
-                android.util.Log.d("ClientListVM", "Erro ao forçar recarregamento otimizado: ${e.message}")
+                Timber.d("ClientListVM", "Erro ao forçar recarregamento otimizado: ${e.message}")
             }
         }
     }
 
     fun forcarRecarregamentoClientes(rotaId: Long) {
-        android.util.Log.d("ClientListVM", "forcarRecarregamentoClientes chamado para rotaId: $rotaId")
+        Timber.d("ClientListVM", "forcarRecarregamentoClientes chamado para rotaId: $rotaId")
         
         viewModelScope.launch {
             try {
@@ -423,9 +423,9 @@ class ClientListViewModel @Inject constructor(
                 aplicarFiltrosCombinados()
                 calcularDadosProgressoCiclo(clientes)
                 
-                android.util.Log.d("ClientListViewModel", "✅ Dados forçados recarregados: ${clientes.size} clientes")
+                Timber.d("ClientListViewModel", "✅ Dados forçados recarregados: ${clientes.size} clientes")
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao forçar recarregamento: ${e.message}", e)
+                Timber.e("ClientListViewModel", "Erro ao forçar recarregamento: ${e.message}", e)
                 showError("Erro ao recarregar clientes: ${e.message}", e)
             }
         }
@@ -460,13 +460,13 @@ class ClientListViewModel @Inject constructor(
                 // ✅ NOVO: Verificar se há ciclo anterior em andamento e finalizá-lo antes de criar novo
                 val cicloAnterior = appRepository.buscarCicloAtivo(rota.id)
                 if (cicloAnterior != null && cicloAnterior.status == StatusCicloAcerto.EM_ANDAMENTO) {
-                    android.util.Log.d("ClientListViewModel", "🔄 Finalizando ciclo anterior ${cicloAnterior.numeroCiclo}/${cicloAnterior.ano} (id=${cicloAnterior.id}) antes de iniciar novo ciclo")
+                    Timber.d("ClientListViewModel", "🔄 Finalizando ciclo anterior ${cicloAnterior.numeroCiclo}/${cicloAnterior.ano} (id=${cicloAnterior.id}) antes de iniciar novo ciclo")
                     try {
                         // Finalizar o ciclo anterior (isso também finalizará as metas automaticamente)
                         appRepository.finalizarCicloAtualComDados(rota.id)
-                        android.util.Log.d("ClientListViewModel", "✅ Ciclo anterior finalizado com sucesso")
+                        Timber.d("ClientListViewModel", "✅ Ciclo anterior finalizado com sucesso")
                     } catch (e: Exception) {
-                        android.util.Log.e("ClientListViewModel", "❌ Erro ao finalizar ciclo anterior: ${e.message}", e)
+                        Timber.e("ClientListViewModel", "❌ Erro ao finalizar ciclo anterior: ${e.message}", e)
                         // Continuar mesmo se houver erro na finalização
                     }
                 }
@@ -491,7 +491,7 @@ class ClientListViewModel @Inject constructor(
                 )
                 
                 val cicloId = appRepository.inserirCicloAcerto(novoCiclo)
-                android.util.Log.d("ClientListViewModel", "✅ Novo ciclo ${proximoCiclo}/${anoAtual} criado com ID=$cicloId")
+                Timber.d("ClientListViewModel", "✅ Novo ciclo ${proximoCiclo}/${anoAtual} criado com ID=$cicloId")
                 
                 // Atualizar estado
                 _cicloAcerto.value = proximoCiclo
@@ -514,10 +514,10 @@ class ClientListViewModel @Inject constructor(
                     if (rotaAtualizada != null) {
                         // Fazer uma atualização trivial para disparar o Flow
                         appRepository.atualizarRota(rotaAtualizada.copy(dataAtualizacao = System.currentTimeMillis()))
-                        android.util.Log.d("ClientListViewModel", "✅ Rota atualizada para disparar Flow - UI será atualizada imediatamente")
+                        Timber.d("ClientListViewModel", "✅ Rota atualizada para disparar Flow - UI será atualizada imediatamente")
                     }
                 } catch (e: Exception) {
-                    android.util.Log.w(
+                    Timber.w(
                         "ClientListViewModel",
                         "Falha ao atualizar Rota no início do ciclo: ${e.message}"
                     )
@@ -539,12 +539,12 @@ class ClientListViewModel @Inject constructor(
                 
                 // ✅ NOVO: Notificar que um novo ciclo foi iniciado para atualizar tela de metas
                 // Isso fará com que o card de metas seja zerado e fique disponível para criar novas metas
-                android.util.Log.d("ClientListViewModel", "📢 Notificando início de novo ciclo para atualização de metas")
+                Timber.d("ClientListViewModel", "📢 Notificando início de novo ciclo para atualização de metas")
                 // A atualização da rota já dispara os Flows, então as metas serão recarregadas automaticamente
                 
                 // ✅ CORREÇÃO: Recarregar clientes IMEDIATAMENTE após iniciar novo acerto
                 // Isso garante que os clientes apareçam corretamente nas abas (em aberto/pago)
-                android.util.Log.d("ClientListViewModel", "🔄 Recarregando clientes imediatamente após iniciar novo acerto")
+                Timber.d("ClientListViewModel", "🔄 Recarregando clientes imediatamente após iniciar novo acerto")
                 carregarClientes(rota.id)
                 
             } catch (e: Exception) {
@@ -567,7 +567,7 @@ class ClientListViewModel @Inject constructor(
                 val cicloAtual = _cicloAcertoEntity.value ?: return@launch
                 val rota = _rotaInfo.value ?: return@launch
                 
-                android.util.Log.d("ClientListViewModel", "Iniciando finalização da rota ${rota.nome} - Ciclo ${cicloAtual.numeroCiclo}")
+                Timber.d("ClientListViewModel", "Iniciando finalização da rota ${rota.nome} - Ciclo ${cicloAtual.numeroCiclo}")
                 
                 // ✅ Centralizar a lógica de finalização completa (consolidação + status FINALIZADO)
                 appRepository.finalizarCicloAtualComDados(rota.id)
@@ -581,24 +581,24 @@ class ClientListViewModel @Inject constructor(
                 _statusCiclo.value = StatusCicloAcerto.FINALIZADO
                 _statusRota.value = StatusRota.FINALIZADA
                 
-                android.util.Log.d("ClientListViewModel", "Ciclo finalizado com sucesso via repositório")
-                android.util.Log.d("ClientListViewModel", "Status da rota atualizado para: ${_statusRota.value}")
+                Timber.d("ClientListViewModel", "Ciclo finalizado com sucesso via repositório")
+                Timber.d("ClientListViewModel", "Status da rota atualizado para: ${_statusRota.value}")
                 
                 // ✅ CORREÇÃO: Pequeno delay para garantir que o banco foi atualizado
-                android.util.Log.d("ClientListViewModel", "⏳ Aguardando 300ms para garantir atualização do banco...")
+                Timber.d("ClientListViewModel", "⏳ Aguardando 300ms para garantir atualização do banco...")
                 kotlinx.coroutines.delay(300)
-                android.util.Log.d("ClientListViewModel", "✅ Delay concluído, recarregando clientes...")
+                Timber.d("ClientListViewModel", "✅ Delay concluído, recarregando clientes...")
                 
                 // ✅ CORREÇÃO: Recarregar clientes após finalizar ciclo para atualizar débitos
                 // Isso garante que os débitos sejam exibidos corretamente após a finalização
-                android.util.Log.d("ClientListViewModel", "🔄 Chamando carregarClientesOtimizado para rotaId: ${rota.id}")
+                Timber.d("ClientListViewModel", "🔄 Chamando carregarClientesOtimizado para rotaId: ${rota.id}")
                 carregarClientesOtimizado(rota.id)
                 
                 // ✅ NOTIFICAR MUDANÇA DE STATUS para atualização em tempo real
                 notificarMudancaStatusRota(rota.id)
                 
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao finalizar rota: ${e.message}", e)
+                Timber.e("ClientListViewModel", "Erro ao finalizar rota: ${e.message}", e)
                 showError("Erro ao finalizar rota: ${e.message}", e)
             } finally {
                 hideLoading()
@@ -626,7 +626,7 @@ class ClientListViewModel @Inject constructor(
      */
     private suspend fun carregarCicloAcertoReal(rota: Rota) {
         try {
-            android.util.Log.d("ClientListViewModel", "🔄 Carregando ciclo para rota ${rota.nome} (ID: ${rota.id})")
+            Timber.d("ClientListViewModel", "🔄 Carregando ciclo para rota ${rota.nome} (ID: ${rota.id})")
             
             // ✅ CORREÇÃO: Usar a mesma lógica do AppRepository.obterCicloAtualRota()
             val emAndamento = appRepository.buscarCicloAtualPorRota(rota.id)
@@ -639,7 +639,7 @@ class ClientListViewModel @Inject constructor(
                 _statusCiclo.value = emAndamento.status
                 _progressoCiclo.value = emAndamento.percentualConclusao
                 
-                android.util.Log.d("ClientListViewModel", "✅ Ciclo em andamento carregado: ${emAndamento.numeroCiclo}º Acerto (ID: ${emAndamento.id}, Status: ${emAndamento.status})")
+                Timber.d("ClientListViewModel", "✅ Ciclo em andamento carregado: ${emAndamento.numeroCiclo}º Acerto (ID: ${emAndamento.id}, Status: ${emAndamento.status})")
             } else {
                 // ✅ CORREÇÃO: Nenhum ciclo em andamento - espelhar o AppRepository exibindo o ÚLTIMO ciclo finalizado
                 val ultimoCiclo = appRepository.buscarUltimoCicloFinalizadoPorRota(rota.id)
@@ -649,19 +649,19 @@ class ClientListViewModel @Inject constructor(
                     _cicloAtivo.value = ultimoCiclo
                     _statusCiclo.value = ultimoCiclo.status
                     _progressoCiclo.value = ultimoCiclo.percentualConclusao
-                    android.util.Log.d("ClientListViewModel", "🔄 Nenhum ciclo em andamento, exibindo último finalizado: ${ultimoCiclo.numeroCiclo}º Acerto (Status: ${ultimoCiclo.status})")
+                    Timber.d("ClientListViewModel", "🔄 Nenhum ciclo em andamento, exibindo último finalizado: ${ultimoCiclo.numeroCiclo}º Acerto (Status: ${ultimoCiclo.status})")
                 } else {
                     _cicloAcerto.value = 1
                     _cicloAcertoEntity.value = null
                     _cicloAtivo.value = null
                     _statusCiclo.value = StatusCicloAcerto.FINALIZADO
                     _progressoCiclo.value = 0
-                    android.util.Log.d("ClientListViewModel", "🆕 Primeira vez nesta rota, exibindo 1º Acerto")
+                    Timber.d("ClientListViewModel", "🆕 Primeira vez nesta rota, exibindo 1º Acerto")
                 }
             }
             
         } catch (e: Exception) {
-            android.util.Log.e("ClientListViewModel", "Erro ao carregar ciclo: ${e.message}", e)
+            Timber.e("ClientListViewModel", "Erro ao carregar ciclo: ${e.message}", e)
             // Valores padrão em caso de erro
             _cicloAcerto.value = 1
             _cicloAcertoEntity.value = null
@@ -706,7 +706,7 @@ class ClientListViewModel @Inject constructor(
                 _searchCriteria.value = ""
                 aplicarFiltrosCombinados()
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro na busca: ${e.message}", e)
+                Timber.e("ClientListViewModel", "Erro na busca: ${e.message}", e)
                 showError("Erro na busca: ${e.message}", e)
             }
         }
@@ -724,7 +724,7 @@ class ClientListViewModel @Inject constructor(
                 _buscaAtual.value = ""
                 aplicarFiltrosCombinados()
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro na pesquisa avançada: ${e.message}", e)
+                Timber.e("ClientListViewModel", "Erro na pesquisa avançada: ${e.message}", e)
                 showError("Erro na pesquisa avançada: ${e.message}", e)
             }
         }
@@ -738,7 +738,7 @@ class ClientListViewModel @Inject constructor(
             val rotaId = _rotaIdFlow.value ?: return null
             appRepository.buscarUltimoCicloFinalizadoPorRota(rotaId)
         } catch (e: Exception) {
-            android.util.Log.e("ClientListViewModel", "Erro ao buscar último ciclo finalizado: ${e.message}")
+            Timber.e("ClientListViewModel", "Erro ao buscar último ciclo finalizado: ${e.message}")
             null
         }
     }
@@ -750,10 +750,10 @@ class ClientListViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val rota = _rotaInfo.value ?: return@launch
-                android.util.Log.d("ClientListViewModel", "🔄 Forçando atualização do ciclo atual para rota ${rota.nome}")
+                Timber.d("ClientListViewModel", "🔄 Forçando atualização do ciclo atual para rota ${rota.nome}")
                 carregarCicloAcertoReal(rota)
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao atualizar ciclo atual: ${e.message}")
+                Timber.e("ClientListViewModel", "Erro ao atualizar ciclo atual: ${e.message}")
             } finally {
                 hideLoading()
             }
@@ -771,13 +771,13 @@ class ClientListViewModel @Inject constructor(
         val searchType = _searchType.value
         val searchCriteria = com.example.gestaobilhares.core.utils.StringUtils.removerEspacosExtras(_searchCriteria.value)
         
-        android.util.Log.d("ClientListViewModel", "🔍 APLICANDO FILTROS COMBINADOS")
-        android.util.Log.d("ClientListViewModel", "   Total de clientes antes do filtro: ${todos.size}")
-        android.util.Log.d("ClientListViewModel", "   Filtro atual: $filtro")
+        Timber.d("ClientListViewModel", "🔍 APLICANDO FILTROS COMBINADOS")
+        Timber.d("ClientListViewModel", "   Total de clientes antes do filtro: ${todos.size}")
+        Timber.d("ClientListViewModel", "   Filtro atual: $filtro")
         
         // ✅ DEBUG: Log do débito de cada cliente antes do filtro
         todos.forEach { cliente ->
-            android.util.Log.d("ClientListViewModel", "   [ANTES FILTRO] Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
+            Timber.d("ClientListViewModel", "   [ANTES FILTRO] Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
         }
         
         // ✅ CORREÇÃO: Filtro PENDENCIAS agora é inclusivo - mostra todos os clientes com pendências
@@ -788,11 +788,11 @@ class ClientListViewModel @Inject constructor(
             FiltroCliente.PENDENCIAS -> filtrarClientesPendenciasInclusivo(todos)
         }
         
-        android.util.Log.d("ClientListViewModel", "   Clientes após filtro de status: ${filtradosPorStatus.size}")
+        Timber.d("ClientListViewModel", "   Clientes após filtro de status: ${filtradosPorStatus.size}")
         
         // ✅ DEBUG: Log do débito de cada cliente após filtro de status
         filtradosPorStatus.forEach { cliente ->
-            android.util.Log.d("ClientListViewModel", "   [APÓS FILTRO STATUS] Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
+            Timber.d("ClientListViewModel", "   [APÓS FILTRO STATUS] Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
         }
         
         // Depois filtrar por busca (normal ou avançada)
@@ -806,16 +806,16 @@ class ClientListViewModel @Inject constructor(
             else -> filtradosPorStatus
         }
         
-        android.util.Log.d("ClientListViewModel", "   Clientes após filtro de busca: ${resultadoFinal.size}")
+        Timber.d("ClientListViewModel", "   Clientes após filtro de busca: ${resultadoFinal.size}")
         
         // ✅ DEBUG: Log do débito de cada cliente no resultado final
         resultadoFinal.forEach { cliente ->
-            android.util.Log.d("ClientListViewModel", "   [RESULTADO FINAL] Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
+            Timber.d("ClientListViewModel", "   [RESULTADO FINAL] Cliente: ${cliente.nome} | débitoAtual: R$ ${cliente.debitoAtual}")
         }
         
         // Atualizar lista filtrada
         _clientes.value = resultadoFinal
-        android.util.Log.d("ClientListViewModel", "✅ Filtros aplicados - ${resultadoFinal.size} clientes exibidos")
+        Timber.d("ClientListViewModel", "✅ Filtros aplicados - ${resultadoFinal.size} clientes exibidos")
     }
 
     /**
@@ -828,14 +828,14 @@ class ClientListViewModel @Inject constructor(
         // ✅ CORREÇÃO: Buscar ciclo ativo diretamente do repositório usando rotaId
         val rotaId = _rotaInfo.value?.id
         if (rotaId == null) {
-            android.util.Log.w("ClientListViewModel", "⚠️ rotaId é null, não é possível filtrar clientes acertados")
+            Timber.w("ClientListViewModel", "⚠️ rotaId é null, não é possível filtrar clientes acertados")
             return emptyList()
         }
         
         val cicloAtivo = appRepository.buscarCicloAtivo(rotaId)
         val cicloId = cicloAtivo?.id ?: -1L
         
-        android.util.Log.d("ClientListViewModel", "🔍 Filtrando clientes acertados - Ciclo ativo: ID=$cicloId, Número=${cicloAtivo?.numeroCiclo}")
+        Timber.d("ClientListViewModel", "🔍 Filtrando clientes acertados - Ciclo ativo: ID=$cicloId, Número=${cicloAtivo?.numeroCiclo}")
         
         for (cliente in clientes) {
             if (clienteFoiAcertadoNoCiclo(cliente.id, cicloId)) {
@@ -843,7 +843,7 @@ class ClientListViewModel @Inject constructor(
             }
         }
         
-        android.util.Log.d("ClientListViewModel", "✅ Clientes acertados encontrados: ${clientesAcertados.size} de ${clientes.size}")
+        Timber.d("ClientListViewModel", "✅ Clientes acertados encontrados: ${clientesAcertados.size} de ${clientes.size}")
         
         return clientesAcertados
     }
@@ -858,14 +858,14 @@ class ClientListViewModel @Inject constructor(
         // ✅ CORREÇÃO: Buscar ciclo ativo diretamente do repositório usando rotaId
         val rotaId = _rotaInfo.value?.id
         if (rotaId == null) {
-            android.util.Log.w("ClientListViewModel", "⚠️ rotaId é null, não é possível filtrar clientes não acertados")
+            Timber.w("ClientListViewModel", "⚠️ rotaId é null, não é possível filtrar clientes não acertados")
             return emptyList()
         }
         
         val cicloAtivo = appRepository.buscarCicloAtivo(rotaId)
         val cicloId = cicloAtivo?.id ?: -1L
         
-        android.util.Log.d("ClientListViewModel", "🔍 Filtrando clientes não acertados - Ciclo ativo: ID=$cicloId, Número=${cicloAtivo?.numeroCiclo}")
+        Timber.d("ClientListViewModel", "🔍 Filtrando clientes não acertados - Ciclo ativo: ID=$cicloId, Número=${cicloAtivo?.numeroCiclo}")
         
         for (cliente in clientes) {
             if (!clienteFoiAcertadoNoCiclo(cliente.id, cicloId)) {
@@ -873,7 +873,7 @@ class ClientListViewModel @Inject constructor(
             }
         }
         
-        android.util.Log.d("ClientListViewModel", "✅ Clientes não acertados encontrados: ${clientesNaoAcertados.size} de ${clientes.size}")
+        Timber.d("ClientListViewModel", "✅ Clientes não acertados encontrados: ${clientesNaoAcertados.size} de ${clientes.size}")
         
         return clientesNaoAcertados
     }
@@ -900,22 +900,22 @@ class ClientListViewModel @Inject constructor(
     private suspend fun filtrarClientesPendenciasInclusivo(clientes: List<Cliente>): List<Cliente> {
         val clientesPendencias = mutableListOf<Cliente>()
         
-        android.util.Log.d("ClientListViewModel", "🔍 Iniciando filtro PEND inclusivo para ${clientes.size} clientes")
+        Timber.d("ClientListViewModel", "🔍 Iniciando filtro PEND inclusivo para ${clientes.size} clientes")
         
         for (cliente in clientes) {
             // ✅ DEBUG: Log para verificar o débito de cada cliente
-            android.util.Log.d("ClientListViewModel", "Verificando cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
+            Timber.d("ClientListViewModel", "Verificando cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
             
             // ✅ CRITÉRIO INCLUSIVO: Se o cliente tem pendências, incluir independente do status de acerto
             if (clienteTemPendencias(cliente.id)) {
                 clientesPendencias.add(cliente)
-                android.util.Log.d("ClientListViewModel", "✅ Cliente ${cliente.nome} adicionado ao filtro PEND")
+                Timber.d("ClientListViewModel", "✅ Cliente ${cliente.nome} adicionado ao filtro PEND")
             } else {
-                android.util.Log.d("ClientListViewModel", "❌ Cliente ${cliente.nome} NÃO adicionado ao filtro PEND")
+                Timber.d("ClientListViewModel", "❌ Cliente ${cliente.nome} NÃO adicionado ao filtro PEND")
             }
         }
         
-        android.util.Log.d("ClientListViewModel", "✅ Filtro PEND inclusivo: ${clientesPendencias.size} clientes com pendências encontrados")
+        Timber.d("ClientListViewModel", "✅ Filtro PEND inclusivo: ${clientesPendencias.size} clientes com pendências encontrados")
         
         return clientesPendencias
     }
@@ -927,30 +927,30 @@ class ClientListViewModel @Inject constructor(
     private suspend fun clienteFoiAcertadoNoCiclo(clienteId: Long, cicloId: Long): Boolean {
         return try {
             if (cicloId == -1L) {
-                android.util.Log.d("ClientListViewModel", "   ⚠️ cicloId inválido (-1), cliente não foi acertado")
+                Timber.d("ClientListViewModel", "   ⚠️ cicloId inválido (-1), cliente não foi acertado")
                 return false
             }
             
             val acertos = appRepository.buscarAcertosPorCicloId(cicloId).first()
-            android.util.Log.d("ClientListViewModel", "   🔍 Verificando acertos do cliente $clienteId no ciclo $cicloId")
-            android.util.Log.d("ClientListViewModel", "   Total de acertos no ciclo: ${acertos.size}")
+            Timber.d("ClientListViewModel", "   🔍 Verificando acertos do cliente $clienteId no ciclo $cicloId")
+            Timber.d("ClientListViewModel", "   Total de acertos no ciclo: ${acertos.size}")
             
             // ✅ CORREÇÃO CRÍTICA: Verificar apenas acertos FINALIZADOS
             val foiAcertado = acertos.any { acerto: com.example.gestaobilhares.data.entities.Acerto -> 
                 acerto.clienteId == clienteId && acerto.status == com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO 
             }
             
-            android.util.Log.d("ClientListViewModel", "   ✅ Cliente $clienteId foi acertado no ciclo $cicloId? $foiAcertado")
+            Timber.d("ClientListViewModel", "   ✅ Cliente $clienteId foi acertado no ciclo $cicloId? $foiAcertado")
             
             // ✅ DEBUG: Log detalhado dos acertos encontrados
             val acertosDoCliente = acertos.filter { it.clienteId == clienteId }
             acertosDoCliente.forEach { acerto ->
-                android.util.Log.d("ClientListViewModel", "      Acerto encontrado: ID=${acerto.id}, Status=${acerto.status}, ClienteId=${acerto.clienteId}")
+                Timber.d("ClientListViewModel", "      Acerto encontrado: ID=${acerto.id}, Status=${acerto.status}, ClienteId=${acerto.clienteId}")
             }
             
             foiAcertado
         } catch (e: Exception) {
-            android.util.Log.e("ClientListViewModel", "Erro ao verificar acerto do cliente: ${e.message}", e)
+            Timber.e("ClientListViewModel", "Erro ao verificar acerto do cliente: ${e.message}", e)
             false
         }
     }
@@ -964,7 +964,7 @@ class ClientListViewModel @Inject constructor(
             val cliente = appRepository.obterClientePorId(clienteId) ?: return false
             
             // ✅ DEBUG: Log para verificar o débito do cliente
-            android.util.Log.d("ClientListViewModel", "Verificando pendências - Cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
+            Timber.d("ClientListViewModel", "Verificando pendências - Cliente ${cliente.nome}: débitoAtual = ${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}")
             
             // ✅ CRITÉRIO 1: Débito > R$300
             val temDebitoAlto = cliente.debitoAtual > 300.0
@@ -984,15 +984,15 @@ class ClientListViewModel @Inject constructor(
             // ✅ RETORNAR TRUE se atender QUALQUER UM dos critérios
             val temPendencia = temDebitoAlto || semAcertoRecente
             
-            android.util.Log.d("ClientListViewModel", "Cliente ${cliente.nome}: temDebitoAlto=$temDebitoAlto, semAcertoRecente=$semAcertoRecente, temPendencia=$temPendencia")
+            Timber.d("ClientListViewModel", "Cliente ${cliente.nome}: temDebitoAlto=$temDebitoAlto, semAcertoRecente=$semAcertoRecente, temPendencia=$temPendencia")
             
             if (temPendencia) {
-                android.util.Log.d("ClientListViewModel", "✅ Cliente ${cliente.nome} tem pendência: Débito=${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}, SemAcertoRecente=$semAcertoRecente")
+                Timber.d("ClientListViewModel", "✅ Cliente ${cliente.nome} tem pendência: Débito=${com.example.gestaobilhares.core.utils.StringUtils.formatarMoeda(cliente.debitoAtual)}, SemAcertoRecente=$semAcertoRecente")
             }
             
             temPendencia
         } catch (e: Exception) {
-            android.util.Log.e("ClientListViewModel", "Erro ao verificar pendências do cliente: ${e.message}")
+            Timber.e("ClientListViewModel", "Erro ao verificar pendências do cliente: ${e.message}")
             false
         }
     }
@@ -1005,7 +1005,7 @@ class ClientListViewModel @Inject constructor(
             val mesas = appRepository.obterMesasPorCliente(clienteId).first()
             mesas.isNotEmpty()
         } catch (e: Exception) {
-            android.util.Log.e("ClientListViewModel", "Erro ao verificar mesas vinculadas: ${e.message}")
+            Timber.e("ClientListViewModel", "Erro ao verificar mesas vinculadas: ${e.message}")
             false
         }
     }
@@ -1066,7 +1066,7 @@ class ClientListViewModel @Inject constructor(
                 _searchCriteria.value = ""
                 aplicarFiltrosCombinados()
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao limpar busca: ${e.message}")
+                Timber.e("ClientListViewModel", "Erro ao limpar busca: ${e.message}")
             }
         }
     }
@@ -1084,7 +1084,7 @@ class ClientListViewModel @Inject constructor(
      */
     fun limparErro() {
         clearError()
-        android.util.Log.d("ClientListViewModel", "Erro limpo")
+        Timber.d("ClientListViewModel", "Erro limpo")
     }
 
     /**
@@ -1100,7 +1100,7 @@ class ClientListViewModel @Inject constructor(
             val cicloAtivo = if (rotaId != null) appRepository.buscarCicloAtivo(rotaId) else null
             val cicloId = cicloAtivo?.id ?: -1L
             
-            android.util.Log.d("ClientListViewModel", "📊 Calculando progresso - Ciclo ativo: ID=$cicloId, Número=${cicloAtivo?.numeroCiclo}")
+            Timber.d("ClientListViewModel", "📊 Calculando progresso - Ciclo ativo: ID=$cicloId, Número=${cicloAtivo?.numeroCiclo}")
             
             // Calcular clientes acertados no ciclo atual
             val clientesAcertados = calcularClientesAcertadosNoCiclo(clientes, cicloId)
@@ -1119,10 +1119,10 @@ class ClientListViewModel @Inject constructor(
             val pendencias = calcularPendencias(clientes)
             _pendencias.value = pendencias
             
-            android.util.Log.d("ClientListViewModel", "✅ Dados do progresso calculados: $percentual% de $totalClientes clientes, $pendencias pendências")
+            Timber.d("ClientListViewModel", "✅ Dados do progresso calculados: $percentual% de $totalClientes clientes, $pendencias pendências")
             
         } catch (e: Exception) {
-            android.util.Log.e("ClientListViewModel", "Erro ao calcular dados do progresso: ${e.message}")
+            Timber.e("ClientListViewModel", "Erro ao calcular dados do progresso: ${e.message}")
             // Valores padrão em caso de erro
             _percentualAcertados.value = 0
             _totalClientes.value = 0
@@ -1147,11 +1147,11 @@ class ClientListViewModel @Inject constructor(
                 .map { acerto: com.example.gestaobilhares.data.entities.Acerto -> acerto.clienteId }
                 .distinct()
             
-            android.util.Log.d("ClientListViewModel", "✅ Clientes acertados no ciclo $cicloId: ${clientesAcertados.size} de ${clientes.size}")
+            Timber.d("ClientListViewModel", "✅ Clientes acertados no ciclo $cicloId: ${clientesAcertados.size} de ${clientes.size}")
             
             clientesAcertados.size
         } catch (e: Exception) {
-            android.util.Log.e("ClientListViewModel", "Erro ao calcular clientes acertados: ${e.message}")
+            Timber.e("ClientListViewModel", "Erro ao calcular clientes acertados: ${e.message}")
             0
         }
     }
@@ -1186,11 +1186,11 @@ class ClientListViewModel @Inject constructor(
                 }
             }
             
-            android.util.Log.d("ClientListViewModel", "✅ Pendências calculadas: $pendencias de ${clientes.size} clientes (débito>R$300 ou sem acerto>4meses)")
+            Timber.d("ClientListViewModel", "✅ Pendências calculadas: $pendencias de ${clientes.size} clientes (débito>R$300 ou sem acerto>4meses)")
             
             pendencias
         } catch (e: Exception) {
-            android.util.Log.e("ClientListViewModel", "Erro ao calcular pendências: ${e.message}")
+            Timber.e("ClientListViewModel", "Erro ao calcular pendências: ${e.message}")
             0
         }
     }
@@ -1210,7 +1210,7 @@ class ClientListViewModel @Inject constructor(
      * ✅ FASE 12.7: Log é suficiente para rastreamento; notificações reativas via StateFlow
      */
     private fun notificarMudancaStatusRota(rotaId: Long) {
-        android.util.Log.d("ClientListViewModel", "Notificando mudanca de status da rota: $rotaId")
+        Timber.d("ClientListViewModel", "Notificando mudanca de status da rota: $rotaId")
         // Notificacoes reativas sao gerenciadas via StateFlow observado pelos Fragments
     }
 
@@ -1218,7 +1218,7 @@ class ClientListViewModel @Inject constructor(
      * ✅ NOVO: Carrega dados reais da rota em tempo real (clientes ativos e mesas)
      */
     fun carregarDadosRotaEmTempoReal(rotaId: Long) {
-        android.util.Log.d("ClientListViewModel", "=== INICIANDO CARREGAMENTO DE DADOS ROTA $rotaId ===")
+        Timber.d("ClientListViewModel", "=== INICIANDO CARREGAMENTO DE DADOS ROTA $rotaId ===")
 
         viewModelScope.launch {
             try {
@@ -1226,17 +1226,17 @@ class ClientListViewModel @Inject constructor(
                 val clientes = appRepository.obterClientesPorRota(rotaId).first()
                 val clientesAtivos = clientes.count { it.ativo }
 
-                android.util.Log.d("ClientListViewModel", "=== DADOS CLIENTES CARREGADOS ===")
-                android.util.Log.d("ClientListViewModel", "Total clientes: ${clientes.size}, Ativos: $clientesAtivos")
+                Timber.d("ClientListViewModel", "=== DADOS CLIENTES CARREGADOS ===")
+                Timber.d("ClientListViewModel", "Total clientes: ${clientes.size}, Ativos: $clientesAtivos")
 
                 // Depois carregar mesas da rota
                 val mesasDaRota = appRepository.buscarMesasPorRota(rotaId).first()
                 val totalMesas = mesasDaRota.size
 
-                android.util.Log.d("ClientListViewModel", "=== DADOS MESAS CARREGADOS ===")
-                android.util.Log.d("ClientListViewModel", "Mesas encontradas: $totalMesas")
+                Timber.d("ClientListViewModel", "=== DADOS MESAS CARREGADOS ===")
+                Timber.d("ClientListViewModel", "Mesas encontradas: $totalMesas")
                 mesasDaRota.forEach { mesa ->
-                    android.util.Log.d("ClientListViewModel", "Mesa: ${mesa.numero} (ID: ${mesa.id}, ClienteId: ${mesa.clienteId})")
+                    Timber.d("ClientListViewModel", "Mesa: ${mesa.numero} (ID: ${mesa.id}, ClienteId: ${mesa.clienteId})")
                 }
 
                 // Atualizar dados apenas uma vez com ambos os valores
@@ -1245,13 +1245,13 @@ class ClientListViewModel @Inject constructor(
                     totalMesas = totalMesas
                 )
 
-                android.util.Log.d("ClientListViewModel", "=== ATUALIZANDO DADOS FINAIS ===")
-                android.util.Log.d("ClientListViewModel", "Dados finais: ${dadosAtualizados.totalClientes} clientes, ${dadosAtualizados.totalMesas} mesas")
+                Timber.d("ClientListViewModel", "=== ATUALIZANDO DADOS FINAIS ===")
+                Timber.d("ClientListViewModel", "Dados finais: ${dadosAtualizados.totalClientes} clientes, ${dadosAtualizados.totalMesas} mesas")
 
                 _dadosRotaReais.value = dadosAtualizados
 
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "Erro ao carregar dados da rota: ${e.message}", e)
+                Timber.e("ClientListViewModel", "Erro ao carregar dados da rota: ${e.message}", e)
                 // Valores padrão em caso de erro
                 _dadosRotaReais.value = DadosRotaReais(0, 0)
             }
@@ -1275,7 +1275,7 @@ class ClientListViewModel @Inject constructor(
                 val clientes = appRepository.buscarClientesPorRotaComCache(rotaId).first()
                 _clientesTodos.value = clientes
                 
-                Log.d("ClientListViewModel", "✅ Carregamento direto: ${clientes.size} clientes carregados")
+                Timber.d("ClientListViewModel", "✅ Carregamento direto: ${clientes.size} clientes carregados")
                 
                 /*
                 // Configurar callback de carregamento
@@ -1293,11 +1293,11 @@ class ClientListViewModel @Inject constructor(
                 val initialData = paginationManager.loadInitialPage()
                 _clientesTodos.value = initialData
                 
-                android.util.Log.d("ClientListViewModel", "✅ Lazy loading: ${initialData.size} clientes carregados")
+                Timber.d("ClientListViewModel", "✅ Lazy loading: ${initialData.size} clientes carregados")
                 */
                 
             } catch (e: Exception) {
-                android.util.Log.e("ClientListViewModel", "❌ Erro no lazy loading: ${e.message}")
+                Timber.e("ClientListViewModel", "❌ Erro no lazy loading: ${e.message}")
                 showError("Erro ao carregar clientes: ${e.message}", e)
             } finally {
                 hideLoading()
@@ -1311,7 +1311,7 @@ class ClientListViewModel @Inject constructor(
      */
     fun carregarProximaPagina() {
         // TODO: PaginationManager não existe - não fazer nada temporariamente
-                android.util.Log.d("ClientListViewModel", "⚠️ PaginationManager não implementado - carregarProximaPagina ignorado")
+                Timber.d("ClientListViewModel", "⚠️ PaginationManager não implementado - carregarProximaPagina ignorado")
         /*
         viewModelScope.launch {
             try {
@@ -1321,10 +1321,10 @@ class ClientListViewModel @Inject constructor(
                     currentData.addAll(nextPageData)
                     _clientesTodos.value = currentData
                     
-                    Log.d("ClientListViewModel", "✅ Próxima página carregada: ${nextPageData.size} clientes")
+                    Timber.d("ClientListViewModel", "✅ Próxima página carregada: ${nextPageData.size} clientes")
                 }
             } catch (e: Exception) {
-                Log.e("ClientListViewModel", "❌ Erro ao carregar próxima página: ${e.message}")
+                Timber.e("ClientListViewModel", "❌ Erro ao carregar próxima página: ${e.message}")
             }
         }
         */
@@ -1356,9 +1356,9 @@ class ClientListViewModel @Inject constructor(
      */
     fun limparCachePaginacao() {
         // TODO: PaginationManager não existe - não fazer nada temporariamente
-        Log.d("ClientListViewModel", "⚠️ PaginationManager não implementado - limparCachePaginacao ignorado")
+        Timber.d("ClientListViewModel", "⚠️ PaginationManager não implementado - limparCachePaginacao ignorado")
         // paginationManager.clearCache()
-        // Log.d("ClientListViewModel", "🧹 Cache de paginação limpo")
+        // Timber.d("ClientListViewModel", "🧹 Cache de paginação limpo")
     }
 } 
 

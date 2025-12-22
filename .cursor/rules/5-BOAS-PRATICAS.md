@@ -1,8 +1,8 @@
 # 5️⃣ BOAS PRÁTICAS
 
 > **Propósito**: Padrões de qualidade, codificação e processos de desenvolvimento.  
-> **Última Atualização**: 18 Dezembro 2025  
-> **Versão**: 1.0 (Consolidada)
+> **Última Atualização**: Janeiro 2025  
+> **Versão**: 2.0 (Atualizada)
 
 ---
 
@@ -41,10 +41,13 @@
 
 ## 🔒 SEGURANÇA E PERFORMANCE
 
-*   **Sensibilidade**: Usar `EncryptedSharedPreferences` para tokens de API.
-*   **Logs**: Proibido `Log.d` em produção. Sempre usar `Timber` com a configuração de árvore correta.
-*   **Database**: Adicionar índices em colunas usadas em filtros de busca (`rotaId`, `dataSincronizacao`).
+*   **Dados Sensíveis**: ⚠️ **OBRIGATÓRIO** usar `EncryptedSharedPreferences` para tokens, senhas e dados sensíveis. Não usar `SharedPreferences` padrão.
+*   **Logs**: ⚠️ **PROIBIDO** usar `android.util.Log` diretamente. Sempre usar `Timber` com a configuração de árvore correta.
+*   **Firestore Rules**: Sempre validar `companyId` e `rotasAtribuidas` nas regras de segurança.
+*   **Database**: Adicionar índices em colunas usadas em filtros de busca (`rotaId`, `dataSincronizacao`, `empresaId`).
 *   **Imagens**: Comprimir imagens usando WebP antes do upload para o Firebase Storage.
+*   **PII (Dados Pessoais)**: Nunca logar CPF, CNPJ, valores monetários ou senhas, mesmo em debug.
+*   **Multi-tenancy**: Sempre filtrar dados por `empresaId` e `rotasAtribuidas` do usuário.
 
 ---
 

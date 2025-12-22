@@ -2,7 +2,7 @@
 import com.example.gestaobilhares.ui.R
 
 import android.os.Bundle
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -62,7 +62,7 @@ class ColaboradorManagementFragment : Fragment() {
                     }
                     findNavController().navigate(com.example.gestaobilhares.ui.R.id.colaboradorRegisterFragment, bundle)
                 } catch (e: Exception) {
-                    Log.e("ColaboradorManagementFragment", "Erro ao navegar para edição: ${e.message}", e)
+                    Timber.e("ColaboradorManagementFragment", "Erro ao navegar para edição: ${e.message}", e)
                     Toast.makeText(requireContext(), "Erro ao abrir edição de colaborador", Toast.LENGTH_SHORT).show()
                 }
             },
@@ -98,7 +98,7 @@ class ColaboradorManagementFragment : Fragment() {
             try {
                 findNavController().navigate(com.example.gestaobilhares.ui.R.id.colaboradorRegisterFragment)
             } catch (e: Exception) {
-                Log.e("ColaboradorManagementFragment", "Erro ao navegar para cadastro: ${e.message}", e)
+                Timber.e("ColaboradorManagementFragment", "Erro ao navegar para cadastro: ${e.message}", e)
                 Toast.makeText(requireContext(), "Erro ao abrir cadastro de colaborador", Toast.LENGTH_SHORT).show()
             }
         }
@@ -267,7 +267,7 @@ class ColaboradorManagementFragment : Fragment() {
                                     }
                                     findNavController().navigate(com.example.gestaobilhares.ui.R.id.colaboradorRegisterFragment, bundle)
                                 } catch (e: Exception) {
-                                    Log.e("ColaboradorManagementFragment", "Erro ao navegar para edição: ${e.message}", e)
+                                    Timber.e("ColaboradorManagementFragment", "Erro ao navegar para edição: ${e.message}", e)
                                     Toast.makeText(requireContext(), "Erro ao abrir edição de colaborador", Toast.LENGTH_SHORT).show()
                                 }
                             }
@@ -276,14 +276,14 @@ class ColaboradorManagementFragment : Fragment() {
                             }
                         }
                     } catch (e: Exception) {
-                        Log.e("ColaboradorManagementFragment", "Erro ao processar opção: ${e.message}", e)
+                        Timber.e("ColaboradorManagementFragment", "Erro ao processar opção: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao processar ação: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
                 .setNegativeButton("Cancelar", null)
                 .show()
         } catch (e: Exception) {
-            Log.e("ColaboradorManagementFragment", "Erro ao mostrar menu de opções: ${e.message}", e)
+            Timber.e("ColaboradorManagementFragment", "Erro ao mostrar menu de opções: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao abrir menu de opções: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
@@ -318,7 +318,7 @@ class ColaboradorManagementFragment : Fragment() {
                 .setNegativeButton("Cancelar", null)
                 .show()
         } catch (e: Exception) {
-            Log.e("ColaboradorManagementFragment", "Erro ao mostrar diálogo de confirmação: ${e.message}", e)
+            Timber.e("ColaboradorManagementFragment", "Erro ao mostrar diálogo de confirmação: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao abrir diálogo: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }

@@ -7,6 +7,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import timber.log.Timber
 
 /**
  * Utilitário para verificar conectividade de rede
@@ -36,10 +37,10 @@ class NetworkUtils(private val context: Context) {
     }
     
     init {
-        android.util.Log.d("NetworkUtils", "NetworkUtils inicializando...")
+        Timber.d("NetworkUtils", "NetworkUtils inicializando...")
         registerNetworkCallback()
         checkInitialConnectivity()
-        android.util.Log.d("NetworkUtils", "NetworkUtils inicializado - isConnected = ${_isNetworkAvailable.value}")
+        Timber.d("NetworkUtils", "NetworkUtils inicializado - isConnected = ${_isNetworkAvailable.value}")
     }
     
     /**

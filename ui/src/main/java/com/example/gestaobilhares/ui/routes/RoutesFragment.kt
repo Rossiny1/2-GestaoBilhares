@@ -2,7 +2,7 @@
 import com.example.gestaobilhares.ui.R
 
 import android.os.Bundle
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -82,31 +82,31 @@ class RoutesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // ✅ LOG CRASH: Início da tela
-        Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - INÍCIO")
+        Timber.d("LOG_CRASH", "RoutesFragment.onViewCreated - INÍCIO")
         
         try {
             // Inicializar gerenciador de sessão primeiro
-            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Inicializando UserSessionManager")
+            Timber.d("LOG_CRASH", "RoutesFragment.onViewCreated - Inicializando UserSessionManager")
             userSessionManager = UserSessionManager.getInstance(requireContext())
             
-            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando RecyclerView")
+            Timber.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando RecyclerView")
             setupRecyclerView()
             
-            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando ClickListeners")
+            Timber.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando ClickListeners")
             setupClickListeners()
             
-            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando NavigationDrawer")
+            Timber.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando NavigationDrawer")
             setupNavigationDrawer()
             
-            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando Observers")
+            Timber.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando Observers")
             observeViewModel()
             
-            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando botão voltar")
+            Timber.d("LOG_CRASH", "RoutesFragment.onViewCreated - Configurando botão voltar")
             // ✅ REMOVIDO: setupBackButtonHandler() - MainActivity agora gerencia o botão voltar globalmente
             
-            Log.d("LOG_CRASH", "RoutesFragment.onViewCreated - CONFIGURAÇÃO COMPLETA")
+            Timber.d("LOG_CRASH", "RoutesFragment.onViewCreated - CONFIGURAÇÃO COMPLETA")
         } catch (e: Exception) {
-            Log.e("LOG_CRASH", "RoutesFragment.onViewCreated - ERRO: ${e.message}", e)
+            Timber.e("LOG_CRASH", "RoutesFragment.onViewCreated - ERRO: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao configurar tela de rotas: ${e.message}", Toast.LENGTH_LONG).show()
         }
 
@@ -124,42 +124,42 @@ class RoutesFragment : Fragment() {
             val isComingFromLogin = previousDestinationId == com.example.gestaobilhares.ui.R.id.loginFragment ||
                     previousDestinationId == com.example.gestaobilhares.ui.R.id.changePasswordFragment
             
-            android.util.Log.d("RoutesFragment", "🔍 Verificando origem da navegação:")
-            android.util.Log.d("RoutesFragment", "   Destino anterior: $previousDestinationId")
-            android.util.Log.d("RoutesFragment", "   Vindo do login: $isComingFromLogin")
+            Timber.d("RoutesFragment", "🔍 Verificando origem da navegação:")
+            Timber.d("RoutesFragment", "   Destino anterior: $previousDestinationId")
+            Timber.d("RoutesFragment", "   Vindo do login: $isComingFromLogin")
             
             if (isComingFromLogin) {
                 // ✅ APENAS se viemos do login - verificar sincronização
-                android.util.Log.d("RoutesFragment", "✅ Vindo do login - verificando sincronização após delay...")
+                Timber.d("RoutesFragment", "✅ Vindo do login - verificando sincronização após delay...")
                 viewLifecycleOwner.lifecycleScope.launch {
                     kotlinx.coroutines.delay(500) // Delay para garantir que tudo esteja inicializado
                     viewModel.checkSyncPendencies(requireContext())
                 }
             } else {
                 // ✅ PROIBIDO: Se não viemos do login, NÃO verificar sincronização
-                android.util.Log.d("RoutesFragment", "🚫 NÃO vindo do login - PROIBIDO verificar sincronização")
+                Timber.d("RoutesFragment", "🚫 NÃO vindo do login - PROIBIDO verificar sincronização")
                 // O observer do syncDialogState já protege contra diálogos não autorizados
             }
         } catch (e: Exception) {
             // Se não conseguir verificar navegação, não verificar sincronização (seguro)
-            android.util.Log.w("RoutesFragment", "⚠️ Erro ao verificar navegação: ${e.message} - não verificando sincronização")
+            Timber.w("RoutesFragment", "⚠️ Erro ao verificar navegação: ${e.message} - não verificando sincronização")
         }
     }
 
     override fun onResume() {
         super.onResume()
         // ✅ CORREÇÃO: Atualizar dados das rotas quando retorna de outras telas
-        android.util.Log.d("RoutesFragment", "🔄 onResume - Forçando atualização dos dados das rotas")
+        Timber.d("RoutesFragment", "🔄 onResume - Forçando atualização dos dados das rotas")
         
         // ✅ CORREÇÃO: Verificar sessão antes de atualizar
         val userId = userSessionManager.getCurrentUserId()
-        android.util.Log.d("RoutesFragment", "🔍 onResume - Usuário logado: ${userId != 0L}")
+        Timber.d("RoutesFragment", "🔍 onResume - Usuário logado: ${userId != 0L}")
         
         viewModel.refresh()
         // ✅ CORREÇÃO CRÍTICA: NÃO verificar sincronização no onResume
         // O diálogo de sincronização só deve aparecer após o login (onViewCreated)
         // Se aparecer no onResume, fica em loop quando o usuário navega entre telas
-        android.util.Log.d("RoutesFragment", "ℹ️ onResume - Não verificando sincronização (só aparece após login)")
+        Timber.d("RoutesFragment", "ℹ️ onResume - Não verificando sincronização (só aparece após login)")
     }
 
 
@@ -193,11 +193,11 @@ class RoutesFragment : Fragment() {
         if (!hasMenuAccess) {
             binding.navigationView.visibility = View.GONE
             binding.btnMenu.visibility = View.GONE
-            android.util.Log.d("RoutesFragment", "🔒 Menu oculto para usuário: ${userSessionManager.getCurrentUserName()}")
+            Timber.d("RoutesFragment", "🔒 Menu oculto para usuário: ${userSessionManager.getCurrentUserName()}")
             return
         }
         
-        android.util.Log.d("RoutesFragment", "🔓 Menu disponível para ADMIN: ${userSessionManager.getCurrentUserName()}")
+        Timber.d("RoutesFragment", "🔓 Menu disponível para ADMIN: ${userSessionManager.getCurrentUserName()}")
         
         // Configurar listener do menu lateral
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
@@ -216,7 +216,7 @@ class RoutesFragment : Fragment() {
                         binding.drawerLayout.closeDrawers()
                         true
                     } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao navegar para gerenciamento de colaboradores: ${e.message}", e)
+                        Timber.e("RoutesFragment", "Erro ao navegar para gerenciamento de colaboradores: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao abrir gerenciamento de colaboradores: ${e.message}", Toast.LENGTH_SHORT).show()
                         binding.drawerLayout.closeDrawers()
                         false
@@ -229,7 +229,7 @@ class RoutesFragment : Fragment() {
                         binding.drawerLayout.closeDrawers()
                         true
                     } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao navegar para categorias de despesa: ${e.message}", e)
+                        Timber.e("RoutesFragment", "Erro ao navegar para categorias de despesa: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao abrir categorias de despesa: ${e.message}", Toast.LENGTH_SHORT).show()
                         binding.drawerLayout.closeDrawers()
                         false
@@ -241,7 +241,7 @@ class RoutesFragment : Fragment() {
                         binding.drawerLayout.closeDrawers()
                         true
                     } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao navegar para tipos de despesa: ${e.message}", e)
+                        Timber.e("RoutesFragment", "Erro ao navegar para tipos de despesa: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao abrir tipos de despesa: ${e.message}", Toast.LENGTH_SHORT).show()
                         binding.drawerLayout.closeDrawers()
                         false
@@ -274,7 +274,7 @@ class RoutesFragment : Fragment() {
                         binding.drawerLayout.closeDrawers()
                         true
                     } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao abrir +Despesa: ${e.message}", e)
+                        Timber.e("RoutesFragment", "Erro ao abrir +Despesa: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao abrir +Despesa: ${e.message}", Toast.LENGTH_SHORT).show()
                         binding.drawerLayout.closeDrawers()
                         false
@@ -294,7 +294,7 @@ class RoutesFragment : Fragment() {
                         binding.drawerLayout.closeDrawers()
                         true
                     } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao navegar para gerenciamento de rotas: ${e.message}", e)
+                        Timber.e("RoutesFragment", "Erro ao navegar para gerenciamento de rotas: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao abrir gerenciamento de rotas: ${e.message}", Toast.LENGTH_SHORT).show()
                         binding.drawerLayout.closeDrawers()
                         false
@@ -314,7 +314,7 @@ class RoutesFragment : Fragment() {
                         binding.drawerLayout.closeDrawers()
                         true
                     } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao navegar para gerenciamento de contratos: ${e.message}", e)
+                        Timber.e("RoutesFragment", "Erro ao navegar para gerenciamento de contratos: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao abrir gerenciamento de contratos: ${e.message}", Toast.LENGTH_SHORT).show()
                         binding.drawerLayout.closeDrawers()
                         false
@@ -326,7 +326,7 @@ class RoutesFragment : Fragment() {
                         binding.drawerLayout.closeDrawers()
                         true
                     } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao abrir Inventário: ${e.message}", e)
+                        Timber.e("RoutesFragment", "Erro ao abrir Inventário: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao abrir Inventário: ${e.message}", Toast.LENGTH_SHORT).show()
                         binding.drawerLayout.closeDrawers()
                         false
@@ -338,7 +338,7 @@ class RoutesFragment : Fragment() {
                         binding.drawerLayout.closeDrawers()
                         true
                     } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao abrir metas: ${e.message}", e)
+                        Timber.e("RoutesFragment", "Erro ao abrir metas: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao abrir metas: ${e.message}", Toast.LENGTH_SHORT).show()
                         binding.drawerLayout.closeDrawers()
                         false
@@ -350,7 +350,7 @@ class RoutesFragment : Fragment() {
                         binding.drawerLayout.closeDrawers()
                         true
                     } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao navegar para dashboard: ${e.message}", e)
+                        Timber.e("RoutesFragment", "Erro ao navegar para dashboard: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao abrir dashboard: ${e.message}", Toast.LENGTH_SHORT).show()
                         binding.drawerLayout.closeDrawers()
                         false
@@ -362,7 +362,7 @@ class RoutesFragment : Fragment() {
                         binding.drawerLayout.closeDrawers()
                         true
                     } catch (e: Exception) {
-                        Log.e("RoutesFragment", "Erro ao navegar para fechamento: ${e.message}", e)
+                        Timber.e("RoutesFragment", "Erro ao navegar para fechamento: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao abrir fechamento: ${e.message}", Toast.LENGTH_SHORT).show()
                         binding.drawerLayout.closeDrawers()
                         false
@@ -380,13 +380,13 @@ class RoutesFragment : Fragment() {
                 }
                 com.example.gestaobilhares.ui.R.id.nav_logout -> {
                     // ✅ NOVO: Implementar logout completo
-                    android.util.Log.d("RoutesFragment", "=== INICIANDO LOGOUT ===")
-                    android.util.Log.d("RoutesFragment", "Usuário atual: ${userSessionManager.getCurrentUserName()}")
+                    Timber.d("RoutesFragment", "=== INICIANDO LOGOUT ===")
+                    Timber.d("RoutesFragment", "Usuário atual: ${userSessionManager.getCurrentUserName()}")
                     
                     try {
                         // Encerrar sessão local
                         userSessionManager.endSession()
-                        android.util.Log.d("RoutesFragment", "✅ Sessão local encerrada")
+                        Timber.d("RoutesFragment", "✅ Sessão local encerrada")
                         
                         // Fechar drawer
                         binding.drawerLayout.closeDrawers()
@@ -399,7 +399,7 @@ class RoutesFragment : Fragment() {
                         
                         true
                     } catch (e: Exception) {
-                        android.util.Log.e("RoutesFragment", "Erro no logout: ${e.message}", e)
+                        Timber.e("RoutesFragment", "Erro no logout: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao fazer logout: ${e.message}", Toast.LENGTH_SHORT).show()
                         binding.drawerLayout.closeDrawers()
                         false
@@ -448,13 +448,13 @@ class RoutesFragment : Fragment() {
      */
     private fun setupClickListeners() {
         // ✅ LOG CRASH: Início do setup de click listeners
-        Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - INÍCIO")
+        Timber.d("LOG_CRASH", "RoutesFragment.setupClickListeners - INÍCIO")
         
         try {
             // Botão de menu lateral
-            Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Configurando botão de menu")
+            Timber.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Configurando botão de menu")
             binding.btnMenu.setOnClickListener {
-                Log.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Clique no botão de menu")
+                Timber.d("LOG_CRASH", "RoutesFragment.setupClickListeners - Clique no botão de menu")
                 binding.drawerLayout.openDrawer(binding.navigationView)
             }
 
@@ -467,7 +467,7 @@ class RoutesFragment : Fragment() {
                 performManualSync()
             }
         } catch (e: Exception) {
-            Log.e("LOG_CRASH", "RoutesFragment.setupClickListeners - ERRO: ${e.message}", e)
+            Timber.e("LOG_CRASH", "RoutesFragment.setupClickListeners - ERRO: ${e.message}", e)
         }
     }
 
@@ -477,26 +477,26 @@ class RoutesFragment : Fragment() {
      */
     private fun observeViewModel() {
         // ✅ LOG CRASH: Início do observeViewModel
-        Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - INÍCIO")
+        Timber.d("LOG_CRASH", "RoutesFragment.observeViewModel - INÍCIO")
         
         try {
             // ✅ MODERNIZADO: Observa a lista de rotas com StateFlow
-            Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - Configurando observer de rotas")
+            Timber.d("LOG_CRASH", "RoutesFragment.observeViewModel - Configurando observer de rotas")
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.rotasResumo.collect { rotas ->
-                        Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - Recebidas ${rotas.size} rotas")
+                        Timber.d("LOG_CRASH", "RoutesFragment.observeViewModel - Recebidas ${rotas.size} rotas")
                         routesAdapter.submitList(rotas)
                     }
                 }
             }
 
             // ✅ MODERNIZADO: Observa as estatísticas gerais com StateFlow
-            Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - Configurando observer de estatísticas")
+            Timber.d("LOG_CRASH", "RoutesFragment.observeViewModel - Configurando observer de estatísticas")
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.estatisticas.collect { stats ->
-                        Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - Recebidas estatísticas: mesas=${stats.totalMesas}, clientes=${stats.totalClientesAtivos}, pendências=${stats.totalPendencias}")
+                        Timber.d("LOG_CRASH", "RoutesFragment.observeViewModel - Recebidas estatísticas: mesas=${stats.totalMesas}, clientes=${stats.totalClientesAtivos}, pendências=${stats.totalPendencias}")
                         binding.totalMesasCount.text = stats.totalMesas.toString()
                         binding.totalClientesCount.text = stats.totalClientesAtivos.toString()
                         binding.totalPendenciasCount.text = stats.totalPendencias.toString()
@@ -506,12 +506,12 @@ class RoutesFragment : Fragment() {
 
 
             // ✅ MODERNIZADO: Observa mensagens de erro com StateFlow
-            Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - Configurando observer de mensagens de erro")
+            Timber.d("LOG_CRASH", "RoutesFragment.observeViewModel - Configurando observer de mensagens de erro")
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.errorMessage.collect { message ->
                         message?.let {
-                            Log.e("LOG_CRASH", "RoutesFragment.observeViewModel - ERRO recebido: $it")
+                            Timber.e("LOG_CRASH", "RoutesFragment.observeViewModel - ERRO recebido: $it")
                             Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
                             viewModel.clearMessages()
                         }
@@ -519,9 +519,9 @@ class RoutesFragment : Fragment() {
                 }
             }
             
-            Log.d("LOG_CRASH", "RoutesFragment.observeViewModel - CONFIGURAÇÃO COMPLETA")
+            Timber.d("LOG_CRASH", "RoutesFragment.observeViewModel - CONFIGURAÇÃO COMPLETA")
         } catch (e: Exception) {
-            Log.e("LOG_CRASH", "RoutesFragment.observeViewModel - ERRO: ${e.message}", e)
+            Timber.e("LOG_CRASH", "RoutesFragment.observeViewModel - ERRO: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao configurar observadores: ${e.message}", Toast.LENGTH_LONG).show()
         }
 
@@ -571,12 +571,12 @@ class RoutesFragment : Fragment() {
                                     previousDestinationId == com.example.gestaobilhares.ui.R.id.changePasswordFragment
                             
                             if (!isComingFromLogin) {
-                                android.util.Log.d("RoutesFragment", "🚫 Diálogo tentou aparecer mas não viemos do login - PROIBIDO")
+                                Timber.d("RoutesFragment", "🚫 Diálogo tentou aparecer mas não viemos do login - PROIBIDO")
                                 viewModel.dismissSyncDialog(requireContext())
                                 return@collect
                             }
                         } catch (e: Exception) {
-                            android.util.Log.w("RoutesFragment", "⚠️ Erro ao verificar navegação no observer: ${e.message}")
+                            Timber.w("RoutesFragment", "⚠️ Erro ao verificar navegação no observer: ${e.message}")
                             // Em caso de erro, não mostrar diálogo (seguro)
                             viewModel.dismissSyncDialog(requireContext())
                             return@collect
@@ -649,7 +649,7 @@ class RoutesFragment : Fragment() {
         val dialog = TransferClientDialog.newInstance(cliente, rota, mesas)
         dialog.setOnTransferSuccessListener {
             // ✅ CORREÇÃO: Forçar atualização dos dados após transferência
-            android.util.Log.d("RoutesFragment", "✅ Transferência concluída - Forçando atualização dos dados")
+            Timber.d("RoutesFragment", "✅ Transferência concluída - Forçando atualização dos dados")
             viewModel.refresh()
         }
         dialog.show(parentFragmentManager, "TransferClientDialog")
@@ -662,18 +662,18 @@ class RoutesFragment : Fragment() {
     private fun performManualSync() {
         var progressDialog: androidx.appcompat.app.AlertDialog? = null
         try {
-            Log.d("RoutesFragment", "🔄 Iniciando sincronização manual")
+            Timber.d("RoutesFragment", "🔄 Iniciando sincronização manual")
             
             // ✅ CORREÇÃO CRÍTICA: Verificar sessão local em vez de Firebase Auth
             // O login híbrido pode funcionar offline sem autenticação Firebase
             val userId = userSessionManager.getCurrentUserId()
             if (userId == 0L) {
-                Log.w("RoutesFragment", "⚠️ Nenhum usuário logado na sessão local")
+                Timber.w("RoutesFragment", "⚠️ Nenhum usuário logado na sessão local")
                 Toast.makeText(requireContext(), "⚠️ Faça login para sincronizar dados", Toast.LENGTH_LONG).show()
                 return
             }
             
-            Log.d("RoutesFragment", "✅ Usuário logado detectado (ID: $userId)")
+            Timber.d("RoutesFragment", "✅ Usuário logado detectado (ID: $userId)")
             
             // Mostrar feedback visual
             binding.syncButton.alpha = 0.5f
@@ -705,7 +705,7 @@ class RoutesFragment : Fragment() {
                     val syncRepository = com.example.gestaobilhares.sync.SyncRepository(requireContext(), appRepository)
                     
                     // Executar sincronização bidirecional
-                    android.util.Log.d("RoutesFragment", "🔄 Iniciando sincronização bidirecional...")
+                    Timber.d("RoutesFragment", "🔄 Iniciando sincronização bidirecional...")
                     val result = withContext(Dispatchers.IO) {
                         syncRepository.syncBidirectional { progress ->
                             uiScope.launch {
@@ -718,9 +718,9 @@ class RoutesFragment : Fragment() {
                     
                     if (result.isSuccess) {
                         val status = syncRepository.getSyncStatus()
-                        android.util.Log.d("RoutesFragment", "✅ Sincronização concluída com sucesso")
-                        android.util.Log.d("RoutesFragment", "   Pendentes: ${status.pendingOperations}")
-                        android.util.Log.d("RoutesFragment", "   Falhas: ${status.failedOperations}")
+                        Timber.d("RoutesFragment", "✅ Sincronização concluída com sucesso")
+                        Timber.d("RoutesFragment", "   Pendentes: ${status.pendingOperations}")
+                        Timber.d("RoutesFragment", "   Falhas: ${status.failedOperations}")
 
                         progressBar.progress = 100
                         progressPercent.text = "100%"
@@ -729,25 +729,25 @@ class RoutesFragment : Fragment() {
                             "Falhas: ${status.failedOperations}"
                         
                         // Forçar atualização completa dos dados das rotas após sincronização
-                        android.util.Log.d("RoutesFragment", "🔄 Aguardando processamento dos dados...")
+                        Timber.d("RoutesFragment", "🔄 Aguardando processamento dos dados...")
                         kotlinx.coroutines.delay(2000)
                         
-                        android.util.Log.d("RoutesFragment", "🔄 Forçando refresh dos dados...")
+                        Timber.d("RoutesFragment", "🔄 Forçando refresh dos dados...")
                         viewModel.refresh()
                         
                         kotlinx.coroutines.delay(1000)
                         viewModel.refresh()
                         
-                        android.util.Log.d("RoutesFragment", "✅ Refresh concluído")
+                        Timber.d("RoutesFragment", "✅ Refresh concluído")
                     } else {
                         val status = syncRepository.getSyncStatus()
-                        android.util.Log.e("RoutesFragment", "❌ Sincronização falhou: ${status.error ?: "Erro desconhecido"}")
+                        Timber.e("RoutesFragment", "❌ Sincronização falhou: ${status.error ?: "Erro desconhecido"}")
                         progressStatus.text = "⚠️ Sincronização falhou: ${status.error ?: "Erro desconhecido"}\n" +
                             "Verifique os logs para mais detalhes"
                     }
                     
                 } catch (e: Exception) {
-                    Log.e("RoutesFragment", "Erro na sincronização: ${e.message}", e)
+                    Timber.e("RoutesFragment", "Erro na sincronização: ${e.message}", e)
                     progressStatus.text = "❌ Erro na sincronização: ${e.message ?: "Erro desconhecido"}"
                 } finally {
                     progressDialog.dismiss()
@@ -760,7 +760,7 @@ class RoutesFragment : Fragment() {
             }
             
         } catch (e: Exception) {
-            Log.e("RoutesFragment", "Erro ao iniciar sincronização: ${e.message}", e)
+            Timber.e("RoutesFragment", "Erro ao iniciar sincronização: ${e.message}", e)
             Toast.makeText(requireContext(), "❌ Erro ao sincronizar: ${e.message}", Toast.LENGTH_LONG).show()
             progressDialog?.dismiss()
             binding.syncButton.alpha = 1.0f
@@ -798,11 +798,11 @@ class RoutesFragment : Fragment() {
         binding.fabMaintenanceContainer.setOnClickListener { view ->
             // Navegar para a tela de mesas reformadas
             try {
-                Log.d("LOG_CRASH", "RoutesFragment - Clique em Manutenção Mesa")
+                Timber.d("LOG_CRASH", "RoutesFragment - Clique em Manutenção Mesa")
                 
                 // Verificar se o fragmento está anexado e o NavController está disponível
                 if (!isAdded || this.view == null) {
-                    Log.e("LOG_CRASH", "RoutesFragment - Fragment não está anexado ou view é null")
+                    Timber.e("LOG_CRASH", "RoutesFragment - Fragment não está anexado ou view é null")
                     return@setOnClickListener
                 }
                 
@@ -810,14 +810,14 @@ class RoutesFragment : Fragment() {
                 val navController = try {
                     findNavController()
                 } catch (e: IllegalStateException) {
-                    Log.e("LOG_CRASH", "RoutesFragment - NavController não disponível: ${e.message}", e)
+                    Timber.e("LOG_CRASH", "RoutesFragment - NavController não disponível: ${e.message}", e)
                     Toast.makeText(requireContext(), "Erro ao navegar. Tente novamente.", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 
                 // ✅ CORREÇÃO: Recolher menu ANTES da navegação para evitar crash
                 // Quando navegamos, o fragment é destruído e a animação tenta acessar binding null
-                Log.d("LOG_CRASH", "RoutesFragment - Recolhendo menu antes da navegação")
+                Timber.d("LOG_CRASH", "RoutesFragment - Recolhendo menu antes da navegação")
                 if (isAdded && view != null && _binding != null) {
                     // Ocultar container imediatamente sem animação para evitar problemas
                     _binding?.fabExpandedContainer?.visibility = View.GONE
@@ -829,14 +829,14 @@ class RoutesFragment : Fragment() {
                 val action = RoutesFragmentDirections.actionRoutesFragmentToMesasReformadasFragment()
                 navController.navigate(action)
                 
-                Log.d("LOG_CRASH", "RoutesFragment - Navegação para mesas reformadas concluída")
+                Timber.d("LOG_CRASH", "RoutesFragment - Navegação para mesas reformadas concluída")
             } catch (e: IllegalStateException) {
-                Log.e("LOG_CRASH", "RoutesFragment - Erro de estado ao navegar: ${e.message}", e)
+                Timber.e("LOG_CRASH", "RoutesFragment - Erro de estado ao navegar: ${e.message}", e)
                 if (isAdded && context != null) {
                     Toast.makeText(requireContext(), "Erro ao abrir reforma de mesas. Tente novamente.", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Log.e("LOG_CRASH", "RoutesFragment - Erro ao navegar para mesas reformadas: ${e.message}", e)
+                Timber.e("LOG_CRASH", "RoutesFragment - Erro ao navegar para mesas reformadas: ${e.message}", e)
                 if (isAdded && context != null) {
                     Toast.makeText(requireContext(), "Erro ao abrir reforma de mesas: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -856,10 +856,10 @@ class RoutesFragment : Fragment() {
      * ✅ NOVO: Expande o menu FAB com animação
      */
     private fun expandirFabMenu() {
-        Log.d("LOG_CRASH", "RoutesFragment.expandirFabMenu - INÍCIO")
+        Timber.d("LOG_CRASH", "RoutesFragment.expandirFabMenu - INÍCIO")
         try {
             binding.fabExpandedContainer.visibility = View.VISIBLE
-            Log.d("LOG_CRASH", "RoutesFragment.expandirFabMenu - Container expandido visível")
+            Timber.d("LOG_CRASH", "RoutesFragment.expandirFabMenu - Container expandido visível")
             
             // Animar entrada dos containers
             binding.fabMaintenanceContainer.alpha = 0f
@@ -885,9 +885,9 @@ class RoutesFragment : Fragment() {
                 .setDuration(200)
                 .start()
             
-            Log.d("LOG_CRASH", "RoutesFragment.expandirFabMenu - Animações iniciadas")
+            Timber.d("LOG_CRASH", "RoutesFragment.expandirFabMenu - Animações iniciadas")
         } catch (e: Exception) {
-            Log.e("LOG_CRASH", "RoutesFragment.expandirFabMenu - ERRO: ${e.message}", e)
+            Timber.e("LOG_CRASH", "RoutesFragment.expandirFabMenu - ERRO: ${e.message}", e)
         }
     }
     
@@ -895,18 +895,18 @@ class RoutesFragment : Fragment() {
      * ✅ NOVO: Recolhe o menu FAB com animação
      */
     private fun recolherFabMenu() {
-        Log.d("LOG_CRASH", "RoutesFragment.recolherFabMenu - INÍCIO")
+        Timber.d("LOG_CRASH", "RoutesFragment.recolherFabMenu - INÍCIO")
         try {
             // Verificar se o binding ainda está disponível
             val currentBinding = _binding
             if (currentBinding == null) {
-                Log.w("LOG_CRASH", "RoutesFragment.recolherFabMenu - Binding é null, pulando animação")
+                Timber.w("LOG_CRASH", "RoutesFragment.recolherFabMenu - Binding é null, pulando animação")
                 return
             }
             
             // Verificar se o fragment ainda está ativo
             if (!isAdded || view == null) {
-                Log.w("LOG_CRASH", "RoutesFragment.recolherFabMenu - Fragment não está ativo, pulando animação")
+                Timber.w("LOG_CRASH", "RoutesFragment.recolherFabMenu - Fragment não está ativo, pulando animação")
                 return
             }
             
@@ -924,12 +924,12 @@ class RoutesFragment : Fragment() {
                     try {
                         if (isAdded && view != null && _binding != null) {
                             _binding?.fabExpandedContainer?.visibility = View.GONE
-                            Log.d("LOG_CRASH", "RoutesFragment.recolherFabMenu - Container ocultado")
+                            Timber.d("LOG_CRASH", "RoutesFragment.recolherFabMenu - Container ocultado")
                         } else {
-                            Log.w("LOG_CRASH", "RoutesFragment.recolherFabMenu - Fragment destruído, pulando ocultação do container")
+                            Timber.w("LOG_CRASH", "RoutesFragment.recolherFabMenu - Fragment destruído, pulando ocultação do container")
                         }
                     } catch (e: Exception) {
-                        Log.e("LOG_CRASH", "RoutesFragment.recolherFabMenu - Erro no withEndAction: ${e.message}", e)
+                        Timber.e("LOG_CRASH", "RoutesFragment.recolherFabMenu - Erro no withEndAction: ${e.message}", e)
                     }
                 }
                 .start()
@@ -940,9 +940,9 @@ class RoutesFragment : Fragment() {
                 .setDuration(200)
                 .start()
             
-            Log.d("LOG_CRASH", "RoutesFragment.recolherFabMenu - Animações iniciadas")
+            Timber.d("LOG_CRASH", "RoutesFragment.recolherFabMenu - Animações iniciadas")
         } catch (e: Exception) {
-            Log.e("LOG_CRASH", "RoutesFragment.recolherFabMenu - ERRO: ${e.message}", e)
+            Timber.e("LOG_CRASH", "RoutesFragment.recolherFabMenu - ERRO: ${e.message}", e)
         }
     }
 

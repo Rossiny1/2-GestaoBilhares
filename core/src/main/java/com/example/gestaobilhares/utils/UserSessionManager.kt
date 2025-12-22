@@ -52,9 +52,13 @@ class UserSessionManager private constructor(context: Context) {
         private const val KEY_COMPANY_ID = "company_id" // ✅ NOVO: ID da empresa para sincronização dinâmica
     }
     
-    private val sharedPrefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    // ✅ PRODUÇÃO: Usar EncryptedSharedPreferences para dados sensíveis
+    private val sharedPrefs: SharedPreferences = SecurePreferencesHelper.getSecurePreferences(context)
     private val appContext: Context = context
     private val ioScope = CoroutineScope(Dispatchers.IO)
+    
+    // Flag para controlar migração única
+    private var migrationDone = false
 
     // DataStore
     private val Context.dataStore by preferencesDataStore(name = PREFS_NAME)
@@ -82,8 +86,39 @@ class UserSessionManager private constructor(context: Context) {
     val companyId: StateFlow<String> = _companyId.asStateFlow()
     
     init {
+        // Migrar dados antigos para EncryptedSharedPreferences (se necessário)
+        migrateIfNeeded()
         // Restaurar sessão ao inicializar
         restoreSession()
+    }
+    
+    /**
+     * Migra dados de SharedPreferences padrão para EncryptedSharedPreferences
+     * Executado apenas uma vez na primeira inicialização após atualização
+     */
+    private fun migrateIfNeeded() {
+        if (migrationDone) return
+        
+        try {
+            // Verificar se há dados antigos em SharedPreferences padrão
+            val oldPrefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val hasOldData = oldPrefs.contains(KEY_IS_LOGGED_IN)
+            
+            if (hasOldData && sharedPrefs !== oldPrefs) {
+                // Migrar dados para EncryptedSharedPreferences
+                SecurePreferencesHelper.migrateToSecurePreferences(
+                    oldPrefs,
+                    sharedPrefs
+                )
+                // Limpar dados antigos após migração bem-sucedida
+                oldPrefs.edit().clear().apply()
+                Timber.d("Migração para EncryptedSharedPreferences concluída")
+            }
+            migrationDone = true
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao migrar para EncryptedSharedPreferences")
+            // Continuar mesmo se migração falhar (fallback seguro)
+        }
     }
     
     /**
@@ -124,7 +159,7 @@ class UserSessionManager private constructor(context: Context) {
                     prefs[Keys.COMPANY_ID] = effectiveCompanyId
                 }
             } catch (e: Exception) {
-                android.util.Log.e("UserSessionManager", "Erro ao salvar DataStore: ${e.message}")
+                Timber.e(e, "Erro ao salvar DataStore: %s", e.message)
             }
         }
         
@@ -148,7 +183,7 @@ class UserSessionManager private constructor(context: Context) {
             try {
                 appContext.dataStore.edit { it.clear() }
             } catch (e: Exception) {
-                android.util.Log.e("UserSessionManager", "Erro ao limpar DataStore: ${e.message}")
+                Timber.e(e, "Erro ao limpar DataStore: %s", e.message)
             }
         }
         

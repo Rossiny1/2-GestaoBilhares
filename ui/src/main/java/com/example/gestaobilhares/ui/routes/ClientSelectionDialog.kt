@@ -18,6 +18,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
  */
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.fragment.app.viewModels
+import timber.log.Timber
 
 /**
  * DialogFragment para selecionar um cliente para transferência.
@@ -134,7 +135,7 @@ class ClientSelectionDialog : DialogFragment() {
         viewModel.errorMessage.observe(this) { message ->
             message?.let {
                 // Mostrar erro se necessário
-                android.util.Log.e("ClientSelectionDialog", it)
+                Timber.e("ClientSelectionDialog", it)
             }
         }
     }

@@ -2,7 +2,7 @@
 
 import android.app.Dialog
 import android.os.Bundle
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -35,7 +35,7 @@ class PanoDetailsDialog : DialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        Log.d("PanoDetailsDialog", "Criando diálogo de detalhes dos panos")
+        Timber.d("PanoDetailsDialog", "Criando diálogo de detalhes dos panos")
         
         _binding = DialogPanoDetailsBinding.inflate(LayoutInflater.from(requireContext()))
 
@@ -53,7 +53,7 @@ class PanoDetailsDialog : DialogFragment() {
 
     private fun setupUI() {
         adapter = PanoDetailAdapter { pano ->
-            Log.d("PanoDetailsDialog", "Pano clicado: ${pano.numero}")
+            Timber.d("PanoDetailsDialog", "Pano clicado: ${pano.numero}")
             // TODO: Implementar ação ao clicar em um pano individual
         }
         

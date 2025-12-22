@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
-import android.util.Log
+import timber.log.Timber
 // BuildConfig não disponível em módulos de biblioteca
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.PanoEstoque
@@ -119,9 +119,9 @@ class SettlementViewModel @Inject constructor(
      * @param acertoIdParaEdicao ID do acerto sendo editado (null se for novo acerto)
      */
     suspend fun prepararMesasParaAcerto(mesasCliente: List<Mesa>, acertoIdParaEdicao: Long? = null): List<Mesa> {
-        Log.d("SettlementViewModel", "=== PREPARANDO MESAS PARA ACERTO ===")
-        Log.d("SettlementViewModel", "Mesas recebidas: ${mesasCliente.size}, Modo edição: ${acertoIdParaEdicao != null}")
-        Log.d("SettlementViewModel", "Acerto ID para edição: $acertoIdParaEdicao")
+        Timber.d("SettlementViewModel", "=== PREPARANDO MESAS PARA ACERTO ===")
+        Timber.d("SettlementViewModel", "Mesas recebidas: ${mesasCliente.size}, Modo edição: ${acertoIdParaEdicao != null}")
+        Timber.d("SettlementViewModel", "Acerto ID para edição: $acertoIdParaEdicao")
         
         return mesasCliente.map { mesa ->
             try {
@@ -170,7 +170,7 @@ class SettlementViewModel @Inject constructor(
                 mesa.copy(relogioInicial = relogioInicial)
             }
         }.also { mesasPreparadas ->
-            Log.d("SettlementViewModel", "=== MESAS PREPARADAS ===")
+            Timber.d("SettlementViewModel", "=== MESAS PREPARADAS ===")
             mesasPreparadas.forEach { mesa ->
                 logOperation("SETTLEMENT", "Mesa ${mesa.numero}: relógio inicial=${mesa.relogioInicial}, relógio final=${mesa.relogioFinal}")
             }
@@ -202,10 +202,10 @@ class SettlementViewModel @Inject constructor(
      */
     suspend fun carregarMesasClienteDireto(clienteId: Long): List<Mesa> {
         return try {
-            Log.d("SettlementViewModel", "Carregando mesas diretamente para cliente $clienteId")
+            Timber.d("SettlementViewModel", "Carregando mesas diretamente para cliente $clienteId")
             appRepository.obterMesasPorClienteDireto(clienteId)
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao carregar mesas direto: ${e.message}")
+            Timber.e("SettlementViewModel", "Erro ao carregar mesas direto: ${e.message}")
             emptyList()
         }
     }
@@ -426,10 +426,10 @@ class SettlementViewModel @Inject constructor(
                 logOperation("SETTLEMENT", "Métodos de pagamento: $metodosPagamento")
 
                 // ✅ CORREÇÃO CRÍTICA: Vínculos com rota e ciclo
-                android.util.Log.d("SettlementViewModel", "=== VINCULANDO ACERTO À ROTA E CICLO ===")
-                android.util.Log.d("SettlementViewModel", "Cliente ID: $clienteId")
-                android.util.Log.d("SettlementViewModel", "Rota ID do cliente: $rotaId")
-                android.util.Log.d("SettlementViewModel", "Ciclo atual: $cicloIdEfetivo")
+                Timber.d("SettlementViewModel", "=== VINCULANDO ACERTO À ROTA E CICLO ===")
+                Timber.d("SettlementViewModel", "Cliente ID: $clienteId")
+                Timber.d("SettlementViewModel", "Rota ID do cliente: $rotaId")
+                Timber.d("SettlementViewModel", "Ciclo atual: $cicloIdEfetivo")
                 
                 // ✅ CORREÇÃO: Lógica diferente para edição vs. novo acerto
                 val acertoId: Long
@@ -670,7 +670,7 @@ class SettlementViewModel @Inject constructor(
      */
     private suspend fun registrarTrocaPanoNoHistorico(mesas: List<com.example.gestaobilhares.ui.settlement.MesaDTO>, numeroPano: String) {
         try {
-            Log.d("SettlementViewModel", "Registrando troca de pano no histórico: $numeroPano")
+            Timber.d("SettlementViewModel", "Registrando troca de pano no histórico: $numeroPano")
             
             mesas.forEach { mesa ->
                 val historico = HistoricoManutencaoMesa(
@@ -687,7 +687,7 @@ class SettlementViewModel @Inject constructor(
                 logOperation("SETTLEMENT", "Histórico de troca de pano registrado para mesa ${mesa.numero}")
             }
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao registrar troca de pano no histórico: ${e.message}", e)
+            Timber.e("SettlementViewModel", "Erro ao registrar troca de pano no histórico: ${e.message}", e)
         }
     }
     
@@ -718,7 +718,7 @@ class SettlementViewModel @Inject constructor(
         return try {
             appRepository.obterMesaPorId(mesaId)
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao buscar mesa por ID: ${e.message}", e)
+            Timber.e("SettlementViewModel", "Erro ao buscar mesa por ID: ${e.message}", e)
             null
         }
     }
@@ -730,7 +730,7 @@ class SettlementViewModel @Inject constructor(
         return try {
             appRepository.obterClientePorId(clienteId)
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao buscar cliente por ID: ${e.message}", e)
+            Timber.e("SettlementViewModel", "Erro ao buscar cliente por ID: ${e.message}", e)
             null
         }
     }
@@ -743,7 +743,7 @@ class SettlementViewModel @Inject constructor(
             // Usar o AppRepository através do ClienteRepository
             appRepository.buscarContratoAtivoPorCliente(clienteId)
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao buscar contrato ativo do cliente: ${e.message}", e)
+            Timber.e("SettlementViewModel", "Erro ao buscar contrato ativo do cliente: ${e.message}", e)
             null
         }
     }
@@ -755,7 +755,7 @@ class SettlementViewModel @Inject constructor(
         return try {
             appRepository.buscarAcertoMesasPorAcerto(acertoId)
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao buscar mesas do acerto: ${e.message}", e)
+            Timber.e("SettlementViewModel", "Erro ao buscar mesas do acerto: ${e.message}", e)
             emptyList()
         }
     }
@@ -778,7 +778,7 @@ class SettlementViewModel @Inject constructor(
         return try {
             appRepository.calcularMediaFichasJogadas(mesaId, limite)
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao calcular média de fichas: ${e.message}", e)
+            Timber.e("SettlementViewModel", "Erro ao calcular média de fichas: ${e.message}", e)
             0.0
         }
     }
@@ -788,11 +788,11 @@ class SettlementViewModel @Inject constructor(
      */
     suspend fun marcarPanoComoUsado(numeroPano: String, motivo: String = "Usado no acerto") {
         try {
-            Log.d("SettlementViewModel", "Marcando pano $numeroPano como usado: $motivo")
+            Timber.d("SettlementViewModel", "Marcando pano $numeroPano como usado: $motivo")
             appRepository.marcarPanoComoUsadoPorNumero(numeroPano)
-            Log.d("SettlementViewModel", "Pano $numeroPano marcado como usado com sucesso")
+            Timber.d("SettlementViewModel", "Pano $numeroPano marcado como usado com sucesso")
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao marcar pano como usado: ${e.message}", e)
+            Timber.e("SettlementViewModel", "Erro ao marcar pano como usado: ${e.message}", e)
         }
     }
     
@@ -813,10 +813,10 @@ class SettlementViewModel @Inject constructor(
             
             // 3. TODO: Vincular pano à mesa (precisa do ID da mesa)
             // Por enquanto, apenas log
-            Log.d("SettlementViewModel", "Pano $numeroPano trocado na mesa: $motivo")
+            Timber.d("SettlementViewModel", "Pano $numeroPano trocado na mesa: $motivo")
             
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao trocar pano na mesa: ${e.message}", e)
+            Timber.e("SettlementViewModel", "Erro ao trocar pano na mesa: ${e.message}", e)
         }
     }
     
@@ -825,7 +825,7 @@ class SettlementViewModel @Inject constructor(
      */
     suspend fun trocarPanoNaMesa(mesaId: Long, numeroPano: String, motivo: String = "Usado no acerto") {
         try {
-            Log.d("SettlementViewModel", "Iniciando troca de pano $numeroPano na mesa $mesaId")
+            Timber.d("SettlementViewModel", "Iniciando troca de pano $numeroPano na mesa $mesaId")
             
             // 1. Buscar o pano no estoque
             val pano = appRepository.buscarPorNumero(numeroPano)
@@ -834,19 +834,19 @@ class SettlementViewModel @Inject constructor(
                 return
             }
             
-            Log.d("SettlementViewModel", "Pano encontrado: ${pano.numero} (ID: ${pano.id})")
+            Timber.d("SettlementViewModel", "Pano encontrado: ${pano.numero} (ID: ${pano.id})")
             
             // 2. Marcar pano como usado no estoque
             appRepository.marcarPanoComoUsado(pano.id)
-            Log.d("SettlementViewModel", "Pano ${pano.id} marcado como usado no estoque")
+            Timber.d("SettlementViewModel", "Pano ${pano.id} marcado como usado no estoque")
             
             // 3. Atualizar mesa com novo pano
             atualizarPanoDaMesa(mesaId, pano.id)
             
-            Log.d("SettlementViewModel", "Pano $numeroPano trocado na mesa $mesaId com sucesso: $motivo")
+            Timber.d("SettlementViewModel", "Pano $numeroPano trocado na mesa $mesaId com sucesso: $motivo")
             
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao trocar pano na mesa: ${e.message}", e)
+            Timber.e("SettlementViewModel", "Erro ao trocar pano na mesa: ${e.message}", e)
         }
     }
     
@@ -855,7 +855,7 @@ class SettlementViewModel @Inject constructor(
      */
     private suspend fun atualizarPanoDaMesa(mesaId: Long, panoId: Long) {
         try {
-            Log.d("SettlementViewModel", "Atualizando pano da mesa $mesaId com pano $panoId")
+            Timber.d("SettlementViewModel", "Atualizando pano da mesa $mesaId com pano $panoId")
             
             // Buscar a mesa atual
             val mesa = appRepository.obterMesaPorId(mesaId)
@@ -866,7 +866,7 @@ class SettlementViewModel @Inject constructor(
                 val dataAtual = try {
                     com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
                 } catch (e: Exception) {
-                    Log.w("SettlementViewModel", "Erro ao obter data atual, usando data padrão: ${e.message}")
+                    Timber.w("SettlementViewModel", "Erro ao obter data atual, usando data padrão: ${e.message}")
                     java.util.Date() // Fallback para data atual do sistema
                 }
                 
@@ -881,7 +881,7 @@ class SettlementViewModel @Inject constructor(
                 logError("SETTLEMENT", "Mesa $mesaId não encontrada")
             }
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao atualizar pano da mesa: ${e.message}", e)
+            Timber.e("SettlementViewModel", "Erro ao atualizar pano da mesa: ${e.message}", e)
             throw e // Re-throw para que o Fragment possa tratar
         }
     }
@@ -906,11 +906,11 @@ class SettlementViewModel @Inject constructor(
                 return null
             }
             
-            Log.d("SettlementViewModel", "Pano atual da mesa $mesaId: ${pano.numero}")
+            Timber.d("SettlementViewModel", "Pano atual da mesa $mesaId: ${pano.numero}")
             pano
             
         } catch (e: Exception) {
-            Log.e("SettlementViewModel", "Erro ao carregar pano atual da mesa: ${e.message}", e)
+            Timber.e("SettlementViewModel", "Erro ao carregar pano atual da mesa: ${e.message}", e)
             null
         }
     }

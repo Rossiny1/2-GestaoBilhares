@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.take
 import java.util.*
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import timber.log.Timber
 
 /**
  * Dialog para venda de mesa - VERSÃO SIMPLIFICADA
@@ -57,7 +58,7 @@ class VendaMesaDialog : DialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        android.util.Log.d(TAG, "onCreateDialog() - criando dialog")
+        Timber.d(TAG, "onCreateDialog() - criando dialog")
         _binding = DialogVendaMesaBinding.inflate(layoutInflater)
         this.isCancelable = true // ✅ CORREÇÃO: Permitir cancelamento
         val dialog = MaterialAlertDialogBuilder(requireContext())
@@ -67,7 +68,7 @@ class VendaMesaDialog : DialogFragment() {
         // ✅ CORREÇÃO: Configurar botão voltar do Android
         dialog.setOnKeyListener { _, keyCode, event ->
             if (keyCode == android.view.KeyEvent.KEYCODE_BACK && event.action == android.view.KeyEvent.ACTION_UP) {
-                android.util.Log.d(TAG, "Botão voltar pressionado - fechando dialog")
+                Timber.d(TAG, "Botão voltar pressionado - fechando dialog")
                 dismiss()
                 true
             } else {
@@ -78,26 +79,26 @@ class VendaMesaDialog : DialogFragment() {
         // ✅ IMPORTANTE: Em DialogFragment, quando se usa setView em onCreateDialog,
         // onViewCreated normalmente NÃO é chamado. Portanto, inicializamos aqui.
         try {
-            android.util.Log.d(TAG, "onCreateDialog() - inicializando dependencias e UI")
+            Timber.d(TAG, "onCreateDialog() - inicializando dependencias e UI")
             setupUI()
             setupClickListeners()
             carregarMesasDisponiveis()
-            android.util.Log.d(TAG, "onCreateDialog() - inicializacao concluida")
+            Timber.d(TAG, "onCreateDialog() - inicializacao concluida")
         } catch (e: Exception) {
-            android.util.Log.e(TAG, "Falha na inicializacao do dialog: ${e.message}", e)
+            Timber.e(TAG, "Falha na inicializacao do dialog: ${e.message}", e)
         }
-        android.util.Log.d(TAG, "onCreateDialog() - dialog criado")
+        Timber.d(TAG, "onCreateDialog() - dialog criado")
         return dialog
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        android.util.Log.d(TAG, "onDestroyView() - limpando binding")
+        Timber.d(TAG, "onDestroyView() - limpando binding")
         _binding = null
     }
 
     private fun setupUI() {
-        android.util.Log.d(TAG, "setupUI() - configurando data e campos")
+        Timber.d(TAG, "setupUI() - configurando data e campos")
         // Configurar data atual
         val calendar = Calendar.getInstance()
         dataVenda = calendar.time
@@ -115,14 +116,14 @@ class VendaMesaDialog : DialogFragment() {
     }
 
     private fun setupClickListeners() {
-        android.util.Log.d(TAG, "setupClickListeners() - registrando listeners")
+        Timber.d(TAG, "setupClickListeners() - registrando listeners")
         binding.btnCancelar.setOnClickListener {
-            android.util.Log.d(TAG, "Clique em Cancelar - fechando dialog")
+            Timber.d(TAG, "Clique em Cancelar - fechando dialog")
             dismiss()
         }
 
         binding.btnVender.setOnClickListener {
-            android.util.Log.d(TAG, "Clique em Vender - iniciando validação/venda")
+            Timber.d(TAG, "Clique em Vender - iniciando validação/venda")
             realizarVenda()
         }
 
@@ -138,10 +139,10 @@ class VendaMesaDialog : DialogFragment() {
             override fun afterTextChanged(s: Editable?) {
                 val texto = s.toString().trim()
                 if (isUpdatingNumeroMesa) {
-                    android.util.Log.d(TAG, "afterTextChanged() - ignorado (atualização programática)")
+                    Timber.d(TAG, "afterTextChanged() - ignorado (atualização programática)")
                     return
                 }
-                android.util.Log.d(TAG, "afterTextChanged() - filtro='${texto}'")
+                Timber.d(TAG, "afterTextChanged() - filtro='${texto}'")
                 if (texto.isNotEmpty()) {
                     filtrarMesas(texto)
                 } else {
@@ -152,18 +153,18 @@ class VendaMesaDialog : DialogFragment() {
 
         // Seleção de mesa
         binding.etNumeroMesa.setOnClickListener {
-            android.util.Log.d(TAG, "Clique no campo número - abrindo seletor de mesa")
+            Timber.d(TAG, "Clique no campo número - abrindo seletor de mesa")
             mostrarSeletorMesa()
         }
     }
 
     private fun carregarMesasDisponiveis() {
-        android.util.Log.d(TAG, "carregarMesasDisponiveis() - iniciando")
+        Timber.d(TAG, "carregarMesasDisponiveis() - iniciando")
         lifecycleScope.launch {
             try {
                 // ✅ CORREÇÃO: Verificar se appRepository foi inicializado
                 if (!::appRepository.isInitialized) {
-                    android.util.Log.e(TAG, "AppRepository não foi inicializado!")
+                    Timber.e(TAG, "AppRepository não foi inicializado!")
                     context?.let { Toast.makeText(it, "Erro de inicialização. Tente novamente.", Toast.LENGTH_SHORT).show() }
                     return@launch
                 }
@@ -175,7 +176,7 @@ class VendaMesaDialog : DialogFragment() {
                     .collect { mesas ->
                         if (!isAdded || _binding == null) return@collect
                         mesasDisponiveis = mesas
-                        android.util.Log.d(TAG, "Mesas carregadas=${mesasDisponiveis.size}")
+                        Timber.d(TAG, "Mesas carregadas=${mesasDisponiveis.size}")
                         if (mesasDisponiveis.isEmpty()) {
                             context?.let {
                                 Toast.makeText(it, "Nenhuma mesa disponível no depósito", Toast.LENGTH_SHORT).show()
@@ -185,23 +186,23 @@ class VendaMesaDialog : DialogFragment() {
                         } else {
                             binding.etNumeroMesa.hint = "Digite o número da mesa"
                             binding.etNumeroMesa.isEnabled = true
-                            android.util.Log.d(TAG, "Mesas disponíveis: ${mesasDisponiveis.map { it.numero }}")
+                            Timber.d(TAG, "Mesas disponíveis: ${mesasDisponiveis.map { it.numero }}")
                         }
                     }
 
             } catch (e: Exception) {
                 if (e is CancellationException) {
-                    android.util.Log.d(TAG, "carregarMesasDisponiveis() cancelado")
+                    Timber.d(TAG, "carregarMesasDisponiveis() cancelado")
                     return@launch
                 }
-                android.util.Log.e(TAG, "Erro ao carregar mesas: ${e.message}", e)
+                Timber.e(TAG, "Erro ao carregar mesas: ${e.message}", e)
                 context?.let { Toast.makeText(it, "Erro ao carregar mesas: ${e.message}", Toast.LENGTH_SHORT).show() }
             }
         }
     }
 
     private fun filtrarMesas(filtro: String) {
-        android.util.Log.d(TAG, "filtrarMesas() - filtro='${filtro}'")
+        Timber.d(TAG, "filtrarMesas() - filtro='${filtro}'")
         val mesasFiltradas = mesasDisponiveis.filter {
             it.numero.startsWith(filtro, ignoreCase = true)
         }
@@ -218,16 +219,16 @@ class VendaMesaDialog : DialogFragment() {
                     isUpdatingNumeroMesa = false
                 }
             }
-            android.util.Log.d(TAG, "Mesa selecionada automaticamente='${mesa.numero}'")
+            Timber.d(TAG, "Mesa selecionada automaticamente='${mesa.numero}'")
             Toast.makeText(requireContext(), "Mesa ${mesa.numero} selecionada!", Toast.LENGTH_SHORT).show()
         } else if (mesasFiltradas.isEmpty()) {
-            android.util.Log.d(TAG, "Nenhuma mesa encontrada para o filtro")
+            Timber.d(TAG, "Nenhuma mesa encontrada para o filtro")
             mesaSelecionada = null
         }
     }
 
     private fun mostrarSeletorData() {
-        android.util.Log.d(TAG, "mostrarSeletorData() - exibindo DatePicker")
+        Timber.d(TAG, "mostrarSeletorData() - exibindo DatePicker")
         val calendar = Calendar.getInstance()
         calendar.time = dataVenda
 
@@ -239,7 +240,7 @@ class VendaMesaDialog : DialogFragment() {
                 dataVenda = selectedCalendar.time
                 val novaData = android.text.format.DateFormat.format("dd/MM/yyyy", dataVenda).toString()
                 binding.etDataVenda.setText(novaData)
-                android.util.Log.d(TAG, "Data selecionada='${novaData}'")
+                Timber.d(TAG, "Data selecionada='${novaData}'")
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
@@ -250,7 +251,7 @@ class VendaMesaDialog : DialogFragment() {
     }
 
     private fun mostrarSeletorMesa() {
-        android.util.Log.d(TAG, "mostrarSeletorMesa() - tamanho lista=${mesasDisponiveis.size}")
+        Timber.d(TAG, "mostrarSeletorMesa() - tamanho lista=${mesasDisponiveis.size}")
         if (mesasDisponiveis.isEmpty()) {
             Toast.makeText(requireContext(), "Nenhuma mesa disponível", Toast.LENGTH_SHORT).show()
             return
@@ -270,10 +271,10 @@ class VendaMesaDialog : DialogFragment() {
                     } finally {
                         isUpdatingNumeroMesa = false
                     }
-                    android.util.Log.d(TAG, "Mesa selecionada no seletor='${mesaSelecionada.numero}'")
+                    Timber.d(TAG, "Mesa selecionada no seletor='${mesaSelecionada.numero}'")
                     Toast.makeText(requireContext(), "Mesa ${mesaSelecionada.numero} selecionada!", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
-                    android.util.Log.e(TAG, "Erro ao selecionar mesa: ${e.message}", e)
+                    Timber.e(TAG, "Erro ao selecionar mesa: ${e.message}", e)
                     Toast.makeText(requireContext(), "Erro ao selecionar mesa", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -282,16 +283,16 @@ class VendaMesaDialog : DialogFragment() {
     }
 
     private fun realizarVenda() {
-        android.util.Log.d(TAG, "realizarVenda() - iniciando")
+        Timber.d(TAG, "realizarVenda() - iniciando")
         if (!validarCampos()) {
-            android.util.Log.w(TAG, "realizarVenda() - validação falhou")
+            Timber.w(TAG, "realizarVenda() - validação falhou")
             return
         }
 
         lifecycleScope.launch {
             try {
                 val mesa = mesaSelecionada!!
-                android.util.Log.d(TAG, "Mesa alvo id=${mesa.id} numero='${mesa.numero}'")
+                Timber.d(TAG, "Mesa alvo id=${mesa.id} numero='${mesa.numero}'")
 
                 // Criar objeto MesaVendida
                 val novaVenda = MesaVendida(
@@ -318,14 +319,14 @@ class VendaMesaDialog : DialogFragment() {
                     vendaId = appRepository.inserirMesaVendida(novaVenda)
                     appRepository.deletarMesa(mesa)
                 }
-                android.util.Log.d(TAG, "Transação concluída - vendaId=${vendaId}")
+                Timber.d(TAG, "Transação concluída - vendaId=${vendaId}")
 
                 // Verificações pós-transação para diagnóstico
                 val vendaRetornada = appRepository.buscarMesaVendidaPorId(vendaId)
                 val mesaAindaExiste = appRepository.obterMesaPorId(mesa.id) != null
-                android.util.Log.d(TAG, "Pós-transação: vendaRetornadaNull=${vendaRetornada==null} mesaAindaExiste=${mesaAindaExiste}")
+                Timber.d(TAG, "Pós-transação: vendaRetornadaNull=${vendaRetornada==null} mesaAindaExiste=${mesaAindaExiste}")
                 if (vendaRetornada == null || mesaAindaExiste) {
-                    android.util.Log.e(TAG, "Inconsistência pós-transação - venda nula ou mesa ainda presente")
+                    Timber.e(TAG, "Inconsistência pós-transação - venda nula ou mesa ainda presente")
                     Toast.makeText(requireContext(), "Falha ao confirmar venda. Tente novamente.", Toast.LENGTH_LONG).show()
                     return@launch
                 }
@@ -333,25 +334,25 @@ class VendaMesaDialog : DialogFragment() {
                 val vendaConfirmada = novaVenda.copy(id = vendaId)
                 Toast.makeText(requireContext(), "Mesa vendida com sucesso!", Toast.LENGTH_SHORT).show()
                 onVendaRealizada?.invoke(vendaConfirmada)
-                android.util.Log.d(TAG, "Venda concluída - fechando dialog")
+                Timber.d(TAG, "Venda concluída - fechando dialog")
                 dismiss()
 
             } catch (e: Exception) {
-                android.util.Log.e(TAG, "Erro ao vender mesa: ${e.message}", e)
+                Timber.e(TAG, "Erro ao vender mesa: ${e.message}", e)
                 context?.let { Toast.makeText(it, "Erro ao vender mesa: ${e.message}", Toast.LENGTH_SHORT).show() }
             }
         }
     }
 
     private fun validarCampos(): Boolean {
-        android.util.Log.d(TAG, "validarCampos() - iniciando")
+        Timber.d(TAG, "validarCampos() - iniciando")
         // Limpar erros anteriores
         binding.etNumeroMesa.error = null
         binding.etNomeComprador.error = null
         binding.etValorVenda.error = null
 
         if (mesaSelecionada == null) {
-            android.util.Log.w(TAG, "validarCampos() - mesa não selecionada")
+            Timber.w(TAG, "validarCampos() - mesa não selecionada")
             binding.etNumeroMesa.error = "Selecione uma mesa"
             context?.let { Toast.makeText(it, "Selecione uma mesa", Toast.LENGTH_SHORT).show() }
             return false
@@ -359,7 +360,7 @@ class VendaMesaDialog : DialogFragment() {
 
         val nomeComprador = binding.etNomeComprador.text.toString().trim()
         if (nomeComprador.isEmpty()) {
-            android.util.Log.w(TAG, "validarCampos() - nome vazio")
+            Timber.w(TAG, "validarCampos() - nome vazio")
             binding.etNomeComprador.error = "Nome obrigatório"
             context?.let { Toast.makeText(it, "Nome do comprador é obrigatório", Toast.LENGTH_SHORT).show() }
             return false
@@ -367,7 +368,7 @@ class VendaMesaDialog : DialogFragment() {
 
         val valorTexto = binding.etValorVenda.text.toString().trim()
         if (valorTexto.isEmpty()) {
-            android.util.Log.w(TAG, "validarCampos() - valor vazio")
+            Timber.w(TAG, "validarCampos() - valor vazio")
             binding.etValorVenda.error = "Valor obrigatório"
             context?.let { Toast.makeText(it, "Valor da venda é obrigatório", Toast.LENGTH_SHORT).show() }
             return false
@@ -375,13 +376,13 @@ class VendaMesaDialog : DialogFragment() {
 
         val valorVenda = valorTexto.replace(",", ".").toDoubleOrNull()
         if (valorVenda == null || valorVenda <= 0) {
-            android.util.Log.w(TAG, "validarCampos() - valor inválido='$valorTexto'")
+            Timber.w(TAG, "validarCampos() - valor inválido='$valorTexto'")
             binding.etValorVenda.error = "Valor deve ser maior que zero"
             context?.let { Toast.makeText(it, "Valor inválido", Toast.LENGTH_SHORT).show() }
             return false
         }
 
-        android.util.Log.d(TAG, "validarCampos() - OK")
+        Timber.d(TAG, "validarCampos() - OK")
         return true
     }
 

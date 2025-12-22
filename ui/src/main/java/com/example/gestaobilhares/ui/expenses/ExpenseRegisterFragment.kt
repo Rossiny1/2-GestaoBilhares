@@ -6,7 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -97,28 +97,28 @@ class ExpenseRegisterFragment : Fragment() {
         if (success) {
             try {
                 currentPhotoUri?.let { uri ->
-                    Log.d("ExpenseRegisterFragment", "Foto do comprovante capturada com sucesso: $uri")
+                    Timber.d("ExpenseRegisterFragment", "Foto do comprovante capturada com sucesso: $uri")
                     binding.root.post {
                         try {
                             val caminhoReal = obterCaminhoRealFoto(uri)
                             if (caminhoReal != null) {
-                                Log.d("ExpenseRegisterFragment", "Caminho real da foto: $caminhoReal")
+                                Timber.d("ExpenseRegisterFragment", "Caminho real da foto: $caminhoReal")
                                 fotoComprovantePath = caminhoReal
                                 dataFotoComprovante = Date()
                                 mostrarFotoComprovante(caminhoReal, dataFotoComprovante)
                                 Toast.makeText(requireContext(), "Foto do comprovante capturada com sucesso!", Toast.LENGTH_SHORT).show()
                             } else {
-                                Log.e("ExpenseRegisterFragment", "Não foi possível obter o caminho real da foto")
+                                Timber.e("ExpenseRegisterFragment", "Não foi possível obter o caminho real da foto")
                                 Toast.makeText(requireContext(), "Erro: não foi possível salvar a foto", Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
-                            Log.e("ExpenseRegisterFragment", "Erro ao processar foto: ${e.message}", e)
+                            Timber.e("ExpenseRegisterFragment", "Erro ao processar foto: ${e.message}", e)
                             Toast.makeText(requireContext(), "Erro ao processar foto: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.e("ExpenseRegisterFragment", "Erro crítico após captura de foto: ${e.message}", e)
+                Timber.e("ExpenseRegisterFragment", "Erro crítico após captura de foto: ${e.message}", e)
                 Toast.makeText(requireContext(), "Erro ao processar foto capturada", Toast.LENGTH_LONG).show()
             }
         } else {
@@ -800,16 +800,16 @@ class ExpenseRegisterFragment : Fragment() {
                 // Se há foto e não é URL do Firebase Storage, fazer upload
                 if (finalFotoPath != null && !firebaseImageUploader.isFirebaseStorageUrl(finalFotoPath)) {
                     if (networkUtils.isConnected()) {
-                        Log.d("ExpenseRegisterFragment", "Fazendo upload da foto para Firebase Storage...")
+                        Timber.d("ExpenseRegisterFragment", "Fazendo upload da foto para Firebase Storage...")
                         val uploadedUrl = firebaseImageUploader.uploadDespesaComprovante(finalFotoPath)
                         if (uploadedUrl != null) {
                             finalFotoPath = uploadedUrl
-                            Log.d("ExpenseRegisterFragment", "✅ Foto enviada para Firebase Storage: $finalFotoPath")
+                            Timber.d("ExpenseRegisterFragment", "✅ Foto enviada para Firebase Storage: $finalFotoPath")
                         } else {
-                            Log.w("ExpenseRegisterFragment", "⚠️ Falha no upload, usando caminho local")
+                            Timber.w("ExpenseRegisterFragment", "⚠️ Falha no upload, usando caminho local")
                         }
                     } else {
-                        Log.d("ExpenseRegisterFragment", "📴 Sem conexão, foto será sincronizada depois")
+                        Timber.d("ExpenseRegisterFragment", "📴 Sem conexão, foto será sincronizada depois")
                     }
                 }
                 
@@ -829,7 +829,7 @@ class ExpenseRegisterFragment : Fragment() {
                     litrosAbastecidos = if (isCombustivel) litrosValue else null
                 )
             } catch (e: Exception) {
-                Log.e("ExpenseRegisterFragment", "Erro ao salvar despesa: ${e.message}", e)
+                Timber.e("ExpenseRegisterFragment", "Erro ao salvar despesa: ${e.message}", e)
                 Toast.makeText(requireContext(), "Erro ao salvar despesa: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
@@ -859,7 +859,7 @@ class ExpenseRegisterFragment : Fragment() {
             )
             cameraLauncher.launch(currentPhotoUri)
         } catch (e: Exception) {
-            Log.e("ExpenseRegisterFragment", "Erro ao abrir câmera: ${e.message}", e)
+            Timber.e("ExpenseRegisterFragment", "Erro ao abrir câmera: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao abrir câmera: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
@@ -873,17 +873,17 @@ class ExpenseRegisterFragment : Fragment() {
     
     private fun obterCaminhoRealFoto(uri: Uri): String? {
         return try {
-            Log.d("ExpenseRegisterFragment", "Obtendo caminho real para URI: $uri")
+            Timber.d("ExpenseRegisterFragment", "Obtendo caminho real para URI: $uri")
             
             // ✅ CORREÇÃO: Tentar comprimir a imagem com fallback seguro
             try {
                 val compressedPath = imageCompressionUtils.compressImageFromUri(uri)
                 if (compressedPath != null) {
-                    Log.d("ExpenseRegisterFragment", "Imagem comprimida com sucesso: $compressedPath")
+                    Timber.d("ExpenseRegisterFragment", "Imagem comprimida com sucesso: $compressedPath")
                     return compressedPath
                 }
             } catch (e: Exception) {
-                Log.w("ExpenseRegisterFragment", "Compressão falhou, usando método original: ${e.message}")
+                Timber.w("ExpenseRegisterFragment", "Compressão falhou, usando método original: ${e.message}")
             }
             
             // Fallback: método original se a compressão falhar
@@ -895,17 +895,17 @@ class ExpenseRegisterFragment : Fragment() {
                     val columnIndex = it.getColumnIndex(MediaStore.Images.Media.DATA)
                     if (columnIndex != -1) {
                         val path = it.getString(columnIndex)
-                        Log.d("ExpenseRegisterFragment", "Caminho obtido via cursor: $path")
+                        Timber.d("ExpenseRegisterFragment", "Caminho obtido via cursor: $path")
                         if (File(path).exists()) {
                             // ✅ CORREÇÃO: Tentar comprimir com fallback
                             try {
                                 val compressedPathFromFile = imageCompressionUtils.compressImageFromPath(path)
                                 if (compressedPathFromFile != null) {
-                                    Log.d("ExpenseRegisterFragment", "Imagem comprimida do arquivo: $compressedPathFromFile")
+                                    Timber.d("ExpenseRegisterFragment", "Imagem comprimida do arquivo: $compressedPathFromFile")
                                     return compressedPathFromFile
                                 }
                             } catch (e: Exception) {
-                                Log.w("ExpenseRegisterFragment", "Compressão do arquivo falhou: ${e.message}")
+                                Timber.w("ExpenseRegisterFragment", "Compressão do arquivo falhou: ${e.message}")
                             }
                             return path
                         }
@@ -918,32 +918,32 @@ class ExpenseRegisterFragment : Fragment() {
                 tempFile.outputStream().use { outputStream ->
                     inputStream.copyTo(outputStream)
                 }
-                Log.d("ExpenseRegisterFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
+                Timber.d("ExpenseRegisterFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
                 
                 // ✅ CORREÇÃO: Tentar comprimir com fallback
                 try {
                     val compressedPath = imageCompressionUtils.compressImageFromPath(tempFile.absolutePath)
                     if (compressedPath != null) {
-                        Log.d("ExpenseRegisterFragment", "Arquivo temporário comprimido: $compressedPath")
+                        Timber.d("ExpenseRegisterFragment", "Arquivo temporário comprimido: $compressedPath")
                         return compressedPath
                     }
                 } catch (e: Exception) {
-                    Log.w("ExpenseRegisterFragment", "Compressão do arquivo temporário falhou: ${e.message}")
+                    Timber.w("ExpenseRegisterFragment", "Compressão do arquivo temporário falhou: ${e.message}")
                 }
                 
                 return tempFile.absolutePath
             }
             uri.toString()
         } catch (e: Exception) {
-            Log.e("ExpenseRegisterFragment", "Erro ao obter caminho real: ${e.message}", e)
+            Timber.e("ExpenseRegisterFragment", "Erro ao obter caminho real: ${e.message}", e)
             null
         }
     }
     
     private fun mostrarFotoComprovante(caminhoFoto: String, dataFoto: Date?) {
         try {
-            Log.d("ExpenseRegisterFragment", "=== MOSTRANDO FOTO DO COMPROVANTE ===")
-            Log.d("ExpenseRegisterFragment", "Caminho da foto: $caminhoFoto")
+            Timber.d("ExpenseRegisterFragment", "=== MOSTRANDO FOTO DO COMPROVANTE ===")
+            Timber.d("ExpenseRegisterFragment", "Caminho da foto: $caminhoFoto")
             
             // ✅ CORREÇÃO: Verificar se é URL do Firebase Storage
             val isFirebaseUrl = caminhoFoto.startsWith("https://") && 
@@ -954,7 +954,7 @@ class ExpenseRegisterFragment : Fragment() {
             if (!isFirebaseUrl && !caminhoFoto.startsWith("content://")) {
                 val file = File(caminhoFoto)
                 if (file.exists() && file.isFile) {
-                    Log.d("ExpenseRegisterFragment", "✅ Carregando foto local: ${file.absolutePath}")
+                    Timber.d("ExpenseRegisterFragment", "✅ Carregando foto local: ${file.absolutePath}")
                     val bitmap = android.graphics.BitmapFactory.decodeFile(caminhoFoto)
                     binding.ivFotoComprovante.setImageBitmap(bitmap)
                     
@@ -967,7 +967,7 @@ class ExpenseRegisterFragment : Fragment() {
                     binding.layoutFotoComprovante.visibility = View.VISIBLE
                     return
                 } else {
-                    Log.w("ExpenseRegisterFragment", "⚠️ Arquivo local não existe: ${file.absolutePath}")
+                    Timber.w("ExpenseRegisterFragment", "⚠️ Arquivo local não existe: ${file.absolutePath}")
                 }
             }
             
@@ -977,7 +977,7 @@ class ExpenseRegisterFragment : Fragment() {
                     val uri = Uri.parse(caminhoFoto)
                     val inputStream = requireContext().contentResolver.openInputStream(uri)
                     if (inputStream != null) {
-                        Log.d("ExpenseRegisterFragment", "✅ Carregando foto do content provider")
+                        Timber.d("ExpenseRegisterFragment", "✅ Carregando foto do content provider")
                         val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
                         inputStream.close()
                         binding.ivFotoComprovante.setImageBitmap(bitmap)
@@ -989,13 +989,13 @@ class ExpenseRegisterFragment : Fragment() {
                         return
                     }
                 } catch (e: Exception) {
-                    Log.e("ExpenseRegisterFragment", "Erro ao carregar do URI: ${e.message}")
+                    Timber.e("ExpenseRegisterFragment", "Erro ao carregar do URI: ${e.message}")
                 }
             }
             
             // ✅ CORREÇÃO: PRIORIDADE 3 - Se for URL do Firebase Storage, fazer download
             if (isFirebaseUrl) {
-                Log.d("ExpenseRegisterFragment", "Detectada URL do Firebase Storage, fazendo download...")
+                Timber.d("ExpenseRegisterFragment", "Detectada URL do Firebase Storage, fazendo download...")
                 binding.layoutFotoComprovante.visibility = View.VISIBLE
                 binding.ivFotoComprovante.setImageResource(android.R.drawable.ic_menu_gallery) // Placeholder
                 
@@ -1007,14 +1007,14 @@ class ExpenseRegisterFragment : Fragment() {
                             val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
                             val dataFormatada = dataFoto?.let { dateFormat.format(it) } ?: "Data não disponível"
                             binding.tvDataFotoComprovante.text = "Data: $dataFormatada"
-                            Log.d("ExpenseRegisterFragment", "✅ Foto carregada do Firebase Storage")
+                            Timber.d("ExpenseRegisterFragment", "✅ Foto carregada do Firebase Storage")
                         } else {
-                            Log.e("ExpenseRegisterFragment", "Erro ao baixar foto do Firebase")
+                            Timber.e("ExpenseRegisterFragment", "Erro ao baixar foto do Firebase")
                             binding.layoutFotoComprovante.visibility = View.GONE
                             Toast.makeText(requireContext(), "Erro ao carregar foto do servidor", Toast.LENGTH_SHORT).show()
                         }
                     } catch (e: Exception) {
-                        Log.e("ExpenseRegisterFragment", "Erro ao fazer download: ${e.message}", e)
+                        Timber.e("ExpenseRegisterFragment", "Erro ao fazer download: ${e.message}", e)
                         binding.layoutFotoComprovante.visibility = View.GONE
                         Toast.makeText(requireContext(), "Erro ao carregar foto: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
@@ -1023,12 +1023,12 @@ class ExpenseRegisterFragment : Fragment() {
             }
             
             // Se chegou aqui, não conseguiu carregar a foto
-            Log.e("ExpenseRegisterFragment", "❌ Não foi possível carregar a foto: $caminhoFoto")
+            Timber.e("ExpenseRegisterFragment", "❌ Não foi possível carregar a foto: $caminhoFoto")
             binding.layoutFotoComprovante.visibility = View.GONE
             Toast.makeText(requireContext(), "Arquivo de foto não encontrado", Toast.LENGTH_SHORT).show()
             
         } catch (e: Exception) {
-            Log.e("ExpenseRegisterFragment", "Erro ao mostrar foto: ${e.message}", e)
+            Timber.e("ExpenseRegisterFragment", "Erro ao mostrar foto: ${e.message}", e)
             binding.layoutFotoComprovante.visibility = View.GONE
             Toast.makeText(requireContext(), "Erro ao exibir foto: ${e.message}", Toast.LENGTH_SHORT).show()
         }
@@ -1052,7 +1052,7 @@ class ExpenseRegisterFragment : Fragment() {
             connection.disconnect()
             bitmap
         } catch (e: Exception) {
-            Log.e("ExpenseRegisterFragment", "Erro ao fazer download da imagem: ${e.message}", e)
+            Timber.e("ExpenseRegisterFragment", "Erro ao fazer download da imagem: ${e.message}", e)
             null
         }
     }
@@ -1069,10 +1069,10 @@ class ExpenseRegisterFragment : Fragment() {
             binding.tvDataFotoComprovante.text = "Data: --/--/---- --:--"
             binding.layoutFotoComprovante.visibility = View.GONE
             
-            Log.d("ExpenseRegisterFragment", "✅ Foto do comprovante removida com sucesso")
+            Timber.d("ExpenseRegisterFragment", "✅ Foto do comprovante removida com sucesso")
             Toast.makeText(requireContext(), "Foto do comprovante removida", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Log.e("ExpenseRegisterFragment", "Erro ao remover foto: ${e.message}", e)
+            Timber.e("ExpenseRegisterFragment", "Erro ao remover foto: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao remover foto: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }

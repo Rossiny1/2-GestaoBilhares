@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import android.util.Log
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import java.util.Date
 import kotlinx.coroutines.runBlocking
@@ -227,9 +227,9 @@ class AppRepository @Inject constructor(
                 status = "PENDING"
             )
             inserirOperacaoSync(operation)
-            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Cliente: ${cliente.id}")
+            Timber.d("✅ Operação DELETE enfileirada para Cliente: %d", cliente.id)
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Cliente: ${e.message}", e)
+            Timber.e(e, "❌ Erro ao enfileirar DELETE de Cliente: %s", e.message)
         }
     }
     suspend fun obterDebitoAtual(clienteId: Long) = clienteRepository.obterDebitoAtual(clienteId)
@@ -275,9 +275,9 @@ class AppRepository @Inject constructor(
                 status = "PENDING"
             )
             inserirOperacaoSync(operation)
-            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Acerto: ${acerto.id}")
+            Timber.d("AppRepository", "✅ Operação DELETE enfileirada para Acerto: ${acerto.id}")
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Acerto: ${e.message}", e)
+            Timber.e(e, "❌ Erro ao enfileirar DELETE de Acerto: %s", e.message)
         }
     }
     suspend fun buscarUltimoAcertoPorMesa(mesaId: Long) = acertoRepository.buscarUltimoPorMesa(mesaId)
@@ -310,9 +310,9 @@ class AppRepository @Inject constructor(
                 status = "PENDING"
             )
             inserirOperacaoSync(operation)
-            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Mesa: ${mesa.id}")
+            Timber.d("AppRepository", "✅ Operação DELETE enfileirada para Mesa: ${mesa.id}")
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Mesa: ${e.message}", e)
+            Timber.e("AppRepository", "❌ Erro ao enfileirar DELETE de Mesa: ${e.message}", e)
         }
     }
     suspend fun vincularMesaACliente(mesaId: Long, clienteId: Long) = mesaRepository.vincularACliente(mesaId, clienteId)
@@ -324,7 +324,7 @@ class AppRepository @Inject constructor(
     suspend fun atualizarRelogioFinal(mesaId: Long, relogioFinal: Int) = mesaRepository.atualizarRelogioFinal(mesaId, relogioFinal)
     suspend fun obterMesasPorClienteDireto(clienteId: Long) = mesaRepository.obterPorClienteDireto(clienteId)
     fun buscarMesasPorRota(rotaId: Long) = mesaRepository.buscarPorRota(rotaId).also {
-        android.util.Log.d("AppRepository", "Buscando mesas para rota $rotaId")
+        Timber.d("AppRepository", "Buscando mesas para rota $rotaId")
     }
     suspend fun contarMesasAtivasPorClientes(clienteIds: List<Long>) = mesaRepository.contarAtivasPorClientes(clienteIds)
     fun obterTodasMesas() = mesaRepository.obterTodas()
@@ -359,7 +359,7 @@ class AppRepository @Inject constructor(
                 clienteDao.obterClientesPorRota(rotaId).first().count { it.ativo }
             }
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao calcular clientes ativos da rota $rotaId: ${e.message}")
+            Timber.e("AppRepository", "Erro ao calcular clientes ativos da rota $rotaId: ${e.message}")
             0
         }
     }
@@ -387,15 +387,15 @@ class AppRepository @Inject constructor(
                     }
                     val temPendencia = debitoAlto || semAcerto4Meses
                     if (temPendencia) {
-                        android.util.Log.d("AppRepository", "📋 Cliente ${cliente.nome} (ID: ${cliente.id}) tem pendência: débito=${cliente.debitoAtual}, semAcerto4Meses=$semAcerto4Meses")
+                        Timber.d("AppRepository", "📋 Cliente ${cliente.nome} (ID: ${cliente.id}) tem pendência: débito=${cliente.debitoAtual}, semAcerto4Meses=$semAcerto4Meses")
                     }
                     temPendencia
                 }
-                android.util.Log.d("AppRepository", "📊 Rota $rotaId: $pendencias pendências de ${clientes.size} clientes")
+                Timber.d("AppRepository", "📊 Rota $rotaId: $pendencias pendências de ${clientes.size} clientes")
                 pendencias
             }
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao calcular pendências reais da rota $rotaId: ${e.message}")
+            Timber.e("AppRepository", "Erro ao calcular pendências reais da rota $rotaId: ${e.message}")
             0
         }
     }
@@ -407,7 +407,7 @@ class AppRepository @Inject constructor(
                 buscarAcertosPorCicloId(cicloId).first().filter { it.rotaId == rotaId }.sumOf { it.valorRecebido }
             }
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao calcular valor acertado da rota $rotaId: ${e.message}")
+            Timber.e("AppRepository", "Erro ao calcular valor acertado da rota $rotaId: ${e.message}")
             0.0
         }
     }
@@ -418,7 +418,7 @@ class AppRepository @Inject constructor(
                 mesaDao.buscarMesasPorRota(rotaId).first().size
             }
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao calcular quantidade de mesas da rota $rotaId: ${e.message}")
+            Timber.e("AppRepository", "Erro ao calcular quantidade de mesas da rota $rotaId: ${e.message}")
             0
         }
     }
@@ -432,7 +432,7 @@ class AppRepository @Inject constructor(
                 ((distintos.toDouble() / clientesAtivos.toDouble()) * 100).toInt()
             }
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao calcular percentual de clientes acertados da rota $rotaId: ${e.message}")
+            Timber.e("AppRepository", "Erro ao calcular percentual de clientes acertados da rota $rotaId: ${e.message}")
             0
         }
     }
@@ -446,7 +446,7 @@ class AppRepository @Inject constructor(
                 // Lógica solicitada: Pegar o maior número de ciclo
                 // Se houver um último ciclo com número maior que o em andamento, usa o último
                 if (ultimoCiclo != null && (emAndamento == null || ultimoCiclo.numeroCiclo > emAndamento.numeroCiclo)) {
-                    android.util.Log.d("AppRepository", "🔄 Rota $rotaId: Exibindo maior ciclo encontrado: ${ultimoCiclo.numeroCiclo} (Status: ${ultimoCiclo.status})")
+                    Timber.d("AppRepository", "🔄 Rota $rotaId: Exibindo maior ciclo encontrado: ${ultimoCiclo.numeroCiclo} (Status: ${ultimoCiclo.status})")
                     // Se estiver finalizado, usa dataFim, senão dataInicio (fallback)
                     val dataRef = if (ultimoCiclo.status == StatusCicloAcerto.FINALIZADO) ultimoCiclo.dataFim else ultimoCiclo.dataInicio
                     Triple(ultimoCiclo.numeroCiclo, ultimoCiclo.id, dataRef.time)
@@ -454,12 +454,12 @@ class AppRepository @Inject constructor(
                     // Se o em andamento for maior ou igual (ou único), usa ele
                     Triple(emAndamento.numeroCiclo, emAndamento.id, emAndamento.dataInicio.time)
                 } else {
-                    android.util.Log.d("AppRepository", "🆕 Rota $rotaId: Sem histórico, exibindo 1º ciclo")
+                    Timber.d("AppRepository", "🆕 Rota $rotaId: Sem histórico, exibindo 1º ciclo")
                     Triple(1, null, null)
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao obter ciclo atual da rota $rotaId: ${e.message}")
+            Timber.e("AppRepository", "Erro ao obter ciclo atual da rota $rotaId: ${e.message}")
             Triple(1, null, null)
         }
     }
@@ -481,7 +481,7 @@ class AppRepository @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao obter datas do ciclo da rota $rotaId: ${e.message}")
+            Timber.e("AppRepository", "Erro ao obter datas do ciclo da rota $rotaId: ${e.message}")
             Pair(null, null)
         }
     }
@@ -491,16 +491,16 @@ class AppRepository @Inject constructor(
             kotlinx.coroutines.runBlocking {
                 val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
                 val status = if (emAndamento != null) {
-                    android.util.Log.d("AppRepository", "✅ Rota $rotaId: Ciclo em andamento encontrado (ID: ${emAndamento.id}) -> EM_ANDAMENTO")
+                    Timber.d("AppRepository", "✅ Rota $rotaId: Ciclo em andamento encontrado (ID: ${emAndamento.id}) -> EM_ANDAMENTO")
                     StatusRota.EM_ANDAMENTO
                 } else {
-                    android.util.Log.d("AppRepository", "✅ Rota $rotaId: Nenhum ciclo em andamento -> FINALIZADA")
+                    Timber.d("AppRepository", "✅ Rota $rotaId: Nenhum ciclo em andamento -> FINALIZADA")
                     StatusRota.FINALIZADA
                 }
                 status
             }
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ Erro ao determinar status da rota $rotaId: ${e.message}")
+            Timber.e("AppRepository", "❌ Erro ao determinar status da rota $rotaId: ${e.message}")
             StatusRota.PAUSADA
         }
     }
@@ -549,9 +549,9 @@ class AppRepository @Inject constructor(
                 status = "PENDING"
             )
             inserirOperacaoSync(operation)
-            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Rota: ${rota.id}")
+            Timber.d("AppRepository", "✅ Operação DELETE enfileirada para Rota: ${rota.id}")
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Rota: ${e.message}", e)
+            Timber.e("AppRepository", "❌ Erro ao enfileirar DELETE de Rota: ${e.message}", e)
         }
     }
     suspend fun desativarRota(rotaId: Long, timestamp: Long = System.currentTimeMillis()) = 
@@ -585,12 +585,12 @@ class AppRepository @Inject constructor(
     suspend fun deletarDespesa(despesa: Despesa) {
         // ✅ CORREÇÃO: Deletar do banco local
         despesaRepository.deletar(despesa)
-        android.util.Log.d("AppRepository", "🗑️ Despesa deletada localmente: ID=${despesa.id}")
+        Timber.d("AppRepository", "🗑️ Despesa deletada localmente: ID=${despesa.id}")
         
         // ✅ CORREÇÃO: Registrar operação de DELETE na fila de sincronização
         // O ID local é usado como documentId no Firestore
         if (syncOperationDao == null) {
-            android.util.Log.e("AppRepository", "❌ CRÍTICO: SyncOperationDao é null! Operação DELETE não será enfileirada para Despesa: ${despesa.id}")
+            Timber.e("AppRepository", "❌ CRÍTICO: SyncOperationDao é null! Operação DELETE não será enfileirada para Despesa: ${despesa.id}")
             return
         }
         
@@ -605,10 +605,10 @@ class AppRepository @Inject constructor(
                 status = "PENDING"
             )
             val operationId = inserirOperacaoSync(operation)
-            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Despesa: ID=${despesa.id}, OperationID=$operationId")
+            Timber.d("AppRepository", "✅ Operação DELETE enfileirada para Despesa: ID=${despesa.id}, OperationID=$operationId")
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ ERRO CRÍTICO ao enfileirar DELETE de Despesa ${despesa.id}: ${e.message}", e)
-            android.util.Log.e("AppRepository", "   Stack trace: ${e.stackTraceToString()}")
+            Timber.e("AppRepository", "❌ ERRO CRÍTICO ao enfileirar DELETE de Despesa ${despesa.id}: ${e.message}", e)
+            Timber.e("AppRepository", "   Stack trace: ${e.stackTraceToString()}")
             // Não lança exceção para não impedir a exclusão local
         }
     }
@@ -656,10 +656,10 @@ class AppRepository @Inject constructor(
         return try {
             val acertos = buscarAcertosPorCicloId(cicloId).first()
             val totalDescontos = acertos.sumOf { it.desconto }
-            android.util.Log.d("AppRepository", "✅ Total de descontos calculado para ciclo $cicloId: R$ $totalDescontos")
+            Timber.d("AppRepository", "✅ Total de descontos calculado para ciclo $cicloId: R$ $totalDescontos")
             totalDescontos
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao calcular total de descontos para ciclo $cicloId: ${e.message}")
+            Timber.e("AppRepository", "Erro ao calcular total de descontos para ciclo $cicloId: ${e.message}")
             0.0
         }
     }
@@ -753,9 +753,9 @@ class AppRepository @Inject constructor(
                 status = "PENDING"
             )
             inserirOperacaoSync(operation)
-            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Colaborador: ${colaborador.id}")
+            Timber.d("AppRepository", "✅ Operação DELETE enfileirada para Colaborador: ${colaborador.id}")
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Colaborador: ${e.message}", e)
+            Timber.e("AppRepository", "❌ Erro ao enfileirar DELETE de Colaborador: ${e.message}", e)
         }
     }
     
@@ -817,9 +817,9 @@ class AppRepository @Inject constructor(
                 status = "PENDING"
             )
             inserirOperacaoSync(operation)
-            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para MetaColaborador: ${meta.id}")
+            Timber.d("AppRepository", "✅ Operação DELETE enfileirada para MetaColaborador: ${meta.id}")
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de MetaColaborador: ${e.message}", e)
+            Timber.e("AppRepository", "❌ Erro ao enfileirar DELETE de MetaColaborador: ${e.message}", e)
         }
     }
     suspend fun atualizarValorAtualMeta(metaId: Long, valorAtual: Double) = colaboradorDao.atualizarValorAtualMeta(metaId, valorAtual)
@@ -843,7 +843,7 @@ class AppRepository @Inject constructor(
         if (cicloFinalizado) {
             val metasAtivas = colaboradorDao.buscarMetasPorRotaECiclo(rotaId, cicloId)
             val metasFinalizadas = colaboradorDao.buscarMetasPorRotaECicloFinalizadas(rotaId, cicloId)
-            android.util.Log.d("AppRepository", "Ciclo finalizado: buscando ${metasAtivas.size} metas ativas e ${metasFinalizadas.size} metas finalizadas")
+            Timber.d("AppRepository", "Ciclo finalizado: buscando ${metasAtivas.size} metas ativas e ${metasFinalizadas.size} metas finalizadas")
             return (metasAtivas + metasFinalizadas).distinctBy { it.id }
         }
         
@@ -868,7 +868,7 @@ class AppRepository @Inject constructor(
         
         // Se o ciclo não está em andamento, retornar lista vazia
         if (!cicloEmAndamento) {
-            android.util.Log.d("AppRepository", "Ciclo $cicloId não está em andamento (status=${ciclo?.status}), retornando lista vazia")
+            Timber.d("AppRepository", "Ciclo $cicloId não está em andamento (status=${ciclo?.status}), retornando lista vazia")
             return emptyList()
         }
         
@@ -895,7 +895,7 @@ class AppRepository @Inject constructor(
         return try {
             colaboradorDao.buscarColaboradorResponsavelPrincipal(rotaId)
         } catch (e: Exception) {
-            Log.e("AppRepository", "Erro ao buscar colaborador responsável: ${e.message}", e)
+            Timber.e(e, "Erro ao buscar colaborador responsável: %s", e.message)
             null
         }
     }
@@ -907,7 +907,7 @@ class AppRepository @Inject constructor(
         return try {
             cicloAcertoDao.buscarCicloAtualPorRota(rotaId)
         } catch (e: Exception) {
-            Log.e("AppRepository", "Erro ao buscar ciclo atual: ${e.message}", e)
+            Timber.e(e, "Erro ao buscar ciclo atual: %s", e.message)
             null
         }
     }
@@ -919,7 +919,7 @@ class AppRepository @Inject constructor(
         return try {
             cicloAcertoDao.buscarCiclosFuturosPorRota(rotaId)
         } catch (e: Exception) {
-            Log.e("AppRepository", "Erro ao buscar ciclos futuros: ${e.message}", e)
+            Timber.e(e, "Erro ao buscar ciclos futuros: %s", e.message)
             emptyList()
         }
     }
@@ -1112,25 +1112,25 @@ class AppRepository @Inject constructor(
     @Suppress("UNUSED_PARAMETER")
     suspend fun syncRotas(_rotas: List<Rota>) {
         // BLOQUEADO: Sincronização de rotas desabilitada para evitar população automática
-        android.util.Log.d("AppRepository", "SYNC ROTAS BLOQUEADO - Evitando população automática")
+        Timber.d("AppRepository", "SYNC ROTAS BLOQUEADO - Evitando população automática")
     }
 
     @Suppress("UNUSED_PARAMETER")
     suspend fun syncClientes(_clientes: List<Cliente>) {
         // BLOQUEADO: Sincronização de clientes desabilitada para evitar população automática
-        android.util.Log.d("AppRepository", "SYNC CLIENTES BLOQUEADO - Evitando população automática")
+        Timber.d("AppRepository", "SYNC CLIENTES BLOQUEADO - Evitando população automática")
     }
 
     @Suppress("UNUSED_PARAMETER")
     suspend fun syncAcertos(_acertos: List<Acerto>) {
         // BLOQUEADO: Sincronização de acertos desabilitada para evitar população automática
-        android.util.Log.d("AppRepository", "SYNC ACERTOS BLOQUEADO - Evitando população automática")
+        Timber.d("AppRepository", "SYNC ACERTOS BLOQUEADO - Evitando população automática")
     }
 
     @Suppress("UNUSED_PARAMETER")
     suspend fun syncColaboradores(_colaboradores: List<Colaborador>) {
         // BLOQUEADO: Sincronização de colaboradores desabilitada para evitar população automática
-        android.util.Log.d("AppRepository", "SYNC COLABORADORES BLOQUEADO - Evitando população automática")
+        Timber.d("AppRepository", "SYNC COLABORADORES BLOQUEADO - Evitando população automática")
     }
     
     // ==================== CONTRATOS DE LOCAÇÃO ====================
@@ -1157,18 +1157,18 @@ class AppRepository @Inject constructor(
     }
     suspend fun atualizarContrato(contrato: ContratoLocacao) {
         try {
-            Log.d("RepoUpdate", "Atualizando contrato id=${contrato.id} cliente=${contrato.clienteId} status=${contrato.status} encerramento=${contrato.dataEncerramento}")
+            Timber.d("Atualizando contrato id=${contrato.id} cliente=${contrato.clienteId} status=${contrato.status} encerramento=${contrato.dataEncerramento}")
             contratoLocacaoDao.atualizarContrato(contrato)
             // Leitura de verificação (apenas diagnóstico)
             try {
                 val apos = contratoLocacaoDao.buscarContratosPorCliente(contrato.clienteId).first()
                 val resumo = apos.joinToString { _ -> "id=${'$'}{it.id},status=${'$'}{it.status},enc=${'$'}{it.dataEncerramento}" }
-                Log.d("RepoContracts", "Após atualizar: cliente=${contrato.clienteId} contratos=${apos.size} -> $resumo")
+                Timber.d("Após atualizar: cliente=${contrato.clienteId} contratos=${apos.size} -> $resumo")
             } catch (e: Exception) {
-                Log.e("RepoContracts", "Falha ao ler contratos após atualizar", e)
+                Timber.e(e, "Falha ao ler contratos após atualizar")
             }
         } catch (e: Exception) {
-            Log.e("RepoUpdate", "Erro ao atualizar contrato id=${contrato.id}", e)
+            Timber.e(e, "Erro ao atualizar contrato id=${contrato.id}")
             throw e
         }
     }
@@ -1176,11 +1176,11 @@ class AppRepository @Inject constructor(
     // ✅ NOVO: Encerrar contrato (UPDATE direto)
     suspend fun encerrarContrato(contratoId: Long, clienteId: Long, status: String) {
         val agora = java.util.Date()
-        Log.d("RepoUpdate", "Encerrar direto contrato id=${contratoId} status=${status} em ${agora}")
+        Timber.d("Encerrar direto contrato id=${contratoId} status=${status} em ${agora}")
         contratoLocacaoDao.encerrarContrato(contratoId, status, agora, agora)
         val apos = contratoLocacaoDao.buscarContratosPorCliente(clienteId).first()
         val resumo = apos.joinToString { _ -> "id=${'$'}{it.id},status=${'$'}{it.status},enc=${'$'}{it.dataEncerramento}" }
-        Log.d("RepoContracts", "Após encerrar direto: cliente=${clienteId} contratos=${apos.size} -> $resumo")
+        Timber.d("Após encerrar direto: cliente=${clienteId} contratos=${apos.size} -> $resumo")
     }
     suspend fun excluirContrato(contrato: ContratoLocacao) = contratoLocacaoDao.excluirContrato(contrato)
     suspend fun buscarContratoPorId(contratoId: Long) = contratoLocacaoDao.buscarContratoPorId(contratoId)
@@ -1364,7 +1364,7 @@ class AppRepository @Inject constructor(
         return try {
             acertoDao.buscarPorRotaECicloId(rotaId, cicloId).first()
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao buscar acertos por rota e ciclo: ${e.message}", e)
+            Timber.e("AppRepository", "Erro ao buscar acertos por rota e ciclo: ${e.message}", e)
             emptyList()
         }
     }
@@ -1376,7 +1376,7 @@ class AppRepository @Inject constructor(
         return try {
             clienteDao.obterClientesPorRota(rotaId).first().count { it.ativo }
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao contar clientes ativos por rota: ${e.message}", e)
+            Timber.e("AppRepository", "Erro ao contar clientes ativos por rota: ${e.message}", e)
             0
         }
     }
@@ -1388,7 +1388,7 @@ class AppRepository @Inject constructor(
         return try {
             acertoDao.buscarPorRotaECicloId(rotaId, cicloId).first().size
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao contar clientes acertados: ${e.message}", e)
+            Timber.e("AppRepository", "Erro ao contar clientes acertados: ${e.message}", e)
             0
         }
     }
@@ -1400,7 +1400,7 @@ class AppRepository @Inject constructor(
         return try {
             mesaDao.buscarMesasPorRota(rotaId).first().size
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao contar mesas locadas: ${e.message}", e)
+            Timber.e("AppRepository", "Erro ao contar mesas locadas: ${e.message}", e)
             0
         }
     }
@@ -1415,28 +1415,28 @@ class AppRepository @Inject constructor(
             val fim = ciclo.dataFim // dataFim é não-nullable em CicloAcertoEntity
             mesaDao.contarNovasMesasInstaladas(rotaId, inicio, fim)
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "Erro ao contar novas mesas no ciclo: ${e.message}", e)
+            Timber.e("AppRepository", "Erro ao contar novas mesas no ciclo: ${e.message}", e)
             0
         }
     }
 
     private fun logDbInsertStart(entity: String, details: String) {
         val stackTrace = Thread.currentThread().stackTrace
-        Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
-        Log.w("🔍 DB_POPULATION", "🚨 INSERINDO $entity: $details")
-        Log.w("🔍 DB_POPULATION", "📍 Chamado por:")
+        Timber.w("════════════════════════════════════════")
+        Timber.w("🚨 INSERINDO $entity: $details")
+        Timber.w("📍 Chamado por:")
         stackTrace.drop(3).take(8).forEachIndexed { index, element ->
-            Log.w("🔍 DB_POPULATION", "   [${index}] $element")
+            Timber.w("   [${index}] $element")
         }
-        Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+        Timber.w("════════════════════════════════════════")
     }
 
     private fun logDbInsertSuccess(entity: String, details: String) {
-        Log.w("🔍 DB_POPULATION", "✅ $entity INSERIDO COM SUCESSO: $details")
+        Timber.w("✅ $entity INSERIDO COM SUCESSO: $details")
     }
 
     private fun logDbInsertError(entity: String, details: String, throwable: Throwable) {
-        Log.e("🔍 DB_POPULATION", "❌ ERRO AO INSERIR $entity: $details", throwable)
+        Timber.e(throwable, "❌ ERRO AO INSERIR $entity: $details")
     }
     
     // ==================== CACHE MANAGEMENT (MODERNIZAÇÃO 2025) ====================
@@ -1448,9 +1448,9 @@ class AppRepository @Inject constructor(
         try {
             val clientes = obterTodosClientes().first()
             _clientesCache.value = clientes
-            Log.d("AppRepository", "✅ Cache de clientes atualizado: ${clientes.size} itens")
+            Timber.d("✅ Cache de clientes atualizado: ${clientes.size} itens")
         } catch (e: Exception) {
-            Log.e("AppRepository", "❌ Erro ao atualizar cache de clientes", e)
+            Timber.e(e, "❌ Erro ao atualizar cache de clientes")
         }
     }
     
@@ -1461,9 +1461,9 @@ class AppRepository @Inject constructor(
         try {
             val rotas = obterTodasRotas().first()
             _rotasCache.value = rotas
-            Log.d("AppRepository", "✅ Cache de rotas atualizado: ${rotas.size} itens")
+            Timber.d("✅ Cache de rotas atualizado: ${rotas.size} itens")
         } catch (e: Exception) {
-            Log.e("AppRepository", "❌ Erro ao atualizar cache de rotas", e)
+            Timber.e(e, "❌ Erro ao atualizar cache de rotas")
         }
     }
     
@@ -1474,9 +1474,9 @@ class AppRepository @Inject constructor(
         try {
             val mesas = obterTodasMesas().first()
             _mesasCache.value = mesas
-            Log.d("AppRepository", "✅ Cache de mesas atualizado: ${mesas.size} itens")
+            Timber.d("✅ Cache de mesas atualizado: ${mesas.size} itens")
         } catch (e: Exception) {
-            Log.e("AppRepository", "❌ Erro ao atualizar cache de mesas", e)
+            Timber.e(e, "❌ Erro ao atualizar cache de mesas")
         }
     }
     
@@ -1484,11 +1484,11 @@ class AppRepository @Inject constructor(
      * ✅ MODERNIZADO: Atualiza todos os caches
      */
     suspend fun refreshAllCaches() {
-        Log.d("AppRepository", "🔄 Atualizando todos os caches...")
+        Timber.d("🔄 Atualizando todos os caches...")
         refreshClientesCache()
         refreshRotasCache()
         refreshMesasCache()
-        Log.d("AppRepository", "✅ Todos os caches atualizados com sucesso")
+        Timber.d("✅ Todos os caches atualizados com sucesso")
     }
     
     // ==================== CATEGORIAS E TIPOS DE DESPESA ====================
@@ -1536,9 +1536,9 @@ class AppRepository @Inject constructor(
                 status = "PENDING"
             )
             inserirOperacaoSync(operation)
-            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para CategoriaDespesa: ${categoria.id}")
+            Timber.d("AppRepository", "✅ Operação DELETE enfileirada para CategoriaDespesa: ${categoria.id}")
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de CategoriaDespesa: ${e.message}", e)
+            Timber.e("AppRepository", "❌ Erro ao enfileirar DELETE de CategoriaDespesa: ${e.message}", e)
         }
     }
     suspend fun categoriaExiste(nome: String): Boolean = categoriaDespesaDao?.contarPorNome(nome) ?: 0 > 0
@@ -1590,9 +1590,9 @@ class AppRepository @Inject constructor(
                 status = "PENDING"
             )
             inserirOperacaoSync(operation)
-            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para TipoDespesa: ${tipo.id}")
+            Timber.d("AppRepository", "✅ Operação DELETE enfileirada para TipoDespesa: ${tipo.id}")
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de TipoDespesa: ${e.message}", e)
+            Timber.e("AppRepository", "❌ Erro ao enfileirar DELETE de TipoDespesa: ${e.message}", e)
         }
     }
     
@@ -1626,7 +1626,7 @@ class AppRepository @Inject constructor(
         try {
             val cicloAtual = buscarCicloAtivo(rotaId)
             if (cicloAtual != null) {
-                Log.d("AppRepository", "🔄 Iniciando finalização do ciclo ${cicloAtual.id} da rota $rotaId")
+                Timber.d("🔄 Iniciando finalização do ciclo ${cicloAtual.id} da rota $rotaId")
                 
                 // ✅ CORREÇÃO: Finalizar o ciclo na rota primeiro
                 val dataFim = System.currentTimeMillis()
@@ -1634,15 +1634,15 @@ class AppRepository @Inject constructor(
                 
                 // ✅ CORREÇÃO: Usar o método finalizarCiclo do CicloAcertoRepository que calcula e salva todos os valores,
                 // incluindo o debitoTotal "congelado" no ciclo finalizado E finaliza as metas automaticamente
-                Log.d("AppRepository", "📋 Chamando finalizarCiclo do CicloAcertoRepository para ciclo ${cicloAtual.id}")
+                Timber.d("📋 Chamando finalizarCiclo do CicloAcertoRepository para ciclo ${cicloAtual.id}")
                 cicloAcertoRepository.finalizarCiclo(cicloAtual.id, java.util.Date(dataFim))
                 
-                Log.d("AppRepository", "✅ Ciclo ${cicloAtual.id} finalizado com debitoTotal preservado e metas finalizadas")
+                Timber.d("✅ Ciclo ${cicloAtual.id} finalizado com debitoTotal preservado e metas finalizadas")
             } else {
-                Log.w("AppRepository", "⚠️ Nenhum ciclo ativo encontrado para rota $rotaId")
+                Timber.w("⚠️ Nenhum ciclo ativo encontrado para rota $rotaId")
             }
         } catch (e: Exception) {
-            Log.e("AppRepository", "❌ Erro ao finalizar ciclo atual: ${e.message}", e)
+            Timber.e(e, "❌ Erro ao finalizar ciclo atual: ${e.message}")
             timber.log.Timber.e(e, "Erro ao finalizar ciclo atual")
         }
     }
@@ -1704,9 +1704,9 @@ class AppRepository @Inject constructor(
                 status = "PENDING"
             )
             inserirOperacaoSync(operation)
-            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Veiculo: ${veiculo.id}")
+            Timber.d("AppRepository", "✅ Operação DELETE enfileirada para Veiculo: ${veiculo.id}")
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Veiculo: ${e.message}", e)
+            Timber.e("AppRepository", "❌ Erro ao enfileirar DELETE de Veiculo: ${e.message}", e)
         }
     }
     @Suppress("UNUSED_PARAMETER")
@@ -1793,12 +1793,12 @@ class AppRepository @Inject constructor(
      */
     suspend fun inserirOperacaoSync(operation: SyncOperationEntity): Long {
         if (syncOperationDao == null) {
-            android.util.Log.e("AppRepository", "❌ CRÍTICO: SyncOperationDao é null ao tentar inserir operação!")
-            android.util.Log.e("AppRepository", "   Tipo: ${operation.operationType}, Entidade: ${operation.entityType}, ID: ${operation.entityId}")
+            Timber.e("AppRepository", "❌ CRÍTICO: SyncOperationDao é null ao tentar inserir operação!")
+            Timber.e("AppRepository", "   Tipo: ${operation.operationType}, Entidade: ${operation.entityType}, ID: ${operation.entityId}")
             throw IllegalStateException("SyncOperationDao não inicializado")
         }
         val operationId = syncOperationDao.inserir(operation)
-        android.util.Log.d("AppRepository", "✅ Operação inserida na fila: ID=$operationId, Tipo=${operation.operationType}, Entidade=${operation.entityType}")
+        Timber.d("AppRepository", "✅ Operação inserida na fila: ID=$operationId, Tipo=${operation.operationType}, Entidade=${operation.entityType}")
         return operationId
     }
     
@@ -1877,9 +1877,9 @@ class AppRepository @Inject constructor(
                 status = "PENDING"
             )
             inserirOperacaoSync(operation)
-            android.util.Log.d("AppRepository", "✅ Operação DELETE enfileirada para Equipment: ${equipment.id}")
+            Timber.d("AppRepository", "✅ Operação DELETE enfileirada para Equipment: ${equipment.id}")
         } catch (e: Exception) {
-            android.util.Log.e("AppRepository", "❌ Erro ao enfileirar DELETE de Equipment: ${e.message}", e)
+            Timber.e("AppRepository", "❌ Erro ao enfileirar DELETE de Equipment: ${e.message}", e)
         }
     }
     

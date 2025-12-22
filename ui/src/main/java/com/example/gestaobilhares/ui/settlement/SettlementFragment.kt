@@ -43,7 +43,7 @@ import com.example.gestaobilhares.ui.settlement.PanoSelectionDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.Toast
 import com.example.gestaobilhares.data.entities.Mesa
-import android.util.Log
+import timber.log.Timber
 import com.example.gestaobilhares.ui.settlement.MesaDTO
 import com.example.gestaobilhares.ui.settlement.MesasAcertoAdapter
 import com.example.gestaobilhares.ui.clients.AcertoResumo
@@ -127,7 +127,7 @@ class SettlementFragment : Fragment() {
             // ✅ CORREÇÃO: Proteção contra crash após captura de foto
             try {
                 currentPhotoUri?.let { uri ->
-                    Log.d("SettlementFragment", "Foto capturada com sucesso: $uri")
+                    Timber.d("Foto capturada com sucesso: $uri")
                     
                     // ✅ CORREÇÃO: Usar post para aguardar o layout ser concluído
                     binding.root.post {
@@ -135,7 +135,7 @@ class SettlementFragment : Fragment() {
                             // ✅ CORREÇÃO MELHORADA: Verificar se o arquivo existe e obter caminho real
                             val caminhoReal = obterCaminhoRealFoto(uri)
                             if (caminhoReal != null) {
-                                Log.d("SettlementFragment", "Caminho real da foto: $caminhoReal")
+                                Timber.d("SettlementFragment", "Caminho real da foto: $caminhoReal")
                                 
                                 // ✅ CORREÇÃO: Exibir foto localmente imediatamente
                                 mesasAcertoAdapter.setFotoRelogio(currentMesaId, caminhoReal)
@@ -147,36 +147,36 @@ class SettlementFragment : Fragment() {
                                         // Se não é URL do Firebase Storage, fazer upload
                                         if (!firebaseImageUploader.isFirebaseStorageUrl(caminhoReal)) {
                                             if (networkUtils.isConnected()) {
-                                                Log.d("SettlementFragment", "Fazendo upload da foto para Firebase Storage...")
+                                                Timber.d("SettlementFragment", "Fazendo upload da foto para Firebase Storage...")
                                                 val uploadedUrl = firebaseImageUploader.uploadMesaRelogio(caminhoReal, currentMesaId)
                                                 if (uploadedUrl != null) {
                                                     // Salvar URL Firebase separadamente para sincronização
                                                     mesasAcertoAdapter.setFotoRelogioFirebaseUrl(currentMesaId, uploadedUrl)
-                                                    Log.d("SettlementFragment", "✅ Foto enviada para Firebase Storage: $uploadedUrl")
+                                                    Timber.d("SettlementFragment", "✅ Foto enviada para Firebase Storage: $uploadedUrl")
                                                 } else {
-                                                    Log.w("SettlementFragment", "⚠️ Falha no upload, foto será sincronizada depois")
+                                                    Timber.w("SettlementFragment", "⚠️ Falha no upload, foto será sincronizada depois")
                                                 }
                                             } else {
-                                                Log.d("SettlementFragment", "📴 Sem conexão, foto será sincronizada depois")
+                                                Timber.d("SettlementFragment", "📴 Sem conexão, foto será sincronizada depois")
                                             }
                                         }
                                     } catch (e: Exception) {
-                                        Log.e("SettlementFragment", "Erro ao fazer upload da foto: ${e.message}", e)
+                                        Timber.e("SettlementFragment", "Erro ao fazer upload da foto: ${e.message}", e)
                                         // Foto local já está sendo exibida, upload pode ser feito depois
                                     }
                                 }
                             } else {
-                                Log.e("SettlementFragment", "Não foi possível obter o caminho real da foto")
+                                Timber.e("SettlementFragment", "Não foi possível obter o caminho real da foto")
                                 Toast.makeText(requireContext(), "Erro: não foi possível salvar a foto", Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
-                            Log.e("SettlementFragment", "Erro ao processar foto: ${e.message}", e)
+                            Timber.e("SettlementFragment", "Erro ao processar foto: ${e.message}", e)
                             Toast.makeText(requireContext(), "Erro ao processar foto: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.e("SettlementFragment", "Erro crítico após captura de foto: ${e.message}", e)
+                Timber.e("SettlementFragment", "Erro crítico após captura de foto: ${e.message}", e)
                 Toast.makeText(requireContext(), "Erro ao processar foto capturada", Toast.LENGTH_LONG).show()
             }
         } else {
@@ -189,17 +189,17 @@ class SettlementFragment : Fragment() {
      */
     private fun obterCaminhoRealFoto(uri: Uri): String? {
         return try {
-            Log.d("SettlementFragment", "Obtendo caminho real para URI: $uri")
+            Timber.d("SettlementFragment", "Obtendo caminho real para URI: $uri")
             
             // ✅ CORREÇÃO: Tentar comprimir a imagem com fallback seguro
             try {
                 val compressedPath = imageCompressionUtils.compressImageFromUri(uri)
                 if (compressedPath != null) {
-                    Log.d("SettlementFragment", "Imagem comprimida com sucesso: $compressedPath")
+                    Timber.d("SettlementFragment", "Imagem comprimida com sucesso: $compressedPath")
                     return compressedPath
                 }
             } catch (e: Exception) {
-                Log.w("SettlementFragment", "Compressão falhou, usando método original: ${e.message}")
+                Timber.w("SettlementFragment", "Compressão falhou, usando método original: ${e.message}")
             }
             
             // Tentativa 1: Converter URI para caminho real via ContentResolver
@@ -216,17 +216,17 @@ class SettlementFragment : Fragment() {
                     val columnIndex = it.getColumnIndex(android.provider.MediaStore.Images.Media.DATA)
                     if (columnIndex != -1) {
                         val path = it.getString(columnIndex)
-                        Log.d("SettlementFragment", "Caminho obtido via cursor: $path")
+                        Timber.d("SettlementFragment", "Caminho obtido via cursor: $path")
                         if (java.io.File(path).exists()) {
                             // ✅ CORREÇÃO: Tentar comprimir com fallback
                             try {
                                 val compressedPathFromFile = imageCompressionUtils.compressImageFromPath(path)
                                 if (compressedPathFromFile != null) {
-                                    Log.d("SettlementFragment", "Imagem comprimida do arquivo: $compressedPathFromFile")
+                                    Timber.d("SettlementFragment", "Imagem comprimida do arquivo: $compressedPathFromFile")
                                     return compressedPathFromFile
                                 }
                             } catch (e: Exception) {
-                                Log.w("SettlementFragment", "Compressão do arquivo falhou: ${e.message}")
+                                Timber.w("SettlementFragment", "Compressão do arquivo falhou: ${e.message}")
                             }
                             return path
                         }
@@ -235,35 +235,35 @@ class SettlementFragment : Fragment() {
             }
             
             // Tentativa 2: Se não conseguiu via cursor, tentar copiar para arquivo temporário
-            Log.d("SettlementFragment", "Tentando copiar para arquivo temporário")
+            Timber.d("SettlementFragment", "Tentando copiar para arquivo temporário")
             val inputStream = requireContext().contentResolver.openInputStream(uri)
             if (inputStream != null) {
                 val tempFile = java.io.File.createTempFile("relogio_foto_", ".jpg", requireContext().cacheDir)
                 tempFile.outputStream().use { outputStream ->
                     inputStream.copyTo(outputStream)
                 }
-                Log.d("SettlementFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
+                Timber.d("SettlementFragment", "Arquivo temporário criado: ${tempFile.absolutePath}")
                 
                 // ✅ CORREÇÃO: Tentar comprimir com fallback
                 try {
                     val compressedPath = imageCompressionUtils.compressImageFromPath(tempFile.absolutePath)
                     if (compressedPath != null) {
-                        Log.d("SettlementFragment", "Arquivo temporário comprimido: $compressedPath")
+                        Timber.d("SettlementFragment", "Arquivo temporário comprimido: $compressedPath")
                         return compressedPath
                     }
                 } catch (e: Exception) {
-                    Log.w("SettlementFragment", "Compressão do arquivo temporário falhou: ${e.message}")
+                    Timber.w("SettlementFragment", "Compressão do arquivo temporário falhou: ${e.message}")
                 }
                 
                 return tempFile.absolutePath
             }
             
             // Tentativa 3: Se ainda não conseguiu, usar o URI como string
-            Log.d("SettlementFragment", "Usando URI como string: $uri")
+            Timber.d("SettlementFragment", "Usando URI como string: $uri")
             uri.toString()
             
         } catch (e: Exception) {
-            Log.e("SettlementFragment", "Erro ao obter caminho real: ${e.message}", e)
+            Timber.e("SettlementFragment", "Erro ao obter caminho real: ${e.message}", e)
             null
         }
     }
@@ -281,13 +281,13 @@ class SettlementFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         // ✅ LOG CRASH: Início da tela
-        Log.d("LOG_CRASH", "SettlementFragment.onViewCreated - INÍCIO")
+        Timber.d("LOG_CRASH", "SettlementFragment.onViewCreated - INÍCIO")
         
         // Inicializar ViewModel aqui onde o contexto está disponível
-        Log.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
-        Log.d("SettlementFragment", "Cliente ID: ${args.clienteId}")
-        Log.d("SettlementFragment", "Acerto ID para edição: ${args.acertoIdParaEdicao}")
-        Log.d("SettlementFragment", "Modo edição: ${args.acertoIdParaEdicao != 0L}")
+        Timber.d("SettlementFragment", "=== INICIANDO SETTLEMENT FRAGMENT ===")
+        Timber.d("SettlementFragment", "Cliente ID: ${args.clienteId}")
+        Timber.d("SettlementFragment", "Acerto ID para edição: ${args.acertoIdParaEdicao}")
+        Timber.d("SettlementFragment", "Modo edição: ${args.acertoIdParaEdicao != 0L}")
         
         // Primeiro: verificar permissões
         verificarPermissaoAcerto()
@@ -306,10 +306,10 @@ class SettlementFragment : Fragment() {
         
         // ✅ NOVO: Sétimo: carregar dados do acerto se estiver editando
         if (args.acertoIdParaEdicao != 0L) {
-            Log.d("SettlementFragment", "🔧 CHAMANDO carregarDadosAcertoParaEdicao() - Acerto ID: ${args.acertoIdParaEdicao}")
+            Timber.d("SettlementFragment", "🔧 CHAMANDO carregarDadosAcertoParaEdicao() - Acerto ID: ${args.acertoIdParaEdicao}")
             carregarDadosAcertoParaEdicao()
         } else {
-            Log.d("SettlementFragment", "🔧 NÃO chamando carregarDadosAcertoParaEdicao() - Acerto ID é 0")
+            Timber.d("SettlementFragment", "🔧 NÃO chamando carregarDadosAcertoParaEdicao() - Acerto ID é 0")
             // ✅ CORREÇÃO: Buscar débito anterior apenas para novos acertos
             viewModel.buscarDebitoAnterior(args.clienteId, null)
         }
@@ -321,57 +321,57 @@ class SettlementFragment : Fragment() {
     private fun carregarDadosAcertoParaEdicao() {
         lifecycleScope.launch {
             try {
-                Log.d("SettlementFragment", "=== CARREGANDO DADOS DO ACERTO PARA EDIÇÃO ===")
-                Log.d("SettlementFragment", "Acerto ID: ${args.acertoIdParaEdicao}")
+                Timber.d("SettlementFragment", "=== CARREGANDO DADOS DO ACERTO PARA EDIÇÃO ===")
+                Timber.d("SettlementFragment", "Acerto ID: ${args.acertoIdParaEdicao}")
                 
                 // ✅ TESTE DIRETO: Buscar acerto diretamente do AppRepository
-                Log.d("SettlementFragment", "🔍 TESTE DIRETO: Buscando acerto diretamente do AppRepository...")
+                Timber.d("SettlementFragment", "🔍 TESTE DIRETO: Buscando acerto diretamente do AppRepository...")
                 val acertoDireto = appRepository.buscarPorId(args.acertoIdParaEdicao)
                 if (acertoDireto != null) {
-                    Log.d("SettlementFragment", "✅ TESTE DIRETO: Acerto encontrado diretamente:")
-                    Log.d("SettlementFragment", "  - ID: ${acertoDireto.id}")
-                    Log.d("SettlementFragment", "  - Débito Anterior: ${acertoDireto.debitoAnterior}")
-                    Log.d("SettlementFragment", "  - Débito Atual: ${acertoDireto.debitoAtual}")
+                    Timber.d("SettlementFragment", "✅ TESTE DIRETO: Acerto encontrado diretamente:")
+                    Timber.d("SettlementFragment", "  - ID: ${acertoDireto.id}")
+                    Timber.d("SettlementFragment", "  - Débito Anterior: ${acertoDireto.debitoAnterior}")
+                    Timber.d("SettlementFragment", "  - Débito Atual: ${acertoDireto.debitoAtual}")
                     
                     // ✅ TESTE DIRETO: Definir débito anterior diretamente
-                    Log.d("SettlementFragment", "🔍 TESTE DIRETO: Definindo débito anterior diretamente...")
+                    Timber.d("SettlementFragment", "🔍 TESTE DIRETO: Definindo débito anterior diretamente...")
                     viewModel.definirDebitoAnteriorParaEdicao(acertoDireto.debitoAnterior)
                 } else {
-                    Log.e("SettlementFragment", "❌ TESTE DIRETO: Acerto não encontrado diretamente")
+                    Timber.e("SettlementFragment", "❌ TESTE DIRETO: Acerto não encontrado diretamente")
                 }
                 
                 // ✅ CORREÇÃO: Primeiro buscar o débito anterior para edição
-                Log.d("SettlementFragment", "🔍 Buscando débito anterior para edição...")
+                Timber.d("SettlementFragment", "🔍 Buscando débito anterior para edição...")
                 viewModel.buscarDebitoAnterior(args.clienteId, args.acertoIdParaEdicao)
                 
                 // Buscar dados do acerto
                 val acerto = viewModel.buscarAcertoPorId(args.acertoIdParaEdicao)
                 if (acerto != null) {
-                    Log.d("SettlementFragment", "Acerto encontrado: ID=${acerto.id}, Valor=${acerto.valorRecebido}")
-                    Log.d("SettlementFragment", "🔍 DEBUG ACERTO COMPLETO:")
-                    Log.d("SettlementFragment", "  - ID: ${acerto.id}")
-                    Log.d("SettlementFragment", "  - Valor Recebido: ${acerto.valorRecebido}")
-                    Log.d("SettlementFragment", "  - Desconto: ${acerto.desconto}")
-                    Log.d("SettlementFragment", "  - Observações: '${acerto.observacoes}'")
-                    Log.d("SettlementFragment", "  - Data: ${acerto.dataAcerto}")
-                    Log.d("SettlementFragment", "  - Status: ${acerto.status}")
-                    Log.d("SettlementFragment", "  - Débito Anterior: ${acerto.debitoAnterior}")
+                    Timber.d("SettlementFragment", "Acerto encontrado: ID=${acerto.id}, Valor=${acerto.valorRecebido}")
+                    Timber.d("SettlementFragment", "🔍 DEBUG ACERTO COMPLETO:")
+                    Timber.d("SettlementFragment", "  - ID: ${acerto.id}")
+                    Timber.d("SettlementFragment", "  - Valor Recebido: ${acerto.valorRecebido}")
+                    Timber.d("SettlementFragment", "  - Desconto: ${acerto.desconto}")
+                    Timber.d("SettlementFragment", "  - Observações: '${acerto.observacoes}'")
+                    Timber.d("SettlementFragment", "  - Data: ${acerto.dataAcerto}")
+                    Timber.d("SettlementFragment", "  - Status: ${acerto.status}")
+                    Timber.d("SettlementFragment", "  - Débito Anterior: ${acerto.debitoAnterior}")
 
                     // ✅ VALIDAÇÃO: Verificar se o acerto pode ser editado
-                    Log.d("SettlementFragment", "🔍 VALIDAÇÃO: Verificando status do acerto...")
-                    Log.d("SettlementFragment", "🔍 Status atual: ${acerto.status}")
+                    Timber.d("SettlementFragment", "🔍 VALIDAÇÃO: Verificando status do acerto...")
+                    Timber.d("SettlementFragment", "🔍 Status atual: ${acerto.status}")
                     
                     // ✅ CORREÇÃO: Remover bloqueio de acertos FINALIZADOS
                     // A validação de edição agora é feita pelo AcertoRepository baseada no status do ciclo
-                    Log.d("SettlementFragment", "✅ Acerto pode ser editado (Status: ${acerto.status})")
+                    Timber.d("SettlementFragment", "✅ Acerto pode ser editado (Status: ${acerto.status})")
 
                     // Preencher campos da UI com dados do acerto
                     preencherCamposComDadosAcerto(acerto)
                 } else {
-                    Log.e("SettlementFragment", "Acerto não encontrado: ${args.acertoIdParaEdicao}")
+                    Timber.e("SettlementFragment", "Acerto não encontrado: ${args.acertoIdParaEdicao}")
                 }
             } catch (e: Exception) {
-                Log.e("SettlementFragment", "Erro ao carregar dados do acerto: ${e.message}", e)
+                Timber.e("SettlementFragment", "Erro ao carregar dados do acerto: ${e.message}", e)
             }
         }
     }
@@ -381,46 +381,46 @@ class SettlementFragment : Fragment() {
      */
     private fun preencherCamposComDadosAcerto(acerto: com.example.gestaobilhares.data.entities.Acerto) {
         try {
-            Log.d("SettlementFragment", "=== PREENCHENDO CAMPOS COM DADOS DO ACERTO ===")
-            Log.d("SettlementFragment", "Valor recebido: ${acerto.valorRecebido}")
-            Log.d("SettlementFragment", "Desconto: ${acerto.desconto}")
-            Log.d("SettlementFragment", "Observações: ${acerto.observacoes}")
-            Log.d("SettlementFragment", "Débito anterior: ${acerto.debitoAnterior}")
+            Timber.d("SettlementFragment", "=== PREENCHENDO CAMPOS COM DADOS DO ACERTO ===")
+            Timber.d("SettlementFragment", "Valor recebido: ${acerto.valorRecebido}")
+            Timber.d("SettlementFragment", "Desconto: ${acerto.desconto}")
+            Timber.d("SettlementFragment", "Observações: ${acerto.observacoes}")
+            Timber.d("SettlementFragment", "Débito anterior: ${acerto.debitoAnterior}")
 
             // ✅ CORREÇÃO: Débito anterior já foi carregado pelo buscarDebitoAnterior()
-            Log.d("SettlementFragment", "🔍 Débito anterior já carregado pelo ViewModel: ${acerto.debitoAnterior}")
+            Timber.d("SettlementFragment", "🔍 Débito anterior já carregado pelo ViewModel: ${acerto.debitoAnterior}")
 
             // ✅ NOVO: Preencher valor recebido usando MoneyTextWatcher
-            Log.d("SettlementFragment", "🔍 Preenchendo valor recebido: ${acerto.valorRecebido}")
+            Timber.d("SettlementFragment", "🔍 Preenchendo valor recebido: ${acerto.valorRecebido}")
             val valorRecebidoWatcher = MoneyTextWatcher(binding.etAmountReceived)
             valorRecebidoWatcher.setValue(acerto.valorRecebido)
-            Log.d("SettlementFragment", "✅ Valor recebido preenchido: ${acerto.valorRecebido}")
+            Timber.d("SettlementFragment", "✅ Valor recebido preenchido: ${acerto.valorRecebido}")
 
             // ✅ NOVO: Preencher desconto usando MoneyTextWatcher
-            Log.d("SettlementFragment", "🔍 Preenchendo desconto: ${acerto.desconto}")
+            Timber.d("SettlementFragment", "🔍 Preenchendo desconto: ${acerto.desconto}")
             val descontoWatcher = MoneyTextWatcher(binding.etDesconto)
             descontoWatcher.setValue(acerto.desconto)
-            Log.d("SettlementFragment", "✅ Desconto preenchido: ${acerto.desconto}")
+            Timber.d("SettlementFragment", "✅ Desconto preenchido: ${acerto.desconto}")
 
             // Preencher observações (sempre, mesmo se for vazio)
-            Log.d("SettlementFragment", "🔍 Preenchendo observações: '${acerto.observacoes}'")
+            Timber.d("SettlementFragment", "🔍 Preenchendo observações: '${acerto.observacoes}'")
             binding.etObservacao.setText(acerto.observacoes ?: "")
-            Log.d("SettlementFragment", "✅ Observações preenchidas: '${acerto.observacoes ?: ""}'")
+            Timber.d("SettlementFragment", "✅ Observações preenchidas: '${acerto.observacoes ?: ""}'")
 
             // ✅ NOVO: Preencher relógio final das mesas se houver dados de mesas
             // Aguardar um pouco para garantir que as mesas já foram carregadas no adapter
             Handler(Looper.getMainLooper()).postDelayed({
-                Log.d("SettlementFragment", "🔧 Executando preenchimento tardio do relógio final...")
+                Timber.d("SettlementFragment", "🔧 Executando preenchimento tardio do relógio final...")
                 preencherRelogioFinalMesas(acerto.id)
             }, 1000)
 
             // Preencher métodos de pagamento (se houver)
             // TODO: Implementar preenchimento dos métodos de pagamento
 
-            Log.d("SettlementFragment", "✅ Campos preenchidos com sucesso!")
+            Timber.d("SettlementFragment", "✅ Campos preenchidos com sucesso!")
 
         } catch (e: Exception) {
-            Log.e("SettlementFragment", "Erro ao preencher campos: ${e.message}", e)
+            Timber.e("SettlementFragment", "Erro ao preencher campos: ${e.message}", e)
         }
     }
 
@@ -430,34 +430,34 @@ class SettlementFragment : Fragment() {
     private fun preencherRelogioFinalMesas(acertoId: Long) {
         lifecycleScope.launch {
             try {
-                Log.d("SettlementFragment", "🔍 Preenchendo relógio final das mesas para acerto: $acertoId")
+                Timber.d("SettlementFragment", "🔍 Preenchendo relógio final das mesas para acerto: $acertoId")
                 
                 // Buscar dados das mesas do acerto
                 val acertoMesas = viewModel.buscarAcertoMesasPorAcertoId(acertoId)
                 
-                Log.d("SettlementFragment", "🔍 AcertoMesas encontradas: ${acertoMesas.size}")
+                Timber.d("SettlementFragment", "🔍 AcertoMesas encontradas: ${acertoMesas.size}")
                 acertoMesas.forEach { acertoMesa ->
-                    Log.d("SettlementFragment", "🔍 AcertoMesa: mesaId=${acertoMesa.mesaId}, relogioInicial=${acertoMesa.relogioInicial}, relogioFinal=${acertoMesa.relogioFinal}")
+                    Timber.d("SettlementFragment", "🔍 AcertoMesa: mesaId=${acertoMesa.mesaId}, relogioInicial=${acertoMesa.relogioInicial}, relogioFinal=${acertoMesa.relogioFinal}")
                 }
                 
                 if (acertoMesas.isNotEmpty()) {
-                    Log.d("SettlementFragment", "✅ Encontradas ${acertoMesas.size} mesas para preenchimento")
+                    Timber.d("SettlementFragment", "✅ Encontradas ${acertoMesas.size} mesas para preenchimento")
                     
                     // Verificar se o adapter já foi inicializado
                     if (::mesasAcertoAdapter.isInitialized) {
-                        Log.d("SettlementFragment", "✅ Adapter inicializado, atualizando relógio final...")
+                        Timber.d("SettlementFragment", "✅ Adapter inicializado, atualizando relógio final...")
                         // Atualizar o adapter com os dados das mesas
                         mesasAcertoAdapter.atualizarRelogioFinalMesas(acertoMesas)
-                        Log.d("SettlementFragment", "✅ Relógio final das mesas preenchido com sucesso")
+                        Timber.d("SettlementFragment", "✅ Relógio final das mesas preenchido com sucesso")
                     } else {
-                        Log.w("SettlementFragment", "⚠️ Adapter não inicializado ainda")
+                        Timber.w("SettlementFragment", "⚠️ Adapter não inicializado ainda")
                     }
                 } else {
-                    Log.w("SettlementFragment", "⚠️ Nenhuma mesa encontrada para o acerto $acertoId")
+                    Timber.w("SettlementFragment", "⚠️ Nenhuma mesa encontrada para o acerto $acertoId")
                 }
                 
             } catch (e: Exception) {
-                Log.e("SettlementFragment", "Erro ao preencher relógio final das mesas: ${e.message}", e)
+                Timber.e("SettlementFragment", "Erro ao preencher relógio final das mesas: ${e.message}", e)
             }
         }
     }
@@ -485,11 +485,11 @@ class SettlementFragment : Fragment() {
     }
 
     private fun carregarDadosClienteESincronizar() {
-        Log.d("SettlementFragment", "Iniciando carregamento sincronizado dos dados do cliente")
+        Timber.d("SettlementFragment", "Iniciando carregamento sincronizado dos dados do cliente")
         
         viewModel.carregarDadosCliente(args.clienteId) { cliente ->
             if (cliente != null) {
-                Log.d("SettlementFragment", "✅ Cliente carregado: valorFicha=${cliente.valorFicha}, comissaoFicha=${cliente.comissaoFicha}")
+                Timber.d("SettlementFragment", "✅ Cliente carregado: valorFicha=${cliente.valorFicha}, comissaoFicha=${cliente.comissaoFicha}")
                 
                 // Agora que temos os dados do cliente, preparar as mesas
                 lifecycleScope.launch {
@@ -503,7 +503,7 @@ class SettlementFragment : Fragment() {
                         }
                         
                         if (mesasCliente != null && mesasCliente.isNotEmpty()) {
-                            Log.d("SettlementFragment", "✅ Mesas do cliente carregadas: ${mesasCliente.size}")
+                            Timber.d("SettlementFragment", "✅ Mesas do cliente carregadas: ${mesasCliente.size}")
                     
                             // ✅ CORREÇÃO: Preparar mesas para acerto com modo de edição
                             val mesasPreparadas = viewModel.prepararMesasParaAcerto(
@@ -528,36 +528,36 @@ class SettlementFragment : Fragment() {
                                 )
                             }
                             
-                            Log.d("SettlementFragment", "MesasDTO criadas com sucesso: ${mesasDTO.size}")
+                            Timber.d("SettlementFragment", "MesasDTO criadas com sucesso: ${mesasDTO.size}")
                             mesasDTO.forEach { mesa ->
-                                Log.d("SettlementFragment", "Mesa ${mesa.numero}: valorFicha=${mesa.valorFicha}, comissaoFicha=${mesa.comissaoFicha}")
+                                Timber.d("SettlementFragment", "Mesa ${mesa.numero}: valorFicha=${mesa.valorFicha}, comissaoFicha=${mesa.comissaoFicha}")
                             }
                             
                             // Configurar RecyclerView com dados completos
                             setupRecyclerViewComDados(mesasDTO)
                             
                         } else {
-                            Log.w("SettlementFragment", "⚠️ Nenhuma mesa encontrada para o cliente.")
+                            Timber.w("SettlementFragment", "⚠️ Nenhuma mesa encontrada para o cliente.")
                             // Exceção: permitir acerto apenas para pagamento de débito se houver débito
                             val debitoAnterior = viewModel.debitoAnterior.value
                             if (debitoAnterior > 0.0) {
-                                Log.i("SettlementFragment", "Modo pagamento de débito sem mesas. Débito anterior: R$ $debitoAnterior")
+                                Timber.i("SettlementFragment", "Modo pagamento de débito sem mesas. Débito anterior: R$ $debitoAnterior")
                                 configurarModoPagamentoDebito()
                             } else {
-                                Log.w("SettlementFragment", "Cliente sem mesas e sem débito. Encerrando tela de acerto.")
+                                Timber.w("SettlementFragment", "Cliente sem mesas e sem débito. Encerrando tela de acerto.")
                                 Toast.makeText(requireContext(), "Cliente sem mesas e sem débito.", Toast.LENGTH_LONG).show()
                                 findNavController().popBackStack()
                             }
                         }
                         
                     } catch (e: Exception) {
-                        Log.e("SettlementFragment", "❌ Erro ao carregar mesas: ${e.message}", e)
+                        Timber.e("SettlementFragment", "❌ Erro ao carregar mesas: ${e.message}", e)
                         // Fallback em caso de erro
                         carregarMesasFallback(cliente)
                     }
                 }
             } else {
-                Log.e("SettlementFragment", "❌ Erro: Cliente não encontrado")
+                Timber.e("SettlementFragment", "❌ Erro: Cliente não encontrado")
                 Toast.makeText(requireContext(), "Erro: Cliente não encontrado", Toast.LENGTH_LONG).show()
             }
         }
@@ -568,11 +568,11 @@ class SettlementFragment : Fragment() {
      */
     private suspend fun carregarMesasFallback(cliente: com.example.gestaobilhares.data.entities.Cliente) {
         try {
-            Log.d("SettlementFragment", "🔄 Executando fallback para carregar mesas...")
+            Timber.d("SettlementFragment", "🔄 Executando fallback para carregar mesas...")
             
             // Verificar se o fragment ainda está ativo
             if (!isAdded || context == null) {
-                Log.w("SettlementFragment", "Fragment não está mais ativo, cancelando fallback")
+                Timber.w("SettlementFragment", "Fragment não está mais ativo, cancelando fallback")
                 return
             }
             
@@ -580,7 +580,7 @@ class SettlementFragment : Fragment() {
             val mesasCliente = viewModel.carregarMesasClienteDireto(args.clienteId)
             
             if (mesasCliente.isNotEmpty()) {
-                Log.d("SettlementFragment", "✅ Fallback: ${mesasCliente.size} mesas carregadas")
+                Timber.d("SettlementFragment", "✅ Fallback: ${mesasCliente.size} mesas carregadas")
                 
                 // ✅ CORREÇÃO: Preparar mesas para acerto com modo de edição no fallback
                 val mesasPreparadas = viewModel.prepararMesasParaAcerto(
@@ -606,10 +606,10 @@ class SettlementFragment : Fragment() {
                 
                 setupRecyclerViewComDados(mesasDTO)
             } else {
-                Log.w("SettlementFragment", "Fallback: Nenhuma mesa encontrada")
+                Timber.w("SettlementFragment", "Fallback: Nenhuma mesa encontrada")
                 val debitoAnterior = viewModel.debitoAnterior.value
                 if (debitoAnterior > 0.0) {
-                    Log.i("SettlementFragment", "Fallback -> Modo pagamento de débito sem mesas. Débito: R$ $debitoAnterior")
+                    Timber.i("SettlementFragment", "Fallback -> Modo pagamento de débito sem mesas. Débito: R$ $debitoAnterior")
                     configurarModoPagamentoDebito()
                 } else {
                     Toast.makeText(requireContext(), "Cliente sem mesas e sem débito.", Toast.LENGTH_LONG).show()
@@ -617,7 +617,7 @@ class SettlementFragment : Fragment() {
                 }
             }
         } catch (e: Exception) {
-            Log.e("SettlementFragment", "❌ Erro no fallback: ${e.message}", e)
+            Timber.e("SettlementFragment", "❌ Erro no fallback: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao carregar dados: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
@@ -639,7 +639,7 @@ class SettlementFragment : Fragment() {
             updateCalculations()
             showSnackbar("Modo pagamento de débito habilitado (sem mesas)")
         } catch (e: Exception) {
-            Log.e("SettlementFragment", "Erro ao configurar modo pagamento de débito: ${e.message}")
+            Timber.e("SettlementFragment", "Erro ao configurar modo pagamento de débito: ${e.message}")
         }
     }
     
@@ -664,41 +664,41 @@ class SettlementFragment : Fragment() {
     
     private fun setupRecyclerViewComDados(mesasDTO: List<MesaDTO>) {
         // ✅ LOG CRASH: Início da configuração do RecyclerView
-        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - INÍCIO")
+        Timber.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - INÍCIO")
         
         // Verificar se o fragment ainda está ativo
         if (!isAdded || _binding == null) {
-            Log.w("SettlementFragment", "Fragment não está mais ativo ou binding é null, cancelando setupRecyclerViewComDados")
+            Timber.w("SettlementFragment", "Fragment não está mais ativo ou binding é null, cancelando setupRecyclerViewComDados")
             return
         }
         
-        Log.d("SettlementFragment", "=== CONFIGURANDO RECYCLERVIEW COM DADOS COMPLETOS ===")
-        Log.d("SettlementFragment", "Total de mesas recebidas: ${mesasDTO.size}")
+        Timber.d("SettlementFragment", "=== CONFIGURANDO RECYCLERVIEW COM DADOS COMPLETOS ===")
+        Timber.d("SettlementFragment", "Total de mesas recebidas: ${mesasDTO.size}")
         
         // ✅ DIAGNÓSTICO: Verificar cada mesa individualmente
         mesasDTO.forEachIndexed { index, mesa ->
-            Log.d("SettlementFragment", "Mesa $index: ID=${mesa.id}, Número=${mesa.numero}, Tipo=${mesa.tipoMesa}, Ativa=${mesa.ativa}")
+            Timber.d("SettlementFragment", "Mesa $index: ID=${mesa.id}, Número=${mesa.numero}, Tipo=${mesa.tipoMesa}, Ativa=${mesa.ativa}")
         }
         
         // ✅ LOG CRASH: Configurando adapter
-        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Configurando adapter")
+        Timber.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Configurando adapter")
         
         mesasAcertoAdapter = MesasAcertoAdapter(
             onDataChanged = { 
-                Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Dados alterados, atualizando cálculos")
+                Timber.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Dados alterados, atualizando cálculos")
                 updateCalculations() 
             },
             onCalcularMedia = { mesaId -> 
                 // ✅ LOG CRASH: Solicitação de cálculo de média
-                Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Solicitando cálculo de média para mesa $mesaId")
+                Timber.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Solicitando cálculo de média para mesa $mesaId")
                 // ✅ NOVO: Calcular média de fichas jogadas dos últimos acertos
-                Log.d("SettlementFragment", "Solicitando cálculo de média para mesa $mesaId")
+                Timber.d("SettlementFragment", "Solicitando cálculo de média para mesa $mesaId")
                 
                 // Iniciar cálculo assíncrono
                 lifecycleScope.launch {
                     try {
                         val media = viewModel.calcularMediaFichasJogadas(mesaId, 5)
-                        Log.d("SettlementFragment", "Média calculada para mesa $mesaId: $media fichas")
+                        Timber.d("SettlementFragment", "Média calculada para mesa $mesaId: $media fichas")
                         
                         // Atualizar o adapter com a média calculada
                         mesasAcertoAdapter.atualizarMediaMesa(mesaId, media)
@@ -709,7 +709,7 @@ class SettlementFragment : Fragment() {
                         // Mostrar feedback visual
                         showSnackbar("Média calculada: ${media.toInt()} fichas")
                     } catch (e: Exception) {
-                        Log.e("SettlementFragment", "Erro ao calcular média: ${e.message}", e)
+                        Timber.e("SettlementFragment", "Erro ao calcular média: ${e.message}", e)
                         showSnackbar("Erro ao calcular média: ${e.message}")
                     }
                 }
@@ -719,7 +719,7 @@ class SettlementFragment : Fragment() {
             },
             onFotoCapturada = { mesaId, caminhoFoto, _ ->
                 // ✅ NOVO: Callback quando foto é capturada
-                Log.d("SettlementFragment", "Foto capturada para mesa $mesaId: $caminhoFoto")
+                Timber.d("SettlementFragment", "Foto capturada para mesa $mesaId: $caminhoFoto")
                 // Aqui você pode fazer qualquer processamento adicional se necessário
             },
             onSolicitarCapturaFoto = { mesaId ->
@@ -728,45 +728,45 @@ class SettlementFragment : Fragment() {
         )
         
         // ✅ LOG CRASH: Configurando RecyclerView
-        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Configurando RecyclerView")
+        Timber.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Configurando RecyclerView")
         
         binding.rvMesasAcerto.adapter = mesasAcertoAdapter
         binding.rvMesasAcerto.layoutManager = LinearLayoutManager(requireContext())
         
-        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - RecyclerView configurado com sucesso")
+        Timber.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - RecyclerView configurado com sucesso")
         
         // ✅ CORREÇÃO: Usar as mesas preparadas com relógio inicial correto
-        Log.d("SettlementFragment", "Carregando ${mesasDTO.size} mesas preparadas para o acerto")
+        Timber.d("SettlementFragment", "Carregando ${mesasDTO.size} mesas preparadas para o acerto")
         mesasDTO.forEach { mesa ->
-            Log.d("SettlementFragment", "Mesa ${mesa.numero}: relógio inicial=${mesa.relogioInicial}, relógio final=${mesa.relogioFinal}")
-            Log.d("SettlementFragment", "🔍 DEBUG MESA ${mesa.numero}:")
-            Log.d("SettlementFragment", "  - ID: ${mesa.id}")
-            Log.d("SettlementFragment", "  - Número: ${mesa.numero}")
-            Log.d("SettlementFragment", "  - Relógio Inicial: ${mesa.relogioInicial}")
-            Log.d("SettlementFragment", "  - Relógio Final: ${mesa.relogioFinal}")
-            Log.d("SettlementFragment", "  - Valor Fixo: ${mesa.valorFixo}")
+            Timber.d("SettlementFragment", "Mesa ${mesa.numero}: relógio inicial=${mesa.relogioInicial}, relógio final=${mesa.relogioFinal}")
+            Timber.d("SettlementFragment", "🔍 DEBUG MESA ${mesa.numero}:")
+            Timber.d("SettlementFragment", "  - ID: ${mesa.id}")
+            Timber.d("SettlementFragment", "  - Número: ${mesa.numero}")
+            Timber.d("SettlementFragment", "  - Relógio Inicial: ${mesa.relogioInicial}")
+            Timber.d("SettlementFragment", "  - Relógio Final: ${mesa.relogioFinal}")
+            Timber.d("SettlementFragment", "  - Valor Fixo: ${mesa.valorFixo}")
         }
         
         // ✅ DIAGNÓSTICO: Verificar se o adapter está sendo configurado corretamente
-        Log.d("SettlementFragment", "Adapter configurado: ${mesasAcertoAdapter.itemCount} itens")
-        Log.d("SettlementFragment", "LayoutManager configurado: ${binding.rvMesasAcerto.layoutManager}")
+        Timber.d("SettlementFragment", "Adapter configurado: ${mesasAcertoAdapter.itemCount} itens")
+        Timber.d("SettlementFragment", "LayoutManager configurado: ${binding.rvMesasAcerto.layoutManager}")
         
         // ✅ LOG CRASH: Submetendo lista de mesas
-        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Submetendo lista de ${mesasDTO.size} mesas")
+        Timber.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Submetendo lista de ${mesasDTO.size} mesas")
         
         mesasAcertoAdapter.submitList(mesasDTO)
         
-        Log.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Lista submetida com sucesso")
+        Timber.d("LOG_CRASH", "SettlementFragment.setupRecyclerViewComDados - Lista submetida com sucesso")
         
         // ✅ DIAGNÓSTICO: Verificar após submitList
-        Log.d("SettlementFragment", "Após submitList: ${mesasAcertoAdapter.itemCount} itens no adapter")
-        Log.d("SettlementFragment", "RecyclerView visível: ${binding.rvMesasAcerto.visibility}")
-        Log.d("SettlementFragment", "RecyclerView altura: ${binding.rvMesasAcerto.height}")
+        Timber.d("SettlementFragment", "Após submitList: ${mesasAcertoAdapter.itemCount} itens no adapter")
+        Timber.d("SettlementFragment", "RecyclerView visível: ${binding.rvMesasAcerto.visibility}")
+        Timber.d("SettlementFragment", "RecyclerView altura: ${binding.rvMesasAcerto.height}")
         
         // ✅ NOVO: Forçar atualização do RecyclerView
         binding.rvMesasAcerto.post {
-            Log.d("SettlementFragment", "Post executado - RecyclerView atualizado")
-            Log.d("SettlementFragment", "ItemCount após post: ${mesasAcertoAdapter.itemCount}")
+            Timber.d("SettlementFragment", "Post executado - RecyclerView atualizado")
+            Timber.d("SettlementFragment", "ItemCount após post: ${mesasAcertoAdapter.itemCount}")
             binding.rvMesasAcerto.invalidate()
             // Atualizar o card com as últimas trocas agora que o adapter está pronto
             carregarUltimasTrocasTodasMesas()
@@ -781,7 +781,7 @@ class SettlementFragment : Fragment() {
             
             if (nomeUsuario.isNotEmpty()) {
                 binding.tvRepresentante.text = nomeUsuario
-                Log.d("SettlementFragment", "✅ Nome do representante preenchido via UserSessionManager: $nomeUsuario")
+                Timber.d("SettlementFragment", "✅ Nome do representante preenchido via UserSessionManager: $nomeUsuario")
             } else {
                 // Fallback: tentar obter do Firebase Auth
                 val firebaseUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
@@ -789,15 +789,15 @@ class SettlementFragment : Fragment() {
                 
                 if (!nomeFirebase.isNullOrEmpty()) {
                     binding.tvRepresentante.text = nomeFirebase
-                    Log.d("SettlementFragment", "Nome do representante obtido do Firebase: $nomeFirebase")
+                    Timber.d("SettlementFragment", "Nome do representante obtido do Firebase: $nomeFirebase")
                 } else {
                     // Último fallback: nome padrão
                     binding.tvRepresentante.text = "Usuário Logado"
-                    Log.d("SettlementFragment", "Usando nome padrão para representante")
+                    Timber.d("SettlementFragment", "Usando nome padrão para representante")
                 }
             }
         } catch (e: Exception) {
-            Log.e("SettlementFragment", "Erro ao obter nome do representante: ${e.message}")
+            Timber.e("SettlementFragment", "Erro ao obter nome do representante: ${e.message}")
             binding.tvRepresentante.text = "Usuário Logado"
         }
     }
@@ -829,7 +829,7 @@ class SettlementFragment : Fragment() {
             }
         })
         
-        Log.d("SettlementFragment", "✅ Listeners de cálculo configurados - débito atual será atualizado em tempo real")
+        Timber.d("SettlementFragment", "✅ Listeners de cálculo configurados - débito atual será atualizado em tempo real")
     }
     
     private fun updateCalculations() {
@@ -847,7 +847,7 @@ class SettlementFragment : Fragment() {
             binding.tvTotalWithDebt.text = formatter.format(totalComDesconto)
             binding.tvCurrentDebt.text = formatter.format(debitoAtualCalculado)
         } catch (e: Exception) {
-            Log.e("UpdateCalculations", "Erro ao calcular totais", e)
+            Timber.e("UpdateCalculations", "Erro ao calcular totais", e)
             binding.tvTableTotal.text = formatter.format(0.0)
             binding.tvTotalWithDebt.text = formatter.format(0.0)
         }
@@ -859,11 +859,11 @@ class SettlementFragment : Fragment() {
      */
     private fun forceUpdateCalculations() {
         try {
-            Log.d("SettlementFragment", "🔄 FORÇANDO RECÁLCULO DOS TOTAIS")
+            Timber.d("SettlementFragment", "🔄 FORÇANDO RECÁLCULO DOS TOTAIS")
             
             // Validar se o adapter está pronto
             if (!::mesasAcertoAdapter.isInitialized) {
-                Log.w("SettlementFragment", "⚠️ Adapter ainda não inicializado")
+                Timber.w("SettlementFragment", "⚠️ Adapter ainda não inicializado")
                 return
             }
             
@@ -873,21 +873,21 @@ class SettlementFragment : Fragment() {
             val valorRecebidoAtual = MoneyTextWatcher.parseValue(binding.etAmountReceived.text.toString())
             
             if (Math.abs(somaPaymentValues - valorRecebidoAtual) > 0.01) {
-                Log.w("SettlementFragment", "⚠️ INCONSISTÊNCIA DETECTADA:")
-                Log.w("SettlementFragment", "Soma paymentValues: R$ $somaPaymentValues")
-                Log.w("SettlementFragment", "Valor no campo: R$ $valorRecebidoAtual")
+                Timber.w("SettlementFragment", "⚠️ INCONSISTÊNCIA DETECTADA:")
+                Timber.w("SettlementFragment", "Soma paymentValues: R$ $somaPaymentValues")
+                Timber.w("SettlementFragment", "Valor no campo: R$ $valorRecebidoAtual")
                 
                 // ✅ NOVO: Forçar sincronização usando MoneyTextWatcher
                 val valorRecebidoWatcher = MoneyTextWatcher(binding.etAmountReceived)
                 valorRecebidoWatcher.setValue(somaPaymentValues)
-                Log.d("SettlementFragment", "✅ Campo sincronizado com paymentValues")
+                Timber.d("SettlementFragment", "✅ Campo sincronizado com paymentValues")
             }
             
             // Chamar updateCalculations normal
             updateCalculations()
             
         } catch (e: Exception) {
-            Log.e("SettlementFragment", "❌ Erro ao forçar recálculo", e)
+            Timber.e("SettlementFragment", "❌ Erro ao forçar recálculo", e)
             // Fallback para updateCalculations normal
             updateCalculations()
         }
@@ -988,7 +988,7 @@ class SettlementFragment : Fragment() {
         com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
             .setView(dialogView)
             .setPositiveButton("✅ Confirmar") { _, _ ->
-                Log.d("SettlementFragment", "=== PROCESSANDO MÉTODOS DE PAGAMENTO ===")
+                Timber.d("SettlementFragment", "=== PROCESSANDO MÉTODOS DE PAGAMENTO ===")
                 
                 paymentValues.clear()
                 var totalInformado = 0.0
@@ -997,10 +997,10 @@ class SettlementFragment : Fragment() {
                 selected.forEach { metodo ->
                     val valor = moneyWatchers[metodo]?.getValue() ?: 0.0
                     
-                    Log.d("SettlementFragment", "Método: $metodo -> Valor: R$ $valor")
+                    Timber.d("SettlementFragment", "Método: $metodo -> Valor: R$ $valor")
                     
                     if (valor < 0) {
-                        Log.w("SettlementFragment", "⚠️ Valor negativo detectado para $metodo: R$ $valor")
+                        Timber.w("SettlementFragment", "⚠️ Valor negativo detectado para $metodo: R$ $valor")
                         valoresValidos = false
                     }
                     
@@ -1009,10 +1009,10 @@ class SettlementFragment : Fragment() {
                 }
                 
                 if (!valoresValidos) {
-                    Log.w("SettlementFragment", "⚠️ Alguns valores são inválidos")
+                    Timber.w("SettlementFragment", "⚠️ Alguns valores são inválidos")
                 }
                 
-                Log.d("SettlementFragment", "Total informado: R$ $totalInformado")
+                Timber.d("SettlementFragment", "Total informado: R$ $totalInformado")
                 
                 // Atualizar texto do campo de método de pagamento
                 val resumo = if (selected.size == 1) {
@@ -1026,19 +1026,19 @@ class SettlementFragment : Fragment() {
                 val valorRecebidoWatcher = MoneyTextWatcher(binding.etAmountReceived)
                 valorRecebidoWatcher.setValue(totalInformado)
                 
-                Log.d("SettlementFragment", "Campo Valor Recebido atualizado para: '${binding.etAmountReceived.text}'")
+                Timber.d("SettlementFragment", "Campo Valor Recebido atualizado para: '${binding.etAmountReceived.text}'")
                 
                 // ✅ CORREÇÃO: Forçar recálculo imediato após atualizar métodos de pagamento
                 updateCalculations()
                 
                 // ✅ CORREÇÃO: Forçar recálculo com post para garantir que UI foi atualizada
                 binding.etAmountReceived.post {
-                    Log.d("SettlementFragment", "Executando recálculo após update UI")
+                    Timber.d("SettlementFragment", "Executando recálculo após update UI")
                     // Forçar recálculo imediato
                     forceUpdateCalculations()
                 }
                 
-                Log.d("SettlementFragment", "✅ Métodos de pagamento processados - Total: R$ $totalInformado")
+                Timber.d("SettlementFragment", "✅ Métodos de pagamento processados - Total: R$ $totalInformado")
             }
             .setNegativeButton("❌ Cancelar", null)
             .show()
@@ -1056,31 +1056,31 @@ class SettlementFragment : Fragment() {
             val total = moneyWatchers.values.sumOf { it.getValue() }
             tvTotalInformado.text = com.example.gestaobilhares.core.utils.MoneyTextWatcher.formatValue(total)
         } catch (e: Exception) {
-            Log.e("SettlementFragment", "Erro ao atualizar total: ${e.message}")
+            Timber.e("SettlementFragment", "Erro ao atualizar total: ${e.message}")
             tvTotalInformado.text = "R$ 0,00"
         }
     }
 
     private fun salvarAcertoComCamposExtras() {
         // ✅ LOG CRASH: Início do salvamento do acerto
-        Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - INÍCIO")
+        Timber.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - INÍCIO")
         
         // Impedir múltiplos cliques
         if (viewModel.isLoading.value) {
-            Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Já está salvando, ignorando clique adicional")
-            Log.d("SettlementFragment", "Já está salvando, ignorando clique adicional")
+            Timber.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Já está salvando, ignorando clique adicional")
+            Timber.d("SettlementFragment", "Já está salvando, ignorando clique adicional")
             return
         }
         
         // ✅ LOG CRASH: Validando dados
-        Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Validando dados")
+        Timber.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Validando dados")
         
         // ✅ CORREÇÃO: Validar dados ANTES de desabilitar o botão
         if (!isDebtOnlyMode) {
-            Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Modo normal (não débito)")
+            Timber.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Modo normal (não débito)")
             if (!::mesasAcertoAdapter.isInitialized || !mesasAcertoAdapter.isDataValid()) {
                 val errorMessage = if (::mesasAcertoAdapter.isInitialized) mesasAcertoAdapter.getValidationErrorMessage() else "Dados de mesas não disponíveis"
-                Log.e("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ERRO de validação: $errorMessage")
+                Timber.e("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ERRO de validação: $errorMessage")
                 Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show()
                 return
             }
@@ -1099,17 +1099,17 @@ class SettlementFragment : Fragment() {
         val representante = binding.tvRepresentante.text.toString()
 
         // ✅ CORREÇÃO: Logs detalhados para debug das observações
-        Log.d("SettlementFragment", "=== SALVANDO ACERTO - DEBUG OBSERVAÇÕES ===")
-        Log.d("SettlementFragment", "Campo observação (RAW): '${binding.etObservacao.text}'")
-        Log.d("SettlementFragment", "Campo observação (TRIM): '$observacao'")
+        Timber.d("SettlementFragment", "=== SALVANDO ACERTO - DEBUG OBSERVAÇÕES ===")
+        Timber.d("SettlementFragment", "Campo observação (RAW): '${binding.etObservacao.text}'")
+        Timber.d("SettlementFragment", "Campo observação (TRIM): '$observacao'")
         // ✅ CORREÇÃO: observacao é String (não nullable), verificação == null sempre false - removida
-        Log.d("SettlementFragment", "Observação é vazia? ${observacao.isEmpty()}")
-        Log.d("SettlementFragment", "Observação é blank? ${observacao.isBlank()}")
-        Log.d("SettlementFragment", "Tamanho da observação: ${observacao.length}")
+        Timber.d("SettlementFragment", "Observação é vazia? ${observacao.isEmpty()}")
+        Timber.d("SettlementFragment", "Observação é blank? ${observacao.isBlank()}")
+        Timber.d("SettlementFragment", "Tamanho da observação: ${observacao.length}")
         
         // ✅ CORREÇÃO: Observação será apenas manual, sem preenchimento automático
         val observacaoFinal = observacao.trim()
-        Log.d("SettlementFragment", "Observação final que será salva: '$observacaoFinal'")
+        Timber.d("SettlementFragment", "Observação final que será salva: '$observacaoFinal'")
 
         // ✅ CORREÇÃO CRÍTICA: Usar dados do adapter como fonte única e confiável quando houver mesas
         val mesasDoAcerto = if (!isDebtOnlyMode && ::mesasAcertoAdapter.isInitialized) {
@@ -1117,28 +1117,28 @@ class SettlementFragment : Fragment() {
                 // Buscar a mesa original no adapter para obter dados completos
                 val mesaOriginal = mesasAcertoAdapter.currentList.find { it.id == mesaState.mesaId }
                 
-                Log.d("SettlementFragment", "=== MONTANDO MESA PARA SALVAR ===")
-                Log.d("SettlementFragment", "Mesa ${idx + 1}: ID=${mesaState.mesaId}")
-                Log.d("SettlementFragment", "Relógio inicial: ${mesaState.relogioInicial}")
-                Log.d("SettlementFragment", "Relógio final: ${mesaState.relogioFinal}")
-                Log.d("SettlementFragment", "Valor fixo (mesa original): ${mesaOriginal?.valorFixo ?: 0.0}")
-                Log.d("SettlementFragment", "Com defeito: ${mesaState.comDefeito}")
-                Log.d("SettlementFragment", "Relógio reiniciou: ${mesaState.relogioReiniciou}")
+                Timber.d("SettlementFragment", "=== MONTANDO MESA PARA SALVAR ===")
+                Timber.d("SettlementFragment", "Mesa ${idx + 1}: ID=${mesaState.mesaId}")
+                Timber.d("SettlementFragment", "Relógio inicial: ${mesaState.relogioInicial}")
+                Timber.d("SettlementFragment", "Relógio final: ${mesaState.relogioFinal}")
+                Timber.d("SettlementFragment", "Valor fixo (mesa original): ${mesaOriginal?.valorFixo ?: 0.0}")
+                Timber.d("SettlementFragment", "Com defeito: ${mesaState.comDefeito}")
+                Timber.d("SettlementFragment", "Relógio reiniciou: ${mesaState.relogioReiniciou}")
                 
                 // ✅ CORREÇÃO: Priorizar URL do Firebase Storage para sincronização
                 // Se houver URL do Firebase, usar ela; caso contrário, usar caminho local
                 val fotoParaSalvar = when {
                     !mesaState.fotoRelogioFirebaseUrl.isNullOrEmpty() -> {
-                        Log.d("SettlementFragment", "Usando URL Firebase Storage para mesa ${mesaState.mesaId}")
+                        Timber.d("SettlementFragment", "Usando URL Firebase Storage para mesa ${mesaState.mesaId}")
                         mesaState.fotoRelogioFirebaseUrl
                     }
                     !mesaState.fotoRelogioFinal.isNullOrEmpty() && 
                     firebaseImageUploader.isFirebaseStorageUrl(mesaState.fotoRelogioFinal) -> {
-                        Log.d("SettlementFragment", "Caminho local já é URL Firebase para mesa ${mesaState.mesaId}")
+                        Timber.d("SettlementFragment", "Caminho local já é URL Firebase para mesa ${mesaState.mesaId}")
                         mesaState.fotoRelogioFinal
                     }
                     else -> {
-                        Log.d("SettlementFragment", "Usando caminho local para mesa ${mesaState.mesaId}")
+                        Timber.d("SettlementFragment", "Usando caminho local para mesa ${mesaState.mesaId}")
                         mesaState.fotoRelogioFinal
                     }
                 }
@@ -1161,10 +1161,10 @@ class SettlementFragment : Fragment() {
             emptyList()
         }
         
-        Log.d("SettlementFragment", "=== LISTA DE MESAS PARA SALVAR ===")
-        Log.d("SettlementFragment", "Total de mesas: ${mesasDoAcerto.size}")
+        Timber.d("SettlementFragment", "=== LISTA DE MESAS PARA SALVAR ===")
+        Timber.d("SettlementFragment", "Total de mesas: ${mesasDoAcerto.size}")
         mesasDoAcerto.forEachIndexed { index, mesa ->
-            Log.d("SettlementFragment", "Mesa ${index + 1}: ${mesa.numero} - Valor fixo: R$ ${mesa.valorFixo}")
+            Timber.d("SettlementFragment", "Mesa ${index + 1}: ${mesa.numero} - Valor fixo: R$ ${mesa.valorFixo}")
         }
 
         val dadosAcerto = SettlementViewModel.DadosAcerto(
@@ -1179,12 +1179,12 @@ class SettlementFragment : Fragment() {
         )
 
         // ✅ LOG CRASH: Chamando ViewModel para salvar
-        Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Chamando ViewModel para salvar")
+        Timber.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - Chamando ViewModel para salvar")
         
-        Log.d("SettlementFragment", "Iniciando salvamento do acerto...")
-        Log.d("SettlementFragment", "Desconto aplicado: R$ $desconto")
-        Log.d("SettlementFragment", "Observação enviada para ViewModel: '$observacaoFinal'")
-        Log.d("SettlementFragment", "Tipo de acerto: $tipoAcerto")
+        Timber.d("SettlementFragment", "Iniciando salvamento do acerto...")
+        Timber.d("SettlementFragment", "Desconto aplicado: R$ $desconto")
+        Timber.d("SettlementFragment", "Observação enviada para ViewModel: '$observacaoFinal'")
+        Timber.d("SettlementFragment", "Tipo de acerto: $tipoAcerto")
         
         try {
             viewModel.salvarAcerto(
@@ -1195,9 +1195,9 @@ class SettlementFragment : Fragment() {
                 acertoIdParaEdicao = args.acertoIdParaEdicao.takeIf { it != 0L }
             )
             
-            Log.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ViewModel chamado com sucesso")
+            Timber.d("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ViewModel chamado com sucesso")
         } catch (e: Exception) {
-            Log.e("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ERRO ao chamar ViewModel: ${e.message}", e)
+            Timber.e("LOG_CRASH", "SettlementFragment.salvarAcertoComCamposExtras - ERRO ao chamar ViewModel: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao salvar acerto: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
@@ -1238,7 +1238,7 @@ class SettlementFragment : Fragment() {
                 resultado?.let {
                     when (it) {
                         is SettlementViewModel.ResultadoSalvamento.Sucesso -> {
-                            Log.d("SettlementFragment", "✅ Acerto salvo com sucesso! ID: ${it.acertoId}")
+                            Timber.d("SettlementFragment", "✅ Acerto salvo com sucesso! ID: ${it.acertoId}")
                             
                             // ✅ CORREÇÃO: Pequeno delay para garantir que o banco foi atualizado
                             lifecycleScope.launch {
@@ -1251,19 +1251,19 @@ class SettlementFragment : Fragment() {
                                 // ✅ TAMBÉM notificar via previousBackStackEntry como fallback
                                 findNavController().previousBackStackEntry?.savedStateHandle?.set("acerto_salvo", true)
                                 
-                                Log.d("SettlementFragment", "📢 Notificação de acerto salvo enviada para ClientListFragment após delay")
+                                Timber.d("SettlementFragment", "📢 Notificação de acerto salvo enviada para ClientListFragment após delay")
                             }
                             
                             mostrarDialogoResumoComAcerto(it.acertoId)
                         }
                         
                         is SettlementViewModel.ResultadoSalvamento.Erro -> {
-                            Log.e("SettlementFragment", "Erro ao salvar acerto: ${it.mensagem}")
+                            Timber.e("SettlementFragment", "Erro ao salvar acerto: ${it.mensagem}")
                             Toast.makeText(requireContext(), "Erro ao salvar acerto: ${it.mensagem}", Toast.LENGTH_LONG).show()
                         }
                         
                         is SettlementViewModel.ResultadoSalvamento.AcertoJaExiste -> {
-                            Log.w("SettlementFragment", "⚠️ Acerto já existe: ID ${it.acertoExistente.id}")
+                            Timber.w("SettlementFragment", "⚠️ Acerto já existe: ID ${it.acertoExistente.id}")
                             mostrarDialogoAcertoJaExiste(it.acertoExistente)
                         }
                     }
@@ -1389,7 +1389,7 @@ class SettlementFragment : Fragment() {
      */
     fun solicitarCapturaFoto(mesaId: Long) {
         currentMesaId = mesaId
-        Log.d("SettlementFragment", "Solicitando captura de foto para mesa ID: $mesaId")
+        Timber.d("SettlementFragment", "Solicitando captura de foto para mesa ID: $mesaId")
         
         // Verificar permissão de câmera
         when {
@@ -1425,7 +1425,7 @@ class SettlementFragment : Fragment() {
             cameraLauncher.launch(currentPhotoUri!!)
             
         } catch (e: Exception) {
-            Log.e("SettlementFragment", "Erro ao abrir câmera: ${e.message}", e)
+            Timber.e("SettlementFragment", "Erro ao abrir câmera: ${e.message}", e)
             Toast.makeText(requireContext(), "Erro ao abrir câmera: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
@@ -1480,12 +1480,12 @@ class SettlementFragment : Fragment() {
      */
     private fun carregarPanoAtual() {
         // Função simplificada - agora usamos o sistema de cards dinâmicos
-        android.util.Log.d("SettlementFragment", "carregarPanoAtual: funcionalidade movida para cards dinâmicos")
+        Timber.d("carregarPanoAtual: funcionalidade movida para cards dinâmicos")
     }
 
     private fun carregarUltimasTrocasTodasMesas() {
         if (!::mesasAcertoAdapter.isInitialized) {
-            android.util.Log.w("SettlementFragment", "carregarUltimasTrocasTodasMesas: adapter ainda não inicializado")
+            Timber.w("carregarUltimasTrocasTodasMesas: adapter ainda não inicializado")
             mostrarMensagemAguarde()
             return
         }
@@ -1514,9 +1514,9 @@ class SettlementFragment : Fragment() {
                     binding.llUltimasTrocasPanos.addView(cardView)
                 }
                 
-                android.util.Log.d("SettlementFragment", "Histórico de panos carregado: ${mesas.size} mesas")
+                Timber.d("Histórico de panos carregado: %d mesas", mesas.size)
             } catch (e: Exception) {
-                android.util.Log.e("SettlementFragment", "Erro ao carregar últimas trocas: ${e.message}", e)
+                Timber.e(e, "Erro ao carregar últimas trocas: %s", e.message)
                 mostrarMensagemErro()
             }
         }
@@ -1626,17 +1626,17 @@ class SettlementFragment : Fragment() {
             }
         }
         
-        Log.d("SettlementFragment", "[PANO] Abrindo seleção de pano (mesaId=${mesaTarget?.id}, tamanhoMesa=$tamanhoMesa)")
+        Timber.d("SettlementFragment", "[PANO] Abrindo seleção de pano (mesaId=${mesaTarget?.id}, tamanhoMesa=$tamanhoMesa)")
         PanoSelectionDialog.newInstance(
             onPanoSelected = { panoSelecionado ->
-                Log.d("SettlementFragment", "Pano selecionado no acerto: ${panoSelecionado.numero}")
+                Timber.d("SettlementFragment", "Pano selecionado no acerto: ${panoSelecionado.numero}")
                 
                 // ✅ CORREÇÃO: Marcar pano como usado IMEDIATAMENTE quando selecionado
                 lifecycleScope.launch {
                     try {
                         val mesaId = mesaTarget?.id ?: 0L
                         if (mesaId != 0L) {
-                            Log.d("SettlementFragment", "Marcando pano ${panoSelecionado.numero} como usado no acerto")
+                            Timber.d("SettlementFragment", "Marcando pano ${panoSelecionado.numero} como usado no acerto")
                             viewModel.trocarPanoNaMesa(mesaId, panoSelecionado.numero, "Usado no acerto")
                             // Marcar flag de troca de pano
                             houveTrocaPanoNoAcerto = true
@@ -1651,11 +1651,11 @@ class SettlementFragment : Fragment() {
                             // Mostrar opção de trocar mais panos
                             mostrarOpcaoTrocarMaisPanos()
                         } else {
-                            Log.e("SettlementFragment", "Erro: Nenhuma mesa disponível para vincular o pano")
+                            Timber.e("SettlementFragment", "Erro: Nenhuma mesa disponível para vincular o pano")
                             Toast.makeText(requireContext(), "Erro: Nenhuma mesa disponível para vincular o pano.", Toast.LENGTH_SHORT).show()
                         }
                     } catch (e: Exception) {
-                        Log.e("SettlementFragment", "Erro ao marcar pano como usado: ${e.message}", e)
+                        Timber.e("SettlementFragment", "Erro ao marcar pano como usado: ${e.message}", e)
                         Toast.makeText(requireContext(), "Erro ao selecionar pano: ${e.message}", Toast.LENGTH_LONG).show()
                         
                         // ✅ CORREÇÃO: Tentar pelo menos marcar o pano como usado no estoque
@@ -1663,7 +1663,7 @@ class SettlementFragment : Fragment() {
                             viewModel.marcarPanoComoUsado(panoSelecionado.numero, "Usado no acerto")
                             Toast.makeText(requireContext(), "Pano ${panoSelecionado.numero} marcado como usado no estoque", Toast.LENGTH_SHORT).show()
                         } catch (e2: Exception) {
-                            Log.e("SettlementFragment", "Erro crítico ao marcar pano como usado: ${e2.message}", e2)
+                            Timber.e("SettlementFragment", "Erro crítico ao marcar pano como usado: ${e2.message}", e2)
                             Toast.makeText(requireContext(), "Erro crítico: ${e2.message}", Toast.LENGTH_LONG).show()
                         }
                     }
@@ -1709,7 +1709,7 @@ class SettlementFragment : Fragment() {
      * ✅ SIMPLIFICADO: Apenas oculta o layout do pano (já foi marcado como usado na seleção)
      */
     private fun trocarPano() {
-        Log.d("SettlementFragment", "Finalizando seleção de pano")
+        Timber.d("SettlementFragment", "Finalizando seleção de pano")
         
         // Ocultar layout do pano
         binding.layoutNovoPano.visibility = View.GONE

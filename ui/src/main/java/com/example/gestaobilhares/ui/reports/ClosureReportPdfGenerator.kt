@@ -2,7 +2,7 @@
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.util.Log
+import timber.log.Timber
 import android.graphics.Color
 import com.github.mikephil.charting.utils.ColorTemplate
 import com.example.gestaobilhares.ui.reports.ClosureReportViewModel
@@ -74,11 +74,11 @@ class ClosureReportPdfGenerator(private val context: Context) {
             
             document.close()
             
-            Log.d("ClosureReportPdfGenerator", "Relatório de fechamento gerado com sucesso: ${file.absolutePath}")
+            Timber.d("ClosureReportPdfGenerator", "Relatório de fechamento gerado com sucesso: ${file.absolutePath}")
             return file
             
         } catch (e: Exception) {
-            Log.e("ClosureReportPdfGenerator", "Erro ao gerar relatório de fechamento", e)
+            Timber.e("ClosureReportPdfGenerator", "Erro ao gerar relatório de fechamento", e)
             throw e
         }
     }
@@ -127,11 +127,11 @@ class ClosureReportPdfGenerator(private val context: Context) {
             
             document.close()
             
-            Log.d("ClosureReportPdfGenerator", "Relatório anual gerado com sucesso: ${file.absolutePath}")
+            Timber.d("ClosureReportPdfGenerator", "Relatório anual gerado com sucesso: ${file.absolutePath}")
             return file
             
         } catch (e: Exception) {
-            Log.e("ClosureReportPdfGenerator", "Erro ao gerar relatório anual", e)
+            Timber.e("ClosureReportPdfGenerator", "Erro ao gerar relatório anual", e)
             throw e
         }
     }
@@ -477,7 +477,7 @@ class ClosureReportPdfGenerator(private val context: Context) {
             document.add(legendsTable)
             
         } catch (e: Exception) {
-            Log.e("ClosureReportPdfGenerator", "Erro ao adicionar gráficos: ${e.message}", e)
+            Timber.e("ClosureReportPdfGenerator", "Erro ao adicionar gráficos: ${e.message}", e)
             // Adicionar mensagem de erro em vez de falhar completamente
             document.add(
                 Paragraph("Erro ao gerar gráficos: ${e.message}")

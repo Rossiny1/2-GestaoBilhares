@@ -4,7 +4,7 @@ import com.example.gestaobilhares.data.dao.CicloAcertoDao
 import com.example.gestaobilhares.data.dao.DespesaDao
 import com.example.gestaobilhares.data.entities.CicloAcertoEntity
 import com.example.gestaobilhares.data.entities.StatusCicloAcerto
-import android.util.Log
+import timber.log.Timber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -46,8 +46,7 @@ class CicloAcertoRepository @Inject constructor(
      */
     suspend fun buscarCiclosPorRota(rotaId: Long): List<CicloAcertoEntity> {
         val ciclos = cicloAcertoDao.listarPorRota(rotaId).first()
-        Log.d(
-            "CicloAcertoRepo",
+        Timber.d(
             "Buscando ciclos da rota $rotaId: encontrados ${ciclos.size} ciclos. Dados: " +
                     ciclos.joinToString(" | ") { c -> "id=${c.id}, total=${c.valorTotalAcertado}, despesas=${c.valorTotalDespesas}, lucro=${c.lucroLiquido}, clientes=${c.clientesAcertados}" }
         )
@@ -122,8 +121,7 @@ class CicloAcertoRepository @Inject constructor(
                 lucroLiquido = valorTotalAcertado - valorTotalDespesas
             )
             cicloAcertoDao.atualizar(cicloAtualizado)
-            Log.d(
-                "CicloAcertoRepo",
+            Timber.d(
                 "Ciclo atualizado: cicloId=$cicloId, valorTotalAcertado=$valorTotalAcertado, valorTotalDespesas=$valorTotalDespesas, clientesAcertados=$clientesAcertados, lucroLiquido=${valorTotalAcertado - valorTotalDespesas}"
             )
         }
@@ -148,8 +146,7 @@ class CicloAcertoRepository @Inject constructor(
                 lucroLiquido = lucroLiquido
             )
             cicloAcertoDao.atualizar(cicloAtualizado)
-            Log.d(
-                "CicloAcertoRepo",
+            Timber.d(
                 "[RECALCULO] Ciclo $cicloId atualizado: arrecadado=$valorTotalAcertado, despesas=$valorTotalDespesas, clientes=$clientesAcertados, lucro=$lucroLiquido"
             )
         }
@@ -230,12 +227,12 @@ class CicloAcertoRepository @Inject constructor(
                 debitoTotal = debitoTotal // Salva o valor "congelado"
             )
             cicloAcertoDao.atualizar(cicloFinalizado)
-            Log.d("CicloAcertoRepo", "Ciclo $cicloId finalizado com dados completos salvos.")
+            Timber.d("Ciclo $cicloId finalizado com dados completos salvos.")
             
             // ✅ NOVO: Finalizar todas as metas associadas a este ciclo
-            Log.d("CicloAcertoRepo", "🔄 Iniciando finalização de metas para o ciclo $cicloId")
+            Timber.d("🔄 Iniciando finalização de metas para o ciclo $cicloId")
             finalizarMetasDoCiclo(cicloId)
-            Log.d("CicloAcertoRepo", "✅ Finalização de metas concluída para o ciclo $cicloId")
+            Timber.d("✅ Finalização de metas concluída para o ciclo $cicloId")
         }
     }
     
@@ -244,19 +241,19 @@ class CicloAcertoRepository @Inject constructor(
      */
     private suspend fun finalizarMetasDoCiclo(cicloId: Long) {
         try {
-            Log.d("CicloAcertoRepo", "🔍 Verificando ColaboradorDao para ciclo $cicloId")
+            Timber.d("🔍 Verificando ColaboradorDao para ciclo $cicloId")
             if (colaboradorDao == null) {
-                Log.e("CicloAcertoRepo", "❌ ColaboradorDao não disponível, pulando finalização de metas")
+                Timber.e("❌ ColaboradorDao não disponível, pulando finalização de metas")
                 return
             }
             
-            Log.d("CicloAcertoRepo", "✅ ColaboradorDao disponível, buscando metas do ciclo $cicloId")
+            Timber.d("✅ ColaboradorDao disponível, buscando metas do ciclo $cicloId")
             // Buscar todas as metas ativas do ciclo
             val metas = colaboradorDao.buscarTodasMetasPorCiclo(cicloId)
-            Log.d("CicloAcertoRepo", "📊 Encontradas ${metas.size} metas ativas para o ciclo $cicloId")
+            Timber.d("📊 Encontradas ${metas.size} metas ativas para o ciclo $cicloId")
             
             if (metas.isNotEmpty()) {
-                Log.d("CicloAcertoRepo", "🔄 Finalizando ${metas.size} metas do ciclo $cicloId")
+                Timber.d("🔄 Finalizando ${metas.size} metas do ciclo $cicloId")
                 
                 // Marcar todas as metas como inativas (finalizadas)
                 var sucessoCount = 0
@@ -264,7 +261,7 @@ class CicloAcertoRepository @Inject constructor(
                 
                 metas.forEachIndexed { index, meta ->
                     try {
-                        Log.d("CicloAcertoRepo", "  - Finalizando meta ${index + 1}/${metas.size}: ID=${meta.id}, Tipo=${meta.tipoMeta}, RotaId=${meta.rotaId}, Ativo=${meta.ativo}")
+                        Timber.d("  - Finalizando meta ${index + 1}/${metas.size}: ID=${meta.id}, Tipo=${meta.tipoMeta}, RotaId=${meta.rotaId}, Ativo=${meta.ativo}")
                         
                         // Criar cópia com ativo = false
                         val metaFinalizada = meta.copy(ativo = false)
@@ -275,21 +272,20 @@ class CicloAcertoRepository @Inject constructor(
                         // Verificar se foi atualizado corretamente (read-your-writes)
                         // Nota: buscarTodasMetasPorCiclo só retorna metas ativas, então não podemos usar para verificar
                         // A atualização foi feita, então assumimos sucesso
-                        Log.d("CicloAcertoRepo", "  ✅ Meta ${meta.id} finalizada (ativo = false)")
+                        Timber.d("  ✅ Meta ${meta.id} finalizada (ativo = false)")
                         sucessoCount++
                     } catch (e: Exception) {
-                        Log.e("CicloAcertoRepo", "  ❌ Erro ao finalizar meta ${meta.id}: ${e.message}", e)
+                        Timber.e(e, "  ❌ Erro ao finalizar meta ${meta.id}: ${e.message}")
                         erroCount++
                     }
                 }
                 
-                Log.d("CicloAcertoRepo", "✅ Finalização concluída: $sucessoCount sucesso, $erroCount erros de ${metas.size} metas")
+                Timber.d("✅ Finalização concluída: $sucessoCount sucesso, $erroCount erros de ${metas.size} metas")
             } else {
-                Log.w("CicloAcertoRepo", "⚠️ Nenhuma meta encontrada para o ciclo $cicloId")
+                Timber.w("⚠️ Nenhuma meta encontrada para o ciclo $cicloId")
             }
         } catch (e: Exception) {
-            Log.e("CicloAcertoRepo", "❌ Erro ao finalizar metas do ciclo $cicloId: ${e.message}", e)
-            timber.log.Timber.e(e, "Erro ao finalizar metas do ciclo $cicloId")
+            Timber.e(e, "❌ Erro ao finalizar metas do ciclo $cicloId: ${e.message}")
         }
     }
 
@@ -315,18 +311,18 @@ class CicloAcertoRepository @Inject constructor(
     }
 
     suspend fun iniciarNovoCiclo(rotaId: Long): Long {
-        Log.d("CicloAcertoRepo", "Iniciando novo ciclo para rotaId: $rotaId")
+        Timber.d("Iniciando novo ciclo para rotaId: $rotaId")
         return withContext(Dispatchers.IO) {
             val cicloAnterior = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
             if (cicloAnterior != null && cicloAnterior.status == StatusCicloAcerto.EM_ANDAMENTO) {
-                Log.d("CicloAcertoRepo", "AVISO: Tentativa de iniciar novo ciclo, mas o ciclo ${cicloAnterior.id} já está em andamento.")
+                Timber.d("AVISO: Tentativa de iniciar novo ciclo, mas o ciclo ${cicloAnterior.id} já está em andamento.")
                 return@withContext cicloAnterior.id
             }
 
             val calendar = Calendar.getInstance()
             val anoAtual = calendar.get(Calendar.YEAR)
             val proximoNumeroCiclo = cicloAcertoDao.buscarProximoNumeroCiclo(rotaId, anoAtual)
-            Log.d("CicloAcertoRepo", "Novo número de ciclo calculado: $proximoNumeroCiclo para o ano $anoAtual")
+            Timber.d("Novo número de ciclo calculado: $proximoNumeroCiclo para o ano $anoAtual")
             val novoCiclo = CicloAcertoEntity(
                 rotaId = rotaId,
                 numeroCiclo = proximoNumeroCiclo,
@@ -336,21 +332,21 @@ class CicloAcertoRepository @Inject constructor(
                 status = StatusCicloAcerto.EM_ANDAMENTO
             )
             val id = cicloAcertoDao.inserir(novoCiclo)
-            Log.d("CicloAcertoRepo", "Novo ciclo inserido com sucesso! ID: $id")
+            Timber.d("Novo ciclo inserido com sucesso! ID: $id")
             id
         }
     }
 
     suspend fun getNumeroCicloAtual(rotaId: Long): Int {
-        Log.d("CicloAcertoRepo", "Buscando número do ciclo atual para rotaId: $rotaId")
+        Timber.d("Buscando número do ciclo atual para rotaId: $rotaId")
         val ciclo = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
         val numeroCiclo = ciclo?.numeroCiclo ?: 1 // Se não houver ciclo, assume-se que é o primeiro
-        Log.d("CicloAcertoRepo", "Número do ciclo encontrado: $numeroCiclo (Ciclo ID: ${ciclo?.id ?: "Nenhum"})")
+        Timber.d("Número do ciclo encontrado: $numeroCiclo (Ciclo ID: ${ciclo?.id ?: "Nenhum"})")
         return numeroCiclo
     }
 
     suspend fun finalizarCicloAtual(rotaId: Long) {
-        Log.d("CicloAcertoRepo", "Tentando finalizar ciclo atual para rotaId: $rotaId")
+        Timber.d("Tentando finalizar ciclo atual para rotaId: $rotaId")
         withContext(Dispatchers.IO) {
             val cicloAtual = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
             if (cicloAtual != null) {
@@ -359,9 +355,9 @@ class CicloAcertoRepository @Inject constructor(
                     status = StatusCicloAcerto.FINALIZADO
                 )
                 cicloAcertoDao.atualizar(cicloFinalizado)
-                Log.d("CicloAcertoRepo", "Ciclo ${cicloAtual.id} finalizado com sucesso.")
+                Timber.d("Ciclo ${cicloAtual.id} finalizado com sucesso.")
             } else {
-                Log.d("CicloAcertoRepo", "AVISO: Nenhum ciclo em andamento encontrado para finalizar na rota $rotaId.")
+                Timber.d("AVISO: Nenhum ciclo em andamento encontrado para finalizar na rota $rotaId.")
             }
         }
     }
@@ -388,7 +384,7 @@ class CicloAcertoRepository @Inject constructor(
         return try {
             rotaDao?.getRotaById(rotaId)
         } catch (e: Exception) {
-            android.util.Log.e("CicloAcertoRepository", "Erro ao buscar rota: ${e.message}")
+            Timber.e(e, "Erro ao buscar rota: ${e.message}")
             null
         }
     }
@@ -400,7 +396,7 @@ class CicloAcertoRepository @Inject constructor(
         return try {
             acertoRepository.buscarPorCicloId(cicloId).first()
         } catch (e: Exception) {
-            android.util.Log.e("CicloAcertoRepository", "Erro ao buscar acertos: ${e.message}")
+            Timber.e(e, "Erro ao buscar acertos: ${e.message}")
             emptyList()
         }
     }
@@ -412,7 +408,7 @@ class CicloAcertoRepository @Inject constructor(
         return try {
             despesaDao.buscarPorCicloId(cicloId).first()
         } catch (e: Exception) {
-            android.util.Log.e("CicloAcertoRepository", "Erro ao buscar despesas: ${e.message}")
+            Timber.e(e, "Erro ao buscar despesas: ${e.message}")
             emptyList()
         }
     }

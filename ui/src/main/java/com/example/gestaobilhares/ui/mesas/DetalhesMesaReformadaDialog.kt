@@ -4,7 +4,7 @@ import android.app.Dialog
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
+import timber.log.Timber
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -135,8 +135,8 @@ class DetalhesMesaReformadaDialog : DialogFragment() {
 
     private fun carregarFoto(caminhoFoto: String) {
         try {
-            Log.d("DetalhesMesaReformadaDialog", "=== CARREGANDO FOTO ===")
-            Log.d("DetalhesMesaReformadaDialog", "Caminho da foto: $caminhoFoto")
+            Timber.d("DetalhesMesaReformadaDialog", "=== CARREGANDO FOTO ===")
+            Timber.d("DetalhesMesaReformadaDialog", "Caminho da foto: $caminhoFoto")
             
             // ✅ CORREÇÃO: Verificar se é URL do Firebase Storage
             val isFirebaseUrl = caminhoFoto.startsWith("https://") && 
@@ -147,18 +147,18 @@ class DetalhesMesaReformadaDialog : DialogFragment() {
             if (!isFirebaseUrl && !caminhoFoto.startsWith("content://")) {
                 val fotoFile = File(caminhoFoto)
                 if (fotoFile.exists() && fotoFile.isFile) {
-                    Log.d("DetalhesMesaReformadaDialog", "✅ Carregando foto local: ${fotoFile.absolutePath}")
+                    Timber.d("DetalhesMesaReformadaDialog", "✅ Carregando foto local: ${fotoFile.absolutePath}")
                     val bitmap = BitmapFactory.decodeFile(fotoFile.absolutePath)
                     if (bitmap != null) {
                         binding.ivFotoMesa.setImageBitmap(bitmap)
                         binding.cardFoto.visibility = View.VISIBLE
-                        Log.d("DetalhesMesaReformadaDialog", "Foto carregada com sucesso")
+                        Timber.d("DetalhesMesaReformadaDialog", "Foto carregada com sucesso")
                         return
                     } else {
-                        Log.e("DetalhesMesaReformadaDialog", "Erro ao decodificar bitmap")
+                        Timber.e("DetalhesMesaReformadaDialog", "Erro ao decodificar bitmap")
                     }
                 } else {
-                    Log.w("DetalhesMesaReformadaDialog", "⚠️ Arquivo local não existe: ${fotoFile.absolutePath}")
+                    Timber.w("DetalhesMesaReformadaDialog", "⚠️ Arquivo local não existe: ${fotoFile.absolutePath}")
                 }
             }
             
@@ -168,7 +168,7 @@ class DetalhesMesaReformadaDialog : DialogFragment() {
                     val uri = Uri.parse(caminhoFoto)
                     val inputStream = requireContext().contentResolver.openInputStream(uri)
                     if (inputStream != null) {
-                        Log.d("DetalhesMesaReformadaDialog", "✅ Carregando foto do content provider")
+                        Timber.d("DetalhesMesaReformadaDialog", "✅ Carregando foto do content provider")
                         val bitmap = BitmapFactory.decodeStream(inputStream)
                         inputStream.close()
                         if (bitmap != null) {
@@ -178,13 +178,13 @@ class DetalhesMesaReformadaDialog : DialogFragment() {
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e("DetalhesMesaReformadaDialog", "Erro ao carregar do URI: ${e.message}")
+                    Timber.e("DetalhesMesaReformadaDialog", "Erro ao carregar do URI: ${e.message}")
                 }
             }
             
             // ✅ CORREÇÃO: PRIORIDADE 3 - Se for URL do Firebase Storage, fazer download
             if (isFirebaseUrl) {
-                Log.d("DetalhesMesaReformadaDialog", "Detectada URL do Firebase Storage, fazendo download...")
+                Timber.d("DetalhesMesaReformadaDialog", "Detectada URL do Firebase Storage, fazendo download...")
                 binding.cardFoto.visibility = View.VISIBLE
                 binding.ivFotoMesa.setImageResource(android.R.drawable.ic_menu_gallery) // Placeholder
                 
@@ -194,15 +194,15 @@ class DetalhesMesaReformadaDialog : DialogFragment() {
                         withContext(Dispatchers.Main) {
                             if (bitmap != null) {
                                 binding.ivFotoMesa.setImageBitmap(bitmap)
-                                Log.d("DetalhesMesaReformadaDialog", "✅ Foto carregada do Firebase Storage")
+                                Timber.d("DetalhesMesaReformadaDialog", "✅ Foto carregada do Firebase Storage")
                             } else {
-                                Log.e("DetalhesMesaReformadaDialog", "Erro ao baixar foto do Firebase")
+                                Timber.e("DetalhesMesaReformadaDialog", "Erro ao baixar foto do Firebase")
                                 binding.cardFoto.visibility = View.GONE
                                 Toast.makeText(requireContext(), "Erro ao carregar foto do servidor", Toast.LENGTH_SHORT).show()
                             }
                         }
                     } catch (e: Exception) {
-                        Log.e("DetalhesMesaReformadaDialog", "Erro ao fazer download: ${e.message}", e)
+                        Timber.e("DetalhesMesaReformadaDialog", "Erro ao fazer download: ${e.message}", e)
                         withContext(Dispatchers.Main) {
                             binding.cardFoto.visibility = View.GONE
                             Toast.makeText(requireContext(), "Erro ao carregar foto: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -213,11 +213,11 @@ class DetalhesMesaReformadaDialog : DialogFragment() {
             }
             
             // Se chegou aqui, não conseguiu carregar a foto
-            Log.e("DetalhesMesaReformadaDialog", "❌ Não foi possível carregar a foto: $caminhoFoto")
+            Timber.e("DetalhesMesaReformadaDialog", "❌ Não foi possível carregar a foto: $caminhoFoto")
             binding.cardFoto.visibility = View.GONE
             
         } catch (e: Exception) {
-            Log.e("DetalhesMesaReformadaDialog", "Erro ao carregar foto: ${e.message}", e)
+            Timber.e("DetalhesMesaReformadaDialog", "Erro ao carregar foto: ${e.message}", e)
             binding.cardFoto.visibility = View.GONE
             Toast.makeText(requireContext(), "Erro ao carregar foto: ${e.message}", Toast.LENGTH_SHORT).show()
         }
@@ -241,7 +241,7 @@ class DetalhesMesaReformadaDialog : DialogFragment() {
             connection.disconnect()
             bitmap
         } catch (e: Exception) {
-            Log.e("DetalhesMesaReformadaDialog", "Erro ao fazer download da imagem: ${e.message}", e)
+            Timber.e("DetalhesMesaReformadaDialog", "Erro ao fazer download da imagem: ${e.message}", e)
             null
         }
     }

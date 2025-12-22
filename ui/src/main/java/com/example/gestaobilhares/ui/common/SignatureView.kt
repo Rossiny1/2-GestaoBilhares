@@ -3,7 +3,7 @@
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
+import timber.log.Timber
 import android.view.MotionEvent
 import android.view.View
 import com.example.gestaobilhares.core.utils.SignaturePoint
@@ -244,7 +244,7 @@ class SignatureView @JvmOverloads constructor(
             signaturePoints.map { it.velocity }.average()
         } else 0.0
         
-        Log.d(TAG, "Estatísticas calculadas: pontos=$totalPoints, duração=${duration}ms, pressão=${averagePressure}, velocidade=${averageVelocity}")
+        Timber.d(TAG, "Estatísticas calculadas: pontos=$totalPoints, duração=${duration}ms, pressão=${averagePressure}, velocidade=${averageVelocity}")
         
         return mapOf(
             "totalPoints" to totalPoints,

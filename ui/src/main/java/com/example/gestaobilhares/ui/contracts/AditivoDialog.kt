@@ -3,16 +3,18 @@
 import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import com.example.gestaobilhares.ui.R
 import com.example.gestaobilhares.data.entities.ContratoLocacao
 import com.example.gestaobilhares.ui.databinding.DialogAditivoEquipamentosBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import timber.log.Timber
 
 /**
  * Diálogo para confirmar a geração de aditivo contratual
  * quando um cliente já possui contrato ativo e deseja adicionar novos equipamentos
+ * ✅ VERSÃO REFEITA: Focada em estabilidade absoluta e resolução de temas.
  */
 class AditivoDialog : DialogFragment() {
     
@@ -25,6 +27,7 @@ class AditivoDialog : DialogFragment() {
     private var contrato: ContratoLocacao? = null
     
     companion object {
+        private const val TAG = "AditivoDialog"
         private const val ARG_CONTRATO = "contrato"
         
         fun newInstance(contrato: ContratoLocacao): AditivoDialog {
@@ -39,27 +42,36 @@ class AditivoDialog : DialogFragment() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(STYLE_NORMAL, com.example.gestaobilhares.ui.R.style.DarkDialogTheme)
+        // ✅ Definir o estilo do diálogo para o tema robusto local
+        setStyle(STYLE_NO_TITLE, R.style.AditivoDialogTheme)
         
         arguments?.let { args ->
-            contrato = args.getSerializable(ARG_CONTRATO) as? ContratoLocacao
+            contrato = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                args.getSerializable(ARG_CONTRATO, ContratoLocacao::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                args.getSerializable(ARG_CONTRATO) as? ContratoLocacao
+            }
         }
     }
-    
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = DialogAditivoEquipamentosBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-    
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        Timber.i("[$TAG] Criando diálogo de aditivo - Versão Estabilidade Máxima")
+        
+        // Usar o layoutInflater do diálogo (que já possui o tema setado no setStyle)
+        _binding = DialogAditivoEquipamentosBinding.inflate(layoutInflater)
         
         setupUI()
         setupClickListeners()
+        
+        // Criar o diálogo usando Material3 mas com o tema robusto local
+        return MaterialAlertDialogBuilder(requireContext(), R.style.AditivoDialogTheme)
+            .setView(binding.root)
+            .setCancelable(false)
+            .create().apply {
+                window?.setBackgroundDrawableResource(android.R.color.transparent)
+                setCanceledOnTouchOutside(false)
+            }
     }
     
     private fun setupUI() {
@@ -71,14 +83,13 @@ class AditivoDialog : DialogFragment() {
     private fun setupClickListeners() {
         binding.btnGerarAditivo.setOnClickListener {
             contrato?.let { contrato ->
-                // ✅ CORREÇÃO: Invocar listener primeiro, deixar o dismiss para quem chama
-                // Isso evita que o dialog feche antes da navegação acontecer
+                Timber.i("[$TAG] Botão 'Gerar Aditivo' clicado")
                 onGerarAditivoClickListener?.invoke(contrato)
-                // O dismiss será chamado pelo fragment que navega
             }
         }
         
         binding.btnCancelar.setOnClickListener {
+            Timber.i("[$TAG] Botão 'Cancelar' clicado")
             onCancelarClickListener?.invoke()
             dismiss()
         }
@@ -97,4 +108,3 @@ class AditivoDialog : DialogFragment() {
         _binding = null
     }
 }
-
