@@ -4,7 +4,7 @@ import com.example.gestaobilhares.data.dao.AcertoDao
 import com.example.gestaobilhares.data.dao.ClienteDao
 import com.example.gestaobilhares.data.entities.Acerto
 import com.example.gestaobilhares.data.entities.Cliente
-import android.util.Log
+import timber.log.Timber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -37,11 +37,11 @@ class AcertoRepository constructor(
             val acertosExistentes = acertoDao.buscarPorClienteECicloId(clienteId, cicloId).first()
             val acertoExistente = acertosExistentes.firstOrNull()
             
-            Log.d("AcertoRepo", "Verificando acerto existente: clienteId=$clienteId, cicloId=$cicloId")
+            Timber.tag("AcertoRepo").d("Verificando acerto existente: clienteId=$clienteId, cicloId=$cicloId")
             if (acertoExistente != null) {
-                Log.d("AcertoRepo", "⚠️ ACERTO JÁ EXISTE: ID=${acertoExistente.id}, valor=${acertoExistente.valorRecebido}")
+                Timber.tag("AcertoRepo").d("⚠️ ACERTO JÁ EXISTE: ID=${acertoExistente.id}, valor=${acertoExistente.valorRecebido}")
             } else {
-                Log.d("AcertoRepo", "✅ Nenhum acerto existente. Pode prosseguir com salvamento.")
+                Timber.tag("AcertoRepo").d("✅ Nenhum acerto existente. Pode prosseguir com salvamento.")
             }
             
             acertoExistente
@@ -51,34 +51,34 @@ class AcertoRepository constructor(
     suspend fun salvarAcerto(acerto: Acerto): Long {
         // ✅ LOG DETALHADO PARA RASTREAR INSERÇÃO DE ACERTOS
         val stackTrace = Thread.currentThread().stackTrace
-        android.util.Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
-        android.util.Log.w("🔍 DB_POPULATION", "🚨 INSERINDO ACERTO: Cliente ID ${acerto.clienteId}, Ciclo ${acerto.cicloId}, Valor R$ ${acerto.valorRecebido}")
-        android.util.Log.w("🔍 DB_POPULATION", "📍 Chamado por:")
+        Timber.tag("🔍 DB_POPULATION").w("════════════════════════════════════════")
+        Timber.tag("🔍 DB_POPULATION").w("🚨 INSERINDO ACERTO: Cliente ID ${acerto.clienteId}, Ciclo ${acerto.cicloId}, Valor R$ ${acerto.valorRecebido}")
+        Timber.tag("🔍 DB_POPULATION").w("📍 Chamado por:")
         stackTrace.take(10).forEachIndexed { index, element ->
-            android.util.Log.w("🔍 DB_POPULATION", "   [$index] $element")
+            Timber.tag("🔍 DB_POPULATION").w("   [$index] $element")
         }
-        android.util.Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+        Timber.tag("🔍 DB_POPULATION").w("════════════════════════════════════════")
         
-        Log.d("AcertoRepo", "Tentando salvar acerto para clienteId: ${acerto.clienteId}, ciclo: ${acerto.cicloId}, valorRecebido: ${acerto.valorRecebido}")
-        android.util.Log.d("DEBUG_DIAG", "[ACERTO] Salvando acerto: clienteId=${acerto.clienteId}, cicloId=${acerto.cicloId}, valorRecebido=${acerto.valorRecebido}")
+        Timber.tag("AcertoRepo").d("Tentando salvar acerto para clienteId: ${acerto.clienteId}, ciclo: ${acerto.cicloId}, valorRecebido: ${acerto.valorRecebido}")
+        Timber.tag("DEBUG_DIAG").d("[ACERTO] Salvando acerto: clienteId=${acerto.clienteId}, cicloId=${acerto.cicloId}, valorRecebido=${acerto.valorRecebido}")
         return try {
             // Verificar se o cliente existe
             val cliente = clienteDao.obterPorId(acerto.clienteId)
             if (cliente == null) {
                 val msg = "ERRO: Cliente com id ${acerto.clienteId} não existe. Não é possível salvar acerto."
-                Log.d("AcertoRepo", msg)
-                android.util.Log.e("DEBUG_DIAG", msg)
+                Timber.tag("AcertoRepo").d(msg)
+                Timber.tag("DEBUG_DIAG").e(msg)
                 throw IllegalStateException(msg)
             }
             
             // Log para verificar o cicloId antes de salvar
             if (acerto.cicloId == null || acerto.cicloId == 0L) {
-                 android.util.Log.w("DEBUG_DIAG", "[ACERTO] AVISO: cicloId é nulo ou 0. O acerto será salvo sem vínculo de ciclo.")
+                 Timber.tag("DEBUG_DIAG").w("[ACERTO] AVISO: cicloId é nulo ou 0. O acerto será salvo sem vínculo de ciclo.")
             }
 
             val id = acertoDao.inserir(acerto)
-            Log.d("AcertoRepo", "Acerto salvo com sucesso! ID: $id")
-            android.util.Log.d("DEBUG_DIAG", "[ACERTO] Acerto salvo com sucesso! ID: $id, cicloId=${acerto.cicloId}")
+            Timber.tag("AcertoRepo").d("Acerto salvo com sucesso! ID: $id")
+            Timber.tag("DEBUG_DIAG").d("[ACERTO] Acerto salvo com sucesso! ID: $id, cicloId=${acerto.cicloId}")
 
             // Atualizar o débito atual do cliente
             withContext(Dispatchers.IO) {
@@ -90,30 +90,30 @@ class AcertoRepository constructor(
             }
             id
         } catch (e: Exception) {
-            Log.d("AcertoRepo", "ERRO ao salvar acerto: ${e.message}")
-            android.util.Log.e("DEBUG_DIAG", "[ACERTO] ERRO ao salvar acerto: ${e.message}")
+            Timber.tag("AcertoRepo").d("ERRO ao salvar acerto: ${e.message}")
+            Timber.tag("DEBUG_DIAG").e(e, "[ACERTO] ERRO ao salvar acerto: ${e.message}")
             -1L // Retorna um ID inválido em caso de erro
         }
     }
 
     suspend fun getNumeroClientesAcertados(rotaId: Long, cicloId: Long): Int {
-        Log.d("AcertoRepo", "Buscando número de clientes acertados para rotaId: $rotaId, cicloId: $cicloId")
+        Timber.tag("AcertoRepo").d("Buscando número de clientes acertados para rotaId: $rotaId, cicloId: $cicloId")
         val acertos = acertoDao.buscarPorRotaECicloId(rotaId, cicloId).first()
         val count = acertos.map { it.clienteId }.distinct().count()
-        Log.d("AcertoRepo", "Clientes acertados encontrados: $count")
+        Timber.tag("AcertoRepo").d("Clientes acertados encontrados: $count")
         return count
     }
 
     suspend fun getReceitaTotal(rotaId: Long, cicloId: Long): Double {
-        Log.d("AcertoRepo", "Buscando receita total para rotaId: $rotaId, cicloId: $cicloId")
+        Timber.tag("AcertoRepo").d("Buscando receita total para rotaId: $rotaId, cicloId: $cicloId")
         val acertos = acertoDao.buscarPorRotaECicloId(rotaId, cicloId).first()
         val receita = acertos.sumOf { it.valorRecebido }
-        Log.d("AcertoRepo", "Receita encontrada: R$$receita")
+        Timber.tag("AcertoRepo").d("Receita encontrada: R$$receita")
         return receita
     }
 
     suspend fun getAcertosDoCliente(clienteId: Long): List<Acerto> {
-        Log.d("AcertoRepo", "Buscando histórico de acertos para clienteId: $clienteId")
+        Timber.tag("AcertoRepo").d("Buscando histórico de acertos para clienteId: $clienteId")
         return acertoDao.buscarPorCliente(clienteId).first()
     }
 
@@ -170,14 +170,14 @@ class AcertoRepository constructor(
             try {
                 val acerto = buscarPorId(acertoId)
                 if (acerto == null) {
-                    Log.d("AcertoRepo", "❌ Acerto não encontrado para edição: ID=$acertoId")
+                    Timber.tag("AcertoRepo").d("❌ Acerto não encontrado para edição: ID=$acertoId")
                     return@withContext PermissaoEdicao.AcertoNaoEncontrado
                 }
 
                 // Verificar se o ciclo está ativo
                 val cicloAtivo = cicloAcertoRepository.buscarCicloAtivo(acerto.rotaId!!)
                 if (cicloAtivo == null || cicloAtivo.id != acerto.cicloId) {
-                    Log.d("AcertoRepo", "❌ Ciclo não está ativo para edição: cicloId=${acerto.cicloId}, rotaId=${acerto.rotaId}")
+                    Timber.tag("AcertoRepo").d("❌ Ciclo não está ativo para edição: cicloId=${acerto.cicloId}, rotaId=${acerto.rotaId}")
                     return@withContext PermissaoEdicao.CicloInativo("O ciclo deste acerto não está mais ativo.")
                 }
 
@@ -186,15 +186,15 @@ class AcertoRepository constructor(
                 val ultimoAcerto = acertosRota.maxByOrNull { it.dataAcerto }
                 
                 if (ultimoAcerto == null || ultimoAcerto.id != acertoId) {
-                    Log.d("AcertoRepo", "❌ Não é o último acerto da rota. Último: ${ultimoAcerto?.id}, Solicitado: $acertoId")
+                    Timber.tag("AcertoRepo").d("❌ Não é o último acerto da rota. Último: ${ultimoAcerto?.id}, Solicitado: $acertoId")
                     return@withContext PermissaoEdicao.NaoEhUltimoAcerto("Apenas o último acerto da rota pode ser editado.")
                 }
 
-                Log.d("AcertoRepo", "✅ Acerto pode ser editado: ID=$acertoId")
+                Timber.tag("AcertoRepo").d("✅ Acerto pode ser editado: ID=$acertoId")
                 PermissaoEdicao.Permitido
                 
             } catch (e: Exception) {
-                Log.d("AcertoRepo", "❌ Erro ao verificar permissão de edição: ${e.message}")
+                Timber.tag("AcertoRepo").d("❌ Erro ao verificar permissão de edição: ${e.message}")
                 PermissaoEdicao.ErroValidacao(e.message ?: "Erro desconhecido")
             }
         }
@@ -219,7 +219,7 @@ class AcertoRepository constructor(
             val acerto = buscarPorId(acertoId)
             acerto?.cicloId
         } catch (e: Exception) {
-            Log.d("AcertoRepo", "Erro ao buscar ciclo ID por acerto: ${e.message}")
+            Timber.tag("AcertoRepo").d("Erro ao buscar ciclo ID por acerto: ${e.message}")
             null
         }
     }
