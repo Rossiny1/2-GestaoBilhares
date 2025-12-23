@@ -3,7 +3,7 @@ package com.example.gestaobilhares.data.repository.domain
 import com.example.gestaobilhares.data.dao.ClienteDao
 import com.example.gestaobilhares.data.entities.Cliente
 import kotlinx.coroutines.flow.Flow
-import android.util.Log
+import timber.log.Timber
 
 /**
  * Repository especializado para operações relacionadas a clientes.
@@ -25,7 +25,7 @@ class ClienteRepository(
             // que apagaria todos os acertos vinculados a este cliente.
             var id = clienteDao.inserir(cliente)
             if (id == -1L) {
-                Log.d("ClienteRepository", "🔄 Cliente ${cliente.id} já existe, atualizando para evitar cascade delete...")
+                Timber.tag("ClienteRepository").d("🔄 Cliente ${cliente.id} já existe, atualizando para evitar cascade delete...")
                 clienteDao.atualizar(cliente)
                 id = cliente.id
             }
@@ -52,7 +52,7 @@ class ClienteRepository(
             val cliente = obterPorId(clienteId)
             cliente?.rotaId
         } catch (e: Exception) {
-            Log.e("ClienteRepository", "Erro ao buscar rota ID por cliente: ${e.message}")
+            Timber.tag("ClienteRepository").e(e, "Erro ao buscar rota ID por cliente: ${e.message}")
             null
         }
     }
@@ -62,21 +62,21 @@ class ClienteRepository(
     
     private fun logDbInsertStart(entity: String, details: String) {
         val stackTrace = Thread.currentThread().stackTrace
-        Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
-        Log.w("🔍 DB_POPULATION", "🚨 INSERINDO $entity: $details")
-        Log.w("🔍 DB_POPULATION", "📍 Chamado por:")
+        Timber.tag("🔍 DB_POPULATION").w("════════════════════════════════════════")
+        Timber.tag("🔍 DB_POPULATION").w("🚨 INSERINDO $entity: $details")
+        Timber.tag("🔍 DB_POPULATION").w("📍 Chamado por:")
         stackTrace.take(10).forEachIndexed { index, element ->
-            Log.w("🔍 DB_POPULATION", "   [$index] $element")
+            Timber.tag("🔍 DB_POPULATION").w("   [$index] $element")
         }
-        Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+        Timber.tag("🔍 DB_POPULATION").w("════════════════════════════════════════")
     }
     
     private fun logDbInsertSuccess(entity: String, details: String) {
-        Log.w("🔍 DB_POPULATION", "✅ $entity inserido com sucesso: $details")
+        Timber.tag("🔍 DB_POPULATION").w("✅ $entity inserido com sucesso: $details")
     }
     
     private fun logDbInsertError(entity: String, details: String, e: Exception) {
-        Log.e("🔍 DB_POPULATION", "❌ Erro ao inserir $entity: $details", e)
+        Timber.tag("🔍 DB_POPULATION").e(e, "❌ Erro ao inserir $entity: $details")
     }
 }
 

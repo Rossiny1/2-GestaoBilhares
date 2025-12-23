@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.provider.Settings
 import android.util.DisplayMetrics
-import android.util.Log
+import timber.log.Timber
 import android.view.WindowManager
 import java.net.InetAddress
 import java.net.NetworkInterface
@@ -46,12 +46,12 @@ class SignatureMetadataCollector constructor(
             screenResolution = screenResolution
         )
         
-        Log.d(TAG, "Metadados coletados para assinatura:")
-        Log.d(TAG, "Device ID: ${metadata.deviceId}")
-        Log.d(TAG, "IP: ${metadata.ipAddress}")
-        Log.d(TAG, "Timestamp: ${metadata.timestamp}")
-        Log.d(TAG, "Document Hash: ${metadata.documentHash.take(20)}...")
-        Log.d(TAG, "Signature Hash: ${metadata.signatureHash.take(20)}...")
+        Timber.tag(TAG).d( "Metadados coletados para assinatura:")
+        Timber.tag(TAG).d( "Device ID: ${metadata.deviceId}")
+        Timber.tag(TAG).d( "IP: ${metadata.ipAddress}")
+        Timber.tag(TAG).d( "Timestamp: ${metadata.timestamp}")
+        Timber.tag(TAG).d( "Document Hash: ${metadata.documentHash.take(20)}...")
+        Timber.tag(TAG).d( "Signature Hash: ${metadata.signatureHash.take(20)}...")
         
         return metadata
     }
@@ -66,7 +66,7 @@ class SignatureMetadataCollector constructor(
                 Settings.Secure.ANDROID_ID
             ) ?: "unknown_device"
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao obter Device ID", e)
+            Timber.tag(TAG).e(e, "Erro ao obter Device ID")
             "error_device"
         }
     }
@@ -89,7 +89,7 @@ class SignatureMetadataCollector constructor(
             }
             "unknown_ip"
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao obter IP", e)
+            Timber.tag(TAG).e(e, "Erro ao obter IP")
             "error_ip"
         }
     }
@@ -103,7 +103,7 @@ class SignatureMetadataCollector constructor(
             // Por enquanto, retornamos null para não solicitar permissões
             null
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao obter geolocalização", e)
+            Timber.tag(TAG).e(e, "Erro ao obter geolocalização")
             null
         }
     }
@@ -120,7 +120,7 @@ class SignatureMetadataCollector constructor(
             
             "Android App GestaoBilhares/$manufacturer $model Android $version (SDK $sdk)"
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao gerar User Agent", e)
+            Timber.tag(TAG).e(e, "Erro ao gerar User Agent")
             "Android App GestaoBilhares/Unknown"
         }
     }
@@ -138,7 +138,7 @@ class SignatureMetadataCollector constructor(
             
             "${displayMetrics.widthPixels}x${displayMetrics.heightPixels}"
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao obter resolução da tela", e)
+            Timber.tag(TAG).e(e, "Erro ao obter resolução da tela")
             "unknown_resolution"
         }
     }
@@ -155,17 +155,17 @@ class SignatureMetadataCollector constructor(
                 metadata.screenResolution.isNotBlank() &&
                 metadata.timestamp > 0
         
-        Log.d(TAG, "Validação dos metadados: $isValid")
+        Timber.tag(TAG).d( "Validação dos metadados: $isValid")
         
         if (!isValid) {
-            Log.w(TAG, "Metadados incompletos:")
-            Log.w(TAG, "Device ID: ${metadata.deviceId.isNotBlank()}")
-            Log.w(TAG, "IP: ${metadata.ipAddress.isNotBlank()}")
-            Log.w(TAG, "Document Hash: ${metadata.documentHash.isNotBlank()}")
-            Log.w(TAG, "Signature Hash: ${metadata.signatureHash.isNotBlank()}")
-            Log.w(TAG, "User Agent: ${metadata.userAgent.isNotBlank()}")
-            Log.w(TAG, "Screen Resolution: ${metadata.screenResolution.isNotBlank()}")
-            Log.w(TAG, "Timestamp: ${metadata.timestamp > 0}")
+            Timber.tag(TAG).w( "Metadados incompletos:")
+            Timber.tag(TAG).w( "Device ID: ${metadata.deviceId.isNotBlank()}")
+            Timber.tag(TAG).w( "IP: ${metadata.ipAddress.isNotBlank()}")
+            Timber.tag(TAG).w( "Document Hash: ${metadata.documentHash.isNotBlank()}")
+            Timber.tag(TAG).w( "Signature Hash: ${metadata.signatureHash.isNotBlank()}")
+            Timber.tag(TAG).w( "User Agent: ${metadata.userAgent.isNotBlank()}")
+            Timber.tag(TAG).w( "Screen Resolution: ${metadata.screenResolution.isNotBlank()}")
+            Timber.tag(TAG).w( "Timestamp: ${metadata.timestamp > 0}")
         }
         
         return isValid

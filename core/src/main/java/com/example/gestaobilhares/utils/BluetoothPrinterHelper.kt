@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Log
+import timber.log.Timber
 import com.example.gestaobilhares.data.entities.Mesa
 import com.example.gestaobilhares.data.entities.TipoMesa
 import java.io.IOException
@@ -37,17 +37,17 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             outputStream = socket?.outputStream
             
             if (socket?.isConnected == true && outputStream != null) {
-                Log.d(TAG, "Conectado à impressora: ${device.name}")
+                Timber.tag(TAG).d("Conectado à impressora: ${device.name}")
                 true
             } else {
                 false
             }
         } catch (e: IOException) {
-            Log.w(TAG, "Método padrão falhou, tentando método alternativo: ${e.message}")
+            Timber.tag(TAG).w("Método padrão falhou, tentando método alternativo: ${e.message}")
             disconnect()
             false
         } catch (e: Exception) {
-            Log.w(TAG, "Erro no método padrão: ${e.message}")
+            Timber.tag(TAG).w("Erro no método padrão: ${e.message}")
             disconnect()
             false
         }
@@ -66,15 +66,15 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             outputStream = socket?.outputStream
             
             if (socket?.isConnected == true && outputStream != null) {
-                Log.d(TAG, "Conectado à impressora (método inseguro): ${device.name}")
+                Timber.tag(TAG).d( "Conectado à impressora (método inseguro): ${device.name}")
                 true
             } else {
-                Log.e(TAG, "Falha ao conectar mesmo com método alternativo")
+                Timber.tag(TAG).e( "Falha ao conectar mesmo com método alternativo")
                 disconnect()
                 false
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao conectar: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao conectar: ${e.message}")
             disconnect()
             false
         }
@@ -94,7 +94,7 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
                     outputStream?.flush()
                     Thread.sleep(100) // Pequeno delay para garantir que o comando foi processado
                 } catch (e: Exception) {
-                    Log.w(TAG, "Erro ao resetar antes de desconectar: ${e.message}")
+                    Timber.tag(TAG).w( "Erro ao resetar antes de desconectar: ${e.message}")
                 }
             }
             
@@ -104,12 +104,12 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             socket?.close()
             outputStream = null
             socket = null
-            Log.d(TAG, "Desconectado da impressora")
+            Timber.tag(TAG).d( "Desconectado da impressora")
             
             // Pequeno delay para garantir que a conexão foi completamente fechada
             Thread.sleep(200)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao desconectar: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao desconectar: ${e.message}")
             // Forçar limpeza mesmo em caso de erro
             outputStream = null
             socket = null
@@ -129,7 +129,7 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
      */
     private fun sendData(data: ByteArray): Boolean {
         if (!isConnected()) {
-            Log.e(TAG, "Tentativa de enviar dados sem conexão")
+            Timber.tag(TAG).e( "Tentativa de enviar dados sem conexão")
             return false
         }
         return try {
@@ -137,7 +137,7 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             outputStream?.flush()
             true
         } catch (e: IOException) {
-            Log.e(TAG, "Erro ao enviar dados: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao enviar dados: ${e.message}")
             false
         }
     }
@@ -162,10 +162,10 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             sendData(EscPos.LINE_FEED)
             Thread.sleep(50)
             
-            Log.d(TAG, "Impressora resetada com sucesso")
+            Timber.tag(TAG).d( "Impressora resetada com sucesso")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao resetar impressora: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao resetar impressora: ${e.message}")
             false
         }
     }
@@ -234,14 +234,14 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
         logoBitmap: Bitmap? = null
     ): Boolean {
         if (!isConnected()) {
-            Log.e(TAG, "Impressora não conectada")
+            Timber.tag(TAG).e( "Impressora não conectada")
             return false
         }
         
         return try {
             // ✅ CRÍTICO: Reset completo antes de cada impressão
             if (!resetPrinter()) {
-                Log.w(TAG, "Aviso: Reset da impressora falhou, continuando mesmo assim")
+                Timber.tag(TAG).w( "Aviso: Reset da impressora falhou, continuando mesmo assim")
             }
             Thread.sleep(100) // Delay para garantir que o reset foi processado
             
@@ -419,10 +419,10 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             sendData(EscPos.ALIGN_LEFT)
             outputStream?.flush()
             
-            Log.d(TAG, "Recibo impresso com sucesso")
+            Timber.tag(TAG).d( "Recibo impresso com sucesso")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao imprimir recibo: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao imprimir recibo: ${e.message}")
             false
         }
     }
@@ -456,7 +456,7 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
      */
     private fun printBitmapRasterGS(bitmap: Bitmap): Boolean {
         if (!isConnected()) {
-            Log.e(TAG, "Impressora não conectada para imprimir bitmap")
+            Timber.tag(TAG).e( "Impressora não conectada para imprimir bitmap")
             return false
         }
         
@@ -506,7 +506,7 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             // IMPORTANTE: Este comando deve ser enviado imediatamente após o reset
             val gsCommand = byteArrayOf(GS, v, zero, m, xL, xH, yL, yH)
             if (!sendData(gsCommand)) {
-                Log.e(TAG, "Erro ao enviar comando GS v 0")
+                Timber.tag(TAG).e( "Erro ao enviar comando GS v 0")
                 return false
             }
             
@@ -533,7 +533,7 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
                 try {
                     outputStream?.write(lineBuffer)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Erro ao enviar linha $y do bitmap: ${e.message}", e)
+                    Timber.tag(TAG).e(e, "Erro ao enviar linha $y do bitmap: ${e.message}")
                     return false
                 }
             }
@@ -547,10 +547,10 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             outputStream?.flush()
             Thread.sleep(100)
             
-            Log.d(TAG, "Bitmap impresso com sucesso")
+            Timber.tag(TAG).d( "Bitmap impresso com sucesso")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao imprimir bitmap raster: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao imprimir bitmap raster: ${e.message}")
             false
         }
     }
@@ -562,7 +562,7 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
      */
     fun printReciboLayoutBitmap(view: android.view.View): Boolean {
         if (!isConnected()) {
-            Log.e(TAG, "Impressora não conectada para imprimir layout")
+            Timber.tag(TAG).e( "Impressora não conectada para imprimir layout")
             return false
         }
         
@@ -600,7 +600,7 @@ class BluetoothPrinterHelper(private val device: BluetoothDevice) {
             
             success
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao imprimir layout bitmap: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao imprimir layout bitmap: ${e.message}")
             false
         }
     }

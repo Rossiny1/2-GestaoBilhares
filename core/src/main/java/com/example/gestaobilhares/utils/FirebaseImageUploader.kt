@@ -2,7 +2,7 @@
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
+import timber.log.Timber
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.tasks.await
@@ -46,11 +46,11 @@ class FirebaseImageUploader(
         fileName: String? = null
     ): String? {
         return try {
-            Log.d(TAG, "Iniciando upload de imagem: $filePath para pasta: $folder")
+            Timber.tag(TAG).d( "Iniciando upload de imagem: $filePath para pasta: $folder")
             
             val file = File(filePath)
             if (!file.exists()) {
-                Log.e(TAG, "Arquivo não existe: $filePath")
+                Timber.tag(TAG).e( "Arquivo não existe: $filePath")
                 return null
             }
             
@@ -69,11 +69,11 @@ class FirebaseImageUploader(
             val downloadUrl = imageRef.downloadUrl.await()
             val url = downloadUrl.toString()
             
-            Log.d(TAG, "✅ Upload concluído com sucesso: $url")
+            Timber.tag(TAG).d( "✅ Upload concluído com sucesso: $url")
             url
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao fazer upload da imagem: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao fazer upload da imagem: ${e.message}")
             null
         }
     }
@@ -91,7 +91,7 @@ class FirebaseImageUploader(
         fileName: String? = null
     ): String? {
         return try {
-            Log.d(TAG, "Iniciando upload de imagem a partir de URI: $uri para pasta: $folder")
+            Timber.tag(TAG).d( "Iniciando upload de imagem a partir de URI: $uri para pasta: $folder")
             
             // Gerar nome do arquivo se não fornecido
             val finalFileName = fileName ?: generateFileName()
@@ -108,11 +108,11 @@ class FirebaseImageUploader(
             val downloadUrl = imageRef.downloadUrl.await()
             val url = downloadUrl.toString()
             
-            Log.d(TAG, "✅ Upload concluído com sucesso: $url")
+            Timber.tag(TAG).d( "✅ Upload concluído com sucesso: $url")
             url
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao fazer upload da imagem: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao fazer upload da imagem: ${e.message}")
             null
         }
     }
@@ -171,10 +171,10 @@ class FirebaseImageUploader(
         fileName: String? = null
     ): String? {
         return try {
-            Log.d(TAG, "Iniciando download de imagem: $firebaseUrl")
+            Timber.tag(TAG).d( "Iniciando download de imagem: $firebaseUrl")
             
             if (!isFirebaseStorageUrl(firebaseUrl)) {
-                Log.e(TAG, "URL não é do Firebase Storage: $firebaseUrl")
+                Timber.tag(TAG).e( "URL não é do Firebase Storage: $firebaseUrl")
                 return null
             }
             
@@ -194,7 +194,7 @@ class FirebaseImageUploader(
             connection.connect()
             
             if (connection.responseCode != java.net.HttpURLConnection.HTTP_OK) {
-                Log.e(TAG, "Erro HTTP ao fazer download: ${connection.responseCode}")
+                Timber.tag(TAG).e( "Erro HTTP ao fazer download: ${connection.responseCode}")
                 return null
             }
             
@@ -205,11 +205,11 @@ class FirebaseImageUploader(
                 }
             }
             
-            Log.d(TAG, "✅ Download concluído com sucesso: ${destinationFile.absolutePath}")
+            Timber.tag(TAG).d( "✅ Download concluído com sucesso: ${destinationFile.absolutePath}")
             destinationFile.absolutePath
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao fazer download da imagem: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao fazer download da imagem: ${e.message}")
             null
         }
     }
@@ -241,7 +241,7 @@ class FirebaseImageUploader(
         // ✅ NOVO: Verificar se arquivo já existe antes de baixar
         val destinationFile = File(destinationFolder, fileName)
         if (destinationFile.exists()) {
-            Log.d(TAG, "✅ Arquivo já existe, reutilizando: ${destinationFile.absolutePath}")
+            Timber.tag(TAG).d( "✅ Arquivo já existe, reutilizando: ${destinationFile.absolutePath}")
             return destinationFile.absolutePath
         }
         

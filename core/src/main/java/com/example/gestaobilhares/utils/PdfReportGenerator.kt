@@ -2,7 +2,7 @@
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.util.Log
+import timber.log.Timber
 import com.example.gestaobilhares.data.entities.*
 import com.itextpdf.io.image.ImageDataFactory
 import com.itextpdf.kernel.colors.ColorConstants
@@ -74,11 +74,11 @@ class PdfReportGenerator(private val context: Context) {
             
             document.close()
             
-            Log.d("PdfReportGenerator", "Relatório gerado com sucesso: ${file.absolutePath}")
+            Timber.tag("PdfReportGenerator").d( "Relatório gerado com sucesso: ${file.absolutePath}")
             return file
             
         } catch (e: Exception) {
-            Log.e("PdfReportGenerator", "Erro ao gerar relatório", e)
+            Timber.tag("PdfReportGenerator").e(e, "Erro ao gerar relatório")
             throw e
         }
     }
@@ -149,7 +149,7 @@ class PdfReportGenerator(private val context: Context) {
             document.add(routeInfo)
             
         } catch (e: Exception) {
-            Log.e("PdfReportGenerator", "Erro ao adicionar cabeçalho", e)
+            Timber.tag("PdfReportGenerator").e(e, "Erro ao adicionar cabeçalho")
             // Continuar sem logo se houver erro
             val title = Paragraph("RELATÓRIO DETALHADO DE FECHAMENTO")
                 .setFontSize(18f) // ✅ REDUZIDO: era 20f
@@ -445,7 +445,7 @@ class PdfReportGenerator(private val context: Context) {
                 Gson().fromJson(metodosPagamentoJson, tipo) ?: mapOf("Dinheiro" to 0.0)
             }
         } catch (e: Exception) {
-            Log.e("PdfReportGenerator", "Erro ao processar métodos de pagamento: ${e.message}")
+            Timber.tag("PdfReportGenerator").e( "Erro ao processar métodos de pagamento: ${e.message}")
             mapOf("Dinheiro" to 0.0)
         }
     }

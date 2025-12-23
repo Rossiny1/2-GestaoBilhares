@@ -9,7 +9,7 @@ import com.example.gestaobilhares.data.entities.PanoMesa
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import android.util.Log
+import timber.log.Timber
 
 /**
  * Repository especializado para operações relacionadas a mesas.
@@ -99,21 +99,21 @@ class MesaRepository(
     
     private fun logDbInsertStart(entity: String, details: String) {
         val stackTrace = Thread.currentThread().stackTrace
-        Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
-        Log.w("🔍 DB_POPULATION", "🚨 INSERINDO $entity: $details")
-        Log.w("🔍 DB_POPULATION", "📍 Chamado por:")
+        Timber.tag("🔍 DB_POPULATION").w("════════════════════════════════════════")
+        Timber.tag("🔍 DB_POPULATION").w("🚨 INSERINDO $entity: $details")
+        Timber.tag("🔍 DB_POPULATION").w("📍 Chamado por:")
         stackTrace.take(10).forEachIndexed { index, element ->
-            Log.w("🔍 DB_POPULATION", "   [$index] $element")
+            Timber.tag("🔍 DB_POPULATION").w("   [$index] $element")
         }
-        Log.w("🔍 DB_POPULATION", "════════════════════════════════════════")
+        Timber.tag("🔍 DB_POPULATION").w("════════════════════════════════════════")
     }
     
     private fun logDbInsertSuccess(entity: String, details: String) {
-        Log.w("🔍 DB_POPULATION", "✅ $entity inserido com sucesso: $details")
+        Timber.tag("🔍 DB_POPULATION").w("✅ $entity inserido com sucesso: $details")
     }
     
     private fun logDbInsertError(entity: String, details: String, e: Exception) {
-        Log.e("🔍 DB_POPULATION", "❌ Erro ao inserir $entity: $details", e)
+        Timber.tag("🔍 DB_POPULATION").e(e, "❌ Erro ao inserir $entity: $details")
     }
 }
 

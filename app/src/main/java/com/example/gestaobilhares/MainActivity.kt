@@ -2,7 +2,7 @@ package com.example.gestaobilhares
 
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
+import timber.log.Timber
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.navigation.fragment.NavHostFragment
@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity() {
                 
                 // Verificar se está online
                 if (!networkUtils.isConnected()) {
-                    Log.d("MainActivity", "App offline - fechando sem verificar sincronização")
+                    Timber.tag("MainActivity").d("App offline - fechando sem verificar sincronização")
                     finish()
                     return@launch
                 }
@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity() {
                     appRepository.contarOperacoesSyncPendentes()
                 }
                 
-                Log.d("MainActivity", "📡 Pendências de sincronização ao fechar: $pending")
+                Timber.tag("MainActivity").d("📡 Pendências de sincronização ao fechar: $pending")
                 
                 if (pending > 0) {
                     // Mostrar diálogo perguntando se deseja sincronizar
@@ -141,7 +141,7 @@ class MainActivity : AppCompatActivity() {
                     finish()
                 }
             } catch (e: Exception) {
-                Log.e("MainActivity", "Erro ao verificar pendências: ${e.message}", e)
+                Timber.tag("MainActivity").e(e, "Erro ao verificar pendências: ${e.message}")
                 // Em caso de erro, fechar normalmente
                 finish()
             }
@@ -206,7 +206,7 @@ class MainActivity : AppCompatActivity() {
                 // Fechar app após sincronização
                 finish()
             } catch (e: Exception) {
-                Log.e("MainActivity", "Erro na sincronização: ${e.message}", e)
+                Timber.tag("MainActivity").e(e, "Erro na sincronização: ${e.message}")
                 android.widget.Toast.makeText(
                     this@MainActivity,
                     "❌ Erro na sincronização: ${e.message}",
@@ -240,10 +240,10 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == 1001) { // REQUEST_BLUETOOTH_PERMISSIONS
             if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 // Permissões concedidas - notificar que pode tentar imprimir novamente
-                Log.d("MainActivity", "Permissões Bluetooth concedidas")
+                Timber.tag("MainActivity").d("Permissões Bluetooth concedidas")
                 // O usuário pode tentar imprimir novamente
             } else {
-                Log.w("MainActivity", "Permissões Bluetooth negadas")
+                Timber.tag("MainActivity").w("Permissões Bluetooth negadas")
                 // Mostrar mensagem explicativa
                 androidx.appcompat.app.AlertDialog.Builder(this)
                     .setTitle("🔗 Permissões Bluetooth Negadas")
