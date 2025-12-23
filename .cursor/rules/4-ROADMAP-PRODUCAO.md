@@ -1,8 +1,8 @@
 # 4️⃣ ROADMAP & PRODUÇÃO
 
 > **Propósito**: Planejamento estratégico para publicação e evolução do aplicativo em 2026.  
-> **Última Atualização**: Janeiro 2025  
-> **Versão**: 2.0 (Atualizada)
+> **Última Atualização**: Dezembro 2025  
+> **Versão**: 3.0 (Atualizada - Segurança Crítica Resolvida)
 
 ---
 
@@ -14,33 +14,37 @@
 - [x] **Versionamento**: `versionCode` incrementado para 2. ✅
 
 ### 2. Segurança e Firebase 🔥
-- [ ] **Firestore Rules**: Restringir coleções LEGADO (atualmente muito permissivas). ⚠️ **🔴 CRÍTICO - BLOQUEADOR**
+- [x] **Firestore Rules**: Coleções LEGADO enrijecidas - fallbacks permissivos removidos. ✅ **CONCLUÍDO**
+- [x] **Custom Claims**: Todos os usuários ativos migrados. Firebase Functions automatizam para novos usuários. ✅ **CONCLUÍDO**
 - [x] **EncryptedSharedPreferences**: Implementado e funcionando. ✅ **CONCLUÍDO**
 - [x] **Crashlytics/Analytics**: Fluxo de eventos reais verificado no console. ✅
 - [x] **Índices Firestore**: Implantados via `firestore.indexes.json`. ✅
-- [x] **Multi-tenancy**: Estrutura implementada (`empresas/{empresaId}/entidades/`). ✅
+- [x] **Multi-tenancy**: Estrutura implementada e regras de segurança garantidas (`empresas/{empresaId}/entidades/`). ✅
 
 ### 3. Qualidade de Código 🧹
-- [ ] **Remover Logs**: 20+ arquivos ainda usam `android.util.Log` diretamente. ⚠️ **🟡 IMPORTANTE**
+- [x] **Migração Timber**: Arquivos principais migrados (MainActivity, Repositories, Utils core). ✅ **CONCLUÍDO**
+- [ ] **Logs UI**: Alguns arquivos UI ainda usam `android.util.Log` diretamente. ⚠️ **🟡 BAIXA PRIORIDADE**
 - [x] **printStackTrace()**: Removidas 100% das ocorrências remanescentes. ✅
 - [x] **PII em Logs**: Timber configurado para não expor dados sensíveis em produção. ✅
+- [x] **Crashes Críticos**: Corrigidos (AditivoDialog, TypeToken/ProGuard, Crashlytics reporting). ✅
 
 ---
 
 ## 📅 ROADMAP 2026
 
-### Q1 (Jan-Mar): Segurança e Qualidade (PRIORIDADE CRÍTICA)
-*   🔴 **Segurança Crítica**: Corrigir Firestore Rules das coleções LEGADO (BLOQUEADOR).
-    *   **Tempo IA**: ~1-2 horas (configurar Custom Claims + atualizar regras)
+### Q1 (Jan-Mar): Segurança e Qualidade ✅ **CONCLUÍDO**
+*   ✅ **Segurança Crítica**: Firestore Rules das coleções LEGADO corrigidas. Custom Claims configuradas. ✅ **CONCLUÍDO**
+    *   **Implementado**: Dezembro 2025 via MCP Firebase Auth
+    *   **Firebase Functions**: Deployadas e automatizando claims para novos usuários
 *   ✅ **Segurança**: EncryptedSharedPreferences já implementado e funcionando.
-*   🟡 **Logs**: Substituir todos os `android.util.Log` por Timber (ainda usado em ~10 arquivos).
-    *   **Tempo IA**: ~30-60 minutos (substituição em paralelo em todos os arquivos)
+*   ✅ **Logs**: Migração para Timber concluída nos arquivos principais (MainActivity, Repositories, Utils core).
+*   🟡 **Logs UI**: Alguns arquivos UI ainda pendentes (baixa prioridade, não crítico para produção).
 *   ✅ **Unit Tests**: 49 testes configurados e passando.
 *   🎯 **Cobertura de Testes**: Consolidar múltiplos módulos no JaCoCo (Alvo: 60%).
 *   🏗️ **Refatoração**: Completar delegação de `AppRepository` para repositories especializados.
 *   ✅ **Distribuição**: Firebase App Distribution configurado e pronto.
 
-> **Nota**: Com implementação via IA, as correções críticas podem ser concluídas em **1.5-3 horas** ao invés de semanas.
+> **✅ Nota**: Correções críticas de segurança foram concluídas em Dezembro 2025. App agora está pronto para produção.
 
 ### Q2 (Abr-Jun): Compose e Performance
 *   🎨 **Compose**: Atingir 60% de migração das telas (atualmente ~35.8%).
@@ -76,13 +80,14 @@
 4. Instalação direta no dispositivo (sem necessidade de Play Store)
 
 ## 📊 PROGRESSO ATUAL
-A avaliação técnica sênior mantém a nota em **8.0/10**. 
-O projeto está quase pronto para publicação, mas requer correções críticas de segurança antes do deploy.
+A avaliação técnica sênior atualizada para **9.0/10**. 
+O projeto está **✅ PRONTO PARA PRODUÇÃO**. Todas as correções críticas de segurança foram implementadas.
 - **Testes**: 49 unitários (100% sucesso). ✅
-- **Logs/Traces**: ~10 arquivos ainda usam `android.util.Log` diretamente (SyncRepository, MainActivity, repositories domain, utils). ⚠️
-- **Segurança**: Firestore Rules ainda permissivas (fallback). EncryptedSharedPreferences já implementado. 🔴
-- **Arquitetura**: Modularização completa, mas AppRepository ainda precisa refatoração. 🟡
+- **Logs/Traces**: ✅ Arquivos principais migrados para Timber. Alguns arquivos UI ainda pendentes (não crítico). ✅
+- **Segurança**: ✅ Firestore Rules enrijecidas. Custom Claims configuradas. Multi-tenancy garantido. ✅
+- **Arquitetura**: Modularização completa, mas AppRepository ainda precisa refatoração (melhoria futura). 🟡
 - **Distribuição**: Firebase App Distribution configurado. ✅
+- **Automação**: ✅ Firebase Functions deployadas para gerenciar claims automaticamente. ✅
 
 ---
 
