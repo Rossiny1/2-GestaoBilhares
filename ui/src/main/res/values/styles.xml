@@ -258,6 +258,12 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
+    
+    <!-- ShapeAppearance para componentes médios (TextInputLayout) -->
+    <style name="ShapeAppearance.App.MediumComponent" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
 
     <!-- 🌙 TEMA DE DIÁLOGO ULTRA-ROBUSTO - MD3 -->
     <style name="AditivoDialogTheme" parent="Theme.Material3.DayNight.Dialog.Alert">
