@@ -1,7 +1,7 @@
 ﻿package com.example.gestaobilhares.core.utils
 
 import android.content.Context
-import android.util.Log
+import timber.log.Timber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -35,9 +35,9 @@ class LegalLogger constructor(
         try {
             val logEntry = createLogEntry(contratoId, userId, action, metadata)
             writeLogToFile(logEntry, contratoId)
-            Log.d(TAG, "Log jurídico registrado: $action para contrato $contratoId")
+            Timber.tag(TAG).d( "Log jurídico registrado: $action para contrato $contratoId")
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao registrar log jurídico", e)
+            Timber.tag(TAG).e(e, "Erro ao registrar log jurídico")
         }
     }
     
@@ -99,7 +99,7 @@ class LegalLogger constructor(
             val logContent = logFile.readText()
             return@withContext parseLogContent(logContent)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao gerar trilha de auditoria", e)
+            Timber.tag(TAG).e(e, "Erro ao gerar trilha de auditoria")
             return@withContext emptyList()
         }
     }
@@ -159,7 +159,7 @@ class LegalLogger constructor(
             } else null
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao fazer parse do bloco de log", e)
+            Timber.tag(TAG).e(e, "Erro ao fazer parse do bloco de log")
             return null
         }
     }
@@ -188,7 +188,7 @@ class LegalLogger constructor(
             return@withContext hasSignatureEvent && hasValidHashes
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao verificar integridade dos logs", e)
+            Timber.tag(TAG).e(e, "Erro ao verificar integridade dos logs")
             return@withContext false
         }
     }

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import android.util.Log
+import timber.log.Timber
 
 /**
  * Repository especializado para operações relacionadas a rotas.
@@ -34,7 +34,7 @@ class RotaRepository(
     suspend fun inserir(rota: Rota): Long {
         var id = rotaDao.insertRota(rota)
         if (id == -1L) {
-            android.util.Log.d("RotaRepository", "🔄 Rota ${rota.id} já existe, atualizando manual para evitar cascade delete...")
+            Timber.tag("RotaRepository").d("🔄 Rota ${rota.id} já existe, atualizando manual para evitar cascade delete...")
             rotaDao.updateRota(rota)
             id = rota.id
         }
@@ -60,7 +60,7 @@ class RotaRepository(
             cicloAcertoDao.listarTodos(),
             clienteDao.obterTodos() // ✅ NOVO: Incluir clientes para atualizar quando houver mudanças nos débitos
         ) { rotas, ciclos, clientes ->
-            Log.d("RotaRepository", "🔄 Atualizando resumo de rotas: ${rotas.size} rotas, ${ciclos.size} ciclos, ${clientes.size} clientes")
+            Timber.tag("RotaRepository").d("🔄 Atualizando resumo de rotas: ${rotas.size} rotas, ${ciclos.size} ciclos, ${clientes.size} clientes")
             
             rotas.map { rota ->
                 val clientesAtivos = calcularClientesAtivos(rota.id)

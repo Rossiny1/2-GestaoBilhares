@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.util.Log
+import timber.log.Timber
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
@@ -41,7 +41,7 @@ class ChartGenerator(private val context: Context) {
             }
 
             if (entries.isEmpty()) {
-                Log.w("ChartGenerator", "Nenhum dado de faturamento encontrado")
+                Timber.tag("ChartGenerator").w("Nenhum dado de faturamento encontrado")
                 return null
             }
 
@@ -81,7 +81,7 @@ class ChartGenerator(private val context: Context) {
             convertChartToBitmap(pieChart)
 
         } catch (e: Exception) {
-            Log.e("ChartGenerator", "Erro ao gerar gráfico de faturamento: ${e.message}", e)
+            Timber.tag("ChartGenerator").e(e, "Erro ao gerar gráfico de faturamento: ${e.message}")
             null
         }
     }
@@ -104,7 +104,7 @@ class ChartGenerator(private val context: Context) {
             }
 
             if (entries.isEmpty()) {
-                Log.w("ChartGenerator", "Nenhum dado de despesas encontrado")
+                Timber.tag("ChartGenerator").w("Nenhum dado de despesas encontrado")
                 return null
             }
 
@@ -142,7 +142,7 @@ class ChartGenerator(private val context: Context) {
             convertChartToBitmap(pieChart)
 
         } catch (e: Exception) {
-            Log.e("ChartGenerator", "Erro ao gerar gráfico de despesas: ${e.message}", e)
+            Timber.tag("ChartGenerator").e(e, "Erro ao gerar gráfico de despesas: ${e.message}")
             null
         }
     }
@@ -197,7 +197,7 @@ class ChartGenerator(private val context: Context) {
      * Converte um PieChart em Bitmap
      */
     private fun convertChartToBitmap(pieChart: PieChart): Bitmap {
-        android.util.Log.d("ChartGenerator", "Iniciando conversão do gráfico para Bitmap")
+        Timber.tag("ChartGenerator").d("Iniciando conversão do gráfico para Bitmap")
         
         // Preparar o Looper se necessário
         if (android.os.Looper.myLooper() == null) {
@@ -218,17 +218,17 @@ class ChartGenerator(private val context: Context) {
         )
         pieChart.layout(0, 0, size2, size2)
         
-        android.util.Log.d("ChartGenerator", "Gráfico configurado - largura: ${pieChart.width}, altura: ${pieChart.height}")
-        android.util.Log.d("ChartGenerator", "Dados do gráfico: ${pieChart.data?.dataSet?.entryCount} entradas")
+        Timber.tag("ChartGenerator").d("Gráfico configurado - largura: ${pieChart.width}, altura: ${pieChart.height}")
+        Timber.tag("ChartGenerator").d("Dados do gráfico: ${pieChart.data?.dataSet?.entryCount} entradas")
         
         // Tentar obter o bitmap nativo do chart (recomendado pelo MPAndroidChart)
         val bitmap: Bitmap = try {
             val native = pieChart.chartBitmap
             if (native != null) {
-                android.util.Log.d("ChartGenerator", "Bitmap criado via chartBitmap")
+                Timber.tag("ChartGenerator").d("Bitmap criado via chartBitmap")
                 native
             } else {
-                android.util.Log.d("ChartGenerator", "chartBitmap null, desenhando manualmente")
+                Timber.tag("ChartGenerator").d("chartBitmap null, desenhando manualmente")
                 val fb = Bitmap.createBitmap(size2, size2, Bitmap.Config.ARGB_8888)
                 val canvas = Canvas(fb)
                 canvas.drawColor(Color.WHITE)
@@ -236,7 +236,7 @@ class ChartGenerator(private val context: Context) {
                 fb
             }
         } catch (e: Exception) {
-            android.util.Log.e("ChartGenerator", "Erro ao criar bitmap: ${e.message}", e)
+            Timber.tag("ChartGenerator").e(e, "Erro ao criar bitmap: ${e.message}")
             val fb = Bitmap.createBitmap(size2, size2, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(fb)
             canvas.drawColor(Color.WHITE)

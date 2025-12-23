@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
-import android.util.Log
+import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -38,12 +38,12 @@ class ImageCompressionUtils(
      */
     fun compressImageFromUri(uri: Uri): String? {
         return try {
-            Log.d(TAG, "Iniciando compressão de imagem: $uri")
+            Timber.tag(TAG).d( "Iniciando compressão de imagem: $uri")
             
             // Ler a imagem original
             val inputStream = context.contentResolver.openInputStream(uri)
             if (inputStream == null) {
-                Log.e(TAG, "Não foi possível abrir InputStream para URI: $uri")
+                Timber.tag(TAG).e( "Não foi possível abrir InputStream para URI: $uri")
                 return null
             }
             
@@ -51,11 +51,11 @@ class ImageCompressionUtils(
             inputStream.close()
             
             if (originalBitmap == null) {
-                Log.e(TAG, "Não foi possível decodificar a imagem")
+                Timber.tag(TAG).e( "Não foi possível decodificar a imagem")
                 return null
             }
             
-            Log.d(TAG, "Imagem original: ${originalBitmap.width}x${originalBitmap.height}")
+            Timber.tag(TAG).d( "Imagem original: ${originalBitmap.width}x${originalBitmap.height}")
             
             // Comprimir a imagem
             val compressedBitmap = compressBitmap(originalBitmap)
@@ -68,7 +68,7 @@ class ImageCompressionUtils(
             compressedFile?.absolutePath
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao comprimir imagem: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao comprimir imagem: ${e.message}")
             null
         }
     }
@@ -80,23 +80,23 @@ class ImageCompressionUtils(
      */
     fun compressImageFromPath(filePath: String): String? {
         return try {
-            Log.d(TAG, "Iniciando compressão de imagem: $filePath")
+            Timber.tag(TAG).d( "Iniciando compressão de imagem: $filePath")
             
             val file = File(filePath)
             if (!file.exists()) {
-                Log.e(TAG, "Arquivo não existe: $filePath")
+                Timber.tag(TAG).e( "Arquivo não existe: $filePath")
                 return null
             }
             
             // Ler a imagem original
             val originalBitmap = BitmapFactory.decodeFile(filePath)
             if (originalBitmap == null) {
-                Log.e(TAG, "Não foi possível decodificar a imagem")
+                Timber.tag(TAG).e( "Não foi possível decodificar a imagem")
                 return null
             }
             
-            Log.d(TAG, "Imagem original: ${originalBitmap.width}x${originalBitmap.height}")
-            Log.d(TAG, "Tamanho original: ${file.length() / 1024}KB")
+            Timber.tag(TAG).d( "Imagem original: ${originalBitmap.width}x${originalBitmap.height}")
+            Timber.tag(TAG).d( "Tamanho original: ${file.length() / 1024}KB")
             
             // Comprimir a imagem
             val compressedBitmap = compressBitmap(originalBitmap)
@@ -109,7 +109,7 @@ class ImageCompressionUtils(
             compressedFile?.absolutePath
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao comprimir imagem: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao comprimir imagem: ${e.message}")
             null
         }
     }
@@ -126,7 +126,7 @@ class ImageCompressionUtils(
         // Calcular dimensões mantendo proporção
         val (newWidth, newHeight) = calculateDimensions(originalWidth, originalHeight)
         
-        Log.d(TAG, "Redimensionando para: ${newWidth}x${newHeight}")
+        Timber.tag(TAG).d("Redimensionando para: ${newWidth}x${newHeight}")
         
         // Redimensionar se necessário
         val resizedBitmap = if (newWidth != originalWidth || newHeight != originalHeight) {
@@ -171,7 +171,7 @@ class ImageCompressionUtils(
             // Em uma implementação mais avançada, poderíamos ler os dados EXIF
             bitmap
         } catch (e: Exception) {
-            Log.w(TAG, "Erro ao aplicar rotação: ${e.message}")
+            Timber.tag(TAG).w( "Erro ao aplicar rotação: ${e.message}")
             bitmap
         }
     }
@@ -190,16 +190,16 @@ class ImageCompressionUtils(
             
             if (result != null) {
                 val fileSizeKB = result.length() / 1024
-                Log.d(TAG, "Imagem comprimida salva: ${result.absolutePath}")
-                Log.d(TAG, "Tamanho final: ${fileSizeKB}KB")
+                Timber.tag(TAG).d( "Imagem comprimida salva: ${result.absolutePath}")
+                Timber.tag(TAG).d( "Tamanho final: ${fileSizeKB}KB")
                 result
             } else {
-                Log.e(TAG, "Falha ao comprimir bitmap para 100KB")
+                Timber.tag(TAG).e( "Falha ao comprimir bitmap para 100KB")
                 null
             }
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao salvar bitmap comprimido: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro ao salvar bitmap comprimido: ${e.message}")
             null
         }
     }
@@ -218,21 +218,21 @@ class ImageCompressionUtils(
                 outputStream.close()
                 
                 fileSizeKB = file.length() / 1024
-                Log.d(TAG, "Tentativa com qualidade $quality%: ${fileSizeKB}KB")
+                Timber.tag(TAG).d( "Tentativa com qualidade $quality%: ${fileSizeKB}KB")
                 
                 if (fileSizeKB <= MAX_FILE_SIZE_KB) {
-                    Log.d(TAG, "Compressão bem-sucedida com qualidade $quality%")
+                    Timber.tag(TAG).d( "Compressão bem-sucedida com qualidade $quality%")
                     return file
                 }
                 
                 quality -= 10
             }
             
-            Log.w(TAG, "Não foi possível comprimir abaixo de ${MAX_FILE_SIZE_KB}KB")
+            Timber.tag(TAG).w( "Não foi possível comprimir abaixo de ${MAX_FILE_SIZE_KB}KB")
             file
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro na compressão adicional: ${e.message}", e)
+            Timber.tag(TAG).e(e, "Erro na compressão adicional: ${e.message}")
             null
         }
     }
@@ -248,7 +248,7 @@ class ImageCompressionUtils(
             var minQuality = MIN_QUALITY
             var maxQuality = INITIAL_COMPRESSION_QUALITY
             
-            Log.d(TAG, "Iniciando compressão adaptativa para 100KB...")
+            Timber.tag(TAG).d( "Iniciando compressão adaptativa para 100KB...")
             
             // Estratégia 1: Busca binária para encontrar qualidade ideal
             while (minQuality <= maxQuality) {
@@ -259,7 +259,7 @@ class ImageCompressionUtils(
                 outputStream.close()
                 
                 val fileSizeKB = file.length() / 1024
-                Log.d(TAG, "Qualidade $currentQuality%: ${fileSizeKB}KB")
+                Timber.tag(TAG).d( "Qualidade $currentQuality%: ${fileSizeKB}KB")
                 
                 if (fileSizeKB <= MAX_FILE_SIZE_KB) {
                     // Tamanho aceitável, tentar qualidade maior
@@ -274,7 +274,7 @@ class ImageCompressionUtils(
             
             // Estratégia 2: Se ainda não conseguiu, tentar redimensionar
             if (bestFile == null || bestFile.length() / 1024 > MAX_FILE_SIZE_KB) {
-                Log.d(TAG, "Tentando redimensionamento adicional...")
+                Timber.tag(TAG).d( "Tentando redimensionamento adicional...")
                 val resizedBitmap = Bitmap.createScaledBitmap(
                     bitmap, 
                     (bitmap.width * 0.8).toInt(), 
@@ -287,7 +287,7 @@ class ImageCompressionUtils(
                 outputStream.close()
                 
                 val finalSizeKB = file.length() / 1024
-                Log.d(TAG, "Após redimensionamento: ${finalSizeKB}KB")
+                Timber.tag(TAG).d( "Após redimensionamento: ${finalSizeKB}KB")
                 
                 if (finalSizeKB <= MAX_FILE_SIZE_KB) {
                     bestFile = file
@@ -298,15 +298,15 @@ class ImageCompressionUtils(
             
             if (bestFile != null) {
                 val finalSizeKB = bestFile.length() / 1024
-                Log.d(TAG, "✅ Compressão bem-sucedida: ${finalSizeKB}KB com qualidade $bestQuality%")
+                Timber.tag(TAG).d( "✅ Compressão bem-sucedida: ${finalSizeKB}KB com qualidade $bestQuality%")
             } else {
-                Log.w(TAG, "⚠️ Não foi possível comprimir abaixo de 100KB, usando melhor resultado")
+                Timber.tag(TAG).w( "⚠️ Não foi possível comprimir abaixo de 100KB, usando melhor resultado")
             }
             
             bestFile ?: file
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro na compressão adaptativa: ${e.message}")
+            Timber.tag(TAG).e("Erro na compressão adaptativa: ${e.message}")
             null
         }
     }
@@ -332,7 +332,7 @@ class ImageCompressionUtils(
             needsResize || needsCompression
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao verificar necessidade de compressão: ${e.message}")
+            Timber.tag(TAG).e("Erro ao verificar necessidade de compressão: ${e.message}")
             true // Em caso de erro, assumir que precisa comprimir
         }
     }
@@ -359,7 +359,7 @@ class ImageCompressionUtils(
             info
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao obter informações da imagem: ${e.message}")
+            Timber.tag(TAG).e("Erro ao obter informações da imagem: ${e.message}")
             null
         }
     }

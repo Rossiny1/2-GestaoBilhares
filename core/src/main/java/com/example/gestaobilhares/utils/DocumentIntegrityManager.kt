@@ -3,7 +3,7 @@
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Base64
-import android.util.Log
+import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 /**
@@ -29,11 +29,11 @@ class DocumentIntegrityManager constructor(
             val hashBytes = digest.digest(pdfBytes)
             val hashString = Base64.encodeToString(hashBytes, Base64.NO_WRAP)
             
-            Log.d(TAG, "Hash do documento gerado: ${hashString.take(20)}...")
+            Timber.tag(TAG).d( "Hash do documento gerado: ${hashString.take(20)}...")
             hashString
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao gerar hash do documento", e)
+            Timber.tag(TAG).e(e, "Erro ao gerar hash do documento")
             ""
         }
     }
@@ -49,11 +49,11 @@ class DocumentIntegrityManager constructor(
             val hashBytes = digest.digest(byteArray)
             val hashString = Base64.encodeToString(hashBytes, Base64.NO_WRAP)
             
-            Log.d(TAG, "Hash da assinatura gerado: ${hashString.take(20)}...")
+            Timber.tag(TAG).d( "Hash da assinatura gerado: ${hashString.take(20)}...")
             hashString
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao gerar hash da assinatura", e)
+            Timber.tag(TAG).e(e, "Erro ao gerar hash da assinatura")
             ""
         }
     }
@@ -72,11 +72,11 @@ class DocumentIntegrityManager constructor(
             val hashBytes = digest.digest(dataString.toByteArray())
             val hashString = Base64.encodeToString(hashBytes, Base64.NO_WRAP)
             
-            Log.d(TAG, "Hash dos dados de assinatura gerado: ${hashString.take(20)}...")
+            Timber.tag(TAG).d( "Hash dos dados de assinatura gerado: ${hashString.take(20)}...")
             hashString
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao gerar hash dos dados de assinatura", e)
+            Timber.tag(TAG).e(e, "Erro ao gerar hash dos dados de assinatura")
             ""
         }
     }
@@ -91,9 +91,9 @@ class DocumentIntegrityManager constructor(
     ): Boolean {
         val isValid = originalHash == currentHash
         
-        Log.d(TAG, "Verificação de integridade do documento: $isValid")
-        Log.d(TAG, "Hash original: ${originalHash.take(20)}...")
-        Log.d(TAG, "Hash atual: ${currentHash.take(20)}...")
+        Timber.tag(TAG).d("Verificação de integridade do documento: $isValid")
+        Timber.tag(TAG).d("Hash original: ${originalHash.take(20)}...")
+        Timber.tag(TAG).d("Hash atual: ${currentHash.take(20)}...")
         
         return isValid
     }
@@ -108,9 +108,9 @@ class DocumentIntegrityManager constructor(
     ): Boolean {
         val isValid = originalHash == currentHash
         
-        Log.d(TAG, "Verificação de integridade da assinatura: $isValid")
-        Log.d(TAG, "Hash original: ${originalHash.take(20)}...")
-        Log.d(TAG, "Hash atual: ${currentHash.take(20)}...")
+        Timber.tag(TAG).d("Verificação de integridade da assinatura: $isValid")
+        Timber.tag(TAG).d("Hash original: ${originalHash.take(20)}...")
+        Timber.tag(TAG).d("Hash atual: ${currentHash.take(20)}...")
         
         return isValid
     }
@@ -130,11 +130,11 @@ class DocumentIntegrityManager constructor(
             val hashBytes = digest.digest(combinedData.toByteArray())
             val hashString = Base64.encodeToString(hashBytes, Base64.NO_WRAP)
             
-            Log.d(TAG, "Hash combinado gerado: ${hashString.take(20)}...")
+            Timber.tag(TAG).d( "Hash combinado gerado: ${hashString.take(20)}...")
             hashString
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao gerar hash combinado", e)
+            Timber.tag(TAG).e(e, "Erro ao gerar hash combinado")
             ""
         }
     }
@@ -163,11 +163,11 @@ class DocumentIntegrityManager constructor(
             val hashBytes = digest.digest(deviceData.toByteArray())
             val hashString = Base64.encodeToString(hashBytes, Base64.NO_WRAP)
             
-            Log.d(TAG, "Hash do dispositivo gerado: ${hashString.take(20)}...")
+            Timber.tag(TAG).d( "Hash do dispositivo gerado: ${hashString.take(20)}...")
             hashString
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao gerar hash do dispositivo", e)
+            Timber.tag(TAG).e(e, "Erro ao gerar hash do dispositivo")
             ""
         }
     }
@@ -181,7 +181,7 @@ class DocumentIntegrityManager constructor(
             // Hash SHA-256 em Base64 deve ter 44 caracteres
             hash.length == 44 && hash.matches(Regex("[A-Za-z0-9+/=]+"))
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao validar hash", e)
+            Timber.tag(TAG).e(e, "Erro ao validar hash")
             false
         }
     }
