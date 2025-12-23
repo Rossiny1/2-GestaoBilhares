@@ -1,8 +1,8 @@
 # 3️⃣ ARQUITETURA TÉCNICA
 
 > **Propósito**: Definição da estrutura técnica, modularização e padrões de comunicação.  
-> **Última Atualização**: Janeiro 2025  
-> **Versão**: 2.0 (Atualizada)
+> **Última Atualização**: Dezembro 2025  
+> **Versão**: 3.0 (Atualizada - Segurança Implementada)
 
 ---
 
@@ -80,7 +80,8 @@ Utilizamos um sistema de `last_update_timestamp` para minimizar o tráfego de da
 
 ### Estrutura de Dados no Firestore
 *   **Multi-tenancy**: `empresas/{empresaId}/entidades/{collectionName}/items/{itemId}`
-*   **Coleções LEGADO**: `ciclos`, `despesas`, `acertos`, `mesas`, `rotas`, `clientes` (⚠️ Requer atualização de regras de segurança)
+*   **Coleções LEGADO**: `ciclos`, `despesas`, `acertos`, `mesas`, `rotas`, `clientes` (✅ Regras de segurança enrijecidas - Dezembro 2025)
+*   **Custom Claims**: Gerenciadas automaticamente via Firebase Functions (`onUserCreated`, `onCollaboratorUpdated`, `onColaboradorRotaUpdated`)
 
 ---
 
