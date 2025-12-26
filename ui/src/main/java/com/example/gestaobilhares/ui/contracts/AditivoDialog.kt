@@ -8,7 +8,7 @@ import androidx.fragment.app.DialogFragment
 import com.example.gestaobilhares.ui.R
 import com.example.gestaobilhares.data.entities.ContratoLocacao
 import com.example.gestaobilhares.ui.databinding.DialogAditivoEquipamentosBinding
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import androidx.appcompat.app.AlertDialog
 import timber.log.Timber
 
 /**
@@ -64,8 +64,9 @@ class AditivoDialog : DialogFragment() {
         setupUI()
         setupClickListeners()
         
-        // Criar o diálogo usando Material3 mas com o tema robusto local
-        return MaterialAlertDialogBuilder(requireContext(), R.style.AditivoDialogTheme)
+        // ✅ CORREÇÃO: Usar AlertDialog padrão ao invés de MaterialAlertDialogBuilder
+        // Isso evita problemas de compatibilidade com tema AppCompat e é mais estável
+        return AlertDialog.Builder(requireContext(), R.style.AditivoDialogTheme)
             .setView(binding.root)
             .setCancelable(false)
             .create().apply {

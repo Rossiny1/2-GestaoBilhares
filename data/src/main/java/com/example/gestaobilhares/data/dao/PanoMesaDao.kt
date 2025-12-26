@@ -18,6 +18,9 @@ interface PanoMesaDao {
     
     @Delete
     suspend fun deletar(panoMesa: PanoMesa)
+
+    @Query("SELECT * FROM pano_mesas WHERE id = :id")
+    suspend fun buscarPorId(id: Long): PanoMesa?
     
     @Query("SELECT * FROM pano_mesas WHERE mesa_id = :mesaId ORDER BY data_troca DESC")
     fun buscarPorMesa(mesaId: Long): Flow<List<PanoMesa>>

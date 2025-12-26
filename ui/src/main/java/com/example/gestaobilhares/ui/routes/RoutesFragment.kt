@@ -69,6 +69,9 @@ class RoutesFragment : Fragment() {
     // Gerenciador de sessão do usuário
     private lateinit var userSessionManager: UserSessionManager
 
+    @javax.inject.Inject
+    lateinit var syncRepository: com.example.gestaobilhares.sync.SyncRepository
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -699,10 +702,8 @@ class RoutesFragment : Fragment() {
             // Executar sincronização em background
             viewLifecycleOwner.lifecycleScope.launch {
                 try {
-                    // Criar SyncRepository diretamente
-                    val database = com.example.gestaobilhares.data.database.AppDatabase.getDatabase(requireContext())
-                    val appRepository = com.example.gestaobilhares.data.repository.AppRepository.create(database)
-                    val syncRepository = com.example.gestaobilhares.sync.SyncRepository(requireContext(), appRepository)
+                    // ✅ REFATORADO: Usar SyncRepository injetado
+                    // O SyncRepository agora é injetado pelo Hilt no Fragment
                     
                     // Executar sincronização bidirecional
                     Timber.d("RoutesFragment", "🔄 Iniciando sincronização bidirecional...")

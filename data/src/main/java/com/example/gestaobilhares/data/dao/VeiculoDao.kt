@@ -9,6 +9,9 @@ interface VeiculoDao {
     @Query("SELECT * FROM veiculos ORDER BY marca, modelo")
     fun listar(): Flow<List<Veiculo>>
 
+    @Query("SELECT * FROM veiculos WHERE id = :id")
+    suspend fun buscarPorId(id: Long): Veiculo?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserir(veiculo: Veiculo): Long
 

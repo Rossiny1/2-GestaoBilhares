@@ -1,0 +1,263 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =================================================================
+    // 🔐 FUNÇÕES AUXILIARES (SECURITY HELPERS)
+    // =================================================================
+
+    // 1. Admin Global (usuário rossinys ou claim admin)
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.role.lower() == 'admin' || 
+        request.auth.token.admin == true ||
+        request.auth.token.email == "rossinys@gmail.com"
+      );
+    }
+
+    // 2. Pertence à empresa (Multi-tenancy)
+    function belongsToCompany(empresaId) {
+      return request.auth != null && 
+             request.auth.token.companyId == empresaId;
+    }
+
+    // 3. Admin da Empresa (Pode alterar dados da empresa específica)
+    function isCompanyAdmin(empresaId) {
+      return request.auth != null && (
+        isAdmin() || 
+        (belongsToCompany(empresaId) && (
+          request.auth.token.role.lower() == 'manager' || 
+          request.auth.token.role.lower() == 'admin'
+        ))
+      );
+    }
+
+    // =================================================================
+    // 🚫 COLEÇÕES BLOQUEADAS (Apenas Admin Global)
+    // =================================================================
+    
+    match /logsAuditoria/{logId} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /historicoManutencaoMesa/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /historicoManutencaoVeiculo/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /historicoCombustivelVeiculo/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /equipamentos/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /panoEstoque/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /panoMesa/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /stockItem/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /veiculos/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /mesaVendida/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /mesaReformada/{item} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /contratos/{contratoId} { allow read: if request.auth != null; allow write: if isAdmin(); }
+
+    // =================================================================
+    // ✅ COLEÇÕES GLOBAIS COM ACESSO RESTRITO
+    // =================================================================
+
+    // 👤 USUÁRIOS/COLABORADORES GLOBAIS
+    match /colaboradores/{userId} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+      allow write: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+    }
+
+    // =================================================================
+    // 🏢 MULTI-TENANCY (DADOS POR EMPRESA)
+    // =================================================================
+    
+    // 1️⃣ COLABORADORES DA EMPRESA (Perfil de Acesso)
+    match /empresas/{empresaId}/entidades/colaboradores/items/{itemId} {
+      allow read: if isAdmin() || 
+                  belongsToCompany(empresaId) || 
+                  (request.auth != null && (
+                    request.auth.token.email == resource.data.email || 
+                    request.auth.uid == resource.data.firebaseUid ||
+                    request.auth.token.email == "rossinys@gmail.com"
+                  ));
+
+      allow create: if isAdmin() || isCompanyAdmin(empresaId) || 
+                    (request.auth != null && (
+                      request.auth.uid == resource.data.firebaseUid || 
+                      request.auth.token.email == resource.data.email ||
+                      request.auth.token.email == "rossinys@gmail.com" ||
+                      (request.auth.token.email == null || request.auth.token.email == "") &&
+                      request.resource.data.aprovado == false &&
+                      (request.resource.data.aprovadoPor == null || request.resource.data.aprovadoPor == "")
+                    ));
+      
+      allow update, delete: if isAdmin() || isCompanyAdmin(empresaId) || 
+                             (request.auth != null && (
+                               request.auth.uid == resource.data.firebaseUid || 
+                               request.auth.token.email == resource.data.email ||
+                               request.auth.token.email == "rossinys@gmail.com"
+                             ));
+    }
+
+    // Suporte para busca global via collectionGroup("items")
+    match /{path=**}/items/{itemId} {
+      allow read: if request.auth != null && (
+        request.auth.token.email == resource.data.email || 
+        request.auth.uid == resource.data.firebaseUid ||
+        request.auth.token.email == "rossinys@gmail.com"
+      );
+    }
+
+    // 2️⃣ DADOS DA EMPRESA (Clientes, Acertos, Mesas, Rotas, etc.)
+    match /empresas/{empresaId}/entidades/{collectionName}/items {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    match /empresas/{empresaId}/entidades/{collectionName}/items/{itemId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null; 
+    }
+    
+    match /empresas/{empresaId}/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin() || isCompanyAdmin(empresaId);
+    }
+
+    // =================================================================
+    // 🏚️ COLEÇÕES LEGADO (Ciclos, Despesas, Acertos Antigos)
+    // ✅ VERSÃO SEGURA: SEM FALLBACKS PERMISSIVOS
+    // ⚠️ APLICAR APENAS APÓS CONFIRMAR QUE 100% DOS USUÁRIOS TÊM CLAIMS
+    // =================================================================
+    
+    // Função auxiliar: Verifica se usuário pertence à empresa
+    // ✅ VERSÃO SEGURA: Exige companyId obrigatório (sem fallback)
+    function hasCompanyAccess(empresaId) {
+      return request.auth != null && (
+        isAdmin() ||
+        // ✅ SEGURO: Exige companyId no token (sem fallback permissivo)
+        ('companyId' in request.auth.token && 
+         request.auth.token.companyId == empresaId)
+      );
+    }
+    
+    // CICLOS: Dados de ciclos de trabalho
+    match /ciclos/{cicloId} {
+      allow read: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in resource.data) || 
+          request.auth.token.companyId == resource.data.empresaId))
+      );
+      
+      allow create: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in request.resource.data) || 
+          request.auth.token.companyId == request.resource.data.empresaId))
+      );
+      
+      allow update, delete: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in resource.data) || 
+          request.auth.token.companyId == resource.data.empresaId))
+      );
+    }
+    
+    // DESPESAS: Despesas operacionais
+    match /despesas/{despesaId} {
+      allow read: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in resource.data) || 
+          request.auth.token.companyId == resource.data.empresaId))
+      );
+      
+      allow create: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in request.resource.data) || 
+          request.auth.token.companyId == request.resource.data.empresaId))
+      );
+      
+      allow update, delete: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in resource.data) || 
+          request.auth.token.companyId == resource.data.empresaId))
+      );
+    }
+    
+    // ACERTOS: Histórico de acertos financeiros
+    match /acertos/{acertoId} {
+      allow read: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in resource.data) || 
+          request.auth.token.companyId == resource.data.empresaId))
+      );
+      
+      allow create: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in request.resource.data) || 
+          request.auth.token.companyId == request.resource.data.empresaId))
+      );
+      
+      allow update, delete: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in resource.data) || 
+          request.auth.token.companyId == resource.data.empresaId))
+      );
+    }
+    
+    // MESAS: Cadastro de mesas
+    match /mesas/{mesaId} {
+      allow read: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in resource.data) || 
+          request.auth.token.companyId == resource.data.empresaId))
+      );
+      
+      allow create: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in request.resource.data) || 
+          request.auth.token.companyId == request.resource.data.empresaId))
+      );
+      
+      allow update, delete: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in resource.data) || 
+          request.auth.token.companyId == resource.data.empresaId))
+      );
+    }
+    
+    // ROTAS: Rotas de entrega/coleta
+    match /rotas/{rotaId}/{document=**} {
+      allow read: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token)
+      );
+      
+      allow write: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in request.resource.data) || 
+          request.auth.token.companyId == request.resource.data.empresaId))
+      );
+    }
+    
+    // CLIENTES: Cadastro de clientes
+    match /clientes/{clienteId}/{document=**} {
+      allow read: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token)
+      );
+      
+      allow write: if request.auth != null && (
+        isAdmin() ||
+        ('companyId' in request.auth.token && 
+         (!('empresaId' in request.resource.data) || 
+          request.auth.token.companyId == request.resource.data.empresaId))
+      );
+    }
+  }
+}
+

@@ -96,6 +96,34 @@ class MesaRepository(
     suspend fun inserirPanoMesa(panoMesa: PanoMesa): Long {
         return panoMesaDao?.inserir(panoMesa) ?: 0L
     }
+
+    /**
+     * Obtém uma mesa reformada por ID
+     */
+    suspend fun obterMesaReformadaPorId(id: Long): MesaReformada? {
+        return mesaReformadaDao?.buscarPorId(id)
+    }
+
+    /**
+     * Atualiza uma mesa reformada
+     */
+    suspend fun atualizarMesaReformada(mesaReformada: MesaReformada) {
+        mesaReformadaDao?.atualizar(mesaReformada)
+    }
+
+    /**
+     * Obtém um PanoMesa por ID
+     */
+    suspend fun obterPanoMesaPorId(id: Long): PanoMesa? {
+        return panoMesaDao?.buscarPorId(id)
+    }
+
+    /**
+     * Atualiza um PanoMesa
+     */
+    suspend fun atualizarPanoMesa(panoMesa: PanoMesa) {
+        panoMesaDao?.atualizar(panoMesa)
+    }
     
     private fun logDbInsertStart(entity: String, details: String) {
         val stackTrace = Thread.currentThread().stackTrace

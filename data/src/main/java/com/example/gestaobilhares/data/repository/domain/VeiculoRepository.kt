@@ -24,6 +24,13 @@ class VeiculoRepository(
 ) {
     
     /**
+     * Obtém veículo de por ID
+     */
+    suspend fun obterPorId(id: Long): com.example.gestaobilhares.data.entities.Veiculo? {
+        return veiculoDao?.buscarPorId(id)
+    }
+    
+    /**
      * Obtém todos os históricos de manutenção de veículos
      * Para sincronização: busca todos os veículos e depois todos os históricos de cada um
      */
@@ -65,6 +72,34 @@ class VeiculoRepository(
      */
     suspend fun inserirHistoricoManutencao(historico: HistoricoManutencaoVeiculo): Long {
         return historicoManutencaoVeiculoDao?.inserir(historico) ?: 0L
+    }
+
+    /**
+     * Obtém veículo de manutenção por ID
+     */
+    suspend fun obterHistoricoManutencaoPorId(id: Long): HistoricoManutencaoVeiculo? {
+        return historicoManutencaoVeiculoDao?.buscarPorId(id)
+    }
+
+    /**
+     * Atualiza histórico de manutenção
+     */
+    suspend fun atualizarHistoricoManutencao(historico: HistoricoManutencaoVeiculo) {
+        historicoManutencaoVeiculoDao?.atualizar(historico)
+    }
+
+    /**
+     * Obtém histórico de combustível por ID
+     */
+    suspend fun obterHistoricoCombustivelPorId(id: Long): HistoricoCombustivelVeiculo? {
+        return historicoCombustivelVeiculoDao?.buscarPorId(id)
+    }
+
+    /**
+     * Atualiza histórico de combustível
+     */
+    suspend fun atualizarHistoricoCombustivel(historico: HistoricoCombustivelVeiculo) {
+        historicoCombustivelVeiculoDao?.atualizar(historico)
     }
     
     /**

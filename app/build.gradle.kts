@@ -77,6 +77,10 @@ android {
                 "proguard-rules.pro"
             )
             
+            // ✅ NOTA: O upload automático de mapping.txt para Crashlytics é feito automaticamente
+            // pelo plugin com.google.firebase.crashlytics quando o build de release é feito.
+            // Não é necessária configuração adicional - o plugin detecta automaticamente o mapping.txt.
+            
             firebaseAppDistribution {
                 releaseNotes = "Release gerada via Gradle"
                 groups = "testers"
