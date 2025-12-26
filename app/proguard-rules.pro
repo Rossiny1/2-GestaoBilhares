@@ -34,7 +34,18 @@
 
 # ✅ CORREÇÃO CRÍTICA: Preservar TypeToken específico do SyncRepository
 # Isso garante que as assinaturas genéricas sejam preservadas após otimização R8/ProGuard
--keep class com.example.gestaobilhares.sync.SyncRepository$Companion$MapTypeToken { *; }
+-keep class com.example.gestaobilhares.sync.SyncRepository$Companion$MapTypeToken {
+    <init>();
+    *;
+}
+# Preservar também a classe Companion completa
+-keep class com.example.gestaobilhares.sync.SyncRepository$Companion {
+    *;
+}
+# Preservar instância singleton do TypeToken
+-keepclassmembers class com.example.gestaobilhares.sync.SyncRepository$Companion {
+    private static final com.google.gson.reflect.TypeToken mapTypeTokenInstance;
+}
 
 # Generic signatures for all app classes (needed for Gson)
 -keepattributes Signature,InnerClasses,EnclosingMethod

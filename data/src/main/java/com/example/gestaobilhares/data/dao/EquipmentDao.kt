@@ -17,5 +17,8 @@ interface EquipmentDao {
 
     @Delete
     suspend fun deletar(equipment: Equipment)
+
+    @Query("SELECT * FROM equipments WHERE id = :id")
+    suspend fun buscarPorId(id: Long): Equipment?
 }
 

@@ -33,6 +33,9 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var networkUtils: NetworkUtils
 
+    @Inject
+    lateinit var syncRepository: com.example.gestaobilhares.sync.SyncRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -156,8 +159,8 @@ class MainActivity : AppCompatActivity() {
         
         lifecycleScope.launch {
             try {
-                // Criar SyncRepository diretamente (firestore e networkUtils têm valores padrão)
-                val syncRepository = com.example.gestaobilhares.sync.SyncRepository(this@MainActivity, appRepository)
+                // ✅ REFATORADO: Usar SyncRepository injetado pelo Hilt
+                // val syncRepository já está disponível via @Inject na classe
                 
                 // Mostrar diálogo de progresso
                 val progressView = layoutInflater.inflate(com.example.gestaobilhares.ui.R.layout.dialog_sync_progress, null)

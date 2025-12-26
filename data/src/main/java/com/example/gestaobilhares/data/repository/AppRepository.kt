@@ -1656,10 +1656,12 @@ class AppRepository @Inject constructor(
     // ✅ DELEGAÇÃO: Usa PanoRepository especializado
     
     fun obterPanosDisponiveis() = panoRepository.obterDisponiveis()
+    fun obterTodosPanoEstoque() = panoRepository.obterTodos()
     fun obterTodosPanosEstoque() = panoRepository.obterTodos()
     suspend fun buscarPorNumero(numero: String) = panoRepository.buscarPorNumero(numero)
     suspend fun obterPanoPorId(id: Long) = panoRepository.obterPorId(id)
     suspend fun inserirPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque): Long = panoRepository.inserir(pano)
+    suspend fun atualizarPanoEstoque(pano: com.example.gestaobilhares.data.entities.PanoEstoque) = panoRepository.atualizar(pano)
     suspend fun marcarPanoComoUsado(id: Long) = panoRepository.marcarComoUsado(id)
     suspend fun marcarPanoComoUsadoPorNumero(numero: String) = panoRepository.marcarComoUsadoPorNumero(numero)
     
@@ -1668,6 +1670,8 @@ class AppRepository @Inject constructor(
     
     fun obterTodasMesasReformadas() = mesaRepository.obterTodasMesasReformadas()
     suspend fun inserirMesaReformada(mesaReformada: com.example.gestaobilhares.data.entities.MesaReformada): Long = mesaRepository.inserirMesaReformada(mesaReformada)
+    suspend fun obterMesaReformadaPorId(id: Long) = mesaRepository.obterMesaReformadaPorId(id)
+    suspend fun atualizarMesaReformada(mesaReformada: com.example.gestaobilhares.data.entities.MesaReformada) = mesaRepository.atualizarMesaReformada(mesaReformada)
     
     // ==================== MESA VENDIDA ====================
     
@@ -1675,12 +1679,16 @@ class AppRepository @Inject constructor(
     suspend fun inserirMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida): Long {
         return mesaVendidaDao?.inserir(mesaVendida) ?: 0L
     }
+    suspend fun atualizarMesaVendida(mesaVendida: com.example.gestaobilhares.data.entities.MesaVendida) = mesaVendidaDao?.atualizar(mesaVendida)
     suspend fun buscarMesaVendidaPorId(id: Long) = mesaVendidaDao?.buscarPorId(id)
+    suspend fun obterMesaVendidaPorId(id: Long) = mesaVendidaDao?.buscarPorId(id)
     
     // ==================== HISTÓRICO MANUTENÇÃO MESA ====================
     
     fun obterTodosHistoricoManutencaoMesa() = historicoManutencaoMesaDao?.listarTodos() ?: flowOf(emptyList())
     suspend fun inserirHistoricoManutencaoMesa(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa): Long = historicoManutencaoMesaDao?.inserir(historico) ?: 0L
+    suspend fun atualizarHistoricoManutencaoMesa(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa) = historicoManutencaoMesaDao?.atualizar(historico)
+    suspend fun obterHistoricoManutencaoMesaPorId(id: Long) = historicoManutencaoMesaDao?.buscarPorId(id)
     suspend fun inserirHistoricoManutencaoMesaSync(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoMesa): Long = inserirHistoricoManutencaoMesa(historico)
     
     // ==================== VEÍCULOS ====================
@@ -1710,10 +1718,7 @@ class AppRepository @Inject constructor(
         }
     }
     @Suppress("UNUSED_PARAMETER")
-    suspend fun obterVeiculoPorId(id: Long) = veiculoDao?.let { 
-        // VeiculoDao não tem método obterPorId, precisamos criar ou usar listar().first()
-        null // TODO: Adicionar método obterPorId no VeiculoDao se necessário
-    }
+    suspend fun obterVeiculoPorId(id: Long) = veiculoDao?.buscarPorId(id)
     
     // ==================== METAS ====================
     // ✅ DELEGAÇÃO: Usa MetaRepository especializado
@@ -1733,14 +1738,22 @@ class AppRepository @Inject constructor(
     suspend fun obterTodosHistoricoCombustivelVeiculo(): List<com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo> {
         return veiculoRepository.obterTodosHistoricoCombustivelVeiculo()
     }
-    
-    suspend fun inserirHistoricoCombustivel(_historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo): Long {
-        return veiculoRepository.inserirHistoricoCombustivel(_historico)
+
+    suspend fun inserirHistoricoCombustivel(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo): Long {
+        return veiculoRepository.inserirHistoricoCombustivel(historico)
     }
     
-    suspend fun inserirHistoricoManutencao(_historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo): Long {
-        return veiculoRepository.inserirHistoricoManutencao(_historico)
+    suspend fun inserirHistoricoManutencao(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo): Long {
+        return veiculoRepository.inserirHistoricoManutencao(historico)
     }
+
+    suspend fun obterHistoricoManutencaoVeiculoPorId(id: Long) = veiculoRepository.obterHistoricoManutencaoPorId(id)
+
+    suspend fun atualizarHistoricoManutencaoVeiculo(historico: com.example.gestaobilhares.data.entities.HistoricoManutencaoVeiculo) = veiculoRepository.atualizarHistoricoManutencao(historico)
+
+    suspend fun obterHistoricoCombustivelVeiculoPorId(id: Long) = veiculoRepository.obterHistoricoCombustivelPorId(id)
+
+    suspend fun atualizarHistoricoCombustivelVeiculo(historico: com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo) = veiculoRepository.atualizarHistoricoCombustivel(historico)
     
     // ✅ NOVO: Métodos Flow reativos para observação automática em ViewModels
     // Baseado no código antigo que funcionava - retorna todos e filtra no ViewModel
@@ -1762,7 +1775,11 @@ class AppRepository @Inject constructor(
     suspend fun inserirPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa): Long {
         return mesaRepository.inserirPanoMesa(panoMesa)
     }
-    
+
+    suspend fun obterPanoMesaPorId(id: Long) = mesaRepository.obterPanoMesaPorId(id)
+    suspend fun atualizarPanoMesa(panoMesa: com.example.gestaobilhares.data.entities.PanoMesa) = mesaRepository.atualizarPanoMesa(panoMesa)
+
+
     // ==================== COLABORADOR ROTA ====================
     // ✅ DELEGAÇÃO: Usa ColaboradorRepository especializado
     
@@ -1783,9 +1800,31 @@ class AppRepository @Inject constructor(
     suspend fun obterTodosContratoMesas(): List<ContratoMesa> {
         return contratoRepository.obterTodosContratoMesas()
     }
+
+    // ==================== FINANÇAS (CATEGORIAS E TIPOS) ====================
+    fun obterTodasCategoriasDespesa() = categoriaDespesaDao?.buscarTodas() ?: flowOf(emptyList())
+    suspend fun obterCategoriaDespesaPorId(id: Long) = categoriaDespesaDao?.buscarPorId(id)
+    suspend fun inserirCategoriaDespesa(categoria: CategoriaDespesa): Long = categoriaDespesaDao?.inserir(categoria) ?: 0L
+    suspend fun atualizarCategoriaDespesa(categoria: CategoriaDespesa) = categoriaDespesaDao?.atualizar(categoria)
     
+    fun obterTodosTiposDespesa() = tipoDespesaDao?.buscarTodos() ?: flowOf(emptyList())
+    suspend fun obterTipoDespesaPorId(id: Long) = tipoDespesaDao?.buscarPorId(id)
+    suspend fun inserirTipoDespesa(tipo: TipoDespesa): Long = tipoDespesaDao?.inserir(tipo) ?: 0L
+    suspend fun atualizarTipoDespesa(tipo: TipoDespesa) = tipoDespesaDao?.atualizar(tipo)
+    
+    // ==================== EQUIPMENT ====================
+    suspend fun obterEquipmentPorId(id: Long) = equipmentDao?.buscarPorId(id)
+    suspend fun inserirEquipment(equipment: Equipment): Long = equipmentDao?.inserir(equipment) ?: 0L
+    suspend fun atualizarEquipment(equipment: Equipment) = equipmentDao?.atualizar(equipment)
+    fun obterTodosEquipments() = equipmentDao?.listar() ?: flowOf(emptyList())
+
     // ==================== STOCK ITEM ====================
-    
+    suspend fun obterStockItemPorId(id: Long) = stockItemDao?.buscarPorId(id)
+    suspend fun inserirStockItem(item: StockItem): Long = stockItemDao?.inserir(item) ?: 0L
+    suspend fun atualizarStockItem(item: StockItem) = stockItemDao?.atualizar(item)
+    fun obterTodosStockItems() = stockItemDao?.listarTodos() ?: flowOf(emptyList())
+
+
     // ==================== FILA DE SINCRONIZAÇÃO ====================
     
     /**
@@ -1851,16 +1890,7 @@ class AppRepository @Inject constructor(
         val beforeTimestamp = System.currentTimeMillis() - (dias * 24 * 60 * 60 * 1000L)
         syncOperationDao?.limparOperacoesCompletadas(beforeTimestamp)
     }
-    
-    fun obterTodosStockItems() = stockItemDao?.listarTodos() ?: flowOf(emptyList())
-    suspend fun inserirStockItem(item: com.example.gestaobilhares.data.entities.StockItem): Long = stockItemDao?.inserir(item) ?: 0L
-    suspend fun obterStockItemPorId(id: Long) = stockItemDao?.buscarPorId(id)
-    
-    // ==================== EQUIPMENT ====================
-    
-    fun obterTodosEquipments() = equipmentDao?.listar() ?: flowOf(emptyList())
-    suspend fun inserirEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment): Long = equipmentDao?.inserir(equipment) ?: 0L
-    suspend fun atualizarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) = equipmentDao?.atualizar(equipment)
+
     suspend fun deletarEquipment(equipment: com.example.gestaobilhares.data.entities.Equipment) {
         // ✅ CORREÇÃO: Deletar do banco local
         equipmentDao?.deletar(equipment)

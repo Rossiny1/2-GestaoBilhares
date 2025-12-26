@@ -10,6 +10,9 @@ interface HistoricoCombustivelVeiculoDao {
     // ✅ NOVO: Listar todos os históricos (para uso no ViewModel como no código antigo)
     @Query("SELECT * FROM historico_combustivel_veiculo ORDER BY data_abastecimento DESC")
     fun listarTodos(): Flow<List<HistoricoCombustivelVeiculo>>
+
+    @Query("SELECT * FROM historico_combustivel_veiculo WHERE id = :id")
+    suspend fun buscarPorId(id: Long): HistoricoCombustivelVeiculo?
     
     @Query("SELECT * FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId ORDER BY data_abastecimento DESC")
     fun listarPorVeiculo(veiculoId: Long): Flow<List<HistoricoCombustivelVeiculo>>

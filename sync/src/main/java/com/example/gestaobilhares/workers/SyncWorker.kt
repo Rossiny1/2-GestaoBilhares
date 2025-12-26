@@ -37,7 +37,8 @@ class SyncWorker(
             // Usar repositories injetados (testes) ou criar novos (produção)
             val database = AppDatabase.getDatabase(applicationContext)
             val appRepo = appRepositoryTest ?: AppRepository.create(database)
-            val syncRepo = syncRepositoryTest ?: SyncRepository(applicationContext, appRepo)
+            val syncRepo = syncRepositoryTest ?: throw IllegalStateException("SyncRepository must be provided for background sync")
+
 
             // Verificar se há necessidade real de sincronizar
             if (!syncRepo.shouldRunBackgroundSync(maxIdleHours = MAX_IDLE_HOURS)) {

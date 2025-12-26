@@ -22,9 +22,44 @@ object SyncModule {
         @ApplicationContext context: Context,
         appRepository: AppRepository,
         firestore: FirebaseFirestore,
-        networkUtils: NetworkUtils
+        networkUtils: NetworkUtils,
+        mesaSyncHandler: com.example.gestaobilhares.sync.handlers.MesaSyncHandler,
+        clienteSyncHandler: com.example.gestaobilhares.sync.handlers.ClienteSyncHandler,
+        contratoSyncHandler: com.example.gestaobilhares.sync.handlers.ContratoSyncHandler,
+        acertoSyncHandler: com.example.gestaobilhares.sync.handlers.AcertoSyncHandler,
+        despesaSyncHandler: com.example.gestaobilhares.sync.handlers.DespesaSyncHandler,
+        rotaSyncHandler: com.example.gestaobilhares.sync.handlers.RotaSyncHandler,
+        cicloSyncHandler: com.example.gestaobilhares.sync.handlers.CicloSyncHandler,
+        colaboradorSyncHandler: com.example.gestaobilhares.sync.handlers.ColaboradorSyncHandler,
+        colaboradorRotaSyncHandler: com.example.gestaobilhares.sync.handlers.ColaboradorRotaSyncHandler,
+        metaColaboradorSyncHandler: com.example.gestaobilhares.sync.handlers.MetaColaboradorSyncHandler,
+        metaSyncHandler: com.example.gestaobilhares.sync.handlers.MetaSyncHandler,
+        assinaturaSyncHandler: com.example.gestaobilhares.sync.handlers.AssinaturaSyncHandler,
+        veiculoSyncHandler: com.example.gestaobilhares.sync.handlers.VeiculoSyncHandler,
+        equipamentoSyncHandler: com.example.gestaobilhares.sync.handlers.EquipamentoSyncHandler,
+        estoqueSyncHandler: com.example.gestaobilhares.sync.handlers.EstoqueSyncHandler
     ): SyncRepository {
-        return SyncRepository(context, appRepository, firestore, networkUtils)
+        return SyncRepository(
+            context, 
+            appRepository, 
+            firestore, 
+            networkUtils, 
+            mesaSyncHandler = mesaSyncHandler,
+            clienteSyncHandler = clienteSyncHandler,
+            contratoSyncHandler = contratoSyncHandler,
+            acertoSyncHandler = acertoSyncHandler,
+            despesaSyncHandler = despesaSyncHandler,
+            rotaSyncHandler = rotaSyncHandler,
+            cicloSyncHandler = cicloSyncHandler,
+            colaboradorSyncHandler = colaboradorSyncHandler,
+            colaboradorRotaSyncHandler = colaboradorRotaSyncHandler,
+            metaColaboradorSyncHandler = metaColaboradorSyncHandler,
+            metaSyncHandler = metaSyncHandler,
+            assinaturaSyncHandler = assinaturaSyncHandler,
+            veiculoSyncHandler = veiculoSyncHandler,
+            equipamentoSyncHandler = equipamentoSyncHandler,
+            estoqueSyncHandler = estoqueSyncHandler
+        )
     }
 
     @Provides

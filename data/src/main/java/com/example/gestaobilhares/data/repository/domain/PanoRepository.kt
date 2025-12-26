@@ -23,5 +23,7 @@ class PanoRepository(
         val pano = buscarPorNumero(numero)
         pano?.let { marcarComoUsado(it.id) }
     }
+
+    suspend fun atualizar(pano: PanoEstoque) = panoEstoqueDao?.atualizar(pano)
 }
 
