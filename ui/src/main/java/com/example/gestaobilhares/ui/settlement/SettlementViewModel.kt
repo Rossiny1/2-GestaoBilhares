@@ -90,7 +90,11 @@ class SettlementViewModel @Inject constructor(
         val dataFoto: java.util.Date? = null
     )
 
+    private val _clienteId = MutableStateFlow<Long?>(null)
+    val clienteId: StateFlow<Long?> = _clienteId.asStateFlow()
+
     fun loadClientForSettlement(clienteId: Long) {
+        _clienteId.value = clienteId
         viewModelScope.launch {
                 showLoading()
             try {
@@ -788,8 +792,14 @@ class SettlementViewModel @Inject constructor(
      * @return Média de fichas jogadas, ou 0 se não houver acertos anteriores
      */
     suspend fun calcularMediaFichasJogadas(mesaId: Long, limite: Int = 5): Double {
+        val currentClienteId = _clienteId.value
+        if (currentClienteId == null) {
+            Timber.e("SettlementViewModel", "Erro ao calcular média: clienteId não definido")
+            return 0.0
+        }
+
         return try {
-            appRepository.calcularMediaFichasJogadas(mesaId, limite)
+            appRepository.calcularMediaFichasJogadas(mesaId, currentClienteId, limite)
         } catch (e: Exception) {
             Timber.e("SettlementViewModel", "Erro ao calcular média de fichas: ${e.message}", e)
             0.0

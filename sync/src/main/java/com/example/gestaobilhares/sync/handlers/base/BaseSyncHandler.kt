@@ -11,7 +11,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.CollectionReference
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.example.gestaobilhares.utils.FirebaseImageUploader
+import com.example.gestaobilhares.core.utils.FirebaseImageUploader
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.DocumentSnapshot
@@ -37,8 +37,12 @@ abstract class BaseSyncHandler(
     protected val networkUtils: NetworkUtils,
     protected val userSessionManager: UserSessionManager,
     protected val firebaseImageUploader: FirebaseImageUploader,
-    protected val syncMetadataDao: SyncMetadataDao = AppDatabase.getDatabase(context).syncMetadataDao()
+    private val injectedSyncMetadataDao: SyncMetadataDao? = null
 ) : SyncHandler {
+
+    protected val syncMetadataDao: SyncMetadataDao by lazy {
+        injectedSyncMetadataDao ?: AppDatabase.getDatabase(context).syncMetadataDao()
+    }
 
     override var allowRouteBootstrap: Boolean = false
 
@@ -70,6 +74,12 @@ abstract class BaseSyncHandler(
     protected val gson: Gson by lazy {
         GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+            .registerTypeAdapter(java.time.LocalDateTime::class.java, com.google.gson.JsonSerializer<java.time.LocalDateTime> { src, _, _ ->
+                com.google.gson.JsonPrimitive(src.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            })
+            .registerTypeAdapter(java.time.LocalDateTime::class.java, com.google.gson.JsonDeserializer<java.time.LocalDateTime> { json, _, _ ->
+                java.time.LocalDateTime.parse(json.asString, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            })
             .registerTypeAdapter(com.google.firebase.Timestamp::class.java, com.google.gson.JsonSerializer<com.google.firebase.Timestamp> { src, _, context ->
                 context.serialize(src.toDate())
             })
@@ -82,6 +92,9 @@ abstract class BaseSyncHandler(
     
     protected val currentCompanyId: String
         get() = userSessionManager.getCurrentCompanyId()
+    
+    protected val currentUserId: Long
+        get() = userSessionManager.getCurrentUserId()
     
     /**
      * Retorna a CollectionReference do Firestore para esta entidade.
@@ -113,14 +126,14 @@ abstract class BaseSyncHandler(
      * Obtém o último timestamp de sincronização (pull) para esta entidade.
      */
     protected suspend fun getLastSyncTimestamp(entityType: String): Long {
-        return syncMetadataDao.obterUltimoTimestamp(entityType)
+        return syncMetadataDao.obterUltimoTimestamp(entityType, currentUserId)
     }
     
     /**
      * Obtém o último timestamp de push para esta entidade.
      */
     protected suspend fun getLastPushTimestamp(entityType: String): Long {
-        return syncMetadataDao.obterUltimoTimestamp("${entityType}_push")
+        return syncMetadataDao.obterUltimoTimestamp("${entityType}_push", currentUserId)
     }
     
     /**
@@ -137,6 +150,7 @@ abstract class BaseSyncHandler(
         val timestamp = timestampOverride ?: System.currentTimeMillis()
         syncMetadataDao.atualizarTimestamp(
             entityType = entityType,
+            userId = currentUserId,
             timestamp = timestamp,
             count = syncCount,
             durationMs = durationMs,
@@ -160,6 +174,7 @@ abstract class BaseSyncHandler(
         val pushEntityType = "${entityType}_push"
         syncMetadataDao.atualizarTimestamp(
             entityType = pushEntityType,
+            userId = currentUserId,
             timestamp = System.currentTimeMillis(),
             count = syncCount,
             durationMs = durationMs,
@@ -190,12 +205,19 @@ abstract class BaseSyncHandler(
                 // 2. É uma String que pode ser uma Data (GSON serializa Date como String ISO)
                 value is String && (key.contains("data") || key.contains("timestamp") || key.contains("time")) -> {
                     try {
-                        // Tentar parsear a string usando o formato do GSON
-                        val date = gson.fromJson("\"$value\"", Date::class.java)
-                        if (date != null) {
-                            com.google.firebase.Timestamp(date)
+                        // Tentar parsear como LocalDateTime primeiro se tiver o formato ISO
+                        if (value.contains("T")) {
+                            val ldt = java.time.LocalDateTime.parse(value, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                            val instant = ldt.atZone(java.time.ZoneId.systemDefault()).toInstant()
+                            com.google.firebase.Timestamp(instant.epochSecond, instant.nano)
                         } else {
-                            value
+                            // Tentar parsear a string usando o formato do GSON
+                            val date = gson.fromJson("\"$value\"", Date::class.java)
+                            if (date != null) {
+                                com.google.firebase.Timestamp(date)
+                            } else {
+                                value
+                            }
                         }
                     } catch (e: Exception) {
                         value // Fallback para string se não for data válida

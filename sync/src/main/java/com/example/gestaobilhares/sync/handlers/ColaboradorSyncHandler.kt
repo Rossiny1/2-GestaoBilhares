@@ -15,19 +15,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import java.util.Date
-import com.example.gestaobilhares.utils.FirebaseImageUploader
+import com.example.gestaobilhares.core.utils.FirebaseImageUploader
 
 /**
  * Handler especializado para sincronização de Colaboradores.
  */
-class ColaboradorSyncHandler(
+class ColaboradorSyncHandler @javax.inject.Inject constructor(
     context: Context,
     appRepository: AppRepository,
     firestore: FirebaseFirestore,
     networkUtils: NetworkUtils,
     userSessionManager: UserSessionManager,
-    firebaseImageUploader: com.example.gestaobilhares.core.utils.FirebaseImageUploader
-) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader) {
+    firebaseImageUploader: com.example.gestaobilhares.core.utils.FirebaseImageUploader,
+    syncMetadataDao: com.example.gestaobilhares.data.dao.SyncMetadataDao? = null
+) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao) {
 
     override val entityType: String = "colaboradores"
 
@@ -254,13 +255,26 @@ class ColaboradorSyncHandler(
             
             paraEnviar.forEach { colab ->
                 try {
-                    val colabMap = entityToMap(colab)
-                    colabMap["roomId"] = colab.id
-                    colabMap["id"] = colab.id
+                    var colabParaEnviar = colab
+                    
+                    // Se o colaborador tem foto e ela é um caminho local (não URL do Firebase), faz o upload
+                    if (!colab.fotoPerfil.isNullOrBlank() && !firebaseImageUploader.isFirebaseStorageUrl(colab.fotoPerfil)) {
+                        Timber.tag(TAG).d("?? Fazendo upload da foto local do colaborador: ${colab.id}")
+                        val urlRemota = firebaseImageUploader.uploadColaboradorFoto(colab.fotoPerfil!!, colab.id)
+                        if (urlRemota != null) {
+                            colabParaEnviar = colab.copy(fotoPerfil = urlRemota)
+                            // Atualiza localmente para evitar uploads repetidos
+                            appRepository.atualizarColaborador(colabParaEnviar)
+                        }
+                    }
+
+                    val colabMap = entityToMap(colabParaEnviar)
+                    colabMap["roomId"] = colabParaEnviar.id
+                    colabMap["id"] = colabParaEnviar.id
                     colabMap["lastModified"] = FieldValue.serverTimestamp()
                     colabMap["syncTimestamp"] = FieldValue.serverTimestamp()
                     
-                    collectionRef.document(colab.id.toString()).set(colabMap).await()
+                    collectionRef.document(colabParaEnviar.id.toString()).set(colabMap).await()
                     
                     syncCount++
                     bytesUploaded += colabMap.toString().length.toLong()

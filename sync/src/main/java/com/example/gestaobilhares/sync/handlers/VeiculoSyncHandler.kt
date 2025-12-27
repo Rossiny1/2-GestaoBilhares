@@ -22,14 +22,15 @@ import com.google.firebase.Timestamp
 /**
  * Handler especializado para sincronização de Veículos e Históricos (Manutenção e Combustível).
  */
-class VeiculoSyncHandler(
+class VeiculoSyncHandler @javax.inject.Inject constructor(
     context: Context,
     appRepository: AppRepository,
     firestore: FirebaseFirestore,
     networkUtils: NetworkUtils,
     userSessionManager: UserSessionManager,
-    firebaseImageUploader: com.example.gestaobilhares.core.utils.FirebaseImageUploader
-) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader) {
+    firebaseImageUploader: com.example.gestaobilhares.core.utils.FirebaseImageUploader,
+    syncMetadataDao: com.example.gestaobilhares.data.dao.SyncMetadataDao? = null
+) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao) {
 
     override val entityType: String = "veiculos"
 

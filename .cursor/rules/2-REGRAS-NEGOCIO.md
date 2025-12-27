@@ -26,6 +26,7 @@
 
 ### 3. Acerto Financeiro (Settlement)
 *   **Cálculo**: (Relógio Final - Relógio Inicial) * Valor da Ficha.
+*   **Relógio com Defeito**: Em caso de falha no relógio, o sistema calcula a média de fichas dos últimos 5 acertos para projetar o subtotal.
 *   **Divisão**: Comissão automática baseada no contrato (ex: 50%).
 *   **Despesas**: Descontadas do montante bruto antes da divisão ou conforme contrato.
 

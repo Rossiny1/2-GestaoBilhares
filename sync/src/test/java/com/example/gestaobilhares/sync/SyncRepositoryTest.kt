@@ -12,10 +12,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 
 class SyncRepositoryTest {
 
@@ -40,11 +37,44 @@ class SyncRepositoryTest {
     @Mock
     private lateinit var syncMetadataDao: SyncMetadataDao
 
+    @Mock
+    private lateinit var mesaSyncHandler: com.example.gestaobilhares.sync.handlers.MesaSyncHandler
+    @Mock
+    private lateinit var clienteSyncHandler: com.example.gestaobilhares.sync.handlers.ClienteSyncHandler
+    @Mock
+    private lateinit var contratoSyncHandler: com.example.gestaobilhares.sync.handlers.ContratoSyncHandler
+    @Mock
+    private lateinit var acertoSyncHandler: com.example.gestaobilhares.sync.handlers.AcertoSyncHandler
+    @Mock
+    private lateinit var despesaSyncHandler: com.example.gestaobilhares.sync.handlers.DespesaSyncHandler
+    @Mock
+    private lateinit var rotaSyncHandler: com.example.gestaobilhares.sync.handlers.RotaSyncHandler
+    @Mock
+    private lateinit var cicloSyncHandler: com.example.gestaobilhares.sync.handlers.CicloSyncHandler
+    @Mock
+    private lateinit var colaboradorSyncHandler: com.example.gestaobilhares.sync.handlers.ColaboradorSyncHandler
+    @Mock
+    private lateinit var colaboradorRotaSyncHandler: com.example.gestaobilhares.sync.handlers.ColaboradorRotaSyncHandler
+    @Mock
+    private lateinit var metaColaboradorSyncHandler: com.example.gestaobilhares.sync.handlers.MetaColaboradorSyncHandler
+    @Mock
+    private lateinit var metaSyncHandler: com.example.gestaobilhares.sync.handlers.MetaSyncHandler
+    @Mock
+    private lateinit var assinaturaSyncHandler: com.example.gestaobilhares.sync.handlers.AssinaturaSyncHandler
+    @Mock
+    private lateinit var veiculoSyncHandler: com.example.gestaobilhares.sync.handlers.VeiculoSyncHandler
+    @Mock
+    private lateinit var equipamentoSyncHandler: com.example.gestaobilhares.sync.handlers.EquipamentoSyncHandler
+    @Mock
+    private lateinit var estoqueSyncHandler: com.example.gestaobilhares.sync.handlers.EstoqueSyncHandler
+
     private lateinit var syncRepository: SyncRepository
 
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
+        whenever(userSessionManager.getCurrentUserId()).thenReturn(1L)
+        
         syncRepository = SyncRepository(
             context = context,
             appRepository = appRepository,
@@ -52,7 +82,22 @@ class SyncRepositoryTest {
             networkUtils = networkUtils,
             userSessionManager = userSessionManager,
             firebaseImageUploader = firebaseImageUploader,
-            syncMetadataDao = syncMetadataDao
+            syncMetadataDao = syncMetadataDao,
+            mesaSyncHandler = mesaSyncHandler,
+            clienteSyncHandler = clienteSyncHandler,
+            contratoSyncHandler = contratoSyncHandler,
+            acertoSyncHandler = acertoSyncHandler,
+            despesaSyncHandler = despesaSyncHandler,
+            rotaSyncHandler = rotaSyncHandler,
+            cicloSyncHandler = cicloSyncHandler,
+            colaboradorSyncHandler = colaboradorSyncHandler,
+            colaboradorRotaSyncHandler = colaboradorRotaSyncHandler,
+            metaColaboradorSyncHandler = metaColaboradorSyncHandler,
+            metaSyncHandler = metaSyncHandler,
+            assinaturaSyncHandler = assinaturaSyncHandler,
+            veiculoSyncHandler = veiculoSyncHandler,
+            equipamentoSyncHandler = equipamentoSyncHandler,
+            estoqueSyncHandler = estoqueSyncHandler
         )
     }
 
@@ -102,7 +147,7 @@ class SyncRepositoryTest {
         whenever(appRepository.contarOperacoesSyncFalhadas()).thenReturn(0)
         
         val recentTime = System.currentTimeMillis() - (1 * 60 * 60 * 1000L) // 1h ago
-        whenever(syncMetadataDao.obterUltimoTimestamp("_global_sync")).thenReturn(recentTime)
+        whenever(syncMetadataDao.obterUltimoTimestamp(org.mockito.kotlin.eq("_global_sync"), org.mockito.kotlin.any())).thenReturn(recentTime)
         
         // Act
         val result = syncRepository.shouldRunBackgroundSync()
@@ -118,7 +163,7 @@ class SyncRepositoryTest {
         whenever(appRepository.contarOperacoesSyncFalhadas()).thenReturn(0)
         
         val oldTime = System.currentTimeMillis() - (12 * 60 * 60 * 1000L) // 12h ago (limit is 6h)
-        whenever(syncMetadataDao.obterUltimoTimestamp("_global_sync")).thenReturn(oldTime)
+        whenever(syncMetadataDao.obterUltimoTimestamp(org.mockito.kotlin.eq("_global_sync"), org.mockito.kotlin.any())).thenReturn(oldTime)
         
         // Act
         val result = syncRepository.shouldRunBackgroundSync()
@@ -168,7 +213,7 @@ class SyncRepositoryTest {
 
     @Test
     fun getLastSyncTimestamp_shouldReturnCorrectValue() = runTest {
-        whenever(syncMetadataDao.obterUltimoTimestamp("clientes")).thenReturn(123456L)
+        whenever(syncMetadataDao.obterUltimoTimestamp(org.mockito.kotlin.eq("clientes"), org.mockito.kotlin.any())).thenReturn(123456L)
         assertThat(syncRepository.getLastSyncTimestamp("clientes")).isEqualTo(123456L)
     }
 
@@ -183,6 +228,7 @@ class SyncRepositoryTest {
         
         org.mockito.Mockito.verify(syncMetadataDao).atualizarTimestamp(
             entityType = org.mockito.kotlin.eq("test"),
+            userId = org.mockito.kotlin.eq(1L),
             timestamp = org.mockito.kotlin.any(),
             count = org.mockito.kotlin.eq(10),
             durationMs = org.mockito.kotlin.eq(100L),
@@ -198,5 +244,27 @@ class SyncRepositoryTest {
         whenever(appRepository.obterClientePorId(1L)).thenReturn(mock())
         val result = syncRepository.ensureEntityExists("cliente", 1L)
         assertThat(result).isTrue()
+    }
+
+    @Test
+    fun saveSyncMetadata_whenDaoFails_shouldNotThrow() = runTest {
+        whenever(syncMetadataDao.atualizarTimestamp(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+            .thenThrow(RuntimeException("Database error"))
+            
+        // Should not crash the sync process
+        syncRepository.saveSyncMetadata("test", 1, 1, 1)
+        
+        verify(syncMetadataDao).atualizarTimestamp(any(), any(), any(), any(), any(), any(), any(), anyOrNull(), any())
+    }
+
+    @Test
+    fun getCollectionReference_whenFirestoreFails_shouldHandleGracefully() {
+        whenever(firestore.collection("empresas")).thenThrow(RuntimeException("Network error"))
+        
+        try {
+            SyncRepository.getCollectionReference(firestore, "test")
+        } catch (e: Exception) {
+            assertThat(e.message).contains("Network error")
+        }
     }
 }

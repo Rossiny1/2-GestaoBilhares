@@ -45,6 +45,24 @@ interface AcertoMesaDao {
     @Query("SELECT * FROM acerto_mesas WHERE mesa_id = :mesaId AND fichas_jogadas > 0 ORDER BY data_criacao DESC LIMIT :limite")
     suspend fun buscarUltimosAcertosMesa(mesaId: Long, limite: Int = 5): List<AcertoMesa>
 
+    /**
+     * ✅ NOVO: Busca os últimos acertos de uma mesa específicos para um cliente para calcular média
+     * @param mesaId ID da mesa
+     * @param clienteId ID do cliente
+     * @param limite Máximo de acertos a buscar (padrão 5)
+     * @return Lista dos últimos acertos da mesa naquele cliente
+     */
+    @Query("""
+        SELECT am.* FROM acerto_mesas am
+        INNER JOIN acertos a ON am.acerto_id = a.id
+        WHERE am.mesa_id = :mesaId 
+        AND a.cliente_id = :clienteId
+        AND am.fichas_jogadas > 0 
+        ORDER BY am.data_criacao DESC 
+        LIMIT :limite
+    """)
+    suspend fun buscarUltimosAcertosMesaPorCliente(mesaId: Long, clienteId: Long, limite: Int = 5): List<AcertoMesa>
+
     @Update
     suspend fun atualizar(acertoMesa: AcertoMesa)
 

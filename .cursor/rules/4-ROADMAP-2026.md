@@ -11,7 +11,9 @@
 ### FASE 1: Consolidação da Arquitetura (Q1 2026) 🟡 **EM PROGRESSO**
 *   **Refatoração AppRepository & SyncRepository**: Migrar métodos remanescentes de acesso a dados e sincronização para repositories especializados e Handlers.
 *   **Orchestrator Sync**: Reduzir `SyncRepository.kt` de ~3.500 para ~300 linhas, movendo lógicas de Acertos, Clientes e Mesas para Handlers individuais.
-*   **Testes de Cobertura**: Configurar JaCoCo consolidado e atingir 60% de cobertura unitária.
+*   **Testes de Cobertura (Crítico)**: ✅ Implementados testes unitários para Handlers críticos (Cliente, Mesa, Acerto, Despesa, Contrato, Rota). Estabilidade e hierarquias validadas.
+*   **Simulação de Falhas**: Testar cenários de rede instável e conflitos de concorrência na sincronização.
+*   **Configuração JaCoCo**: Consolidar métricas para atingir 60% de cobertura unitária.
 *   **Cleanup de Logs**: Finalizar migração de `android.util.Log` para `Timber` na camada UI.
 
 ### FASE 2: Transição de Interface (Q2 2026)
@@ -31,5 +33,6 @@
 ## ✅ MARCOS CONCLUÍDOS (DEZEMBRO 2025)
 *   ✅ **Sync Engine**: Refatoração de SyncRepository para Handlers especializados.
 *   ✅ **Segurança**: Firestore Rules enrijecidas e Multi-tenancy garantido.
+*   ✅ **Cálculo Financeiro**: Fix do cálculo de média para relógios com defeito e 100% de cobertura em `FinancialCalculator`.
 *   ✅ **Automatização**: Firebase Functions configuradas para gerenciamento de Custom Claims.
 *   ✅ **Monitoramento**: Integração total com Crashlytics MCP para análise via IA.

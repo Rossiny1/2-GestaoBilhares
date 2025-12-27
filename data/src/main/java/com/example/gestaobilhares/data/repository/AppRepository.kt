@@ -1942,10 +1942,30 @@ class AppRepository @Inject constructor(
     
     // ==================== CÁLCULOS ====================
     
-    @Suppress("UNUSED_PARAMETER")
-    suspend fun calcularMediaFichasJogadas(_mesaId: Long, _periodoDias: Int): Double {
-        // TODO: Implementar cálculo de média de fichas jogadas
-        return 0.0
+    /**
+     * ✅ IMPLEMENTADO: Calcula a média de fichas jogadas dos últimos acertos de uma mesa naquele cliente
+     * @param mesaId ID da mesa
+     * @param clienteId ID do cliente
+     * @param limite Máximo de acertos a considerar (padrão 5)
+     * @return Média de fichas jogadas, ou 0 se não houver acertos anteriores
+     */
+    suspend fun calcularMediaFichasJogadas(mesaId: Long, clienteId: Long, limite: Int = 5): Double {
+        return try {
+            val ultimosAcertos = acertoMesaDao.buscarUltimosAcertosMesaPorCliente(mesaId, clienteId, limite)
+            if (ultimosAcertos.isEmpty()) {
+                Timber.d("AppRepository", "Mesa $mesaId não possui históricos de acerto no cliente $clienteId para cálculo de média.")
+                return 0.0
+            }
+            
+            val somaFichas = ultimosAcertos.sumOf { it.fichasJogadas }
+            val media = somaFichas.toDouble() / ultimosAcertos.size
+            
+            Timber.d("AppRepository", "Média de fichas calculada para mesa $mesaId no cliente $clienteId: $media (Baseado em ${ultimosAcertos.size} acertos)")
+            media
+        } catch (e: Exception) {
+            Timber.e("AppRepository", "Erro ao calcular média de fichas para mesa $mesaId no cliente $clienteId: ${e.message}", e)
+            0.0
+        }
     }
 } 
 

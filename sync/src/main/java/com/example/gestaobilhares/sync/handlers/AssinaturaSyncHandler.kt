@@ -19,14 +19,15 @@ import java.util.Date
 /**
  * Handler especializado para sincronização de Assinaturas e Logs de Auditoria.
  */
-class AssinaturaSyncHandler(
+class AssinaturaSyncHandler @javax.inject.Inject constructor(
     context: Context,
     appRepository: AppRepository,
     firestore: FirebaseFirestore,
     networkUtils: NetworkUtils,
     userSessionManager: UserSessionManager,
-    firebaseImageUploader: com.example.gestaobilhares.core.utils.FirebaseImageUploader
-) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader) {
+    firebaseImageUploader: com.example.gestaobilhares.core.utils.FirebaseImageUploader,
+    syncMetadataDao: com.example.gestaobilhares.data.dao.SyncMetadataDao? = null
+) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao) {
 
     override val entityType: String = COLLECTION_ASSINATURAS
 

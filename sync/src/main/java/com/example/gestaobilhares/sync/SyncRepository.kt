@@ -90,6 +90,9 @@ class SyncRepository @javax.inject.Inject constructor(
     private val currentCompanyId: String
         get() = userSessionManager.getCurrentCompanyId()
 
+    private val currentUserId: Long
+        get() = userSessionManager.getCurrentUserId()
+
     init {
         Timber.tag(TAG).d("SyncRepository inicializado (Empresa: $currentCompanyId)")
         Timber.tag(TAG).d("NetworkUtils.isConnected() inicial = ${networkUtils.isConnected()}")
@@ -508,7 +511,7 @@ class SyncRepository @javax.inject.Inject constructor(
      */
     internal suspend fun getLastSyncTimestamp(entityType: String): Long {
         return try {
-            syncMetadataDao.obterUltimoTimestamp(entityType)
+            syncMetadataDao.obterUltimoTimestamp(entityType, currentUserId)
         } catch (e: Exception) {
             Timber.tag(TAG).w("?? Erro ao obter timestamp de sincroniza��o para $entityType: ${e.message}")
             0L // Retorna 0 para primeira sincroniza��o completa
@@ -524,7 +527,7 @@ class SyncRepository @javax.inject.Inject constructor(
      */
     private suspend fun getLastPushTimestamp(entityType: String): Long {
         return try {
-            syncMetadataDao.obterUltimoTimestamp("${entityType}_push")
+            syncMetadataDao.obterUltimoTimestamp("${entityType}_push", currentUserId)
         } catch (e: Exception) {
             Timber.tag(TAG).w("?? Erro ao obter timestamp de push para $entityType: ${e.message}")
             0L // Retorna 0 para primeira sincroniza��o completa
@@ -584,6 +587,7 @@ class SyncRepository @javax.inject.Inject constructor(
             val timestamp = timestampOverride ?: System.currentTimeMillis()
             syncMetadataDao.atualizarTimestamp(
                 entityType = entityType,
+                userId = currentUserId,
                 timestamp = timestamp,
                 count = syncCount,
                 durationMs = durationMs,
@@ -625,7 +629,7 @@ class SyncRepository @javax.inject.Inject constructor(
             return true
         }
 
-        val lastGlobalSync = runCatching { syncMetadataDao.obterUltimoTimestamp(GLOBAL_SYNC_METADATA) }.getOrDefault(0L)
+        val lastGlobalSync = runCatching { syncMetadataDao.obterUltimoTimestamp(GLOBAL_SYNC_METADATA, currentUserId) }.getOrDefault(0L)
         if (lastGlobalSync == 0L) {
             Timber.tag(TAG).d("?? Nenhum registro de sincroniza��o global - executar agora")
             return true
@@ -642,7 +646,7 @@ class SyncRepository @javax.inject.Inject constructor(
     }
     
     suspend fun getGlobalLastSyncTimestamp(): Long {
-        return runCatching { syncMetadataDao.obterUltimoTimestamp(GLOBAL_SYNC_METADATA) }
+        return runCatching { syncMetadataDao.obterUltimoTimestamp(GLOBAL_SYNC_METADATA, currentUserId) }
             .getOrDefault(0L)
     }
     
