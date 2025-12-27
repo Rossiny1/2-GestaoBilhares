@@ -15,11 +15,16 @@ import androidx.room.PrimaryKey
  * 
  * Segue melhores práticas Android 2025 para sincronização incremental.
  */
-@Entity(tableName = "sync_metadata")
+@Entity(
+    tableName = "sync_metadata",
+    primaryKeys = ["entity_type", "user_id"]
+)
 data class SyncMetadata(
-    @PrimaryKey
     @ColumnInfo(name = "entity_type")
     val entityType: String, // Ex: "clientes", "mesas", "acertos"
+    
+    @ColumnInfo(name = "user_id")
+    val userId: Long, // ID do usuário que realizou a sincronização
     
     @ColumnInfo(name = "last_sync_timestamp")
     val lastSyncTimestamp: Long = 0L, // Timestamp da última sincronização bem-sucedida

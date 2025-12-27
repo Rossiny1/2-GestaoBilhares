@@ -17,8 +17,8 @@ import java.util.Date
 import timber.log.Timber
 
 /**
- * Banco de dados principal da aplicaÁ„o usando Room.
- * Centraliza todas as entidades e DAOs da aplicaÁ„o.
+ * Banco de dados principal da aplica√ß√£o usando Room.
+ * Centraliza todas as entidades e DAOs da aplica√ß√£o.
  */
 @Database(
     entities = [
@@ -27,161 +27,161 @@ import timber.log.Timber
         Mesa::class,
         Colaborador::class,
         MetaColaborador::class, // ? NOVO: METAS DOS COLABORADORES
-        ColaboradorRota::class, // ? NOVO: VINCULA«√O COLABORADOR-ROTA
+        ColaboradorRota::class, // ? NOVO: VINCULA√á√ÉO COLABORADOR-ROTA
         Acerto::class,
         Despesa::class,
         AcertoMesa::class,
-        CicloAcertoEntity::class, // ? FASE 8A: NOVA ENTIDADE PARA HIST”RICO DE CICLOS
+        CicloAcertoEntity::class, // ? FASE 8A: NOVA ENTIDADE PARA HIST√ìRICO DE CICLOS
         CategoriaDespesa::class, // ? NOVO: CATEGORIAS DE DESPESAS
         TipoDespesa::class, // ? NOVO: TIPOS DE DESPESAS
-        ContratoLocacao::class, // ? NOVO: CONTRATOS DE LOCA«√O
-        ContratoMesa::class, // ? NOVO: VINCULA«√O CONTRATO-MESAS
+        ContratoLocacao::class, // ? NOVO: CONTRATOS DE LOCA√á√ÉO
+        ContratoMesa::class, // ? NOVO: VINCULA√á√ÉO CONTRATO-MESAS
         AditivoContrato::class, // ? NOVO: ADITIVOS DE CONTRATO
-        AditivoMesa::class, // ? NOVO: VINCULA«√O ADITIVO-MESAS
+        AditivoMesa::class, // ? NOVO: VINCULA√á√ÉO ADITIVO-MESAS
         AssinaturaRepresentanteLegal::class, // ? NOVO: ASSINATURA DIGITAL DO REPRESENTANTE
         LogAuditoriaAssinatura::class, // ? NOVO: LOGS DE AUDITORIA
-        // ProcuraÁ„oRepresentante::class, // ? TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
+        // Procura√ß√£oRepresentante::class, // ? TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
         MesaVendida::class, // ? NOVO: MESAS VENDIDAS
         MesaReformada::class, // ? NOVO: MESAS REFORMADAS
         PanoEstoque::class, // ? NOVO: PANOS EM ESTOQUE
-        HistoricoManutencaoMesa::class, // ? NOVO: HIST”RICO DE MANUTEN«√O DAS MESAS
-        Veiculo::class, // ? NOVO: VEÕCULOS
-        HistoricoManutencaoVeiculo::class, // ? NOVO: HIST”RICO DE MANUTEN«√O DE VEÕCULOS
-        HistoricoCombustivelVeiculo::class, // ? NOVO: HIST”RICO DE COMBUSTÕVEL DE VEÕCULOS
-        PanoMesa::class, // ? NOVO: VINCULA«√O PANO-MESA
-        com.example.gestaobilhares.data.entities.StockItem::class, // ? NOVO: ITENS GEN…RICOS DO ESTOQUE
+        HistoricoManutencaoMesa::class, // ? NOVO: HIST√ìRICO DE MANUTEN√á√ÉO DAS MESAS
+        Veiculo::class, // ? NOVO: VE√çCULOS
+        HistoricoManutencaoVeiculo::class, // ? NOVO: HIST√ìRICO DE MANUTEN√á√ÉO DE VE√çCULOS
+        HistoricoCombustivelVeiculo::class, // ? NOVO: HIST√ìRICO DE COMBUST√çVEL DE VE√çCULOS
+        PanoMesa::class, // ? NOVO: VINCULA√á√ÉO PANO-MESA
+        com.example.gestaobilhares.data.entities.StockItem::class, // ? NOVO: ITENS GEN√âRICOS DO ESTOQUE
         Meta::class, // Adicionar a nova entidade
         com.example.gestaobilhares.data.entities.Equipment::class, // ? NOVO: EQUIPAMENTOS
-        SyncOperationEntity::class, // ? NOVO: FILA DE SINCRONIZA«√O OFFLINE-FIRST
-        SyncMetadata::class // ? NOVO (2025): METADATA DE SINCRONIZA«√O INCREMENTAL
+        SyncOperationEntity::class, // ? NOVO: FILA DE SINCRONIZA√á√ÉO OFFLINE-FIRST
+        SyncMetadata::class // ? NOVO (2025): METADATA DE SINCRONIZA√á√ÉO INCREMENTAL
     ],
-    version = 5, // ? MIGRATION: inclus„o de metadata de sincronizaÁ„o incremental
+    version = 6, // ? MIGRATION: inclus√£o de metadata de sincroniza√ß√£o incremental por usu√°rio
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     /**
-     * DAO para operaÁıes com rotas.
+     * DAO para opera√ß√µes com rotas.
      */
     abstract fun rotaDao(): RotaDao
     
     /**
-     * DAO para operaÁıes com clientes.
+     * DAO para opera√ß√µes com clientes.
      */
     abstract fun clienteDao(): ClienteDao
     
     /**
-     * DAO para operaÁıes with mesas.
+     * DAO para opera√ß√µes with mesas.
      */
     abstract fun mesaDao(): com.example.gestaobilhares.data.dao.MesaDao
     
     /**
-     * DAO para operaÁıes com colaboradores.
+     * DAO para opera√ß√µes com colaboradores.
      * ? IMPLEMENTADO: ColaboradorDao com metas e rotas
      */
     abstract fun colaboradorDao(): com.example.gestaobilhares.data.dao.ColaboradorDao
     
     /**
-     * DAO para operaÁıes com acertos.
+     * DAO para opera√ß√µes com acertos.
      */
     abstract fun acertoDao(): com.example.gestaobilhares.data.dao.AcertoDao
     
     /**
-     * DAO para operaÁıes com despesas.
+     * DAO para opera√ß√µes com despesas.
      */
     abstract fun despesaDao(): DespesaDao
     
     /**
-     * DAO para operaÁıes com acerto-mesas.
+     * DAO para opera√ß√µes com acerto-mesas.
      */
     abstract fun acertoMesaDao(): com.example.gestaobilhares.data.dao.AcertoMesaDao
     
     /**
-     * DAO para operaÁıes com ciclos de acerto.
-     * ? FASE 8A: NOVO DAO PARA HIST”RICO DE CICLOS
+     * DAO para opera√ß√µes com ciclos de acerto.
+     * ? FASE 8A: NOVO DAO PARA HIST√ìRICO DE CICLOS
      */
     abstract fun cicloAcertoDao(): com.example.gestaobilhares.data.dao.CicloAcertoDao
     
     /**
-     * DAO para operaÁıes com categorias de despesas.
+     * DAO para opera√ß√µes com categorias de despesas.
      * ? NOVO: CATEGORIAS DE DESPESAS
      */
     abstract fun categoriaDespesaDao(): com.example.gestaobilhares.data.dao.CategoriaDespesaDao
     
     /**
-     * DAO para operaÁıes com tipos de despesas.
+     * DAO para opera√ß√µes com tipos de despesas.
      * ? NOVO: TIPOS DE DESPESAS
      */
     abstract fun tipoDespesaDao(): com.example.gestaobilhares.data.dao.TipoDespesaDao
     
     /**
-     * DAO para operaÁıes com contratos de locaÁ„o.
-     * ? NOVO: CONTRATOS DE LOCA«√O
+     * DAO para opera√ß√µes com contratos de loca√ß√£o.
+     * ? NOVO: CONTRATOS DE LOCA√á√ÉO
      */
     abstract fun contratoLocacaoDao(): com.example.gestaobilhares.data.dao.ContratoLocacaoDao
     
     /**
-     * DAO para operaÁıes com aditivos de contrato.
+     * DAO para opera√ß√µes com aditivos de contrato.
      * ? NOVO: ADITIVOS DE CONTRATO
      */
     abstract fun aditivoContratoDao(): com.example.gestaobilhares.data.dao.AditivoContratoDao
     
     /**
-     * DAO para operaÁıes com assinaturas do representante legal.
+     * DAO para opera√ß√µes com assinaturas do representante legal.
      * ? NOVO: ASSINATURA DIGITAL DO REPRESENTANTE
      */
     abstract fun assinaturaRepresentanteLegalDao(): com.example.gestaobilhares.data.dao.AssinaturaRepresentanteLegalDao
     
     /**
-     * DAO para operaÁıes com logs de auditoria de assinaturas.
+     * DAO para opera√ß√µes com logs de auditoria de assinaturas.
      * ? NOVO: LOGS DE AUDITORIA
      */
     abstract fun logAuditoriaAssinaturaDao(): com.example.gestaobilhares.data.dao.LogAuditoriaAssinaturaDao
     
     /**
-     * DAO para operaÁıes com procuraÁıes de representantes.
-     * ? NOVO: PROCURA«’ES E DELEGA«√O DE PODERES
+     * DAO para opera√ß√µes com procura√ß√µes de representantes.
+     * ? NOVO: PROCURA√á√ïES E DELEGA√á√ÉO DE PODERES
      */
-    // abstract fun procuraÁ„oRepresentanteDao(): com.example.gestaobilhares.data.dao.ProcuraÁ„oRepresentanteDao // ? TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
+    // abstract fun procura√ß√£oRepresentanteDao(): com.example.gestaobilhares.data.dao.Procura√ß√£oRepresentanteDao // ? TEMPORARIAMENTE REMOVIDO: PROBLEMA DE ENCODING
     
     /**
-     * DAO para operaÁıes com mesas vendidas.
+     * DAO para opera√ß√µes com mesas vendidas.
      * ? NOVO: MESAS VENDIDAS
      */
     abstract fun mesaVendidaDao(): com.example.gestaobilhares.data.dao.MesaVendidaDao
     
     /**
-     * DAO para operaÁıes com mesas reformadas.
+     * DAO para opera√ß√µes com mesas reformadas.
      * ? NOVO: MESAS REFORMADAS
      */
     abstract fun mesaReformadaDao(): com.example.gestaobilhares.data.dao.MesaReformadaDao
     
     /**
-     * DAO para operaÁıes com panos em estoque.
+     * DAO para opera√ß√µes com panos em estoque.
      * ? NOVO: PANOS EM ESTOQUE
      */
     abstract fun panoEstoqueDao(): com.example.gestaobilhares.data.dao.PanoEstoqueDao
     
     /**
-     * DAO para operaÁıes com histÛrico de manutenÁ„o das mesas.
-     * ? NOVO: HIST”RICO DE MANUTEN«√O DAS MESAS
+     * DAO para opera√ß√µes com hist√≥rico de manuten√ß√£o das mesas.
+     * ? NOVO: HIST√ìRICO DE MANUTEN√á√ÉO DAS MESAS
      */
     abstract fun historicoManutencaoMesaDao(): com.example.gestaobilhares.data.dao.HistoricoManutencaoMesaDao
 
-    // ? NOVO: DAO de veÌculos
+    // ? NOVO: DAO de ve√≠culos
     abstract fun veiculoDao(): com.example.gestaobilhares.data.dao.VeiculoDao
     
-    // ? NOVO: DAO de histÛrico de manutenÁ„o de veÌculos
+    // ? NOVO: DAO de hist√≥rico de manuten√ß√£o de ve√≠culos
     abstract fun historicoManutencaoVeiculoDao(): com.example.gestaobilhares.data.dao.HistoricoManutencaoVeiculoDao
     
-    // ? NOVO: DAO de histÛrico de combustÌvel de veÌculos
+    // ? NOVO: DAO de hist√≥rico de combust√≠vel de ve√≠culos
     abstract fun historicoCombustivelVeiculoDao(): com.example.gestaobilhares.data.dao.HistoricoCombustivelVeiculoDao
     
-    // ? NOVO: DAO de vinculaÁ„o pano-mesa
+    // ? NOVO: DAO de vincula√ß√£o pano-mesa
     abstract fun panoMesaDao(): PanoMesaDao
     
-    // ? NOVO: DAO de itens genÈricos do estoque
+    // ? NOVO: DAO de itens gen√©ricos do estoque
     abstract fun stockItemDao(): com.example.gestaobilhares.data.dao.StockItemDao
 
     // ? NOVO: DAO de metas
@@ -190,10 +190,10 @@ abstract class AppDatabase : RoomDatabase() {
     // ? NOVO: DAO de equipamentos
     abstract fun equipmentDao(): com.example.gestaobilhares.data.dao.EquipmentDao
     
-    // ? NOVO: DAO de fila de sincronizaÁ„o
+    // ? NOVO: DAO de fila de sincroniza√ß√£o
     abstract fun syncOperationDao(): SyncOperationDao
     
-    // ? NOVO (2025): DAO de metadata de sincronizaÁ„o incremental
+    // ? NOVO (2025): DAO de metadata de sincroniza√ß√£o incremental
     abstract fun syncMetadataDao(): SyncMetadataDao
 
     companion object {
@@ -201,13 +201,13 @@ abstract class AppDatabase : RoomDatabase() {
         // Nome do banco de dados
         private const val DATABASE_NAME = "gestao_bilhares_database"
         
-        // Inst‚ncia singleton do banco de dados
+        // Inst√¢ncia singleton do banco de dados
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
         /**
-         * ObtÈm a inst‚ncia singleton do banco de dados.
-         * Usa o padr„o Double-Checked Locking para thread safety.
+         * Obt√©m a inst√¢ncia singleton do banco de dados.
+         * Usa o padr√£o Double-Checked Locking para thread safety.
          */
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -277,14 +277,14 @@ abstract class AppDatabase : RoomDatabase() {
                         database.execSQL("DROP TABLE clientes")
                         database.execSQL("ALTER TABLE clientes_new RENAME TO clientes")
                         
-                        // Recriar Ìndice
+                        // Recriar √≠ndice
                         database.execSQL("CREATE INDEX index_clientes_rota_id ON clientes (rota_id)")
                     }
                 }
                 
                 val MIGRATION_14_15 = object : androidx.room.migration.Migration(14, 15) {
                     override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
-                        // Adicionar campos de geolocalizaÁ„o na tabela clientes
+                        // Adicionar campos de geolocaliza√ß√£o na tabela clientes
                         database.execSQL("ALTER TABLE clientes ADD COLUMN latitude REAL")
                         database.execSQL("ALTER TABLE clientes ADD COLUMN longitude REAL")
                         database.execSQL("ALTER TABLE clientes ADD COLUMN precisao_gps REAL")
@@ -294,7 +294,7 @@ abstract class AppDatabase : RoomDatabase() {
                 
                 val MIGRATION_15_16 = object : androidx.room.migration.Migration(15, 16) {
                     override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
-                        // Adicionar campos de foto do relÛgio na tabela acerto_mesas
+                        // Adicionar campos de foto do rel√≥gio na tabela acerto_mesas
                         database.execSQL("ALTER TABLE acerto_mesas ADD COLUMN foto_relogio_final TEXT")
                         database.execSQL("ALTER TABLE acerto_mesas ADD COLUMN data_foto INTEGER")
                     }
@@ -311,9 +311,9 @@ abstract class AppDatabase : RoomDatabase() {
                 val MIGRATION_17_18 = object : androidx.room.migration.Migration(17, 18) {
                     override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Migration para corrigir problemas de integridade do schema
-                        // Recriar tabelas se necess·rio para garantir consistÍncia
+                        // Recriar tabelas se necess√°rio para garantir consist√™ncia
                         try {
-                            // Verificar se a tabela clientes tem todos os campos necess·rios
+                            // Verificar se a tabela clientes tem todos os campos necess√°rios
                             database.execSQL("""
                                 CREATE TABLE IF NOT EXISTS clientes_temp (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -356,7 +356,7 @@ abstract class AppDatabase : RoomDatabase() {
                             database.execSQL("DROP TABLE IF EXISTS clientes")
                             database.execSQL("ALTER TABLE clientes_temp RENAME TO clientes")
                             
-                            // Recriar Ìndices
+                            // Recriar √≠ndices
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_clientes_rota_id ON clientes (rota_id)")
                             
                         } catch (e: Exception) {
@@ -432,7 +432,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 )
                             """)
                             
-                            // Criar tabela de vinculaÁ„o colaborador-rota
+                            // Criar tabela de vincula√ß√£o colaborador-rota
                             database.execSQL("""
                                 CREATE TABLE IF NOT EXISTS colaborador_rotas (
                                     colaborador_id INTEGER NOT NULL,
@@ -454,9 +454,9 @@ abstract class AppDatabase : RoomDatabase() {
                 
                 val MIGRATION_20_21 = object : androidx.room.migration.Migration(20, 21) {
                     override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
-                        // Migration para corrigir valores padr„o da tabela colaboradores
+                        // Migration para corrigir valores padr√£o da tabela colaboradores
                         try {
-                            // Recriar tabela colaboradores com valores padr„o corretos
+                            // Recriar tabela colaboradores com valores padr√£o corretos
                             database.execSQL("""
                                 CREATE TABLE IF NOT EXISTS colaboradores_temp (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -545,7 +545,7 @@ abstract class AppDatabase : RoomDatabase() {
                     override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
                         // Migration para atualizar tabela metas_colaborador
                         try {
-                            // Criar tabela tempor·ria com nova estrutura
+                            // Criar tabela tempor√°ria com nova estrutura
                             database.execSQL("""
                                 CREATE TABLE metas_colaborador_temp (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -573,7 +573,7 @@ abstract class AppDatabase : RoomDatabase() {
                             // Remover tabela antiga
                             database.execSQL("DROP TABLE metas_colaborador")
                             
-                            // Renomear tabela tempor·ria
+                            // Renomear tabela tempor√°ria
                             database.execSQL("ALTER TABLE metas_colaborador_temp RENAME TO metas_colaborador")
                             
                             Timber.d("Migration 23_24 executada com sucesso")
@@ -601,7 +601,7 @@ abstract class AppDatabase : RoomDatabase() {
                             if (columns.contains("periodo_inicio") || columns.contains("periodo_fim")) {
                                 Timber.d("Corrigindo estrutura da tabela metas_colaborador")
                                 
-                                // Criar tabela tempor·ria com estrutura correta
+                                // Criar tabela tempor√°ria com estrutura correta
                                 database.execSQL("""
                                     CREATE TABLE metas_colaborador_temp (
                                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -627,13 +627,13 @@ abstract class AppDatabase : RoomDatabase() {
                                         FROM metas_colaborador
                                     """)
                                 } catch (e: Exception) {
-                                    Timber.w("N„o foi possÌvel copiar dados existentes: ${e.message}")
+                                    Timber.w("N√£o foi poss√≠vel copiar dados existentes: ${e.message}")
                                 }
                                 
                                 // Remover tabela antiga
                                 database.execSQL("DROP TABLE metas_colaborador")
                                 
-                                // Renomear tabela tempor·ria
+                                // Renomear tabela tempor√°ria
                                 database.execSQL("ALTER TABLE metas_colaborador_temp RENAME TO metas_colaborador")
                             }
                             
@@ -653,7 +653,7 @@ abstract class AppDatabase : RoomDatabase() {
                             database.execSQL("ALTER TABLE despesas ADD COLUMN cicloAno INTEGER")
                             database.execSQL("ALTER TABLE despesas ADD COLUMN cicloNumero INTEGER")
                             
-                            // Criar Ìndices para as novas colunas
+                            // Criar √≠ndices para as novas colunas
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_origemLancamento ON despesas (origemLancamento)")
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_cicloAno ON despesas (cicloAno)")
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_despesas_cicloNumero ON despesas (cicloNumero)")
@@ -677,7 +677,7 @@ abstract class AppDatabase : RoomDatabase() {
                                     clienteId INTEGER NOT NULL,
                                     locadorNome TEXT NOT NULL DEFAULT 'BILHAR GLOBO R & A LTDA',
                                     locadorCnpj TEXT NOT NULL DEFAULT '34.994.884/0001-69',
-                                    locadorEndereco TEXT NOT NULL DEFAULT 'Rua Jo„o Pinheiro, n∫ 765, Bairro Centro, Montes Claros, MG',
+                                    locadorEndereco TEXT NOT NULL DEFAULT 'Rua Jo√£o Pinheiro, n¬∫ 765, Bairro Centro, Montes Claros, MG',
                                     locadorCep TEXT NOT NULL DEFAULT '39.400-093',
                                     locatarioNome TEXT NOT NULL,
                                     locatarioCpf TEXT NOT NULL,
@@ -713,7 +713,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 )
                             """)
                             
-                            // Criar Ìndices
+                            // Criar √≠ndices
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_contratos_locacao_clienteId ON contratos_locacao (clienteId)")
                             database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_contratos_locacao_numeroContrato ON contratos_locacao (numeroContrato)")
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_contrato_mesas_contratoId ON contrato_mesas (contratoId)")
@@ -759,7 +759,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 )
                             """)
                             
-                            // Criar Ìndices
+                            // Criar √≠ndices
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_aditivos_contrato_contratoId ON aditivos_contrato (contratoId)")
                             database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_aditivos_contrato_numeroAditivo ON aditivos_contrato (numeroAditivo)")
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_aditivo_mesas_aditivoId ON aditivo_mesas (aditivoId)")
@@ -824,7 +824,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val MIGRATION_30_31 = object : androidx.room.migration.Migration(30, 31) {
                     override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
                         try {
-                            // Criar tabela de fila de sincronizaÁ„o
+                            // Criar tabela de fila de sincroniza√ß√£o
                             database.execSQL("""
                                 CREATE TABLE IF NOT EXISTS sync_operations (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -839,7 +839,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 )
                             """)
                             
-                            // Criar Ìndice para melhor performance
+                            // Criar √≠ndice para melhor performance
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_sync_operations_status ON sync_operations (status)")
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_sync_operations_timestamp ON sync_operations (timestamp)")
                             
@@ -850,11 +850,11 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
                 
-                // Migration para vers„o 3 -> 4 (pular versıes intermedi·rias se necess·rio)
+                // Migration para vers√£o 3 -> 4 (pular vers√µes intermedi√°rias se necess√°rio)
                 val MIGRATION_3_4 = object : androidx.room.migration.Migration(3, 4) {
                     override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
                         try {
-                            // Criar tabela de fila de sincronizaÁ„o
+                            // Criar tabela de fila de sincroniza√ß√£o
                             database.execSQL("""
                                 CREATE TABLE IF NOT EXISTS sync_operations (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -869,7 +869,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 )
                             """)
                             
-                            // Criar Ìndices para melhor performance
+                            // Criar √≠ndices para melhor performance
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_sync_operations_status ON sync_operations (status)")
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_sync_operations_timestamp ON sync_operations (timestamp)")
                             
@@ -880,11 +880,11 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
                 
-                // ? NOVO (2025): Migration para vers„o 4 -> 5 (Metadata de sincronizaÁ„o incremental)
+                // ? NOVO (2025): Migration para vers√£o 4 -> 5 (Metadata de sincroniza√ß√£o incremental)
                 val MIGRATION_4_5 = object : androidx.room.migration.Migration(4, 5) {
                     override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
                         try {
-                            // Criar tabela de metadata de sincronizaÁ„o
+                            // Criar tabela de metadata de sincroniza√ß√£o
                             database.execSQL("""
                                 CREATE TABLE IF NOT EXISTS sync_metadata (
                                     entity_type TEXT PRIMARY KEY NOT NULL,
@@ -898,12 +898,45 @@ abstract class AppDatabase : RoomDatabase() {
                                 )
                             """)
                             
-                            // Criar Ìndice para melhor performance
+                            // Criar √≠ndice para melhor performance
                             database.execSQL("CREATE INDEX IF NOT EXISTS index_sync_metadata_entity_type ON sync_metadata (entity_type)")
                             
                             Timber.d("Migration 4_5 executada com sucesso - Tabela sync_metadata criada")
                         } catch (e: Exception) {
                             Timber.w("Erro na migration 4_5: ${e.message}", e)
+                        }
+                    }
+                }
+                
+                // ? NOVO (2025): Migration para vers√£o 5 -> 6 (Metadata de sincroniza√ß√£o incremental por usu√°rio)
+                val MIGRATION_5_6 = object : androidx.room.migration.Migration(5, 6) {
+                    override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                        try {
+                            // Drop old table to recreate with new schema (composite PK)
+                            database.execSQL("DROP TABLE IF EXISTS sync_metadata")
+                            
+                            // Recreate table with entity_type and user_id as composite PRIMARY KEY
+                            database.execSQL("""
+                                CREATE TABLE sync_metadata (
+                                    entity_type TEXT NOT NULL,
+                                    user_id INTEGER NOT NULL,
+                                    last_sync_timestamp INTEGER NOT NULL DEFAULT 0,
+                                    last_sync_count INTEGER NOT NULL DEFAULT 0,
+                                    last_sync_duration_ms INTEGER NOT NULL DEFAULT 0,
+                                    last_sync_bytes_downloaded INTEGER NOT NULL DEFAULT 0,
+                                    last_sync_bytes_uploaded INTEGER NOT NULL DEFAULT 0,
+                                    last_error TEXT,
+                                    updated_at INTEGER NOT NULL DEFAULT 0,
+                                    PRIMARY KEY (entity_type, user_id)
+                                )
+                            """)
+                            
+                            // Create index for performance
+                            database.execSQL("CREATE INDEX IF NOT EXISTS index_sync_metadata_entity_type_user_id ON sync_metadata (entity_type, user_id)")
+                            
+                            Timber.d("Migration 5_6 executada com sucesso - Tabela sync_metadata recriada com user_id")
+                        } catch (e: Exception) {
+                            Timber.w("Erro na migration 5_6: ${e.message}", e)
                         }
                     }
                 }
@@ -914,7 +947,7 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         DATABASE_NAME
                     )
-                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_3_4, MIGRATION_4_5)
+                        .addMigrations(MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                         .addCallback(object : RoomDatabase.Callback() {
                             override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                                 super.onOpen(db)
@@ -923,19 +956,19 @@ abstract class AppDatabase : RoomDatabase() {
                         })
                     
                     // Aplicar fallback destrutivo somente em builds de debug
-                    // Nota: BuildConfig n„o est· disponÌvel em mÛdulos de biblioteca
+                    // Nota: BuildConfig n√£o est√° dispon√≠vel em m√≥dulos de biblioteca
                     // Usar fallback destrutivo sempre para desenvolvimento
                     val instance = builder.fallbackToDestructiveMigration().build()
                     
-                    // Banco de dados limpo - sem seed autom·tico
-                    // Os dados ser„o inseridos manualmente pelo usu·rio
+                    // Banco de dados limpo - sem seed autom√°tico
+                    // Os dados ser√£o inseridos manualmente pelo usu√°rio
                     
                     INSTANCE = instance
                     Timber.d("? Banco de dados inicializado com sucesso")
                     instance
                 } catch (e: Exception) {
-                    Timber.e("Erro crÌtico ao inicializar banco de dados: ${e.message}")
-                    // Em caso de erro crÌtico, usar fallback destrutivo
+                    Timber.e("Erro cr√≠tico ao inicializar banco de dados: ${e.message}")
+                    // Em caso de erro cr√≠tico, usar fallback destrutivo
                     val fallbackBuilder = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,

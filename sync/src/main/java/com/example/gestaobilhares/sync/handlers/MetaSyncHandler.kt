@@ -20,14 +20,15 @@ import com.example.gestaobilhares.utils.FirebaseImageUploader
 /**
  * Handler especializado para sincronização de Metas Gerais (Rotas/Ciclos).
  */
-class MetaSyncHandler(
+class MetaSyncHandler @javax.inject.Inject constructor(
     context: Context,
     appRepository: AppRepository,
     firestore: FirebaseFirestore,
     networkUtils: NetworkUtils,
     userSessionManager: UserSessionManager,
-    firebaseImageUploader: com.example.gestaobilhares.core.utils.FirebaseImageUploader
-) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader) {
+    firebaseImageUploader: com.example.gestaobilhares.core.utils.FirebaseImageUploader,
+    syncMetadataDao: com.example.gestaobilhares.data.dao.SyncMetadataDao? = null
+) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao) {
 
     override val entityType: String = "metas"
 

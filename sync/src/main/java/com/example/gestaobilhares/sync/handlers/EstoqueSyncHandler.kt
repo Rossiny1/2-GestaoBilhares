@@ -23,14 +23,15 @@ import java.util.Date
 /**
  * Handler especializado para sincronização de Estoque e Manutenção de Mesas.
  */
-class EstoqueSyncHandler(
+class EstoqueSyncHandler @javax.inject.Inject constructor(
     context: Context,
     appRepository: AppRepository,
     firestore: FirebaseFirestore,
     networkUtils: NetworkUtils,
     userSessionManager: UserSessionManager,
-    firebaseImageUploader: com.example.gestaobilhares.core.utils.FirebaseImageUploader
-) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader) {
+    firebaseImageUploader: com.example.gestaobilhares.core.utils.FirebaseImageUploader,
+    syncMetadataDao: com.example.gestaobilhares.data.dao.SyncMetadataDao? = null
+) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao) {
 
     override val entityType: String = "estoque"
 

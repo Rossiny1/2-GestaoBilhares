@@ -26,8 +26,9 @@ class ContratoSyncHandler(
     firestore: FirebaseFirestore,
     networkUtils: NetworkUtils,
     userSessionManager: UserSessionManager,
-    firebaseImageUploader: FirebaseImageUploader
-) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader) {
+    firebaseImageUploader: FirebaseImageUploader,
+    syncMetadataDao: com.example.gestaobilhares.data.dao.SyncMetadataDao? = null
+) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader, syncMetadataDao) {
 
     override val entityType: String = "contratos"
     private val aditivosEntityType: String = "aditivos"
@@ -237,12 +238,12 @@ class ContratoSyncHandler(
             
             // 2. Push Aditivo Mesas
             pushAditivoMesas().onSuccess { pCount ->
-                Timber.tag(TAG).d("? Push AditivoMesas: $pCount sincronizados")
+                Timber.tag(TAG).d("🔄 Push AditivoMesas: $pCount sincronizados")
             }
             
             // 3. Push Contrato Mesas
             pushContratoMesas().onSuccess { pCount ->
-                Timber.tag(TAG).d("? Push ContratoMesas: $pCount sincronizados")
+                Timber.tag(TAG).d("🔄 Push ContratoMesas: $pCount sincronizados")
             }
 
             Result.success(count)

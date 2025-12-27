@@ -130,7 +130,7 @@ class SettlementViewModelTest {
         whenever(appRepository.inserirAcerto(any())).thenReturn(500L)
         whenever(appRepository.obterAcertoPorId(500L)).thenReturn(Acerto(id = 500L, clienteId = clienteId, rotaId = rotaId, cicloId = cicloId, valorRecebido = 100.0, periodoInicio = Date(), periodoFim = Date()))
         whenever(appRepository.inserirAcertoMesa(any())).thenReturn(1000L)
-        whenever(appRepository.atualizarDebitoAtual(any(), any())).thenReturn(Unit)
+        whenever(appRepository.atualizarDebitoAtualCliente(any(), any())).thenReturn(Unit)
         whenever(appRepository.atualizarValoresCiclo(any())).thenReturn(Unit)
         whenever(appRepository.inserirHistoricoManutencaoMesa(any())).thenReturn(2000L)
         
@@ -205,7 +205,7 @@ class SettlementViewModelTest {
         whenever(appRepository.buscarAcertosPorClienteECicloId(clienteId, cicloId)).thenReturn(flowOf(listOf(acertoExistente)))
         whenever(appRepository.obterAcertoPorId(acertoId)).thenReturn(acertoExistente)
         whenever(appRepository.atualizarAcerto(any())).thenReturn(1)
-        whenever(appRepository.atualizarDebitoAtual(any(), any())).thenReturn(Unit)
+        whenever(appRepository.atualizarDebitoAtualCliente(any(), any())).thenReturn(Unit)
         whenever(appRepository.atualizarValoresCiclo(any())).thenReturn(Unit)
         whenever(appRepository.buscarAcertosPorRotaECicloId(any(), any())).thenReturn(flowOf(emptyList()))
         whenever(appRepository.buscarDespesasPorCicloId(any())).thenReturn(flowOf(emptyList()))
@@ -241,7 +241,7 @@ class SettlementViewModelTest {
         whenever(appRepository.inserirAcerto(any())).thenReturn(500L)
         whenever(appRepository.obterAcertoPorId(any())).thenReturn(Acerto(id = 500L, clienteId = clienteId, periodoInicio = Date(), periodoFim = Date()))
         whenever(appRepository.inserirAcertoMesa(any())).thenReturn(1000L)
-        whenever(appRepository.atualizarDebitoAtual(any(), any())).thenReturn(Unit)
+        whenever(appRepository.atualizarDebitoAtualCliente(any(), any())).thenReturn(Unit)
         whenever(appRepository.atualizarValoresCiclo(any())).thenReturn(Unit)
         whenever(appRepository.inserirHistoricoManutencaoMesa(any())).thenReturn(2000L)
         
