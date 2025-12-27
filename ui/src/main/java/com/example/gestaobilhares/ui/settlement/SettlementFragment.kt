@@ -1152,6 +1152,7 @@ class SettlementFragment : Fragment() {
                     tipoMesa = com.example.gestaobilhares.data.entities.TipoMesa.SINUCA,
                     comDefeito = mesaState.comDefeito,
                     relogioReiniciou = mesaState.relogioReiniciou,
+                    mediaFichasJogadas = mesaState.mediaFichasJogadas,
                     // ✅ CORREÇÃO: Priorizar URL do Firebase Storage para sincronização
                     fotoRelogioFinal = fotoParaSalvar,
                     dataFoto = mesaState.dataFoto

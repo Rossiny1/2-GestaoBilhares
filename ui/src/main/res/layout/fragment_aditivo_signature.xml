@@ -15,16 +15,15 @@
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_margin="12dp"
         app:cardCornerRadius="12dp"
-        app:cardElevation="4dp">
+        app:cardElevation="2dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
-
+            android:padding="12dp">
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
@@ -35,7 +34,6 @@
                 android:textColor="@color/primary_color"
                 android:gravity="center"
                 android:layout_marginBottom="8dp" />
-
             <TextView
                 android:id="@+id/tvContratoInfo"
                 android:layout_width="match_parent"
@@ -44,7 +42,6 @@
                 android:textSize="14sp"
                 android:textColor="@color/text_secondary"
                 android:gravity="center" />
-
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
@@ -53,35 +50,32 @@
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginBottom="12dp"
         app:cardCornerRadius="12dp"
-        app:cardElevation="4dp">
+        app:cardElevation="2dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
-
+            android:padding="12dp">
             <TextView
                 android:id="@+id/tvInstructions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Instruções"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary_color"
-                android:layout_marginBottom="8dp" />
-
+                android:layout_marginBottom="4dp" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="• Gire o dispositivo para o modo horizontal\n• Assine com o dedo na área abaixo\n• Certifique-se de que a assinatura está legível\n• Após assinar, salve e envie via WhatsApp"
-                android:textSize="14sp"
+                android:textSize="12sp"
                 android:textColor="@color/text_secondary"
-                android:lineSpacingExtra="4dp" />
-
+                android:lineSpacingExtra="2dp" />
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
@@ -89,27 +83,29 @@
     <!-- Área de Assinatura -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
-        android:layout_height="400dp"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginBottom="12dp"
         app:cardCornerRadius="12dp"
-        app:cardElevation="4dp">
+        app:cardElevation="4dp"
+        android:minHeight="250dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="12dp">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Assinatura do Locatário"
-                android:textSize="16sp"
+                android:textSize="14dp"
                 android:textStyle="bold"
                 android:textColor="@color/primary_color"
                 android:gravity="center"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="8dp" />
 
             <!-- View personalizada para captura de assinatura -->
             <com.example.gestaobilhares.ui.common.SignatureView
@@ -160,7 +156,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="12dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBack"

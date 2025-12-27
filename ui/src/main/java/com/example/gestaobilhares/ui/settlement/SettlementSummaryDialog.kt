@@ -158,8 +158,6 @@ class SettlementSummaryDialog : DialogFragment() {
         }
         view.findViewById<TextView>(com.example.gestaobilhares.ui.R.id.tvResumoPagamentos).text = pagamentosText
         
-        // Observação
-        view.findViewById<TextView>(com.example.gestaobilhares.ui.R.id.tvResumoObservacao).text = observacao
 
         // ✅ BOTÃO IMPRIMIR UNIFICADO: Usa função centralizada
         view.findViewById<MaterialButton>(com.example.gestaobilhares.ui.R.id.btnImprimir).setOnClickListener {

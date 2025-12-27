@@ -233,7 +233,16 @@ class AppRepository @Inject constructor(
         }
     }
     suspend fun obterDebitoAtual(clienteId: Long) = clienteRepository.obterDebitoAtual(clienteId)
-    suspend fun atualizarDebitoAtual(clienteId: Long, novoDebito: Double) = clienteRepository.atualizarDebitoAtual(clienteId, novoDebito)
+    suspend fun atualizarDebitoAtualCliente(clienteId: Long, novoDebito: Double) = 
+        clienteRepository.atualizarDebitoAtual(clienteId, novoDebito)
+    
+    suspend fun buscarClientePorNomeERota(nome: String, rotaId: Long) = 
+        clienteRepository.buscarPorNomeERota(nome, rotaId)
+        
+    suspend fun migrarDadosDeCliente(idAntigo: Long, idNovo: Long) = 
+        clienteRepository.migrarDadosDeCliente(idAntigo, idNovo)
+    
+    // ==================== CONTRATOS ====================
     suspend fun calcularDebitoAtualEmTempoReal(clienteId: Long) = clienteRepository.calcularDebitoAtualEmTempoReal(clienteId)
     suspend fun obterClienteComDebitoAtual(clienteId: Long) = clienteRepository.obterClienteComDebitoAtual(clienteId)
     suspend fun buscarRotaIdPorCliente(clienteId: Long): Long? = clienteRepository.buscarRotaIdPorCliente(clienteId)
@@ -784,6 +793,10 @@ class AppRepository @Inject constructor(
     
     suspend fun contarColaboradoresAtivos() = colaboradorDao.contarAtivos()
     suspend fun contarColaboradoresPendentesAprovacao() = colaboradorDao.contarPendentesAprovacao()
+    
+    fun contarColaboradoresAtivosFlow() = colaboradorDao.contarAtivosFlow()
+    fun contarColaboradoresPendentesAprovacaoFlow() = colaboradorDao.contarPendentesAprovacaoFlow()
+    fun contarTotalColaboradoresFlow() = colaboradorDao.contarTotalFlow()
     
     // ==================== META COLABORADOR ====================
     

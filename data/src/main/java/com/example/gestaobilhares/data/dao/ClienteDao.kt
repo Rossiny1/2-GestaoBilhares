@@ -57,7 +57,26 @@ interface ClienteDao {
     @RewriteQueriesToDropUnusedColumns
     @Query("""
         SELECT c.*, 
-               COALESCE(ultimo_acerto.debito_atual, 0.0) as debito_atual_calculado
+               COALESCE(ultimo_acerto.debito_atual, 0.0) as debito_atual
+        FROM clientes c
+        LEFT JOIN (
+            SELECT a1.cliente_id, a1.debito_atual
+            FROM acertos a1
+            INNER JOIN (
+                SELECT cliente_id, MAX(data_acerto) as max_data
+                FROM acertos
+                GROUP BY cliente_id
+            ) a2 ON a1.cliente_id = a2.cliente_id AND a1.data_acerto = a2.max_data
+        ) ultimo_acerto ON c.id = ultimo_acerto.cliente_id
+        WHERE c.rota_id = :rotaId
+        ORDER BY c.nome ASC
+    """)
+    fun obterClientesPorRotaComDebitoCalculado(rotaId: Long): Flow<List<Cliente>>
+
+    @RewriteQueriesToDropUnusedColumns
+    @Query("""
+        SELECT c.*, 
+               COALESCE(ultimo_acerto.debito_atual, 0.0) as debito_atual
         FROM clientes c
         LEFT JOIN (
             SELECT cliente_id, debito_atual, data_acerto
@@ -69,4 +88,28 @@ interface ClienteDao {
         WHERE c.id = :clienteId
     """)
     suspend fun obterClienteComDebitoAtual(clienteId: Long): Cliente?
+
+    /**
+     * ✅ NOVO: Busca um cliente pelo nome e rota para reconciliação durante sync.
+     */
+    @Query("SELECT * FROM clientes WHERE nome = :nome AND rota_id = :rotaId LIMIT 1")
+    suspend fun buscarPorNomeERota(nome: String, rotaId: Long): Cliente?
+
+    /**
+     * ✅ NOVO: Migra mesas de um ID de cliente para outro.
+     */
+    @Query("UPDATE mesas SET cliente_id = :idNovo WHERE cliente_id = :idAntigo")
+    suspend fun migrarMesas(idAntigo: Long, idNovo: Long): Int
+
+    /**
+     * ✅ NOVO: Migra acertos de um ID de cliente para outro.
+     */
+    @Query("UPDATE acertos SET cliente_id = :idNovo WHERE cliente_id = :idAntigo")
+    suspend fun migrarAcertos(idAntigo: Long, idNovo: Long): Int
+
+    /**
+     * ✅ NOVO: Migra contratos de um ID de cliente para outro.
+     */
+    @Query("UPDATE contratos_locacao SET clienteId = :idNovo WHERE clienteId = :idAntigo")
+    suspend fun migrarContratos(idAntigo: Long, idNovo: Long): Int
 } 

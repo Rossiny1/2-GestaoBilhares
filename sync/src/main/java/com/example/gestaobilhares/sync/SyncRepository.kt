@@ -1081,6 +1081,16 @@ class SyncRepository @javax.inject.Inject constructor(
             val isConnected = networkUtils.isConnected()
             Timber.tag(TAG).d("?? NetworkUtils.isConnected() = $isConnected")
             
+            // ✅ CORREÇÃO: Propagar flag de bootstrap para todos os handlers
+            val handlers = listOf(
+                mesaSyncHandler, clienteSyncHandler, contratoSyncHandler, acertoSyncHandler,
+                despesaSyncHandler, rotaSyncHandler, cicloSyncHandler, colaboradorSyncHandler,
+                colaboradorRotaSyncHandler, metaColaboradorSyncHandler, metaSyncHandler,
+                assinaturaSyncHandler, veiculoSyncHandler, equipamentoSyncHandler, estoqueSyncHandler
+            )
+            handlers.forEach { it.allowRouteBootstrap = allowRouteBootstrap }
+            Timber.tag(TAG).d("?? Bootstrap flag ($allowRouteBootstrap) propagada para ${handlers.size} handlers")
+            
             // Tentar mesmo se NetworkUtils reportar offline (pode ser falso negativo)
             // O Firestore vai falhar se realmente estiver offline
             if (!isConnected) {
@@ -1106,19 +1116,7 @@ class SyncRepository @javax.inject.Inject constructor(
             // ? CORRIGIDO: Pull por dom�nio em sequ�ncia respeitando depend�ncias
             // ORDEM CR�TICA: Rotas primeiro (clientes dependem de rotas)
             
-            rotaSyncHandler.pull(timestampOverride).fold(
-                onSuccess = { count -> 
-                    totalSyncCount += count
-                    Timber.tag(TAG).d("? Pull Rotas: $count sincronizadas")
-                },
-                onFailure = { e ->
-                    failedCount++
-                    Timber.tag(TAG).e("? Pull Rotas falhou: ${e.message}", e)
-                }
-            )
-            progressTracker?.advance("Importando rotas...")
-
-            // ✅ CORREÇÃO: Puxar colaboradores antes para ter o ID e login
+            // ✅ CORREÇÃO: Puxar colaboradores antes (para garantir ID do usuário atual)
             colaboradorSyncHandler.pull(timestampOverride).fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
@@ -1131,8 +1129,8 @@ class SyncRepository @javax.inject.Inject constructor(
             )
             progressTracker?.advance("Importando colaboradores...")
 
-            // ✅ CORREÇÃO: Puxar vinculos de rota ANTES de puxar clientes/mesas
-            // Isso garante que accessibleRoutes no BaseSyncHandler não esteja vazio para usuários comuns
+            // ✅ CORREÇÃO: Puxar vínculos de rota ANTES de puxar as rotas
+            // Isso garante que o USER saiba quais rotas ele pode acessar
             colaboradorRotaSyncHandler.pull().fold(
                 onSuccess = { count -> 
                     totalSyncCount += count
@@ -1144,6 +1142,20 @@ class SyncRepository @javax.inject.Inject constructor(
                 }
             )
             progressTracker?.advance("Importando colaborador rotas...")
+
+            // rotaSyncHandler.allowRouteBootstrap = allowRouteBootstrap // Removido: agora propagado para todos acima
+            
+            rotaSyncHandler.pull(timestampOverride).fold(
+                onSuccess = { count -> 
+                    totalSyncCount += count
+                    Timber.tag(TAG).d("? Pull Rotas: $count sincronizadas")
+                },
+                onFailure = { e ->
+                    failedCount++
+                    Timber.tag(TAG).e("? Pull Rotas falhou: ${e.message}", e)
+                }
+            )
+            progressTracker?.advance("Importando rotas...")
             
             clienteSyncHandler.pull(timestampOverride).fold(
                 onSuccess = { count -> 
@@ -1634,6 +1646,8 @@ class SyncRepository @javax.inject.Inject constructor(
     suspend fun syncBidirectional(onProgress: ((SyncProgress) -> Unit)? = null): Result<Unit> {
         Timber.tag(TAG).d("?? syncBidirectional() CHAMADO - IN�CIO")
         return try {
+            // ✅ NOVO: Resetar filtros de rota no início para garantir que o cache não esteja sujo
+            resetRouteFilters()
             Timber.tag(TAG).d("?? ========== INICIANDO SINCRONIZA��O BIDIRECIONAL ==========")
             Timber.tag(TAG).d("Iniciando sincroniza��o bidirecional...")
             

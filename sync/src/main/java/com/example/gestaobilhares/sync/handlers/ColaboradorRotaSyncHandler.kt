@@ -59,13 +59,39 @@ class ColaboradorRotaSyncHandler(
         }
     }
 
+    private suspend fun fetchColaboradorRotaDocuments(
+        collectionRef: CollectionReference,
+        lastSyncTimestamp: Long = 0L
+    ): List<DocumentSnapshot> {
+        return if (userSessionManager.isAdmin()) {
+            // Admin busca tudo
+            if (lastSyncTimestamp > 0L) {
+                collectionRef.whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
+                    .orderBy("lastModified")
+                    .get().await().documents
+            } else {
+                collectionRef.get().await().documents
+            }
+        } else {
+            // Para USER, pull apenas os VÍNCULOS dele
+            // ✅ CORREÇÃO: Isso quebra a dependência circular onde precisávamos de RotaIDs para puxar vínculos
+            val userId = userSessionManager.getCurrentUserId()
+            var query = collectionRef.whereEqualTo("colaboradorId", userId)
+            if (lastSyncTimestamp > 0L) {
+                query = query.whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
+                    .orderBy("lastModified")
+            }
+            query.get().await().documents
+        }
+    }
+
     private suspend fun pullComplete(
         collectionRef: CollectionReference,
         startTime: Long,
         timestampOverride: Long?
     ): Result<Int> {
         return try {
-            val documents = fetchAllDocumentsWithRouteFilter(collectionRef, FIELD_ROTA_ID)
+            val documents = fetchColaboradorRotaDocuments(collectionRef)
             Timber.tag(TAG).d("?? Pull COMPLETO de colaborador rotas - documentos recebidos: ${documents.size}")
             
             if (documents.isEmpty()) {
@@ -93,7 +119,7 @@ class ColaboradorRotaSyncHandler(
         timestampOverride: Long?
     ): Result<Int>? {
         return try {
-            val documents = fetchDocumentsWithRouteFilter(collectionRef, FIELD_ROTA_ID, lastSyncTimestamp)
+            val documents = fetchColaboradorRotaDocuments(collectionRef, lastSyncTimestamp)
             
             if (documents.isEmpty()) {
                 saveSyncMetadata(entityType, 0, System.currentTimeMillis() - startTime, timestampOverride = timestampOverride)

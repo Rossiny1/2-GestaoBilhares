@@ -630,8 +630,15 @@ class MesasAcertoAdapter(
     }
 
     fun isDataValid(): Boolean {
-        return mesaStates.values.all { state ->
-            val mesa = currentList.find { it.id == state.mesaId }
+        // Garantir que todas as mesas da lista tenham um estado e sejam válidas
+        return currentList.all { mesa ->
+            val state = mesaStates[mesa.id] ?: MesaAcertoState(
+                mesaId = mesa.id,
+                relogioInicial = mesa.relogioInicial,
+                valorFixo = mesa.valorFixo,
+                valorFicha = mesa.valorFicha,
+                comissaoFicha = mesa.comissaoFicha
+            )
             
             // ✅ FASE 2: Usar DataValidator centralizado
             val resultadoValidacao = com.example.gestaobilhares.core.utils.DataValidator.validarDadosMesa(
@@ -643,7 +650,7 @@ class MesasAcertoAdapter(
             )
             
             // Para mesas com valor fixo, sempre válido
-            if (mesa?.valorFixo ?: 0.0 > 0) {
+            if (mesa.valorFixo > 0) {
                 true
             } else {
                 resultadoValidacao.isSucesso()
@@ -653,11 +660,17 @@ class MesasAcertoAdapter(
     
     // ✅ NOVO: Função para obter mensagem de erro específica
     fun getValidationErrorMessage(): String {
-        mesaStates.values.forEach { state ->
-            val mesa = currentList.find { it.id == state.mesaId }
+        currentList.forEach { mesa ->
+            val state = mesaStates[mesa.id] ?: MesaAcertoState(
+                mesaId = mesa.id,
+                relogioInicial = mesa.relogioInicial,
+                valorFixo = mesa.valorFixo,
+                valorFicha = mesa.valorFicha,
+                comissaoFicha = mesa.comissaoFicha
+            )
             
             // Verificar validação básica
-            val validacaoBasica = if (mesa?.valorFixo ?: 0.0 > 0) {
+            val validacaoBasica = if (mesa.valorFixo > 0) {
                 true
             } else if (state.comDefeito && state.mediaFichasJogadas > 0) {
                 true
@@ -666,13 +679,19 @@ class MesasAcertoAdapter(
             }
             
             if (!validacaoBasica) {
-                return "Mesa ${mesa?.numero ?: state.mesaId}: Relógio final deve ser maior ou igual ao inicial"
+                return "Mesa ${mesa.numero}: Relógio final deve ser maior ou igual ao inicial"
             }
             
             // Verificar foto obrigatória
             if ((state.comDefeito || state.relogioReiniciou) && state.fotoRelogioFinal.isNullOrEmpty()) {
                 val problema = if (state.comDefeito) "relógio com defeito" else "relógio reiniciou"
-                return "Mesa ${mesa?.numero ?: state.mesaId}: É obrigatório tirar foto quando '$problema' está selecionado"
+                return "Mesa ${mesa.numero}: É obrigatório tirar foto quando '$problema' está selecionado"
+            }
+            
+            // Caso especial: relógio final igual ao inicial em mesa normal (sem defeito/reinício)
+            if (!state.comDefeito && !state.relogioReiniciou && mesa.valorFixo <= 0 && state.relogioFinal == state.relogioInicial) {
+                // Apenas logar ou avisar? O sistema permite 0 fichas, mas geralmente o usuário quer saber.
+                // Aqui manteremos como válido por enquanto, conforme regras anteriores.
             }
         }
         return "Dados válidos"

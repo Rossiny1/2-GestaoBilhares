@@ -136,13 +136,37 @@ class ClienteSyncHandler(
                     continue
                 }
                 
-                val local = appRepository.obterClientePorId(id)
+                var local = appRepository.obterClientePorId(id)
                 val serverTime = (data["dataUltimaAtualizacao"] as? Timestamp)?.toDate()?.time ?: 0L
                 val localTime = local?.dataUltimaAtualizacao?.time ?: 0L
                 
+                // ✅ LÓGICA DE RECONCILIAÇÃO: Se não achou pelo ID, tenta pelo Nome + Rota
+                if (local == null) {
+                    val clientePorNome = appRepository.buscarClientePorNomeERota(cliente.nome, cliente.rotaId)
+                    if (clientePorNome != null && clientePorNome.id != id) {
+                        Timber.tag(TAG).w("🚨 [RECONCILIAÇÃO] Detectada duplicação por colisão de ID para '${cliente.nome}'")
+                        Timber.tag(TAG).w("   - ID Local: ${clientePorNome.id}, ID Servidor: $id")
+                        
+                        // Migrar mesas, acertos e contratos do ID antigo para o ID novo (servidor)
+                        appRepository.migrarDadosDeCliente(clientePorNome.id, id)
+                        
+                        // Remover o cliente local duplicado para que o novo seja inserido com o ID correto
+                        appRepository.deletarCliente(clientePorNome)
+                        Timber.tag(TAG).d("   - Cliente local antigo removido.")
+                        
+                        // Agora marcamos como 'local' nulo para forçar a inserção do novo ID
+                        local = null
+                    }
+                }
+
                 if (local == null || serverTime > localTime) {
-                    if (local == null) appRepository.inserirCliente(cliente)
-                    else appRepository.atualizarCliente(cliente)
+                    if (local == null) {
+                        Timber.tag(TAG).d("📥 Inserindo novo cliente: ${cliente.nome} (ID $id)")
+                        appRepository.inserirCliente(cliente)
+                    } else {
+                        Timber.tag(TAG).d("🆙 Atualizando cliente: ${cliente.nome} (ID $id)")
+                        appRepository.atualizarCliente(cliente)
+                    }
                     count++
                 }
             } catch (e: Exception) {

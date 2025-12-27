@@ -40,6 +40,8 @@ abstract class BaseSyncHandler(
     protected val syncMetadataDao: SyncMetadataDao = AppDatabase.getDatabase(context).syncMetadataDao()
 ) : SyncHandler {
 
+    override var allowRouteBootstrap: Boolean = false
+
     protected companion object {
         const val COLLECTION_CLIENTES = "clientes"
         const val COLLECTION_CONTRATOS = "contratos"
@@ -267,7 +269,7 @@ abstract class BaseSyncHandler(
         if (userSessionManager.isAdmin()) return true
         val accessibleRoutes = getAccessibleRouteIds()
         if (accessibleRoutes.isEmpty()) {
-            return false // Não permitir bootstrap por padrão nos handlers
+            return allowRouteBootstrap // ✅ CORREÇÃO: Permitir se bootstrap estiver habilitado
         }
         val resolvedRouteId = when {
             rotaId != null && rotaId != 0L -> rotaId

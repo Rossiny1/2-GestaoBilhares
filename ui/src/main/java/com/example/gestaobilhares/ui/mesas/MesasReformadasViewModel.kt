@@ -19,24 +19,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 /**
- * ✅ NOVO: Data class para agrupar reformas por mesa com histórico
- */
-data class MesaReformadaComHistorico(
-    val numeroMesa: String,
-    val mesaId: Long,
-    val tipoMesa: String,
-    val tamanhoMesa: String,
-    val reformas: List<MesaReformada>,
-    val historicoManutencoes: List<HistoricoManutencaoMesa>
-) {
-    // Data da última reforma
-    val dataUltimaReforma = reformas.maxByOrNull { it.dataReforma.time }?.dataReforma
-    
-    // Total de reformas
-    val totalReformas = reformas.size
-}
-
-/**
  * ViewModel para a tela de mesas reformadas.
  * Gerencia o estado e operações relacionadas às mesas reformadas.
  * ✅ NOVO: Agrupa reformas por mesa e inclui histórico de manutenções
@@ -64,34 +46,59 @@ class MesasReformadasViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 showLoading()
-                // ✅ CORRIGIDO: Usar Flow reativo do banco de dados (igual VehiclesViewModel)
-                // O Flow emite automaticamente quando há mudanças no banco
+                // ✅ CORRIGIDO: Combinar com todas as mesas para obter dados atualizados de tipo/tamanho
                 combine(
-                    appRepository.obterTodasMesasReformadas(), // ✅ CORRIGIDO: Flow reativo do banco
+                    appRepository.obterTodasMesasReformadas(),
                     appRepository.obterTodosHistoricoManutencaoMesa(),
+                    appRepository.obterTodasMesas(),
                     _filtroNumeroMesa
-                ) { mesasReformadas: List<MesaReformada>, historicoManutencoes: List<HistoricoManutencaoMesa>, filtro: String? ->
-                    // Agrupar reformas por número da mesa
-                    val reformasPorMesa = mesasReformadas.groupBy { it.numeroMesa }
+                ) { reformas: List<MesaReformada>, historico: List<HistoricoManutencaoMesa>, todasMesas: List<com.example.gestaobilhares.data.entities.Mesa>, filtro: String? ->
                     
-                    // Criar lista de MesaReformadaComHistorico
-                    val mesasAgrupadas = reformasPorMesa.map { (numeroMesa: String, reformas: List<MesaReformada>) ->
-                        val primeiraReforma = reformas.first()
-                        val historicoDaMesa = historicoManutencoes.filter { historico: HistoricoManutencaoMesa ->
-                            historico.numeroMesa == numeroMesa 
+                    // 1. Identificar todos os identificadores únicos de mesas que têm alguma atividade
+                    val idsReformas = reformas.map { if (it.mesaId != 0L) it.mesaId else it.numeroMesa }.toSet()
+                    val idsHistorico = historico.map { if (it.mesaId != 0L) it.mesaId else it.numeroMesa }.toSet()
+                    val todosIdsComAtividade = idsReformas + idsHistorico
+                    
+                    // Criar mapa de mesas para consulta rápida de dados atuais
+                    val mesaInfoMap = todasMesas.associateBy { it.id }
+                    
+                    // 2. Agrupar atividades por mesa
+                    val mesasAgrupadas = todosIdsComAtividade.map { key ->
+                        val reformasDaMesa = reformas.filter { 
+                            if (key is Long) it.mesaId == key else it.numeroMesa == key
+                        }.sortedByDescending { it.dataReforma.time }
+                        
+                        val historicoDaMesa = historico.filter { 
+                            if (key is Long) it.mesaId == key else it.numeroMesa == key
                         }.sortedByDescending { it.dataManutencao.time }
+                        
+                        // Determinar número, tipo e tamanho da mesa (preferir dados atuais do banco se houver)
+                        val mesaAtual = if (key is Long) mesaInfoMap[key] else null
+                        
+                        val numeroMesa = mesaAtual?.numero 
+                            ?: reformasDaMesa.firstOrNull()?.numeroMesa 
+                            ?: historicoDaMesa.firstOrNull()?.numeroMesa 
+                            ?: key.toString()
+                            
+                        val tipoMesa = mesaAtual?.tipoMesa?.name
+                            ?: reformasDaMesa.firstOrNull()?.tipoMesa?.name
+                            ?: "SINUCA"
+                            
+                        val tamanhoMesa = mesaAtual?.tamanho?.name
+                            ?: reformasDaMesa.firstOrNull()?.tamanhoMesa?.name
+                            ?: "GRANDE"
                         
                         MesaReformadaComHistorico(
                             numeroMesa = numeroMesa,
-                            mesaId = primeiraReforma.mesaId,
-                            tipoMesa = primeiraReforma.tipoMesa.name,
-                            tamanhoMesa = primeiraReforma.tamanhoMesa.name,
-                            reformas = reformas.sortedByDescending { it.dataReforma.time },
+                            mesaId = if (key is Long) key else 0L,
+                            tipoMesa = tipoMesa,
+                            tamanhoMesa = tamanhoMesa,
+                            reformas = reformasDaMesa,
                             historicoManutencoes = historicoDaMesa
                         )
-                    }.sortedByDescending { it.dataUltimaReforma?.time ?: 0L }
+                    }.sortedByDescending { it.dataUltimoEvento?.time ?: 0L }
                     
-                    // ✅ NOVO: Aplicar filtro se houver
+                    // Aplicar filtro se houver
                     if (filtro.isNullOrBlank()) {
                         mesasAgrupadas
                     } else {
@@ -101,7 +108,7 @@ class MesasReformadasViewModel @Inject constructor(
                     }
                 }.collect { mesasFiltradas: List<MesaReformadaComHistorico> ->
                     _mesasReformadas.value = mesasFiltradas
-                    hideLoading() // Ocultar loading após primeira coleta
+                    hideLoading()
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Erro ao carregar mesas reformadas: ${e.message}"

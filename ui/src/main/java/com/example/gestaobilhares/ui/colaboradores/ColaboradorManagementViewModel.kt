@@ -9,6 +9,8 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
@@ -43,14 +45,14 @@ class ColaboradorManagementViewModel @Inject constructor(
     val colaboradores: StateFlow<List<Colaborador>> = _colaboradores.asStateFlow()
     
     // Estatísticas
-    private val _totalColaboradores = MutableStateFlow(0)
-    val totalColaboradores: StateFlow<Int> = _totalColaboradores.asStateFlow()
+    val totalColaboradores: StateFlow<Int> = appRepository.contarTotalColaboradoresFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
     
-    private val _colaboradoresAtivos = MutableStateFlow(0)
-    val colaboradoresAtivos: StateFlow<Int> = _colaboradoresAtivos.asStateFlow()
+    val colaboradoresAtivos: StateFlow<Int> = appRepository.contarColaboradoresAtivosFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
     
-    private val _pendentesAprovacao = MutableStateFlow(0)
-    val pendentesAprovacao: StateFlow<Int> = _pendentesAprovacao.asStateFlow()
+    val pendentesAprovacao: StateFlow<Int> = appRepository.contarColaboradoresPendentesAprovacaoFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
     
     // isLoading já existe na BaseViewModel
     
@@ -84,9 +86,6 @@ class ColaboradorManagementViewModel @Inject constructor(
             try {
                 showLoading()
                 
-                // Carregar estatísticas
-                carregarEstatisticas()
-                
                 // Carregar colaboradores com filtro atual
                 aplicarFiltro(_filtroAtual.value)
                 
@@ -95,28 +94,6 @@ class ColaboradorManagementViewModel @Inject constructor(
             } finally {
                 hideLoading()
             }
-        }
-    }
-    
-    /**
-     * Carrega estatísticas dos colaboradores
-     */
-    private suspend fun carregarEstatisticas() {
-        try {
-            // Total de colaboradores
-            val todosColaboradores = appRepository.obterTodosColaboradores().first()
-            _totalColaboradores.value = todosColaboradores.size
-            
-            // Colaboradores ativos
-            val colaboradoresAtivos = appRepository.obterColaboradoresAtivos().first()
-            _colaboradoresAtivos.value = colaboradoresAtivos.size
-            
-            // Pendentes aprovação
-            val pendentes = appRepository.obterColaboradoresPendentesAprovacao().first()
-            _pendentesAprovacao.value = pendentes.size
-            
-        } catch (e: Exception) {
-            Timber.e("ColaboradorManagementViewModel", "Erro ao carregar estatísticas: ${e.message}")
         }
     }
     

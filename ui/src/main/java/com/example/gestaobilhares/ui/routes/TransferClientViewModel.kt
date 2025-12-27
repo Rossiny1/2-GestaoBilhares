@@ -62,16 +62,23 @@ class TransferClientViewModel @Inject constructor(
                 val rotaDestino = appRepository.obterRotaPorNome(rotaDestinoNome)
                     ?: throw Exception("Rota de destino não encontrada")
 
-                // Atualizar o cliente com a nova rota
-                val clienteAtualizado = cliente.copy(rotaId = rotaDestino.id)
+                // 1. Atualizar o cliente com a nova rota e nova data de atualização
+                val clienteAtualizado = cliente.copy(
+                    rotaId = rotaDestino.id,
+                    dataUltimaAtualizacao = java.util.Date()
+                )
                 appRepository.atualizarCliente(clienteAtualizado)
 
-                // ✅ NOVO: Log para debug da transferência
-                Timber.d("TransferClientViewModel", "✅ Cliente '${cliente.nome}' transferido de '${rotaOrigem.nome}' para '${rotaDestino.nome}'")
-                Timber.d("TransferClientViewModel", "📊 Mesas transferidas: ${mesas.size} mesas")
+                // 2. Atualizar timestamps das mesas para garantir que o Sync detecte a mudança
+                // (O clienteId da mesa não muda, mas ela deve ser "empurrada" para a nova rota no Firestore)
+                mesas.forEach { mesa ->
+                    val mesaAtualizada = mesa.copy(dataUltimaLeitura = java.util.Date())
+                    appRepository.atualizarMesa(mesaAtualizada)
+                }
 
-                // As mesas não precisam ser atualizadas pois já estão vinculadas ao cliente
-                // que foi transferido para a nova rota
+                // ✅ NOVO: Log para debug da transferência
+                Timber.d("TransferClientViewModel", "✅ Cliente '${cliente.nome}' transferido para '${rotaDestino.nome}'")
+                Timber.d("TransferClientViewModel", "📊 Timestamps atualizados para ${mesas.size} mesas")
 
                 _transferSuccess.value = true
             } catch (e: Exception) {

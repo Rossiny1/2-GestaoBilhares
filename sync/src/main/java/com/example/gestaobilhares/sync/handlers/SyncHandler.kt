@@ -18,6 +18,11 @@ interface SyncHandler {
     val entityType: String
     
     /**
+     * Flag para permitir bootstrap (sincronizar dados mesmo sem rotas locais atribuídas).
+     */
+    var allowRouteBootstrap: Boolean
+    
+    /**
      * Sincroniza dados do servidor (Firestore) para o local (Room).
      * 
      * @param timestampOverride Timestamp opcional para forçar sincronização a partir de uma data específica
