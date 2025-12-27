@@ -66,8 +66,12 @@ class TransferClientDialog : DialogFragment() {
             .create()
         dialog.setCanceledOnTouchOutside(true)
         
-        // Inicializar repositórios e ViewModel
-        // Hilt initializes ViewModel automatically
+        // ✅ NOVO: Ajustar dimensões do diálogo para melhor visibilidade em dispositivos móveis (ex: A31)
+        dialog.setOnShowListener {
+            val displayMetrics = resources.displayMetrics
+            val width = (displayMetrics.widthPixels * 0.95).toInt() // Aumentado para 95% para telas menores
+            dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
 
         setupArguments()
         setupClickListeners()

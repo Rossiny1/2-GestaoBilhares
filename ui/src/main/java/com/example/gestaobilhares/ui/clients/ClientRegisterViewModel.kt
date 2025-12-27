@@ -32,6 +32,10 @@ class ClientRegisterViewModel @Inject constructor(
     // ✅ NOVO: Estado para indicar se é edição
     private val _clienteAtualizado = MutableStateFlow<Boolean>(false)
     val clienteAtualizado: StateFlow<Boolean> = _clienteAtualizado.asStateFlow()
+
+    // ✅ NOVO: Estado para erro de cliente duplicado
+    private val _clienteDuplicado = MutableStateFlow<Boolean>(false)
+    val clienteDuplicado: StateFlow<Boolean> = _clienteDuplicado.asStateFlow()
     
     fun carregarDebitoAtual(clienteId: Long?) {
         if (clienteId == null) {
@@ -61,9 +65,17 @@ class ClientRegisterViewModel @Inject constructor(
                 if (clienteExistente != null) {
                     // MODO EDIÇÃO - Atualizar cliente existente
                     android.util.Log.d("ClientRegisterViewModel", "Modo EDIÇÃO - Atualizando cliente ID: ${clienteExistente.id}")
-                    android.util.Log.d("ClientRegisterViewModel", "Dados originais: ${clienteExistente.nome}")
-                    android.util.Log.d("ClientRegisterViewModel", "Dados novos: ${cliente.nome}")
                     
+                    // ✅ NOVO: Verificar se o NOVO nome já existe em OUTRO cliente na mesma rota
+                    if (cliente.nome != clienteExistente.nome) {
+                        val existente = appRepository.buscarClientePorNomeERota(cliente.nome, cliente.rotaId)
+                        if (existente != null && existente.id != clienteExistente.id) {
+                            android.util.Log.w("ClientRegisterViewModel", "ALERTA: Tentativa de mudar nome para '${cliente.nome}', que já existe (ID: ${existente.id})")
+                            _clienteDuplicado.value = true
+                            return@launch
+                        }
+                    }
+
                     val clienteAtualizado = cliente.copy(
                         id = clienteExistente.id,
                         dataCadastro = clienteExistente.dataCadastro, // Preservar data original
@@ -81,7 +93,17 @@ class ClientRegisterViewModel @Inject constructor(
                     android.util.Log.d("ClientRegisterViewModel", "Cliente atualizado com sucesso!")
                 } else {
                     // MODO NOVO CADASTRO
-                    android.util.Log.d("ClientRegisterViewModel", "Modo NOVO CADASTRO - Inserindo cliente")
+                    android.util.Log.d("ClientRegisterViewModel", "Modo NOVO CADASTRO - Verificando duplicados")
+                    
+                    // ✅ NOVO: Verificar se já existe um cliente com este nome na mesma rota
+                    val existente = appRepository.buscarClientePorNomeERota(cliente.nome, cliente.rotaId)
+                    if (existente != null) {
+                        android.util.Log.w("ClientRegisterViewModel", "ALERTA: Cliente '${cliente.nome}' já existe na rota ${cliente.rotaId} (ID: ${existente.id})")
+                        _clienteDuplicado.value = true
+                        return@launch
+                    }
+
+                    android.util.Log.d("ClientRegisterViewModel", "Nenhum duplicado encontrado, inserindo cliente")
                     val id = appRepository.inserirCliente(cliente)
                     _novoClienteId.value = id
                     android.util.Log.d("ClientRegisterViewModel", "Cliente inserido com sucesso, ID: $id")
@@ -101,6 +123,11 @@ class ClientRegisterViewModel @Inject constructor(
     fun resetNovoClienteId() {
         _novoClienteId.value = null
         _clienteAtualizado.value = false
+        _clienteDuplicado.value = false
+    }
+
+    fun resetStatusDuplicado() {
+        _clienteDuplicado.value = false
     }
     
     /**

@@ -179,6 +179,9 @@ class ClientRegisterFragment : Fragment() {
                                     findNavController().popBackStack()
                                     viewModel.resetNovoClienteId()
                                 }
+                                .setOnDismissListener {
+                                    viewModel.resetNovoClienteId()
+                                }
                                 .show()
                         }
                     } catch (e: Exception) {
@@ -225,6 +228,9 @@ class ClientRegisterFragment : Fragment() {
                                     findNavController().popBackStack()
                                     viewModel.resetNovoClienteId()
                                 }
+                                .setOnDismissListener {
+                                    viewModel.resetNovoClienteId()
+                                }
                                 .show()
                         }
                     } catch (e: Exception) {
@@ -253,6 +259,28 @@ class ClientRegisterFragment : Fragment() {
                 }
             }
         }
+
+        // ✅ NOVO: Observer para cliente duplicado
+        lifecycleScope.launch {
+            viewModel.clienteDuplicado.collect { isDuplicado ->
+                if (isDuplicado) {
+                    mostrarAlertaClienteDuplicado()
+                }
+            }
+        }
+    }
+
+    private fun mostrarAlertaClienteDuplicado() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("⚠️ Cliente já Cadastrado")
+            .setMessage("Já existe um cliente com este nome nesta rota.\n\nPor favor, use um nome diferente ou verifique se o cliente já está na lista.")
+            .setPositiveButton("Entendido") { _, _ ->
+                viewModel.resetStatusDuplicado()
+            }
+            .setOnDismissListener {
+                viewModel.resetStatusDuplicado()
+            }
+            .show()
     }
 
     private fun showErrorDialog(message: String) {

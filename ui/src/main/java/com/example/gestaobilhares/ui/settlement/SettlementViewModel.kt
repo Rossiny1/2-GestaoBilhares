@@ -84,6 +84,7 @@ class SettlementViewModel @Inject constructor(
         val tipoMesa: com.example.gestaobilhares.data.entities.TipoMesa,
         val comDefeito: Boolean = false,
         val relogioReiniciou: Boolean = false,
+        val mediaFichasJogadas: Double = 0.0,
         // ✅ NOVO: Campos para fotos
         val fotoRelogioFinal: String? = null,
         val dataFoto: java.util.Date? = null
@@ -367,7 +368,10 @@ class SettlementViewModel @Inject constructor(
                     com.example.gestaobilhares.core.utils.FinancialCalculator.MesaAcertoCalculo(
                         relogioInicial = mesa.relogioInicial,
                         relogioFinal = mesa.relogioFinal,
-                        valorFixo = mesa.valorFixo
+                        valorFixo = mesa.valorFixo,
+                        comDefeito = mesa.comDefeito,
+                        relogioReiniciou = mesa.relogioReiniciou,
+                        mediaFichasJogadas = mesa.mediaFichasJogadas
                     )
                 }
                 
@@ -545,7 +549,16 @@ class SettlementViewModel @Inject constructor(
                     val fichasJogadas = if (mesa.valorFixo > 0) {
                         0 // Mesa de valor fixo não tem fichas jogadas
                     } else {
-                        (mesa.relogioFinal - mesa.relogioInicial).coerceAtLeast(0)
+                        com.example.gestaobilhares.core.utils.FinancialCalculator.calcularFichasJogadasMesa(
+                            com.example.gestaobilhares.core.utils.FinancialCalculator.MesaAcertoCalculo(
+                                relogioInicial = mesa.relogioInicial,
+                                relogioFinal = mesa.relogioFinal,
+                                valorFixo = mesa.valorFixo,
+                                comDefeito = mesa.comDefeito,
+                                relogioReiniciou = mesa.relogioReiniciou,
+                                mediaFichasJogadas = mesa.mediaFichasJogadas
+                            )
+                        )
                     }
                     
                     val subtotal = if (mesa.valorFixo > 0) {
@@ -599,7 +612,7 @@ class SettlementViewModel @Inject constructor(
                 logOperation("SETTLEMENT", "✅ Dados de ${acertoMesas.size} mesas salvos para o acerto $acertoId")
                 
                 // ✅ CRÍTICO: Atualizar o débito atual na tabela de clientes
-                appRepository.atualizarDebitoAtual(clienteId, debitoAtual)
+                appRepository.atualizarDebitoAtualCliente(clienteId, debitoAtual)
                 logOperation("SETTLEMENT", "Débito atual atualizado na tabela clientes: R$ $debitoAtual")
                 
                 // ✅ CORREÇÃO: Emitir resultado IMEDIATAMENTE para não bloquear a UI

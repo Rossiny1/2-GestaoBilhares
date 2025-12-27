@@ -9,7 +9,8 @@
 ## 📅 FASES PENDENTES
 
 ### FASE 1: Consolidação da Arquitetura (Q1 2026) 🟡 **EM PROGRESSO**
-*   **Refatoração AppRepository**: Migrar os métodos de acesso a dados remanescentes para repositories especializados em `data/repository/domain/`.
+*   **Refatoração AppRepository & SyncRepository**: Migrar métodos remanescentes de acesso a dados e sincronização para repositories especializados e Handlers.
+*   **Orchestrator Sync**: Reduzir `SyncRepository.kt` de ~3.500 para ~300 linhas, movendo lógicas de Acertos, Clientes e Mesas para Handlers individuais.
 *   **Testes de Cobertura**: Configurar JaCoCo consolidado e atingir 60% de cobertura unitária.
 *   **Cleanup de Logs**: Finalizar migração de `android.util.Log` para `Timber` na camada UI.
 

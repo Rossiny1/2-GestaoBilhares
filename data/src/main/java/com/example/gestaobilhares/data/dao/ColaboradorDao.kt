@@ -73,8 +73,17 @@ interface ColaboradorDao {
     @Query("SELECT COUNT(*) FROM colaboradores WHERE ativo = 1")
     suspend fun contarAtivos(): Int
     
+    @Query("SELECT COUNT(*) FROM colaboradores WHERE ativo = 1")
+    fun contarAtivosFlow(): Flow<Int>
+    
     @Query("SELECT COUNT(*) FROM colaboradores WHERE aprovado = 0")
     suspend fun contarPendentesAprovacao(): Int
+
+    @Query("SELECT COUNT(*) FROM colaboradores WHERE aprovado = 0")
+    fun contarPendentesAprovacaoFlow(): Flow<Int>
+    
+    @Query("SELECT COUNT(*) FROM colaboradores")
+    fun contarTotalFlow(): Flow<Int>
     
     // ==================== META COLABORADOR ====================
     

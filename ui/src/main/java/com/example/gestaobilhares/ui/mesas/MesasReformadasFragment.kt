@@ -63,8 +63,9 @@ class MesasReformadasFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = MesasReformadasAdapter { mesaComHistorico ->
-            // ✅ NOVO: Mostrar diálogo com histórico completo
-            mostrarDetalhesMesaComHistorico(mesaComHistorico)
+            // ✅ NOVO: Navegar para nova tela de histórico dedicada
+            val action = MesasReformadasFragmentDirections.actionMesasReformadasFragmentToHistoricoMesaFragment(mesaComHistorico)
+            findNavController().navigate(action)
         }
 
         binding.rvMesasReformadas.apply {
@@ -166,19 +167,6 @@ class MesasReformadasFragment : Fragment() {
             dialog.show(parentFragmentManager, "DetalhesMesaReformadaDialog")
         } catch (e: Exception) {
             // Log do erro se necessário
-        }
-    }
-    
-    /**
-     * ✅ NOVO: Mostra diálogo com detalhes da mesa e histórico completo
-     */
-    private fun mostrarDetalhesMesaComHistorico(mesaComHistorico: MesaReformadaComHistorico) {
-        try {
-            val dialog = DetalhesMesaReformadaComHistoricoDialog.newInstance(mesaComHistorico)
-            dialog.show(parentFragmentManager, "DetalhesMesaReformadaComHistoricoDialog")
-        } catch (e: Exception) {
-            android.util.Log.e("MesasReformadasFragment", "Erro ao mostrar detalhes: ${e.message}", e)
-            Toast.makeText(requireContext(), "Erro ao exibir detalhes: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 

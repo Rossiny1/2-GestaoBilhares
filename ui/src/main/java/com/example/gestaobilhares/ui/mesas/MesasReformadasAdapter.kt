@@ -43,15 +43,18 @@ class MesasReformadasAdapter(
 
         fun bind(mesaComHistorico: MesaReformadaComHistorico) {
             val ultimaReforma = mesaComHistorico.reformas.firstOrNull()
+            val ultimaManutencao = mesaComHistorico.historicoManutencoes.firstOrNull()
             
             // Número da mesa
             binding.tvNumeroMesa.text = "Mesa ${mesaComHistorico.numeroMesa}"
             
-            // Data da última reforma
-            if (mesaComHistorico.dataUltimaReforma != null) {
-                binding.tvDataReforma.text = dateFormat.format(mesaComHistorico.dataUltimaReforma)
+            // ✅ CORREÇÃO: Usar Data do último evento (reforma ou manutenção)
+            val dataExibicao = mesaComHistorico.dataUltimoEvento
+            if (dataExibicao != null) {
+                binding.tvDataReforma.text = dateFormat.format(dataExibicao)
+                binding.tvDataReforma.visibility = View.VISIBLE
             } else {
-                binding.tvDataReforma.text = ""
+                binding.tvDataReforma.visibility = View.GONE
             }
             
             // Tipo da mesa
@@ -61,11 +64,21 @@ class MesasReformadasAdapter(
             if (mesaComHistorico.totalReformas > 1) {
                 binding.tvTotalReformas.text = "${mesaComHistorico.totalReformas} reformas realizadas"
                 binding.tvTotalReformas.visibility = View.VISIBLE
+            } else if (mesaComHistorico.totalReformas == 1) {
+                binding.tvTotalReformas.text = "1 reforma realizada"
+                binding.tvTotalReformas.visibility = View.VISIBLE
             } else {
-                binding.tvTotalReformas.visibility = View.GONE
+                // Se não houver reformas, mostrar que tem histórico
+                val totalManutencoes = mesaComHistorico.historicoManutencoes.size
+                if (totalManutencoes > 0) {
+                    binding.tvTotalReformas.text = "$totalManutencoes manutenções registradas"
+                    binding.tvTotalReformas.visibility = View.VISIBLE
+                } else {
+                    binding.tvTotalReformas.visibility = View.GONE
+                }
             }
             
-            // Itens reformados da última reforma
+            // Itens reformados ou última manutenção
             if (ultimaReforma != null) {
                 val itensReformados = buildString {
                     val itens = mutableListOf<String>()
@@ -87,11 +100,24 @@ class MesasReformadasAdapter(
                 
                 // Observações da última reforma
                 if (!ultimaReforma.observacoes.isNullOrBlank()) {
-                    binding.tvObservacoes.text = "Observações: ${ultimaReforma.observacoes}"
+                    binding.tvObservacoes.text = "Obs: ${ultimaReforma.observacoes}"
                     binding.tvObservacoes.visibility = View.VISIBLE
                 } else {
                     binding.tvObservacoes.visibility = View.GONE
                 }
+            } else if (ultimaManutencao != null) {
+                // Fallback: Mostrar dados da última manutenção se não houver reforma
+                binding.tvItensReformados.text = "Manutenção: ${formatarTipoManutencao(ultimaManutencao.tipoManutencao)}"
+                
+                if (!ultimaManutencao.descricao.isNullOrBlank()) {
+                    binding.tvObservacoes.text = "Obs: ${ultimaManutencao.descricao}"
+                    binding.tvObservacoes.visibility = View.VISIBLE
+                } else {
+                    binding.tvObservacoes.visibility = View.GONE
+                }
+            } else {
+                binding.tvItensReformados.text = "Sem atividades registradas"
+                binding.tvObservacoes.visibility = View.GONE
             }
             
             // Click listener
@@ -114,7 +140,7 @@ class MesasReformadasAdapter(
 
     class DiffCallback : DiffUtil.ItemCallback<MesaReformadaComHistorico>() {
         override fun areItemsTheSame(oldItem: MesaReformadaComHistorico, newItem: MesaReformadaComHistorico): Boolean {
-            return oldItem.numeroMesa == newItem.numeroMesa
+            return oldItem.mesaId == newItem.mesaId && oldItem.numeroMesa == newItem.numeroMesa
         }
 
         override fun areContentsTheSame(oldItem: MesaReformadaComHistorico, newItem: MesaReformadaComHistorico): Boolean {

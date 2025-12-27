@@ -30,9 +30,6 @@ class RotaSyncHandler(
 ) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader) {
 
     override val entityType: String = "rotas"
-    
-    // Flag para permitir bootstrap (sincronizar todas as rotas se não houver nenhuma atribuída localmente)
-    var allowRouteBootstrap: Boolean = false
 
     companion object {
         private const val COLLECTION_ROTAS = "rotas"

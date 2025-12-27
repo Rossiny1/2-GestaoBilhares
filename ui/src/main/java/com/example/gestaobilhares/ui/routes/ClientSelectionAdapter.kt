@@ -49,14 +49,14 @@ class ClientSelectionAdapter(
             binding.txtNomeCliente.text = cliente.nome
 
             // CPF formatado
-            binding.txtCpfCliente.text = "CPF: ${cliente.cpfCnpj ?: "Não informado"}"
+            binding.txtCpfCliente.text = cliente.cpfCnpj ?: "Não informado"
 
             // Rota atual
-            binding.txtRotaAtual.text = "Rota: ${rota.nome}"
+            binding.txtRotaAtual.text = rota.nome
 
             // Mesas vinculadas
             val mesasText = if (mesas.isNotEmpty()) {
-                "Mesas: ${mesas.joinToString(", ") { "Mesa ${it.numero}" }}"
+                mesas.joinToString(" ; ") { it.numero }
             } else {
                 "Nenhuma mesa vinculada"
             }

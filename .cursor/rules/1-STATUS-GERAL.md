@@ -33,7 +33,7 @@
 ```
 
 ## 🛠️ STATUS DOS MÓDULOS
-1.  **`:sync`**: ✅ **RECUPERADO**. Build corrigido. Orchestrator implementado.
+1.  **`:sync`**: 🟡 **EM REFACTOR**. Orchestrator implementado, mas pendente de cleanup (Meta: < 300 linhas).
 2.  **`:data`**: ✅ **ESTÁVEL**. AppRepository em processo de delegação.
 3.  **`:ui`**: 🟡 **EM TRANSIÇÃO**. ~36% Compose.
 4.  **`:core`**: ✅ **ESTÁVEL**. Utilitários e segurança consolidados.
@@ -44,6 +44,6 @@
 
 ---
 ## 📦 PRÓXIMAS FASES (RESUMO)
-1. **Refatoração AppRepository**: Delegar lógica para repositories especializados.
+1. **Refatoração AppRepository & SyncRepository**: Delegar lógicas remanescentes (Meta: SyncRepository < 300 linhas).
 2. **Expansão de Testes**: Atingir 60% de cobertura (JaCoCo).
 3. **Migração Compose**: Meta de 60% no Q2/2026.

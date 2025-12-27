@@ -46,10 +46,36 @@ object FinancialCalculator {
             if (mesa.valorFixo > 0) {
                 mesa.valorFixo
             } else {
-                val fichasJogadas = (mesa.relogioFinal - mesa.relogioInicial).coerceAtLeast(0)
+                val fichasJogadas = calcularFichasJogadasMesa(mesa)
                 fichasJogadas * comissaoFicha
             }
         }
+    }
+
+    /**
+     * ✅ NOVO: Lógica centralizada para cálculo de fichas jogadas
+     * Trata casos de relógio com defeito (média) e relógio que reiniciou (wrap-around)
+     */
+    fun calcularFichasJogadasMesa(mesa: MesaAcertoCalculo): Int {
+        if (mesa.comDefeito && mesa.mediaFichasJogadas > 0) {
+            return mesa.mediaFichasJogadas.toInt()
+        }
+
+        if (mesa.relogioReiniciou) {
+            // Determinar o fator de ajuste baseado no número de dígitos do relógio inicial (simulando a lógica do App)
+            val fatorAjuste = when {
+                mesa.relogioInicial >= 10000 -> 100000 // 5 dígitos
+                mesa.relogioInicial >= 1000 -> 10000   // 4 dígitos
+                else -> 0 // Não aplicável
+            }
+            
+            if (fatorAjuste > 0) {
+                val relogioFinalAjustado = mesa.relogioFinal + fatorAjuste
+                return (relogioFinalAjustado - mesa.relogioInicial).coerceAtLeast(0)
+            }
+        }
+
+        return (mesa.relogioFinal - mesa.relogioInicial).coerceAtLeast(0)
     }
     
     /**
@@ -281,7 +307,10 @@ object FinancialCalculator {
     data class MesaAcertoCalculo(
         val relogioInicial: Int,
         val relogioFinal: Int,
-        val valorFixo: Double
+        val valorFixo: Double,
+        val comDefeito: Boolean = false,
+        val relogioReiniciou: Boolean = false,
+        val mediaFichasJogadas: Double = 0.0
     )
     
     /**

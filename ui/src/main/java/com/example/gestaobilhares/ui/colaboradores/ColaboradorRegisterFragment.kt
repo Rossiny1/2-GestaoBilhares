@@ -43,6 +43,7 @@ class ColaboradorRegisterFragment : Fragment() {
     lateinit var appRepository: AppRepository
     // private lateinit var appRepository: AppRepository
     private var colaboradorId: Long? = null
+    private var colaboradorExistente: Colaborador? = null // ✅ NOVO: Armazenar objeto original
     private var dataNascimento: Date? = null
     private val rotasSelecionadas = mutableSetOf<Long>()
     private var todasRotas = listOf<Rota>()
@@ -240,6 +241,7 @@ class ColaboradorRegisterFragment : Fragment() {
                 }
                 
                 colaborador?.let { col ->
+                    colaboradorExistente = col // ✅ NOVO: Armazenar referência original
                     // Preencher campos básicos
                     binding.etNome.setText(col.nome)
                     binding.etEmail.setText(col.email)
@@ -323,30 +325,57 @@ class ColaboradorRegisterFragment : Fragment() {
         
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val colaborador = Colaborador(
-                    id = colaboradorId ?: 0,
-                    nome = nome,
-                    email = email,
-                    telefone = telefone.takeIf { it.isNotEmpty() },
-                    cpf = cpf.takeIf { it.isNotEmpty() },
-                    dataNascimento = dataNascimento,
-                    endereco = binding.etEndereco.text.toString().trim().takeIf { it.isNotEmpty() },
-                    bairro = binding.etBairro.text.toString().trim().takeIf { it.isNotEmpty() },
-                    cidade = binding.etCidade.text.toString().trim().takeIf { it.isNotEmpty() },
-                    estado = binding.etEstado.text.toString().takeIf { it.isNotEmpty() },
-                    cep = binding.etCep.text.toString().trim().takeIf { it.isNotEmpty() },
-                    rg = binding.etRg.text.toString().trim().takeIf { it.isNotEmpty() },
-                    orgaoEmissor = binding.etOrgaoEmissor.text.toString().trim().takeIf { it.isNotEmpty() },
-                    estadoCivil = binding.etEstadoCivil.text.toString().takeIf { it.isNotEmpty() },
-                    nomeMae = binding.etNomeMae.text.toString().trim().takeIf { it.isNotEmpty() },
-                    nomePai = binding.etNomePai.text.toString().trim().takeIf { it.isNotEmpty() },
-                    // Converter texto em português de volta para enum
-                    nivelAcesso = when (binding.etNivelAcesso.text.toString()) {
-                        "Administrador" -> NivelAcesso.ADMIN
-                        "Usuário" -> NivelAcesso.USER
-                        else -> NivelAcesso.USER // Fallback seguro
-                    }
-                )
+                // ✅ CORREÇÃO: Preservar dados originais (aprovado, firebaseUid, etc) usando copy()
+                val colaborador = if (colaboradorExistente != null) {
+                    colaboradorExistente!!.copy(
+                        nome = nome,
+                        email = email,
+                        telefone = telefone.takeIf { it.isNotEmpty() },
+                        cpf = cpf.takeIf { it.isNotEmpty() },
+                        dataNascimento = dataNascimento,
+                        endereco = binding.etEndereco.text.toString().trim().takeIf { it.isNotEmpty() },
+                        bairro = binding.etBairro.text.toString().trim().takeIf { it.isNotEmpty() },
+                        cidade = binding.etCidade.text.toString().trim().takeIf { it.isNotEmpty() },
+                        estado = binding.etEstado.text.toString().takeIf { it.isNotEmpty() },
+                        cep = binding.etCep.text.toString().trim().takeIf { it.isNotEmpty() },
+                        rg = binding.etRg.text.toString().trim().takeIf { it.isNotEmpty() },
+                        orgaoEmissor = binding.etOrgaoEmissor.text.toString().trim().takeIf { it.isNotEmpty() },
+                        estadoCivil = binding.etEstadoCivil.text.toString().takeIf { it.isNotEmpty() },
+                        nomeMae = binding.etNomeMae.text.toString().trim().takeIf { it.isNotEmpty() },
+                        nomePai = binding.etNomePai.text.toString().trim().takeIf { it.isNotEmpty() },
+                        nivelAcesso = when (binding.etNivelAcesso.text.toString()) {
+                            "Administrador" -> NivelAcesso.ADMIN
+                            "Usuário" -> NivelAcesso.USER
+                            else -> NivelAcesso.USER
+                        },
+                        dataUltimaAtualizacao = Date()
+                    )
+                } else {
+                    Colaborador(
+                        id = 0,
+                        nome = nome,
+                        email = email,
+                        telefone = telefone.takeIf { it.isNotEmpty() },
+                        cpf = cpf.takeIf { it.isNotEmpty() },
+                        dataNascimento = dataNascimento,
+                        endereco = binding.etEndereco.text.toString().trim().takeIf { it.isNotEmpty() },
+                        bairro = binding.etBairro.text.toString().trim().takeIf { it.isNotEmpty() },
+                        cidade = binding.etCidade.text.toString().trim().takeIf { it.isNotEmpty() },
+                        estado = binding.etEstado.text.toString().takeIf { it.isNotEmpty() },
+                        cep = binding.etCep.text.toString().trim().takeIf { it.isNotEmpty() },
+                        rg = binding.etRg.text.toString().trim().takeIf { it.isNotEmpty() },
+                        orgaoEmissor = binding.etOrgaoEmissor.text.toString().trim().takeIf { it.isNotEmpty() },
+                        estadoCivil = binding.etEstadoCivil.text.toString().takeIf { it.isNotEmpty() },
+                        nomeMae = binding.etNomeMae.text.toString().trim().takeIf { it.isNotEmpty() },
+                        nomePai = binding.etNomePai.text.toString().trim().takeIf { it.isNotEmpty() },
+                        nivelAcesso = when (binding.etNivelAcesso.text.toString()) {
+                            "Administrador" -> NivelAcesso.ADMIN
+                            "Usuário" -> NivelAcesso.USER
+                            else -> NivelAcesso.USER
+                        },
+                        dataUltimaAtualizacao = Date()
+                    )
+                }
                 
                 val idSalvo = withContext(Dispatchers.IO) {
                     if (colaboradorId == null) {

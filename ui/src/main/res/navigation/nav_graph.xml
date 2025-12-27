@@ -698,6 +698,18 @@
         <action
             android:id="@+id/action_mesasReformadasFragment_to_novaReformaFragment"
             app:destination="@id/novaReformaFragment" />
+        <action
+            android:id="@+id/action_mesasReformadasFragment_to_historicoMesaFragment"
+            app:destination="@id/historicoMesaFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/historicoMesaFragment"
+        android:name="com.example.gestaobilhares.ui.mesas.HistoricoMesaFragment"
+        android:label="Histórico de Mesa">
+        <argument
+            android:name="mesaComHistorico"
+            app:argType="com.example.gestaobilhares.ui.mesas.MesaReformadaComHistorico" />
     </fragment>
 
     <fragment

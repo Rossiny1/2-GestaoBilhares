@@ -58,7 +58,29 @@ class ClienteRepository(
     }
     
     fun obterClientesPorRotaComDebitoAtual(rotaId: Long): Flow<List<Cliente>> = 
-        clienteDao.obterClientesPorRota(rotaId)
+        clienteDao.obterClientesPorRotaComDebitoCalculado(rotaId)
+
+    suspend fun buscarPorNomeERota(nome: String, rotaId: Long) = 
+        clienteDao.buscarPorNomeERota(nome, rotaId)
+
+    /**
+     * ✅ NOVO: Migra todos os dados (mesas, acertos, contratos) de um cliente para outro.
+     * Usado para resolver duplicações por colisão de IDs durante a sincronização.
+     */
+    suspend fun migrarDadosDeCliente(idAntigo: Long, idNovo: Long) {
+        Timber.tag("ClienteRepository").w("🚀 [MIGRAÇÃO] Iniciando migração de dados: ID $idAntigo -> ID $idNovo")
+        
+        val mesasAfetadas = clienteDao.migrarMesas(idAntigo, idNovo)
+        Timber.tag("ClienteRepository").d("   - Mesas migradas: $mesasAfetadas")
+        
+        val acertosAfetados = clienteDao.migrarAcertos(idAntigo, idNovo)
+        Timber.tag("ClienteRepository").d("   - Acertos migrados: $acertosAfetados")
+        
+        val contratosAfetados = clienteDao.migrarContratos(idAntigo, idNovo)
+        Timber.tag("ClienteRepository").d("   - Contratos migrados: $contratosAfetados")
+        
+        Timber.tag("ClienteRepository").w("✅ [MIGRAÇÃO] Migração concluída com sucesso.")
+    }
     
     private fun logDbInsertStart(entity: String, details: String) {
         val stackTrace = Thread.currentThread().stackTrace

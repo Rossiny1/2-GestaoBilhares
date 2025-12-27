@@ -30,8 +30,6 @@ class CicloSyncHandler(
 ) : BaseSyncHandler(context, appRepository, firestore, networkUtils, userSessionManager, firebaseImageUploader) {
 
     override val entityType: String = "ciclos"
-    
-    var allowRouteBootstrap: Boolean = false
 
     companion object {
         private const val COLLECTION_CICLOS = "ciclos"
