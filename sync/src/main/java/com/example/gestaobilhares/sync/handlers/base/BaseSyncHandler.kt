@@ -11,6 +11,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.CollectionReference
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.FieldNamingPolicy
 import com.example.gestaobilhares.core.utils.FirebaseImageUploader
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Query
@@ -71,24 +72,43 @@ abstract class BaseSyncHandler(
     protected val TAG: String
         get() = "${javaClass.simpleName}"
     
-    protected val gson: Gson by lazy {
-        GsonBuilder()
-            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-            .registerTypeAdapter(java.time.LocalDateTime::class.java, com.google.gson.JsonSerializer<java.time.LocalDateTime> { src, _, _ ->
-                com.google.gson.JsonPrimitive(src.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-            })
-            .registerTypeAdapter(java.time.LocalDateTime::class.java, com.google.gson.JsonDeserializer<java.time.LocalDateTime> { json, _, _ ->
-                java.time.LocalDateTime.parse(json.asString, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-            })
-            .registerTypeAdapter(com.google.firebase.Timestamp::class.java, com.google.gson.JsonSerializer<com.google.firebase.Timestamp> { src, _, context ->
-                context.serialize(src.toDate())
-            })
-            .registerTypeAdapter(com.google.firebase.Timestamp::class.java, com.google.gson.JsonDeserializer<com.google.firebase.Timestamp> { json, _, context ->
-                val date = context.deserialize<Date>(json, Date::class.java)
-                if (date != null) com.google.firebase.Timestamp(date) else null
-            })
-            .create()
-    }
+    protected val gson: Gson = GsonBuilder()
+        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+        .registerTypeAdapter(java.time.LocalDateTime::class.java, com.google.gson.JsonSerializer<java.time.LocalDateTime> { src, _, _ ->
+            com.google.gson.JsonPrimitive(src.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+        })
+        .registerTypeAdapter(java.time.LocalDateTime::class.java, com.google.gson.JsonDeserializer<java.time.LocalDateTime> { json, _, _ ->
+            java.time.LocalDateTime.parse(json.asString, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        })
+        .registerTypeAdapter(Date::class.java, com.google.gson.JsonSerializer<Date> { src, _, _ ->
+            com.google.gson.JsonPrimitive(src.time)
+        })
+        .registerTypeAdapter(Date::class.java, com.google.gson.JsonDeserializer<Date> { json, _, _ ->
+            if (json.isJsonPrimitive) {
+                if (json.asJsonPrimitive.isNumber) return@JsonDeserializer Date(json.asLong)
+                if (json.asJsonPrimitive.isString) {
+                    return@JsonDeserializer try {
+                        Date(json.asString.toLong())
+                    } catch (e: Exception) {
+                        java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).parse(json.asString)
+                    }
+                }
+            } else if (json.isJsonObject) {
+                val obj = json.asJsonObject
+                if (obj.has("seconds")) {
+                    return@JsonDeserializer Date(obj.get("seconds").asLong * 1000L + (obj.get("nanoseconds")?.asLong ?: 0L) / 1000000L)
+                }
+            }
+            null
+        })
+        .registerTypeAdapter(com.google.firebase.Timestamp::class.java, com.google.gson.JsonSerializer<com.google.firebase.Timestamp> { src, _, context ->
+            context.serialize(src.toDate())
+        })
+        .registerTypeAdapter(com.google.firebase.Timestamp::class.java, com.google.gson.JsonDeserializer<com.google.firebase.Timestamp> { json, _, context ->
+            val date = context.deserialize<Date>(json, Date::class.java)
+            if (date != null) com.google.firebase.Timestamp(date) else null
+        })
+        .create()
     
     protected val currentCompanyId: String
         get() = userSessionManager.getCurrentCompanyId()
@@ -352,6 +372,7 @@ abstract class BaseSyncHandler(
 
     /**
      * Busca documentos aplicando filtro de rota se necessário.
+     * Implementa PAGINAÇÃO para lidar com grandes volumes de dados.
      */
     protected suspend fun fetchDocumentsWithRouteFilter(
         collectionRef: CollectionReference,
@@ -364,8 +385,10 @@ abstract class BaseSyncHandler(
         
         val documents = mutableListOf<DocumentSnapshot>()
         for (query in queries) {
-            val snapshot = query.get().await()
-            documents += snapshot.documents
+            // ✅ CORREÇÃO: Usar paginação para cada query (especialmente importante para tabelas grandes como clientes/acertos)
+            executePaginatedQuery(query) { batch ->
+                documents += batch
+            }
         }
         return documents
     }
@@ -433,14 +456,18 @@ abstract class BaseSyncHandler(
     }
 
     /**
-     * Busca todos os documentos aplicando filtro de rota se necessário.
+     * Busca todos os documentos aplicando filtro de rota se necessário com PAGINAÇÃO.
      */
     protected suspend fun fetchAllDocumentsWithRouteFilter(
         collectionRef: CollectionReference,
         routeField: String?
     ): List<DocumentSnapshot> {
         if (routeField == null || userSessionManager.isAdmin()) {
-            return collectionRef.get().await().documents
+            val documents = mutableListOf<DocumentSnapshot>()
+            executePaginatedQuery(collectionRef) { batch ->
+                documents += batch
+            }
+            return documents
         }
         
         val accessibleRoutes = getAccessibleRouteIds()
@@ -456,9 +483,59 @@ abstract class BaseSyncHandler(
             } else {
                 collectionRef.whereIn(routeField, chunk)
             }
-            documents += query.get().await().documents
+            executePaginatedQuery(query) { batch ->
+                documents += batch
+            }
         }
         return documents
+    }
+
+    /**
+     * ✅ NOVO (Phase 6): Executa query Firestore com paginação automática.
+     * Processa documentos em lotes para evitar problemas de memória e timeout.
+     */
+    protected suspend fun executePaginatedQuery(
+        query: Query,
+        batchSize: Int = 500,
+        processor: suspend (List<DocumentSnapshot>) -> Unit
+    ): Int {
+        var lastDocument: DocumentSnapshot? = null
+        var hasMore = true
+        var totalProcessed = 0
+        
+        while (hasMore) {
+            try {
+                var paginatedQuery = query.limit(batchSize.toLong())
+                if (lastDocument != null) {
+                    paginatedQuery = paginatedQuery.startAfter(lastDocument)
+                }
+                
+                val snapshot = paginatedQuery.get().await()
+                val documents = snapshot.documents
+                
+                if (documents.isEmpty()) {
+                    break
+                }
+                
+                processor(documents)
+                
+                totalProcessed += documents.size
+                Timber.tag(TAG).d("📦 Processado lote sync: ${documents.size} documentos (total: $totalProcessed)")
+                
+                hasMore = documents.size == batchSize
+                lastDocument = documents.lastOrNull()
+                
+            } catch (e: Exception) {
+                Timber.tag(TAG).e("❌ Erro ao processar lote paginado: ${e.message}", e)
+                hasMore = false
+                throw e // Propagar erro para o handler tratar (geralmente vai retornar Result.failure)
+            }
+        }
+        
+        if (totalProcessed > batchSize) {
+             Timber.tag(TAG).i("✅ Paginação concluída: $totalProcessed documentos processados em múltiplos lotes")
+        }
+        return totalProcessed
     }
 
     /**

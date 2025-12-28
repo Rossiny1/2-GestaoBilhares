@@ -17,7 +17,7 @@ import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import java.util.Date
 
-import com.example.gestaobilhares.utils.FirebaseImageUploader
+import com.example.gestaobilhares.core.utils.FirebaseImageUploader
 
 /**
  * Handler especializado para sincronização de Mesas.

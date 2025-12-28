@@ -9,38 +9,38 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="8dp">
 
         <!-- Header -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="8dp">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Geração de Contrato"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/primary_color"
                     android:gravity="center"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="4dp" />
 
                 <TextView
                     android:id="@+id/tvNumeroContrato"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Número: -"
-                    android:textSize="14sp"
+                    android:textSize="12sp"
                     android:textColor="@color/text_secondary"
                     android:gravity="center" />
 
@@ -48,101 +48,98 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Dados do Cliente -->
+        <!-- Dados do Cliente e Mesas (Combinados) -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="10dp">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Dados do Locatário"
-                    android:textSize="16sp"
+                    android:text="Informações Gerais"
+                    android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/primary_color"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="8dp" />
 
-                <TextView
-                    android:id="@+id/tvClienteNome"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Nome: -"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="4dp" />
-
-                <TextView
-                    android:id="@+id/tvClienteCpf"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="CPF: -"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="4dp" />
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/tvClienteNome"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Nome: -"
+                        android:textSize="13sp"
+                        android:layout_marginBottom="2dp" />
+                    <TextView
+                        android:id="@+id/tvClienteCpf"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CPF: -"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_secondary" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/tvClienteEndereco"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Endereço: -"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="4dp" />
+                    android:textSize="12sp"
+                    android:layout_marginBottom="2dp" />
 
-                <TextView
-                    android:id="@+id/tvClienteTelefone"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Telefone: -"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="4dp" />
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/tvClienteTelefone"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Telefone: -"
+                        android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tvClienteEmail"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Email: -"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tvClienteEmail"
+                <View
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Email: -"
-                    android:textSize="14sp" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Mesas Vinculadas -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                    android:layout_height="1dp"
+                    android:background="#EEEEEE"
+                    android:layout_marginVertical="8dp" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Mesas Vinculadas"
-                    android:textSize="16sp"
+                    android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="@color/primary_color"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="2dp" />
 
                 <TextView
                     android:id="@+id/tvMesasVinculadas"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Nenhuma mesa vinculada"
-                    android:textSize="14sp"
+                    android:textSize="12sp"
                     android:textColor="@color/text_secondary" />
 
             </LinearLayout>
@@ -153,40 +150,32 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="10dp">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Configurações do Contrato"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/primary_color"
-                    android:layout_marginBottom="16dp" />
-
-                <!-- Tipo de Pagamento -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Tipo de Pagamento"
                     android:textSize="14sp"
                     android:textStyle="bold"
+                    android:textColor="@color/primary_color"
                     android:layout_marginBottom="8dp" />
 
+                <!-- Tipo de Pagamento -->
                 <RadioGroup
                     android:id="@+id/rgTipoPagamento"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="16dp">
+                    android:layout_marginBottom="8dp">
 
                     <RadioButton
                         android:id="@+id/rbValorFixo"
@@ -194,6 +183,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Valor Fixo"
+                        android:textSize="13sp"
                         android:checked="true" />
 
                     <RadioButton
@@ -201,16 +191,18 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Percentual" />
+                        android:text="Percentual"
+                        android:textSize="13sp" />
 
                 </RadioGroup>
 
                 <!-- Valor Mensal -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/tilValorMensal"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="8dp"
                     android:hint="Valor Mensal (R$)"
                     app:startIconDrawable="@drawable/ic_money">
 
@@ -218,6 +210,8 @@
                         android:id="@+id/etValorMensal"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:padding="12dp"
+                        android:textSize="14sp"
                         android:inputType="numberDecimal" />
 
                 </com.google.android.material.textfield.TextInputLayout>
@@ -225,9 +219,10 @@
                 <!-- Percentual Receita (condicional) -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/tilPercentualReceita"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="8dp"
                     android:hint="Percentual da Receita (%)"
                     android:visibility="gone"
                     app:startIconDrawable="@drawable/ic_percent">
@@ -236,6 +231,8 @@
                         android:id="@+id/etPercentualReceita"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:padding="12dp"
+                        android:textSize="14sp"
                         android:inputType="numberDecimal" />
 
                 </com.google.android.material.textfield.TextInputLayout>
@@ -243,9 +240,10 @@
                 <!-- Dia de Vencimento -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/tilDiaVencimento"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="8dp"
                     android:hint="Dia de Vencimento"
                     app:startIconDrawable="@drawable/ic_calendar">
 
@@ -253,6 +251,8 @@
                         android:id="@+id/etDiaVencimento"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:padding="12dp"
+                        android:textSize="14sp"
                         android:inputType="number"
                         android:text="1" />
 
@@ -272,9 +272,10 @@
                 android:id="@+id/btnGerarContrato"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="6dp"
                 android:text="Gerar Contrato"
-                android:textSize="16sp"
+                android:textSize="14sp"
+                android:paddingVertical="8dp"
                 app:icon="@drawable/ic_contract"
                 app:iconGravity="textStart" />
 
@@ -283,7 +284,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Assinar Contrato"
-                android:textSize="16sp"
+                android:textSize="14sp"
+                android:paddingVertical="8dp"
                 android:enabled="false"
                 app:icon="@drawable/ic_signature"
                 app:iconGravity="textStart"
@@ -294,10 +296,10 @@
         <!-- Progress Bar -->
         <ProgressBar
             android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:layout_gravity="center"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:visibility="gone" />
 
     </LinearLayout>
