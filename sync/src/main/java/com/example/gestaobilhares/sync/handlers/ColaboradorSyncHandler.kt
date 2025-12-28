@@ -258,14 +258,18 @@ class ColaboradorSyncHandler @javax.inject.Inject constructor(
                     var colabParaEnviar = colab
                     
                     // Se o colaborador tem foto e ela é um caminho local (não URL do Firebase), faz o upload
-                    if (!colab.fotoPerfil.isNullOrBlank() && !firebaseImageUploader.isFirebaseStorageUrl(colab.fotoPerfil)) {
-                        Timber.tag(TAG).d("?? Fazendo upload da foto local do colaborador: ${colab.id}")
-                        val urlRemota = firebaseImageUploader.uploadColaboradorFoto(colab.fotoPerfil!!, colab.id)
-                        if (urlRemota != null) {
-                            colabParaEnviar = colab.copy(fotoPerfil = urlRemota)
-                            // Atualiza localmente para evitar uploads repetidos
-                            appRepository.atualizarColaborador(colabParaEnviar)
+                    try {
+                        if (!colab.fotoPerfil.isNullOrBlank() && !firebaseImageUploader.isFirebaseStorageUrl(colab.fotoPerfil)) {
+                            Timber.tag(TAG).d("📸 Fazendo upload da foto local do colaborador: ${colab.id}")
+                            val urlRemota = firebaseImageUploader.uploadColaboradorFoto(colab.fotoPerfil!!, colab.id)
+                            if (urlRemota != null) {
+                                colabParaEnviar = colab.copy(fotoPerfil = urlRemota)
+                                // Atualiza localmente para evitar uploads repetidos
+                                appRepository.atualizarColaborador(colabParaEnviar)
+                            }
                         }
+                    } catch (e: Exception) {
+                        Timber.tag(TAG).w("⚠️ Falha ao fazer upload da foto do colaborador ${colab.id}: ${e.message}. Prosseguindo sem URL.")
                     }
 
                     val colabMap = entityToMap(colabParaEnviar)

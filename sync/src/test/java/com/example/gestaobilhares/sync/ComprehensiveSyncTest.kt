@@ -72,6 +72,8 @@ class ComprehensiveSyncTest {
         
         whenever(userSessionManager.getCurrentUserId()).thenReturn(1L)
         whenever(userSessionManager.getCurrentCompanyId()).thenReturn("company123")
+        whenever(userSessionManager.isAdmin()).thenReturn(true)
+        whenever(userSessionManager.isApproved()).thenReturn(true)
         whenever(networkUtils.isConnected()).thenReturn(true)
         
         // Mock hierarchal Firestore path

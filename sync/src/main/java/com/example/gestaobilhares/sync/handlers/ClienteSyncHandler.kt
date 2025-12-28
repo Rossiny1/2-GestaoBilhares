@@ -15,7 +15,7 @@ import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import java.util.Date
 
-import com.example.gestaobilhares.utils.FirebaseImageUploader
+import com.example.gestaobilhares.core.utils.FirebaseImageUploader
 
 /**
  * Handler especializado para sincronização de Clientes.
@@ -74,12 +74,14 @@ class ClienteSyncHandler(
         timestampOverride: Long?
     ): Result<Int> {
         return try {
-            val snapshot = collectionRef
-                .whereGreaterThan("dataUltimaAtualizacao", Timestamp(Date(lastSyncTimestamp)))
-                .get()
-                .await()
+            val documents = fetchDocumentsWithRouteFilter(
+                collectionRef = collectionRef,
+                routeField = "rota_id",
+                lastSyncTimestamp = lastSyncTimestamp,
+                timestampField = "dataUltimaAtualizacao"
+            )
                 
-            val syncCount = processSnapshot(snapshot.documents)
+            val syncCount = processSnapshot(documents)
             val durationMs = System.currentTimeMillis() - startTime
             
             saveSyncMetadata(
@@ -89,7 +91,6 @@ class ClienteSyncHandler(
                 timestampOverride = timestampOverride
             )
             
-            Timber.tag(TAG).d("✅ Pull Clientes (INCREMENTAL) concluído: $syncCount sincronizados")
             Result.success(syncCount)
         } catch (e: Exception) {
             Timber.tag(TAG).w("⚠️ Incremental falhou, tentando completo: ${e.message}")
@@ -103,8 +104,8 @@ class ClienteSyncHandler(
         timestampOverride: Long?
     ): Result<Int> {
         return try {
-            val snapshot = collectionRef.get().await()
-            val syncCount = processSnapshot(snapshot.documents)
+            val documents = fetchAllDocumentsWithRouteFilter(collectionRef, "rota_id")
+            val syncCount = processSnapshot(documents)
             val durationMs = System.currentTimeMillis() - startTime
             
             saveSyncMetadata(
@@ -114,7 +115,6 @@ class ClienteSyncHandler(
                 timestampOverride = timestampOverride
             )
             
-            Timber.tag(TAG).d("✅ Pull Clientes (COMPLETO) concluído: $syncCount sincronizados")
             Result.success(syncCount)
         } catch (e: Exception) {
             Timber.tag(TAG).e("Erro no pull completo de clientes: ${e.message}", e)
@@ -128,22 +128,36 @@ class ClienteSyncHandler(
             try {
                 val data = doc.data ?: continue
                 val id = doc.id.toLongOrNull() ?: continue
-                
                 val json = gson.toJson(data)
-                val cliente = gson.fromJson(json, Cliente::class.java)?.copy(id = id) ?: continue
                 
+                val cliente = gson.fromJson(json, Cliente::class.java)?.copy(id = id)
+                if (cliente == null) {
+                    continue
+                }
+                
+                // ✅ RESILIÊNCIA: Garantir rotaId independente do case (Firestore costuma ser snake_case)
+                val effectiveRotaId = (data["rota_id"] as? Number)?.toLong() 
+                    ?: (data["rotaId"] as? Number)?.toLong() 
+                    ?: cliente.rotaId
+
                 // Filtro de rota
-                if (!shouldSyncRouteData(cliente.rotaId, allowUnknown = true)) {
+                if (!shouldSyncRouteData(effectiveRotaId, allowUnknown = true)) {
                     continue
                 }
                 
                 var local = appRepository.obterClientePorId(id)
-                val serverTime = (data["dataUltimaAtualizacao"] as? Timestamp)?.toDate()?.time ?: 0L
+                val serverTimeObj = data["dataUltimaAtualizacao"] ?: data["data_ultima_atualizacao"]
+                val serverTime = (serverTimeObj as? Timestamp)?.toDate()?.time 
+                    ?: (serverTimeObj as? Date)?.time
+                    ?: (serverTimeObj as? Number)?.toLong()
+                    ?: 0L
                 val localTime = local?.dataUltimaAtualizacao?.time ?: 0L
+                
+                
                 
                 // ✅ LÓGICA DE RECONCILIAÇÃO: Se não achou pelo ID, tenta pelo Nome + Rota
                 if (local == null) {
-                    val clientePorNome = appRepository.buscarClientePorNomeERota(cliente.nome, cliente.rotaId)
+                    val clientePorNome = appRepository.buscarClientePorNomeERota(cliente.nome, effectiveRotaId)
                     if (clientePorNome != null && clientePorNome.id != id) {
                         Timber.tag(TAG).w("🚨 [RECONCILIAÇÃO] Detectada duplicação por colisão de ID para '${cliente.nome}'")
                         Timber.tag(TAG).w("   - ID Local: ${clientePorNome.id}, ID Servidor: $id")

@@ -8,7 +8,7 @@ import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.example.gestaobilhares.sync.handlers.base.BaseSyncHandler
 import com.example.gestaobilhares.sync.utils.NetworkUtils
-import com.example.gestaobilhares.utils.FirebaseImageUploader
+import com.example.gestaobilhares.core.utils.FirebaseImageUploader
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.CollectionReference
 import kotlinx.coroutines.flow.first
