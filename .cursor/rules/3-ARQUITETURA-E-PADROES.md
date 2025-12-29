@@ -1,8 +1,8 @@
 # 3️⃣ ARQUITETURA E PADRÕES
 
 > **Propósito**: Definição da estrutura técnica, padrões de código e modularização.  
-> **Última Atualização**: Dezembro 2025  
-> **Versão**: 5.0 (Padrão Orchestrator Solidificado)
+> **Última Atualização**: 29 de Dezembro 2025  
+> **Versão**: 5.2 (Estratégia de Testes Ampliada)
 
 ---
 
@@ -26,6 +26,19 @@ Para evitar arquivos massivos, o módulo `:sync` utiliza o padrão **Orchestrato
 ### Sincronização Incremental
 *   Uso de `last_modified` do servidor para busca diferencial.
 *   Economia de ~98% de dados em sincronizações subsequentes.
+
+
+---
+
+## 🛡️ QUALIDADE E TESTES
+### Estratégia Unitária
+*   **Financeiro**: Lógica centralizada em `FinancialCalculator` com 100% de cobertura.
+*   **Sincronização**: Cada `SyncHandler` possui testes unitários (`ComprehensiveSyncTest`) validando pull, push e integridade relational.
+*   **Repositórios**: `SyncRepositoryTest` valida a orquestração e filtros de rota.
+
+### Cobertura e Regressão
+*   **JaCoCo**: Configurado para medir cobertura em módulos críticos.
+*   **Cenários de Borda**: Testes incluem simulação de falhas de rede, conflitos de ID e cenários de "Bootstrap" (primeiro login).
 
 ---
 

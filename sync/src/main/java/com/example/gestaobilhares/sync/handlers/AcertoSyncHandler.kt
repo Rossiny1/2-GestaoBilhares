@@ -131,14 +131,22 @@ class AcertoSyncHandler(
                     continue
                 }
                 
-                // Tenta atualizar primeiro, se não existir insere
-                val updated = appRepository.atualizarAcerto(acerto)
-                if (updated == 0) {
-                    appRepository.inserirAcerto(acerto)
+                // Validar FKs
+                if (ensureEntityExists("cliente", acerto.clienteId) &&
+                    ensureEntityExists("colaborador", acerto.colaboradorId ?: 0) &&
+                    ensureEntityExists("rota", acerto.rotaId ?: 0)) {
+                    
+                    // Tenta atualizar primeiro, se não existir insere
+                    val updated = appRepository.atualizarAcerto(acerto)
+                    if (updated == 0) {
+                        appRepository.inserirAcerto(acerto)
+                    }
+                    
+                    syncCount++
+                    pullAcertoMesas(acerto.id)
+                } else {
+                    Timber.tag(TAG).w("⏭️ Pulando acerto ${acerto.id} por falha na FK")
                 }
-                
-                syncCount++
-                pullAcertoMesas(acerto.id)
             } catch (e: Exception) {
                 Timber.tag(TAG).e(e, "Erro ao processar acerto ${doc.id}")
             }
@@ -175,6 +183,12 @@ class AcertoSyncHandler(
                     val json = gson.toJson(data)
                     var acertoMesa = gson.fromJson(json, AcertoMesa::class.java) ?: continue
                     
+                    // Validar FKs
+                    if (!ensureEntityExists("acerto", acertoMesa.acertoId) || !ensureEntityExists("mesa", acertoMesa.mesaId)) {
+                        Timber.tag(TAG).w("⏭️ Pulando acerto_mesa ${doc.id} por falha na FK (acerto ou mesa não encontrados).")
+                        continue
+                    }
+
                     // Tratamento de foto
                     val remoteUrl = acertoMesa.fotoRelogioFinal
                     if (!remoteUrl.isNullOrEmpty() && firebaseImageUploader.isFirebaseStorageUrl(remoteUrl)) {

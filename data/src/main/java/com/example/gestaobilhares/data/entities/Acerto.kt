@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
 import java.util.Date
 
 /**
@@ -44,80 +45,105 @@ import java.util.Date
 )
 data class Acerto(
     @PrimaryKey(autoGenerate = true)
+    @SerializedName("id")
     val id: Long = 0,
     
     @ColumnInfo(name = "cliente_id")
+    @SerializedName("cliente_id")
     val clienteId: Long,
     
     @ColumnInfo(name = "colaborador_id")
+    @SerializedName("colaborador_id")
     val colaboradorId: Long? = null,
     
     @ColumnInfo(name = "data_acerto")
+    @SerializedName("data_acerto")
     val dataAcerto: Date = Date(),
     
     @ColumnInfo(name = "periodo_inicio")
+    @SerializedName("periodo_inicio")
     val periodoInicio: Date,
     
     @ColumnInfo(name = "periodo_fim")
+    @SerializedName("periodo_fim")
     val periodoFim: Date,
     
     @ColumnInfo(name = "total_mesas")
+    @SerializedName("total_mesas")
     val totalMesas: Double = 0.0,
     
     @ColumnInfo(name = "debito_anterior")
+    @SerializedName("debito_anterior")
     val debitoAnterior: Double = 0.0,
     
     @ColumnInfo(name = "valor_total")
+    @SerializedName("valor_total")
     val valorTotal: Double = 0.0,
     
     @ColumnInfo(name = "desconto")
+    @SerializedName("desconto")
     val desconto: Double = 0.0,
     
     @ColumnInfo(name = "valor_com_desconto")
+    @SerializedName("valor_com_desconto")
     val valorComDesconto: Double = 0.0,
     
     @ColumnInfo(name = "valor_recebido")
+    @SerializedName("valor_recebido")
     val valorRecebido: Double = 0.0,
     
     @ColumnInfo(name = "debito_atual")
+    @SerializedName("debito_atual")
     val debitoAtual: Double = 0.0,
     
     @ColumnInfo(name = "status")
+    @SerializedName("status")
     val status: StatusAcerto = StatusAcerto.PENDENTE,
     
     @ColumnInfo(name = "observacoes")
+    @SerializedName("observacoes")
     val observacoes: String? = null,
     
     @ColumnInfo(name = "data_criacao")
+    @SerializedName("data_criacao")
     val dataCriacao: Date = Date(),
     
     @ColumnInfo(name = "data_finalizacao")
+    @SerializedName("data_finalizacao")
     val dataFinalizacao: Date? = null,
     
     @ColumnInfo(name = "metodos_pagamento_json")
+    @SerializedName("metodos_pagamento_json")
     val metodosPagamentoJson: String? = null,
     
     // ✅ NOVOS CAMPOS: Para resolver problema de dados perdidos
     @ColumnInfo(name = "representante")
+    @SerializedName("representante")
     val representante: String? = null,
     
     @ColumnInfo(name = "tipo_acerto")
+    @SerializedName("tipo_acerto")
     val tipoAcerto: String? = null,
     
     @ColumnInfo(name = "pano_trocado")
+    @SerializedName("pano_trocado")
     val panoTrocado: Boolean = false,
     
     @ColumnInfo(name = "numero_pano")
+    @SerializedName("numero_pano")
     val numeroPano: String? = null,
     
     @ColumnInfo(name = "dados_extras_json")
+    @SerializedName("dados_extras_json")
     val dadosExtrasJson: String? = null,
     
     // NOVO: VÍNCULO COM CICLO DE ACERTO (id do ciclo)
     @ColumnInfo(name = "rota_id")
+    @SerializedName("rota_id")
     val rotaId: Long? = null,
     
     @ColumnInfo(name = "ciclo_id")
+    @SerializedName("ciclo_id")
     val cicloId: Long? = null
 )
 

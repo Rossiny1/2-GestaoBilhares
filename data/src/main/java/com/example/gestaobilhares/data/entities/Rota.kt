@@ -3,6 +3,7 @@
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -14,45 +15,59 @@ import java.util.Locale
 @Entity(tableName = "rotas")
 data class Rota(
     @PrimaryKey(autoGenerate = true)
+    @SerializedName("id")
     val id: Long = 0,
     
     @ColumnInfo(name = "nome")
+    @SerializedName("nome")
     val nome: String,
     
     @ColumnInfo(name = "descricao")
+    @SerializedName("descricao")
     val descricao: String = "",
     
     @ColumnInfo(name = "colaborador_responsavel")
+    @SerializedName("colaborador_responsavel")
     val colaboradorResponsavel: String = "Não definido",
     
     @ColumnInfo(name = "cidades")
+    @SerializedName("cidades")
     val cidades: String = "Não definido",
     
     @ColumnInfo(name = "ativa")
+    @SerializedName("ativa")
     val ativa: Boolean = true,
     
     @ColumnInfo(name = "cor")
+    @SerializedName("cor")
     val cor: String = "#6200EA", // Cor padrão roxa do tema
     
     @ColumnInfo(name = "data_criacao")
+    @SerializedName("data_criacao")
     val dataCriacao: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "data_atualizacao")
+    @SerializedName("data_atualizacao")
     val dataAtualizacao: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "status_atual")
+    @SerializedName("status_atual")
     val statusAtual: StatusRota = StatusRota.PAUSADA,
     
     @ColumnInfo(name = "ciclo_acerto_atual")
+    @SerializedName("ciclo_acerto_atual")
     val cicloAcertoAtual: Int = 1,
     
     @ColumnInfo(name = "ano_ciclo")
+    @SerializedName("ano_ciclo")
     val anoCiclo: Int = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR),
     
     @ColumnInfo(name = "data_inicio_ciclo")
+    @SerializedName("data_inicio_ciclo")
     val dataInicioCiclo: Long? = null,
     
     @ColumnInfo(name = "data_fim_ciclo")
+    @SerializedName("data_fim_ciclo")
     val dataFimCiclo: Long? = null
 ) : Serializable
 

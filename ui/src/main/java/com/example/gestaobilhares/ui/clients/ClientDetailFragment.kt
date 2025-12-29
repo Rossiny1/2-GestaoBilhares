@@ -598,49 +598,16 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
             // Criar aditivo de retirada diretamente
             // appRepository já injetado via Hilt
             
-            // Gerar número do aditivo
-            val numeroAditivo = gerarNumeroAditivo()
-            
-            // Criar aditivo de retirada
-            val aditivo = com.example.gestaobilhares.data.entities.AditivoContrato(
-                numeroAditivo = numeroAditivo,
-                contratoId = contrato.id,
-                dataAditivo = java.util.Date(),
-                observacoes = "Retirada da mesa ${mesaRemovida.numero}",
-                tipo = "RETIRADA"
-            )
-            
-            // Salvar aditivo
-            val aditivoId = appRepository.inserirAditivo(aditivo)
-            
-            // Vincular mesa ao aditivo
-            val aditivoMesa = com.example.gestaobilhares.data.entities.AditivoMesa(
-                aditivoId = aditivoId,
-                mesaId = mesaRemovida.id,
-                tipoEquipamento = mesaRemovida.tipoMesa.name,
-                numeroSerie = mesaRemovida.numero,
-                valorFicha = 0.0,
-                valorFixo = mesaRemovida.valorFixo
-            )
-            
-            appRepository.inserirAditivoMesas(listOf(aditivoMesa))
-            
-            // Navegar para tela de assinatura do aditivo
-            val bundle = android.os.Bundle().apply {
-                putLong("contratoId", contrato.id)
-                putString("aditivoTipo", "RETIRADA")
-                putLongArray("mesasVinculadas", longArrayOf(mesaRemovida.id))
-            }
-            findNavController().navigate(
-                com.example.gestaobilhares.ui.R.id.aditivoSignatureFragment,
-                bundle
-            )
-            
-            Toast.makeText(
-                requireContext(),
-                "Mesa retirada. Assine o aditivo para finalizar.",
-                Toast.LENGTH_LONG
-            ).show()
+        // Navegar para tela de assinatura do aditivo - Deixar a criação para o ViewModel da tela de destino
+        val bundle = android.os.Bundle().apply {
+            putLong("contratoId", contrato.id)
+            putString("aditivoTipo", "RETIRADA")
+            putLongArray("mesasVinculadas", longArrayOf(mesaRemovida.id))
+        }
+        findNavController().navigate(
+            com.example.gestaobilhares.ui.R.id.aditivoSignatureFragment,
+            bundle
+        )
             
         } catch (e: Exception) {
             Timber.e("ClientDetailFragment", "Erro ao processar aditivo", e)

@@ -8,13 +8,11 @@
 
 ## 📅 FASES PENDENTES
 
-### FASE 1: Consolidação da Arquitetura (Q1 2026) 🟡 **EM PROGRESSO**
-*   **Refatoração AppRepository & SyncRepository**: Migrar métodos remanescentes de acesso a dados e sincronização para repositories especializados e Handlers.
-*   **Orchestrator Sync**: Reduzir `SyncRepository.kt` de ~3.500 para ~300 linhas, movendo lógicas de Acertos, Clientes e Mesas para Handlers individuais.
-*   **Testes de Cobertura (Crítico)**: ✅ Implementados testes unitários para Handlers críticos (Cliente, Mesa, Acerto, Despesa, Contrato, Rota). Estabilidade e hierarquias validadas.
-*   **Simulação de Falhas**: Testar cenários de rede instável e conflitos de concorrência na sincronização.
-*   **Configuração JaCoCo**: Consolidar métricas para atingir 60% de cobertura unitária.
-*   **Cleanup de Logs**: Finalizar migração de `android.util.Log` para `Timber` na camada UI.
+### FASE 1: Consolidação da Arquitetura (Q1 2026) ✅ **CONCLUÍDO**
+*   ✅ **Refatoração AppRepository**: Migração de métodos para repositories especializados concluída.
+*   ✅ **Orchestrator Sync**: SyncRepository refatorado para Handlers especializados. Padronização de nomes de campos Firestore concluída.
+*   ✅ **Testes de Cobertura**: 100% de cobertura em `FinancialCalculator`. Testes unitários para todos os `SyncHandlers`.
+*   ✅ **Fix Sincronização**: Resolvido problema de acesso a rotas para não-admins via lógica de Bootstrap.
 
 ### FASE 2: Transição de Interface (Q2 2026)
 *   **Aceleração Compose**: Migrar as 43 telas restantes de ViewBinding para Jetpack Compose (Meta: 60% concluído).
@@ -31,7 +29,8 @@
 ---
 
 ## ✅ MARCOS CONCLUÍDOS (DEZEMBRO 2025)
-*   ✅ **Sync Engine**: Refatoração de SyncRepository para Handlers especializados.
+*   ✅ **Sync Engine**: Refatoração de SyncRepository para Handlers especializados e fix de rotas para não-admins.
+*   ✅ **Padronização**: Implementação de `@SerializedName` em todas as entidades persistentes.
 *   ✅ **Segurança**: Firestore Rules enrijecidas e Multi-tenancy garantido.
 *   ✅ **Cálculo Financeiro**: Fix do cálculo de média para relógios com defeito e 100% de cobertura em `FinancialCalculator`.
 *   ✅ **Automatização**: Firebase Functions configuradas para gerenciamento de Custom Claims.

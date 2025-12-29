@@ -30,24 +30,25 @@ interface MesaDao {
     """)
     fun obterMesasDisponiveis(): Flow<List<Mesa>>
 
-    @Query("UPDATE mesas SET cliente_id = NULL, ativa = 1 WHERE id = :mesaId")
-    suspend fun desvincularMesa(mesaId: Long)
+    @Query("UPDATE mesas SET cliente_id = NULL, ativa = 1, data_ultima_leitura = :timestamp WHERE id = :mesaId")
+    suspend fun desvincularMesa(mesaId: Long, timestamp: Date = Date())
 
-    @Query("UPDATE mesas SET cliente_id = :clienteId, ativa = 1 WHERE id = :mesaId")
-    suspend fun vincularMesa(mesaId: Long, clienteId: Long)
+    @Query("UPDATE mesas SET cliente_id = :clienteId, ativa = 1, data_ultima_leitura = :timestamp WHERE id = :mesaId")
+    suspend fun vincularMesa(mesaId: Long, clienteId: Long, timestamp: Date = Date())
 
-    @Query("UPDATE mesas SET cliente_id = :clienteId, ativa = 1, valor_fixo = :valorFixo WHERE id = :mesaId")
-    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double)
+    @Query("UPDATE mesas SET cliente_id = :clienteId, ativa = 1, valor_fixo = :valorFixo, data_ultima_leitura = :timestamp WHERE id = :mesaId")
+    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double, timestamp: Date = Date())
 
     @Query("""
         UPDATE mesas 
         SET cliente_id = NULL, 
             ativa = 1,
             relogio_inicial = relogio_final,
-            fichas_inicial = fichas_final
+            fichas_inicial = fichas_final,
+            data_ultima_leitura = :timestamp
         WHERE id = :mesaId
     """)
-    suspend fun retirarMesa(mesaId: Long)
+    suspend fun retirarMesa(mesaId: Long, timestamp: Date = Date())
     
     @Query("""
         UPDATE mesas 

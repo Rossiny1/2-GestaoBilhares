@@ -340,8 +340,9 @@ abstract class BaseSyncHandler(
      */
     protected suspend fun ensureEntityExists(
         entityType: String,
-        entityId: Long
+        entityId: Long?
     ): Boolean {
+        if (entityId == null || entityId == 0L) return true
         return try {
             when (entityType) {
                 "cliente" -> {
@@ -359,9 +360,29 @@ abstract class BaseSyncHandler(
                         false
                     } else true
                 }
+                "contrato" -> {
+                    val exists = appRepository.buscarContratoPorId(entityId) != null
+                    if (!exists) Timber.tag(TAG).w("⚠️ FK contrato $entityId não encontrada")
+                    exists
+                }
+                "aditivo" -> {
+                    val exists = appRepository.buscarAditivoPorId(entityId) != null
+                    if (!exists) Timber.tag(TAG).w("⚠️ FK aditivo $entityId não encontrada")
+                    exists
+                }
+                "colaborador" -> {
+                    val exists = appRepository.obterColaboradorPorId(entityId) != null
+                    if (!exists) Timber.tag(TAG).w("⚠️ FK colaborador $entityId não encontrada")
+                    exists
+                }
+                "rota" -> {
+                    val exists = appRepository.obterRotaPorId(entityId) != null
+                    if (!exists) Timber.tag(TAG).w("⚠️ FK rota $entityId não encontrada")
+                    exists
+                }
                 else -> {
-                    Timber.tag(TAG).w("Tipo de entidade desconhecido para validação: $entityType")
-                    false
+                    Timber.tag(TAG).w("❓ Tipo de entidade desconhecido para validação: $entityType")
+                    true // Assume existe por falta de informação
                 }
             }
         } catch (e: Exception) {
@@ -408,9 +429,13 @@ abstract class BaseSyncHandler(
         
         val accessibleRoutes = getAccessibleRouteIds()
         if (accessibleRoutes.isEmpty()) {
-            // Nota: Bootstrap removido por simplicidade e segurança nos handlers individuais
-            Timber.tag(TAG).w(" Usuário sem rotas atribuídas - nenhuma query será executada para $routeField")
-            return emptyList()
+            return if (allowRouteBootstrap) {
+                Timber.tag(TAG).w("⚠️ [BOOTSTRAP] Usuário sem rotas locais - baixando dados globais da empresa")
+                listOf(applyTimestampFilter(collectionRef, lastSyncTimestamp, timestampField))
+            } else {
+                Timber.tag(TAG).w("❌ Usuário sem rotas atribuídas - nenhuma query será executada para $routeField")
+                emptyList()
+            }
         }
         
         val routeChunks = accessibleRoutes.toList().chunked(FIRESTORE_WHERE_IN_LIMIT)
@@ -472,8 +497,17 @@ abstract class BaseSyncHandler(
         
         val accessibleRoutes = getAccessibleRouteIds()
         if (accessibleRoutes.isEmpty()) {
-            Timber.tag(TAG).w(" Nenhuma rota atribuída ao usuário - resultado vazio para $routeField")
-            return emptyList()
+            return if (allowRouteBootstrap) {
+                Timber.tag(TAG).w("⚠️ [BOOTSTRAP-FULL] Usuário sem rotas locais - baixando todos os dados da empresa")
+                val documents = mutableListOf<DocumentSnapshot>()
+                executePaginatedQuery(collectionRef) { batch ->
+                    documents += batch
+                }
+                documents
+            } else {
+                Timber.tag(TAG).w("❌ Nenhuma rota atribuída ao usuário - resultado vazio para $routeField")
+                emptyList()
+            }
         }
         
         val documents = mutableListOf<DocumentSnapshot>()

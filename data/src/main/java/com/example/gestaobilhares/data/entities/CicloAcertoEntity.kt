@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
 import java.util.Date
 
 /**
@@ -33,54 +34,71 @@ import java.util.Date
 )
 data class CicloAcertoEntity(
     @PrimaryKey(autoGenerate = true)
+    @SerializedName("id")
     val id: Long = 0,
     
     @ColumnInfo(name = "rota_id")
+    @SerializedName("rota_id")
     val rotaId: Long,
     
     @ColumnInfo(name = "numero_ciclo")
+    @SerializedName("numero_ciclo")
     val numeroCiclo: Int,
     
     @ColumnInfo(name = "ano")
+    @SerializedName("ano")
     val ano: Int,
     
     @ColumnInfo(name = "data_inicio")
+    @SerializedName("data_inicio")
     val dataInicio: Date,
     
     @ColumnInfo(name = "data_fim")
+    @SerializedName("data_fim")
     val dataFim: Date,
     
     @ColumnInfo(name = "status")
+    @SerializedName("status")
     val status: StatusCicloAcerto = StatusCicloAcerto.FINALIZADO,
     
     @ColumnInfo(name = "total_clientes")
+    @SerializedName("total_clientes")
     val totalClientes: Int = 0,
     
     @ColumnInfo(name = "clientes_acertados")
+    @SerializedName("clientes_acertados")
     val clientesAcertados: Int = 0,
     
     @ColumnInfo(name = "valor_total_acertado")
+    @SerializedName("valor_total_acertado")
     val valorTotalAcertado: Double = 0.0,
     
     @ColumnInfo(name = "valor_total_despesas")
+    @SerializedName("valor_total_despesas")
     val valorTotalDespesas: Double = 0.0,
     
     @ColumnInfo(name = "lucro_liquido")
+    @SerializedName("lucro_liquido")
     val lucroLiquido: Double = 0.0,
     
     @ColumnInfo(name = "debito_total")
+    @SerializedName("debito_total")
     val debitoTotal: Double = 0.0,
     
     @ColumnInfo(name = "observacoes")
+    @SerializedName("observacoes")
     val observacoes: String? = null,
     
     @ColumnInfo(name = "criado_por")
+    @SerializedName("criado_por")
     val criadoPor: String? = null,
     
     @ColumnInfo(name = "data_criacao")
+    @SerializedName("data_criacao")
     val dataCriacao: Date = Date(),
     
     @ColumnInfo(name = "data_atualizacao")
+    @SerializedName("data_atualizacao")
     val dataAtualizacao: Date = Date()
 ) {
     /**

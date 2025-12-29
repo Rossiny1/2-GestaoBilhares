@@ -23,6 +23,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.Timestamp
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.FieldNamingPolicy
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Date
@@ -48,8 +49,9 @@ class AuthViewModel @Inject constructor(
     // Instância do Firestore
     private val firestore = FirebaseFirestore.getInstance()
     
-    // Gson para serialização/deserialização
+    // Gson para serialização/deserialização - padrão LOWER_CASE_WITH_UNDERSCORES para Firestore
     private val gson: Gson = GsonBuilder()
+        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
         .create()
     
@@ -1353,13 +1355,21 @@ class AuthViewModel @Inject constructor(
             
             // 4. Fallback para empresa_001 se collectionGroup falhar ou não encontrar
             if (doc == null) {
-                Timber.d("AuthViewModel", "   Não encontrado via collectionGroup ou PERMISSION_DENIED suspeito. Tentando fallback direto na empresa_001...")
+                Timber.d("AuthViewModel", "   Não encontrado via collectionGroup. Tentando fallback direto na empresa_001...")
                 val collectionRef = firestore.collection("empresas").document("empresa_001")
                     .collection("entidades").document("colaboradores").collection("items")
                 
                 try {
                     querySnapshot = collectionRef.whereEqualTo("email", email).get().await()
                     doc = querySnapshot.documents.firstOrNull()
+                    
+                    if (doc == null) {
+                        val firebaseUid = firebaseAuth.currentUser?.uid
+                        if (firebaseUid != null) {
+                            querySnapshot = collectionRef.whereEqualTo("firebaseUid", firebaseUid).get().await()
+                            doc = querySnapshot.documents.firstOrNull()
+                        }
+                    }
                     Timber.d("AuthViewModel", "   Fallback empresa_001: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")
                 } catch (e: Exception) {
                     Timber.e("AuthViewModel", "   Erro no fallback empresa_001: ${e.message}")
@@ -1376,25 +1386,10 @@ class AuthViewModel @Inject constructor(
             val segments = path.split("/")
             val companyId = if (segments.size > 1 && segments[0] == "empresas") segments[1] else "empresa_001"
             
-            Timber.d("AuthViewModel", "DIAG: Documento encontrado na nuvem!")
-            Timber.d("AuthViewModel", "DIAG: Path: $path")
-            Timber.d("AuthViewModel", "DIAG: Empresa identificada: $companyId")
-            
-            // VERIFICACAO DE CLAIMS
-            val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
-            if (currentUser != null) {
-                try {
-                    val tokenResult = currentUser.getIdToken(false).await()
-                    val claims = tokenResult.claims
-                    Timber.d("AuthViewModel", "DIAG: Claims atuais no Token: $claims")
-                    Timber.d("AuthViewModel", "DIAG: ID Token CompanyId: ${claims["companyId"]}")
-                } catch (e: Exception) {
-                    Timber.w("AuthViewModel", "DIAG: Nao foi possivel ler as claims: ${e.message}")
-                }
-            }
+            Timber.d("AuthViewModel", "DIAG: Documento encontrado na nuvem! Path: $path, Empresa: $companyId")
 
-            // Converter Timestamps para Date
-            val dataConvertido = data.toMutableMap()
+            // Converter Timestamps para Date (GSON não lida nativamente com Firebase Timestamps)
+            val dataConvertida = data.toMutableMap()
             fun toDate(v: Any?): Date? = when(v) {
                 is com.google.firebase.Timestamp -> v.toDate()
                 is Date -> v
@@ -1402,31 +1397,29 @@ class AuthViewModel @Inject constructor(
                 else -> null
             }
             
-            dataConvertido["dataCadastro"] = toDate(data["dataCadastro"]) ?: toDate(data["data_cadastro"]) ?: Date()
-            dataConvertido["dataUltimaAtualizacao"] = toDate(data["dataUltimaAtualizacao"]) ?: toDate(data["data_ultima_atualizacao"]) ?: Date()
-            dataConvertido["dataAprovacao"] = toDate(data["dataAprovacao"]) ?: toDate(data["data_aprovacao"])
-            dataConvertido["dataUltimoAcesso"] = toDate(data["dataUltimoAcesso"]) ?: toDate(data["data_ultimo_acesso"])
-            dataConvertido["dataNascimento"] = toDate(data["dataNascimento"]) ?: toDate(data["data_nascimento"])
+            // Campos que podem vir do Firestore como Timestamp
+            val dateFields = listOf(
+                "data_cadastro", "data_ultima_atualizacao", "data_aprovacao", 
+                "data_ultimo_acesso", "data_nascimento"
+            )
             
-            // Robustez para primeiro acesso (boolean)
-            if (data["primeiroAcesso"] == null && data["primeiro_acesso"] != null) {
-                dataConvertido["primeiroAcesso"] = data["primeiro_acesso"]
+            dateFields.forEach { field ->
+                if (data.containsKey(field)) {
+                    dataConvertida[field] = toDate(data[field])
+                }
             }
             
-            // Robustez para senhaHash (snake_case para camelCase)
-            if (data["senhaHash"] == null && data["senha_hash"] != null) {
-                dataConvertido["senhaHash"] = data["senha_hash"]
-            }
-
-            // Robustez para senhaTemporaria (snake_case para camelCase)
-            if (data["senhaTemporaria"] == null && data["senha_temporaria"] != null) {
-                dataConvertido["senhaTemporaria"] = data["senha_temporaria"]
-            }
+            // Garantir que campos essenciais não sejam nulos para o Room
+            if (dataConvertida["data_cadastro"] == null) dataConvertida["data_cadastro"] = Date()
+            if (dataConvertida["data_ultima_atualizacao"] == null) dataConvertida["data_ultima_atualizacao"] = Date()
 
             val colaboradorId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: 0L
-            val colaborador = gson.fromJson(gson.toJson(dataConvertido), Colaborador::class.java).copy(id = colaboradorId)
             
-            Timber.d("AuthViewModel", "✅ Colaborador processado: ${colaborador.nome}")
+            // Com a nova política de GSON (LOWER_CASE_WITH_UNDERSCORES) e @SerializedName na entidade,
+            // o mapeamento deve ser automático e robusto.
+            val colaborador = gson.fromJson(gson.toJson(dataConvertida), Colaborador::class.java).copy(id = colaboradorId)
+            
+            Timber.d("AuthViewModel", "✅ Colaborador processado: ${colaborador.nome} (ID: ${colaborador.id}, Acesso: ${colaborador.nivelAcesso})")
             Pair(colaborador, companyId)
             
         } catch (e: Exception) {

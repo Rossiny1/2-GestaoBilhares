@@ -59,6 +59,8 @@ class RoutesFragment : Fragment() {
 
     // ✅ CORREÇÃO: ViewModel injetado pelo Hilt
     private val viewModel: RoutesViewModel by viewModels()
+    private var isSyncing = false
+    private var isExpanded = false
 
     // Adapter para a lista de rotas
     private lateinit var routesAdapter: RoutesAdapter
@@ -667,20 +669,29 @@ class RoutesFragment : Fragment() {
         try {
             Timber.d("RoutesFragment", "🔄 Iniciando sincronização manual")
             
+            if (isSyncing) {
+                Toast.makeText(requireContext(), "Sincronização já em andamento.", Toast.LENGTH_SHORT).show()
+                return
+            }
+            isSyncing = true
+
             // ✅ CORREÇÃO CRÍTICA: Verificar sessão local em vez de Firebase Auth
             // O login híbrido pode funcionar offline sem autenticação Firebase
             val userId = userSessionManager.getCurrentUserId()
             if (userId == 0L) {
                 Timber.w("RoutesFragment", "⚠️ Nenhum usuário logado na sessão local")
                 Toast.makeText(requireContext(), "⚠️ Faça login para sincronizar dados", Toast.LENGTH_LONG).show()
+                isSyncing = false
                 return
             }
             
             Timber.d("RoutesFragment", "✅ Usuário logado detectado (ID: $userId)")
             
             // Mostrar feedback visual
-            binding.syncButton.alpha = 0.5f
-            binding.syncButton.isEnabled = false
+            _binding?.let { b ->
+                b.syncButton.isEnabled = false
+                b.syncButton.alpha = 0.5f
+            }
 
             val progressView = layoutInflater.inflate(com.example.gestaobilhares.ui.R.layout.dialog_sync_progress, null)
             val progressBar = progressView.findViewById<ProgressBar>(com.example.gestaobilhares.ui.R.id.syncProgressBar)
@@ -710,9 +721,12 @@ class RoutesFragment : Fragment() {
                     val result = withContext(Dispatchers.IO) {
                         syncRepository.syncBidirectional { progress ->
                             uiScope.launch {
-                                progressBar.progress = progress.percent
-                                progressPercent.text = "${progress.percent}%"
-                                progressStatus.text = progress.message
+                                // Check if view is still available before updating UI
+                                if (_binding != null) {
+                                    progressBar.progress = progress.percent
+                                    progressPercent.text = "${progress.percent}%"
+                                    progressStatus.text = progress.message
+                                }
                             }
                         }
                     }
@@ -723,11 +737,14 @@ class RoutesFragment : Fragment() {
                         Timber.d("RoutesFragment", "   Pendentes: ${status.pendingOperations}")
                         Timber.d("RoutesFragment", "   Falhas: ${status.failedOperations}")
 
-                        progressBar.progress = 100
-                        progressPercent.text = "100%"
-                        progressStatus.text = getString(com.example.gestaobilhares.ui.R.string.sync_status_completed) + 
-                            "\nPendentes: ${status.pendingOperations}\n" +
-                            "Falhas: ${status.failedOperations}"
+                        // Check if view is still available before updating UI
+                        if (_binding != null) {
+                            progressBar.progress = 100
+                            progressPercent.text = "100%"
+                            progressStatus.text = getString(com.example.gestaobilhares.ui.R.string.sync_status_completed) + 
+                                "\nPendentes: ${status.pendingOperations}\n" +
+                                "Falhas: ${status.failedOperations}"
+                        }
                         
                         // Forçar atualização completa dos dados das rotas após sincronização
                         Timber.d("RoutesFragment", "🔄 Aguardando processamento dos dados...")
@@ -743,17 +760,27 @@ class RoutesFragment : Fragment() {
                     } else {
                         val status = syncRepository.getSyncStatus()
                         Timber.e("RoutesFragment", "❌ Sincronização falhou: ${status.error ?: "Erro desconhecido"}")
-                        progressStatus.text = "⚠️ Sincronização falhou: ${status.error ?: "Erro desconhecido"}\n" +
-                            "Verifique os logs para mais detalhes"
+                        // Check if view is still available before updating UI
+                        if (_binding != null) {
+                            progressStatus.text = "⚠️ Sincronização falhou: ${status.error ?: "Erro desconhecido"}\n" +
+                                "Verifique os logs para mais detalhes"
+                        }
                     }
                     
                 } catch (e: Exception) {
                     Timber.e("RoutesFragment", "Erro na sincronização: ${e.message}", e)
-                    progressStatus.text = "❌ Erro na sincronização: ${e.message ?: "Erro desconhecido"}"
+                    // Check if view is still available before updating UI
+                    if (_binding != null) {
+                        progressStatus.text = "❌ Erro na sincronização: ${e.message ?: "Erro desconhecido"}"
+                    }
                 } finally {
                     progressDialog.dismiss()
-                    binding.syncButton.alpha = 1.0f
-                    binding.syncButton.isEnabled = true
+                    // Restaurar UI - Use _binding? para evitar NPE se navegar durante o sync
+                    _binding?.let { b ->
+                        b.syncButton.isEnabled = true
+                        b.syncButton.alpha = 1.0f
+                    }
+                    isSyncing = false
                     // ✅ CORREÇÃO: Não verificar pendências após sincronização manual
                     // Isso evita que o diálogo reapareça em loop
                     // O diálogo só aparecerá novamente no próximo login ou se o usuário solicitar
@@ -764,8 +791,11 @@ class RoutesFragment : Fragment() {
             Timber.e("RoutesFragment", "Erro ao iniciar sincronização: ${e.message}", e)
             Toast.makeText(requireContext(), "❌ Erro ao sincronizar: ${e.message}", Toast.LENGTH_LONG).show()
             progressDialog?.dismiss()
-            binding.syncButton.alpha = 1.0f
-            binding.syncButton.isEnabled = true
+            _binding?.let { b ->
+                b.syncButton.isEnabled = true
+                b.syncButton.alpha = 1.0f
+            }
+            isSyncing = false
             // ✅ CORREÇÃO: Não verificar pendências após erro na sincronização
             // Isso evita que o diálogo reapareça em loop
         }
@@ -845,7 +875,7 @@ class RoutesFragment : Fragment() {
         }
         
         // Container Transferir Cliente
-        binding.fabTransferContainer.setOnClickListener {
+        _binding?.fabTransferContainer?.setOnClickListener {
             showTransferClientDialog()
             // Recolher menu após clicar
             recolherFabMenu()
@@ -857,31 +887,32 @@ class RoutesFragment : Fragment() {
      * ✅ NOVO: Expande o menu FAB com animação
      */
     private fun expandirFabMenu() {
+        val b = _binding ?: return
         Timber.d("LOG_CRASH", "RoutesFragment.expandirFabMenu - INÍCIO")
         try {
-            binding.fabExpandedContainer.visibility = View.VISIBLE
+            b.fabExpandedContainer.visibility = View.VISIBLE
             Timber.d("LOG_CRASH", "RoutesFragment.expandirFabMenu - Container expandido visível")
             
             // Animar entrada dos containers
-            binding.fabMaintenanceContainer.alpha = 0f
-            binding.fabTransferContainer.alpha = 0f
+            b.fabMaintenanceContainer.alpha = 0f
+            b.fabTransferContainer.alpha = 0f
             
             // Animar "Transferir Cliente" primeiro (mais próximo do FAB principal)
-            binding.fabTransferContainer.animate()
+            b.fabTransferContainer.animate()
                 .alpha(1f)
                 .setDuration(300)
                 .setStartDelay(100)
                 .start()
                 
             // Animar "Manutenção Mesa" depois (mais afastado do FAB principal)
-            binding.fabMaintenanceContainer.animate()
+            b.fabMaintenanceContainer.animate()
                 .alpha(1f)
                 .setDuration(300)
                 .setStartDelay(200)
                 .start()
                 
             // Rotacionar ícone do FAB principal
-            binding.fabMain.animate()
+            b.fabMain.animate()
                 .rotation(45f)
                 .setDuration(200)
                 .start()
