@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 import java.util.Date
 
@@ -27,81 +28,107 @@ import java.util.Date
 )
 data class Cliente(
     @PrimaryKey(autoGenerate = true)
+    @SerializedName("id")
     val id: Long = 0,
     
     @ColumnInfo(name = "nome")
+    @SerializedName("nome")
     val nome: String,
     
     @ColumnInfo(name = "nome_fantasia")
+    @SerializedName("nome_fantasia")
     val nomeFantasia: String? = null,
     
     @ColumnInfo(name = "cpf_cnpj")
+    @SerializedName("cpf_cnpj")
     val cpfCnpj: String? = null,
     
     @ColumnInfo(name = "telefone")
+    @SerializedName("telefone")
     val telefone: String? = null,
     
     @ColumnInfo(name = "telefone2")
+    @SerializedName("telefone2")
     val telefone2: String? = null,
     
     @ColumnInfo(name = "email")
+    @SerializedName("email")
     val email: String? = null,
     
     @ColumnInfo(name = "endereco")
+    @SerializedName("endereco")
     val endereco: String? = null,
     
     @ColumnInfo(name = "bairro")
+    @SerializedName("bairro")
     val bairro: String? = null,
     
     @ColumnInfo(name = "cidade")
+    @SerializedName("cidade")
     val cidade: String? = null,
     
     @ColumnInfo(name = "estado")
+    @SerializedName("estado")
     val estado: String? = null,
     
     @ColumnInfo(name = "cep")
+    @SerializedName("cep")
     val cep: String? = null,
     
     @ColumnInfo(name = "latitude")
+    @SerializedName("latitude")
     val latitude: Double? = null,
     
     @ColumnInfo(name = "longitude")
+    @SerializedName("longitude")
     val longitude: Double? = null,
     
     @ColumnInfo(name = "precisao_gps")
+    @SerializedName("precisao_gps")
     val precisaoGps: Float? = null,
     
     @ColumnInfo(name = "data_captura_gps")
+    @SerializedName("data_captura_gps")
     val dataCapturaGps: Date? = null,
     
     @ColumnInfo(name = "rota_id")
+    @SerializedName("rota_id")
     val rotaId: Long,
     
     @ColumnInfo(name = "valor_ficha")
+    @SerializedName("valor_ficha")
     val valorFicha: Double = 0.0,
     
     @ColumnInfo(name = "comissao_ficha")
+    @SerializedName("comissao_ficha")
     val comissaoFicha: Double = 0.0,
     
     @ColumnInfo(name = "numero_contrato")
+    @SerializedName("numero_contrato")
     val numeroContrato: String? = null,
     
     @ColumnInfo(name = "debito_anterior")
+    @SerializedName("debito_anterior")
     val debitoAnterior: Double = 0.0,
     
     @ColumnInfo(name = "debito_atual")
+    @SerializedName("debito_atual")
     val debitoAtual: Double = 0.0,
     
     @ColumnInfo(name = "ativo")
+    @SerializedName("ativo")
     val ativo: Boolean = true,
     
     @ColumnInfo(name = "observacoes")
+    @SerializedName("observacoes")
     val observacoes: String? = null,
     
     @ColumnInfo(name = "data_cadastro")
+    @SerializedName("data_cadastro")
     val dataCadastro: Date = Date(),
     
     @ColumnInfo(name = "data_ultima_atualizacao")
+    @SerializedName("data_ultima_atualizacao")
     val dataUltimaAtualizacao: Date = Date()
 ) : Serializable
 

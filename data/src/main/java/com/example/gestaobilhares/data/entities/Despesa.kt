@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
+import com.google.gson.annotations.SerializedName
 import java.time.LocalDateTime
 import java.util.Date
 
@@ -45,42 +46,60 @@ import java.util.Date
 )
 data class Despesa(
     @PrimaryKey(autoGenerate = true)
+    @SerializedName("id")
     val id: Long = 0,
     
+    @SerializedName("rotaId")
     val rotaId: Long,
     
+    @SerializedName("descricao")
     val descricao: String,
     
+    @SerializedName("valor")
     val valor: Double,
     
+    @SerializedName("categoria")
     val categoria: String,
     
     // ✅ NOVO: VÍNCULO COM TIPO DE DESPESA
+    @SerializedName("tipoDespesa")
     val tipoDespesa: String = "",
     
+    @SerializedName("dataHora")
     val dataHora: LocalDateTime = LocalDateTime.now(),
     
+    @SerializedName("observacoes")
     val observacoes: String = "",
     
+    @SerializedName("criadoPor")
     val criadoPor: String = "", // ID do colaborador
     
     // NOVO: VÍNCULO COM CICLO DE ACERTO (id do ciclo)
+    @SerializedName("cicloId")
     val cicloId: Long? = null,
     
     // ✅ NOVO: Origem do lançamento (ROTA ou GLOBAL)
+    @SerializedName("origemLancamento")
     val origemLancamento: String = "ROTA",
     
     // ✅ NOVO: Identificação de ciclo global por ano/número
+    @SerializedName("cicloAno")
     val cicloAno: Int? = null,
+    @SerializedName("cicloNumero")
     val cicloNumero: Int? = null,
     
     // ✅ NOVO: CAMPOS PARA FOTO DO COMPROVANTE
+    @SerializedName("fotoComprovante")
     val fotoComprovante: String? = null,
+    @SerializedName("dataFotoComprovante")
     val dataFotoComprovante: Date? = null
     ,
     // ✅ NOVO: Campos para despesas de viagem
+    @SerializedName("veiculoId")
     val veiculoId: Long? = null,
+    @SerializedName("kmRodado")
     val kmRodado: Long? = null,
+    @SerializedName("litrosAbastecidos")
     val litrosAbastecidos: Double? = null
 )
 

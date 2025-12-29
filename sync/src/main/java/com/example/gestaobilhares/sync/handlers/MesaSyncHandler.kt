@@ -151,11 +151,18 @@ class MesaSyncHandler(
                     
                     // Verificar se deve sincronizar baseado na rota do cliente
                     val rotaId = getClienteRouteId(mesaFirestore.clienteId)
-                    if (!shouldSyncRouteData(rotaId, clienteId = mesaFirestore.clienteId, allowUnknown = false)) {
+                    if (!shouldSyncRouteData(rotaId)) {
                         skippedCount++
                         return@forEach
                     }
                     
+                    // Validar FK cliente (opcional para mesas)
+                    if (!ensureEntityExists("cliente", mesaFirestore.clienteId)) {
+                        Timber.tag(TAG).w("⏭️ Pulando mesa ${mesaFirestore.id} por falha na FK cliente ${mesaFirestore.clienteId}")
+                        return@forEach
+                    }
+                    
+                    // Buscar versão local para preservar dados se necessário
                     val mesaLocal = mesasCache[mesaId]
                     
                     // Verificar timestamp do servidor vs local
@@ -173,12 +180,12 @@ class MesaSyncHandler(
                     
                     val shouldSync = mesaLocal == null || serverTimestamp > localTimestamp
                     
-                    // ✅ PROTEÇÃO ADICIONAL: Se mesa local tem clienteId mas servidor não tem, NÃO sobrescrever
-                    val localClienteId = mesaLocal?.clienteId
-                    val serverClienteId = mesaFirestore.clienteId
-                    val localHasCliente = localClienteId != null && localClienteId > 0L
-                    val serverHasCliente = serverClienteId != null && serverClienteId > 0L
-                    val wouldLoseCliente = localHasCliente && !serverHasCliente && shouldSync
+                    /* 
+                     * ✅ REMOVIDO: ser tão restritivo com a perda de clienteId.
+                     * Se o servidor diz que a mesa não tem cliente, e o servidor é mais recente,
+                     * devemos aceitar a verdade do servidor. 
+                     */
+                    val wouldLoseCliente = false 
                     
                     if (wouldLoseCliente) {
                         Timber.tag(TAG).e("🚨 [PULL MESA] BLOQUEADO: Mesa $mesaId perderia clienteId (local=${mesaLocal?.clienteId}, servidor=${mesaFirestore.clienteId})")
@@ -274,19 +281,17 @@ class MesaSyncHandler(
                     }
                     
                     val rotaId = getClienteRouteId(mesaFirestore.clienteId)
-                    if (!shouldSyncRouteData(rotaId, clienteId = mesaFirestore.clienteId, allowUnknown = false)) {
+                    if (!shouldSyncRouteData(rotaId, clienteId = mesaFirestore.clienteId, allowUnknown = true)) {
                         skippedCount++
                         return@forEach
                     }
                     
                     val mesaLocal = appRepository.obterMesaPorId(mesaId)
                     
-                    // ✅ PROTEÇÃO: Se mesa local tem clienteId mas servidor não tem, NÃO sobrescrever
-                    val localClienteId = mesaLocal?.clienteId
-                    val serverClienteId = mesaFirestore.clienteId
-                    val localHasCliente = localClienteId != null && localClienteId > 0L
-                    val serverHasCliente = serverClienteId != null && serverClienteId > 0L
-                    val wouldLoseCliente = localHasCliente && !serverHasCliente
+                    /* 
+                     * ✅ REMOVIDO: ser tão restritivo no pull completo.
+                     */
+                    val wouldLoseCliente = false
                     
                     if (wouldLoseCliente) {
                         Timber.tag(TAG).e("🚨 [PULL MESA COMPLETO] BLOQUEADO: Mesa $mesaId perderia clienteId (local=${mesaLocal?.clienteId}, servidor=${mesaFirestore.clienteId})")

@@ -53,14 +53,19 @@ class ContratoSyncHandler(
                 pullComplete(collectionRef, startTime, timestampOverride)
             }
             
-            // 2. Pull Aditivo Mesas
+            // 2. Pull Aditivos (Global)
+            pullAditivos().onSuccess { count ->
+                Timber.tag(TAG).d("🔄 Pull Aditivos: $count sincronizados")
+            }
+
+            // 3. Pull Aditivo Mesas
             pullAditivoMesas().onSuccess { count -> 
-                Timber.tag(TAG).d("? Pull AditivoMesas: $count sincronizados")
+                Timber.tag(TAG).d("📥 Pull AditivoMesas: $count sincronizados")
             }
             
-            // 3. Pull Contrato Mesas
+            // 4. Pull Contrato Mesas
             pullContratoMesas().onSuccess { count ->
-                Timber.tag(TAG).d("? Pull ContratoMesas: $count sincronizados")
+                Timber.tag(TAG).d("📥 Pull ContratoMesas: $count sincronizados")
             }
             
             result
@@ -158,8 +163,6 @@ class ContratoSyncHandler(
                         if (local == null) appRepository.inserirContrato(server)
                         else appRepository.atualizarContrato(server)
                         
-                        // Sincronizar aditivos relacionados
-                        pullAditivos(id)
                         count++
                     } else {
                         Timber.tag(TAG).w("Contrato $id ignorado: cliente ${server.clienteId} não existe localmente")
@@ -183,8 +186,9 @@ class ContratoSyncHandler(
             for (doc in snapshot.documents) {
                 try {
                     val data = doc.data ?: continue
+                    val id = doc.id.toLongOrNull() ?: continue
                     val json = gson.toJson(data)
-                    val aditivo = gson.fromJson(json, AditivoContrato::class.java) ?: continue
+                    val aditivo = gson.fromJson(json, AditivoContrato::class.java)?.copy(id = id) ?: continue
                     
                     appRepository.inserirAditivo(aditivo)
                 } catch (e: Exception) {
@@ -193,6 +197,57 @@ class ContratoSyncHandler(
             }
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no pull de aditivos para contrato $contratoId")
+        }
+    }
+
+    /**
+     * Pull Aditivos: Sincroniza aditivos de contrato do Firestore para o Room.
+     * Estratégia global para garantir que todos os aditivos sejam sincronizados,
+     * independente de quando o contrato pai foi atualizado.
+     */
+    suspend fun pullAditivos(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val type = COLLECTION_ADITIVOS
+        
+        return try {
+            val collectionRef = getCollectionReference(type)
+            val lastSync = getLastSyncTimestamp(type)
+            
+            val snapshot = if (lastSync > 0L) {
+                collectionRef.whereGreaterThan("lastModified", Timestamp(Date(lastSync))).get().await()
+            } else {
+                collectionRef.get().await()
+            }
+            
+            if (snapshot.isEmpty) {
+                saveSyncMetadata(type, 0, System.currentTimeMillis() - startTime)
+                return Result.success(0)
+            }
+            
+            var syncCount = 0
+            for (doc in snapshot.documents) {
+                try {
+                    val data = doc.data ?: continue
+                    val id = doc.id.toLongOrNull() ?: continue
+                    
+                    val json = gson.toJson(data)
+                    val aditivo = gson.fromJson(json, AditivoContrato::class.java)?.copy(id = id) ?: continue
+                    
+                    // Validar FK contrato
+                    if (ensureEntityExists("contrato", aditivo.contratoId)) {
+                        appRepository.inserirAditivo(aditivo)
+                        syncCount++
+                    }
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Erro ao processar aditivo ${doc.id}")
+                }
+            }
+            
+            saveSyncMetadata(type, syncCount, System.currentTimeMillis() - startTime)
+            Result.success(syncCount)
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "Erro no pull global de aditivos")
+            Result.failure(e)
         }
     }
 
@@ -208,35 +263,34 @@ class ContratoSyncHandler(
             val locais = appRepository.buscarTodosContratos().first()
             val paraEnviar = locais.filter { it.dataAtualizacao.time > lastPushTimestamp }
 
-            if (paraEnviar.isEmpty()) {
-                savePushMetadata(entityType, 0, System.currentTimeMillis() - startTime)
-                return Result.success(0)
-            }
-
             var count = 0
-            val collectionRef = getCollectionReference(entityType)
+            if (paraEnviar.isNotEmpty()) {
+                val collectionRef = getCollectionReference(entityType)
 
-            for (contrato in paraEnviar) {
-                try {
-                    val map = entityToMap(contrato)
-                    map["id"] = contrato.id
-                    map["roomId"] = contrato.id
-                    map["lastModified"] = FieldValue.serverTimestamp()
-                    map["syncTimestamp"] = FieldValue.serverTimestamp()
+                for (contrato in paraEnviar) {
+                    try {
+                        val map = entityToMap(contrato)
+                        map["id"] = contrato.id
+                        map["roomId"] = contrato.id
+                        map["lastModified"] = FieldValue.serverTimestamp()
+                        map["syncTimestamp"] = FieldValue.serverTimestamp()
 
-                    collectionRef.document(contrato.id.toString()).set(map).await()
-                    
-                    // Push aditivos relacionados
-                    pushAditivos(contrato.id)
-                    count++
-                } catch (e: Exception) {
-                    Timber.tag(TAG).e(e, "Erro ao enviar contrato ${contrato.id}")
+                        collectionRef.document(contrato.id.toString()).set(map).await()
+                        
+                        count++
+                    } catch (e: Exception) {
+                        Timber.tag(TAG).e(e, "Erro ao enviar contrato ${contrato.id}")
+                    }
                 }
+                savePushMetadata(entityType, count, System.currentTimeMillis() - startTime)
             }
-
-            savePushMetadata(entityType, count, System.currentTimeMillis() - startTime)
             
-            // 2. Push Aditivo Mesas
+            // 2. Push Aditivos (Global)
+            pushAditivos().onSuccess { pCount ->
+                Timber.tag(TAG).d("🔄 Push Aditivos: $pCount sincronizados")
+            }
+            
+            // 3. Push Aditivo Mesas
             pushAditivoMesas().onSuccess { pCount ->
                 Timber.tag(TAG).d("🔄 Push AditivoMesas: $pCount sincronizados")
             }
@@ -272,6 +326,50 @@ class ContratoSyncHandler(
             }
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro no push de aditivos para contrato $contratoId")
+        }
+    }
+
+    /**
+     * Push Aditivos: Envia aditivos locais para o Firestore.
+     * Estratégia global baseada em timestamp de alteração.
+     */
+    suspend fun pushAditivos(): Result<Int> {
+        val startTime = System.currentTimeMillis()
+        val type = COLLECTION_ADITIVOS
+        
+        return try {
+            val lastPush = getLastPushTimestamp(type)
+            val locais = appRepository.buscarTodosAditivos().first()
+            val paraEnviar = locais.filter { it.dataAtualizacao.time > lastPush }
+
+            if (paraEnviar.isEmpty()) {
+                savePushMetadata(type, 0, System.currentTimeMillis() - startTime)
+                return Result.success(0)
+            }
+
+            var count = 0
+            val collectionRef = getCollectionReference(type)
+
+            for (aditivo in paraEnviar) {
+                try {
+                    val map = entityToMap(aditivo)
+                    map["id"] = aditivo.id
+                    map["roomId"] = aditivo.id
+                    map["lastModified"] = FieldValue.serverTimestamp()
+                    map["syncTimestamp"] = FieldValue.serverTimestamp()
+
+                    collectionRef.document(aditivo.id.toString()).set(map).await()
+                    count++
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Erro ao enviar aditivo ${aditivo.id}")
+                }
+            }
+
+            savePushMetadata(type, count, System.currentTimeMillis() - startTime)
+            Result.success(count)
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "Erro no push global de aditivos")
+            Result.failure(e)
         }
     }
 
@@ -314,7 +412,7 @@ class ContratoSyncHandler(
                         ?: (data["mesa_id"] as? Number)?.toLong() ?: continue
                     
                     val rotaId = getMesaRouteId(mesaId)
-                    if (!shouldSyncRouteData(rotaId, allowUnknown = false)) {
+                    if (!shouldSyncRouteData(rotaId, allowUnknown = true)) {
                         continue
                     }
                     
@@ -328,9 +426,15 @@ class ContratoSyncHandler(
                             ?: data["numero_serie"] as? String ?: ""
                     )
                     
-                    appRepository.inserirAditivoMesas(listOf(aditivoMesa))
-                    aditivoMesasCache[aditivoMesaId] = aditivoMesa
-                    syncCount++
+                    
+                    // Validar FKs
+                    if (ensureEntityExists("aditivo", aditivoId) && ensureEntityExists("mesa", mesaId)) {
+                        appRepository.inserirAditivoMesas(listOf(aditivoMesa))
+                        aditivoMesasCache[aditivoMesaId] = aditivoMesa
+                        syncCount++
+                    } else {
+                        Timber.tag(TAG).w("⏭️ Pulando aditivo_mesa $aditivoMesaId por falha na FK")
+                    }
                 } catch (e: Exception) {
                     Timber.tag(TAG).e(e, "Erro ao processar aditivo mesa ${doc.id}")
                 }
@@ -382,7 +486,7 @@ class ContratoSyncHandler(
                         ?: (data["mesa_id"] as? Number)?.toLong() ?: continue
                     
                     val rotaId = getMesaRouteId(mesaId)
-                    if (!shouldSyncRouteData(rotaId, allowUnknown = false)) {
+                    if (!shouldSyncRouteData(rotaId, allowUnknown = true)) {
                         continue
                     }
                     

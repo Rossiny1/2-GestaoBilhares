@@ -77,7 +77,7 @@ class ColaboradorRotaSyncHandler @javax.inject.Inject constructor(
             // Para USER, pull apenas os VÍNCULOS dele
             // ✅ CORREÇÃO: Isso quebra a dependência circular onde precisávamos de RotaIDs para puxar vínculos
             val userId = userSessionManager.getCurrentUserId()
-            var query = collectionRef.whereEqualTo("colaboradorId", userId)
+            var query = collectionRef.whereEqualTo("colaborador_id", userId)
             if (lastSyncTimestamp > 0L) {
                 query = query.whereGreaterThan("lastModified", Timestamp(Date(lastSyncTimestamp)))
                     .orderBy("lastModified")
@@ -151,15 +151,17 @@ class ColaboradorRotaSyncHandler @javax.inject.Inject constructor(
         documents.forEach { doc ->
             try {
                 val data = doc.data ?: return@forEach
-                val colabId = (data["colaboradorId"] as? Number)?.toLong() ?: return@forEach
-                val rotaId = (data["rotaId"] as? Number)?.toLong() ?: return@forEach
+                val colabId = (data["colaborador_id"] as? Number)?.toLong() ?: (data["colaboradorId"] as? Number)?.toLong() ?: return@forEach
+                val rotaId = (data["rota_id"] as? Number)?.toLong() ?: (data["rotaId"] as? Number)?.toLong() ?: return@forEach
                 
                 val json = gson.toJson(data)
                 val vinculoFirestore = gson.fromJson(json, ColaboradorRota::class.java) ?: return@forEach
                 
                 val key = "${colabId}_${rotaId}"
                 val localVinculo = vinculosCache[key]
-                val serverTimestamp = doc.getTimestamp("lastModified")?.toDate()?.time
+                val serverTimestamp = doc.getTimestamp("last_modified")?.toDate()?.time
+                    ?: doc.getTimestamp("lastModified")?.toDate()?.time
+                    ?: converterTimestampParaDate(data["data_vinculacao"])?.time 
                     ?: converterTimestampParaDate(data["dataVinculacao"])?.time ?: 0L
                 val localTimestamp = localVinculo?.dataVinculacao?.time ?: 0L
                 

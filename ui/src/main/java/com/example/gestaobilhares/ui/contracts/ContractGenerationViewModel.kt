@@ -143,9 +143,14 @@ class ContractGenerationViewModel @Inject constructor(
                 
                 repository.inserirContratoMesas(contratoMesas)
                 
-                // Atualizar mesas para vincular ao cliente
+                // Atualizar mesas para vincular ao cliente e atualizar timestamps para sync
                 mesas.forEach { mesa ->
-                    val mesaAtualizada = mesa.copy(clienteId = cliente.id)
+                    val agora = java.util.Date()
+                    val mesaAtualizada = mesa.copy(
+                        clienteId = cliente.id,
+                        dataInstalacao = agora,
+                        dataUltimaLeitura = agora
+                    )
                     repository.atualizarMesa(mesaAtualizada)
                 }
                 

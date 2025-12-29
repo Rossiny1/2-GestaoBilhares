@@ -129,9 +129,14 @@ class AditivoSignatureViewModel @Inject constructor(
                         repository.retirarMesa(mesa.id)
                     }
                 } else {
-                    // Inclusão: vincular mesas ao cliente do contrato
+                    // Inclusão: vincular mesas ao cliente do contrato e atualizar timestamps
                     mesas.forEach { mesa ->
-                        val mesaAtualizada = mesa.copy(clienteId = contrato.clienteId)
+                        val agora = Date()
+                        val mesaAtualizada = mesa.copy(
+                            clienteId = contrato.clienteId,
+                            dataInstalacao = agora,
+                            dataUltimaLeitura = agora
+                        )
                         repository.atualizarMesa(mesaAtualizada)
                     }
                 }
