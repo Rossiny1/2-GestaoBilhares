@@ -1,8 +1,9 @@
 # 4️⃣ ROADMAP 2026
 
+> **⚠️ IMPORTANTE**: Antes de ler este arquivo, leia PRIMEIRO: `.cursor/rules/0-PERFORMANCE-MAXIMA-OBRIGATORIO.md`  
 > **Propósito**: Planejamento estratégico e fases pendentes de evolução.  
-> **Última Atualização**: Dezembro 2025  
-> **Versão**: 3.0
+> **Última Atualização**: Janeiro 2026  
+> **Versão**: 3.1
 
 ---
 

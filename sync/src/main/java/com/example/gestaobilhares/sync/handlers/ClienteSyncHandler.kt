@@ -146,12 +146,10 @@ class ClienteSyncHandler(
                 }
                 
                 var local = appRepository.obterClientePorId(id)
-                val serverTimeObj = data["dataUltimaAtualizacao"] ?: data["data_ultima_atualizacao"]
-                val serverTime = (serverTimeObj as? Timestamp)?.toDate()?.time 
-                    ?: (serverTimeObj as? Date)?.time
-                    ?: (serverTimeObj as? Number)?.toLong()
+                val serverTime = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["dataUltimaAtualizacao"])
+                    ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["data_ultima_atualizacao"])
                     ?: 0L
-                val localTime = local?.dataUltimaAtualizacao?.time ?: 0L
+                val localTime = local?.dataUltimaAtualizacao ?: 0L
                 
                 
                 
@@ -198,7 +196,7 @@ class ClienteSyncHandler(
             val lastPushTimestamp = getLastPushTimestamp(entityType)
             val clientesLocais = appRepository.obterTodosClientes().first()
             
-            val paraEnviar = clientesLocais.filter { it.dataUltimaAtualizacao.time > lastPushTimestamp }
+            val paraEnviar = clientesLocais.filter { it.dataUltimaAtualizacao > lastPushTimestamp }
             
             if (paraEnviar.isEmpty()) {
                 savePushMetadata(entityType, 0, System.currentTimeMillis() - startTime)

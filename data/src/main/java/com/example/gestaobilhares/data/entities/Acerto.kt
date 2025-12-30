@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
-import java.util.Date
 
 /**
  * Entidade que representa um Acerto no banco de dados.
@@ -58,15 +57,15 @@ data class Acerto(
     
     @ColumnInfo(name = "data_acerto")
     @SerializedName("data_acerto")
-    val dataAcerto: Date = Date(),
+    val dataAcerto: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "periodo_inicio")
     @SerializedName("periodo_inicio")
-    val periodoInicio: Date,
+    val periodoInicio: Long,
     
     @ColumnInfo(name = "periodo_fim")
     @SerializedName("periodo_fim")
-    val periodoFim: Date,
+    val periodoFim: Long,
     
     @ColumnInfo(name = "total_mesas")
     @SerializedName("total_mesas")
@@ -106,11 +105,11 @@ data class Acerto(
     
     @ColumnInfo(name = "data_criacao")
     @SerializedName("data_criacao")
-    val dataCriacao: Date = Date(),
+    val dataCriacao: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "data_finalizacao")
     @SerializedName("data_finalizacao")
-    val dataFinalizacao: Date? = null,
+    val dataFinalizacao: Long? = null,
     
     @ColumnInfo(name = "metodos_pagamento_json")
     @SerializedName("metodos_pagamento_json")

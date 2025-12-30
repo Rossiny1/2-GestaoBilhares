@@ -32,7 +32,7 @@ interface StockItemDao {
     fun buscarPorNome(search: String): Flow<List<StockItem>>
 
     @Query("UPDATE stock_items SET quantity = :newQuantity, updated_at = :updatedAt WHERE id = :id")
-    suspend fun atualizarQuantidade(id: Long, newQuantity: Int, updatedAt: java.util.Date)
+    suspend fun atualizarQuantidade(id: Long, newQuantity: Int, updatedAt: Long)
 
     @Query("DELETE FROM stock_items WHERE id = :id")
     suspend fun deletarPorId(id: Long)

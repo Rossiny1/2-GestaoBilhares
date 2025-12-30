@@ -154,8 +154,8 @@ class ContratoSyncHandler(
                 }
 
                 val local = localCache[id]
-                val serverTime = (data["lastModified"] as? Timestamp)?.toDate()?.time ?: server.dataAtualizacao.time
-                val localTime = local?.dataAtualizacao?.time ?: 0L
+                val serverTime = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["lastModified"]) ?: server.dataAtualizacao
+                val localTime = local?.dataAtualizacao ?: 0L
 
                 if (local == null || serverTime > localTime) {
                     // Validar FK cliente
@@ -261,7 +261,7 @@ class ContratoSyncHandler(
         
         return try {
             val locais = appRepository.buscarTodosContratos().first()
-            val paraEnviar = locais.filter { it.dataAtualizacao.time > lastPushTimestamp }
+            val paraEnviar = locais.filter { it.dataAtualizacao > lastPushTimestamp }
 
             var count = 0
             if (paraEnviar.isNotEmpty()) {
@@ -340,7 +340,7 @@ class ContratoSyncHandler(
         return try {
             val lastPush = getLastPushTimestamp(type)
             val locais = appRepository.buscarTodosAditivos().first()
-            val paraEnviar = locais.filter { it.dataAtualizacao.time > lastPush }
+            val paraEnviar = locais.filter { it.dataAtualizacao > lastPush }
 
             if (paraEnviar.isEmpty()) {
                 savePushMetadata(type, 0, System.currentTimeMillis() - startTime)

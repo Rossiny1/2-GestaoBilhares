@@ -293,7 +293,7 @@ class AppRepository @Inject constructor(
     suspend fun buscarObservacaoUltimoAcerto(clienteId: Long) = acertoRepository.buscarObservacaoUltimoAcerto(clienteId)
     suspend fun buscarUltimosAcertosPorClientes(clienteIds: List<Long>) = acertoRepository.buscarUltimosPorClientes(clienteIds)
     suspend fun removerAcertosExcedentes(clienteId: Long, limit: Int) = acertoRepository.removerAcertosExcedentes(clienteId, limit)
-    suspend fun buscarAcertosPorPeriodo(clienteId: Long, inicio: Date, fim: Date) = acertoRepository.buscarPorPeriodo(clienteId, inicio, fim)
+    suspend fun buscarAcertosPorPeriodo(clienteId: Long, inicio: Date, fim: Date) = acertoRepository.buscarPorPeriodo(clienteId, inicio.time, fim.time)
     
     // ==================== MESA ====================
     // ✅ DELEGAÇÃO: Usa MesaRepository especializado
@@ -389,7 +389,7 @@ class AppRepository @Inject constructor(
                     val semAcerto4Meses = if (dataUltimo == null) {
                         true
                     } else {
-                        val cal = java.util.Calendar.getInstance(); cal.time = dataUltimo
+                        val cal = java.util.Calendar.getInstance(); cal.time = java.util.Date(dataUltimo)
                         val anos = agora.get(java.util.Calendar.YEAR) - cal.get(java.util.Calendar.YEAR)
                         val meses = anos * 12 + (agora.get(java.util.Calendar.MONTH) - cal.get(java.util.Calendar.MONTH))
                         meses >= 4
@@ -458,10 +458,10 @@ class AppRepository @Inject constructor(
                     Timber.d("AppRepository", "🔄 Rota $rotaId: Exibindo maior ciclo encontrado: ${ultimoCiclo.numeroCiclo} (Status: ${ultimoCiclo.status})")
                     // Se estiver finalizado, usa dataFim, senão dataInicio (fallback)
                     val dataRef = if (ultimoCiclo.status == StatusCicloAcerto.FINALIZADO) ultimoCiclo.dataFim else ultimoCiclo.dataInicio
-                    Triple(ultimoCiclo.numeroCiclo, ultimoCiclo.id, dataRef.time)
+                    Triple(ultimoCiclo.numeroCiclo, ultimoCiclo.id, dataRef)
                 } else if (emAndamento != null) {
                     // Se o em andamento for maior ou igual (ou único), usa ele
-                    Triple(emAndamento.numeroCiclo, emAndamento.id, emAndamento.dataInicio.time)
+                    Triple(emAndamento.numeroCiclo, emAndamento.id, emAndamento.dataInicio)
                 } else {
                     Timber.d("AppRepository", "🆕 Rota $rotaId: Sem histórico, exibindo 1º ciclo")
                     Triple(1, null, null)
@@ -479,11 +479,11 @@ class AppRepository @Inject constructor(
             kotlinx.coroutines.runBlocking {
                 val emAndamento = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
                 if (emAndamento != null) {
-                    Pair(emAndamento.dataInicio.time, emAndamento.dataFim.time)
+                    Pair(emAndamento.dataInicio, emAndamento.dataFim)
                 } else {
                     val ultimo = cicloAcertoDao.buscarUltimoCicloPorRota(rotaId)
                     if (ultimo != null) {
-                        Pair(ultimo.dataInicio.time, ultimo.dataFim.time)
+                        Pair(ultimo.dataInicio, ultimo.dataFim)
                     } else {
                         Pair(null, null)
                     }
@@ -769,7 +769,7 @@ class AppRepository @Inject constructor(
     }
     
     suspend fun aprovarColaborador(colaboradorId: Long, dataAprovacao: java.util.Date, aprovadoPor: String) = 
-        colaboradorDao.aprovarColaborador(colaboradorId, dataAprovacao, aprovadoPor)
+        colaboradorDao.aprovarColaborador(colaboradorId, dataAprovacao.time, aprovadoPor)
     
     suspend fun aprovarColaboradorComCredenciais(
         colaboradorId: Long,
@@ -781,7 +781,7 @@ class AppRepository @Inject constructor(
         aprovadoPor: String,
         firebaseUid: String? = null
     ) = colaboradorDao.aprovarColaboradorComCredenciais(
-        colaboradorId, email, senha, nivelAcesso, observacoes, dataAprovacao, aprovadoPor, firebaseUid
+        colaboradorId, email, senha, nivelAcesso, observacoes, dataAprovacao.time, aprovadoPor, firebaseUid
     )
     
     suspend fun marcarPrimeiroAcessoConcluido(colaboradorId: Long, senhaHash: String) = 
@@ -789,7 +789,7 @@ class AppRepository @Inject constructor(
     suspend fun alterarStatusColaborador(colaboradorId: Long, ativo: Boolean) = 
         colaboradorDao.alterarStatus(colaboradorId, ativo)
     suspend fun atualizarUltimoAcessoColaborador(colaboradorId: Long, dataUltimoAcesso: java.util.Date) = 
-        colaboradorDao.atualizarUltimoAcesso(colaboradorId, dataUltimoAcesso)
+        colaboradorDao.atualizarUltimoAcesso(colaboradorId, dataUltimoAcesso.time)
     
     suspend fun contarColaboradoresAtivos() = colaboradorDao.contarAtivos()
     suspend fun contarColaboradoresPendentesAprovacao() = colaboradorDao.contarPendentesAprovacao()
@@ -975,7 +975,7 @@ class AppRepository @Inject constructor(
     
     // Métodos auxiliares para vinculação de colaborador com rotas
     suspend fun removerRotasColaborador(colaboradorId: Long) = colaboradorDao.deletarTodasRotasColaborador(colaboradorId)
-    suspend fun vincularColaboradorRota(colaboradorId: Long, rotaId: Long, responsavelPrincipal: Boolean, dataVinculacao: java.util.Date) {
+    suspend fun vincularColaboradorRota(colaboradorId: Long, rotaId: Long, responsavelPrincipal: Boolean, dataVinculacao: Long) {
         val colaboradorRota = ColaboradorRota(
             colaboradorId = colaboradorId,
             rotaId = rotaId,
@@ -1018,7 +1018,7 @@ class AppRepository @Inject constructor(
                     descricao = despesa.descricao,
                     valor = despesa.valor,
                     categoria = despesa.categoria,
-                    data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    data = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR")).format(java.util.Date(despesa.dataHora)),
 	                    rota = rotaNome,
                     observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
                 )
@@ -1034,7 +1034,7 @@ class AppRepository @Inject constructor(
             val calendar = java.util.Calendar.getInstance()
             val ciclos = cicloAcertoDao.listarTodos().first()
                 .filter { ciclo ->
-                    calendar.time = ciclo.dataInicio
+                    calendar.timeInMillis = ciclo.dataInicio
                     ciclo.numeroCiclo == numeroCiclo && calendar.get(java.util.Calendar.YEAR) == ano
                 }
             
@@ -1056,7 +1056,7 @@ class AppRepository @Inject constructor(
                         descricao = despesa.descricao,
                         valor = despesa.valor,
                         categoria = despesa.categoria,
-                        data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                        data = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR")).format(java.util.Date(despesa.dataHora)),
 	                        rota = rotaNome,
                         observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
                     )
@@ -1071,8 +1071,9 @@ class AppRepository @Inject constructor(
     
     suspend fun getDespesasPorAno(ano: Int, rotaId: Long): List<DespesaRelatorio> {
         return try {
-            val dataInicio = java.time.LocalDateTime.of(ano, 1, 1, 0, 0)
-            val dataFim = java.time.LocalDateTime.of(ano, 12, 31, 23, 59)
+            val zoneId = java.time.ZoneId.systemDefault()
+            val dataInicio = java.time.LocalDateTime.of(ano, 1, 1, 0, 0).atZone(zoneId).toInstant().toEpochMilli()
+            val dataFim = java.time.LocalDateTime.of(ano, 12, 31, 23, 59).atZone(zoneId).toInstant().toEpochMilli()
             
 	            val despesas: List<Despesa> = if (rotaId == 0L) {
 	                // Converte DespesaResumo -> Despesa para unificar o tipo
@@ -1091,7 +1092,7 @@ class AppRepository @Inject constructor(
                     descricao = despesa.descricao,
                     valor = despesa.valor,
                     categoria = despesa.categoria,
-                    data = despesa.dataHora.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    data = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("pt", "BR")).format(java.util.Date(despesa.dataHora)),
 	                    rota = rotaNome,
                     observacoes = despesa.observacoes.takeIf { it.isNotBlank() }
                 )
@@ -1188,7 +1189,7 @@ class AppRepository @Inject constructor(
 
     // ✅ NOVO: Encerrar contrato (UPDATE direto)
     suspend fun encerrarContrato(contratoId: Long, clienteId: Long, status: String) {
-        val agora = java.util.Date()
+        val agora = System.currentTimeMillis()
         Timber.d("Encerrar direto contrato id=${contratoId} status=${status} em ${agora}")
         contratoLocacaoDao.encerrarContrato(contratoId, status, agora, agora)
         val apos = contratoLocacaoDao.buscarContratosPorCliente(clienteId).first()
@@ -1328,7 +1329,7 @@ class AppRepository @Inject constructor(
     suspend fun obterAssinaturaRepresentanteLegalPorId(id: Long) = assinaturaRepresentanteLegalDao.obterAssinaturaPorId(id)
     suspend fun atualizarAssinaturaRepresentanteLegal(assinatura: AssinaturaRepresentanteLegal) = assinaturaRepresentanteLegalDao.atualizarAssinatura(assinatura)
     suspend fun desativarAssinaturaRepresentanteLegal(id: Long) = assinaturaRepresentanteLegalDao.desativarAssinatura(id)
-    suspend fun incrementarUsoAssinatura(id: Long, dataUso: java.util.Date) = assinaturaRepresentanteLegalDao.incrementarUso(id, dataUso)
+    suspend fun incrementarUsoAssinatura(id: Long, dataUso: Long) = assinaturaRepresentanteLegalDao.incrementarUso(id, dataUso)
     suspend fun contarAssinaturasRepresentanteLegalAtivas() = assinaturaRepresentanteLegalDao.contarAssinaturasAtivas()
     suspend fun obterAssinaturasRepresentanteLegalValidadas() = assinaturaRepresentanteLegalDao.obterAssinaturasValidadas()
     
@@ -1339,13 +1340,13 @@ class AppRepository @Inject constructor(
     suspend fun obterLogsAuditoriaPorAssinatura(idAssinatura: Long) = logAuditoriaAssinaturaDao.obterLogsPorAssinatura(idAssinatura)
     suspend fun obterLogsAuditoriaPorContrato(idContrato: Long) = logAuditoriaAssinaturaDao.obterLogsPorContrato(idContrato)
     suspend fun obterLogsAuditoriaPorTipoOperacao(tipoOperacao: String) = logAuditoriaAssinaturaDao.obterLogsPorTipoOperacao(tipoOperacao)
-    suspend fun obterLogsAuditoriaPorPeriodo(dataInicio: java.util.Date, dataFim: java.util.Date) = logAuditoriaAssinaturaDao.obterLogsPorPeriodo(dataInicio, dataFim)
+    suspend fun obterLogsAuditoriaPorPeriodo(dataInicio: Long, dataFim: Long) = logAuditoriaAssinaturaDao.obterLogsPorPeriodo(dataInicio, dataFim)
     suspend fun obterLogsAuditoriaPorUsuario(usuario: String) = logAuditoriaAssinaturaDao.obterLogsPorUsuario(usuario)
     suspend fun obterLogsAuditoriaComErro() = logAuditoriaAssinaturaDao.obterLogsComErro()
-    suspend fun contarLogsAuditoriaDesde(dataInicio: java.util.Date) = logAuditoriaAssinaturaDao.contarLogsDesde(dataInicio)
+    suspend fun contarLogsAuditoriaDesde(dataInicio: Long) = logAuditoriaAssinaturaDao.contarLogsDesde(dataInicio)
     suspend fun contarUsosAssinaturaAuditoria(idAssinatura: Long) = logAuditoriaAssinaturaDao.contarUsosAssinatura(idAssinatura)
     suspend fun obterLogsAuditoriaNaoValidados() = logAuditoriaAssinaturaDao.obterLogsNaoValidados()
-    suspend fun validarLogAuditoria(id: Long, dataValidacao: java.util.Date, validadoPor: String) = logAuditoriaAssinaturaDao.validarLog(id, dataValidacao, validadoPor)
+    suspend fun validarLogAuditoria(id: Long, dataValidacao: Long, validadoPor: String) = logAuditoriaAssinaturaDao.validarLog(id, dataValidacao, validadoPor)
     
     // ==================== PROCURAÇÕES ====================
     
@@ -1528,7 +1529,7 @@ class AppRepository @Inject constructor(
                 nome = dados.nome.trim(),
                 descricao = dados.descricao.trim(),
                 ativa = dados.ativa,
-                dataAtualizacao = java.util.Date()
+                dataAtualizacao = System.currentTimeMillis()
             )
             atualizarCategoria(categoriaAtualizada)
         }
@@ -1582,7 +1583,7 @@ class AppRepository @Inject constructor(
                 nome = dados.nome.trim(),
                 descricao = dados.descricao.trim(),
                 ativo = dados.ativo,
-                dataAtualizacao = java.util.Date()
+                dataAtualizacao = System.currentTimeMillis()
             )
             atualizarTipo(tipoAtualizado)
         }
@@ -1648,7 +1649,7 @@ class AppRepository @Inject constructor(
                 // ✅ CORREÇÃO: Usar o método finalizarCiclo do CicloAcertoRepository que calcula e salva todos os valores,
                 // incluindo o debitoTotal "congelado" no ciclo finalizado E finaliza as metas automaticamente
                 Timber.d("📋 Chamando finalizarCiclo do CicloAcertoRepository para ciclo ${cicloAtual.id}")
-                cicloAcertoRepository.finalizarCiclo(cicloAtual.id, java.util.Date(dataFim))
+                cicloAcertoRepository.finalizarCiclo(cicloAtual.id, dataFim)
                 
                 Timber.d("✅ Ciclo ${cicloAtual.id} finalizado com debitoTotal preservado e metas finalizadas")
             } else {
@@ -1737,8 +1738,8 @@ class AppRepository @Inject constructor(
     // ✅ DELEGAÇÃO: Usa MetaRepository especializado
     
     fun obterTodasMetas() = metaRepository.obterTodas()
-    suspend fun inserirMeta(meta: Meta): Long = metaRepository.inserir(meta)
-    suspend fun atualizarMeta(meta: Meta) = metaRepository.atualizar(meta)
+    suspend fun inserirMeta(meta: MetaEntity): Long = metaRepository.inserir(meta)
+    suspend fun atualizarMeta(meta: MetaEntity) = metaRepository.atualizar(meta)
     suspend fun obterMetaPorId(id: Long) = metaRepository.obterPorId(id)
     
     // ==================== HISTÓRICO COMBUSTÍVEL E MANUTENÇÃO VEÍCULO ====================

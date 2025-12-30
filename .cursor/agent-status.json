@@ -1,0 +1,36 @@
+{
+  "agent1": {
+    "name": "Build Fixes Agent",
+    "status": "idle",
+    "task": null,
+    "filesLocked": [],
+    "estimatedTime": null,
+    "lastUpdate": null,
+    "description": "Foco em correções de build, dependências e configurações"
+  },
+  "agent2": {
+    "name": "Feature Implementation Agent",
+    "status": "idle",
+    "task": null,
+    "filesLocked": [],
+    "estimatedTime": null,
+    "lastUpdate": null,
+    "description": "Foco em implementações de features e lógica de negócio"
+  },
+  "agent3": {
+    "name": "Test & Quality Agent",
+    "status": "idle",
+    "task": null,
+    "filesLocked": [],
+    "estimatedTime": null,
+    "lastUpdate": null,
+    "description": "Foco em testes, cobertura e qualidade de código"
+  },
+  "rules": {
+    "buildPriority": true,
+    "oneFileAtATime": true,
+    "frequentCommits": true,
+    "clearCommunication": true
+  },
+  "lastSync": null
+}

@@ -1,8 +1,9 @@
 # 3️⃣ ARQUITETURA E PADRÕES
 
+> **⚠️ IMPORTANTE**: Antes de ler este arquivo, leia PRIMEIRO: `.cursor/rules/0-PERFORMANCE-MAXIMA-OBRIGATORIO.md`  
 > **Propósito**: Definição da estrutura técnica, padrões de código e modularização.  
-> **Última Atualização**: 29 de Dezembro 2025  
-> **Versão**: 5.2 (Estratégia de Testes Ampliada)
+> **Última Atualização**: Janeiro 2026  
+> **Versão**: 5.3 (Performance Máxima + Estratégia de Testes Ampliada)
 
 ---
 

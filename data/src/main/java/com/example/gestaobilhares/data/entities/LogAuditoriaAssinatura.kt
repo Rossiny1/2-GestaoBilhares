@@ -2,7 +2,6 @@ package com.example.gestaobilhares.data.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.Date
 import java.io.Serializable
 
 /**
@@ -51,11 +50,11 @@ data class LogAuditoriaAssinatura(
     val mensagemErro: String? = null,
     
     // Dados de auditoria
-    val dataOperacao: Date,
+    val dataOperacao: Long = System.currentTimeMillis(),
     val observacoes: String? = null,
     
     // Validação jurídica
     val validadoJuridicamente: Boolean = false,
-    val dataValidacao: Date? = null,
+    val dataValidacao: Long? = null,
     val validadoPor: String? = null
 ) : Serializable

@@ -22,7 +22,7 @@ import java.util.Date
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-
+import com.example.gestaobilhares.core.utils.DateUtils
 /**
  * Classe base abstrata para handlers de sincronização.
  * Fornece funcionalidades comuns compartilhadas por todos os handlers:
@@ -572,20 +572,5 @@ abstract class BaseSyncHandler(
         return totalProcessed
     }
 
-    /**
-     * Converte Timestamp do Firestore para Date do Java.
-     */
-    protected fun converterTimestampParaDate(value: Any?): Date? {
-        return when (value) {
-            is Timestamp -> value.toDate()
-            is Long -> Date(value)
-            is String -> try {
-                Date(value.toLong())
-            } catch (e: Exception) {
-                null
-            }
-            else -> null
-        }
-    }
 }
 

@@ -1,0 +1,1135 @@
+﻿Initialized native services in: C:\Users\Amanda\.gradle\native
+Initialized jansi services in: C:\Users\Amanda\.gradle\native
+The client will now receive all logging from the daemon (pid: 23680). The daemon log file: C:\Users\Amanda\.gradle\daemon\8.11.1\daemon-23680.out.log
+Starting 8th build in daemon [uptime: 1 hrs 42 mins 29.573 secs, performance: 100%, GC rate: 0.00/s, heap usage: 0% of 8 GiB]
+Using 8 worker leases.
+Reusing configuration cache.
+Watching the file system is configured to be disabled
+File system watching is inactive
+Using local directory build cache for the root build (location = C:\Users\Amanda\.gradle\caches\build-cache-1, remove unused entries = after 7 days).
+Tasks to be executed: [task ':core:checkKotlinGradlePluginConfigurationErrors', task ':core:preBuild', task ':core:preDebugBuild', task ':core:generateDebugResValues', task ':core:generateDebugResources', task ':core:packageDebugResources', task ':core:parseDebugLocalResources', task ':core:generateDebugRFile', task ':data:preBuild', task ':data:preDebugBuild', task ':data:generateDebugResValues', task ':data:generateDebugResources', task ':data:packageDebugResources', task ':data:parseDebugLocalResources', task ':data:generateDebugRFile', task ':data:checkKotlinGradlePluginConfigurationErrors', task ':data:kspDebugKotlin', task ':data:compileDebugKotlin', task ':data:javaPreCompileDebug', task ':data:compileDebugJavaWithJavac', task ':data:transformDebugClassesWithAsm', task ':data:bundleLibCompileToJarDebug', task ':core:kspDebugKotlin', task ':core:compileDebugKotlin']
+Tasks that were excluded: []
+Resolve mutations for :core:checkKotlinGradlePluginConfigurationErrors (Thread[#418,included builds,5,main]) started.
+:core:checkKotlinGradlePluginConfigurationErrors (Thread[#418,included builds,5,main]) started.
+Resolve mutations for :data:preBuild (Thread[#420,Execution worker Thread 2,5,main]) started.
+Resolve mutations for :core:preBuild (Thread[#421,Execution worker Thread 3,5,main]) started.
+:core:preBuild (Thread[#420,Execution worker Thread 2,5,main]) started.
+:data:preBuild (Thread[#421,Execution worker Thread 3,5,main]) started.
+Resolve mutations for :data:checkKotlinGradlePluginConfigurationErrors (Thread[#422,Execution worker Thread 4,5,main]) started.
+:data:checkKotlinGradlePluginConfigurationErrors (Thread[#422,Execution worker Thread 4,5,main]) started.
+
+> Task :core:preBuild UP-TO-DATE
+Skipping task ':core:preBuild' as it has no actions.
+Resolve mutations for :core:preDebugBuild (Thread[#420,Execution worker Thread 2,5,main]) started.
+
+> Task :data:preBuild UP-TO-DATE
+Skipping task ':data:preBuild' as it has no actions.
+Resolve mutations for :data:preDebugBuild (Thread[#421,Execution worker Thread 3,5,main]) started.
+:core:preDebugBuild (Thread[#420,Execution worker Thread 2,5,main]) started.
+
+> Task :core:preDebugBuild UP-TO-DATE
+Skipping task ':core:preDebugBuild' as it has no actions.
+:data:preDebugBuild (Thread[#421,Execution worker Thread 3,5,main]) started.
+Resolve mutations for :core:generateDebugResValues (Thread[#420,Execution worker Thread 2,5,main]) started.
+
+> Task :data:preDebugBuild UP-TO-DATE
+Skipping task ':data:preDebugBuild' as it has no actions.
+Resolve mutations for :data:generateDebugResValues (Thread[#421,Execution worker Thread 3,5,main]) started.
+:core:generateDebugResValues (Thread[#420,Execution worker Thread 2,5,main]) started.
+:data:generateDebugResValues (Thread[#421,Execution worker Thread 3,5,main]) started.
+Resolve mutations for :data:javaPreCompileDebug (Thread[#425,Execution worker Thread 7,5,main]) started.
+:data:javaPreCompileDebug (Thread[#425,Execution worker Thread 7,5,main]) started.
+
+> Task :data:generateDebugResValues UP-TO-DATE
+Build cache key for task ':data:generateDebugResValues' is c567a2c9e87c880217ca9c652e537415
+Skipping task ':data:generateDebugResValues' as it is up-to-date.
+Resolve mutations for :data:generateDebugResources (Thread[#421,Execution worker Thread 3,5,main]) started.
+:data:generateDebugResources (Thread[#421,Execution worker Thread 3,5,main]) started.
+
+> Task :core:generateDebugResValues UP-TO-DATE
+Build cache key for task ':core:generateDebugResValues' is c567a2c9e87c880217ca9c652e537415
+Skipping task ':core:generateDebugResValues' as it is up-to-date.
+Resolve mutations for :core:generateDebugResources (Thread[#420,Execution worker Thread 2,5,main]) started.
+:core:generateDebugResources (Thread[#420,Execution worker Thread 2,5,main]) started.
+
+> Task :data:generateDebugResources UP-TO-DATE
+Build cache key for task ':data:generateDebugResources' is 091922d64f0978665678e999e1b6ba55
+Skipping task ':data:generateDebugResources' as it is up-to-date.
+Resolve mutations for :data:packageDebugResources (Thread[#421,Execution worker Thread 3,5,main]) started.
+:data:packageDebugResources (Thread[#421,Execution worker Thread 3,5,main]) started.
+
+> Task :core:generateDebugResources UP-TO-DATE
+Build cache key for task ':core:generateDebugResources' is 091922d64f0978665678e999e1b6ba55
+Skipping task ':core:generateDebugResources' as it is up-to-date.
+Resolve mutations for :core:packageDebugResources (Thread[#424,Execution worker Thread 6,5,main]) started.
+:core:packageDebugResources (Thread[#424,Execution worker Thread 6,5,main]) started.
+
+> Task :core:checkKotlinGradlePluginConfigurationErrors
+Caching disabled for task ':core:checkKotlinGradlePluginConfigurationErrors' because:
+  This task renders reported diagnostics; caching this task will hide diagnostics and obscure issues in the build
+Task ':core:checkKotlinGradlePluginConfigurationErrors' is not up-to-date because:
+  Task has not declared any outputs despite executing actions.
+
+> Task :data:packageDebugResources UP-TO-DATE
+Build cache key for task ':data:packageDebugResources' is 76a32d7a6eef65bb9f817deed685ab17
+Skipping task ':data:packageDebugResources' as it is up-to-date.
+Resolve mutations for :data:parseDebugLocalResources (Thread[#421,Execution worker Thread 3,5,main]) started.
+:data:parseDebugLocalResources (Thread[#421,Execution worker Thread 3,5,main]) started.
+
+> Task :data:parseDebugLocalResources UP-TO-DATE
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Build cache key for task ':data:parseDebugLocalResources' is 20cd24db4f69c0cf1100de1aac97318b
+Skipping task ':data:parseDebugLocalResources' as it is up-to-date.
+Resolve mutations for :data:generateDebugRFile (Thread[#421,Execution worker Thread 3,5,main]) started.
+
+> Task :core:packageDebugResources UP-TO-DATE
+Build cache key for task ':core:packageDebugResources' is a2ed25f52f0adcbf59d6e240daae2a64
+Skipping task ':core:packageDebugResources' as it is up-to-date.
+
+> Task :data:javaPreCompileDebug UP-TO-DATE
+Build cache key for task ':data:javaPreCompileDebug' is e449b4eabd0d451c87f05c65b66cba03
+Skipping task ':data:javaPreCompileDebug' as it is up-to-date.
+:data:generateDebugRFile (Thread[#421,Execution worker Thread 3,5,main]) started.
+Resolve mutations for :core:parseDebugLocalResources (Thread[#424,Execution worker Thread 6,5,main]) started.
+:core:parseDebugLocalResources (Thread[#424,Execution worker Thread 6,5,main]) started.
+
+> Task :core:parseDebugLocalResources UP-TO-DATE
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Build cache key for task ':core:parseDebugLocalResources' is 20cd24db4f69c0cf1100de1aac97318b
+Skipping task ':core:parseDebugLocalResources' as it is up-to-date.
+Resolve mutations for :core:generateDebugRFile (Thread[#424,Execution worker Thread 6,5,main]) started.
+:core:generateDebugRFile (Thread[#424,Execution worker Thread 6,5,main]) started.
+
+> Task :data:generateDebugRFile UP-TO-DATE
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Build cache key for task ':data:generateDebugRFile' is e5b87696fd104af604051f37aae1a3dc
+Skipping task ':data:generateDebugRFile' as it is up-to-date.
+
+> Task :core:generateDebugRFile UP-TO-DATE
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Transforming android.jar with PlatformAttrTransform
+Build cache key for task ':core:generateDebugRFile' is 9c5dd293f3854387f8ba9ed7b724e36d
+Skipping task ':core:generateDebugRFile' as it is up-to-date.
+
+> Task :data:checkKotlinGradlePluginConfigurationErrors
+Caching disabled for task ':data:checkKotlinGradlePluginConfigurationErrors' because:
+  This task renders reported diagnostics; caching this task will hide diagnostics and obscure issues in the build
+Task ':data:checkKotlinGradlePluginConfigurationErrors' is not up-to-date because:
+  Task has not declared any outputs despite executing actions.
+Resolve mutations for :data:kspDebugKotlin (Thread[#424,Execution worker Thread 6,5,main]) started.
+:data:kspDebugKotlin (Thread[#424,Execution worker Thread 6,5,main]) started.
+
+> Task :data:kspDebugKotlin UP-TO-DATE
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\data\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\data\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\data\src\main\kotlin', not found
+Transforming kotlin-parcelize-runtime-1.9.20.jar (org.jetbrains.kotlin:kotlin-parcelize-runtime:1.9.20) with JetifyTransform
+Transforming kotlin-parcelize-runtime-1.9.20.jar (org.jetbrains.kotlin:kotlin-parcelize-runtime:1.9.20) with IdentityTransform
+Transforming hilt-android-2.51.aar (com.google.dagger:hilt-android:2.51) with JetifyTransform
+Transforming hilt-android-2.51.aar (com.google.dagger:hilt-android:2.51) with AarToClassTransform
+Transforming firebase-firestore-ktx-24.10.3.aar (com.google.firebase:firebase-firestore-ktx:24.10.3) with JetifyTransform
+Transforming firebase-firestore-ktx-24.10.3.aar (com.google.firebase:firebase-firestore-ktx:24.10.3) with AarToClassTransform
+Transforming firebase-firestore-24.10.3.aar (com.google.firebase:firebase-firestore:24.10.3) with JetifyTransform
+Transforming firebase-firestore-24.10.3.aar (com.google.firebase:firebase-firestore:24.10.3) with AarToClassTransform
+Transforming firebase-common-ktx-20.4.2.aar (com.google.firebase:firebase-common-ktx:20.4.2) with JetifyTransform
+Transforming firebase-common-ktx-20.4.2.aar (com.google.firebase:firebase-common-ktx:20.4.2) with AarToClassTransform
+Transforming firebase-common-20.4.2.aar (com.google.firebase:firebase-common:20.4.2) with JetifyTransform
+Transforming firebase-common-20.4.2.aar (com.google.firebase:firebase-common:20.4.2) with AarToClassTransform
+Transforming room-common-2.6.1.jar (androidx.room:room-common:2.6.1) with JetifyTransform
+Transforming room-common-2.6.1.jar (androidx.room:room-common:2.6.1) with IdentityTransform
+Transforming room-runtime-2.6.1.aar (androidx.room:room-runtime:2.6.1) with JetifyTransform
+Transforming room-runtime-2.6.1.aar (androidx.room:room-runtime:2.6.1) with AarToClassTransform
+Transforming room-ktx-2.6.1.aar (androidx.room:room-ktx:2.6.1) with JetifyTransform
+Transforming room-ktx-2.6.1.aar (androidx.room:room-ktx:2.6.1) with AarToClassTransform
+Transforming activity-1.5.1.aar (androidx.activity:activity:1.5.1) with JetifyTransform
+Transforming activity-1.5.1.aar (androidx.activity:activity:1.5.1) with AarToClassTransform
+Transforming lifecycle-viewmodel-savedstate-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel-savedstate:2.5.1) with JetifyTransform
+Transforming lifecycle-viewmodel-savedstate-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel-savedstate:2.5.1) with AarToClassTransform
+Transforming kotlinx-coroutines-android-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3) with JetifyTransform
+Transforming kotlinx-coroutines-android-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3) with IdentityTransform
+Transforming kotlinx-coroutines-core-jvm-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3) with JetifyTransform
+Transforming kotlinx-coroutines-core-jvm-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3) with IdentityTransform
+Transforming kotlinx-coroutines-play-services-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3) with JetifyTransform
+Transforming kotlinx-coroutines-play-services-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3) with IdentityTransform
+Transforming firebase-appcheck-interop-17.0.0.aar (com.google.firebase:firebase-appcheck-interop:17.0.0) with JetifyTransform
+Transforming firebase-appcheck-interop-17.0.0.aar (com.google.firebase:firebase-appcheck-interop:17.0.0) with AarToClassTransform
+Transforming firebase-database-collection-18.0.1.aar (com.google.firebase:firebase-database-collection:18.0.1) with JetifyTransform
+Transforming firebase-database-collection-18.0.1.aar (com.google.firebase:firebase-database-collection:18.0.1) with AarToClassTransform
+Transforming play-services-base-18.0.1.aar (com.google.android.gms:play-services-base:18.0.1) with JetifyTransform
+Transforming play-services-base-18.0.1.aar (com.google.android.gms:play-services-base:18.0.1) with AarToClassTransform
+Transforming firebase-auth-interop-19.0.2.aar (com.google.firebase:firebase-auth-interop:19.0.2) with JetifyTransform
+Transforming firebase-auth-interop-19.0.2.aar (com.google.firebase:firebase-auth-interop:19.0.2) with AarToClassTransform
+Transforming play-services-tasks-18.0.2.aar (com.google.android.gms:play-services-tasks:18.0.2) with JetifyTransform
+Transforming play-services-tasks-18.0.2.aar (com.google.android.gms:play-services-tasks:18.0.2) with AarToClassTransform
+Transforming play-services-tasks-18.0.2.aar (com.google.android.gms:play-services-tasks:18.0.2) with JetifyTransform
+Transforming play-services-tasks-18.0.2.aar (com.google.android.gms:play-services-tasks:18.0.2) with AarToClassTransform
+Transforming play-services-basement-18.1.0.aar (com.google.android.gms:play-services-basement:18.1.0) with JetifyTransform
+Transforming play-services-basement-18.1.0.aar (com.google.android.gms:play-services-basement:18.1.0) with AarToClassTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with JetifyTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with AarToClassTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with JetifyTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with AarToClassTransform
+Transforming core-ktx-1.12.0.aar (androidx.core:core-ktx:1.12.0) with JetifyTransform
+Transforming core-ktx-1.12.0.aar (androidx.core:core-ktx:1.12.0) with AarToClassTransform
+Transforming timber-5.0.1.aar (com.jakewharton.timber:timber:5.0.1) with JetifyTransform
+Transforming timber-5.0.1.aar (com.jakewharton.timber:timber:5.0.1) with AarToClassTransform
+Transforming kotlin-android-extensions-runtime-1.9.20.jar (org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.9.20) with JetifyTransform
+Transforming kotlin-android-extensions-runtime-1.9.20.jar (org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.9.20) with IdentityTransform
+Transforming kotlin-stdlib-jdk8-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22) with JetifyTransform
+Transforming kotlin-stdlib-jdk8-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22) with IdentityTransform
+Transforming loader-1.0.0.aar (androidx.loader:loader:1.0.0) with JetifyTransform
+Transforming loader-1.0.0.aar (androidx.loader:loader:1.0.0) with AarToClassTransform
+Transforming viewpager-1.0.0.aar (androidx.viewpager:viewpager:1.0.0) with JetifyTransform
+Transforming viewpager-1.0.0.aar (androidx.viewpager:viewpager:1.0.0) with AarToClassTransform
+Transforming customview-1.0.0.aar (androidx.customview:customview:1.0.0) with JetifyTransform
+Transforming customview-1.0.0.aar (androidx.customview:customview:1.0.0) with AarToClassTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with JetifyTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with AarToClassTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with JetifyTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with AarToClassTransform
+Transforming annotation-experimental-1.3.1.aar (androidx.annotation:annotation-experimental:1.3.1) with JetifyTransform
+Transforming annotation-experimental-1.3.1.aar (androidx.annotation:annotation-experimental:1.3.1) with AarToClassTransform
+Transforming lifecycle-viewmodel-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel:2.5.1) with JetifyTransform
+Transforming lifecycle-viewmodel-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel:2.5.1) with AarToClassTransform
+Transforming lifecycle-viewmodel-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel:2.5.1) with JetifyTransform
+Transforming lifecycle-viewmodel-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel:2.5.1) with AarToClassTransform
+Transforming savedstate-1.2.0.aar (androidx.savedstate:savedstate:1.2.0) with JetifyTransform
+Transforming savedstate-1.2.0.aar (androidx.savedstate:savedstate:1.2.0) with AarToClassTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with JetifyTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with AarToClassTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with JetifyTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with AarToClassTransform
+Transforming sqlite-framework-2.4.0.aar (androidx.sqlite:sqlite-framework:2.4.0) with JetifyTransform
+Transforming sqlite-framework-2.4.0.aar (androidx.sqlite:sqlite-framework:2.4.0) with AarToClassTransform
+Transforming sqlite-2.4.0.aar (androidx.sqlite:sqlite:2.4.0) with JetifyTransform
+Transforming sqlite-2.4.0.aar (androidx.sqlite:sqlite:2.4.0) with AarToClassTransform
+Transforming lifecycle-runtime-2.5.1.aar (androidx.lifecycle:lifecycle-runtime:2.5.1) with JetifyTransform
+Transforming lifecycle-runtime-2.5.1.aar (androidx.lifecycle:lifecycle-runtime:2.5.1) with AarToClassTransform
+Transforming lifecycle-livedata-2.0.0.aar (androidx.lifecycle:lifecycle-livedata:2.0.0) with JetifyTransform
+Transforming lifecycle-livedata-2.0.0.aar (androidx.lifecycle:lifecycle-livedata:2.0.0) with AarToClassTransform
+Transforming lifecycle-livedata-core-2.5.1.aar (androidx.lifecycle:lifecycle-livedata-core:2.5.1) with JetifyTransform
+Transforming lifecycle-livedata-core-2.5.1.aar (androidx.lifecycle:lifecycle-livedata-core:2.5.1) with AarToClassTransform
+Transforming lifecycle-livedata-core-2.5.1.aar (androidx.lifecycle:lifecycle-livedata-core:2.5.1) with JetifyTransform
+Transforming lifecycle-livedata-core-2.5.1.aar (androidx.lifecycle:lifecycle-livedata-core:2.5.1) with AarToClassTransform
+Transforming lifecycle-common-2.5.1.jar (androidx.lifecycle:lifecycle-common:2.5.1) with JetifyTransform
+Transforming lifecycle-common-2.5.1.jar (androidx.lifecycle:lifecycle-common:2.5.1) with IdentityTransform
+Transforming versionedparcelable-1.1.1.aar (androidx.versionedparcelable:versionedparcelable:1.1.1) with JetifyTransform
+Transforming versionedparcelable-1.1.1.aar (androidx.versionedparcelable:versionedparcelable:1.1.1) with AarToClassTransform
+Transforming concurrent-futures-1.1.0.jar (androidx.concurrent:concurrent-futures:1.1.0) with JetifyTransform
+Transforming concurrent-futures-1.1.0.jar (androidx.concurrent:concurrent-futures:1.1.0) with IdentityTransform
+Transforming collection-1.1.0.jar (androidx.collection:collection:1.1.0) with JetifyTransform
+Transforming collection-1.1.0.jar (androidx.collection:collection:1.1.0) with IdentityTransform
+Transforming core-runtime-2.2.0.aar (androidx.arch.core:core-runtime:2.2.0) with JetifyTransform
+Transforming core-runtime-2.2.0.aar (androidx.arch.core:core-runtime:2.2.0) with AarToClassTransform
+Transforming core-common-2.2.0.jar (androidx.arch.core:core-common:2.2.0) with JetifyTransform
+Transforming core-common-2.2.0.jar (androidx.arch.core:core-common:2.2.0) with IdentityTransform
+Transforming annotation-jvm-1.6.0.jar (androidx.annotation:annotation-jvm:1.6.0) with JetifyTransform
+Transforming annotation-jvm-1.6.0.jar (androidx.annotation:annotation-jvm:1.6.0) with IdentityTransform
+Transforming kotlin-stdlib-jdk7-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22) with JetifyTransform
+Transforming kotlin-stdlib-jdk7-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22) with IdentityTransform
+Transforming kotlin-stdlib-1.9.20.jar (org.jetbrains.kotlin:kotlin-stdlib:1.9.20) with JetifyTransform
+Transforming kotlin-stdlib-1.9.20.jar (org.jetbrains.kotlin:kotlin-stdlib:1.9.20) with IdentityTransform
+Transforming gson-2.10.1.jar (com.google.code.gson:gson:2.10.1) with JetifyTransform
+Transforming gson-2.10.1.jar (com.google.code.gson:gson:2.10.1) with IdentityTransform
+Transforming annotations-23.0.0.jar (org.jetbrains:annotations:23.0.0) with JetifyTransform
+Transforming annotations-23.0.0.jar (org.jetbrains:annotations:23.0.0) with IdentityTransform
+Transforming grpc-stub-1.57.2.jar (io.grpc:grpc-stub:1.57.2) with JetifyTransform
+Transforming grpc-stub-1.57.2.jar (io.grpc:grpc-stub:1.57.2) with IdentityTransform
+Transforming guava-32.0.1-android.jar (com.google.guava:guava:32.0.1-android) with JetifyTransform
+Transforming guava-32.0.1-android.jar (com.google.guava:guava:32.0.1-android) with IdentityTransform
+Transforming listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar (com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava) with JetifyTransform
+Transforming listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar (com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava) with IdentityTransform
+Transforming firebase-annotations-16.2.0.jar (com.google.firebase:firebase-annotations:16.2.0) with JetifyTransform
+Transforming firebase-annotations-16.2.0.jar (com.google.firebase:firebase-annotations:16.2.0) with IdentityTransform
+Transforming hilt-core-2.51.jar (com.google.dagger:hilt-core:2.51) with JetifyTransform
+Transforming hilt-core-2.51.jar (com.google.dagger:hilt-core:2.51) with IdentityTransform
+Transforming dagger-2.51.jar (com.google.dagger:dagger:2.51) with JetifyTransform
+Transforming dagger-2.51.jar (com.google.dagger:dagger:2.51) with IdentityTransform
+Transforming javax.inject-1.jar (javax.inject:javax.inject:1) with JetifyTransform
+Transforming javax.inject-1.jar (javax.inject:javax.inject:1) with IdentityTransform
+Transforming grpc-protobuf-lite-1.57.2.jar (io.grpc:grpc-protobuf-lite:1.57.2) with JetifyTransform
+Transforming grpc-protobuf-lite-1.57.2.jar (io.grpc:grpc-protobuf-lite:1.57.2) with IdentityTransform
+Transforming grpc-android-1.57.2.aar (io.grpc:grpc-android:1.57.2) with JetifyTransform
+Transforming grpc-android-1.57.2.aar (io.grpc:grpc-android:1.57.2) with AarToClassTransform
+Transforming grpc-okhttp-1.57.2.jar (io.grpc:grpc-okhttp:1.57.2) with JetifyTransform
+Transforming grpc-okhttp-1.57.2.jar (io.grpc:grpc-okhttp:1.57.2) with IdentityTransform
+Transforming grpc-core-1.57.2.jar (io.grpc:grpc-core:1.57.2) with JetifyTransform
+Transforming grpc-core-1.57.2.jar (io.grpc:grpc-core:1.57.2) with IdentityTransform
+Transforming grpc-api-1.57.2.jar (io.grpc:grpc-api:1.57.2) with JetifyTransform
+Transforming grpc-api-1.57.2.jar (io.grpc:grpc-api:1.57.2) with IdentityTransform
+Transforming error_prone_annotations-2.18.0.jar (com.google.errorprone:error_prone_annotations:2.18.0) with JetifyTransform
+Transforming error_prone_annotations-2.18.0.jar (com.google.errorprone:error_prone_annotations:2.18.0) with IdentityTransform
+Transforming jsr305-3.0.2.jar (com.google.code.findbugs:jsr305:3.0.2) with JetifyTransform
+Transforming jsr305-3.0.2.jar (com.google.code.findbugs:jsr305:3.0.2) with IdentityTransform
+Transforming failureaccess-1.0.1.jar (com.google.guava:failureaccess:1.0.1) with JetifyTransform
+Transforming failureaccess-1.0.1.jar (com.google.guava:failureaccess:1.0.1) with IdentityTransform
+Transforming checker-qual-3.33.0.jar (org.checkerframework:checker-qual:3.33.0) with JetifyTransform
+Transforming checker-qual-3.33.0.jar (org.checkerframework:checker-qual:3.33.0) with IdentityTransform
+Transforming j2objc-annotations-2.8.jar (com.google.j2objc:j2objc-annotations:2.8) with JetifyTransform
+Transforming j2objc-annotations-2.8.jar (com.google.j2objc:j2objc-annotations:2.8) with IdentityTransform
+Transforming protolite-well-known-types-18.0.0.aar (com.google.firebase:protolite-well-known-types:18.0.0) with JetifyTransform
+Transforming protolite-well-known-types-18.0.0.aar (com.google.firebase:protolite-well-known-types:18.0.0) with AarToClassTransform
+Transforming protobuf-javalite-3.22.3.jar (com.google.protobuf:protobuf-javalite:3.22.3) with JetifyTransform
+Transforming protobuf-javalite-3.22.3.jar (com.google.protobuf:protobuf-javalite:3.22.3) with IdentityTransform
+Transforming dagger-lint-aar-2.51.aar (com.google.dagger:dagger-lint-aar:2.51) with JetifyTransform
+Transforming dagger-lint-aar-2.51.aar (com.google.dagger:dagger-lint-aar:2.51) with AarToClassTransform
+Transforming R.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-parcelize-runtime-1.9.20.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-hilt-android-2.51-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-firestore-ktx-24.10.3-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-firestore-24.10.3-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-common-ktx-20.4.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-common-20.4.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming room-common-2.6.1.jar with ClasspathEntrySnapshotTransform
+Transforming room-runtime-2.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-room-ktx-2.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-activity-1.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-lifecycle-viewmodel-savedstate-2.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-android-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-core-jvm-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-play-services-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-appcheck-interop-17.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-database-collection-18.0.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-base-18.0.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-auth-interop-19.0.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-tasks-18.0.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-basement-18.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming fragment-1.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-core-ktx-1.12.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-timber-5.0.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-android-extensions-runtime-1.9.20.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-jdk8-1.8.22.jar with ClasspathEntrySnapshotTransform
+Transforming loader-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming viewpager-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming customview-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming core-1.12.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotation-experimental-1.3.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-viewmodel-2.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-savedstate-1.2.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-components-17.1.5-api.jar with ClasspathEntrySnapshotTransform
+Transforming sqlite-framework-2.4.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming sqlite-2.4.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-runtime-2.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-livedata-2.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-livedata-core-2.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-common-2.5.1.jar with ClasspathEntrySnapshotTransform
+Transforming versionedparcelable-1.1.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-concurrent-futures-1.1.0.jar with ClasspathEntrySnapshotTransform
+Transforming collection-1.1.0.jar with ClasspathEntrySnapshotTransform
+Transforming core-runtime-2.2.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming core-common-2.2.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotation-jvm-1.6.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-jdk7-1.8.22.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-1.9.20.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-gson-2.10.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotations-23.0.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-stub-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-guava-32.0.1-android.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-annotations-16.2.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-hilt-core-2.51.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-dagger-2.51.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-javax.inject-1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-protobuf-lite-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-android-1.57.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-okhttp-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-core-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-api-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-error_prone_annotations-2.18.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-jsr305-3.0.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-failureaccess-1.0.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-checker-qual-3.33.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-j2objc-annotations-2.8.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-protolite-well-known-types-18.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-protobuf-javalite-3.22.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-dagger-lint-aar-2.51-api.jar with ClasspathEntrySnapshotTransform
+Transforming android.jar with ClasspathEntrySnapshotTransform
+Transforming core-lambda-stubs.jar with ClasspathEntrySnapshotTransform
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\data\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\data\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\data\src\main\kotlin', not found
+Build cache key for task ':data:kspDebugKotlin' is 2ae89f8d242ad852d3689bf16ab29f0a
+Skipping task ':data:kspDebugKotlin' as it is up-to-date.
+Resolve mutations for :data:compileDebugKotlin (Thread[#422,Execution worker Thread 4,5,main]) started.
+:data:compileDebugKotlin (Thread[#422,Execution worker Thread 4,5,main]) started.
+
+> Task :data:compileDebugKotlin UP-TO-DATE
+Transforming R.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-parcelize-runtime-1.9.20.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-hilt-android-2.51-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-firestore-ktx-24.10.3-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-firestore-24.10.3-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-common-ktx-20.4.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-common-20.4.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming room-common-2.6.1.jar with ClasspathEntrySnapshotTransform
+Transforming room-runtime-2.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-room-ktx-2.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-activity-1.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-lifecycle-viewmodel-savedstate-2.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-android-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-core-jvm-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-play-services-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-appcheck-interop-17.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-database-collection-18.0.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-base-18.0.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-auth-interop-19.0.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-tasks-18.0.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-basement-18.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming fragment-1.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-core-ktx-1.12.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-timber-5.0.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-android-extensions-runtime-1.9.20.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-jdk8-1.8.22.jar with ClasspathEntrySnapshotTransform
+Transforming loader-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming viewpager-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming customview-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming core-1.12.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotation-experimental-1.3.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-viewmodel-2.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-savedstate-1.2.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-components-17.1.5-api.jar with ClasspathEntrySnapshotTransform
+Transforming sqlite-framework-2.4.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming sqlite-2.4.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-runtime-2.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-livedata-2.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-livedata-core-2.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-common-2.5.1.jar with ClasspathEntrySnapshotTransform
+Transforming versionedparcelable-1.1.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-concurrent-futures-1.1.0.jar with ClasspathEntrySnapshotTransform
+Transforming collection-1.1.0.jar with ClasspathEntrySnapshotTransform
+Transforming core-runtime-2.2.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming core-common-2.2.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotation-jvm-1.6.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-jdk7-1.8.22.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-1.9.20.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-gson-2.10.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotations-23.0.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-stub-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-guava-32.0.1-android.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-annotations-16.2.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-hilt-core-2.51.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-dagger-2.51.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-javax.inject-1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-protobuf-lite-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-android-1.57.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-okhttp-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-core-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-api-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-error_prone_annotations-2.18.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-jsr305-3.0.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-failureaccess-1.0.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-checker-qual-3.33.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-j2objc-annotations-2.8.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-protolite-well-known-types-18.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-protobuf-javalite-3.22.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-dagger-lint-aar-2.51-api.jar with ClasspathEntrySnapshotTransform
+Transforming android.jar with ClasspathEntrySnapshotTransform
+Transforming core-lambda-stubs.jar with ClasspathEntrySnapshotTransform
+Build cache key for task ':data:compileDebugKotlin' is 3d12d2053326a2915e75cf999fe3836e
+Skipping task ':data:compileDebugKotlin' as it is up-to-date.
+Resolve mutations for :data:compileDebugJavaWithJavac (Thread[#424,Execution worker Thread 6,5,main]) started.
+:data:compileDebugJavaWithJavac (Thread[#424,Execution worker Thread 6,5,main]) started.
+
+> Task :data:compileDebugJavaWithJavac UP-TO-DATE
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\data\build\generated\ksp\debug\classes', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\data\build\generated\ksp\debug\classes', not found
+Build cache key for task ':data:compileDebugJavaWithJavac' is 8ad193382cffbf3cb07384321f6e1233
+Skipping task ':data:compileDebugJavaWithJavac' as it is up-to-date.
+Resolve mutations for :data:transformDebugClassesWithAsm (Thread[#422,Execution worker Thread 4,5,main]) started.
+:data:transformDebugClassesWithAsm (Thread[#422,Execution worker Thread 4,5,main]) started.
+
+> Task :data:transformDebugClassesWithAsm UP-TO-DATE
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\data\build\generated\ksp\debug\classes', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\data\build\generated\ksp\debug\classes', not found
+Transforming kotlin-parcelize-runtime-1.9.20.jar (org.jetbrains.kotlin:kotlin-parcelize-runtime:1.9.20) with JetifyTransform
+Transforming kotlin-parcelize-runtime-1.9.20.jar (org.jetbrains.kotlin:kotlin-parcelize-runtime:1.9.20) with IdentityTransform
+Transforming hilt-android-2.51.aar (com.google.dagger:hilt-android:2.51) with JetifyTransform
+Transforming hilt-android-2.51.aar (com.google.dagger:hilt-android:2.51) with AarToClassTransform
+Transforming firebase-firestore-ktx-24.10.3.aar (com.google.firebase:firebase-firestore-ktx:24.10.3) with JetifyTransform
+Transforming firebase-firestore-ktx-24.10.3.aar (com.google.firebase:firebase-firestore-ktx:24.10.3) with AarToClassTransform
+Transforming firebase-firestore-24.10.3.aar (com.google.firebase:firebase-firestore:24.10.3) with JetifyTransform
+Transforming firebase-firestore-24.10.3.aar (com.google.firebase:firebase-firestore:24.10.3) with AarToClassTransform
+Transforming firebase-common-ktx-20.4.2.aar (com.google.firebase:firebase-common-ktx:20.4.2) with JetifyTransform
+Transforming firebase-common-ktx-20.4.2.aar (com.google.firebase:firebase-common-ktx:20.4.2) with AarToClassTransform
+Transforming firebase-common-20.4.2.aar (com.google.firebase:firebase-common:20.4.2) with JetifyTransform
+Transforming firebase-common-20.4.2.aar (com.google.firebase:firebase-common:20.4.2) with AarToClassTransform
+Transforming room-common-2.6.1.jar (androidx.room:room-common:2.6.1) with JetifyTransform
+Transforming room-common-2.6.1.jar (androidx.room:room-common:2.6.1) with IdentityTransform
+Transforming room-runtime-2.6.1.aar (androidx.room:room-runtime:2.6.1) with JetifyTransform
+Transforming room-runtime-2.6.1.aar (androidx.room:room-runtime:2.6.1) with AarToClassTransform
+Transforming room-ktx-2.6.1.aar (androidx.room:room-ktx:2.6.1) with JetifyTransform
+Transforming room-ktx-2.6.1.aar (androidx.room:room-ktx:2.6.1) with AarToClassTransform
+Transforming loader-1.0.0.aar (androidx.loader:loader:1.0.0) with JetifyTransform
+Transforming loader-1.0.0.aar (androidx.loader:loader:1.0.0) with AarToClassTransform
+Transforming lifecycle-viewmodel-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel:2.5.1) with JetifyTransform
+Transforming lifecycle-viewmodel-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel:2.5.1) with AarToClassTransform
+Transforming lifecycle-viewmodel-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel:2.5.1) with JetifyTransform
+Transforming lifecycle-viewmodel-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel:2.5.1) with AarToClassTransform
+Transforming lifecycle-viewmodel-savedstate-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel-savedstate:2.5.1) with JetifyTransform
+Transforming lifecycle-viewmodel-savedstate-2.5.1.aar (androidx.lifecycle:lifecycle-viewmodel-savedstate:2.5.1) with AarToClassTransform
+Transforming kotlinx-coroutines-android-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3) with JetifyTransform
+Transforming kotlinx-coroutines-android-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3) with IdentityTransform
+Transforming kotlinx-coroutines-core-jvm-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3) with JetifyTransform
+Transforming kotlinx-coroutines-core-jvm-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3) with IdentityTransform
+Transforming kotlinx-coroutines-play-services-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3) with JetifyTransform
+Transforming kotlinx-coroutines-play-services-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3) with IdentityTransform
+Transforming firebase-appcheck-interop-17.0.0.aar (com.google.firebase:firebase-appcheck-interop:17.0.0) with JetifyTransform
+Transforming firebase-appcheck-interop-17.0.0.aar (com.google.firebase:firebase-appcheck-interop:17.0.0) with AarToClassTransform
+Transforming firebase-database-collection-18.0.1.aar (com.google.firebase:firebase-database-collection:18.0.1) with JetifyTransform
+Transforming firebase-database-collection-18.0.1.aar (com.google.firebase:firebase-database-collection:18.0.1) with AarToClassTransform
+Transforming play-services-base-18.0.1.aar (com.google.android.gms:play-services-base:18.0.1) with JetifyTransform
+Transforming play-services-base-18.0.1.aar (com.google.android.gms:play-services-base:18.0.1) with AarToClassTransform
+Transforming firebase-auth-interop-19.0.2.aar (com.google.firebase:firebase-auth-interop:19.0.2) with JetifyTransform
+Transforming firebase-auth-interop-19.0.2.aar (com.google.firebase:firebase-auth-interop:19.0.2) with AarToClassTransform
+Transforming play-services-tasks-18.0.2.aar (com.google.android.gms:play-services-tasks:18.0.2) with JetifyTransform
+Transforming play-services-tasks-18.0.2.aar (com.google.android.gms:play-services-tasks:18.0.2) with AarToClassTransform
+Transforming play-services-tasks-18.0.2.aar (com.google.android.gms:play-services-tasks:18.0.2) with JetifyTransform
+Transforming play-services-tasks-18.0.2.aar (com.google.android.gms:play-services-tasks:18.0.2) with AarToClassTransform
+Transforming play-services-basement-18.1.0.aar (com.google.android.gms:play-services-basement:18.1.0) with JetifyTransform
+Transforming play-services-basement-18.1.0.aar (com.google.android.gms:play-services-basement:18.1.0) with AarToClassTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with JetifyTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with AarToClassTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with JetifyTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with AarToClassTransform
+Transforming activity-1.5.1.aar (androidx.activity:activity:1.5.1) with JetifyTransform
+Transforming activity-1.5.1.aar (androidx.activity:activity:1.5.1) with AarToClassTransform
+Transforming viewpager-1.0.0.aar (androidx.viewpager:viewpager:1.0.0) with JetifyTransform
+Transforming viewpager-1.0.0.aar (androidx.viewpager:viewpager:1.0.0) with AarToClassTransform
+Transforming customview-1.0.0.aar (androidx.customview:customview:1.0.0) with JetifyTransform
+Transforming customview-1.0.0.aar (androidx.customview:customview:1.0.0) with AarToClassTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with JetifyTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with AarToClassTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with JetifyTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with AarToClassTransform
+Transforming core-ktx-1.12.0.aar (androidx.core:core-ktx:1.12.0) with JetifyTransform
+Transforming core-ktx-1.12.0.aar (androidx.core:core-ktx:1.12.0) with AarToClassTransform
+Transforming timber-5.0.1.aar (com.jakewharton.timber:timber:5.0.1) with JetifyTransform
+Transforming timber-5.0.1.aar (com.jakewharton.timber:timber:5.0.1) with AarToClassTransform
+Transforming kotlin-android-extensions-runtime-1.9.20.jar (org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.9.20) with JetifyTransform
+Transforming kotlin-android-extensions-runtime-1.9.20.jar (org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.9.20) with IdentityTransform
+Transforming sqlite-framework-2.4.0.aar (androidx.sqlite:sqlite-framework:2.4.0) with JetifyTransform
+Transforming sqlite-framework-2.4.0.aar (androidx.sqlite:sqlite-framework:2.4.0) with AarToClassTransform
+Transforming sqlite-2.4.0.aar (androidx.sqlite:sqlite:2.4.0) with JetifyTransform
+Transforming sqlite-2.4.0.aar (androidx.sqlite:sqlite:2.4.0) with AarToClassTransform
+Transforming annotation-experimental-1.3.1.aar (androidx.annotation:annotation-experimental:1.3.1) with JetifyTransform
+Transforming annotation-experimental-1.3.1.aar (androidx.annotation:annotation-experimental:1.3.1) with AarToClassTransform
+Transforming savedstate-1.2.0.aar (androidx.savedstate:savedstate:1.2.0) with JetifyTransform
+Transforming savedstate-1.2.0.aar (androidx.savedstate:savedstate:1.2.0) with AarToClassTransform
+Transforming kotlin-stdlib-jdk8-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22) with JetifyTransform
+Transforming kotlin-stdlib-jdk8-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22) with IdentityTransform
+Transforming lifecycle-runtime-2.5.1.aar (androidx.lifecycle:lifecycle-runtime:2.5.1) with JetifyTransform
+Transforming lifecycle-runtime-2.5.1.aar (androidx.lifecycle:lifecycle-runtime:2.5.1) with AarToClassTransform
+Transforming lifecycle-livedata-2.0.0.aar (androidx.lifecycle:lifecycle-livedata:2.0.0) with JetifyTransform
+Transforming lifecycle-livedata-2.0.0.aar (androidx.lifecycle:lifecycle-livedata:2.0.0) with AarToClassTransform
+Transforming lifecycle-livedata-core-2.5.1.aar (androidx.lifecycle:lifecycle-livedata-core:2.5.1) with JetifyTransform
+Transforming lifecycle-livedata-core-2.5.1.aar (androidx.lifecycle:lifecycle-livedata-core:2.5.1) with AarToClassTransform
+Transforming lifecycle-livedata-core-2.5.1.aar (androidx.lifecycle:lifecycle-livedata-core:2.5.1) with JetifyTransform
+Transforming lifecycle-livedata-core-2.5.1.aar (androidx.lifecycle:lifecycle-livedata-core:2.5.1) with AarToClassTransform
+Transforming core-runtime-2.2.0.aar (androidx.arch.core:core-runtime:2.2.0) with JetifyTransform
+Transforming core-runtime-2.2.0.aar (androidx.arch.core:core-runtime:2.2.0) with AarToClassTransform
+Transforming core-runtime-2.2.0.aar (androidx.arch.core:core-runtime:2.2.0) with JetifyTransform
+Transforming core-runtime-2.2.0.aar (androidx.arch.core:core-runtime:2.2.0) with AarToClassTransform
+Transforming lifecycle-common-2.5.1.jar (androidx.lifecycle:lifecycle-common:2.5.1) with JetifyTransform
+Transforming lifecycle-common-2.5.1.jar (androidx.lifecycle:lifecycle-common:2.5.1) with IdentityTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with JetifyTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with AarToClassTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with JetifyTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with AarToClassTransform
+Transforming interpolator-1.0.0.aar (androidx.interpolator:interpolator:1.0.0) with JetifyTransform
+Transforming interpolator-1.0.0.aar (androidx.interpolator:interpolator:1.0.0) with AarToClassTransform
+Transforming versionedparcelable-1.1.1.aar (androidx.versionedparcelable:versionedparcelable:1.1.1) with JetifyTransform
+Transforming versionedparcelable-1.1.1.aar (androidx.versionedparcelable:versionedparcelable:1.1.1) with AarToClassTransform
+Transforming core-common-2.2.0.jar (androidx.arch.core:core-common:2.2.0) with JetifyTransform
+Transforming core-common-2.2.0.jar (androidx.arch.core:core-common:2.2.0) with IdentityTransform
+Transforming tracing-1.0.0.aar (androidx.tracing:tracing:1.0.0) with JetifyTransform
+Transforming tracing-1.0.0.aar (androidx.tracing:tracing:1.0.0) with AarToClassTransform
+Transforming collection-1.1.0.jar (androidx.collection:collection:1.1.0) with JetifyTransform
+Transforming collection-1.1.0.jar (androidx.collection:collection:1.1.0) with IdentityTransform
+Transforming concurrent-futures-1.1.0.jar (androidx.concurrent:concurrent-futures:1.1.0) with JetifyTransform
+Transforming concurrent-futures-1.1.0.jar (androidx.concurrent:concurrent-futures:1.1.0) with IdentityTransform
+Transforming annotation-jvm-1.6.0.jar (androidx.annotation:annotation-jvm:1.6.0) with JetifyTransform
+Transforming annotation-jvm-1.6.0.jar (androidx.annotation:annotation-jvm:1.6.0) with IdentityTransform
+Transforming kotlin-stdlib-jdk7-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22) with JetifyTransform
+Transforming kotlin-stdlib-jdk7-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22) with IdentityTransform
+Transforming kotlin-stdlib-1.9.20.jar (org.jetbrains.kotlin:kotlin-stdlib:1.9.20) with JetifyTransform
+Transforming kotlin-stdlib-1.9.20.jar (org.jetbrains.kotlin:kotlin-stdlib:1.9.20) with IdentityTransform
+Transforming grpc-android-1.57.2.aar (io.grpc:grpc-android:1.57.2) with JetifyTransform
+Transforming grpc-android-1.57.2.aar (io.grpc:grpc-android:1.57.2) with AarToClassTransform
+Transforming grpc-okhttp-1.57.2.jar (io.grpc:grpc-okhttp:1.57.2) with JetifyTransform
+Transforming grpc-okhttp-1.57.2.jar (io.grpc:grpc-okhttp:1.57.2) with IdentityTransform
+Transforming grpc-core-1.57.2.jar (io.grpc:grpc-core:1.57.2) with JetifyTransform
+Transforming grpc-core-1.57.2.jar (io.grpc:grpc-core:1.57.2) with IdentityTransform
+Transforming gson-2.10.1.jar (com.google.code.gson:gson:2.10.1) with JetifyTransform
+Transforming gson-2.10.1.jar (com.google.code.gson:gson:2.10.1) with IdentityTransform
+Transforming annotations-23.0.0.jar (org.jetbrains:annotations:23.0.0) with JetifyTransform
+Transforming annotations-23.0.0.jar (org.jetbrains:annotations:23.0.0) with IdentityTransform
+Transforming hilt-core-2.51.jar (com.google.dagger:hilt-core:2.51) with JetifyTransform
+Transforming hilt-core-2.51.jar (com.google.dagger:hilt-core:2.51) with IdentityTransform
+Transforming dagger-2.51.jar (com.google.dagger:dagger:2.51) with JetifyTransform
+Transforming dagger-2.51.jar (com.google.dagger:dagger:2.51) with IdentityTransform
+Transforming dagger-lint-aar-2.51.aar (com.google.dagger:dagger-lint-aar:2.51) with JetifyTransform
+Transforming dagger-lint-aar-2.51.aar (com.google.dagger:dagger-lint-aar:2.51) with AarToClassTransform
+Transforming grpc-protobuf-lite-1.57.2.jar (io.grpc:grpc-protobuf-lite:1.57.2) with JetifyTransform
+Transforming grpc-protobuf-lite-1.57.2.jar (io.grpc:grpc-protobuf-lite:1.57.2) with IdentityTransform
+Transforming grpc-stub-1.57.2.jar (io.grpc:grpc-stub:1.57.2) with JetifyTransform
+Transforming grpc-stub-1.57.2.jar (io.grpc:grpc-stub:1.57.2) with IdentityTransform
+Transforming grpc-context-1.57.2.jar (io.grpc:grpc-context:1.57.2) with JetifyTransform
+Transforming grpc-context-1.57.2.jar (io.grpc:grpc-context:1.57.2) with IdentityTransform
+Transforming grpc-api-1.57.2.jar (io.grpc:grpc-api:1.57.2) with JetifyTransform
+Transforming grpc-api-1.57.2.jar (io.grpc:grpc-api:1.57.2) with IdentityTransform
+Transforming guava-32.0.1-android.jar (com.google.guava:guava:32.0.1-android) with JetifyTransform
+Transforming guava-32.0.1-android.jar (com.google.guava:guava:32.0.1-android) with IdentityTransform
+Transforming jsr305-3.0.2.jar (com.google.code.findbugs:jsr305:3.0.2) with JetifyTransform
+Transforming jsr305-3.0.2.jar (com.google.code.findbugs:jsr305:3.0.2) with IdentityTransform
+Transforming firebase-annotations-16.2.0.jar (com.google.firebase:firebase-annotations:16.2.0) with JetifyTransform
+Transforming firebase-annotations-16.2.0.jar (com.google.firebase:firebase-annotations:16.2.0) with IdentityTransform
+Transforming javax.inject-1.jar (javax.inject:javax.inject:1) with JetifyTransform
+Transforming javax.inject-1.jar (javax.inject:javax.inject:1) with IdentityTransform
+Transforming error_prone_annotations-2.18.0.jar (com.google.errorprone:error_prone_annotations:2.18.0) with JetifyTransform
+Transforming error_prone_annotations-2.18.0.jar (com.google.errorprone:error_prone_annotations:2.18.0) with IdentityTransform
+Transforming protolite-well-known-types-18.0.0.aar (com.google.firebase:protolite-well-known-types:18.0.0) with JetifyTransform
+Transforming protolite-well-known-types-18.0.0.aar (com.google.firebase:protolite-well-known-types:18.0.0) with AarToClassTransform
+Transforming listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar (com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava) with JetifyTransform
+Transforming listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar (com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava) with IdentityTransform
+Transforming okio-1.17.5.jar (com.squareup.okio:okio:1.17.5) with JetifyTransform
+Transforming okio-1.17.5.jar (com.squareup.okio:okio:1.17.5) with IdentityTransform
+Transforming perfmark-api-0.26.0.jar (io.perfmark:perfmark-api:0.26.0) with JetifyTransform
+Transforming perfmark-api-0.26.0.jar (io.perfmark:perfmark-api:0.26.0) with IdentityTransform
+Transforming protobuf-javalite-3.22.3.jar (com.google.protobuf:protobuf-javalite:3.22.3) with JetifyTransform
+Transforming protobuf-javalite-3.22.3.jar (com.google.protobuf:protobuf-javalite:3.22.3) with IdentityTransform
+Transforming annotations-4.1.1.4.jar (com.google.android:annotations:4.1.1.4) with JetifyTransform
+Transforming annotations-4.1.1.4.jar (com.google.android:annotations:4.1.1.4) with IdentityTransform
+Transforming animal-sniffer-annotations-1.23.jar (org.codehaus.mojo:animal-sniffer-annotations:1.23) with JetifyTransform
+Transforming animal-sniffer-annotations-1.23.jar (org.codehaus.mojo:animal-sniffer-annotations:1.23) with IdentityTransform
+Transforming failureaccess-1.0.1.jar (com.google.guava:failureaccess:1.0.1) with JetifyTransform
+Transforming failureaccess-1.0.1.jar (com.google.guava:failureaccess:1.0.1) with IdentityTransform
+Transforming checker-qual-3.33.0.jar (org.checkerframework:checker-qual:3.33.0) with JetifyTransform
+Transforming checker-qual-3.33.0.jar (org.checkerframework:checker-qual:3.33.0) with IdentityTransform
+Transforming j2objc-annotations-2.8.jar (com.google.j2objc:j2objc-annotations:2.8) with JetifyTransform
+Transforming j2objc-annotations-2.8.jar (com.google.j2objc:j2objc-annotations:2.8) with IdentityTransform
+Build cache key for task ':data:transformDebugClassesWithAsm' is 857b57fc655c6f5c19e9c9496856a192
+Skipping task ':data:transformDebugClassesWithAsm' as it is up-to-date.
+Resolve mutations for :data:bundleLibCompileToJarDebug (Thread[#424,Execution worker Thread 6,5,main]) started.
+:data:bundleLibCompileToJarDebug (Thread[#424,Execution worker Thread 6,5,main]) started.
+
+> Task :data:bundleLibCompileToJarDebug UP-TO-DATE
+Caching disabled for task ':data:bundleLibCompileToJarDebug' because:
+  Simple merging task
+Skipping task ':data:bundleLibCompileToJarDebug' as it is up-to-date.
+work action resolve classes.jar (project :data) (Thread[#424,Execution worker Thread 6,5,main]) started.
+Resolve mutations for :core:kspDebugKotlin (Thread[#424,Execution worker Thread 6,5,main]) started.
+:core:kspDebugKotlin (Thread[#424,Execution worker Thread 6,5,main]) started.
+
+> Task :core:kspDebugKotlin UP-TO-DATE
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+Transforming appcompat-1.6.1.aar (androidx.appcompat:appcompat:1.6.1) with JetifyTransform
+Transforming appcompat-1.6.1.aar (androidx.appcompat:appcompat:1.6.1) with AarToClassTransform
+Transforming hilt-android-2.51.aar (com.google.dagger:hilt-android:2.51) with JetifyTransform
+Transforming hilt-android-2.51.aar (com.google.dagger:hilt-android:2.51) with AarToClassTransform
+Transforming firebase-firestore-ktx-24.10.3.aar (com.google.firebase:firebase-firestore-ktx:24.10.3) with JetifyTransform
+Transforming firebase-firestore-ktx-24.10.3.aar (com.google.firebase:firebase-firestore-ktx:24.10.3) with AarToClassTransform
+Transforming firebase-storage-ktx-20.3.0.aar (com.google.firebase:firebase-storage-ktx:20.3.0) with JetifyTransform
+Transforming firebase-storage-ktx-20.3.0.aar (com.google.firebase:firebase-storage-ktx:20.3.0) with AarToClassTransform
+Transforming firebase-firestore-24.10.3.aar (com.google.firebase:firebase-firestore:24.10.3) with JetifyTransform
+Transforming firebase-firestore-24.10.3.aar (com.google.firebase:firebase-firestore:24.10.3) with AarToClassTransform
+Transforming firebase-storage-20.3.0.aar (com.google.firebase:firebase-storage:20.3.0) with JetifyTransform
+Transforming firebase-storage-20.3.0.aar (com.google.firebase:firebase-storage:20.3.0) with AarToClassTransform
+Transforming firebase-appcheck-17.1.2.aar (com.google.firebase:firebase-appcheck:17.1.2) with JetifyTransform
+Transforming firebase-appcheck-17.1.2.aar (com.google.firebase:firebase-appcheck:17.1.2) with AarToClassTransform
+Transforming firebase-common-ktx-20.4.2.aar (com.google.firebase:firebase-common-ktx:20.4.2) with JetifyTransform
+Transforming firebase-common-ktx-20.4.2.aar (com.google.firebase:firebase-common-ktx:20.4.2) with AarToClassTransform
+Transforming firebase-common-20.4.2.aar (com.google.firebase:firebase-common:20.4.2) with JetifyTransform
+Transforming firebase-common-20.4.2.aar (com.google.firebase:firebase-common:20.4.2) with AarToClassTransform
+Transforming room-common-2.6.1.jar (androidx.room:room-common:2.6.1) with JetifyTransform
+Transforming room-common-2.6.1.jar (androidx.room:room-common:2.6.1) with IdentityTransform
+Transforming room-runtime-2.6.1.aar (androidx.room:room-runtime:2.6.1) with JetifyTransform
+Transforming room-runtime-2.6.1.aar (androidx.room:room-runtime:2.6.1) with AarToClassTransform
+Transforming room-ktx-2.6.1.aar (androidx.room:room-ktx:2.6.1) with JetifyTransform
+Transforming room-ktx-2.6.1.aar (androidx.room:room-ktx:2.6.1) with AarToClassTransform
+Transforming activity-1.6.0.aar (androidx.activity:activity:1.6.0) with JetifyTransform
+Transforming activity-1.6.0.aar (androidx.activity:activity:1.6.0) with AarToClassTransform
+Transforming appcompat-resources-1.6.1.aar (androidx.appcompat:appcompat-resources:1.6.1) with JetifyTransform
+Transforming appcompat-resources-1.6.1.aar (androidx.appcompat:appcompat-resources:1.6.1) with AarToClassTransform
+Transforming drawerlayout-1.0.0.aar (androidx.drawerlayout:drawerlayout:1.0.0) with JetifyTransform
+Transforming drawerlayout-1.0.0.aar (androidx.drawerlayout:drawerlayout:1.0.0) with AarToClassTransform
+Transforming vectordrawable-animated-1.1.0.aar (androidx.vectordrawable:vectordrawable-animated:1.1.0) with JetifyTransform
+Transforming vectordrawable-animated-1.1.0.aar (androidx.vectordrawable:vectordrawable-animated:1.1.0) with AarToClassTransform
+Transforming vectordrawable-1.1.0.aar (androidx.vectordrawable:vectordrawable:1.1.0) with JetifyTransform
+Transforming vectordrawable-1.1.0.aar (androidx.vectordrawable:vectordrawable:1.1.0) with AarToClassTransform
+Transforming vectordrawable-1.1.0.aar (androidx.vectordrawable:vectordrawable:1.1.0) with JetifyTransform
+Transforming vectordrawable-1.1.0.aar (androidx.vectordrawable:vectordrawable:1.1.0) with AarToClassTransform
+Transforming viewpager-1.0.0.aar (androidx.viewpager:viewpager:1.0.0) with JetifyTransform
+Transforming viewpager-1.0.0.aar (androidx.viewpager:viewpager:1.0.0) with AarToClassTransform
+Transforming customview-1.0.0.aar (androidx.customview:customview:1.0.0) with JetifyTransform
+Transforming customview-1.0.0.aar (androidx.customview:customview:1.0.0) with AarToClassTransform
+Transforming loader-1.0.0.aar (androidx.loader:loader:1.0.0) with JetifyTransform
+Transforming loader-1.0.0.aar (androidx.loader:loader:1.0.0) with AarToClassTransform
+Transforming firebase-appcheck-interop-17.1.0.aar (com.google.firebase:firebase-appcheck-interop:17.1.0) with JetifyTransform
+Transforming firebase-appcheck-interop-17.1.0.aar (com.google.firebase:firebase-appcheck-interop:17.1.0) with AarToClassTransform
+Transforming firebase-database-collection-18.0.1.aar (com.google.firebase:firebase-database-collection:18.0.1) with JetifyTransform
+Transforming firebase-database-collection-18.0.1.aar (com.google.firebase:firebase-database-collection:18.0.1) with AarToClassTransform
+Transforming play-services-base-18.1.0.aar (com.google.android.gms:play-services-base:18.1.0) with JetifyTransform
+Transforming play-services-base-18.1.0.aar (com.google.android.gms:play-services-base:18.1.0) with AarToClassTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with JetifyTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with AarToClassTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with JetifyTransform
+Transforming core-1.12.0.aar (androidx.core:core:1.12.0) with AarToClassTransform
+Transforming lifecycle-livedata-core-2.7.0.aar (androidx.lifecycle:lifecycle-livedata-core:2.7.0) with JetifyTransform
+Transforming lifecycle-livedata-core-2.7.0.aar (androidx.lifecycle:lifecycle-livedata-core:2.7.0) with AarToClassTransform
+Transforming lifecycle-runtime-2.7.0.aar (androidx.lifecycle:lifecycle-runtime:2.7.0) with JetifyTransform
+Transforming lifecycle-runtime-2.7.0.aar (androidx.lifecycle:lifecycle-runtime:2.7.0) with AarToClassTransform
+Transforming lifecycle-viewmodel-savedstate-2.7.0.aar (androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0) with JetifyTransform
+Transforming lifecycle-viewmodel-savedstate-2.7.0.aar (androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0) with AarToClassTransform
+Transforming lifecycle-viewmodel-2.7.0.aar (androidx.lifecycle:lifecycle-viewmodel:2.7.0) with JetifyTransform
+Transforming lifecycle-viewmodel-2.7.0.aar (androidx.lifecycle:lifecycle-viewmodel:2.7.0) with AarToClassTransform
+Transforming lifecycle-viewmodel-2.7.0.aar (androidx.lifecycle:lifecycle-viewmodel:2.7.0) with JetifyTransform
+Transforming lifecycle-viewmodel-2.7.0.aar (androidx.lifecycle:lifecycle-viewmodel:2.7.0) with AarToClassTransform
+Transforming lifecycle-livedata-core-ktx-2.7.0.aar (androidx.lifecycle:lifecycle-livedata-core-ktx:2.7.0) with JetifyTransform
+Transforming lifecycle-livedata-core-ktx-2.7.0.aar (androidx.lifecycle:lifecycle-livedata-core-ktx:2.7.0) with AarToClassTransform
+Transforming lifecycle-livedata-2.7.0.aar (androidx.lifecycle:lifecycle-livedata:2.7.0) with JetifyTransform
+Transforming lifecycle-livedata-2.7.0.aar (androidx.lifecycle:lifecycle-livedata:2.7.0) with AarToClassTransform
+Transforming lifecycle-livedata-2.7.0.aar (androidx.lifecycle:lifecycle-livedata:2.7.0) with JetifyTransform
+Transforming lifecycle-livedata-2.7.0.aar (androidx.lifecycle:lifecycle-livedata:2.7.0) with AarToClassTransform
+Transforming lifecycle-livedata-ktx-2.7.0.aar (androidx.lifecycle:lifecycle-livedata-ktx:2.7.0) with JetifyTransform
+Transforming lifecycle-livedata-ktx-2.7.0.aar (androidx.lifecycle:lifecycle-livedata-ktx:2.7.0) with AarToClassTransform
+Transforming lifecycle-common-2.7.0.jar (androidx.lifecycle:lifecycle-common:2.7.0) with JetifyTransform
+Transforming lifecycle-common-2.7.0.jar (androidx.lifecycle:lifecycle-common:2.7.0) with IdentityTransform
+Transforming kotlinx-coroutines-android-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3) with JetifyTransform
+Transforming kotlinx-coroutines-android-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3) with IdentityTransform
+Transforming datastore-core-okio-jvm-1.1.1.jar (androidx.datastore:datastore-core-okio-jvm:1.1.1) with JetifyTransform
+Transforming datastore-core-okio-jvm-1.1.1.jar (androidx.datastore:datastore-core-okio-jvm:1.1.1) with IdentityTransform
+Transforming datastore-core-release.aar (androidx.datastore:datastore-core-android:1.1.1) with JetifyTransform
+Transforming datastore-core-release.aar (androidx.datastore:datastore-core-android:1.1.1) with AarToClassTransform
+Transforming datastore-preferences-core-jvm-1.1.1.jar (androidx.datastore:datastore-preferences-core-jvm:1.1.1) with JetifyTransform
+Transforming datastore-preferences-core-jvm-1.1.1.jar (androidx.datastore:datastore-preferences-core-jvm:1.1.1) with IdentityTransform
+Transforming datastore-release.aar (androidx.datastore:datastore-android:1.1.1) with JetifyTransform
+Transforming datastore-release.aar (androidx.datastore:datastore-android:1.1.1) with AarToClassTransform
+Transforming datastore-preferences-release.aar (androidx.datastore:datastore-preferences-android:1.1.1) with JetifyTransform
+Transforming datastore-preferences-release.aar (androidx.datastore:datastore-preferences-android:1.1.1) with AarToClassTransform
+Transforming kotlinx-coroutines-core-jvm-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3) with JetifyTransform
+Transforming kotlinx-coroutines-core-jvm-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3) with IdentityTransform
+Transforming kotlinx-coroutines-play-services-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3) with JetifyTransform
+Transforming kotlinx-coroutines-play-services-1.7.3.jar (org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3) with IdentityTransform
+Transforming firebase-auth-interop-19.0.2.aar (com.google.firebase:firebase-auth-interop:19.0.2) with JetifyTransform
+Transforming firebase-auth-interop-19.0.2.aar (com.google.firebase:firebase-auth-interop:19.0.2) with AarToClassTransform
+Transforming play-services-tasks-18.1.0.aar (com.google.android.gms:play-services-tasks:18.1.0) with JetifyTransform
+Transforming play-services-tasks-18.1.0.aar (com.google.android.gms:play-services-tasks:18.1.0) with AarToClassTransform
+Transforming play-services-tasks-18.1.0.aar (com.google.android.gms:play-services-tasks:18.1.0) with JetifyTransform
+Transforming play-services-tasks-18.1.0.aar (com.google.android.gms:play-services-tasks:18.1.0) with AarToClassTransform
+Transforming play-services-basement-18.3.0.aar (com.google.android.gms:play-services-basement:18.3.0) with JetifyTransform
+Transforming play-services-basement-18.3.0.aar (com.google.android.gms:play-services-basement:18.3.0) with AarToClassTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with JetifyTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with AarToClassTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with JetifyTransform
+Transforming fragment-1.5.1.aar (androidx.fragment:fragment:1.5.1) with AarToClassTransform
+Transforming core-ktx-1.12.0.aar (androidx.core:core-ktx:1.12.0) with JetifyTransform
+Transforming core-ktx-1.12.0.aar (androidx.core:core-ktx:1.12.0) with AarToClassTransform
+Transforming timber-5.0.1.aar (com.jakewharton.timber:timber:5.0.1) with JetifyTransform
+Transforming timber-5.0.1.aar (com.jakewharton.timber:timber:5.0.1) with AarToClassTransform
+Transforming savedstate-1.2.1.aar (androidx.savedstate:savedstate:1.2.1) with JetifyTransform
+Transforming savedstate-1.2.1.aar (androidx.savedstate:savedstate:1.2.1) with AarToClassTransform
+Transforming okio-jvm-3.4.0.jar (com.squareup.okio:okio-jvm:3.4.0) with JetifyTransform
+Transforming okio-jvm-3.4.0.jar (com.squareup.okio:okio-jvm:3.4.0) with IdentityTransform
+Transforming kotlin-stdlib-jdk8-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22) with JetifyTransform
+Transforming kotlin-stdlib-jdk8-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22) with IdentityTransform
+Transforming annotation-experimental-1.3.1.aar (androidx.annotation:annotation-experimental:1.3.1) with JetifyTransform
+Transforming annotation-experimental-1.3.1.aar (androidx.annotation:annotation-experimental:1.3.1) with AarToClassTransform
+Transforming security-crypto-1.1.0-alpha06.aar (androidx.security:security-crypto:1.1.0-alpha06) with JetifyTransform
+Transforming security-crypto-1.1.0-alpha06.aar (androidx.security:security-crypto:1.1.0-alpha06) with AarToClassTransform
+Transforming cursoradapter-1.0.0.aar (androidx.cursoradapter:cursoradapter:1.0.0) with JetifyTransform
+Transforming cursoradapter-1.0.0.aar (androidx.cursoradapter:cursoradapter:1.0.0) with AarToClassTransform
+Transforming sqlite-framework-2.4.0.aar (androidx.sqlite:sqlite-framework:2.4.0) with JetifyTransform
+Transforming sqlite-framework-2.4.0.aar (androidx.sqlite:sqlite-framework:2.4.0) with AarToClassTransform
+Transforming sqlite-2.4.0.aar (androidx.sqlite:sqlite:2.4.0) with JetifyTransform
+Transforming sqlite-2.4.0.aar (androidx.sqlite:sqlite:2.4.0) with AarToClassTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with JetifyTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with AarToClassTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with JetifyTransform
+Transforming firebase-components-17.1.5.aar (com.google.firebase:firebase-components:17.1.5) with AarToClassTransform
+Transforming versionedparcelable-1.1.1.aar (androidx.versionedparcelable:versionedparcelable:1.1.1) with JetifyTransform
+Transforming versionedparcelable-1.1.1.aar (androidx.versionedparcelable:versionedparcelable:1.1.1) with AarToClassTransform
+Transforming core-runtime-2.2.0.aar (androidx.arch.core:core-runtime:2.2.0) with JetifyTransform
+Transforming core-runtime-2.2.0.aar (androidx.arch.core:core-runtime:2.2.0) with AarToClassTransform
+Transforming collection-1.1.0.jar (androidx.collection:collection:1.1.0) with JetifyTransform
+Transforming collection-1.1.0.jar (androidx.collection:collection:1.1.0) with IdentityTransform
+Transforming concurrent-futures-1.1.0.jar (androidx.concurrent:concurrent-futures:1.1.0) with JetifyTransform
+Transforming concurrent-futures-1.1.0.jar (androidx.concurrent:concurrent-futures:1.1.0) with IdentityTransform
+Transforming core-common-2.2.0.jar (androidx.arch.core:core-common:2.2.0) with JetifyTransform
+Transforming core-common-2.2.0.jar (androidx.arch.core:core-common:2.2.0) with IdentityTransform
+Transforming interpolator-1.0.0.aar (androidx.interpolator:interpolator:1.0.0) with JetifyTransform
+Transforming interpolator-1.0.0.aar (androidx.interpolator:interpolator:1.0.0) with AarToClassTransform
+Transforming annotation-jvm-1.7.0.jar (androidx.annotation:annotation-jvm:1.7.0) with JetifyTransform
+Transforming annotation-jvm-1.7.0.jar (androidx.annotation:annotation-jvm:1.7.0) with IdentityTransform
+Transforming kotlin-stdlib-jdk7-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22) with JetifyTransform
+Transforming kotlin-stdlib-jdk7-1.8.22.jar (org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22) with IdentityTransform
+Transforming kotlin-stdlib-1.9.22.jar (org.jetbrains.kotlin:kotlin-stdlib:1.9.22) with JetifyTransform
+Transforming kotlin-stdlib-1.9.22.jar (org.jetbrains.kotlin:kotlin-stdlib:1.9.22) with IdentityTransform
+Transforming gson-2.10.1.jar (com.google.code.gson:gson:2.10.1) with JetifyTransform
+Transforming gson-2.10.1.jar (com.google.code.gson:gson:2.10.1) with IdentityTransform
+Transforming layout-7.1.16.jar (com.itextpdf:layout:7.1.16) with JetifyTransform
+Transforming layout-7.1.16.jar (com.itextpdf:layout:7.1.16) with IdentityTransform
+Transforming kernel-7.1.16.jar (com.itextpdf:kernel:7.1.16) with JetifyTransform
+Transforming kernel-7.1.16.jar (com.itextpdf:kernel:7.1.16) with IdentityTransform
+Transforming io-7.1.16.jar (com.itextpdf:io:7.1.16) with JetifyTransform
+Transforming io-7.1.16.jar (com.itextpdf:io:7.1.16) with IdentityTransform
+Transforming MPAndroidChart-v3.1.0.aar (com.github.PhilJay:MPAndroidChart:v3.1.0) with JetifyTransform
+Transforming MPAndroidChart-v3.1.0.aar (com.github.PhilJay:MPAndroidChart:v3.1.0) with AarToClassTransform
+Transforming annotations-23.0.0.jar (org.jetbrains:annotations:23.0.0) with JetifyTransform
+Transforming annotations-23.0.0.jar (org.jetbrains:annotations:23.0.0) with IdentityTransform
+Transforming grpc-stub-1.57.2.jar (io.grpc:grpc-stub:1.57.2) with JetifyTransform
+Transforming grpc-stub-1.57.2.jar (io.grpc:grpc-stub:1.57.2) with IdentityTransform
+Transforming guava-32.0.1-android.jar (com.google.guava:guava:32.0.1-android) with JetifyTransform
+Transforming guava-32.0.1-android.jar (com.google.guava:guava:32.0.1-android) with IdentityTransform
+Transforming listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar (com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava) with JetifyTransform
+Transforming listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar (com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava) with IdentityTransform
+Transforming firebase-annotations-16.2.0.jar (com.google.firebase:firebase-annotations:16.2.0) with JetifyTransform
+Transforming firebase-annotations-16.2.0.jar (com.google.firebase:firebase-annotations:16.2.0) with IdentityTransform
+Transforming hilt-core-2.51.jar (com.google.dagger:hilt-core:2.51) with JetifyTransform
+Transforming hilt-core-2.51.jar (com.google.dagger:hilt-core:2.51) with IdentityTransform
+Transforming dagger-2.51.jar (com.google.dagger:dagger:2.51) with JetifyTransform
+Transforming dagger-2.51.jar (com.google.dagger:dagger:2.51) with IdentityTransform
+Transforming javax.inject-1.jar (javax.inject:javax.inject:1) with JetifyTransform
+Transforming javax.inject-1.jar (javax.inject:javax.inject:1) with IdentityTransform
+Transforming grpc-protobuf-lite-1.57.2.jar (io.grpc:grpc-protobuf-lite:1.57.2) with JetifyTransform
+Transforming grpc-protobuf-lite-1.57.2.jar (io.grpc:grpc-protobuf-lite:1.57.2) with IdentityTransform
+Transforming grpc-android-1.57.2.aar (io.grpc:grpc-android:1.57.2) with JetifyTransform
+Transforming grpc-android-1.57.2.aar (io.grpc:grpc-android:1.57.2) with AarToClassTransform
+Transforming grpc-okhttp-1.57.2.jar (io.grpc:grpc-okhttp:1.57.2) with JetifyTransform
+Transforming grpc-okhttp-1.57.2.jar (io.grpc:grpc-okhttp:1.57.2) with IdentityTransform
+Transforming grpc-core-1.57.2.jar (io.grpc:grpc-core:1.57.2) with JetifyTransform
+Transforming grpc-core-1.57.2.jar (io.grpc:grpc-core:1.57.2) with IdentityTransform
+Transforming grpc-api-1.57.2.jar (io.grpc:grpc-api:1.57.2) with JetifyTransform
+Transforming grpc-api-1.57.2.jar (io.grpc:grpc-api:1.57.2) with IdentityTransform
+Transforming error_prone_annotations-2.18.0.jar (com.google.errorprone:error_prone_annotations:2.18.0) with JetifyTransform
+Transforming error_prone_annotations-2.18.0.jar (com.google.errorprone:error_prone_annotations:2.18.0) with IdentityTransform
+Transforming jsr305-3.0.2.jar (com.google.code.findbugs:jsr305:3.0.2) with JetifyTransform
+Transforming jsr305-3.0.2.jar (com.google.code.findbugs:jsr305:3.0.2) with IdentityTransform
+Transforming failureaccess-1.0.1.jar (com.google.guava:failureaccess:1.0.1) with JetifyTransform
+Transforming failureaccess-1.0.1.jar (com.google.guava:failureaccess:1.0.1) with IdentityTransform
+Transforming checker-qual-3.33.0.jar (org.checkerframework:checker-qual:3.33.0) with JetifyTransform
+Transforming checker-qual-3.33.0.jar (org.checkerframework:checker-qual:3.33.0) with IdentityTransform
+Transforming j2objc-annotations-2.8.jar (com.google.j2objc:j2objc-annotations:2.8) with JetifyTransform
+Transforming j2objc-annotations-2.8.jar (com.google.j2objc:j2objc-annotations:2.8) with IdentityTransform
+Transforming protolite-well-known-types-18.0.0.aar (com.google.firebase:protolite-well-known-types:18.0.0) with JetifyTransform
+Transforming protolite-well-known-types-18.0.0.aar (com.google.firebase:protolite-well-known-types:18.0.0) with AarToClassTransform
+Transforming protobuf-javalite-3.22.3.jar (com.google.protobuf:protobuf-javalite:3.22.3) with JetifyTransform
+Transforming protobuf-javalite-3.22.3.jar (com.google.protobuf:protobuf-javalite:3.22.3) with IdentityTransform
+Transforming dagger-lint-aar-2.51.aar (com.google.dagger:dagger-lint-aar:2.51) with JetifyTransform
+Transforming dagger-lint-aar-2.51.aar (com.google.dagger:dagger-lint-aar:2.51) with AarToClassTransform
+Transforming slf4j-api-1.7.30.jar (org.slf4j:slf4j-api:1.7.30) with JetifyTransform
+Transforming slf4j-api-1.7.30.jar (org.slf4j:slf4j-api:1.7.30) with IdentityTransform
+Transforming bcpkix-jdk15on-1.68.jar (org.bouncycastle:bcpkix-jdk15on:1.68) with JetifyTransform
+Transforming bcpkix-jdk15on-1.68.jar (org.bouncycastle:bcpkix-jdk15on:1.68) with IdentityTransform
+Transforming bcprov-jdk15on-1.68.jar (org.bouncycastle:bcprov-jdk15on:1.68) with JetifyTransform
+Transforming bcprov-jdk15on-1.68.jar (org.bouncycastle:bcprov-jdk15on:1.68) with IdentityTransform
+Transforming R.jar with ClasspathEntrySnapshotTransform
+Transforming classes.jar with ClasspathEntrySnapshotTransform
+Transforming appcompat-1.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-hilt-android-2.51-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-firestore-ktx-24.10.3-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-storage-ktx-20.3.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-firestore-24.10.3-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-storage-20.3.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-appcheck-17.1.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-common-ktx-20.4.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-common-20.4.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming room-common-2.6.1.jar with ClasspathEntrySnapshotTransform
+Transforming room-runtime-2.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-room-ktx-2.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-activity-1.6.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-appcompat-resources-1.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming drawerlayout-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming vectordrawable-animated-1.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming vectordrawable-1.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming viewpager-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming customview-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming loader-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-appcheck-interop-17.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-database-collection-18.0.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-base-18.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming core-1.12.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-livedata-core-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-runtime-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-lifecycle-viewmodel-savedstate-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-viewmodel-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-lifecycle-livedata-core-ktx-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-livedata-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-lifecycle-livedata-ktx-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-common-2.7.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-android-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-datastore-core-okio-jvm-1.1.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-datastore-core-release-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-datastore-preferences-core-jvm-1.1.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-datastore-release-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-datastore-preferences-release-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-core-jvm-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-play-services-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-auth-interop-19.0.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-tasks-18.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-basement-18.3.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming fragment-1.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-core-ktx-1.12.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-timber-5.0.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-savedstate-1.2.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-okio-jvm-3.4.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-jdk8-1.8.22.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotation-experimental-1.3.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-security-crypto-1.1.0-alpha06-api.jar with ClasspathEntrySnapshotTransform
+Transforming cursoradapter-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming sqlite-framework-2.4.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming sqlite-2.4.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-components-17.1.5-api.jar with ClasspathEntrySnapshotTransform
+Transforming versionedparcelable-1.1.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming core-runtime-2.2.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming collection-1.1.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-concurrent-futures-1.1.0.jar with ClasspathEntrySnapshotTransform
+Transforming core-common-2.2.0.jar with ClasspathEntrySnapshotTransform
+Transforming interpolator-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotation-jvm-1.7.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-jdk7-1.8.22.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-1.9.22.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-gson-2.10.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-layout-7.1.16.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kernel-7.1.16.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-io-7.1.16.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-MPAndroidChart-v3.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotations-23.0.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-stub-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-guava-32.0.1-android.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-annotations-16.2.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-hilt-core-2.51.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-dagger-2.51.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-javax.inject-1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-protobuf-lite-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-android-1.57.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-okhttp-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-core-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-api-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-error_prone_annotations-2.18.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-jsr305-3.0.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-failureaccess-1.0.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-checker-qual-3.33.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-j2objc-annotations-2.8.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-protolite-well-known-types-18.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-protobuf-javalite-3.22.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-dagger-lint-aar-2.51-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-slf4j-api-1.7.30.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-bcpkix-jdk15on-1.68.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-bcprov-jdk15on-1.68.jar with ClasspathEntrySnapshotTransform
+Transforming android.jar with ClasspathEntrySnapshotTransform
+Transforming core-lambda-stubs.jar with ClasspathEntrySnapshotTransform
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+Build cache key for task ':core:kspDebugKotlin' is b10a2769bb5170c53017b9499ce7d2ba
+Skipping task ':core:kspDebugKotlin' as it is up-to-date.
+Resolve mutations for :core:compileDebugKotlin (Thread[#422,Execution worker Thread 4,5,main]) started.
+:core:compileDebugKotlin (Thread[#422,Execution worker Thread 4,5,main]) started.
+
+> Task :core:compileDebugKotlin
+Transforming R.jar with ClasspathEntrySnapshotTransform
+Transforming classes.jar with ClasspathEntrySnapshotTransform
+Transforming appcompat-1.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-hilt-android-2.51-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-firestore-ktx-24.10.3-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-storage-ktx-20.3.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-firestore-24.10.3-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-storage-20.3.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-appcheck-17.1.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-common-ktx-20.4.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-common-20.4.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming room-common-2.6.1.jar with ClasspathEntrySnapshotTransform
+Transforming room-runtime-2.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-room-ktx-2.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-activity-1.6.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-appcompat-resources-1.6.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming drawerlayout-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming vectordrawable-animated-1.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming vectordrawable-1.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming viewpager-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming customview-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming loader-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-appcheck-interop-17.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-database-collection-18.0.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-base-18.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming core-1.12.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-livedata-core-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-runtime-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-lifecycle-viewmodel-savedstate-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-viewmodel-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-lifecycle-livedata-core-ktx-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-livedata-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-lifecycle-livedata-ktx-2.7.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming lifecycle-common-2.7.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-android-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-datastore-core-okio-jvm-1.1.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-datastore-core-release-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-datastore-preferences-core-jvm-1.1.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-datastore-release-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-datastore-preferences-release-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-core-jvm-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlinx-coroutines-play-services-1.7.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-auth-interop-19.0.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-tasks-18.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-play-services-basement-18.3.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming fragment-1.5.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-core-ktx-1.12.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-timber-5.0.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-savedstate-1.2.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-okio-jvm-3.4.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-jdk8-1.8.22.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotation-experimental-1.3.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-security-crypto-1.1.0-alpha06-api.jar with ClasspathEntrySnapshotTransform
+Transforming cursoradapter-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming sqlite-framework-2.4.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming sqlite-2.4.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-components-17.1.5-api.jar with ClasspathEntrySnapshotTransform
+Transforming versionedparcelable-1.1.1-api.jar with ClasspathEntrySnapshotTransform
+Transforming core-runtime-2.2.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming collection-1.1.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-concurrent-futures-1.1.0.jar with ClasspathEntrySnapshotTransform
+Transforming core-common-2.2.0.jar with ClasspathEntrySnapshotTransform
+Transforming interpolator-1.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotation-jvm-1.7.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-jdk7-1.8.22.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kotlin-stdlib-1.9.22.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-gson-2.10.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-layout-7.1.16.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-kernel-7.1.16.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-io-7.1.16.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-MPAndroidChart-v3.1.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-annotations-23.0.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-stub-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-guava-32.0.1-android.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-firebase-annotations-16.2.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-hilt-core-2.51.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-dagger-2.51.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-javax.inject-1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-protobuf-lite-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-android-1.57.2-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-okhttp-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-core-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-grpc-api-1.57.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-error_prone_annotations-2.18.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-jsr305-3.0.2.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-failureaccess-1.0.1.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-checker-qual-3.33.0.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-j2objc-annotations-2.8.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-protolite-well-known-types-18.0.0-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-protobuf-javalite-3.22.3.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-dagger-lint-aar-2.51-api.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-slf4j-api-1.7.30.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-bcpkix-jdk15on-1.68.jar with ClasspathEntrySnapshotTransform
+Transforming jetified-bcprov-jdk15on-1.68.jar with ClasspathEntrySnapshotTransform
+Transforming android.jar with ClasspathEntrySnapshotTransform
+Transforming core-lambda-stubs.jar with ClasspathEntrySnapshotTransform
+Build cache key for task ':core:compileDebugKotlin' is eccf907724f9da5ebc188dd0e9977b14
+Task ':core:compileDebugKotlin' is not up-to-date because:
+  Task has failed previously.
+The input changes require a full rebuild for incremental task ':core:compileDebugKotlin'.
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\kotlin', not found
+file or directory 'C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\debug\java', not found
+Kotlin source files: C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\di\CoreModule.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\AditivoPdfGenerator.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\AppLogger.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\AuditReportGenerator.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\BluetoothPrinterHelper.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\ChartGenerator.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\ContractPdfGenerator.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\CpfCnpjTextWatcher.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\DataValidator.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\DateUtils.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\DocumentIntegrityManager.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\FinancialCalculator.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\FirebaseImageUploader.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\ImageCompressionUtils.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\LegalLogger.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\MoneyTextWatcher.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\NetworkUtils.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\PdfReportGenerator.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\ReciboPrinterHelper.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\SecurePreferencesHelper.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\SignatureMetadataCollector.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\SignatureStatistics.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\StringUtils.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\core\utils\UserSessionManager.kt, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\src\main\java\com\example\gestaobilhares\legacy\LegacyUtilsAliases.kt
+Java source files: C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\build\generated\ksp\debug\java\com\example\gestaobilhares\core\di\CoreModule_ProvideFirebaseImageUploaderFactory.java, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\build\generated\ksp\debug\java\com\example\gestaobilhares\core\di\CoreModule_ProvideGsonFactory.java, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\build\generated\ksp\debug\java\com\example\gestaobilhares\core\di\CoreModule_ProvideNetworkUtilsFactory.java, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\build\generated\ksp\debug\java\com\example\gestaobilhares\core\di\CoreModule_ProvideUserSessionManagerFactory.java, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\build\generated\ksp\debug\java\hilt_aggregated_deps\_com_example_gestaobilhares_core_di_CoreModule.java
+Script source files: 
+Script file extensions: 
+Using Kotlin/JVM incremental compilation
+[KOTLIN] Kotlin compilation 'jdkHome' argument: null
+i: found daemon on port 17691 (7224824 ms old), trying to connect
+i: connected to the daemon
+Options for KOTLIN DAEMON: IncrementalCompilationOptions(super=CompilationOptions(compilerMode=INCREMENTAL_COMPILER, targetPlatform=JVM, reportCategories=[0, 3], reportSeverity=2, requestedCompilationResults=[0], kotlinScriptExtensions=[]), areFileChangesKnown=false, modifiedFiles=null, deletedFiles=null, classpathChanges=NotAvailableForNonIncrementalRun, workingDir=C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\build\kotlin\compileDebugKotlin\cacheable, multiModuleICSettings=MultiModuleICSettings(buildHistoryFile=C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\build\kotlin\compileDebugKotlin\local-state\build-history.bin, useModuleDetection=true), usePreciseJavaTracking=true, outputFiles=[C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\build\tmp\kotlin-classes\debug, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\build\kotlin\compileDebugKotlin\cacheable, C:\Users\Rossiny\Desktop\2-GestaoBilhares\core\build\kotlin\compileDebugKotlin\local-state])
+./gradlew : e: file:///C:/Users/Rossiny/Desktop/2-GestaoBilhares/core/src/main/java/com/example/gestaobilhares/core/uti
+ls/ContractPdfGenerator.kt:57:35 Type mismatch: inferred type is Date but Long was expected
+No linha:1 caractere:1
++ ./gradlew :core:compileDebugKotlin --info 2>&1 | Out-File -Encoding U ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (e: file:///C:/U...ng was expected:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+e: file:///C:/Users/Rossiny/Desktop/2-GestaoBilhares/core/src/main/java/com/example/gestaobilhares/core/utils/PdfReport
+Generator.kt:334:73 Unresolved reference. None of the following candidates is applicable because of receiver type 
+mismatch: 
+public inline fun String.format(locale: Locale?, vararg args: Any?): String defined in kotlin.text
+public inline fun String.format(vararg args: Any?): String defined in kotlin.text
+public inline fun String.Companion.format(locale: Locale?, format: String, vararg args: Any?): String defined in 
+kotlin.text
+public inline fun String.Companion.format(format: String, vararg args: Any?): String defined in kotlin.text
+
+> Task :core:compileDebugKotlin FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':core:compileDebugKotlin'.
+> A failure occurred while executing 
+org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 39s
+20 actionable tasks: 3 executed, 17 up-to-date
+Configuration cache entry reused.

@@ -31,13 +31,13 @@ interface MesaDao {
     fun obterMesasDisponiveis(): Flow<List<Mesa>>
 
     @Query("UPDATE mesas SET cliente_id = NULL, ativa = 1, data_ultima_leitura = :timestamp WHERE id = :mesaId")
-    suspend fun desvincularMesa(mesaId: Long, timestamp: Date = Date())
+    suspend fun desvincularMesa(mesaId: Long, timestamp: Long = System.currentTimeMillis())
 
     @Query("UPDATE mesas SET cliente_id = :clienteId, ativa = 1, data_ultima_leitura = :timestamp WHERE id = :mesaId")
-    suspend fun vincularMesa(mesaId: Long, clienteId: Long, timestamp: Date = Date())
+    suspend fun vincularMesa(mesaId: Long, clienteId: Long, timestamp: Long = System.currentTimeMillis())
 
     @Query("UPDATE mesas SET cliente_id = :clienteId, ativa = 1, valor_fixo = :valorFixo, data_ultima_leitura = :timestamp WHERE id = :mesaId")
-    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double, timestamp: Date = Date())
+    suspend fun vincularMesaComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double, timestamp: Long = System.currentTimeMillis())
 
     @Query("""
         UPDATE mesas 
@@ -48,7 +48,7 @@ interface MesaDao {
             data_ultima_leitura = :timestamp
         WHERE id = :mesaId
     """)
-    suspend fun retirarMesa(mesaId: Long, timestamp: Date = Date())
+    suspend fun retirarMesa(mesaId: Long, timestamp: Long = System.currentTimeMillis())
     
     @Query("""
         UPDATE mesas 
@@ -118,7 +118,7 @@ interface MesaDao {
           AND m.data_instalacao BETWEEN :dataInicio AND :dataFim
         """
     )
-    suspend fun contarNovasMesasInstaladas(rotaId: Long, dataInicio: Date, dataFim: Date): Int
+    suspend fun contarNovasMesasInstaladas(rotaId: Long, dataInicio: Long, dataFim: Long): Int
 } 
 
 data class MesaCountCliente(
