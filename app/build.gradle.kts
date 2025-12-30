@@ -318,31 +318,24 @@ tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
     }
 }
 
-// ✅ AUTOMAÇÃO: Commit e push automático após build bem-sucedido
-tasks.register("autoCommitOnSuccess") {
+// ✅ AUTOMAÇÃO: Criar PR automaticamente após build bem-sucedido
+tasks.register("createPROnSuccess") {
     doLast {
         // Detectar sistema operacional e usar script apropriado
         val isWindows = System.getProperty("os.name").lowercase().contains("windows")
         
         if (isWindows) {
-            // Windows: tentar PowerShell primeiro, depois batch
-            val psScript = rootProject.file("scripts/auto-commit-on-build-success.ps1")
-            val batScript = rootProject.file("scripts/auto-commit-on-build-success.bat")
-            
+            // Windows: usar PowerShell
+            val psScript = rootProject.file("scripts/create-pr-on-success.ps1")
             if (psScript.exists()) {
                 exec {
                     commandLine("powershell", "-ExecutionPolicy", "Bypass", "-File", psScript.absolutePath)
-                    ignoreExitValue = true
-                }
-            } else if (batScript.exists()) {
-                exec {
-                    commandLine("cmd", "/c", batScript.absolutePath)
-                    ignoreExitValue = true
+                    ignoreExitValue = true // Não falhar o build se o PR falhar
                 }
             }
         } else {
             // Linux/Mac: usar shell script
-            val scriptPath = rootProject.file("scripts/auto-commit-on-build-success.sh")
+            val scriptPath = rootProject.file("scripts/create-pr-on-success.sh")
             if (scriptPath.exists() && scriptPath.canExecute()) {
                 exec {
                     commandLine("bash", scriptPath.absolutePath)
@@ -353,9 +346,9 @@ tasks.register("autoCommitOnSuccess") {
     }
 }
 
-// Conectar autoCommitOnSuccess ao installDebug
+// Conectar createPROnSuccess ao installDebug
 tasks.named("installDebug") {
-    finalizedBy("autoCommitOnSuccess")
+    finalizedBy("createPROnSuccess")
 }
 
 // Task helper para rodar testes + cobertura
