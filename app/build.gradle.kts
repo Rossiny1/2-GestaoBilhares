@@ -321,11 +321,33 @@ tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
 // ✅ AUTOMAÇÃO: Commit e push automático após build bem-sucedido
 tasks.register("autoCommitOnSuccess") {
     doLast {
-        val scriptPath = rootProject.file("scripts/auto-commit-on-build-success.sh")
-        if (scriptPath.exists() && scriptPath.canExecute()) {
-            exec {
-                commandLine("bash", scriptPath.absolutePath)
-                ignoreExitValue = true // Não falhar o build se o commit falhar
+        // Detectar sistema operacional e usar script apropriado
+        val isWindows = System.getProperty("os.name").lowercase().contains("windows")
+        
+        if (isWindows) {
+            // Windows: tentar PowerShell primeiro, depois batch
+            val psScript = rootProject.file("scripts/auto-commit-on-build-success.ps1")
+            val batScript = rootProject.file("scripts/auto-commit-on-build-success.bat")
+            
+            if (psScript.exists()) {
+                exec {
+                    commandLine("powershell", "-ExecutionPolicy", "Bypass", "-File", psScript.absolutePath)
+                    ignoreExitValue = true
+                }
+            } else if (batScript.exists()) {
+                exec {
+                    commandLine("cmd", "/c", batScript.absolutePath)
+                    ignoreExitValue = true
+                }
+            }
+        } else {
+            // Linux/Mac: usar shell script
+            val scriptPath = rootProject.file("scripts/auto-commit-on-build-success.sh")
+            if (scriptPath.exists() && scriptPath.canExecute()) {
+                exec {
+                    commandLine("bash", scriptPath.absolutePath)
+                    ignoreExitValue = true
+                }
             }
         }
     }
