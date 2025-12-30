@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.contracts
+package com.example.gestaobilhares.ui.contracts
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -87,10 +87,10 @@ class RepresentanteLegalSignatureViewModel @Inject constructor(
                     deviceId = deviceId,
                     hashIntegridade = hashIntegridade,
                     versaoSistema = versaoSistema,
-                    dataCriacao = Date(),
+                    dataCriacao = System.currentTimeMillis(),
                     criadoPor = criadoPor,
                     numeroProcuração = numeroProcuração,
-                    dataProcuração = Date(),
+                    dataProcuração = System.currentTimeMillis(),
                     poderesDelegados = poderesDelegados
                 )
                 
@@ -111,7 +111,7 @@ class RepresentanteLegalSignatureViewModel @Inject constructor(
                     hashAssinatura = hashIntegridade,
                     tipoDocumento = "ASSINATURA_REPRESENTANTE",
                     numeroDocumento = numeroProcuração,
-                    dataOperacao = Date(),
+                    dataOperacao = System.currentTimeMillis(),
                     observacoes = "Assinatura digital do representante legal criada com sucesso"
                 )
                 
@@ -146,7 +146,7 @@ class RepresentanteLegalSignatureViewModel @Inject constructor(
                 val assinatura = _assinaturaAtiva.value ?: return@launch
                 
                 // Incrementar contador de uso
-                repository.incrementarUsoAssinatura(assinatura.id, Date())
+                repository.incrementarUsoAssinatura(assinatura.id, System.currentTimeMillis())
                 
                 // Criar log de auditoria
                 val logAuditoria = LogAuditoriaAssinatura(
@@ -164,7 +164,7 @@ class RepresentanteLegalSignatureViewModel @Inject constructor(
                     tipoDocumento = tipoDocumento,
                     numeroDocumento = numeroDocumento,
                     valorContrato = valorContrato,
-                    dataOperacao = Date(),
+                    dataOperacao = System.currentTimeMillis(),
                     observacoes = "Assinatura utilizada em $tipoDocumento"
                 )
                 
@@ -186,7 +186,7 @@ class RepresentanteLegalSignatureViewModel @Inject constructor(
                 
                 val assinaturaAtualizada = assinatura.copy(
                     validadaJuridicamente = true,
-                    dataValidacao = Date(),
+                    dataValidacao = System.currentTimeMillis(),
                     validadoPor = validadoPor
                 )
                 

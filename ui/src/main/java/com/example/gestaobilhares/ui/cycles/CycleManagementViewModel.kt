@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.cycles
+package com.example.gestaobilhares.ui.cycles
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -118,8 +118,8 @@ class CycleManagementViewModel @Inject constructor(
                             id = ciclo.id,
                             rotaId = ciclo.rotaId,
                             titulo = "${ciclo.numeroCiclo}º Acerto - ${rota.nome}",
-                            dataInicio = ciclo.dataInicio,
-                            dataFim = ciclo.dataFim,
+                            dataInicio = Date(ciclo.dataInicio),
+                            dataFim = Date(ciclo.dataFim),
                             status = ciclo.status
                         )
                         

@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.mesas
+package com.example.gestaobilhares.ui.mesas
 
 import android.app.DatePickerDialog
 import android.app.Dialog
@@ -44,7 +44,7 @@ class VendaMesaDialog : DialogFragment() {
     private var onVendaRealizada: ((MesaVendida) -> Unit)? = null
     private var mesasDisponiveis: List<Mesa> = emptyList()
     private var mesaSelecionada: Mesa? = null
-    private var dataVenda: Date = Date()
+    private var dataVenda: Long = System.currentTimeMillis()
     private var initialized: Boolean = false
     private var isUpdatingNumeroMesa: Boolean = false
 
@@ -101,8 +101,8 @@ class VendaMesaDialog : DialogFragment() {
         Timber.d(TAG, "setupUI() - configurando data e campos")
         // Configurar data atual
         val calendar = Calendar.getInstance()
-        dataVenda = calendar.time
-        val dataFormatada = android.text.format.DateFormat.format("dd/MM/yyyy", dataVenda).toString()
+        dataVenda = calendar.timeInMillis
+        val dataFormatada = android.text.format.DateFormat.format("dd/MM/yyyy", Date(dataVenda)).toString()
         binding.etDataVenda.setText(dataFormatada)
 
         // Configurar campo de valor
@@ -230,15 +230,15 @@ class VendaMesaDialog : DialogFragment() {
     private fun mostrarSeletorData() {
         Timber.d(TAG, "mostrarSeletorData() - exibindo DatePicker")
         val calendar = Calendar.getInstance()
-        calendar.time = dataVenda
+        calendar.timeInMillis = dataVenda
 
         val datePickerDialog = DatePickerDialog(
             requireContext(),
             { _, year, month, dayOfMonth ->
                 val selectedCalendar = Calendar.getInstance()
                 selectedCalendar.set(year, month, dayOfMonth)
-                dataVenda = selectedCalendar.time
-                val novaData = android.text.format.DateFormat.format("dd/MM/yyyy", dataVenda).toString()
+                dataVenda = selectedCalendar.timeInMillis
+                val novaData = android.text.format.DateFormat.format("dd/MM/yyyy", Date(dataVenda)).toString()
                 binding.etDataVenda.setText(novaData)
                 Timber.d(TAG, "Data selecionada='${novaData}'")
             },

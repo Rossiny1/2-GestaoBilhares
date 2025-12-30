@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.mesas
+package com.example.gestaobilhares.ui.mesas
 
 import timber.log.Timber
 import androidx.lifecycle.ViewModel
@@ -103,7 +103,7 @@ class NovaReformaViewModel @Inject constructor(
                 }
                 val atualizada = mesa.copy(
                     panoAtualId = panoId,
-                    dataUltimaTrocaPano = Date()
+                    dataUltimaTrocaPano = System.currentTimeMillis()
                 )
                 appRepository.atualizarMesa(atualizada)
                 Timber.d("NovaReformaViewModel", "Mesa $mesaId atualizada com pano $panoId (reforma) com sucesso")

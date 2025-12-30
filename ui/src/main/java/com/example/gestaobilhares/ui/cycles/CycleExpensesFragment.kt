@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.cycles
+package com.example.gestaobilhares.ui.cycles
 import com.example.gestaobilhares.ui.R
 
 import android.os.Bundle
@@ -377,7 +377,7 @@ class CycleExpensesFragment : Fragment() {
                 val file = java.io.File(caminhoFoto)
                 if (file.exists() && file.isFile) {
                     android.util.Log.d("CycleExpensesFragment", "✅ Carregando foto local: ${file.absolutePath}")
-                    mostrarFotoDialog(file, despesa.dataFotoComprovante)
+                    mostrarFotoDialog(file, despesa.dataFotoComprovante?.let { Date(it) })
                     return
                 } else {
                     android.util.Log.w("CycleExpensesFragment", "⚠️ Arquivo local não existe: ${file.absolutePath}")
@@ -391,7 +391,7 @@ class CycleExpensesFragment : Fragment() {
                     val inputStream = requireContext().contentResolver.openInputStream(uri)
                     if (inputStream != null) {
                         android.util.Log.d("CycleExpensesFragment", "✅ Carregando foto do content provider")
-                        mostrarFotoDialog(inputStream, despesa.dataFotoComprovante)
+                        mostrarFotoDialog(inputStream, despesa.dataFotoComprovante?.let { Date(it) })
                         return
                     }
                 } catch (e: Exception) {
@@ -416,7 +416,7 @@ class CycleExpensesFragment : Fragment() {
                                 val path = it.getString(columnIndex)
                                 val file = java.io.File(path)
                                 if (file.exists()) {
-                                    mostrarFotoDialog(file, despesa.dataFotoComprovante)
+                                    mostrarFotoDialog(file, despesa.dataFotoComprovante?.let { Date(it) })
                                     return
                                 }
                             }
@@ -434,7 +434,7 @@ class CycleExpensesFragment : Fragment() {
                     try {
                         val bitmap = downloadImageFromUrl(caminhoFoto)
                         if (bitmap != null) {
-                            mostrarFotoDialog(bitmap, despesa.dataFotoComprovante)
+                            mostrarFotoDialog(bitmap, despesa.dataFotoComprovante?.let { Date(it) })
                             android.util.Log.d("CycleExpensesFragment", "✅ Foto carregada do Firebase Storage")
                         } else {
                             android.widget.Toast.makeText(

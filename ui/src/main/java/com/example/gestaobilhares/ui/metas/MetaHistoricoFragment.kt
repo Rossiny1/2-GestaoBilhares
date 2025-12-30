@@ -217,7 +217,7 @@ class MetaHistoricoFragment : Fragment() {
                             metas = metasComProgresso,
                             dataInicioCiclo = cicloDaRota.dataInicio,
                             dataFimCiclo = cicloDaRota.dataFim,
-                            ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
+                            ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual().time
                         )
                         
                         metasPorRota.add(metaRotaResumo)

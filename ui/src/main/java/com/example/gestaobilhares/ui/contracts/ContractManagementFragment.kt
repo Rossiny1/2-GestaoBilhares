@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.contracts
+package com.example.gestaobilhares.ui.contracts
 import com.example.gestaobilhares.ui.R
 
 import android.content.Intent
@@ -165,7 +165,7 @@ class ContractManagementFragment : Fragment() {
                     statusUpper == "RESCINDIDO_COM_DIVIDA" ||
                     statusUpper == "RESCINDIDO"
                 )
-                var distratoData: java.util.Date? = contrato.dataEncerramento
+                var distratoData: Long? = contrato.dataEncerramento
 
                 // Fallback por arquivo físico
                 try {
@@ -174,7 +174,7 @@ class ContractManagementFragment : Fragment() {
                         val pdfs = dir.listFiles { f -> f.isFile && f.name.endsWith(".pdf", ignoreCase = true) }?.toList().orEmpty()
                         if (pdfs.isNotEmpty()) {
                             val maisRecente = pdfs.maxByOrNull { it.lastModified() }!!
-                            val dataArquivo = java.util.Date(maisRecente.lastModified())
+                            val dataArquivo = maisRecente.lastModified()
                             distratoData = distratoData ?: dataArquivo
                             android.util.Log.d("DocsDialog", "Fallback PDF distrato detectado para contrato ${contrato.numeroContrato}, arquivos=${pdfs.size}, maisRecente=${maisRecente.name} @ ${dataArquivo}")
                             if (!isDistratoStatus) {
@@ -212,7 +212,7 @@ class ContractManagementFragment : Fragment() {
                 }
             }
             // Ordena todos os documentos por data (mais recente primeiro)
-            val documentosOrdenados = documentos.sortedByDescending { it.data.time }
+            val documentosOrdenados = documentos.sortedByDescending { it.data }
             android.util.Log.d("DocsDialog", "Total documentos montados=${documentosOrdenados.size}")
             documentosOrdenados.forEachIndexed { idx, doc ->
                 android.util.Log.d("DocsDialog", "#${idx} tipo=${doc.tipo} titulo=${doc.titulo} data=${doc.data} contratoId=${doc.contrato.id}")
@@ -323,7 +323,7 @@ class ContractManagementFragment : Fragment() {
     data class DocumentoItem(
         val tipo: String,
         val titulo: String,
-        val data: Date,
+        val data: Long,
         val contrato: ContratoLocacao,
         val aditivo: AditivoContrato?
     )
@@ -588,7 +588,7 @@ class ContractManagementFragment : Fragment() {
                     Toast.makeText(requireContext(), "Nenhum aditivo para este contrato", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
-                val aditivo = item.aditivos.maxByOrNull { it.dataCriacao.time } ?: item.aditivos.last()
+                val aditivo = item.aditivos.maxByOrNull { it.dataCriacao } ?: item.aditivos.last()
                 val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
                 
                 // ✅ NOVO: Obter assinatura do representante legal automaticamente
@@ -626,7 +626,7 @@ class ContractManagementFragment : Fragment() {
                     Toast.makeText(requireContext(), "Nenhum aditivo para este contrato", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
-                val aditivo = item.aditivos.maxByOrNull { it.dataCriacao.time } ?: item.aditivos.last()
+                val aditivo = item.aditivos.maxByOrNull { it.dataCriacao } ?: item.aditivos.last()
                 val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
                 
                 // ✅ NOVO: Obter assinatura do representante legal automaticamente
@@ -656,7 +656,7 @@ class ContractManagementFragment : Fragment() {
         // Reutiliza o mesmo gerador do aditivo; filtra pelo tipo RETIRADA
         lifecycleScope.launch {
             val contrato = item.contrato ?: return@launch
-            val aditivo = item.aditivos.filter { it.tipo.equals("RETIRADA", true) }.maxByOrNull { it.dataCriacao.time } ?: return@launch
+            val aditivo = item.aditivos.filter { it.tipo.equals("RETIRADA", true) }.maxByOrNull { it.dataCriacao } ?: return@launch
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
             
             // ✅ NOVO: Obter assinatura do representante legal automaticamente
@@ -676,7 +676,7 @@ class ContractManagementFragment : Fragment() {
     private fun shareAddendumRetirada(item: ContractManagementViewModel.ContractItem) {
         lifecycleScope.launch {
             val contrato = item.contrato ?: return@launch
-            val aditivo = item.aditivos.filter { it.tipo.equals("RETIRADA", true) }.maxByOrNull { it.dataCriacao.time } ?: return@launch
+            val aditivo = item.aditivos.filter { it.tipo.equals("RETIRADA", true) }.maxByOrNull { it.dataCriacao } ?: return@launch
             val mesas = viewModel.getMesasPorCliente(contrato.clienteId)
             
             // ✅ NOVO: Obter assinatura do representante legal automaticamente
@@ -716,7 +716,7 @@ class ContractManagementFragment : Fragment() {
 
             // ✅ Persistir status de encerramento
             val novoStatus = if (saldo > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
-            val agora = java.util.Date()
+            val agora = System.currentTimeMillis()
             val contratoEncerrado = contrato.copy(status = novoStatus, dataEncerramento = agora, dataAtualizacao = agora)
             repository.atualizarContrato(contratoEncerrado)
 
@@ -758,7 +758,7 @@ class ContractManagementFragment : Fragment() {
 
             // ✅ Persistir status de encerramento
             val novoStatus = if (saldo > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
-            val agora = java.util.Date()
+            val agora = System.currentTimeMillis()
             val contratoEncerrado = contrato.copy(status = novoStatus, dataEncerramento = agora, dataAtualizacao = agora)
             repository.atualizarContrato(contratoEncerrado)
 

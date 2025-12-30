@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.mesas
+package com.example.gestaobilhares.ui.mesas
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -124,7 +124,7 @@ class HistoricoManutencaoMesaViewModel @Inject constructor(
                     custo = custo,
                     fotoAntes = fotoAntes,
                     fotoDepois = fotoDepois,
-                    dataManutencao = java.util.Date()
+                    dataManutencao = System.currentTimeMillis()
                 )
                 
                 appRepository.inserirHistoricoManutencaoMesaSync(historico)

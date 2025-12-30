@@ -283,7 +283,7 @@ class ExpenseRegisterViewModel @Inject constructor(
         despesaId: Long = 0L,
         modoEdicao: Boolean = false,
         fotoComprovante: String? = null,
-        dataFotoComprovante: Date? = null,
+        dataFotoComprovante: Long? = null,
         veiculoId: Long? = null,
         kmRodado: Long? = null,
         litrosAbastecidos: Double? = null
@@ -393,7 +393,7 @@ class ExpenseRegisterViewModel @Inject constructor(
                         valor = valor * quantidade,
                         categoria = categoria.nome,
                         tipoDespesa = _selectedType.value?.nome ?: "",
-                        dataHora = _selectedDate.value,
+                        dataHora = _selectedDate.value.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
                         observacoes = observacoes,
                         criadoPor = "Sistema", // TODO: Pegar usuário atual
                         cicloId = cicloId,
@@ -466,13 +466,7 @@ class ExpenseRegisterViewModel @Inject constructor(
             val categoriaDespesa = despesa.categoria.lowercase()
             
             // ✅ CORREÇÃO: Conversão segura de LocalDateTime para Date
-            val dataDespesa = try {
-                Date(despesa.dataHora)
-            } catch (e: Exception) {
-                // Fallback para data atual se houver erro na conversão
-                android.util.Log.w("ExpenseRegisterViewModel", "Erro na conversão de data: ${e.message}")
-                Date()
-            }
+            val dataDespesa = despesa.dataHora
             
             when {
                 isCombustivel(tipoDespesa, categoriaDespesa) -> {

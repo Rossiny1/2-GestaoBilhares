@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.mesas
+package com.example.gestaobilhares.ui.mesas
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -279,7 +279,7 @@ class MesasDepositoFragment : Fragment() {
                         
                         // Buscar último documento por data (priorizar dataEncerramento se existe)
                         val latest = todos.maxByOrNull { c -> 
-                            c.dataEncerramento?.time ?: c.dataCriacao.time 
+                            c.dataEncerramento ?: c.dataCriacao
                         }
                         
                         Timber.d("MesasDepositoFragment", 

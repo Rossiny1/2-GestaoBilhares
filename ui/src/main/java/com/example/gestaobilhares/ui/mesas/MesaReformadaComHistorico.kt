@@ -18,13 +18,13 @@ data class MesaReformadaComHistorico(
     val historicoManutencoes: List<HistoricoManutencaoMesa>
 ) : Serializable {
     // Data da última reforma
-    val dataUltimaReforma = reformas.maxByOrNull { it.dataReforma.time }?.dataReforma
+    val dataUltimaReforma = reformas.maxByOrNull { it.dataReforma }?.dataReforma
     
     // ✅ NOVO: Data do último evento (reforma ou manutenção)
     val dataUltimoEvento = listOfNotNull(
         dataUltimaReforma,
-        historicoManutencoes.maxByOrNull { it.dataManutencao.time }?.dataManutencao
-    ).maxByOrNull { it.time }
+        historicoManutencoes.maxByOrNull { it.dataManutencao }?.dataManutencao
+    ).maxOfOrNull { it }
 
     // Total de reformas
     val totalReformas = reformas.size
@@ -34,7 +34,7 @@ data class MesaReformadaComHistorico(
      * Busca na lista de reformas a mais recente que possui número do pano preenchido.
      */
     val numeroUltimoPano: String
-        get() = reformas.sortedByDescending { it.dataReforma.time }
+        get() = reformas.sortedByDescending { it.dataReforma }
             .firstOrNull { it.panos && !it.numeroPanos.isNullOrBlank() }
             ?.numeroPanos ?: "Não informado"
 }

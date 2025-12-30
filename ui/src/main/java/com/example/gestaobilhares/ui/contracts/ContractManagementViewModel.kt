@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.contracts
+package com.example.gestaobilhares.ui.contracts
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -133,7 +133,7 @@ class ContractManagementViewModel @Inject constructor(
             // Buscar o documento mais recente (contrato ou distrato)
             val documentoMaisRecente = contratosCliente.maxByOrNull { contrato ->
                 // Se for distrato, usar dataEncerramento; senão, dataCriacao
-                (contrato.dataEncerramento ?: contrato.dataCriacao).time
+                (contrato.dataEncerramento ?: contrato.dataCriacao)
             } ?: contratosCliente.first()
             
             // Coletar todas as mesas de todos os contratos do cliente
