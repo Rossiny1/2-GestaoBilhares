@@ -7,7 +7,7 @@ import com.example.gestaobilhares.data.entities.TipoDespesa
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.example.gestaobilhares.sync.handlers.base.BaseSyncHandler
-import com.example.gestaobilhares.core.utils.NetworkUtils
+import com.example.gestaobilhares.sync.utils.NetworkUtils
 import com.example.gestaobilhares.core.utils.FirebaseImageUploader
 import com.example.gestaobilhares.core.utils.DateUtils
 import com.google.firebase.Timestamp
