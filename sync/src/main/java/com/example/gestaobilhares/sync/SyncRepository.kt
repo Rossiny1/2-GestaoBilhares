@@ -2699,10 +2699,18 @@ class SyncRepository @javax.inject.Inject constructor(
             var syncCount = 0
             var errorCount = 0
             var bytesUploaded = 0L
+            val collectionRef = getCollectionRef(COLLECTION_MESAS_VENDIDAS)
+            
             mesasParaEnviar.forEach { mesaVendida ->
                 try {
-                    // Usar o entityToMap do EstoqueSyncHandler via mtodo pblico se necessrio.
-                    // Para correcao imediata do build, vamos simplificar.
+                    val map = entityToMap(mesaVendida)
+                    map["roomId"] = mesaVendida.id
+                    map["id"] = mesaVendida.id
+                    map["lastModified"] = FieldValue.serverTimestamp()
+                    map["syncTimestamp"] = FieldValue.serverTimestamp()
+                    
+                    collectionRef.document(mesaVendida.id.toString()).set(map).await()
+                    bytesUploaded += (map.toString().length).toLong()
                     syncCount++
                 } catch (e: Exception) {
                     errorCount++
