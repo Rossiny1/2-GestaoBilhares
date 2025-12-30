@@ -1,4 +1,4 @@
-﻿import java.util.Properties
+import java.util.Properties
 import java.io.FileInputStream
 
 plugins {
@@ -316,6 +316,24 @@ tasks.register<JacocoCoverageVerification>("jacocoCoverageVerification") {
             }
         }
     }
+}
+
+// ✅ AUTOMAÇÃO: Commit e push automático após build bem-sucedido
+tasks.register("autoCommitOnSuccess") {
+    doLast {
+        val scriptPath = rootProject.file("scripts/auto-commit-on-build-success.sh")
+        if (scriptPath.exists() && scriptPath.canExecute()) {
+            exec {
+                commandLine("bash", scriptPath.absolutePath)
+                ignoreExitValue = true // Não falhar o build se o commit falhar
+            }
+        }
+    }
+}
+
+// Conectar autoCommitOnSuccess ao installDebug
+tasks.named("installDebug") {
+    finalizedBy("autoCommitOnSuccess")
 }
 
 // Task helper para rodar testes + cobertura
