@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.settlement
+package com.example.gestaobilhares.ui.settlement
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -129,7 +129,7 @@ class AcertoMesaDetailAdapter(
                 binding.layoutFotoRelogio.visibility = View.VISIBLE
                 binding.btnVerFoto.setOnClickListener {
                     Timber.d("Botão Ver Foto clicado para mesa ${mesa.mesaId}")
-                    onVerFotoRelogio?.invoke(mesa.fotoRelogioFinal!!, mesa.dataFoto)
+                    onVerFotoRelogio?.invoke(mesa.fotoRelogioFinal!!, mesa.dataFoto?.let { Date(it) })
                 }
             } else {
                 Timber.d("❌ Nenhuma foto para mesa ${mesa.mesaId}, ocultando botão")

@@ -174,7 +174,7 @@ class AditivoSignatureViewModel @Inject constructor(
                 }
                 val aditivoAtualizado = aditivo.copy(
                     assinaturaLocatario = assinaturaBase64,
-                    dataAtualizacao = Date()
+                    dataAtualizacao = System.currentTimeMillis()
                 )
                 
                 repository.atualizarAditivo(aditivoAtualizado)

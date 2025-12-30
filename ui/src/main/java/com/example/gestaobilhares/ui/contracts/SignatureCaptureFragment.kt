@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.contracts
+package com.example.gestaobilhares.ui.contracts
 import com.example.gestaobilhares.ui.R
 
 import android.graphics.Bitmap
@@ -257,7 +257,7 @@ class SignatureCaptureFragment : Fragment() {
                     val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
                     val agora = java.util.Date()
                     Timber.d("DistratoFlow", "✅ ATUALIZAR STATUS ao salvar assinatura: contrato ${contratoAtual.id} para $novoStatus em $agora")
-                    repo.atualizarContrato(contratoAtual.copy(status = novoStatus, dataEncerramento = agora))
+                    repo.atualizarContrato(contratoAtual.copy(status = novoStatus, dataEncerramento = agora.time))
                     
                     // Verificação imediata
                     try {
@@ -489,7 +489,7 @@ class SignatureCaptureFragment : Fragment() {
                     val novoStatus = if (fechamento.saldoApurado > 0.0) "RESCINDIDO_COM_DIVIDA" else "ENCERRADO_QUITADO"
                     val agora = java.util.Date()
                     Timber.d("DistratoFlow", "Encerrar direto contrato ${contrato.id} para $novoStatus em $agora")
-                    repo.atualizarContrato(contrato.copy(status = novoStatus, dataEncerramento = agora))
+                    repo.atualizarContrato(contrato.copy(status = novoStatus, dataEncerramento = agora.time))
                     // Verificação imediata (diagnóstico)
                     try {
                         val apos = repo.buscarContratosPorCliente(contrato.clienteId).first()

@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.mesas
+package com.example.gestaobilhares.ui.mesas
 
 import android.app.Dialog
 import android.graphics.BitmapFactory
@@ -135,10 +135,10 @@ class DetalhesMesaReformadaComHistoricoDialog : DialogFragment() {
         
         // Processar reformas
         mesaComHistorico.reformas.forEach { reforma ->
-            val dataKey = dateFormat.format(reforma.dataReforma)
+            val dataKey = dateFormat.format(Date(reforma.dataReforma))
             if (!mapaPorData.containsKey(dataKey)) {
                 mapaPorData[dataKey] = ReformaAgrupada(
-                    dataReforma = reforma.dataReforma,
+                    dataReforma = Date(reforma.dataReforma),
                     reforma = reforma,
                     manutencoes = emptyList()
                 )
@@ -151,11 +151,11 @@ class DetalhesMesaReformadaComHistoricoDialog : DialogFragment() {
         
         // Processar manutenções e agrupar por data
         mesaComHistorico.historicoManutencoes.forEach { manutencao ->
-            val dataKey = dateFormat.format(manutencao.dataManutencao)
+            val dataKey = dateFormat.format(Date(manutencao.dataManutencao))
             if (!mapaPorData.containsKey(dataKey)) {
                 // Criar nova entrada apenas com manutenção
                 mapaPorData[dataKey] = ReformaAgrupada(
-                    dataReforma = manutencao.dataManutencao,
+                    dataReforma = Date(manutencao.dataManutencao),
                     reforma = null,
                     manutencoes = listOf(manutencao)
                 )

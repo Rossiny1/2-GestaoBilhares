@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.routes
+package com.example.gestaobilhares.ui.routes
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -65,14 +65,14 @@ class TransferClientViewModel @Inject constructor(
                 // 1. Atualizar o cliente com a nova rota e nova data de atualização
                 val clienteAtualizado = cliente.copy(
                     rotaId = rotaDestino.id,
-                    dataUltimaAtualizacao = java.util.Date()
+                    dataUltimaAtualizacao = System.currentTimeMillis()
                 )
                 appRepository.atualizarCliente(clienteAtualizado)
 
                 // 2. Atualizar timestamps das mesas para garantir que o Sync detecte a mudança
                 // (O clienteId da mesa não muda, mas ela deve ser "empurrada" para a nova rota no Firestore)
                 mesas.forEach { mesa ->
-                    val mesaAtualizada = mesa.copy(dataUltimaLeitura = java.util.Date())
+                    val mesaAtualizada = mesa.copy(dataUltimaLeitura = System.currentTimeMillis())
                     appRepository.atualizarMesa(mesaAtualizada)
                 }
 

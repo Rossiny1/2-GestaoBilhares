@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.mesas
+package com.example.gestaobilhares.ui.mesas
 
 import android.app.Dialog
 import android.os.Bundle
@@ -77,11 +77,11 @@ class DetalhesMesaVendidaDialog : DialogFragment() {
         
         // Dados da venda
         binding.tvValorVenda.text = "R$ ${String.format("%.2f", mesa.valorVenda)}"
-        binding.tvDataVenda.text = formatarData(mesa.dataVenda)
+        binding.tvDataVenda.text = formatarData(Date(mesa.dataVenda))
         binding.tvObservacoes.text = mesa.observacoes ?: "Nenhuma observação"
         
         // Dados do registro
-        binding.tvDataRegistro.text = formatarData(mesa.dataCriacao)
+        binding.tvDataRegistro.text = formatarData(Date(mesa.dataCriacao))
     }
 
     private fun getTipoMesaNome(tipoMesa: com.example.gestaobilhares.data.entities.TipoMesa): String {

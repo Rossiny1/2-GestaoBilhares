@@ -218,7 +218,13 @@ class ExpenseHistoryFragment : Fragment() {
             val maxDate = expenses.maxByOrNull { it.dataHora }?.dataHora
             
             if (minDate != null && maxDate != null) {
-                val daysDiff = java.time.temporal.ChronoUnit.DAYS.between(minDate, maxDate) + 1
+                val minLocalDate = java.time.Instant.ofEpochMilli(minDate)
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDate()
+                val maxLocalDate = java.time.Instant.ofEpochMilli(maxDate)
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDate()
+                val daysDiff = java.time.temporal.ChronoUnit.DAYS.between(minLocalDate, maxLocalDate) + 1
                 binding.periodText.text = if (daysDiff == 1L) "1 dia" else "$daysDiff dias"
             }
         } else {
@@ -235,11 +241,13 @@ class ExpenseHistoryFragment : Fragment() {
             binding.totalExpensesAmount.text = currencyFormatter.format(stats.totalDespesas)
             binding.expenseCount.text = stats.quantidadeDespesas.toString()
             
-            if (stats.periodoInicio != null && stats.periodoFim != null) {
-                val inicio = java.time.Instant.ofEpochMilli(stats.periodoInicio)
+            val periodoInicio = stats.periodoInicio
+            val periodoFim = stats.periodoFim
+            if (periodoInicio != null && periodoFim != null) {
+                val inicio = java.time.Instant.ofEpochMilli(periodoInicio)
                     .atZone(java.time.ZoneId.systemDefault())
                     .toLocalDate()
-                val fim = java.time.Instant.ofEpochMilli(stats.periodoFim)
+                val fim = java.time.Instant.ofEpochMilli(periodoFim)
                     .atZone(java.time.ZoneId.systemDefault())
                     .toLocalDate()
                 val daysDiff = java.time.temporal.ChronoUnit.DAYS.between(inicio, fim) + 1

@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.dashboard
+package com.example.gestaobilhares.ui.dashboard
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -89,7 +89,7 @@ class DashboardViewModel @Inject constructor(
                 // Todos os ciclos do ano selecionado: filtra por dataAcerto
                 repository.obterTodosAcertos().first().filter { ac ->
                     val cal = java.util.Calendar.getInstance()
-                    cal.time = ac.dataAcerto
+                    cal.timeInMillis = ac.dataAcerto
                     cal.get(java.util.Calendar.YEAR) == ano
                 }
             } else {
@@ -117,7 +117,7 @@ class DashboardViewModel @Inject constructor(
                         descricao = rel.descricao,
                         valor = rel.valor,
                         categoria = rel.categoria,
-                        dataHora = java.time.LocalDateTime.of(ano, 1, 1, 0, 0)
+                        dataHora = java.time.LocalDateTime.of(ano, 1, 1, 0, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
                     )
                 }
             } else {

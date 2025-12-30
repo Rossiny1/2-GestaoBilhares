@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.mesas
+package com.example.gestaobilhares.ui.mesas
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -426,7 +426,7 @@ class NovaReformaFragment : Fragment() {
                     outros = outros,
                     observacoes = observacoes,
                     fotoReforma = finalFotoPath, // Usar URL do Firebase Storage se disponível
-                    dataReforma = Date()
+                    dataReforma = System.currentTimeMillis()
                 )
 
                 viewModel.salvarReforma(mesaReformada)

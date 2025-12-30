@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.cycles
+package com.example.gestaobilhares.ui.cycles
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -37,7 +37,7 @@ data class CycleExpenseItem(
     val data: Date,
     val observacoes: String? = null,
     val fotoComprovante: String? = null,
-    val dataFotoComprovante: Date? = null
+    val dataFotoComprovante: Long? = null
 )
 
 /**
@@ -110,7 +110,7 @@ class CycleExpensesViewModel @Inject constructor(
                     descricao = despesa.descricao,
                     valor = despesa.valor,
                     categoria = despesa.categoria,
-                    data = despesa.dataHora.toDate(), // Converter LocalDateTime para Date
+                    data = Date(despesa.dataHora),
                     observacoes = despesa.observacoes,
                     fotoComprovante = despesa.fotoComprovante,
                     dataFotoComprovante = despesa.dataFotoComprovante

@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.metas
+package com.example.gestaobilhares.ui.metas
 import com.example.gestaobilhares.ui.R
 
 import android.os.Bundle
@@ -261,7 +261,7 @@ class MetaCadastroFragment : Fragment() {
             valorMeta = valorMeta,
             valorAtual = 0.0,
             ativo = true,
-            dataCriacao = Date()
+            dataCriacao = System.currentTimeMillis()
         )
 
         viewModel.salvarMeta(meta)

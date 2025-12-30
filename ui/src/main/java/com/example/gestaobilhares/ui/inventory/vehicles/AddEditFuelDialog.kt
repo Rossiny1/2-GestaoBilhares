@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.inventory.vehicles
+package com.example.gestaobilhares.ui.inventory.vehicles
 
 import android.app.Dialog
 import android.os.Bundle
@@ -103,7 +103,7 @@ class AddEditFuelDialog : DialogFragment() {
             // Converter data de dd/MM/yyyy para Date
             val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
             val localDate = LocalDate.parse(dateStr, dateFormatter)
-            val dataAbastecimento = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
+            val dataAbastecimento = localDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             
             // Converter valores
             val litros = litersStr.replace(",", ".").toDoubleOrNull() ?: 0.0
@@ -135,7 +135,7 @@ class AddEditFuelDialog : DialogFragment() {
                 kmRodado = 0.0, // Será calculado automaticamente se necessário
                 posto = gasStation,
                 observacoes = null,
-                dataCriacao = Date()
+                dataCriacao = System.currentTimeMillis()
             )
             
             // Salvar no banco de dados
