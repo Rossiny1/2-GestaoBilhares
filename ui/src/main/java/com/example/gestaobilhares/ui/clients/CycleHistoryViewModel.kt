@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.clients
+package com.example.gestaobilhares.ui.clients
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -195,8 +195,8 @@ class CycleHistoryViewModel @Inject constructor(
             id = ciclo.id,
             rotaId = ciclo.rotaId,
             titulo = ciclo.titulo,
-            dataInicio = ciclo.dataInicio,
-            dataFim = ciclo.dataFim,
+            dataInicio = Date(ciclo.dataInicio),
+            dataFim = Date(ciclo.dataFim),
             valorTotalAcertado = valorTotalAcertado, // ✅ CORRIGIDO: Usar valor calculado dos acertos reais
             valorTotalDespesas = valorTotalDespesas,
             totalDescontos = totalDescontos,
@@ -258,8 +258,8 @@ class CycleHistoryViewModel @Inject constructor(
         val lucroLiquido = receitaTotal - despesasTotal
         val lucroMedioPorCiclo = if (totalCiclos > 0) lucroLiquido / totalCiclos else 0.0
         
-        val periodoInicio = ciclos.minOfOrNull { it.dataInicio }
-        val periodoFim = ciclos.mapNotNull { it.dataFim }.maxOfOrNull { it }
+        val periodoInicio = ciclos.minOfOrNull { it.dataInicio }?.let { Date(it) }
+        val periodoFim = ciclos.mapNotNull { it.dataFim }.maxOfOrNull { it }?.let { Date(it) }
 
         val stats = CycleStatistics(
             totalCiclos = totalCiclos,

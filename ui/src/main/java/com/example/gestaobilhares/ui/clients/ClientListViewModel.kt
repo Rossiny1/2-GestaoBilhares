@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.clients
+package com.example.gestaobilhares.ui.clients
 
 import androidx.lifecycle.viewModelScope
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -484,8 +484,8 @@ class ClientListViewModel @Inject constructor(
                     rotaId = rota.id,
                     numeroCiclo = proximoCiclo,
                     ano = anoAtual,
-                    dataInicio = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual(),
-                    dataFim = Date(), // Será atualizado quando finalizar
+                    dataInicio = System.currentTimeMillis(),
+                    dataFim = System.currentTimeMillis(), // Será atualizado quando finalizar
                     status = StatusCicloAcerto.EM_ANDAMENTO,
                     criadoPor = criadoPor
                 )
@@ -505,7 +505,7 @@ class ClientListViewModel @Inject constructor(
                     appRepository.iniciarCicloRota(
                         rotaId = rota.id,
                         ciclo = proximoCiclo,
-                        dataInicio = novoCiclo.dataInicio.time
+                        dataInicio = novoCiclo.dataInicio
                     )
                     
                     // ✅ CORREÇÃO: Forçar atualização da rota para disparar Flow e atualizar UI imediatamente
@@ -974,9 +974,9 @@ class ClientListViewModel @Inject constructor(
             val semAcertoRecente = when {
                 ultimoAcerto == null -> true // Se nunca foi acertado, considerar como pendência
                 else -> {
-                    val dataAtual = java.util.Date()
+                    val dataAtual = System.currentTimeMillis()
                     val dataUltimoAcerto = ultimoAcerto.dataAcerto
-                    val diffEmMeses = ((dataAtual.time - dataUltimoAcerto.time) / (1000L * 60 * 60 * 24 * 30)).toInt()
+                    val diffEmMeses = ((dataAtual - dataUltimoAcerto) / (1000L * 60 * 60 * 24 * 30)).toInt()
                     diffEmMeses > 4
                 }
             }
@@ -1163,7 +1163,7 @@ class ClientListViewModel @Inject constructor(
         return try {
             val quatroMesesAtras = java.util.Calendar.getInstance().apply {
                 add(java.util.Calendar.MONTH, -4)
-            }.time
+            }.timeInMillis
             
             var pendencias = 0
             
@@ -1176,7 +1176,7 @@ class ClientListViewModel @Inject constructor(
                     cliente.debitoAtual > 300.0 -> true
                     
                     // Cliente sem acerto há mais de 4 meses
-                    ultimoAcerto == null || ultimoAcerto.dataAcerto.before(quatroMesesAtras) -> true
+                    ultimoAcerto == null || ultimoAcerto.dataAcerto < quatroMesesAtras -> true
                     
                     else -> false
                 }

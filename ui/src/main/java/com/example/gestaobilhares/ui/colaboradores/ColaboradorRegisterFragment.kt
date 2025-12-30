@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.colaboradores
+package com.example.gestaobilhares.ui.colaboradores
 import com.example.gestaobilhares.ui.R
 
 import android.app.DatePickerDialog
@@ -44,7 +44,7 @@ class ColaboradorRegisterFragment : Fragment() {
     // private lateinit var appRepository: AppRepository
     private var colaboradorId: Long? = null
     private var colaboradorExistente: Colaborador? = null // ✅ NOVO: Armazenar objeto original
-    private var dataNascimento: Date? = null
+    private var dataNascimento: Long? = null
     private val rotasSelecionadas = mutableSetOf<Long>()
     private var todasRotas = listOf<Rota>()
 
@@ -139,9 +139,9 @@ class ColaboradorRegisterFragment : Fragment() {
                 { _, year, month, dayOfMonth ->
                     val selectedDate = Calendar.getInstance().apply {
                         set(year, month, dayOfMonth)
-                    }.time
+                    }.timeInMillis
                     dataNascimento = selectedDate
-                    binding.etDataNascimento.setText(displayFormatter.format(selectedDate))
+                    binding.etDataNascimento.setText(displayFormatter.format(Date(selectedDate)))
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -251,7 +251,7 @@ class ColaboradorRegisterFragment : Fragment() {
                     // Preencher dados pessoais
                     col.dataNascimento?.let { data ->
                         dataNascimento = data
-                        binding.etDataNascimento.setText(displayFormatter.format(data))
+                        binding.etDataNascimento.setText(displayFormatter.format(Date(data)))
                     }
                     
                     binding.etEndereco.setText(col.endereco ?: "")
@@ -348,7 +348,7 @@ class ColaboradorRegisterFragment : Fragment() {
                             "Usuário" -> NivelAcesso.USER
                             else -> NivelAcesso.USER
                         },
-                        dataUltimaAtualizacao = Date()
+                        dataUltimaAtualizacao = System.currentTimeMillis()
                     )
                 } else {
                     Colaborador(
@@ -373,7 +373,7 @@ class ColaboradorRegisterFragment : Fragment() {
                             "Usuário" -> NivelAcesso.USER
                             else -> NivelAcesso.USER
                         },
-                        dataUltimaAtualizacao = Date()
+                        dataUltimaAtualizacao = System.currentTimeMillis()
                     )
                 }
                 
@@ -407,7 +407,7 @@ class ColaboradorRegisterFragment : Fragment() {
                                 colaboradorId = idSalvo,
                                 rotaId = rotaId,
                                 responsavelPrincipal = false,
-                                dataVinculacao = Date()
+                                dataVinculacao = System.currentTimeMillis()
                             )
                             android.util.Log.d("ColaboradorRegister", "   ✅ Rota $rotaId vinculada")
                         }

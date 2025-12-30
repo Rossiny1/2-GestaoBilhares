@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.contracts
+package com.example.gestaobilhares.ui.contracts
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -100,7 +100,7 @@ class AditivoSignatureViewModel @Inject constructor(
                 val aditivo = AditivoContrato(
                     numeroAditivo = numeroAditivo,
                     contratoId = contrato.id,
-                    dataAditivo = Date(),
+                    dataAditivo = System.currentTimeMillis(),
                     observacoes = observacoes,
                     tipo = aditivoTipo
                 )
@@ -131,7 +131,7 @@ class AditivoSignatureViewModel @Inject constructor(
                 } else {
                     // Inclusão: vincular mesas ao cliente do contrato e atualizar timestamps
                     mesas.forEach { mesa ->
-                        val agora = Date()
+                        val agora = System.currentTimeMillis()
                         val mesaAtualizada = mesa.copy(
                             clienteId = contrato.clienteId,
                             dataInstalacao = agora,
@@ -148,7 +148,7 @@ class AditivoSignatureViewModel @Inject constructor(
                 pendingSignatureBase64?.let { assinatura ->
                     val aditivoAssinado = aditivoCriado.copy(
                         assinaturaLocatario = assinatura,
-                        dataAtualizacao = Date()
+                        dataAtualizacao = System.currentTimeMillis()
                     )
                     repository.atualizarAditivo(aditivoAssinado)
                     _aditivo.value = aditivoAssinado

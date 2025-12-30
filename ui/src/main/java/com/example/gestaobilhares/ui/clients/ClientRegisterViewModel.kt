@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.clients
+package com.example.gestaobilhares.ui.clients
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -79,7 +79,7 @@ class ClientRegisterViewModel @Inject constructor(
                     val clienteAtualizado = cliente.copy(
                         id = clienteExistente.id,
                         dataCadastro = clienteExistente.dataCadastro, // Preservar data original
-                        dataUltimaAtualizacao = java.util.Date() // Atualizar data de modificação
+                        dataUltimaAtualizacao = System.currentTimeMillis() // Atualizar data de modificação
                     )
                     
                     android.util.Log.d("ClientRegisterViewModel", "Cliente atualizado preparado: ${clienteAtualizado.nome}")

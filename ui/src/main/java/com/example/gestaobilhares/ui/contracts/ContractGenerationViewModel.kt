@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.contracts
+package com.example.gestaobilhares.ui.contracts
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -122,8 +122,8 @@ class ContractGenerationViewModel @Inject constructor(
                     diaVencimento = diaVencimento,
                     tipoPagamento = tipoPagamento,
                     percentualReceita = percentualReceita,
-                    dataContrato = Date(),
-                    dataInicio = Date()
+                    dataContrato = System.currentTimeMillis(),
+                    dataInicio = System.currentTimeMillis()
                 )
                 
                 // Salvar contrato
@@ -145,7 +145,7 @@ class ContractGenerationViewModel @Inject constructor(
                 
                 // Atualizar mesas para vincular ao cliente e atualizar timestamps para sync
                 mesas.forEach { mesa ->
-                    val agora = java.util.Date()
+                    val agora = System.currentTimeMillis()
                     val mesaAtualizada = mesa.copy(
                         clienteId = cliente.id,
                         dataInstalacao = agora,
@@ -171,7 +171,7 @@ class ContractGenerationViewModel @Inject constructor(
                 val contrato = _contrato.value ?: return@launch
                 val contratoAtualizado = contrato.copy(
                     assinaturaLocatario = assinaturaBase64,
-                    dataAtualizacao = Date()
+                    dataAtualizacao = System.currentTimeMillis()
                 )
                 
                 repository.atualizarContrato(contratoAtualizado)

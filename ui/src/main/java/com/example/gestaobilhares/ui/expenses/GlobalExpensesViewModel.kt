@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.expenses
+package com.example.gestaobilhares.ui.expenses
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -74,8 +74,8 @@ class GlobalExpensesViewModel @Inject constructor(
                         rotaId = 0L, // Rota global
                         numeroCiclo = numeroCiclo,
                         ano = currentYear,
-                        dataInicio = java.util.Date(),
-                        dataFim = java.util.Date(),
+                        dataInicio = System.currentTimeMillis(),
+                        dataFim = System.currentTimeMillis(),
                         status = com.example.gestaobilhares.data.entities.StatusCicloAcerto.FINALIZADO,
                         totalClientes = 0,
                         clientesAcertados = 0,
@@ -85,8 +85,8 @@ class GlobalExpensesViewModel @Inject constructor(
                         debitoTotal = 0.0,
                         observacoes = "Ciclo global $numeroCiclo",
                         criadoPor = "Sistema",
-                        dataCriacao = java.util.Date(),
-                        dataAtualizacao = java.util.Date()
+                        dataCriacao = System.currentTimeMillis(),
+                        dataAtualizacao = System.currentTimeMillis()
                     )
                     cycles.add(ciclo)
                 }
