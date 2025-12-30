@@ -13,11 +13,9 @@ if (Test-Path "local.properties") {
     Write-Host "Conteúdo atual:" -ForegroundColor Cyan
     Get-Content local.properties
     Write-Host ""
-    $sobrescrever = Read-Host "Deseja sobrescrever? (S/N)"
-    if ($sobrescrever -ne "S" -and $sobrescrever -ne "s") {
-        Write-Host "Operação cancelada." -ForegroundColor Yellow
-        exit 0
-    }
+    Write-Host "⚠️  Arquivo já existe. Será sobrescrito." -ForegroundColor Yellow
+    Write-Host "💡 Se não quiser sobrescrever, cancele (Ctrl+C) e edite manualmente." -ForegroundColor Cyan
+    Start-Sleep -Seconds 2
 }
 
 # Tentar encontrar Android SDK automaticamente
@@ -40,7 +38,7 @@ foreach ($path in $sdkPaths) {
     }
 }
 
-# Se não encontrou, pedir ao usuário
+# Se não encontrou, usar caminho padrão ou pedir
 if (-not $sdkPath) {
     Write-Host "❌ Android SDK não encontrado automaticamente." -ForegroundColor Red
     Write-Host ""
@@ -49,12 +47,29 @@ if (-not $sdkPath) {
     Write-Host "   2. File → Settings → Appearance & Behavior → System Settings → Android SDK" -ForegroundColor Gray
     Write-Host "   3. Copie o caminho mostrado" -ForegroundColor Gray
     Write-Host ""
-    $sdkPath = Read-Host "Digite o caminho do Android SDK"
+    Write-Host "📝 Caminhos comuns no Windows:" -ForegroundColor Yellow
+    Write-Host "   - $env:LOCALAPPDATA\Android\Sdk" -ForegroundColor Gray
+    Write-Host "   - $env:USERPROFILE\AppData\Local\Android\Sdk" -ForegroundColor Gray
+    Write-Host ""
+    
+    # Tentar usar variável de ambiente
+    if ($env:ANDROID_HOME) {
+        $sdkPath = $env:ANDROID_HOME
+        Write-Host "✅ Usando ANDROID_HOME: $sdkPath" -ForegroundColor Green
+    } elseif ($env:ANDROID_SDK_ROOT) {
+        $sdkPath = $env:ANDROID_SDK_ROOT
+        Write-Host "✅ Usando ANDROID_SDK_ROOT: $sdkPath" -ForegroundColor Green
+    } else {
+        Write-Host "⚠️  Não foi possível detectar automaticamente." -ForegroundColor Yellow
+        Write-Host "💡 Crie o arquivo local.properties manualmente com:" -ForegroundColor Cyan
+        Write-Host "   sdk.dir=C:\\\\Users\\\\SeuUsuario\\\\AppData\\\\Local\\\\Android\\\\Sdk" -ForegroundColor Gray
+        exit 1
+    }
     
     # Validar caminho
     if (-not (Test-Path $sdkPath)) {
         Write-Host "❌ Caminho não encontrado: $sdkPath" -ForegroundColor Red
-        Write-Host "💡 Verifique o caminho e tente novamente." -ForegroundColor Yellow
+        Write-Host "💡 Crie o arquivo local.properties manualmente." -ForegroundColor Yellow
         exit 1
     }
 }
@@ -76,7 +91,7 @@ $content = @"
 sdk.dir=$sdkPathEscaped
 "@
 
-$content | Out-File -FilePath "local.properties" -Encoding UTF8 -NoNewline
+$content | Out-File -FilePath "local.properties" -Encoding UTF8
 
 Write-Host ""
 Write-Host "✅ local.properties criado com sucesso!" -ForegroundColor Green
@@ -84,16 +99,27 @@ Write-Host ""
 Write-Host "📄 Conteúdo:" -ForegroundColor Cyan
 Get-Content local.properties
 Write-Host ""
-Write-Host "🧪 Testando build..." -ForegroundColor Yellow
+Write-Host "🧪 Testando build (opcional)..." -ForegroundColor Yellow
 
-# Testar se funciona
-$testResult = .\gradlew.bat compileDebugKotlin --console=plain 2>&1 | Select-String -Pattern "BUILD SUCCESS|BUILD FAILED" | Select-Object -First 1
-
-if ($testResult -match "BUILD SUCCESS") {
-    Write-Host "✅ Build passou! Tudo configurado corretamente!" -ForegroundColor Green
+# Testar se funciona (opcional, pode falhar se SDK não estiver completo)
+if (Test-Path "gradlew.bat") {
+    try {
+        $testOutput = .\gradlew.bat compileDebugKotlin --console=plain 2>&1 | Out-String
+        if ($testOutput -match "BUILD SUCCESS") {
+            Write-Host "✅ Build passou! Tudo configurado corretamente!" -ForegroundColor Green
+        } else {
+            Write-Host "⚠️  Build ainda pode ter problemas." -ForegroundColor Yellow
+            Write-Host "💡 Execute: .\scripts\diagnostico-build-local.ps1 para mais detalhes" -ForegroundColor Cyan
+        }
+    } catch {
+        Write-Host "⚠️  Não foi possível testar o build automaticamente." -ForegroundColor Yellow
+        Write-Host "💡 Teste manualmente com: .\gradlew.bat compileDebugKotlin" -ForegroundColor Cyan
+    }
 } else {
-    Write-Host "⚠️  Build ainda falhou. Verifique os erros acima." -ForegroundColor Yellow
-    Write-Host "💡 Execute: .\scripts\diagnostico-build-local.ps1 para mais detalhes" -ForegroundColor Cyan
+    Write-Host "⚠️  gradlew.bat não encontrado. Teste manualmente após configurar." -ForegroundColor Yellow
 }
 
+Write-Host ""
+Write-Host "✅ local.properties criado!" -ForegroundColor Green
+Write-Host "💡 Próximo passo: Teste o build com .\gradlew.bat compileDebugKotlin" -ForegroundColor Cyan
 Write-Host ""
