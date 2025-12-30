@@ -354,9 +354,11 @@ tasks.register("createPROnSuccess") {
     }
 }
 
-// Conectar createPROnSuccess ao installDebug
-tasks.named("installDebug") {
-    finalizedBy("createPROnSuccess")
+// Conectar createPROnSuccess ao installDebug (se a task existir)
+afterEvaluate {
+    tasks.findByName("installDebug")?.let {
+        it.finalizedBy("createPROnSuccess")
+    }
 }
 
 // Task helper para rodar testes + cobertura
