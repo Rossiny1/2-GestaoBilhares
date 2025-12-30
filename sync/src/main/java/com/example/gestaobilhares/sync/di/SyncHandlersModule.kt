@@ -20,7 +20,7 @@ import com.example.gestaobilhares.sync.handlers.MetaSyncHandler
 import com.example.gestaobilhares.sync.handlers.RotaSyncHandler
 import com.example.gestaobilhares.sync.handlers.VeiculoSyncHandler
 import com.example.gestaobilhares.sync.handlers.SyncHandler
-import com.example.gestaobilhares.core.utils.NetworkUtils
+import com.example.gestaobilhares.sync.utils.NetworkUtils
 import com.example.gestaobilhares.utils.FirebaseImageUploader
 import com.example.gestaobilhares.core.utils.FirebaseImageUploader as CoreFirebaseImageUploader
 import com.google.firebase.firestore.FirebaseFirestore
