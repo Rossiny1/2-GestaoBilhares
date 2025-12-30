@@ -26,9 +26,15 @@
 
 ### 1. Instalação de Ferramentas Essenciais
 
-#### Firebase CLI (Global)
+#### Firebase CLI
+**Windows (Local via npm)**:
+- O projeto já tem scripts PowerShell que usam Firebase CLI local em `$env:APPDATA\npm\firebase.cmd`
+- Scripts de deploy: `scripts/deploy-functions.ps1`, `scripts/deploy-regras-firestore.ps1`, etc.
+- Se necessário instalar: Execute `scripts/instalar-firebase-cli.ps1`
+
+**Linux/VM (Global)**:
 ```bash
-# Instalar Firebase CLI globalmente
+# Instalar Firebase CLI globalmente (já instalado na VM)
 npm install -g firebase-tools
 
 # Verificar instalação
@@ -394,11 +400,17 @@ Criar `scripts/test-fast.sh`:
 
 ### 1. Configuração Firebase CLI
 
-```bash
-# Instalar Firebase CLI
-npm install -g firebase-tools
+**Windows**:
+- Use os scripts PowerShell existentes: `scripts/deploy-*.ps1`
+- Firebase CLI local em `$env:APPDATA\npm\firebase.cmd`
+- Scripts já configurados para usar o caminho local
 
-# Autenticar
+**Linux/VM**:
+```bash
+# Firebase CLI já instalado globalmente
+firebase --version
+
+# Autenticar (se necessário)
 firebase login
 
 # Configurar projeto

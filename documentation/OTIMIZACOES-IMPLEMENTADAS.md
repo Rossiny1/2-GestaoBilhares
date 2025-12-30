@@ -15,9 +15,12 @@ Todas as otimizações recomendadas foram implementadas com sucesso para maximiz
 
 ### 1. Firebase CLI ✅
 - **Status**: Instalado e funcionando
-- **Versão**: 15.1.0
+- **Versão**: 15.1.0 (global na VM Linux)
+- **Windows**: Firebase CLI instalado localmente via npm em `$env:APPDATA\npm\firebase.cmd`
+- **Scripts de Deploy**: Já configurados em `scripts/deploy-*.ps1` para Windows
 - **Comando de verificação**: `firebase --version`
 - **Próximo passo**: Autenticar com `firebase login` (quando necessário)
+- **Nota**: Os scripts PowerShell usam o caminho local do Windows. Na VM Linux, o Firebase CLI global funciona diretamente.
 
 ### 2. Configurações do Cursor ✅
 
@@ -82,6 +85,12 @@ Todas as otimizações recomendadas foram implementadas com sucesso para maximiz
 ## 🎯 PRÓXIMOS PASSOS RECOMENDADOS
 
 ### 1. Autenticação Firebase (Quando Necessário)
+
+**Windows**:
+- Use os scripts PowerShell: `scripts/deploy-*.ps1`
+- Ou execute manualmente: `firebase login` (se Firebase CLI estiver no PATH)
+
+**Linux/VM**:
 ```bash
 firebase login
 firebase use gestaobilhares
@@ -144,9 +153,17 @@ Com as otimizações implementadas, você deve observar:
 ## 🚨 TROUBLESHOOTING
 
 ### Se Firebase CLI não funcionar:
+
+**Windows**:
+- Execute: `scripts/instalar-firebase-cli.ps1`
+- Ou: `npm install -g firebase-tools`
+- Verifique se está em: `$env:APPDATA\npm\firebase.cmd`
+
+**Linux/VM**:
 ```bash
 npm install -g firebase-tools
 export PATH=$PATH:$(npm config get prefix)/bin
+# Ou use o script: scripts/deploy-functions.sh (versão Linux)
 ```
 
 ### Se Gradle estiver lento:
