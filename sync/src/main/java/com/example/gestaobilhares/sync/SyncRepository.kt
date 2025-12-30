@@ -10,6 +10,7 @@ import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.dao.SyncMetadataDao
 import com.example.gestaobilhares.core.utils.DateUtils
+import com.example.gestaobilhares.sync.handlers.ProcessResult
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.CollectionReference
@@ -77,6 +78,7 @@ class SyncRepository @javax.inject.Inject constructor(
     private val gson: Gson by lazy { 
         GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+            .setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create() 
     }
     
@@ -86,6 +88,61 @@ class SyncRepository @javax.inject.Inject constructor(
      * O problema anterior era que classes anônimas perdem suas assinaturas genéricas após otimização.
      */
     private val mapType: java.lang.reflect.Type = Companion.mapTypeTokenInstance.type
+    
+    /**
+     * Converte entidade para Map para Firestore.
+     * Similar ao método do BaseSyncHandler, mas adaptado para SyncRepository.
+     */
+    private fun <T> entityToMap(entity: T): MutableMap<String, Any> {
+        val json = gson.toJson(entity)
+        @Suppress("UNCHECKED_CAST")
+        val map = gson.fromJson(json, Map::class.java) as? Map<String, Any> ?: emptyMap()
+        
+        return map.mapKeys { it.key.toString() }.mapValues { entry ->
+            val key = entry.key.lowercase()
+            val value = entry.value
+            
+            when {
+                // 1. Já é uma Date
+                value is Date -> com.google.firebase.Timestamp(value)
+                
+                // 2. É uma String que pode ser uma Data
+                value is String && (key.contains("data") || key.contains("timestamp") || key.contains("time")) -> {
+                    try {
+                        if (value.contains("T")) {
+                            val ldt = java.time.LocalDateTime.parse(value, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                            val instant = ldt.atZone(java.time.ZoneId.systemDefault()).toInstant()
+                            com.google.firebase.Timestamp(instant.epochSecond, instant.nano)
+                        } else {
+                            val date = gson.fromJson("\"$value\"", Date::class.java)
+                            if (date != null) {
+                                com.google.firebase.Timestamp(date)
+                            } else {
+                                value
+                            }
+                        }
+                    } catch (e: Exception) {
+                        value
+                    }
+                }
+                
+                // 3. É um Long que representa um timestamp
+                value is Long || (value is Double && value % 1 == 0.0) -> {
+                    val longValue = if (value is Double) value.toLong() else value as Long
+                    if (key.contains("data") || key.contains("timestamp") || key.contains("time")) {
+                        val seconds = longValue / 1000
+                        val nanoseconds = ((longValue % 1000) * 1000000).toInt()
+                        com.google.firebase.Timestamp(seconds, nanoseconds)
+                    } else {
+                        longValue
+                    }
+                }
+                
+                // 4. Manter outros tipos
+                else -> value
+            }
+        }.toMutableMap()
+    }
     
     // ? NOVO: ID da empresa din�mico vindo da sess�o
     private val currentCompanyId: String
