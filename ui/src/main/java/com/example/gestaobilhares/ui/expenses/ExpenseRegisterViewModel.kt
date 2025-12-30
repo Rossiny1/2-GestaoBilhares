@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.expenses
+package com.example.gestaobilhares.ui.expenses
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -365,7 +365,7 @@ class ExpenseRegisterViewModel @Inject constructor(
                             valor = valor * quantidade,
                             categoria = categoria.nome,
                             tipoDespesa = _selectedType.value?.nome ?: "",
-                            dataHora = _selectedDate.value,
+                            dataHora = _selectedDate.value.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
                             observacoes = observacoes,
                             cicloId = cicloId,
                             origemLancamento = if (rotaId == 0L) "GLOBAL" else "ROTA",
@@ -467,7 +467,7 @@ class ExpenseRegisterViewModel @Inject constructor(
             
             // ✅ CORREÇÃO: Conversão segura de LocalDateTime para Date
             val dataDespesa = try {
-                Date.from(despesa.dataHora.atZone(java.time.ZoneId.systemDefault()).toInstant())
+                Date(despesa.dataHora)
             } catch (e: Exception) {
                 // Fallback para data atual se houver erro na conversão
                 android.util.Log.w("ExpenseRegisterViewModel", "Erro na conversão de data: ${e.message}")

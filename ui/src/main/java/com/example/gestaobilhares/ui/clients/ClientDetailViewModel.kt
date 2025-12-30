@@ -112,7 +112,7 @@ class ClientDetailViewModel @Inject constructor(
 
                 val diasSemAcerto = ultimoAcerto?.let {
                     val hoje = LocalDate.now()
-                    val dataUltimoAcerto = it.dataAcerto.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+                    val dataUltimoAcerto = Date(it.dataAcerto).toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
                     ChronoUnit.DAYS.between(dataUltimoAcerto, hoje).toInt()
                 } ?: 0
 
@@ -195,21 +195,21 @@ class ClientDetailViewModel @Inject constructor(
                 }
                 
                 // 3. Verificar se não acerta há mais de 4 meses
-                val hoje = Calendar.getInstance().time
+                val hoje = System.currentTimeMillis()
                 val quatroMesesAtras = Calendar.getInstance().apply {
                     add(Calendar.MONTH, -4)
-                }.time
+                }.timeInMillis
                 
                 val semAcertoRecente = when {
                     ultimoAcerto == null -> true // Nunca foi acertado
-                    else -> ultimoAcerto.dataAcerto.before(quatroMesesAtras)
+                    else -> ultimoAcerto.dataAcerto < quatroMesesAtras
                 }
                 
                 if (semAcertoRecente) {
                     val mesesSemAcerto = if (ultimoAcerto == null) {
                         "Nunca foi acertado"
                     } else {
-                        val diffMeses = ((hoje.time - ultimoAcerto.dataAcerto.time) / (1000L * 60 * 60 * 24 * 30)).toInt()
+                        val diffMeses = ((hoje - ultimoAcerto.dataAcerto) / (1000L * 60 * 60 * 24 * 30)).toInt()
                         "Não acerta há $diffMeses mês(es)"
                     }
                     pendencias.add("Sem acerto recente: $mesesSemAcerto")
@@ -279,13 +279,11 @@ class ClientDetailViewModel @Inject constructor(
                 add(Calendar.DAY_OF_MONTH, 1)
             }
             
-            val dataAcerto = Calendar.getInstance().apply {
-                time = ultimoAcertoMesa.dataAcerto
-            }
+            val dataAcerto = ultimoAcertoMesa.dataAcerto
             
             // Verificar se o acerto foi feito hoje (entre hoje 00:00:00 e amanhã 00:00:00)
-            val acertoFoiHoje = dataAcerto.timeInMillis >= hoje.timeInMillis && 
-                               dataAcerto.timeInMillis < amanha.timeInMillis
+            val acertoFoiHoje = dataAcerto >= hoje.timeInMillis && 
+                               dataAcerto < amanha.timeInMillis
 
             if (acertoFoiHoje) {
                 RetiradaStatus.PODE_RETIRAR
@@ -458,9 +456,9 @@ class ClientDetailViewModel @Inject constructor(
         }
     }
 
-    private fun calcularTempoRelativoReal(data: Date): String {
-        val agora = Calendar.getInstance().time
-        val diffMillis = agora.time - data.time
+    private fun calcularTempoRelativoReal(data: Long): String {
+        val agora = System.currentTimeMillis()
+        val diffMillis = agora - data
         val diffDias = (diffMillis / (1000 * 60 * 60 * 24)).toInt()
         return when {
             diffDias < 1 -> "Hoje"
@@ -576,7 +574,7 @@ class ClientDetailViewModel @Inject constructor(
                 else -> {
                     val hoje = Calendar.getInstance()
                     val dataUltimoAcerto = Calendar.getInstance().apply {
-                        time = ultimoAcerto.dataAcerto
+                        timeInMillis = ultimoAcerto.dataAcerto
                     }
                     
                     // Calcular diferença em meses de forma mais precisa

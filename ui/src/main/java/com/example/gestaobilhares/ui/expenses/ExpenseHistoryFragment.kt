@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.expenses
+package com.example.gestaobilhares.ui.expenses
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -236,7 +236,13 @@ class ExpenseHistoryFragment : Fragment() {
             binding.expenseCount.text = stats.quantidadeDespesas.toString()
             
             if (stats.periodoInicio != null && stats.periodoFim != null) {
-                val daysDiff = java.time.temporal.ChronoUnit.DAYS.between(stats.periodoInicio, stats.periodoFim) + 1
+                val inicio = java.time.Instant.ofEpochMilli(stats.periodoInicio)
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDate()
+                val fim = java.time.Instant.ofEpochMilli(stats.periodoFim)
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDate()
+                val daysDiff = java.time.temporal.ChronoUnit.DAYS.between(inicio, fim) + 1
                 binding.periodText.text = if (daysDiff == 1L) "1 dia" else "$daysDiff dias"
             }
         }

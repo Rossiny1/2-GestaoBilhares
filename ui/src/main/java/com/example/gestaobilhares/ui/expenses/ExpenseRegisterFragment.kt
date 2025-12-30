@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.expenses
+package com.example.gestaobilhares.ui.expenses
 import com.example.gestaobilhares.ui.R
 
 import android.app.DatePickerDialog
@@ -77,7 +77,7 @@ class ExpenseRegisterFragment : Fragment() {
     // ✅ NOVO: Propriedades para captura de foto do comprovante
     private var currentPhotoUri: Uri? = null
     private var fotoComprovantePath: String? = null
-    private var dataFotoComprovante: Date? = null
+    private var dataFotoComprovante: Long? = null
     private var selectedVehicleId: Long? = null
     
     // ✅ NOVO: Launchers para câmera e permissões
@@ -104,7 +104,7 @@ class ExpenseRegisterFragment : Fragment() {
                             if (caminhoReal != null) {
                                 Timber.d("ExpenseRegisterFragment", "Caminho real da foto: $caminhoReal")
                                 fotoComprovantePath = caminhoReal
-                                dataFotoComprovante = Date()
+                                dataFotoComprovante = System.currentTimeMillis()
                                 mostrarFotoComprovante(caminhoReal, dataFotoComprovante)
                                 Toast.makeText(requireContext(), "Foto do comprovante capturada com sucesso!", Toast.LENGTH_SHORT).show()
                             } else {
@@ -185,7 +185,9 @@ class ExpenseRegisterFragment : Fragment() {
             etQuantidade.setText("1") // Por enquanto, sempre 1
             
             // Definir data da despesa
-            val dataDespesa = despesa.dataHora
+            val dataDespesa = java.time.Instant.ofEpochMilli(despesa.dataHora)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDateTime()
             viewModel.setSelectedDate(dataDespesa)
             updateDateDisplay()
             
@@ -940,7 +942,7 @@ class ExpenseRegisterFragment : Fragment() {
         }
     }
     
-    private fun mostrarFotoComprovante(caminhoFoto: String, dataFoto: Date?) {
+    private fun mostrarFotoComprovante(caminhoFoto: String, dataFoto: Long?) {
         try {
             Timber.d("ExpenseRegisterFragment", "=== MOSTRANDO FOTO DO COMPROVANTE ===")
             Timber.d("ExpenseRegisterFragment", "Caminho da foto: $caminhoFoto")
@@ -960,7 +962,7 @@ class ExpenseRegisterFragment : Fragment() {
                     
                     // Formatar e exibir data da foto
                     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
-                    val dataFormatada = dataFoto?.let { dateFormat.format(it) } ?: "Data não disponível"
+                    val dataFormatada = dataFoto?.let { dateFormat.format(Date(it)) } ?: "Data não disponível"
                     binding.tvDataFotoComprovante.text = "Data: $dataFormatada"
                     
                     // Mostrar layout da foto
@@ -983,7 +985,7 @@ class ExpenseRegisterFragment : Fragment() {
                         binding.ivFotoComprovante.setImageBitmap(bitmap)
                         
                         val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
-                        val dataFormatada = dataFoto?.let { dateFormat.format(it) } ?: "Data não disponível"
+                        val dataFormatada = dataFoto?.let { dateFormat.format(Date(it)) } ?: "Data não disponível"
                         binding.tvDataFotoComprovante.text = "Data: $dataFormatada"
                         binding.layoutFotoComprovante.visibility = View.VISIBLE
                         return

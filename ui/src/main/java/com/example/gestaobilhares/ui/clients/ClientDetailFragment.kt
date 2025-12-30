@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.clients
+package com.example.gestaobilhares.ui.clients
 import com.example.gestaobilhares.ui.R
 
 import android.Manifest
@@ -559,7 +559,7 @@ class ClientDetailFragment : Fragment(), ConfirmarRetiradaMesaDialogFragment.Con
             // ✅ FASE 12.7: Variável removida (não utilizada)
             
             // Atualizar status do contrato para aguardando assinatura
-            val agora = java.util.Date()
+            val agora = System.currentTimeMillis()
             val contratoAtualizado = contrato.copy(
                 status = "AGUARDANDO_ASSINATURA_DISTRATO",
                 dataAtualizacao = agora
