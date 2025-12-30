@@ -1,22 +1,23 @@
 {
     "cursor.cpp.enableIntelliSense": true,
     "cursor.general.enableCodeActions": true,
-    // ✅ ACEITE AUTOMÁTICO DE MUDANÇAS
+    // ✅ ACEITE AUTOMÁTICO DE MUDANÇAS (OTIMIZADO: 500ms)
     "cursor.general.enableAutoAccept": true,
-    "cursor.general.autoAcceptDelay": 1000,
+    "cursor.general.autoAcceptDelay": 500,
     "cursor.general.autoAcceptOnSave": true,
     // ✅ APLICAÇÃO AUTOMÁTICA DE EDITS
+    "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-        "source.organizeImports": true,
-        "source.fixAll": true
+        "source.organizeImports": "explicit",
+        "source.fixAll": "explicit"
     },
     // ✅ CONFIGURAÇÕES PARA DESENVOLVIMENTO ANDROID
     "kotlin.languageServer.enabled": true,
     "android.enableGradleWrapper": true,
-    // ✅ AUTO-SAVE PARA ACELERAR DESENVOLVIMENTO
+    // ✅ AUTO-SAVE OTIMIZADO (500ms para resposta mais rápida)
     "files.autoSave": "afterDelay",
-    "files.autoSaveDelay": 1000,
-    // ✅ CONFIRMAÇÕESAUTOMÁTICAS
+    "files.autoSaveDelay": 500,
+    // ✅ CONFIRMAÇÕES AUTOMÁTICAS
     "security.workspace.trust.enabled": false,
     "extensions.ignoreRecommendations": true,
     // ✅ CONFIGURAÇÕES DE AI/COPILOT
@@ -26,6 +27,22 @@
         "plaintext": true,
         "markdown": true,
         "kotlin": true,
-        "xml": true
-    }
+        "xml": true,
+        "gradle": true
+    },
+    // ✅ CONFIGURAÇÕES DE PERFORMANCE (File Watchers)
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/**": true,
+        "**/.gradle/**": true,
+        "**/build/**": true,
+        "**/.idea/**": true
+    },
+    // ✅ CONFIGURAÇÕES KOTLIN
+    "kotlin.languageServer.transport": "stdio",
+    "kotlin.completion.snippets.enabled": true,
+    // ✅ CONFIGURAÇÕES GRADLE
+    "gradle.nestedProjects": true,
+    "gradle.autoDetect": "on"
 }

@@ -3,19 +3,38 @@
     "commands": [
       "gradlew*",
       "dir",
-      "ls", 
+      "ls",
       "Get-ChildItem*",
       "tasklist*",
       "Select-String*",
       "cd*",
       "Remove-Item*",
-      "New-Item*"
+      "New-Item*",
+      "find*",
+      "grep*",
+      "cat*",
+      "head*",
+      "tail*",
+      "wc*",
+      "du*",
+      "df*",
+      "free*",
+      "nproc*",
+      "which*",
+      "firebase*",
+      "npm*",
+      "node*"
     ],
     "filePatterns": [
       "app/src/**/*.kt",
-      "app/src/**/*.xml", 
+      "app/src/**/*.xml",
+      "core/**/*.kt",
+      "data/**/*.kt",
+      "sync/**/*.kt",
+      "ui/**/*.kt",
       "*.gradle*",
-      ".cursor/rules/*"
+      ".cursor/rules/*",
+      "documentation/**/*.md"
     ],
     "developmentMode": true,
     "autoApproveInProject": true
@@ -23,6 +42,8 @@
   "terminal.autoApprove": {
     "buildCommands": true,
     "diagnosticCommands": true,
-    "cleanCommands": true
+    "cleanCommands": true,
+    "testCommands": true,
+    "gitCommands": false
   }
 } 
