@@ -328,18 +328,26 @@ tasks.register("createPROnSuccess") {
             // Windows: usar PowerShell
             val psScript = rootProject.file("scripts/create-pr-on-success.ps1")
             if (psScript.exists()) {
-                exec {
-                    commandLine("powershell", "-ExecutionPolicy", "Bypass", "-File", psScript.absolutePath)
-                    ignoreExitValue = true // Não falhar o build se o PR falhar
+                try {
+                    exec {
+                        commandLine("powershell", "-ExecutionPolicy", "Bypass", "-File", psScript.absolutePath)
+                    }
+                } catch (e: Exception) {
+                    // Não falhar o build se o PR falhar
+                    logger.warn("Erro ao criar PR: ${e.message}")
                 }
             }
         } else {
             // Linux/Mac: usar shell script
             val scriptPath = rootProject.file("scripts/create-pr-on-success.sh")
             if (scriptPath.exists() && scriptPath.canExecute()) {
-                exec {
-                    commandLine("bash", scriptPath.absolutePath)
-                    ignoreExitValue = true
+                try {
+                    exec {
+                        commandLine("bash", scriptPath.absolutePath)
+                    }
+                } catch (e: Exception) {
+                    // Não falhar o build se o PR falhar
+                    logger.warn("Erro ao criar PR: ${e.message}")
                 }
             }
         }
