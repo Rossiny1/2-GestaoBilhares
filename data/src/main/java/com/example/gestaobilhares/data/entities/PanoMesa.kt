@@ -4,7 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import java.util.Date
 
 /**
  * Entidade que representa o relacionamento entre Pano e Mesa.
@@ -43,7 +42,7 @@ data class PanoMesa(
     val panoId: Long,
     
     @ColumnInfo(name = "data_troca")
-    val dataTroca: Date,
+    val dataTroca: Long,
     
     @ColumnInfo(name = "ativo")
     val ativo: Boolean = true, // Se é o pano atual da mesa
@@ -52,5 +51,5 @@ data class PanoMesa(
     val observacoes: String? = null,
     
     @ColumnInfo(name = "data_criacao")
-    val dataCriacao: Date = Date()
+    val dataCriacao: Long = System.currentTimeMillis()
 )

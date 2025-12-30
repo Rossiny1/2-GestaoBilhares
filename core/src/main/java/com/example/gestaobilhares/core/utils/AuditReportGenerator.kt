@@ -117,7 +117,7 @@ class AuditReportGenerator(private val context: Context) {
         Assinaturas Ativas: $assinaturasAtivas
         Total de Usos Registrados: $totalUsos
         Procurações Ativas: 0 (funcionalidade temporariamente desabilitada)
-        Período de Análise: ${if (logs.isNotEmpty()) "${dateFormat.format(logs.minByOrNull { it.dataOperacao.time }?.dataOperacao ?: Date())} a ${dateFormat.format(logs.maxByOrNull { it.dataOperacao.time }?.dataOperacao ?: Date())}" else "Sem dados"}
+        Período de Análise: ${if (logs.isNotEmpty()) "${dateFormat.format(Date(logs.minByOrNull { it.dataOperacao }?.dataOperacao ?: 0L))} a ${dateFormat.format(Date(logs.maxByOrNull { it.dataOperacao }?.dataOperacao ?: 0L))}" else "Sem dados"}
         """.trimIndent()
         
         document.add(Paragraph(summary).setFont(font).setFontSize(10f))
@@ -190,7 +190,7 @@ class AuditReportGenerator(private val context: Context) {
         
         // Dados dos logs (limitado aos últimos 50 para não sobrecarregar o relatório)
         logs.take(50).forEach { log ->
-            table.addCell(Cell().add(Paragraph(dateFormat.format(log.dataOperacao)).setFont(font).setFontSize(8f)))
+            table.addCell(Cell().add(Paragraph(dateFormat.format(Date(log.dataOperacao))).setFont(font).setFontSize(8f)))
             table.addCell(Cell().add(Paragraph(log.tipoOperacao).setFont(font).setFontSize(8f)))
             table.addCell(Cell().add(Paragraph("${log.tipoDocumento} ${log.numeroDocumento}").setFont(font).setFontSize(8f)))
             table.addCell(Cell().add(Paragraph(log.usuarioExecutou).setFont(font).setFontSize(8f)))

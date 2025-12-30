@@ -100,7 +100,7 @@ interface CicloAcertoDao {
      * Lista ciclos por período (para relatórios).
      */
     @Query("SELECT * FROM ciclos_acerto WHERE data_inicio >= :dataInicio AND data_fim <= :dataFim ORDER BY ano DESC, numero_ciclo DESC")
-    fun listarPorPeriodo(dataInicio: Date, dataFim: Date): Flow<List<CicloAcertoEntity>>
+    fun listarPorPeriodo(dataInicio: Long, dataFim: Long): Flow<List<CicloAcertoEntity>>
     
     /**
      * Calcula estatísticas por rota e ano.

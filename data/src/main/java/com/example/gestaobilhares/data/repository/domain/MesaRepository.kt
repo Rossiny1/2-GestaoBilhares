@@ -48,11 +48,11 @@ class MesaRepository(
     
     suspend fun atualizar(mesa: Mesa) = mesaDao?.atualizar(mesa)
     suspend fun deletar(mesa: Mesa) = mesaDao?.deletar(mesa)
-    suspend fun vincularACliente(mesaId: Long, clienteId: Long) = mesaDao?.vincularMesa(mesaId, clienteId, java.util.Date())
+    suspend fun vincularACliente(mesaId: Long, clienteId: Long) = mesaDao?.vincularMesa(mesaId, clienteId, System.currentTimeMillis())
     suspend fun vincularComValorFixo(mesaId: Long, clienteId: Long, valorFixo: Double) = 
-        mesaDao?.vincularMesaComValorFixo(mesaId, clienteId, valorFixo, java.util.Date())
-    suspend fun desvincularDeCliente(mesaId: Long) = mesaDao?.desvincularMesa(mesaId, java.util.Date())
-    suspend fun retirar(mesaId: Long) = mesaDao?.retirarMesa(mesaId, java.util.Date())
+        mesaDao?.vincularMesaComValorFixo(mesaId, clienteId, valorFixo, System.currentTimeMillis())
+    suspend fun desvincularDeCliente(mesaId: Long) = mesaDao?.desvincularMesa(mesaId, System.currentTimeMillis())
+    suspend fun retirar(mesaId: Long) = mesaDao?.retirarMesa(mesaId, System.currentTimeMillis())
     suspend fun atualizarRelogio(mesaId: Long, relogioInicial: Int, relogioFinal: Int, fichasInicial: Int, fichasFinal: Int) = 
         mesaDao?.atualizarRelogioMesa(mesaId, relogioInicial, relogioFinal, fichasInicial, fichasFinal)
     suspend fun atualizarRelogioFinal(mesaId: Long, relogioFinal: Int) = mesaDao?.atualizarRelogioFinal(mesaId, relogioFinal)

@@ -23,7 +23,7 @@ interface AcertoDao {
     suspend fun removerAcertosExcedentes(clienteId: Long, limit: Int)
 
     @Query("SELECT * FROM acertos WHERE cliente_id = :clienteId AND data_acerto BETWEEN :inicio AND :fim ORDER BY data_acerto DESC")
-    suspend fun buscarPorPeriodo(clienteId: Long, inicio: Date, fim: Date): List<Acerto>
+    suspend fun buscarPorPeriodo(clienteId: Long, inicio: Long, fim: Long): List<Acerto>
 
     @Query("SELECT * FROM acertos ORDER BY data_acerto DESC")
     fun listarTodos(): Flow<List<Acerto>>

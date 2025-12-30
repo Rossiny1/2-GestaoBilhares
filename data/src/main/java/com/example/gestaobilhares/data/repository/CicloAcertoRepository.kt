@@ -58,8 +58,8 @@ class CicloAcertoRepository @Inject constructor(
      */
     suspend fun buscarCiclosPorPeriodo(
         @Suppress("UNUSED_PARAMETER") rotaId: Long,
-        dataInicio: Date,
-        dataFim: Date
+        dataInicio: Long,
+        dataFim: Long
     ): List<CicloAcertoEntity> {
         return cicloAcertoDao.listarPorPeriodo(dataInicio, dataFim).first()
     }
@@ -196,7 +196,7 @@ class CicloAcertoRepository @Inject constructor(
     /**
      * Finaliza um ciclo
      */
-    suspend fun finalizarCiclo(cicloId: Long, dataFim: Date) {
+    suspend fun finalizarCiclo(cicloId: Long, dataFim: Long) {
         val ciclo = buscarCicloPorId(cicloId)
         ciclo?.let {
             val rotaId = it.rotaId
@@ -327,8 +327,8 @@ class CicloAcertoRepository @Inject constructor(
                 rotaId = rotaId,
                 numeroCiclo = proximoNumeroCiclo,
                 ano = anoAtual,
-                dataInicio = Date(),
-                dataFim = Date(), // Será atualizado ao finalizar
+                dataInicio = System.currentTimeMillis(),
+                dataFim = System.currentTimeMillis(), // Será atualizado ao finalizar
                 status = StatusCicloAcerto.EM_ANDAMENTO
             )
             val id = cicloAcertoDao.inserir(novoCiclo)
@@ -351,7 +351,7 @@ class CicloAcertoRepository @Inject constructor(
             val cicloAtual = cicloAcertoDao.buscarCicloEmAndamento(rotaId)
             if (cicloAtual != null) {
                 val cicloFinalizado = cicloAtual.copy(
-                    dataFim = Date(),
+                    dataFim = System.currentTimeMillis(),
                     status = StatusCicloAcerto.FINALIZADO
                 )
                 cicloAcertoDao.atualizar(cicloFinalizado)

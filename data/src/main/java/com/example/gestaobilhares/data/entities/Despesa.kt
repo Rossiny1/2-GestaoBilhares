@@ -5,8 +5,6 @@ import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
 import com.google.gson.annotations.SerializedName
-import java.time.LocalDateTime
-import java.util.Date
 
 /**
  * Entidade que representa uma despesa no banco de dados.
@@ -66,7 +64,7 @@ data class Despesa(
     val tipoDespesa: String = "",
     
     @SerializedName("dataHora")
-    val dataHora: LocalDateTime = LocalDateTime.now(),
+    val dataHora: Long = System.currentTimeMillis(),
     
     @SerializedName("observacoes")
     val observacoes: String = "",
@@ -92,7 +90,7 @@ data class Despesa(
     @SerializedName("fotoComprovante")
     val fotoComprovante: String? = null,
     @SerializedName("dataFotoComprovante")
-    val dataFotoComprovante: Date? = null
+    val dataFotoComprovante: Long? = null
     ,
     // ✅ NOVO: Campos para despesas de viagem
     @SerializedName("veiculoId")
@@ -145,7 +143,7 @@ data class DespesaResumo(
     val descricao: String,
     val valor: Double,
     val categoria: String,
-    val dataHora: LocalDateTime,
+    val dataHora: Long,
     val observacoes: String,
     val criadoPor: String,
     val nomeRota: String
@@ -181,6 +179,6 @@ data class EstatisticasDespesas(
     val totalDespesas: Double = 0.0,
     val quantidadeDespesas: Int = 0,
     val despesasPorCategoria: Map<String, Double> = emptyMap(),
-    val periodoInicio: LocalDateTime? = null,
-    val periodoFim: LocalDateTime? = null
+    val periodoInicio: Long? = null,
+    val periodoFim: Long? = null
 ) 

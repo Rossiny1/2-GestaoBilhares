@@ -1,7 +1,6 @@
 package com.example.gestaobilhares.data.entities
 
 import java.io.Serializable
-import java.util.Date
 
 /**
  * Data class para representar o resumo de metas de uma rota
@@ -15,9 +14,9 @@ data class MetaRotaResumo(
     val colaboradorResponsavel: Colaborador?,
     val metas: List<MetaColaborador>,
     val progressoGeral: Double = 0.0, // 0-100%
-    val dataInicioCiclo: Date? = null,
-    val dataFimCiclo: Date? = null,
-    val ultimaAtualizacao: Date = Date()
+    val dataInicioCiclo: Long? = null,
+    val dataFimCiclo: Long? = null,
+    val ultimaAtualizacao: Long = System.currentTimeMillis()
 ) : Serializable {
     
     /**

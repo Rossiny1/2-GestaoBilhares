@@ -2,7 +2,6 @@ package com.example.gestaobilhares.data.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.Date
 import java.io.Serializable
 
 /**
@@ -29,23 +28,23 @@ data class AssinaturaRepresentanteLegal(
     val versaoSistema: String, // Versão do app quando foi criada
     
     // Dados de auditoria
-    val dataCriacao: Date,
+    val dataCriacao: Long = System.currentTimeMillis(),
     val criadoPor: String, // Usuário que criou (ADM)
     val ativo: Boolean = true, // Se a assinatura está ativa
     
     // Procuração e delegação de poderes
     val numeroProcuração: String, // Número único da procuração
-    val dataProcuração: Date,
+    val dataProcuração: Long,
     val poderesDelegados: String, // JSON com os poderes específicos
-    val validadeProcuração: Date? = null, // Data de validade (opcional)
+    val validadeProcuração: Long? = null, // Data de validade (opcional)
     
     // Logs de uso
     val totalUsos: Int = 0, // Quantas vezes foi utilizada
-    val ultimoUso: Date? = null, // Data do último uso
+    val ultimoUso: Long? = null, // Data do último uso
     val contratosAssinados: String = "", // IDs dos contratos assinados (JSON)
     
     // Status de validação jurídica
     val validadaJuridicamente: Boolean = false,
-    val dataValidacao: Date? = null,
+    val dataValidacao: Long? = null,
     val validadoPor: String? = null // Advogado ou responsável legal
 ) : Serializable

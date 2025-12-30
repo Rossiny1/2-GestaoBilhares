@@ -75,6 +75,13 @@ object DateUtils {
     fun formatarMesAno(data: Date): String {
         return formatoMesAno.format(data)
     }
+
+    /**
+     * Formata um timestamp Long para formato brasileiro (dd/MM/yyyy)
+     */
+    fun formatarLong(timestamp: Long): String {
+        return formatarDataBrasileira(Date(timestamp))
+    }
     
     // ==================== CONVERSÃO DE STRINGS ====================
     
@@ -285,5 +292,37 @@ object DateUtils {
         val fimAno = calendar.timeInMillis
         
         return Pair(inicioAno, fimAno)
+    }
+    
+    /**
+     * ✅ FASE 4: Converte diversos formatos para Long (timestamp).
+     * Suporta Timestamp (Firebase), Date, Long, Number e String.
+     */
+    fun convertToLong(value: Any?): Long? {
+        return when (value) {
+            is com.google.firebase.Timestamp -> value.toDate().time
+            is Date -> value.time
+            is Long -> value
+            is Number -> value.toLong()
+            is String -> value.toLongOrNull()
+            else -> null
+        }
+    }
+
+    /**
+     * ✅ FASE 4: Converte Timestamp do Firestore para Date do Java.
+     * Centralizado para uso em Handlers e Repositories.
+     */
+    fun converterTimestampParaDate(value: Any?): Date? {
+        return when (value) {
+            is com.google.firebase.Timestamp -> value.toDate()
+            is Long -> Date(value)
+            is String -> try {
+                Date(value.toLong())
+            } catch (e: Exception) {
+                null
+            }
+            else -> null
+        }
     }
 }

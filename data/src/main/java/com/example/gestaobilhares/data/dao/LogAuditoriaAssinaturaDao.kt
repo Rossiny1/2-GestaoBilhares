@@ -3,7 +3,6 @@ package com.example.gestaobilhares.data.dao
 import androidx.room.*
 import com.example.gestaobilhares.data.entities.LogAuditoriaAssinatura
 import kotlinx.coroutines.flow.Flow
-import java.util.Date
 
 /**
  * DAO para operações com logs de auditoria de assinaturas
@@ -27,7 +26,7 @@ interface LogAuditoriaAssinaturaDao {
     suspend fun obterLogsPorTipoOperacao(tipoOperacao: String): List<LogAuditoriaAssinatura>
     
     @Query("SELECT * FROM logs_auditoria_assinatura WHERE dataOperacao BETWEEN :dataInicio AND :dataFim ORDER BY dataOperacao DESC")
-    suspend fun obterLogsPorPeriodo(dataInicio: Date, dataFim: Date): List<LogAuditoriaAssinatura>
+    suspend fun obterLogsPorPeriodo(dataInicio: Long, dataFim: Long): List<LogAuditoriaAssinatura>
     
     @Query("SELECT * FROM logs_auditoria_assinatura WHERE usuarioExecutou = :usuario ORDER BY dataOperacao DESC")
     suspend fun obterLogsPorUsuario(usuario: String): List<LogAuditoriaAssinatura>
@@ -39,7 +38,7 @@ interface LogAuditoriaAssinaturaDao {
     suspend fun inserirLog(log: LogAuditoriaAssinatura): Long
     
     @Query("SELECT COUNT(*) FROM logs_auditoria_assinatura WHERE dataOperacao >= :dataInicio")
-    suspend fun contarLogsDesde(dataInicio: Date): Int
+    suspend fun contarLogsDesde(dataInicio: Long): Int
     
     @Query("SELECT COUNT(*) FROM logs_auditoria_assinatura WHERE idAssinatura = :idAssinatura")
     suspend fun contarUsosAssinatura(idAssinatura: Long): Int
@@ -48,5 +47,5 @@ interface LogAuditoriaAssinaturaDao {
     suspend fun obterLogsNaoValidados(): List<LogAuditoriaAssinatura>
     
     @Query("UPDATE logs_auditoria_assinatura SET validadoJuridicamente = 1, dataValidacao = :dataValidacao, validadoPor = :validadoPor WHERE id = :id")
-    suspend fun validarLog(id: Long, dataValidacao: Date, validadoPor: String)
+    suspend fun validarLog(id: Long, dataValidacao: Long, validadoPor: String)
 }

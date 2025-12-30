@@ -331,7 +331,7 @@ class PdfReportGenerator(private val context: Context) {
             
             despesasCategoria.forEach { despesa ->
                 expensesTable.addCell(createCell(despesa.descricao, false))
-                expensesTable.addCell(createCell(try { despesa.dataHora.format(localDateTimeFormatter) } catch (e: Exception) { "Data inválida" }, false))
+                expensesTable.addCell(createCell(try { dateFormatter.format(Date(despesa.dataHora)) } catch (e: Exception) { "Data inválida" }, false))
                 expensesTable.addCell(createCell(currencyFormatter.format(despesa.valor), false))
                 // ✅ CORREÇÃO: observacoes é String (não nullable), elvis operator desnecessário
                 expensesTable.addCell(createCell(despesa.observacoes, false))
