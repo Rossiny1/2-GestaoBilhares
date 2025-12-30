@@ -1,8 +1,9 @@
 # 5️⃣ SEGURANÇA E OPERAÇÃO
 
+> **⚠️ IMPORTANTE**: Antes de ler este arquivo, leia PRIMEIRO: `.cursor/rules/0-PERFORMANCE-MAXIMA-OBRIGATORIO.md`  
 > **Propósito**: Regras de proteção de dados, segurança de nuvem e processo de release.  
-> **Última Atualização**: Dezembro 2025  
-> **Versão**: 3.0 (Segurança Crítica Resolvida)
+> **Última Atualização**: Janeiro 2026  
+> **Versão**: 3.1 (Segurança Crítica Resolvida + Performance Máxima)
 
 ---
 

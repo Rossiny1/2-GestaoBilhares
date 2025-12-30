@@ -23,7 +23,9 @@
       "which*",
       "firebase*",
       "npm*",
-      "node*"
+      "node*",
+      "verify-performance*",
+      "setup-optimization*"
     ],
     "filePatterns": [
       "app/src/**/*.kt",
@@ -45,5 +47,15 @@
     "cleanCommands": true,
     "testCommands": true,
     "gitCommands": false
+  },
+  "cursor.agentInitialization": {
+    "requiredReading": [
+      ".cursor/rules/0-PERFORMANCE-MAXIMA-OBRIGATORIO.md"
+    ],
+    "requiredVerification": [
+      "scripts/verify-performance.sh"
+    ],
+    "performanceMode": "maximum",
+    "autoOptimize": true
   }
 } 

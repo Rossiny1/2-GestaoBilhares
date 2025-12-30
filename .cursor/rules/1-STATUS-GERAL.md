@@ -1,8 +1,9 @@
 # 1️⃣ STATUS GERAL & SETUP
 
+> **⚠️ IMPORTANTE**: Antes de ler este arquivo, leia PRIMEIRO: `.cursor/rules/0-PERFORMANCE-MAXIMA-OBRIGATORIO.md`  
 > **Propósito**: Visão imediata do projeto, saúde técnica e primeiros passos.  
-> **Última Atualização**: 29 de Dezembro 2025  
-> **Versão**: 5.1 (Sync Orchestrator + Fix Rotas + Cobertura de Testes)  
+> **Última Atualização**: Janeiro 2026  
+> **Versão**: 5.2 (Performance Máxima + Sync Orchestrator + Fix Rotas + Cobertura de Testes)  
 > **Status**: ✅ **PRONTO PARA PRODUÇÃO**
 
 ---
