@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable
-import java.util.Date
 
 /**
  * Entidade que representa um Colaborador no banco de dados.
@@ -37,7 +36,7 @@ data class Colaborador(
     // Dados pessoais completos
     @ColumnInfo(name = "data_nascimento")
     @SerializedName("data_nascimento")
-    val dataNascimento: Date? = null,
+    val dataNascimento: Long? = null,
     
     @ColumnInfo(name = "endereco")
     @SerializedName("endereco")
@@ -98,7 +97,7 @@ data class Colaborador(
     
     @ColumnInfo(name = "data_aprovacao")
     @SerializedName("data_aprovacao")
-    val dataAprovacao: Date? = null,
+    val dataAprovacao: Long? = null,
     
     @ColumnInfo(name = "aprovado_por")
     @SerializedName("aprovado_por")
@@ -132,15 +131,15 @@ data class Colaborador(
     // Datas
     @ColumnInfo(name = "data_cadastro")
     @SerializedName("data_cadastro")
-    val dataCadastro: Date = Date(),
+    val dataCadastro: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "data_ultimo_acesso")
     @SerializedName("data_ultimo_acesso")
-    val dataUltimoAcesso: Date? = null,
+    val dataUltimoAcesso: Long? = null,
     
     @ColumnInfo(name = "data_ultima_atualizacao")
     @SerializedName("data_ultima_atualizacao")
-    val dataUltimaAtualizacao: Date = Date()
+    val dataUltimaAtualizacao: Long = System.currentTimeMillis()
 ) : Serializable
 
 /**
@@ -190,7 +189,7 @@ data class MetaColaborador(
     
     @ColumnInfo(name = "data_criacao")
     @SerializedName("data_criacao")
-    val dataCriacao: Date = Date()
+    val dataCriacao: Long = System.currentTimeMillis()
 )
 
 /**
@@ -225,5 +224,5 @@ data class ColaboradorRota(
     
     @ColumnInfo(name = "data_vinculacao")
     @SerializedName("data_vinculacao")
-    val dataVinculacao: Date = Date()
-) 
+    val dataVinculacao: Long = System.currentTimeMillis()
+)

@@ -1,7 +1,7 @@
 package com.example.gestaobilhares.sync.handlers
 
 import android.content.Context
-import com.example.gestaobilhares.data.entities.Meta
+import com.example.gestaobilhares.data.entities.MetaEntity
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.example.gestaobilhares.sync.handlers.base.BaseSyncHandler
@@ -34,7 +34,6 @@ class MetaSyncHandler @javax.inject.Inject constructor(
 
     companion object {
         private const val COLLECTION_METAS = "metas"
-        private const val FIELD_ROTA_ID = "rotaId"
     }
 
     override suspend fun pull(timestampOverride: Long?): Result<Int> {
@@ -74,7 +73,7 @@ class MetaSyncHandler @javax.inject.Inject constructor(
                 return Result.success(0)
             }
             
-            val metasCache = mutableMapOf<Long, Meta>()
+            val metasCache = mutableMapOf<Long, MetaEntity>()
             val (syncCount, skippedCount, errorCount) = processDocuments(documents, metasCache)
             
             val durationMs = System.currentTimeMillis() - startTime
@@ -101,7 +100,7 @@ class MetaSyncHandler @javax.inject.Inject constructor(
                 return Result.success(0)
             }
             
-            val metasCache = mutableMapOf<Long, Meta>()
+            val metasCache = mutableMapOf<Long, MetaEntity>()
             val (syncCount, skippedCount, errorCount) = processDocuments(documents, metasCache)
             
             val durationMs = System.currentTimeMillis() - startTime
@@ -116,7 +115,7 @@ class MetaSyncHandler @javax.inject.Inject constructor(
 
     private suspend fun processDocuments(
         documents: List<DocumentSnapshot>,
-        metasCache: MutableMap<Long, Meta>
+        metasCache: MutableMap<Long, MetaEntity>
     ): Triple<Int, Int, Int> {
         var syncCount = 0
         var skippedCount = 0
@@ -131,7 +130,7 @@ class MetaSyncHandler @javax.inject.Inject constructor(
                     ?: return@forEach
                 
                 val json = gson.toJson(data)
-                val metaFirestore = gson.fromJson(json, Meta::class.java)?.copy(id = metaId) ?: return@forEach
+                val metaFirestore = gson.fromJson(json, MetaEntity::class.java)?.copy(id = metaId) ?: return@forEach
                 
                 if (!shouldSyncRouteData(metaFirestore.rotaId, allowUnknown = false)) {
                     skippedCount++
@@ -139,9 +138,11 @@ class MetaSyncHandler @javax.inject.Inject constructor(
                 }
                 
                 val localMeta = appRepository.obterMetaPorId(metaId)
-                val serverTimestamp = doc.getTimestamp("lastModified")?.toDate()?.time
-                    ?: converterTimestampParaDate(data["dataInicio"])?.time ?: 0L
-                val localTimestamp = localMeta?.dataInicio?.time ?: 0L
+                val serverTimestamp = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["lastModified"])
+                    ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["data_inicio"])
+                    ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["dataInicio"])
+                    ?: 0L
+                val localTimestamp = localMeta?.dataInicio ?: 0L
                 
                 if (localMeta == null || serverTimestamp > (localTimestamp + 1000)) {
                     if (localMeta == null) {

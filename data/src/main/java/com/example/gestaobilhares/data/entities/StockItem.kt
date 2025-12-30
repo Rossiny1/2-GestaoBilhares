@@ -3,7 +3,6 @@ package com.example.gestaobilhares.data.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.Date
 
 /**
  * Entidade que representa um item genérico do estoque
@@ -32,8 +31,8 @@ data class StockItem(
     val description: String? = null,
 
     @ColumnInfo(name = "created_at")
-    val createdAt: Date = Date(),
+    val createdAt: Long = System.currentTimeMillis(),
 
     @ColumnInfo(name = "updated_at")
-    val updatedAt: Date = Date()
+    val updatedAt: Long = System.currentTimeMillis()
 )

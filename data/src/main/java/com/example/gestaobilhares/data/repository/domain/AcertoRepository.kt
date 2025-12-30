@@ -40,7 +40,7 @@ class AcertoRepository(
     suspend fun buscarObservacaoUltimoAcerto(clienteId: Long) = acertoDao.buscarObservacaoUltimoAcerto(clienteId)
     suspend fun buscarUltimosPorClientes(clienteIds: List<Long>) = acertoDao.buscarUltimosAcertosPorClientes(clienteIds)
     suspend fun removerAcertosExcedentes(clienteId: Long, limit: Int) = acertoDao.removerAcertosExcedentes(clienteId, limit)
-    suspend fun buscarPorPeriodo(clienteId: Long, inicio: java.util.Date, fim: java.util.Date) = acertoDao.buscarPorPeriodo(clienteId, inicio, fim)
+    suspend fun buscarPorPeriodo(clienteId: Long, inicio: Long, fim: Long) = acertoDao.buscarPorPeriodo(clienteId, inicio, fim)
     
     private fun logDbInsertStart(entity: String, details: String) {
         val stackTrace = Thread.currentThread().stackTrace

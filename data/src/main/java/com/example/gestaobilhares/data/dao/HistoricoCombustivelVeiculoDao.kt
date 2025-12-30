@@ -3,7 +3,6 @@ package com.example.gestaobilhares.data.dao
 import androidx.room.*
 import com.example.gestaobilhares.data.entities.HistoricoCombustivelVeiculo
 import kotlinx.coroutines.flow.Flow
-import java.util.Date
 
 @Dao
 interface HistoricoCombustivelVeiculoDao {
@@ -18,7 +17,7 @@ interface HistoricoCombustivelVeiculoDao {
     fun listarPorVeiculo(veiculoId: Long): Flow<List<HistoricoCombustivelVeiculo>>
     
     // ✅ CORREÇÃO: Query corrigida para trabalhar com Date do Java
-    @Query("SELECT * FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento) = :ano ORDER BY data_abastecimento DESC")
+    @Query("SELECT * FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento / 1000, 'unixepoch') = :ano ORDER BY data_abastecimento DESC")
     fun listarPorVeiculoEAno(veiculoId: Long, ano: String): Flow<List<HistoricoCombustivelVeiculo>>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -31,14 +30,14 @@ interface HistoricoCombustivelVeiculoDao {
     suspend fun deletar(historico: HistoricoCombustivelVeiculo)
     
     // ✅ CORREÇÃO: Query corrigida para trabalhar com Date do Java
-    @Query("SELECT SUM(valor) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento) = :ano")
+    @Query("SELECT SUM(valor) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento / 1000, 'unixepoch') = :ano")
     suspend fun obterTotalGastoPorAno(veiculoId: Long, ano: String): Double?
     
     // ✅ CORREÇÃO: Query corrigida para trabalhar com Date do Java
-    @Query("SELECT SUM(km_rodado) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento) = :ano")
+    @Query("SELECT SUM(km_rodado) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento / 1000, 'unixepoch') = :ano")
     suspend fun obterTotalKmPorAno(veiculoId: Long, ano: String): Double?
     
     // ✅ CORREÇÃO: Query corrigida para trabalhar com Date do Java
-    @Query("SELECT SUM(litros) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento) = :ano")
+    @Query("SELECT SUM(litros) FROM historico_combustivel_veiculo WHERE veiculo_id = :veiculoId AND strftime('%Y', data_abastecimento / 1000, 'unixepoch') = :ano")
     suspend fun obterTotalLitrosPorAno(veiculoId: Long, ano: String): Double?
 }

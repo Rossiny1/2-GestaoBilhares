@@ -34,7 +34,6 @@ class CicloSyncHandler @javax.inject.Inject constructor(
 
     companion object {
         private const val COLLECTION_CICLOS = "ciclos"
-        private const val FIELD_ROTA_ID = "rotaId"
     }
 
     override suspend fun pull(timestampOverride: Long?): Result<Int> {
@@ -183,10 +182,11 @@ class CicloSyncHandler @javax.inject.Inject constructor(
                     return@forEach
                 }
                 
-                val serverTimestamp = doc.getTimestamp("lastModified")?.toDate()?.time
-                    ?: (cicloData["dataAtualizacao"] as? Timestamp)?.toDate()?.time
-                    ?: cicloFirestore.dataAtualizacao.time
-                val localTimestamp = ciclosCache[cicloId]?.dataAtualizacao?.time ?: 0L
+                val serverTimestamp = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(cicloData["last_modified"])
+                    ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(cicloData["lastModified"])
+                    ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(cicloData["dataAtualizacao"])
+                    ?: cicloFirestore.dataAtualizacao
+                val localTimestamp = ciclosCache[cicloId]?.dataAtualizacao ?: 0L
                 
                 if (ciclosCache[cicloId] == null || serverTimestamp > localTimestamp) {
                     appRepository.inserirCicloAcerto(cicloFirestore)
@@ -216,7 +216,7 @@ class CicloSyncHandler @javax.inject.Inject constructor(
             val ciclosLocais = appRepository.obterTodosCiclos().first()
             
             val ciclosParaEnviar = if (canUseIncremental) {
-                ciclosLocais.filter { it.dataAtualizacao.time > lastPushTimestamp }
+                ciclosLocais.filter { it.dataAtualizacao > lastPushTimestamp }
             } else {
                 ciclosLocais
             }

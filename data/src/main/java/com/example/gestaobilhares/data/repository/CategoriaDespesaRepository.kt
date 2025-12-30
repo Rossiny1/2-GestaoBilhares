@@ -109,7 +109,7 @@ class CategoriaDespesaRepository constructor(
                 nome = dados.nome.trim(),
                 descricao = dados.descricao.trim(),
                 ativa = dados.ativa,
-                dataAtualizacao = java.util.Date()
+                dataAtualizacao = System.currentTimeMillis()
             )
             atualizar(categoriaAtualizada)
         }

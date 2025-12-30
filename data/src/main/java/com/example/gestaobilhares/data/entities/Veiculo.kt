@@ -2,7 +2,6 @@ package com.example.gestaobilhares.data.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.Date
 
 @Entity(tableName = "veiculos")
 data class Veiculo(
@@ -14,7 +13,7 @@ data class Veiculo(
     val modelo: String,
     val anoModelo: Int,
     val kmAtual: Long = 0,
-    val dataCompra: Date? = null,
+    val dataCompra: Long? = null,
     val observacoes: String? = null
 )
 

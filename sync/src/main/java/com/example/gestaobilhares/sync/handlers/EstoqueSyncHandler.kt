@@ -15,9 +15,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.Timestamp
+import com.example.gestaobilhares.core.utils.DateUtils
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
 import java.util.Date
 
 /**
@@ -107,7 +107,7 @@ class EstoqueSyncHandler @javax.inject.Inject constructor(
                     telefoneComprador = data["telefoneComprador"] as? String,
                     cpfCnpjComprador = data["cpfCnpjComprador"] as? String,
                     enderecoComprador = data["enderecoComprador"] as? String,
-                    dataVenda = converterTimestampParaDate(data["dataVenda"]) ?: Date(),
+                    dataVenda = DateUtils.convertToLong(data["dataVenda"]) ?: System.currentTimeMillis(),
                     valorVenda = (data["valorVenda"] as? Number)?.toDouble() ?: 0.0,
                     observacoes = data["observacoes"] as? String
                 )
@@ -148,7 +148,7 @@ class EstoqueSyncHandler @javax.inject.Inject constructor(
                     outros = data["outros"] as? Boolean ?: false,
                     observacoes = data["observacoes"] as? String,
                     fotoReforma = data["fotoReforma"] as? String,
-                    dataReforma = converterTimestampParaDate(data["dataReforma"]) ?: Date()
+                    dataReforma = DateUtils.convertToLong(data["dataReforma"]) ?: System.currentTimeMillis()
                 )
                 appRepository.inserirMesaReformada(item)
                 count++
@@ -175,7 +175,7 @@ class EstoqueSyncHandler @javax.inject.Inject constructor(
                     id = (data["roomId"] as? Number)?.toLong() ?: doc.id.toLongOrNull() ?: continue,
                     mesaId = (data["mesaId"] as? Number)?.toLong() ?: 0L,
                     panoId = (data["panoId"] as? Number)?.toLong() ?: (data["panoEstoqueId"] as? Number)?.toLong() ?: 0L,
-                    dataTroca = converterTimestampParaDate(data["dataTroca"]) ?: Date(),
+                    dataTroca = DateUtils.convertToLong(data["dataTroca"]) ?: System.currentTimeMillis(),
                     ativo = data["ativo"] as? Boolean ?: true,
                     observacoes = data["observacoes"] as? String
                 )
@@ -208,7 +208,7 @@ class EstoqueSyncHandler @javax.inject.Inject constructor(
                     numeroMesa = data["numeroMesa"] as? String ?: "",
                     tipoManutencao = try { com.example.gestaobilhares.data.entities.TipoManutencao.valueOf(tipoManutencaoStr) } catch (e: Exception) { com.example.gestaobilhares.data.entities.TipoManutencao.OUTROS },
                     descricao = data["descricao"] as? String,
-                    dataManutencao = converterTimestampParaDate(data["dataManutencao"]) ?: Date(),
+                    dataManutencao = DateUtils.convertToLong(data["dataManutencao"]) ?: System.currentTimeMillis(),
                     responsavel = data["responsavel"] as? String,
                     observacoes = data["observacoes"] as? String,
                     custo = (data["custo"] as? Number)?.toDouble() ?: (data["valor"] as? Number)?.toDouble()

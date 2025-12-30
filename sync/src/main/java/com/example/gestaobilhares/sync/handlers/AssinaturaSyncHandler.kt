@@ -14,6 +14,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
+import com.example.gestaobilhares.core.utils.DateUtils
 import java.util.Date
 
 /**
@@ -73,18 +74,18 @@ class AssinaturaSyncHandler @javax.inject.Inject constructor(
                     deviceId = data["deviceId"] as? String ?: "",
                     hashIntegridade = data["hashIntegridade"] as? String ?: "",
                     versaoSistema = data["versaoSistema"] as? String ?: "",
-                    dataCriacao = converterTimestampParaDate(data["dataCriacao"]) ?: Date(),
+                    dataCriacao = DateUtils.convertToLong(data["dataCriacao"]) ?: System.currentTimeMillis(),
                     criadoPor = data["criadoPor"] as? String ?: "",
                     ativo = data["ativo"] as? Boolean ?: true,
                     numeroProcuração = data["numeroProcuração"] as? String ?: "",
-                    dataProcuração = converterTimestampParaDate(data["dataProcuração"]) ?: Date(),
+                    dataProcuração = DateUtils.convertToLong(data["dataProcuração"]) ?: System.currentTimeMillis(),
                     poderesDelegados = data["poderesDelegados"] as? String ?: "",
-                    validadeProcuração = converterTimestampParaDate(data["validadeProcuração"]),
+                    validadeProcuração = DateUtils.convertToLong(data["validadeProcuração"]),
                     totalUsos = (data["totalUsos"] as? Number)?.toInt() ?: 0,
-                    ultimoUso = converterTimestampParaDate(data["ultimoUso"]),
+                    ultimoUso = DateUtils.convertToLong(data["ultimoUso"]),
                     contratosAssinados = data["contratosAssinados"] as? String ?: "",
                     validadaJuridicamente = data["validadaJuridicamente"] as? Boolean ?: false,
-                    dataValidacao = converterTimestampParaDate(data["dataValidacao"]),
+                    dataValidacao = DateUtils.convertToLong(data["dataValidacao"]),
                     validadoPor = data["validadoPor"] as? String
                 )
                 
@@ -143,10 +144,10 @@ class AssinaturaSyncHandler @javax.inject.Inject constructor(
                     valorContrato = (data["valorContrato"] as? Number)?.toDouble(),
                     sucesso = data["sucesso"] as? Boolean ?: true,
                     mensagemErro = data["mensagemErro"] as? String,
-                    dataOperacao = converterTimestampParaDate(data["dataOperacao"]) ?: Date(),
+                    dataOperacao = DateUtils.convertToLong(data["dataOperacao"]) ?: System.currentTimeMillis(),
                     observacoes = data["observacoes"] as? String,
                     validadoJuridicamente = data["validadaJuridicamente"] as? Boolean ?: false,
-                    dataValidacao = converterTimestampParaDate(data["dataValidacao"]),
+                    dataValidacao = DateUtils.convertToLong(data["dataValidacao"]),
                     validadoPor = data["validadoPor"] as? String
                 )
                 
@@ -174,7 +175,7 @@ class AssinaturaSyncHandler @javax.inject.Inject constructor(
         return try {
             val lastPush = getLastPushTimestamp(type)
             val locais = appRepository.obterTodasAssinaturasRepresentanteLegal()
-                .filter { it.dataCriacao.time > lastPush }
+                .filter { it.dataCriacao > lastPush }
             
             if (locais.isEmpty()) return Result.success(0)
             
@@ -201,7 +202,7 @@ class AssinaturaSyncHandler @javax.inject.Inject constructor(
         return try {
             val lastPush = getLastPushTimestamp(type)
             val locais = appRepository.obterTodosLogsAuditoria()
-                .filter { it.dataOperacao.time > lastPush }
+                .filter { it.dataOperacao > lastPush }
             
             if (locais.isEmpty()) return Result.success(0)
             

@@ -4,7 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.io.Serializable
-import java.util.Date
 
 /**
  * Entidade que representa uma Mesa Reformada no banco de dados.
@@ -49,8 +48,8 @@ data class MesaReformada(
     val fotoReforma: String?, // Caminho da foto da mesa reformada
     
     @ColumnInfo(name = "data_reforma")
-    val dataReforma: Date, // Data da reforma
+    val dataReforma: Long, // Data da reforma
     
     @ColumnInfo(name = "data_criacao")
-    val dataCriacao: Date = Date() // Data de criação do registro
+    val dataCriacao: Long = System.currentTimeMillis() // Data de criação do registro
 ) : Serializable

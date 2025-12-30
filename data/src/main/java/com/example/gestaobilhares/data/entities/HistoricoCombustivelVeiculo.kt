@@ -4,7 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.io.Serializable
-import java.util.Date
 
 /**
  * Entidade que representa o histórico de abastecimento de um veículo.
@@ -19,7 +18,7 @@ data class HistoricoCombustivelVeiculo(
     val veiculoId: Long, // ID do veículo
     
     @ColumnInfo(name = "data_abastecimento")
-    val dataAbastecimento: Date, // Data do abastecimento
+    val dataAbastecimento: Long, // Data do abastecimento
     
     @ColumnInfo(name = "litros")
     val litros: Double, // Quantidade de litros abastecida
@@ -40,5 +39,5 @@ data class HistoricoCombustivelVeiculo(
     val observacoes: String? = null, // Observações adicionais
     
     @ColumnInfo(name = "data_criacao")
-    val dataCriacao: Date = Date() // Data de criação do registro
+    val dataCriacao: Long = System.currentTimeMillis() // Data de criação do registro
 ) : Serializable
