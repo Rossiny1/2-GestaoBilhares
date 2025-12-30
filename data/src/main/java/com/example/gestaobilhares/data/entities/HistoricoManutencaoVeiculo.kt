@@ -4,7 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.io.Serializable
-import java.util.Date
 
 /**
  * Entidade que representa o histórico de manutenção de um veículo.
@@ -25,7 +24,7 @@ data class HistoricoManutencaoVeiculo(
     val descricao: String, // Descrição detalhada da manutenção
     
     @ColumnInfo(name = "data_manutencao")
-    val dataManutencao: Date, // Data em que a manutenção foi realizada
+    val dataManutencao: Long, // Data em que a manutenção foi realizada
     
     @ColumnInfo(name = "valor")
     val valor: Double, // Valor gasto na manutenção
@@ -40,5 +39,5 @@ data class HistoricoManutencaoVeiculo(
     val observacoes: String? = null, // Observações adicionais
     
     @ColumnInfo(name = "data_criacao")
-    val dataCriacao: Date = Date() // Data de criação do registro
+    val dataCriacao: Long = System.currentTimeMillis() // Data de criação do registro
 ) : Serializable

@@ -54,7 +54,7 @@ class ContractPdfGenerator(
             // TODO: Adicionar campo documentoHash na entidade ContratoLocacao se necessário
             // Por enquanto, apenas atualizamos a data de atualização
             val contratoAtualizado = contrato.copy(
-                dataAtualizacao = Date()
+                dataAtualizacao = System.currentTimeMillis()
             )
             repository.atualizarContrato(contratoAtualizado)
             android.util.Log.d("ContractPdfGenerator", "Hash do documento gerado: ${documentoHash.take(20)}... (não salvo - campo não existe na entidade)")

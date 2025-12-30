@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.Timestamp
+import com.example.gestaobilhares.core.utils.DateUtils
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
@@ -72,7 +73,7 @@ class FinancasSyncHandler @javax.inject.Inject constructor(
                     nome = data["nome"] as? String ?: "",
                     descricao = data["descricao"] as? String ?: "",
                     ativa = data["ativo"] as? Boolean ?: data["ativa"] as? Boolean ?: true,
-                    dataAtualizacao = converterTimestampParaDate(data["dataAtualizacao"]) ?: Date()
+                    dataAtualizacao = DateUtils.convertToLong(data["dataAtualizacao"]) ?: System.currentTimeMillis()
                 )
                 
                 val local = appRepository.obterCategoriaDespesaPorId(id)
@@ -113,7 +114,7 @@ class FinancasSyncHandler @javax.inject.Inject constructor(
                     nome = data["nome"] as? String ?: "",
                     descricao = data["descricao"] as? String ?: "",
                     ativo = data["ativo"] as? Boolean ?: true,
-                    dataAtualizacao = converterTimestampParaDate(data["dataAtualizacao"]) ?: Date()
+                    dataAtualizacao = DateUtils.converterTimestampParaDate(data["dataAtualizacao"])?.time ?: System.currentTimeMillis()
                 )
                 
                 val local = appRepository.obterTipoDespesaPorId(id)
@@ -143,7 +144,7 @@ class FinancasSyncHandler @javax.inject.Inject constructor(
         return try {
             val lastPush = getLastPushTimestamp(type)
             val locais = appRepository.obterTodasCategoriasDespesa().first()
-                .filter { (it.dataAtualizacao.time) > lastPush }
+                .filter { it.dataAtualizacao > lastPush }
             
             if (locais.isEmpty()) return Result.success(0)
             
@@ -170,7 +171,7 @@ class FinancasSyncHandler @javax.inject.Inject constructor(
         return try {
             val lastPush = getLastPushTimestamp(type)
             val locais = appRepository.obterTodosTiposDespesa().first()
-                .filter { it.dataAtualizacao.time > lastPush }
+                .filter { it.dataAtualizacao > lastPush }
             
             if (locais.isEmpty()) return Result.success(0)
             

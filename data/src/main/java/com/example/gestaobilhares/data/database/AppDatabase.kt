@@ -50,7 +50,7 @@ import timber.log.Timber
         HistoricoCombustivelVeiculo::class, // ? NOVO: HISTÓRICO DE COMBUSTÍVEL DE VEÍCULOS
         PanoMesa::class, // ? NOVO: VINCULAÇÃO PANO-MESA
         com.example.gestaobilhares.data.entities.StockItem::class, // ? NOVO: ITENS GENÉRICOS DO ESTOQUE
-        Meta::class, // Adicionar a nova entidade
+        MetaEntity::class, // Adicionar a nova entidade
         com.example.gestaobilhares.data.entities.Equipment::class, // ? NOVO: EQUIPAMENTOS
         SyncOperationEntity::class, // ? NOVO: FILA DE SINCRONIZAÇÃO OFFLINE-FIRST
         SyncMetadata::class // ? NOVO (2025): METADATA DE SINCRONIZAÇÃO INCREMENTAL

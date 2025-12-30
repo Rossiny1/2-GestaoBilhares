@@ -35,7 +35,7 @@ interface AssinaturaRepresentanteLegalDao {
     suspend fun desativarAssinatura(id: Long)
     
     @Query("UPDATE assinatura_representante_legal SET totalUsos = totalUsos + 1, ultimoUso = :dataUso WHERE id = :id")
-    suspend fun incrementarUso(id: Long, dataUso: java.util.Date)
+    suspend fun incrementarUso(id: Long, dataUso: Long)
     
     @Query("SELECT COUNT(*) FROM assinatura_representante_legal WHERE ativo = 1")
     suspend fun contarAssinaturasAtivas(): Int

@@ -6,7 +6,6 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable
-import java.util.Date
 
 /**
  * Entidade que representa um Cliente no banco de dados.
@@ -89,7 +88,7 @@ data class Cliente(
     
     @ColumnInfo(name = "data_captura_gps")
     @SerializedName("data_captura_gps")
-    val dataCapturaGps: Date? = null,
+    val dataCapturaGps: Long? = null,
     
     @ColumnInfo(name = "rota_id")
     @SerializedName("rota_id")
@@ -125,11 +124,11 @@ data class Cliente(
     
     @ColumnInfo(name = "data_cadastro")
     @SerializedName("data_cadastro")
-    val dataCadastro: Date = Date(),
+    val dataCadastro: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "data_ultima_atualizacao")
     @SerializedName("data_ultima_atualizacao")
-    val dataUltimaAtualizacao: Date = Date()
+    val dataUltimaAtualizacao: Long = System.currentTimeMillis()
 ) : Serializable
 
 /**

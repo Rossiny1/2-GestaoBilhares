@@ -7,8 +7,9 @@ import com.example.gestaobilhares.data.entities.TipoDespesa
 import com.example.gestaobilhares.data.repository.AppRepository
 import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.example.gestaobilhares.sync.handlers.base.BaseSyncHandler
-import com.example.gestaobilhares.sync.utils.NetworkUtils
+import com.example.gestaobilhares.core.utils.NetworkUtils
 import com.example.gestaobilhares.core.utils.FirebaseImageUploader
+import com.example.gestaobilhares.core.utils.DateUtils
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentSnapshot
@@ -151,9 +152,11 @@ class DespesaSyncHandler(
                 
                 if (!shouldSyncRouteData(rotaId, allowUnknown = false)) continue
                 
-                val dataHora = converterTimestampParaLocalDateTime(data["dataHora"])
+                val dataHoraLocalDateTime = converterTimestampParaLocalDateTime(data["dataHora"])
                     ?: converterTimestampParaLocalDateTime(data["data_hora"])
                     ?: LocalDateTime.now()
+                
+                val dataHoraLong = dataHoraLocalDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
                 
                 val despesaFirestore = Despesa(
                     id = despesaId,
@@ -162,7 +165,7 @@ class DespesaSyncHandler(
                     valor = (data["valor"] as? Number)?.toDouble() ?: 0.0,
                     categoria = (data["categoria"] as? String) ?: "",
                     tipoDespesa = (data["tipoDespesa"] as? String) ?: (data["tipo_despesa"] as? String) ?: "",
-                    dataHora = dataHora,
+                    dataHora = dataHoraLong,
                     observacoes = (data["observacoes"] as? String) ?: "",
                     criadoPor = (data["criadoPor"] as? String) ?: (data["criado_por"] as? String) ?: "",
                     cicloId = (data["cicloId"] as? Number)?.toLong() ?: (data["ciclo_id"] as? Number)?.toLong(),
@@ -170,18 +173,18 @@ class DespesaSyncHandler(
                     cicloAno = (data["cicloAno"] as? Number)?.toInt() ?: (data["ciclo_ano"] as? Number)?.toInt(),
                     cicloNumero = (data["cicloNumero"] as? Number)?.toInt() ?: (data["ciclo_numero"] as? Number)?.toInt(),
                     fotoComprovante = (data["fotoComprovante"] as? String) ?: (data["foto_comprovante"] as? String),
-                    dataFotoComprovante = converterTimestampParaDate(data["dataFotoComprovante"]) ?: converterTimestampParaDate(data["data_foto_comprovante"]),
+                    dataFotoComprovante = DateUtils.convertToLong(data["dataFotoComprovante"]) ?: DateUtils.convertToLong(data["data_foto_comprovante"]),
                     veiculoId = (data["veiculoId"] as? Number)?.toLong() ?: (data["veiculo_id"] as? Number)?.toLong(),
                     kmRodado = (data["kmRodado"] as? Number)?.toLong() ?: (data["km_rodado"] as? Number)?.toLong(),
                     litrosAbastecidos = (data["litrosAbastecidos"] as? Number)?.toDouble() ?: (data["litros_abastecidos"] as? Number)?.toDouble()
                 )
                 
                 val despesaLocal = appRepository.obterDespesaPorId(despesaId)
-                val serverTimestamp = (data["lastModified"] as? Timestamp)?.toDate()?.time
-                    ?: (data["syncTimestamp"] as? Timestamp)?.toDate()?.time
-                    ?: dataHora.toEpochSecond(ZoneOffset.UTC) * 1000
+                val serverTimestamp = DateUtils.convertToLong(data["lastModified"])
+                    ?: DateUtils.convertToLong(data["syncTimestamp"])
+                    ?: dataHoraLong
                 
-                val localTimestamp = despesaLocal?.dataHora?.toEpochSecond(ZoneOffset.UTC)?.times(1000) ?: 0L
+                val localTimestamp = despesaLocal?.dataHora ?: 0L
                 
                 if (despesaLocal == null) {
                     appRepository.inserirDespesa(despesaFirestore)
@@ -209,8 +212,7 @@ class DespesaSyncHandler(
             val despesasLocais = appRepository.obterTodasDespesas().first()
             
             val paraEnviar = despesasLocais.filter { despesa ->
-                val despesaTimestamp = despesa.dataHora.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                despesaTimestamp > lastPushTimestamp
+                despesa.dataHora > lastPushTimestamp
             }
             
             if (paraEnviar.isEmpty()) {
@@ -231,7 +233,7 @@ class DespesaSyncHandler(
                     collectionRef.document(despesa.id.toString()).set(map).await()
                     
                     // Atualiza timestamp local para evitar sobrescrita imediata per pull
-                    val despesaAtualizada = despesa.copy(dataHora = LocalDateTime.now())
+                    val despesaAtualizada = despesa.copy(dataHora = System.currentTimeMillis())
                     appRepository.atualizarDespesa(despesaAtualizada)
                     
                     syncCount++
@@ -290,8 +292,8 @@ class DespesaSyncHandler(
                         nome = data["nome"] as? String ?: "Sem nome",
                         descricao = data["descricao"] as? String ?: "",
                         ativa = data["ativa"] as? Boolean ?: true,
-                        dataCriacao = converterTimestampParaDate(data["dataCriacao"]) ?: Date(),
-                        dataAtualizacao = converterTimestampParaDate(data["dataAtualizacao"]) ?: Date(),
+                        dataCriacao = DateUtils.convertToLong(data["dataCriacao"]) ?: System.currentTimeMillis(),
+                        dataAtualizacao = DateUtils.convertToLong(data["dataAtualizacao"]) ?: System.currentTimeMillis(),
                         criadoPor = data["criadoPor"] as? String ?: ""
                     )
                     
@@ -343,8 +345,8 @@ class DespesaSyncHandler(
                         nome = data["nome"] as? String ?: "Sem nome",
                         descricao = data["descricao"] as? String ?: "",
                         ativo = data["ativo"] as? Boolean ?: true,
-                        dataCriacao = converterTimestampParaDate(data["dataCriacao"]) ?: Date(),
-                        dataAtualizacao = converterTimestampParaDate(data["dataAtualizacao"]) ?: Date(),
+                        dataCriacao = DateUtils.convertToLong(data["dataCriacao"]) ?: System.currentTimeMillis(),
+                        dataAtualizacao = DateUtils.convertToLong(data["dataAtualizacao"]) ?: System.currentTimeMillis(),
                         criadoPor = data["criadoPor"] as? String ?: ""
                     )
                     
@@ -372,7 +374,7 @@ class DespesaSyncHandler(
         return try {
             val lastPush = getLastPushTimestamp(type)
             val categorias = appRepository.buscarCategoriasAtivas().first()
-                .filter { it.dataAtualizacao.time > lastPush }
+                .filter { it.dataAtualizacao > lastPush }
             
             if (categorias.isEmpty()) return Result.success(0)
             
@@ -410,7 +412,7 @@ class DespesaSyncHandler(
             val lastPush = getLastPushTimestamp(type)
             val tipos = appRepository.buscarTiposAtivosComCategoria().first()
                 .map { it.tipoDespesa }
-                .filter { it.dataAtualizacao.time > lastPush }
+                .filter { it.dataAtualizacao > lastPush }
             
             if (tipos.isEmpty()) return Result.success(0)
             

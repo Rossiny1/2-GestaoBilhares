@@ -3,7 +3,6 @@ package com.example.gestaobilhares.data.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.Date
 
 /**
  * Entidade que representa uma Mesa Vendida no banco de dados.
@@ -45,11 +44,11 @@ data class MesaVendida(
     val valorVenda: Double, // Valor da venda
     
     @ColumnInfo(name = "data_venda")
-    val dataVenda: Date, // Data da venda
+    val dataVenda: Long, // Data da venda
     
     @ColumnInfo(name = "observacoes")
     val observacoes: String?, // Observações sobre a venda
     
     @ColumnInfo(name = "data_criacao")
-    val dataCriacao: Date = Date() // Data de criação do registro
+    val dataCriacao: Long = System.currentTimeMillis() // Data de criação do registro
 )

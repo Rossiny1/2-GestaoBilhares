@@ -156,11 +156,19 @@ class AcertoSyncHandler(
 
     private fun documentToAcerto(doc: DocumentSnapshot): Acerto? {
         val data = doc.data?.toMutableMap() ?: return null
-        val acertoId = doc.id.toLongOrNull() ?: return null
+        val acertoId = doc.id.toLongOrNull() ?: (data["id"] as? Number)?.toLong() ?: return null
         
         val clienteId = extrairClienteId(data) ?: return null
         data["clienteId"] = clienteId
         data["cliente_id"] = clienteId
+        
+        // Converter campos de data para Long se chegarem como Timestamp ou Date do Firestore
+        data["data_acerto"] = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["data_acerto"]) ?: 
+                            com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["dataAcerto"]) ?: System.currentTimeMillis()
+        data["periodo_inicio"] = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["periodo_inicio"]) ?: 0L
+        data["periodo_fim"] = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["periodo_fim"]) ?: 0L
+        data["data_criacao"] = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["data_criacao"]) ?: System.currentTimeMillis()
+        data["data_finalizacao"] = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["data_finalizacao"])
         
         val json = gson.toJson(data)
         return gson.fromJson(json, Acerto::class.java)?.copy(
@@ -235,7 +243,7 @@ class AcertoSyncHandler(
             val acertosLocais = appRepository.obterTodosAcertos().first()
             
             val paraEnviar = acertosLocais.filter { 
-                it.dataAcerto.time > lastPushTimestamp || it.dataCriacao.time > lastPushTimestamp
+                it.dataAcerto > lastPushTimestamp || it.dataCriacao > lastPushTimestamp
             }
             
             if (paraEnviar.isEmpty()) {

@@ -1,0 +1,19 @@
+# Tarefas de Finalização do Sync
+
+- [x] Analisar estado atual e preparar ambiente
+- [x] Implementar `DateUtils.convertToLong` (se ausente)
+- [/] Atualizar Handlers de Sync para usar [Long](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/core/src/main/java/com/example/gestaobilhares/utils/DateUtils.kt#290-304)
+    - [ ] [AcertoSyncHandler.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/handlers/AcertoSyncHandler.kt)
+    - [ ] [MesaSyncHandler.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/handlers/MesaSyncHandler.kt)
+    - [ ] [ClienteSyncHandler.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/handlers/ClienteSyncHandler.kt)
+    - [ ] [ContratoSyncHandler.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/handlers/ContratoSyncHandler.kt)
+    - [ ] [AssinaturaSyncHandler.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/handlers/AssinaturaSyncHandler.kt)
+    - [ ] [EstoqueSyncHandler.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/handlers/EstoqueSyncHandler.kt)
+    - [ ] [EquipamentoSyncHandler.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/handlers/EquipamentoSyncHandler.kt)
+    - [x] [FinancasSyncHandler.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/handlers/FinancasSyncHandler.kt)
+    - [ ] [RotaSyncHandler.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/handlers/RotaSyncHandler.kt)
+    - [ ] [VeiculoSyncHandler.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/handlers/VeiculoSyncHandler.kt)
+    - [ ] [MetaSyncHandler.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/handlers/MetaSyncHandler.kt)
+- [ ] Ajustar [SyncRepository.kt](file:///c:/Users/Rossiny/Desktop/2-GestaoBilhares/sync/src/main/java/com/example/gestaobilhares/sync/SyncRepository.kt)
+- [ ] Verificar build com `./gradlew :sync:assembleDebug`
+- [ ] Validar com testes unitários relevantes

@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
-import java.util.Date
 
 /**
  * Entidade que representa um tipo de despesa no banco de dados.
@@ -37,9 +36,9 @@ data class TipoDespesa(
     
     val ativo: Boolean = true,
     
-    val dataCriacao: Date = Date(),
+    val dataCriacao: Long = System.currentTimeMillis(),
     
-    val dataAtualizacao: Date = Date(),
+    val dataAtualizacao: Long = System.currentTimeMillis(),
     
     val criadoPor: String = ""
 ) {

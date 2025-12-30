@@ -85,7 +85,7 @@ interface DespesaDao {
         WHERE d.dataHora BETWEEN :dataInicio AND :dataFim 
         ORDER BY d.dataHora DESC
     """)
-    fun buscarPorPeriodo(dataInicio: LocalDateTime, dataFim: LocalDateTime): Flow<List<DespesaResumo>>
+    fun buscarPorPeriodo(dataInicio: Long, dataFim: Long): Flow<List<DespesaResumo>>
 
     /**
      * Busca despesas por categoria.
@@ -138,8 +138,8 @@ interface DespesaDao {
     """)
     suspend fun buscarPorRotaEPeriodo(
         rotaId: Long, 
-        dataInicio: LocalDateTime, 
-        dataFim: LocalDateTime
+        dataInicio: Long, 
+        dataFim: Long
     ): List<Despesa>
 
     /**
