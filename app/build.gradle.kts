@@ -129,9 +129,6 @@ android {
             )
         }
     }
-    
-    // ✅ TESTES: Habilitados para garantir qualidade do código
-    // Removido: tasks que desabilitavam testes
 }
 
 // ✅ CORREÇÃO: KSP para Room (compatível com Java 11+)
@@ -355,8 +352,24 @@ tasks.register("createPROnSuccess") {
 }
 
 // Conectar createPROnSuccess ao installDebug (se a task existir)
+// ✅ OTIMIZAÇÃO WINDOWS: Desabilitar tasks desnecessárias no debug para acelerar build
 afterEvaluate {
+    // Desabilitar tasks de teste, lint e check durante build debug (apenas para assembleDebug)
+    tasks.matching { 
+        (it.name.contains("test", ignoreCase = true) || 
+         it.name.contains("lint", ignoreCase = true) || 
+         it.name.contains("check", ignoreCase = true)) && 
+        !it.name.contains("assemble") 
+    }.configureEach {
+        enabled = false
+    }
+    
+    // Conectar createPROnSuccess
     tasks.findByName("installDebug")?.let {
+        it.finalizedBy("createPROnSuccess")
+    }
+    
+    tasks.findByName("assembleDebug")?.let {
         it.finalizedBy("createPROnSuccess")
     }
 }
