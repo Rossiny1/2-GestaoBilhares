@@ -136,3 +136,144 @@ A VM atual não suporta virtualização aninhada, então o emulador não pode ro
 - Uma máquina física com Linux
 - Uma VM com suporte a KVM habilitado
 - WSL2 no Windows (com algumas limitações)
+
+## 🌐 Alternativas Online para Teste de Frontend/Android
+
+### Serviços de Emulação em Nuvem (Gratuitos/Pagos)
+
+#### 1. **Firebase Test Lab** (Google) ⭐ Recomendado
+- **Gratuito**: 5 testes físicos + 10 testes virtuais por dia
+- **URL**: https://firebase.google.com/docs/test-lab
+- **Como usar**:
+  ```bash
+  # Instalar Firebase CLI
+  npm install -g firebase-tools
+  
+  # Fazer login
+  firebase login
+  
+  # Executar testes
+  firebase test android run \
+    --app app-debug.apk \
+    --device model=Pixel2,version=28 \
+    --device model=NexusLowRes,version=25
+  ```
+- **Vantagens**: Integração com Firebase, múltiplos dispositivos, relatórios detalhados
+
+#### 2. **BrowserStack App Live** ⭐ Melhor para Testes Interativos
+- **Gratuito**: Trial de 100 minutos
+- **URL**: https://www.browserstack.com/app-live
+- **Como usar**:
+  1. Criar conta em browserstack.com
+  2. Fazer upload do APK
+  3. Testar em dispositivos reais na nuvem
+- **Vantagens**: Dispositivos reais, não emuladores, interface web interativa
+
+#### 3. **AWS Device Farm**
+- **Gratuito**: 250 minutos/mês
+- **URL**: https://aws.amazon.com/device-farm/
+- **Como usar**: Via console AWS ou CLI
+- **Vantagens**: Integração com AWS, testes automatizados
+
+#### 4. **Sauce Labs**
+- **Gratuito**: Trial limitado
+- **URL**: https://saucelabs.com/
+- **Vantagens**: Suporte a múltiplas plataformas
+
+#### 5. **Genymotion Cloud** (Pago, mas tem trial)
+- **URL**: https://www.genymotion.com/cloud/
+- **Vantagens**: Emuladores rápidos, múltiplas versões Android
+
+### Alternativas para Emulação Sem KVM
+
+#### 1. **Android-x86 em VirtualBox/VMware**
+- Rodar Android-x86 como sistema operacional em uma VM
+- **Limitação**: Não é um emulador Android completo, mas permite testar apps
+- **URL**: https://www.android-x86.org/
+
+#### 2. **Anbox** (Android in a Box)
+- Container Linux que executa Android
+- **Instalação**:
+  ```bash
+  sudo snap install --devmode --edge anbox
+  ```
+- **Limitação**: Requer suporte a kernel modules, pode não funcionar em todas as VMs
+
+#### 3. **Scrcpy** (Espelhamento de Tela)
+- Não é emulador, mas permite controlar dispositivo físico via USB/WiFi
+- **Instalação**:
+  ```bash
+  sudo apt install scrcpy
+  ```
+- **Uso**: Conecte dispositivo físico e espelhe na VM
+- **Vantagem**: Funciona sem KVM, usa dispositivo real
+
+### Teste de Frontend Web (Se o app tiver versão web)
+
+#### 1. **BrowserStack** (Web Testing)
+- Teste em múltiplos navegadores e dispositivos
+- **Gratuito**: Trial disponível
+
+#### 2. **LambdaTest**
+- Teste cross-browser
+- **Gratuito**: 100 minutos/mês
+
+#### 3. **Sauce Labs** (Web)
+- Teste automatizado de frontend
+- **Gratuito**: Trial disponível
+
+### Recomendações Práticas
+
+#### Para Desenvolvimento Rápido:
+1. **Use dispositivo físico** via USB ou WiFi ADB (mais rápido e confiável)
+2. **Firebase Test Lab** para testes automatizados em múltiplos dispositivos
+
+#### Para Testes em Produção:
+1. **BrowserStack App Live** para testes interativos em dispositivos reais
+2. **Firebase Test Lab** para testes automatizados e CI/CD
+
+#### Para Desenvolvimento Local (sem KVM):
+1. **Scrcpy** para espelhar dispositivo físico
+2. **Anbox** (se suportado pela VM)
+
+### Scripts Úteis
+
+#### Conectar Dispositivo via WiFi:
+```bash
+# No dispositivo (via USB primeiro):
+adb tcpip 5555
+
+# Depois desconecte USB e conecte via WiFi:
+adb connect <IP_DO_DISPOSITIVO>:5555
+
+# Verificar:
+adb devices
+```
+
+#### Upload APK para Firebase Test Lab:
+```bash
+# Instalar Firebase CLI
+npm install -g firebase-tools
+
+# Configurar projeto
+firebase init
+
+# Executar teste
+firebase test android run \
+  --app /workspace/b/outputs/apk/debug/app-debug.apk \
+  --type instrumentation \
+  --timeout 5m
+```
+
+### Conclusão
+
+**Para a VM do Cursor especificamente:**
+- ❌ Emulador Android tradicional não funciona (sem KVM)
+- ✅ **Melhor opção**: Dispositivo físico via ADB (USB ou WiFi)
+- ✅ **Alternativa online**: Firebase Test Lab ou BrowserStack
+- ✅ **Para desenvolvimento**: Scrcpy para espelhar dispositivo físico
+
+**Próximos Passos:**
+1. Se tiver dispositivo Android: Configure ADB over WiFi
+2. Se não tiver: Use Firebase Test Lab (gratuito) ou BrowserStack (trial)
+3. Para CI/CD: Integre Firebase Test Lab no pipeline
