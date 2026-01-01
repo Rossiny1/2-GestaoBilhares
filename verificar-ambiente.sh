@@ -1,0 +1,11 @@
+#!/bin/bash
+echo "=== VERIFICAÇÃO DE AMBIENTE ==="
+echo "Diretório atual: $(pwd)"
+echo "Hostname: $(hostname)"
+echo "Usuário: $(whoami)"
+echo "OS: $(uname -s)"
+echo ""
+echo "Workspace existe: $([ -d /workspace ] && echo 'SIM ✅' || echo 'NÃO ❌')"
+echo "Firebase CLI: $(which firebase >/dev/null 2>&1 && echo 'Instalado ✅' || echo 'Não encontrado ❌')"
+echo ""
+[ -d /workspace ] && echo "✅ Você está na VM do Cursor!" || echo "❌ Você está no terminal local"
