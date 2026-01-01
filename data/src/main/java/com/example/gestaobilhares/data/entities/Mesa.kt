@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
-import java.util.Date
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 import java.io.Serializable
@@ -84,11 +83,11 @@ data class Mesa(
     
     @ColumnInfo(name = "data_instalacao")
     @SerializedName("data_instalacao")
-    val dataInstalacao: Date = Date(),
+    val dataInstalacao: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "data_ultima_leitura")
     @SerializedName("data_ultima_leitura")
-    val dataUltimaLeitura: Date = Date(),
+    val dataUltimaLeitura: Long = System.currentTimeMillis(),
     
     // ✅ NOVO: Campos para pano atual da mesa
     @ColumnInfo(name = "pano_atual_id")
@@ -97,7 +96,7 @@ data class Mesa(
     
     @ColumnInfo(name = "data_ultima_troca_pano")
     @SerializedName("data_ultima_troca_pano")
-    val dataUltimaTrocaPano: Date? = null
+    val dataUltimaTrocaPano: Long? = null
 ) : Parcelable, Serializable 
 
 /**

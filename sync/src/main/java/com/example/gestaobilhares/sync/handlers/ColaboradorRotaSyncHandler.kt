@@ -16,6 +16,7 @@ import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import java.util.Date
 import com.example.gestaobilhares.core.utils.FirebaseImageUploader
+import com.example.gestaobilhares.core.utils.DateUtils
 
 /**
  * Handler especializado para sincronização de Vinculações Colaborador-Rota.
@@ -34,7 +35,6 @@ class ColaboradorRotaSyncHandler @javax.inject.Inject constructor(
 
     companion object {
         private const val COLLECTION_COLABORADOR_ROTA = "colaborador_rota"
-        private const val FIELD_ROTA_ID = "rotaId"
     }
 
     override suspend fun pull(timestampOverride: Long?): Result<Int> {
@@ -159,11 +159,11 @@ class ColaboradorRotaSyncHandler @javax.inject.Inject constructor(
                 
                 val key = "${colabId}_${rotaId}"
                 val localVinculo = vinculosCache[key]
-                val serverTimestamp = doc.getTimestamp("last_modified")?.toDate()?.time
-                    ?: doc.getTimestamp("lastModified")?.toDate()?.time
-                    ?: converterTimestampParaDate(data["data_vinculacao"])?.time 
-                    ?: converterTimestampParaDate(data["dataVinculacao"])?.time ?: 0L
-                val localTimestamp = localVinculo?.dataVinculacao?.time ?: 0L
+                val serverTimestamp = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["last_modified"])
+                    ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["lastModified"])
+                    ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["data_vinculacao"])
+                    ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(data["dataVinculacao"]) ?: 0L
+                val localTimestamp = localVinculo?.dataVinculacao ?: 0L
                 
                 if (localVinculo == null || serverTimestamp > localTimestamp) {
                     appRepository.vincularColaboradorRota(
@@ -197,7 +197,7 @@ class ColaboradorRotaSyncHandler @javax.inject.Inject constructor(
             val vinculosLocais = appRepository.obterTodosColaboradorRotas()
             
             val paraEnviar = if (canUseIncremental) {
-                vinculosLocais.filter { it.dataVinculacao.time > lastPushTimestamp }
+                vinculosLocais.filter { it.dataVinculacao > lastPushTimestamp }
             } else {
                 vinculosLocais
             }

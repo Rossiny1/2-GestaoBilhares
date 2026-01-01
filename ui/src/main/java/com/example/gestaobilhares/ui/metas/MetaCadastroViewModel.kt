@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.metas
+package com.example.gestaobilhares.ui.metas
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -180,8 +180,8 @@ class MetaCadastroViewModel @Inject constructor(
                     rotaId = rotaId,
                     numeroCiclo = proximoNumero,
                     ano = 2024,
-                    dataInicio = java.util.Date(),
-                    dataFim = java.util.Date(System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000)), // 30 dias
+                    dataInicio = System.currentTimeMillis(),
+                    dataFim = System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000), // 30 dias
                     status = com.example.gestaobilhares.data.entities.StatusCicloAcerto.EM_ANDAMENTO,
                     debitoTotal = 0.0
                 )
@@ -217,8 +217,8 @@ class MetaCadastroViewModel @Inject constructor(
                     rotaId = rotaId,
                     numeroCiclo = proximoNumero,
                     ano = 2024,
-                    dataInicio = java.util.Date(System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000)), // Início em 30 dias
-                    dataFim = java.util.Date(System.currentTimeMillis() + (60L * 24 * 60 * 60 * 1000)), // Fim em 60 dias
+                    dataInicio = System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000), // Início em 30 dias
+                    dataFim = System.currentTimeMillis() + (60L * 24 * 60 * 60 * 1000), // Fim em 60 dias
                     status = com.example.gestaobilhares.data.entities.StatusCicloAcerto.PLANEJADO,
                     debitoTotal = 0.0
                 )

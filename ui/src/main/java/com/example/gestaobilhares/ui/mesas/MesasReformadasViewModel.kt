@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.mesas
+package com.example.gestaobilhares.ui.mesas
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -66,11 +66,11 @@ class MesasReformadasViewModel @Inject constructor(
                     val mesasAgrupadas = todosIdsComAtividade.map { key ->
                         val reformasDaMesa = reformas.filter { 
                             if (key is Long) it.mesaId == key else it.numeroMesa == key
-                        }.sortedByDescending { it.dataReforma.time }
+                        }.sortedByDescending { it.dataReforma }
                         
                         val historicoDaMesa = historico.filter { 
                             if (key is Long) it.mesaId == key else it.numeroMesa == key
-                        }.sortedByDescending { it.dataManutencao.time }
+                        }.sortedByDescending { it.dataManutencao }
                         
                         // Determinar número, tipo e tamanho da mesa (preferir dados atuais do banco se houver)
                         val mesaAtual = if (key is Long) mesaInfoMap[key] else null
@@ -96,7 +96,7 @@ class MesasReformadasViewModel @Inject constructor(
                             reformas = reformasDaMesa,
                             historicoManutencoes = historicoDaMesa
                         )
-                    }.sortedByDescending { it.dataUltimoEvento?.time ?: 0L }
+                    }.sortedByDescending { it.dataUltimoEvento ?: 0L }
                     
                     // Aplicar filtro se houver
                     if (filtro.isNullOrBlank()) {

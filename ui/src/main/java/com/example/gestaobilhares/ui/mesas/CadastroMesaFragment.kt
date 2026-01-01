@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.mesas
+package com.example.gestaobilhares.ui.mesas
 import com.example.gestaobilhares.ui.R
 
 import android.os.Bundle
@@ -127,8 +127,8 @@ class CadastroMesaFragment : Fragment() {
                             estadoConservacao = EstadoConservacao.values()[estadoIndex],
                             ativa = true,
                             observacoes = binding.etObservacoes.text?.toString()?.takeIf { it.isNotBlank() },
-                            dataInstalacao = Date(),
-                            dataUltimaLeitura = Date()
+                            dataInstalacao = System.currentTimeMillis(),
+                            dataUltimaLeitura = System.currentTimeMillis()
                         )
                         
                         viewModel.salvarMesa(mesa)

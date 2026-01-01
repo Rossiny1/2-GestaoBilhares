@@ -47,7 +47,7 @@ interface ColaboradorDao {
     suspend fun deletar(colaborador: Colaborador)
     
     @Query("UPDATE colaboradores SET aprovado = 1, data_aprovacao = :dataAprovacao, aprovado_por = :aprovadoPor, data_ultima_atualizacao = :dataAprovacao WHERE id = :colaboradorId")
-    suspend fun aprovarColaborador(colaboradorId: Long, dataAprovacao: java.util.Date, aprovadoPor: String)
+    suspend fun aprovarColaborador(colaboradorId: Long, dataAprovacao: Long, aprovadoPor: String)
     
     @Query("UPDATE colaboradores SET aprovado = 1, data_aprovacao = :dataAprovacao, aprovado_por = :aprovadoPor, email_acesso = :email, senha_temporaria = :senha, nivel_acesso = :nivelAcesso, observacoes = :observacoes, primeiro_acesso = 1, firebase_uid = :firebaseUid, data_ultima_atualizacao = :dataAprovacao WHERE id = :colaboradorId")
     suspend fun aprovarColaboradorComCredenciais(
@@ -56,7 +56,7 @@ interface ColaboradorDao {
         senha: String,
         nivelAcesso: NivelAcesso,
         observacoes: String,
-        dataAprovacao: java.util.Date,
+        dataAprovacao: Long,
         aprovadoPor: String,
         firebaseUid: String? = null
     )
@@ -68,7 +68,7 @@ interface ColaboradorDao {
     suspend fun alterarStatus(colaboradorId: Long, ativo: Boolean)
     
     @Query("UPDATE colaboradores SET data_ultimo_acesso = :dataUltimoAcesso WHERE id = :colaboradorId")
-    suspend fun atualizarUltimoAcesso(colaboradorId: Long, dataUltimoAcesso: java.util.Date)
+    suspend fun atualizarUltimoAcesso(colaboradorId: Long, dataUltimoAcesso: Long)
     
     @Query("SELECT COUNT(*) FROM colaboradores WHERE ativo = 1")
     suspend fun contarAtivos(): Int

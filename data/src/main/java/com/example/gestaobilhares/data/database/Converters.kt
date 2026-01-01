@@ -91,6 +91,32 @@ class Converters {
     fun toStatusAcerto(value: String): StatusAcerto {
         return StatusAcerto.valueOf(value)
     }
+
+    /**
+     * Conversores para TipoMeta enum
+     */
+    @TypeConverter
+    fun fromTipoMeta(value: TipoMeta): String {
+        return value.name
+    }
+
+    @TypeConverter
+    fun toTipoMeta(value: String): TipoMeta {
+        return TipoMeta.valueOf(value)
+    }
+
+    /**
+     * Conversores para TipoManutencao enum
+     */
+    @TypeConverter
+    fun fromTipoManutencao(value: TipoManutencao): String {
+        return value.name
+    }
+
+    @TypeConverter
+    fun toTipoManutencao(value: String): TipoManutencao {
+        return TipoManutencao.valueOf(value)
+    }
     
     // Conversores para CategoriaDespesa enum removidos - agora usando entidades dinâmicas
     
@@ -119,4 +145,38 @@ class Converters {
             Gson().fromJson<Map<String, Double>>(it, type)
         }
     }
-} 
+
+    /**
+     * Conversores para StatusCicloAcerto enum
+     */
+    @TypeConverter
+    fun fromStatusCicloAcerto(value: StatusCicloAcerto): String {
+        return value.name
+    }
+
+    @TypeConverter
+    fun toStatusCicloAcerto(value: String): StatusCicloAcerto {
+        return try {
+            StatusCicloAcerto.valueOf(value)
+        } catch (e: Exception) {
+            StatusCicloAcerto.FINALIZADO
+        }
+    }
+
+    /**
+     * Conversores para SyncOperationStatus enum
+     */
+    @TypeConverter
+    fun fromSyncOperationStatus(value: SyncOperationStatus): String {
+        return value.name
+    }
+
+    @TypeConverter
+    fun toSyncOperationStatus(value: String): SyncOperationStatus {
+        return try {
+            SyncOperationStatus.valueOf(value)
+        } catch (e: Exception) {
+            SyncOperationStatus.PENDING
+        }
+    }
+}

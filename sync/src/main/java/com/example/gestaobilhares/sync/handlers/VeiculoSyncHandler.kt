@@ -18,6 +18,7 @@ import timber.log.Timber
 import java.util.Date
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.Timestamp
+import com.example.gestaobilhares.core.utils.DateUtils
 
 /**
  * Handler especializado para sincronização de Veículos e Históricos (Manutenção e Combustível).
@@ -81,7 +82,7 @@ class VeiculoSyncHandler @javax.inject.Inject constructor(
                     marca = data["marca"] as? String ?: "",
                     anoModelo = (data["ano"] as? Number)?.toInt() ?: (data["anoModelo"] as? Number)?.toInt() ?: 0,
                     kmAtual = (data["kmAtual"] as? Number)?.toLong() ?: 0L,
-                    dataCompra = converterTimestampParaDate(data["dataCompra"] ?: data["dataUltimaRevisao"]),
+                    dataCompra = DateUtils.convertToLong(data["dataCompra"] ?: data["data_compra"] ?: data["dataUltimaRevisao"]),
                     observacoes = data["observacoes"] as? String
                 )
                 
@@ -121,7 +122,7 @@ class VeiculoSyncHandler @javax.inject.Inject constructor(
                     veiculoId = (data["veiculoId"] as? Number)?.toLong() ?: 0L,
                     tipoManutencao = data["tipoManutencao"] as? String ?: "Manutenção",
                     descricao = data["descricao"] as? String ?: "",
-                    dataManutencao = converterTimestampParaDate(data["dataManutencao"]) ?: Date(),
+                    dataManutencao = DateUtils.convertToLong(data["dataManutencao"]) ?: System.currentTimeMillis(),
                     valor = (data["valor"] as? Number)?.toDouble() ?: 0.0,
                     kmVeiculo = (data["kmVeiculo"] as? Number)?.toLong() ?: (data["kmNoMomento"] as? Number)?.toLong() ?: 0L,
                     observacoes = data["observacoes"] as? String
@@ -161,7 +162,7 @@ class VeiculoSyncHandler @javax.inject.Inject constructor(
                 val historico = HistoricoCombustivelVeiculo(
                     id = id,
                     veiculoId = (data["veiculoId"] as? Number)?.toLong() ?: 0L,
-                    dataAbastecimento = converterTimestampParaDate(data["dataAbastecimento"]) ?: Date(),
+                    dataAbastecimento = DateUtils.convertToLong(data["dataAbastecimento"]) ?: System.currentTimeMillis(),
                     litros = (data["litros"] as? Number)?.toDouble() ?: 0.0,
                     valor = (data["valor"] as? Number)?.toDouble() ?: 0.0,
                     kmVeiculo = (data["kmVeiculo"] as? Number)?.toLong() ?: (data["kmNoMomento"] as? Number)?.toLong() ?: 0L,
@@ -197,7 +198,7 @@ class VeiculoSyncHandler @javax.inject.Inject constructor(
         return try {
             val lastPush = getLastPushTimestamp(type)
             val locais = appRepository.obterTodosVeiculos().first()
-                .filter { (it.dataCompra?.time ?: 0L) > lastPush }
+                .filter { (it.dataCompra ?: 0L) > lastPush }
             
             if (locais.isEmpty()) return Result.success(0)
             
@@ -225,7 +226,7 @@ class VeiculoSyncHandler @javax.inject.Inject constructor(
             val lastPush = getLastPushTimestamp(type)
             val locais = appRepository.obterTodosHistoricoManutencaoVeiculo()
                 // HistoricoManutencaoVeiculo doesn't have dataAtualizacao in the provided snippets, using dataManutencao as fallback
-                .filter { it.dataManutencao.time > lastPush }
+                .filter { it.dataManutencao > lastPush }
             
             if (locais.isEmpty()) return Result.success(0)
             
@@ -252,7 +253,7 @@ class VeiculoSyncHandler @javax.inject.Inject constructor(
         return try {
             val lastPush = getLastPushTimestamp(type)
             val todasMatenutencoes = appRepository.obterTodosHistoricoCombustivelVeiculo()
-            val filtrados = todasMatenutencoes.filter { it.dataAbastecimento.time > lastPush }
+            val filtrados = todasMatenutencoes.filter { it.dataAbastecimento > lastPush }
             
             if (filtrados.isEmpty()) return Result.success(0)
             

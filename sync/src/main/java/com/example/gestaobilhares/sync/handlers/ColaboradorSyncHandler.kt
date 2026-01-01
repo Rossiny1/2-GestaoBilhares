@@ -197,12 +197,12 @@ class ColaboradorSyncHandler @javax.inject.Inject constructor(
         val colaboradorFirestore = gson.fromJson(colaboradorJson, Colaborador::class.java)?.copy(id = colaboradorId)
             ?: return ProcessResult.Error
         
-        val serverTimestamp = doc.getTimestamp("lastModified")?.toDate()?.time
-            ?: (colaboradorData["dataUltimaAtualizacao"] as? Timestamp)?.toDate()?.time
-            ?: colaboradorFirestore.dataUltimaAtualizacao.time
+        val serverTimestamp = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(colaboradorData["lastModified"])
+            ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(colaboradorData["dataUltimaAtualizacao"])
+            ?: colaboradorFirestore.dataUltimaAtualizacao
         
         val localColaborador = colaboradoresCache[colaboradorId]
-        val localTimestamp = localColaborador?.dataUltimaAtualizacao?.time ?: 0L
+        val localTimestamp = localColaborador?.dataUltimaAtualizacao ?: 0L
         
         return if (localColaborador == null || serverTimestamp > localTimestamp) {
             val colaboradorParaSalvar = if (localColaborador?.aprovado == true && !colaboradorFirestore.aprovado) {
@@ -237,7 +237,7 @@ class ColaboradorSyncHandler @javax.inject.Inject constructor(
             val colaboradoresLocais = appRepository.obterTodosColaboradores().first()
             
             val paraEnviar = if (canUseIncremental) {
-                colaboradoresLocais.filter { it.dataUltimaAtualizacao.time > lastPushTimestamp }
+                colaboradoresLocais.filter { it.dataUltimaAtualizacao > lastPushTimestamp }
             } else {
                 colaboradoresLocais
             }

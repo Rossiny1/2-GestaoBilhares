@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.contracts
+package com.example.gestaobilhares.ui.contracts
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -103,7 +103,7 @@ class SignatureCaptureViewModel @Inject constructor(
                     // locatarioAssinaturaVelocidadeMedia = velocidadeMedia,
                     // locatarioAssinaturaDuracao = duracao,
                     // locatarioAssinaturaTotalPontos = totalPontos,
-                    dataAtualizacao = Date()
+                    dataAtualizacao = System.currentTimeMillis()
                 )
                 
                 repository.atualizarContrato(contratoAtualizado)
@@ -125,8 +125,8 @@ class SignatureCaptureViewModel @Inject constructor(
                 val contrato = _contrato.value ?: throw Exception("Contrato não encontrado")
                 val contratoAtualizado = contrato.copy(
                     distratoAssinaturaLocatario = assinaturaBase64,
-                    distratoDataAssinatura = Date(),
-                    dataAtualizacao = Date()
+                    distratoDataAssinatura = System.currentTimeMillis(),
+                    dataAtualizacao = System.currentTimeMillis()
                 )
                 repository.atualizarContrato(contratoAtualizado)
                 _contrato.value = contratoAtualizado

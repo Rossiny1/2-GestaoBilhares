@@ -4,7 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.io.Serializable
-import java.util.Date
 
 /**
  * Entidade que representa o histórico de manutenção de uma mesa.
@@ -28,7 +27,7 @@ data class HistoricoManutencaoMesa(
     val descricao: String?, // Descrição detalhada da manutenção
     
     @ColumnInfo(name = "data_manutencao")
-    val dataManutencao: Date, // Data em que a manutenção foi realizada
+    val dataManutencao: Long, // Data em que a manutenção foi realizada
     
     @ColumnInfo(name = "responsavel")
     val responsavel: String?, // Quem realizou a manutenção
@@ -46,7 +45,7 @@ data class HistoricoManutencaoMesa(
     val fotoDepois: String? = null, // Caminho da foto depois da manutenção
     
     @ColumnInfo(name = "data_criacao")
-    val dataCriacao: Date = Date() // Data de criação do registro
+    val dataCriacao: Long = System.currentTimeMillis() // Data de criação do registro
 ) : Serializable
 
 /**

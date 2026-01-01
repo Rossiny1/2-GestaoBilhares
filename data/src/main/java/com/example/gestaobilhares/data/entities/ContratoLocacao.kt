@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
-import java.util.Date
 import java.io.Serializable
 
 @Entity(
@@ -46,20 +45,20 @@ data class ContratoLocacao(
     val percentualReceita: Double? = null, // Se for percentual
     
     // Status e datas
-    val dataContrato: Date,
-    val dataInicio: Date,
+    val dataContrato: Long,
+    val dataInicio: Long,
     val status: String = "ATIVO", // ATIVO, RESCINDIDO, ENCERRADO_QUITADO, RESCINDIDO_COM_DIVIDA
-    val dataEncerramento: Date? = null,
+    val dataEncerramento: Long? = null,
     val assinaturaLocador: String? = null, // Base64 da assinatura
     val assinaturaLocatario: String? = null, // Base64 da assinatura
     // Assinaturas do distrato (capturadas no ato do encerramento)
     val distratoAssinaturaLocador: String? = null,
     val distratoAssinaturaLocatario: String? = null,
-    val distratoDataAssinatura: Date? = null,
+    val distratoDataAssinatura: Long? = null,
     
     // Controle
-    val dataCriacao: Date = Date(),
-    val dataAtualizacao: Date = Date()
+    val dataCriacao: Long = System.currentTimeMillis(),
+    val dataAtualizacao: Long = System.currentTimeMillis()
 ) : Serializable
 
 @Entity(
@@ -114,7 +113,7 @@ data class AditivoContrato(
     val contratoId: Long, // ID do contrato original
     
     // Dados do aditivo
-    val dataAditivo: Date,
+    val dataAditivo: Long,
     val observacoes: String? = null,
     val tipo: String = "INCLUSAO", // INCLUSAO ou RETIRADA
     
@@ -123,8 +122,8 @@ data class AditivoContrato(
     val assinaturaLocatario: String? = null, // Base64 da assinatura
     
     // Controle
-    val dataCriacao: Date = Date(),
-    val dataAtualizacao: Date = Date()
+    val dataCriacao: Long = System.currentTimeMillis(),
+    val dataAtualizacao: Long = System.currentTimeMillis()
 )
 
 @Entity(

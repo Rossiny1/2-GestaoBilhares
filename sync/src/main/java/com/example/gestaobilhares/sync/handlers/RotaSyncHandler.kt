@@ -14,8 +14,9 @@ import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
-import java.util.Date
 import com.example.gestaobilhares.core.utils.FirebaseImageUploader
+import com.example.gestaobilhares.core.utils.DateUtils
+import java.util.Date
 
 /**
  * Handler especializado para sincronização de Rotas.
@@ -179,12 +180,12 @@ class RotaSyncHandler(
                     return@forEach
                 }
                 
-                val dataCriacaoLong = converterTimestampParaDate(rotaData["dataCriacao"])?.time 
-                    ?: converterTimestampParaDate(rotaData["data_criacao"])?.time
+                val dataCriacaoLong = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(rotaData["dataCriacao"])
+                    ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(rotaData["data_criacao"])
                     ?: System.currentTimeMillis()
-                val dataAtualizacaoLong = converterTimestampParaDate(rotaData["dataAtualizacao"])?.time
-                    ?: converterTimestampParaDate(rotaData["data_atualizacao"])?.time
-                    ?: converterTimestampParaDate(rotaData["lastModified"])?.time
+                val dataAtualizacaoLong = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(rotaData["dataAtualizacao"])
+                    ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(rotaData["data_atualizacao"])
+                    ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(rotaData["lastModified"])
                     ?: System.currentTimeMillis()
                 
                 if (roomId == null) {

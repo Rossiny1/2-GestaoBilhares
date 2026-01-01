@@ -4,7 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import java.util.Date
 
 /**
  * Entidade que representa o relacionamento entre Acerto e Mesa.
@@ -76,8 +75,8 @@ data class AcertoMesa(
     val fotoRelogioFinal: String? = null,
     
     @ColumnInfo(name = "data_foto")
-    val dataFoto: Date? = null,
+    val dataFoto: Long? = null,
     
     @ColumnInfo(name = "data_criacao")
-    val dataCriacao: Date = Date()
+    val dataCriacao: Long = System.currentTimeMillis()
 ) 

@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.reports
+package com.example.gestaobilhares.ui.reports
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -94,7 +94,7 @@ class ClosureReportViewModel @Inject constructor(
             val acertos = if (acertoSelecionado.numero == 0) {
                 repository.obterTodosAcertos().first().filter { ac ->
                     val cal = java.util.Calendar.getInstance()
-                    cal.time = ac.dataAcerto
+                    cal.timeInMillis = ac.dataAcerto
                     cal.get(java.util.Calendar.YEAR) == anoSelecionado
                 }
             } else {
@@ -212,7 +212,7 @@ class ClosureReportViewModel @Inject constructor(
             Timber.d("ChartData", "Total de acertos encontrados: ${todosAcertos.size}")
             todosAcertos.filter { ac ->
                 val cal = java.util.Calendar.getInstance()
-                cal.time = ac.dataAcerto
+                cal.timeInMillis = ac.dataAcerto
                 val anoAcerto = cal.get(java.util.Calendar.YEAR)
                 Timber.d("ChartData", "Acerto ano: $anoAcerto, filtro: $anoSelecionado, valor: ${ac.valorRecebido}")
                 anoAcerto == anoSelecionado

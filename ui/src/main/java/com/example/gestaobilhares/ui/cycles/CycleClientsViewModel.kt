@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.cycles
+package com.example.gestaobilhares.ui.cycles
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -65,7 +65,7 @@ class CycleClientsViewModel @Inject constructor(
                         id = acerto.clienteId,
                         nome = cliente?.nome ?: "Cliente ${acerto.clienteId}",
                         valorAcertado = acerto.valorRecebido,
-                        dataAcerto = acerto.dataAcerto,
+                        dataAcerto = Date(acerto.dataAcerto),
                         observacoes = acerto.observacoes
                     )
                 }

@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.settlement
+package com.example.gestaobilhares.ui.settlement
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -154,14 +154,14 @@ class SettlementDetailViewModel @Inject constructor(
                         panoTrocado = acerto.panoTrocado,
                         numeroPano = acerto.numeroPano,
                         metodosPagamento = metodosPagamento,
-                        dataFinalizacao = acerto.dataFinalizacao,
+                        dataFinalizacao = acerto.dataFinalizacao?.let { Date(it) },
                         // ✅ NOVOS DADOS: Dados do cliente
                         clienteNome = clienteNome,
                         clienteTelefone = clienteTelefone,
                         clienteCpf = clienteCpf,
                         valorFicha = valorFichaCliente,
                         comissaoFicha = comissaoFichaCliente,
-                        dataAcerto = acerto.dataAcerto
+                        dataAcerto = Date(acerto.dataAcerto)
                     )
                     
                     _settlementDetail.value = settlementDetail

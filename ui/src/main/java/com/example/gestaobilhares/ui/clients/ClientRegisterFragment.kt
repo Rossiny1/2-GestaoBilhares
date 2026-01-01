@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.clients
+package com.example.gestaobilhares.ui.clients
 import com.example.gestaobilhares.ui.R
 
 import android.Manifest
@@ -49,7 +49,7 @@ class ClientRegisterFragment : Fragment() {
     private var currentLatitude: Double? = null
     private var currentLongitude: Double? = null
     private var currentAccuracy: Float? = null
-    private var locationCaptureTime: Date? = null
+    private var locationCaptureTime: Long? = null
     
     // Launcher para solicitar permissões de localização
     private val locationPermissionLauncher = registerForActivityResult(
@@ -686,7 +686,7 @@ class ClientRegisterFragment : Fragment() {
                     currentLatitude = location.latitude
                     currentLongitude = location.longitude
                     currentAccuracy = location.accuracy
-                    locationCaptureTime = Date()
+                    locationCaptureTime = System.currentTimeMillis()
                     
                     // Atualizar UI
                     // Feedback de sucesso

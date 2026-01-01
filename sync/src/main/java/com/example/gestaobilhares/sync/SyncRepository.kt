@@ -9,6 +9,8 @@ import com.example.gestaobilhares.core.utils.FirebaseImageUploader
 import com.example.gestaobilhares.core.utils.UserSessionManager
 import com.example.gestaobilhares.data.database.AppDatabase
 import com.example.gestaobilhares.data.dao.SyncMetadataDao
+import com.example.gestaobilhares.core.utils.DateUtils
+import com.example.gestaobilhares.sync.handlers.ProcessResult
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.CollectionReference
@@ -31,7 +33,7 @@ import java.util.Locale
 import java.util.TimeZone
 import java.io.File
 import kotlin.math.roundToInt
-import com.example.gestaobilhares.sync.handlers.ProcessResult
+
 
 /**
  * Repository especializado para sincroniza��o de dados.
@@ -76,6 +78,7 @@ class SyncRepository @javax.inject.Inject constructor(
     private val gson: Gson by lazy { 
         GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+            .setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create() 
     }
     
@@ -85,6 +88,61 @@ class SyncRepository @javax.inject.Inject constructor(
      * O problema anterior era que classes anônimas perdem suas assinaturas genéricas após otimização.
      */
     private val mapType: java.lang.reflect.Type = Companion.mapTypeTokenInstance.type
+    
+    /**
+     * Converte entidade para Map para Firestore.
+     * Similar ao método do BaseSyncHandler, mas adaptado para SyncRepository.
+     */
+    private fun <T> entityToMap(entity: T): MutableMap<String, Any> {
+        val json = gson.toJson(entity)
+        @Suppress("UNCHECKED_CAST")
+        val map = gson.fromJson(json, Map::class.java) as? Map<String, Any> ?: emptyMap()
+        
+        return map.mapKeys { it.key.toString() }.mapValues { entry ->
+            val key = entry.key.lowercase()
+            val value = entry.value
+            
+            when {
+                // 1. Já é uma Date
+                value is Date -> com.google.firebase.Timestamp(value)
+                
+                // 2. É uma String que pode ser uma Data
+                value is String && (key.contains("data") || key.contains("timestamp") || key.contains("time")) -> {
+                    try {
+                        if (value.contains("T")) {
+                            val ldt = java.time.LocalDateTime.parse(value, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                            val instant = ldt.atZone(java.time.ZoneId.systemDefault()).toInstant()
+                            com.google.firebase.Timestamp(instant.epochSecond, instant.nano)
+                        } else {
+                            val date = gson.fromJson("\"$value\"", Date::class.java)
+                            if (date != null) {
+                                com.google.firebase.Timestamp(date)
+                            } else {
+                                value
+                            }
+                        }
+                    } catch (e: Exception) {
+                        value
+                    }
+                }
+                
+                // 3. É um Long que representa um timestamp
+                value is Long || (value is Double && value % 1 == 0.0) -> {
+                    val longValue = if (value is Double) value.toLong() else value as Long
+                    if (key.contains("data") || key.contains("timestamp") || key.contains("time")) {
+                        val seconds = longValue / 1000
+                        val nanoseconds = ((longValue % 1000) * 1000000).toInt()
+                        com.google.firebase.Timestamp(seconds, nanoseconds)
+                    } else {
+                        longValue
+                    }
+                }
+                
+                // 4. Manter outros tipos
+                else -> value
+            }
+        }.toMutableMap()
+    }
     
     // ? NOVO: ID da empresa din�mico vindo da sess�o
     private val currentCompanyId: String
@@ -242,7 +300,7 @@ class SyncRepository @javax.inject.Inject constructor(
 
         return when (rawValue) {
             is com.google.firebase.Timestamp -> rawValue.toDate().time
-            is Date -> rawValue.time
+            is java.util.Date -> rawValue.time
             is Number -> rawValue.toLong()
             is String -> parseDataAcertoString(rawValue)
             else -> {
@@ -319,8 +377,8 @@ class SyncRepository @javax.inject.Inject constructor(
                 limit = null,
                 builder = { query ->
                     query
-                        .whereGreaterThanOrEqualTo("dataAcerto", Timestamp(inicio))
-                        .whereLessThanOrEqualTo("dataAcerto", Timestamp(fim))
+                        .whereGreaterThanOrEqualTo("dataAcerto", com.google.firebase.Timestamp(inicio))
+                        .whereLessThanOrEqualTo("dataAcerto", com.google.firebase.Timestamp(fim))
                         .orderBy("dataAcerto", Query.Direction.DESCENDING)
                 }
             )
@@ -2133,10 +2191,10 @@ class SyncRepository @javax.inject.Inject constructor(
                         ?: (data["timestamp"] as? com.google.firebase.Timestamp)?.seconds?.times(1000)?.plus(
                             (data["timestamp"] as? com.google.firebase.Timestamp)?.nanoseconds?.div(1000000) ?: 0
                         ) ?: System.currentTimeMillis()
-                    val dataOperacao = converterTimestampParaDate(data["dataOperacao"])
-                        ?: converterTimestampParaDate(data["data_operacao"]) ?: Date(timestamp)
-                    val dataValidacao = converterTimestampParaDate(data["dataValidacao"])
-                        ?: converterTimestampParaDate(data["data_validacao"])
+                    val dataOperacao = DateUtils.converterTimestampParaDate(data["dataOperacao"])
+                        ?: DateUtils.converterTimestampParaDate(data["data_operacao"]) ?: Date(timestamp)
+                    val dataValidacao = DateUtils.converterTimestampParaDate(data["dataValidacao"])
+                        ?: DateUtils.converterTimestampParaDate(data["data_validacao"])
                     
                     val log = LogAuditoriaAssinatura(
                         id = logId,
@@ -2176,11 +2234,11 @@ class SyncRepository @javax.inject.Inject constructor(
                         sucesso = data["sucesso"] as? Boolean ?: true,
                         mensagemErro = data["mensagemErro"] as? String
                             ?: data["mensagem_erro"] as? String,
-                        dataOperacao = dataOperacao,
+                        dataOperacao = dataOperacao?.time ?: System.currentTimeMillis(),
                         observacoes = data["observacoes"] as? String,
-                    validadoJuridicamente = data["validadaJuridicamente"] as? Boolean
-                        ?: data["validada_juridicamente"] as? Boolean ?: false,
-                        dataValidacao = dataValidacao,
+                        validadoJuridicamente = data["validadaJuridicamente"] as? Boolean
+                            ?: data["validada_juridicamente"] as? Boolean ?: false,
+                        dataValidacao = dataValidacao?.time,
                         validadoPor = data["validadoPor"] as? String
                             ?: data["validado_por"] as? String
                     )
@@ -2394,10 +2452,10 @@ class SyncRepository @javax.inject.Inject constructor(
                     
                     val mesaVendidaId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
-                    val dataVenda = converterTimestampParaDate(data["dataVenda"])
-                        ?: converterTimestampParaDate(data["data_venda"]) ?: Date()
-                    val dataCriacao = converterTimestampParaDate(data["dataCriacao"])
-                        ?: converterTimestampParaDate(data["data_criacao"]) ?: Date()
+                    val dataVenda = DateUtils.converterTimestampParaDate(data["dataVenda"])
+                        ?: DateUtils.converterTimestampParaDate(data["data_venda"]) ?: Date()
+                    val dataCriacao = DateUtils.converterTimestampParaDate(data["dataCriacao"])
+                        ?: DateUtils.converterTimestampParaDate(data["data_criacao"]) ?: Date()
                     
                     // Converter enums
                     val tipoMesaStr = (data["tipoMesa"] as? String) ?: (data["tipo_mesa"] as? String) ?: "SINUCA"
@@ -2433,16 +2491,16 @@ class SyncRepository @javax.inject.Inject constructor(
                         cpfCnpjComprador = data["cpfCnpjComprador"] as? String ?: (data["cpf_cnpj_comprador"] as? String),
                         enderecoComprador = data["enderecoComprador"] as? String ?: (data["endereco_comprador"] as? String),
                         valorVenda = (data["valorVenda"] as? Number)?.toDouble() ?: (data["valor_venda"] as? Number)?.toDouble() ?: 0.0,
-                        dataVenda = dataVenda,
+                        dataVenda = dataVenda.time,
                         observacoes = data["observacoes"] as? String,
-                        dataCriacao = dataCriacao
+                        dataCriacao = dataCriacao.time
                     )
                     
                     // ? Verificar timestamp do servidor vs local
                     val serverTimestamp = (data["lastModified"] as? com.google.firebase.Timestamp)?.toDate()?.time
                         ?: dataCriacao.time
                     val mesaVendidaLocal = mesasVendidasCache[mesaVendidaId]
-                    val localTimestamp = mesaVendidaLocal?.dataCriacao?.time ?: 0L
+                    val localTimestamp = mesaVendidaLocal?.dataCriacao ?: 0L
                     
                     // Sincronizar se: no existe localmente OU servidor  mais recente OU foi modificado desde ltima sync
                     val shouldSync = mesaVendidaLocal == null || 
@@ -2529,8 +2587,8 @@ class SyncRepository @javax.inject.Inject constructor(
                     val data = doc.data ?: emptyMap()
                     val mesaVendidaId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
-                    val dataVenda = converterTimestampParaDate(data["dataVenda"]) ?: converterTimestampParaDate(data["data_venda"]) ?: Date()
-                    val dataCriacao = converterTimestampParaDate(data["dataCriacao"]) ?: converterTimestampParaDate(data["data_criacao"]) ?: Date()
+                    val dataVenda = DateUtils.converterTimestampParaDate(data["dataVenda"]) ?: DateUtils.converterTimestampParaDate(data["data_venda"]) ?: Date()
+                    val dataCriacao = DateUtils.converterTimestampParaDate(data["dataCriacao"]) ?: DateUtils.converterTimestampParaDate(data["data_criacao"]) ?: Date()
                     
                     val tipoMesaStr = (data["tipoMesa"] as? String) ?: (data["tipo_mesa"] as? String) ?: "SINUCA"
                     val tipoMesa = try { TipoMesa.valueOf(tipoMesaStr) } catch (e: Exception) { TipoMesa.SINUCA }
@@ -2553,9 +2611,9 @@ class SyncRepository @javax.inject.Inject constructor(
                         cpfCnpjComprador = data["cpfCnpjComprador"] as? String ?: (data["cpf_cnpj_comprador"] as? String),
                         enderecoComprador = data["enderecoComprador"] as? String ?: (data["endereco_comprador"] as? String),
                         valorVenda = (data["valorVenda"] as? Number)?.toDouble() ?: (data["valor_venda"] as? Number)?.toDouble() ?: 0.0,
-                        dataVenda = dataVenda,
+                        dataVenda = dataVenda.time,
                         observacoes = data["observacoes"] as? String,
-                        dataCriacao = dataCriacao
+                        dataCriacao = dataCriacao.time
                     )
                     
                     val rotaId = getMesaRouteId(mesaVendida.mesaIdOriginal)
@@ -2622,7 +2680,7 @@ class SyncRepository @javax.inject.Inject constructor(
             // ? Filtrar apenas mesas vendidas modificadas desde ltimo push
             val mesasParaEnviar = if (canUseIncremental) {
                 mesasVendidasLocais.filter { mesaVendida ->
-                    val mesaTimestamp = mesaVendida.dataCriacao.time
+                    val mesaTimestamp = mesaVendida.dataCriacao
                     mesaTimestamp > lastPushTimestamp
                 }.also {
                     Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} mesas vendidas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasVendidasLocais.size} total)")
@@ -2641,10 +2699,18 @@ class SyncRepository @javax.inject.Inject constructor(
             var syncCount = 0
             var errorCount = 0
             var bytesUploaded = 0L
+            val collectionRef = getCollectionRef(COLLECTION_MESAS_VENDIDAS)
+            
             mesasParaEnviar.forEach { mesaVendida ->
                 try {
-                    // Usar o entityToMap do EstoqueSyncHandler via mtodo pblico se necessrio.
-                    // Para correcao imediata do build, vamos simplificar.
+                    val map = entityToMap(mesaVendida)
+                    map["roomId"] = mesaVendida.id
+                    map["id"] = mesaVendida.id
+                    map["lastModified"] = FieldValue.serverTimestamp()
+                    map["syncTimestamp"] = FieldValue.serverTimestamp()
+                    
+                    collectionRef.document(mesaVendida.id.toString()).set(map).await()
+                    bytesUploaded += (map.toString().length).toLong()
                     syncCount++
                 } catch (e: Exception) {
                     errorCount++
@@ -2772,10 +2838,10 @@ class SyncRepository @javax.inject.Inject constructor(
                     
                     val stockItemId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
-                    val createdAt = converterTimestampParaDate(data["createdAt"])
-                        ?: converterTimestampParaDate(data["created_at"]) ?: Date()
-                    val updatedAt = converterTimestampParaDate(data["updatedAt"])
-                        ?: converterTimestampParaDate(data["updated_at"]) ?: Date()
+                    val createdAt = DateUtils.converterTimestampParaDate(data["createdAt"])
+                        ?: DateUtils.converterTimestampParaDate(data["created_at"]) ?: Date()
+                    val updatedAt = DateUtils.converterTimestampParaDate(data["updatedAt"])
+                        ?: DateUtils.converterTimestampParaDate(data["updated_at"]) ?: Date()
                     
                     val stockItem = StockItem(
                         id = stockItemId,
@@ -2785,15 +2851,15 @@ class SyncRepository @javax.inject.Inject constructor(
                         unitPrice = (data["unitPrice"] as? Number)?.toDouble() ?: (data["unit_price"] as? Number)?.toDouble() ?: 0.0,
                         supplier = data["supplier"] as? String ?: "",
                         description = data["description"] as? String,
-                        createdAt = createdAt,
-                        updatedAt = updatedAt
+                        createdAt = createdAt.time,
+                        updatedAt = updatedAt.time
                     )
                     
                     // ? Verificar timestamp do servidor vs local
                     val serverTimestamp = (data["lastModified"] as? com.google.firebase.Timestamp)?.toDate()?.time
                         ?: updatedAt.time
                     val stockItemLocal = stockItemsCache[stockItemId]
-                    val localTimestamp = stockItemLocal?.updatedAt?.time ?: 0L
+                    val localTimestamp = stockItemLocal?.updatedAt ?: 0L
                     
                     // Sincronizar se: no existe localmente OU servidor  mais recente OU foi modificado desde ltima sync
                     val shouldSync = stockItemLocal == null || 
@@ -2874,8 +2940,8 @@ class SyncRepository @javax.inject.Inject constructor(
                     val data = doc.data ?: emptyMap()
                     val stockItemId = (data["roomId"] as? Long) ?: (data["id"] as? Long) ?: doc.id.toLongOrNull() ?: 0L
                     
-                    val createdAt = converterTimestampParaDate(data["createdAt"]) ?: converterTimestampParaDate(data["created_at"]) ?: Date()
-                    val updatedAt = converterTimestampParaDate(data["updatedAt"]) ?: converterTimestampParaDate(data["updated_at"]) ?: Date()
+                    val createdAt = DateUtils.converterTimestampParaDate(data["createdAt"]) ?: DateUtils.converterTimestampParaDate(data["created_at"]) ?: Date()
+                    val updatedAt = DateUtils.converterTimestampParaDate(data["updatedAt"]) ?: DateUtils.converterTimestampParaDate(data["updated_at"]) ?: Date()
                     
                     val stockItem = StockItem(
                         id = stockItemId,
@@ -2885,8 +2951,8 @@ class SyncRepository @javax.inject.Inject constructor(
                         unitPrice = (data["unitPrice"] as? Number)?.toDouble() ?: (data["unit_price"] as? Number)?.toDouble() ?: 0.0,
                         supplier = data["supplier"] as? String ?: "",
                         description = data["description"] as? String,
-                        createdAt = createdAt,
-                        updatedAt = updatedAt
+                        createdAt = createdAt.time,
+                        updatedAt = updatedAt.time
                     )
                     
                     if (stockItem.name.isBlank()) {
@@ -2946,7 +3012,7 @@ class SyncRepository @javax.inject.Inject constructor(
             // ? Filtrar apenas stock items modificados desde ltimo push (usar updatedAt)
             val itemsParaEnviar = if (canUseIncremental) {
                 stockItemsLocais.filter { stockItem ->
-                    val itemTimestamp = stockItem.updatedAt.time
+                    val itemTimestamp = stockItem.updatedAt
                     itemTimestamp > lastPushTimestamp
                 }.also {
                     Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} stock items modificados desde ${Date(lastPushTimestamp)} (de ${stockItemsLocais.size} total)")
@@ -3106,13 +3172,13 @@ class SyncRepository @javax.inject.Inject constructor(
                     // ✅ CORREÇÃO: Preservar dataReforma local se existir e for válida
                     // Se o Firestore não tiver dataReforma ou tiver uma data muito recente (fallback),
                     // usar a data local que já existe
-                    val dataReformaFirestore = converterTimestampParaDate(data["dataReforma"])
-                        ?: converterTimestampParaDate(data["data_reforma"])
+                    val dataReformaFirestore = DateUtils.converterTimestampParaDate(data["dataReforma"])
+                        ?: DateUtils.converterTimestampParaDate(data["data_reforma"])
                     
                     // Verificar se a data local não é de hoje (indicando que não é um fallback)
                     val hoje = System.currentTimeMillis()
                     val inicioHoje = hoje - (hoje % 86400000) // Início do dia em millis
-                    val dataLocalValida = mesaReformadaLocal?.dataReforma?.time?.let { it < inicioHoje } ?: false
+                    val dataLocalValida = mesaReformadaLocal?.dataReforma?.let { it < inicioHoje } ?: false
                     
                     val dataReforma = when {
                         // Se existe localmente com data válida (não é de hoje), preservar
@@ -3121,15 +3187,15 @@ class SyncRepository @javax.inject.Inject constructor(
                             mesaReformadaLocal.dataReforma
                         }
                         // Se o Firestore tem dataReforma válida, usar ela
-                        dataReformaFirestore != null -> dataReformaFirestore
+                        dataReformaFirestore != null -> dataReformaFirestore.time
                         // Se existe localmente mas sem data válida, usar a local mesmo assim
                         mesaReformadaLocal != null -> mesaReformadaLocal.dataReforma
                         // Fallback apenas se não existir localmente
-                        else -> Date()
+                        else -> Date().time
                     }
                     
-                    val dataCriacao = converterTimestampParaDate(data["dataCriacao"])
-                        ?: converterTimestampParaDate(data["data_criacao"]) ?: Date()
+                    val dataCriacao = DateUtils.converterTimestampParaDate(data["dataCriacao"])
+                        ?: DateUtils.converterTimestampParaDate(data["data_criacao"]) ?: Date()
                     
                     // Converter enums
                     val tipoMesaStr = (data["tipoMesa"] as? String) ?: (data["tipo_mesa"] as? String) ?: "SINUCA"
@@ -3160,15 +3226,15 @@ class SyncRepository @javax.inject.Inject constructor(
                         observacoes = data["observacoes"] as? String,
                         fotoReforma = data["fotoReforma"] as? String ?: (data["foto_reforma"] as? String),
                         dataReforma = dataReforma,
-                        dataCriacao = dataCriacao
+                        dataCriacao = dataCriacao.time
                     )
                     
                     // ? ANDROID 2025: Verificar timestamp do servidor vs local
                     val serverTimestamp = (data["lastModified"] as? com.google.firebase.Timestamp)?.toDate()?.time
                         ?: (data["dataCriacao"] as? com.google.firebase.Timestamp)?.toDate()?.time
-                        ?: mesaReformada.dataCriacao.time
+                        ?: mesaReformada.dataCriacao
                     // ✅ CORREÇÃO: mesaReformadaLocal já foi obtido acima para preservar dataReforma
-                    val localTimestamp = mesaReformadaLocal?.dataCriacao?.time ?: 0L
+                    val localTimestamp = mesaReformadaLocal?.dataCriacao ?: 0L
                     
                     // Sincronizar se: no existe localmente OU servidor  mais recente OU foi modificado desde ltima sync
                     val shouldSync = mesaReformadaLocal == null || 
@@ -3185,8 +3251,8 @@ class SyncRepository @javax.inject.Inject constructor(
                         // ✅ CORREÇÃO: Garantir que dataReforma local seja preservada (já foi preservada acima, mas garantir novamente)
                         val hoje = System.currentTimeMillis()
                         val inicioHoje = hoje - (hoje % 86400000)
-                        val dataLocalValida = mesaReformadaLocal?.dataReforma?.time?.let { it < inicioHoje } ?: false
-                        val mesaReformadaParaSalvar = if (mesaReformadaLocal != null && dataLocalValida && mesaReformada.dataReforma.time >= inicioHoje) {
+                        val dataLocalValida = mesaReformadaLocal?.dataReforma?.let { it < inicioHoje } ?: false
+                        val mesaReformadaParaSalvar = if (mesaReformadaLocal != null && dataLocalValida && mesaReformada.dataReforma >= inicioHoje) {
                             // Se a data do Firestore é de hoje (fallback) mas a local é válida, preservar local
                             Timber.tag(TAG).d("⚠️ Corrigindo dataReforma de fallback para data local válida: ${mesaReformadaLocal.dataReforma}")
                             mesaReformada.copy(dataReforma = mesaReformadaLocal.dataReforma)
@@ -3271,13 +3337,13 @@ class SyncRepository @javax.inject.Inject constructor(
                     val mesaReformadaLocal = mesasReformadasCache[mesaReformadaId]
                     
                     // ✅ CORREÇÃO: Preservar dataReforma local se existir e for válida
-                    val dataReformaFirestore = converterTimestampParaDate(data["dataReforma"])
-                        ?: converterTimestampParaDate(data["data_reforma"])
+                    val dataReformaFirestore = DateUtils.converterTimestampParaDate(data["dataReforma"])
+                        ?: DateUtils.converterTimestampParaDate(data["data_reforma"])
                     
                     // Verificar se a data local não é de hoje (indicando que não é um fallback)
                     val hoje = System.currentTimeMillis()
                     val inicioHoje = hoje - (hoje % 86400000) // Início do dia em millis
-                    val dataLocalValida = mesaReformadaLocal?.dataReforma?.time?.let { it < inicioHoje } ?: false
+                    val dataLocalValida = mesaReformadaLocal?.dataReforma?.let { it < inicioHoje } ?: false
                     
                     val dataReforma = when {
                         // Se existe localmente com data válida (não é de hoje), preservar
@@ -3286,15 +3352,15 @@ class SyncRepository @javax.inject.Inject constructor(
                             mesaReformadaLocal.dataReforma
                         }
                         // Se o Firestore tem dataReforma válida, usar ela
-                        dataReformaFirestore != null -> dataReformaFirestore
+                        dataReformaFirestore != null -> dataReformaFirestore.time
                         // Se existe localmente mas sem data válida, usar a local mesmo assim
                         mesaReformadaLocal != null -> mesaReformadaLocal.dataReforma
                         // Fallback apenas se não existir localmente
-                        else -> Date()
+                        else -> Date().time
                     }
                     
-                    val dataCriacao = converterTimestampParaDate(data["dataCriacao"])
-                        ?: converterTimestampParaDate(data["data_criacao"]) ?: Date()
+                    val dataCriacao = DateUtils.converterTimestampParaDate(data["dataCriacao"])
+                        ?: DateUtils.converterTimestampParaDate(data["data_criacao"]) ?: Date()
                     
                     val tipoMesaStr = (data["tipoMesa"] as? String) ?: (data["tipo_mesa"] as? String) ?: "SINUCA"
                     val tipoMesa = try { TipoMesa.valueOf(tipoMesaStr) } catch (e: Exception) { TipoMesa.SINUCA }
@@ -3317,7 +3383,7 @@ class SyncRepository @javax.inject.Inject constructor(
                         observacoes = data["observacoes"] as? String,
                         fotoReforma = data["fotoReforma"] as? String ?: (data["foto_reforma"] as? String),
                         dataReforma = dataReforma,
-                        dataCriacao = dataCriacao
+                        dataCriacao = dataCriacao.time
                     )
                     
                     if (mesaReformada.numeroMesa.isBlank()) {
@@ -3379,7 +3445,7 @@ class SyncRepository @javax.inject.Inject constructor(
             
             val mesasParaEnviar = if (canUseIncremental) {
                 mesasReformadasLocais.filter { mesaReformada ->
-                    val mesaTimestamp = mesaReformada.dataCriacao.time
+                    val mesaTimestamp = mesaReformada.dataCriacao
                     mesaTimestamp > lastPushTimestamp
                 }.also {
                     Timber.tag(TAG).d("?? Push INCREMENTAL: ${it.size} mesas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasReformadasLocais.size} total)")
@@ -3471,17 +3537,7 @@ class SyncRepository @javax.inject.Inject constructor(
         return veiculoSyncHandler?.push() ?: Result.success(0)
     }
 
-    /**
-     * Helper para converter timestamp do Firestore para Date.
-     */
-    private fun converterTimestampParaDate(value: Any?): Date? {
-        return when (value) {
-            is com.google.firebase.Timestamp -> value.toDate()
-            is Long -> Date(value)
-            is String -> try { Date(value.toLong()) } catch (e: Exception) { null }
-            else -> null
-        }
-    }
+
 
 
     

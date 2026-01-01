@@ -3,7 +3,6 @@ package com.example.gestaobilhares.data.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Index
-import java.util.Date
 
 /**
  * Entidade que representa uma categoria de despesa no banco de dados.
@@ -25,9 +24,9 @@ data class CategoriaDespesa(
     
     val ativa: Boolean = true,
     
-    val dataCriacao: Date = Date(),
+    val dataCriacao: Long = System.currentTimeMillis(),
     
-    val dataAtualizacao: Date = Date(),
+    val dataAtualizacao: Long = System.currentTimeMillis(),
     
     val criadoPor: String = ""
 ) {

@@ -51,11 +51,11 @@ data class CicloAcertoEntity(
     
     @ColumnInfo(name = "data_inicio")
     @SerializedName("data_inicio")
-    val dataInicio: Date,
+    val dataInicio: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "data_fim")
     @SerializedName("data_fim")
-    val dataFim: Date,
+    val dataFim: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "status")
     @SerializedName("status")
@@ -95,11 +95,11 @@ data class CicloAcertoEntity(
     
     @ColumnInfo(name = "data_criacao")
     @SerializedName("data_criacao")
-    val dataCriacao: Date = Date(),
+    val dataCriacao: Long = System.currentTimeMillis(),
     
     @ColumnInfo(name = "data_atualizacao")
     @SerializedName("data_atualizacao")
-    val dataAtualizacao: Date = Date()
+    val dataAtualizacao: Long = System.currentTimeMillis()
 ) {
     /**
      * Calcula o percentual de conclusão do ciclo

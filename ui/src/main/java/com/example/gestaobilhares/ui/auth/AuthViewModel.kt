@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.auth
+package com.example.gestaobilhares.ui.auth
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -170,7 +170,7 @@ class AuthViewModel @Inject constructor(
                                         // Atualizar firebaseUid e salvar localmente
                                         val colaboradorComUid = colaboradorFallback.copy(
                                             firebaseUid = result.user!!.uid,
-                                            dataUltimoAcesso = java.util.Date()
+                                            dataUltimoAcesso = System.currentTimeMillis()
                                         )
                                         try {
                                             val colaboradorExistente = appRepository.obterColaboradorPorEmail(email)
@@ -812,11 +812,11 @@ class AuthViewModel @Inject constructor(
                     colaboradorExistente.copy(
                         nome = firebaseUser.displayName ?: colaboradorExistente.nome,
                         firebaseUid = firebaseUser.uid,
-                        dataUltimoAcesso = java.util.Date(),
+                        dataUltimoAcesso = System.currentTimeMillis(),
                         nivelAcesso = NivelAcesso.ADMIN,
                         aprovado = true,
                         primeiroAcesso = false, // Superadmin nunca precisa alterar senha
-                        dataAprovacao = colaboradorExistente.dataAprovacao ?: java.util.Date(),
+                        dataAprovacao = colaboradorExistente.dataAprovacao ?: System.currentTimeMillis(),
                         aprovadoPor = colaboradorExistente.aprovadoPor ?: "Sistema (Superadmin)",
                         senhaHash = senhaParaHash // ✅ Atualizar senhaHash para login offline
                     )
@@ -825,7 +825,7 @@ class AuthViewModel @Inject constructor(
                     colaboradorExistente.copy(
                         nome = firebaseUser.displayName ?: colaboradorExistente.nome,
                         firebaseUid = firebaseUser.uid,
-                        dataUltimoAcesso = java.util.Date()
+                        dataUltimoAcesso = System.currentTimeMillis()
                         // NÃO alterar nivelAcesso, aprovado, etc. para usuários normais
                     )
                 }
@@ -868,7 +868,7 @@ class AuthViewModel @Inject constructor(
                     // ✅ Atualizar firebaseUid com o UID do Firebase Authentication
                     val colaboradorAtualizado = colaboradorNuvem.copy(
                         firebaseUid = firebaseUser.uid,
-                        dataUltimoAcesso = java.util.Date()
+                        dataUltimoAcesso = System.currentTimeMillis()
                     )
                     
                     // ✅ SELF-HEALING: Se logou com sucesso e a senha é diferente da temporária, 
@@ -886,7 +886,7 @@ class AuthViewModel @Inject constructor(
                             nivelAcesso = NivelAcesso.ADMIN,
                             aprovado = true,
                             primeiroAcesso = false,
-                            dataAprovacao = colaboradorAtualizado.dataAprovacao ?: java.util.Date(),
+                            dataAprovacao = colaboradorAtualizado.dataAprovacao ?: System.currentTimeMillis(),
                             aprovadoPor = colaboradorAtualizado.aprovadoPor ?: "Sistema (Superadmin)",
                             senhaHash = senhaParaHash
                         )
@@ -896,7 +896,7 @@ class AuthViewModel @Inject constructor(
                             primeiroAcesso = false,
                             senhaHash = senha.trim(),
                             senhaTemporaria = null,
-                            dataUltimaAtualizacao = java.util.Date()
+                            dataUltimaAtualizacao = System.currentTimeMillis()
                         ).also { 
                             // Sincronizar correção para a nuvem imediatamente
                             viewModelScope.launch {
@@ -1245,11 +1245,11 @@ class AuthViewModel @Inject constructor(
             colaboradorMap["firebaseUid"] = colaborador.firebaseUid
             colaboradorMap["senhaTemporaria"] = colaborador.senhaTemporaria
             colaboradorMap["senhaHash"] = colaborador.senhaHash
-            colaboradorMap["dataCadastro"] = Timestamp(colaborador.dataCadastro)
-            colaboradorMap["dataUltimaAtualizacao"] = Timestamp(colaborador.dataUltimaAtualizacao)
-            colaboradorMap["dataAprovacao"] = colaborador.dataAprovacao?.let { Timestamp(it) }
+            colaboradorMap["dataCadastro"] = Timestamp(Date(colaborador.dataCadastro))
+            colaboradorMap["dataUltimaAtualizacao"] = Timestamp(Date(colaborador.dataUltimaAtualizacao))
+            colaboradorMap["dataAprovacao"] = colaborador.dataAprovacao?.let { Timestamp(Date(it)) }
             colaboradorMap["aprovadoPor"] = colaborador.aprovadoPor
-            colaboradorMap["dataUltimoAcesso"] = colaborador.dataUltimoAcesso?.let { Timestamp(it) }
+            colaboradorMap["dataUltimoAcesso"] = colaborador.dataUltimoAcesso?.let { Timestamp(Date(it)) }
             colaboradorMap["lastModified"] = FieldValue.serverTimestamp()
             colaboradorMap["syncTimestamp"] = FieldValue.serverTimestamp()
             
@@ -1487,7 +1487,7 @@ class AuthViewModel @Inject constructor(
                     firebaseUid = firebaseUid ?: existente.firebaseUid,
                     senhaHash = if (senha.isNotEmpty()) senha else existente.senhaHash, // Salvar senha para login offline
                     senhaTemporaria = null, // Limpar senha temporária
-                    dataAprovacao = existente.dataAprovacao ?: java.util.Date(),
+                    dataAprovacao = existente.dataAprovacao ?: System.currentTimeMillis(),
                     aprovadoPor = existente.aprovadoPor ?: "Sistema (Superadmin)"
                 )
                 appRepository.atualizarColaborador(atualizado)
@@ -1509,7 +1509,7 @@ class AuthViewModel @Inject constructor(
                 senhaHash = senhaHash, // Salvar senha para login offline
                 senhaTemporaria = null,
                 firebaseUid = firebaseUid,
-                dataAprovacao = java.util.Date(),
+                dataAprovacao = System.currentTimeMillis(),
                 aprovadoPor = "Sistema (Superadmin Automático)"
             )
             

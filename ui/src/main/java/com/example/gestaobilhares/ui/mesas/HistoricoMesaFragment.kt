@@ -74,10 +74,10 @@ class HistoricoMesaFragment : Fragment() {
         
         // Processar reformas
         mesaComHistorico.reformas.forEach { reforma ->
-            val dataKey = dateFormat.format(reforma.dataReforma)
+            val dataKey = dateFormat.format(Date(reforma.dataReforma))
             if (!mapaPorData.containsKey(dataKey)) {
                 mapaPorData[dataKey] = ReformaAgrupada(
-                    dataReforma = reforma.dataReforma,
+                    dataReforma = Date(reforma.dataReforma),
                     reforma = reforma,
                     manutencoes = emptyList()
                 )
@@ -89,10 +89,10 @@ class HistoricoMesaFragment : Fragment() {
         
         // Processar manutenções
         mesaComHistorico.historicoManutencoes.forEach { manutencao ->
-            val dataKey = dateFormat.format(manutencao.dataManutencao)
+            val dataKey = dateFormat.format(Date(manutencao.dataManutencao))
             if (!mapaPorData.containsKey(dataKey)) {
                 mapaPorData[dataKey] = ReformaAgrupada(
-                    dataReforma = manutencao.dataManutencao,
+                    dataReforma = Date(manutencao.dataManutencao),
                     reforma = null,
                     manutencoes = listOf(manutencao)
                 )

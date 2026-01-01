@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.settlement
+package com.example.gestaobilhares.ui.settlement
 
 import android.content.Intent
 import android.os.Bundle
@@ -588,7 +588,7 @@ class SettlementDetailFragment : Fragment() {
 
             // Buscar o último acerto da rota no ciclo ativo
             val acertosRota = appRepository.buscarPorRotaECicloId(rotaId, cicloAtivo.id)
-            val ultimoAcerto = acertosRota.maxByOrNull { it.dataAcerto.time }
+            val ultimoAcerto = acertosRota.maxByOrNull { it.dataAcerto }
             
             if (ultimoAcerto == null || ultimoAcerto.id != acertoId) {
                 Timber.d("SettlementDetailFragment", "❌ Não é o último acerto da rota. Último: ${ultimoAcerto?.id}, Solicitado: $acertoId")

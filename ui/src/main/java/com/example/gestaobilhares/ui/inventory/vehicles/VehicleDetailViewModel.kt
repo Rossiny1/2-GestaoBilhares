@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.inventory.vehicles
+package com.example.gestaobilhares.ui.inventory.vehicles
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -72,7 +72,7 @@ class VehicleDetailViewModel @Inject constructor(
                                 manutencoes
                             } else {
                                 manutencoes.filter { manutencao ->
-                                    val anoManutencao = manutencao.dataManutencao.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
+                                    val anoManutencao = java.time.Instant.ofEpochMilli(manutencao.dataManutencao).atZone(ZoneId.systemDefault()).toLocalDate().year
                                     anoManutencao == currentYear
                                 }
                             }
@@ -82,7 +82,7 @@ class VehicleDetailViewModel @Inject constructor(
                             manutencoesFiltradas.map { manutencao ->
                                 MaintenanceRecord(
                                     id = manutencao.id,
-                                    date = manutencao.dataManutencao.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+                                    date = java.time.Instant.ofEpochMilli(manutencao.dataManutencao).atZone(ZoneId.systemDefault()).toLocalDate(),
                                     description = manutencao.descricao,
                                     value = manutencao.valor,
                                     mileage = manutencao.kmVeiculo.toDouble(),
@@ -119,7 +119,7 @@ class VehicleDetailViewModel @Inject constructor(
                                 combustiveis
                             } else {
                                 combustiveis.filter { combustivel ->
-                                    val anoAbastecimento = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year
+                                    val anoAbastecimento = java.time.Instant.ofEpochMilli(combustivel.dataAbastecimento).atZone(ZoneId.systemDefault()).toLocalDate().year
                                     anoAbastecimento == currentYear
                                 }
                             }
@@ -147,7 +147,7 @@ class VehicleDetailViewModel @Inject constructor(
                                 
                                 FuelRecord(
                                     id = combustivel.id,
-                                    date = combustivel.dataAbastecimento.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+                                    date = java.time.Instant.ofEpochMilli(combustivel.dataAbastecimento).atZone(ZoneId.systemDefault()).toLocalDate(),
                                     liters = combustivel.litros,
                                     value = combustivel.valor,
                                     km = hodometroAbsoluto,

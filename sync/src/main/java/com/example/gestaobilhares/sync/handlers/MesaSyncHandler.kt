@@ -10,8 +10,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.Timestamp
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.example.gestaobilhares.core.utils.DateUtils
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
@@ -166,11 +166,10 @@ class MesaSyncHandler(
                     val mesaLocal = mesasCache[mesaId]
                     
                     // Verificar timestamp do servidor vs local
-                    val serverTimestamp = (mesaData["lastModified"] as? Timestamp)?.toDate()?.time
-                        ?: (mesaData["dataUltimaLeitura"] as? Timestamp)?.toDate()?.time
-                        ?: mesaFirestore.dataUltimaLeitura.time
-                    val localTimestamp = mesaLocal?.dataUltimaLeitura?.time
-                        ?: mesaLocal?.dataInstalacao?.time ?: 0L
+                    val serverTimestamp = com.example.gestaobilhares.core.utils.DateUtils.convertToLong(mesaData["lastModified"])
+                        ?: com.example.gestaobilhares.core.utils.DateUtils.convertToLong(mesaData["dataUltimaLeitura"])
+                        ?: mesaFirestore.dataUltimaLeitura
+                    val localTimestamp = mesaLocal?.dataUltimaLeitura ?: mesaLocal?.dataInstalacao ?: 0L
                     
                     // ✅ CORREÇÃO CRÍTICA: Sincronizar APENAS se servidor é mais recente que local
                     Timber.tag(TAG).w("🔍 [PULL MESA] Mesa ID=$mesaId")
@@ -359,7 +358,7 @@ class MesaSyncHandler(
             // Filtrar apenas mesas modificadas (usar maxOf para considerar dataInstalacao também)
             val mesasParaEnviar = if (canUseIncremental) {
                 mesasLocais.filter { mesa ->
-                    val mesaTimestamp = maxOf(mesa.dataUltimaLeitura.time, mesa.dataInstalacao.time)
+                    val mesaTimestamp = maxOf(mesa.dataUltimaLeitura, mesa.dataInstalacao)
                     mesaTimestamp > lastPushTimestamp
                 }.also {
                     Timber.tag(TAG).d("📤 Push INCREMENTAL: ${it.size} mesas modificadas desde ${Date(lastPushTimestamp)} (de ${mesasLocais.size} total)")

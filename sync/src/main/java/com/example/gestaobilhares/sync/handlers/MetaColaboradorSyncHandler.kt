@@ -16,6 +16,7 @@ import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import java.util.Date
 import com.example.gestaobilhares.core.utils.FirebaseImageUploader
+import com.example.gestaobilhares.core.utils.DateUtils
 
 /**
  * Handler especializado para sincronização de Metas de Colaborador.
@@ -34,7 +35,6 @@ class MetaColaboradorSyncHandler @javax.inject.Inject constructor(
 
     companion object {
         private const val COLLECTION_META_COLABORADOR = "meta_colaborador"
-        private const val FIELD_ROTA_ID = "rotaId"
     }
 
     override suspend fun pull(timestampOverride: Long?): Result<Int> {
@@ -139,9 +139,9 @@ class MetaColaboradorSyncHandler @javax.inject.Inject constructor(
                 }
                 
                 val localMeta = metasCache[metaId]
-                val serverTimestamp = doc.getTimestamp("lastModified")?.toDate()?.time
-                    ?: converterTimestampParaDate(data["dataCriacao"])?.time ?: 0L
-                val localTimestamp = localMeta?.dataCriacao?.time ?: 0L
+                val serverTimestamp = DateUtils.convertToLong(data["lastModified"])
+                    ?: DateUtils.convertToLong(data["dataCriacao"]) ?: 0L
+                val localTimestamp = localMeta?.dataCriacao ?: 0L
                 
                 if (localMeta == null || serverTimestamp > (localTimestamp + 1000)) {
                     if (localMeta == null) {
@@ -174,7 +174,7 @@ class MetaColaboradorSyncHandler @javax.inject.Inject constructor(
             val metasLocais = appRepository.obterTodasMetaColaborador().first()
             
             val paraEnviar = if (canUseIncremental) {
-                metasLocais.filter { it.dataCriacao.time > lastPushTimestamp }
+                metasLocais.filter { it.dataCriacao > lastPushTimestamp }
             } else {
                 metasLocais
             }

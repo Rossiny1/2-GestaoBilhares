@@ -12,9 +12,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.Timestamp
+import com.example.gestaobilhares.core.utils.DateUtils
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
 import java.util.Date
 
 /**
@@ -106,6 +106,11 @@ class EquipamentoSyncHandler @javax.inject.Inject constructor(
                 val data = doc.data ?: continue
                 val id = (data["roomId"] as? Number)?.toLong() ?: doc.id.toLongOrNull() ?: continue
                 
+                val updatedAtLong = DateUtils.convertToLong(data["updatedAt"]) 
+                    ?: DateUtils.convertToLong(data["dataAtualizacao"]) 
+                    ?: DateUtils.convertToLong(data["lastModified"])
+                    ?: System.currentTimeMillis()
+                
                 val item = StockItem(
                     id = id,
                     name = data["name"] as? String ?: data["nome"] as? String ?: "",
@@ -114,7 +119,7 @@ class EquipamentoSyncHandler @javax.inject.Inject constructor(
                     unitPrice = (data["unitPrice"] as? Number)?.toDouble() ?: (data["precoUnitario"] as? Number)?.toDouble() ?: 0.0,
                     supplier = data["supplier"] as? String ?: "",
                     description = data["description"] as? String ?: data["descricao"] as? String,
-                    updatedAt = converterTimestampParaDate(data["updatedAt"]) ?: converterTimestampParaDate(data["dataAtualizacao"]) ?: Date()
+                    updatedAt = updatedAtLong
                 )
                 
                 val local = appRepository.obterStockItemPorId(id)
@@ -171,7 +176,7 @@ class EquipamentoSyncHandler @javax.inject.Inject constructor(
         return try {
             val lastPush = getLastPushTimestamp(type)
             val locais = appRepository.obterTodosStockItems().first()
-                .filter { it.updatedAt.time > lastPush }
+                .filter { it.updatedAt > lastPush }
             
             if (locais.isEmpty()) return Result.success(0)
             

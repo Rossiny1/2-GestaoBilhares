@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.settlement
+package com.example.gestaobilhares.ui.settlement
 
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -464,7 +464,7 @@ class SettlementViewModel @Inject constructor(
                         valorRecebido = valorRecebido,
                         debitoAtual = debitoAtual,
                         observacoes = observacaoParaSalvar,
-                        dataFinalizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual(),
+                        dataFinalizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual().time,
                         metodosPagamentoJson = metodosPagamentoJson,
                         representante = dadosAcerto.representante,
                         tipoAcerto = dadosAcerto.tipoAcerto,
@@ -484,8 +484,8 @@ class SettlementViewModel @Inject constructor(
                     val acerto = Acerto(
                         clienteId = clienteId,
                         colaboradorId = null,
-                        periodoInicio = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual(),
-                        periodoFim = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual(),
+                        periodoInicio = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual().time,
+                        periodoFim = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual().time,
                         totalMesas = dadosAcerto.mesas.size.toDouble(),
                         debitoAnterior = debitoAnterior,
                         valorTotal = valorTotal,
@@ -495,7 +495,7 @@ class SettlementViewModel @Inject constructor(
                         debitoAtual = debitoAtual,
                         status = com.example.gestaobilhares.data.entities.StatusAcerto.FINALIZADO,
                         observacoes = observacaoParaSalvar,
-                        dataFinalizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual(),
+                        dataFinalizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual().time,
                         metodosPagamentoJson = metodosPagamentoJson,
                         representante = dadosAcerto.representante,
                         tipoAcerto = dadosAcerto.tipoAcerto,
@@ -597,7 +597,7 @@ class SettlementViewModel @Inject constructor(
                         observacoes = null,
                         // ✅ CORREÇÃO CRÍTICA: Incluir campos de foto
                         fotoRelogioFinal = mesa.fotoRelogioFinal,
-                        dataFoto = mesa.dataFoto
+                        dataFoto = mesa.dataFoto?.time
                     )
                 }
                 
@@ -697,7 +697,7 @@ class SettlementViewModel @Inject constructor(
                     descricao = "Troca de pano durante acerto - Número: $numeroPano",
                     responsavel = "Sistema de Acerto",
                     observacoes = "Troca de pano registrada automaticamente durante o acerto",
-                    dataManutencao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
+                    dataManutencao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual().time
                 )
                 
                 appRepository.inserirHistoricoManutencaoMesa(historico)
@@ -896,7 +896,7 @@ class SettlementViewModel @Inject constructor(
                 // Atualizar mesa com novo pano e data
                 val mesaAtualizada = mesa.copy(
                     panoAtualId = panoId,
-                    dataUltimaTrocaPano = dataAtual
+                    dataUltimaTrocaPano = dataAtual.time
                 )
                 appRepository.atualizarMesa(mesaAtualizada)
                 logOperation("SETTLEMENT", "Mesa $mesaId atualizada com pano $panoId com sucesso")

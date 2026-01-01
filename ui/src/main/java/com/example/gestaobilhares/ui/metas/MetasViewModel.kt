@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.metas
+package com.example.gestaobilhares.ui.metas
 
 import androidx.lifecycle.ViewModel
 import com.example.gestaobilhares.ui.common.BaseViewModel
@@ -165,7 +165,7 @@ class MetasViewModel @Inject constructor(
                             metas = metasComProgresso,
                             dataInicioCiclo = ciclo.dataInicio,
                             dataFimCiclo = ciclo.dataFim,
-                            ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
+                            ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual().time
                         )
 
                         Timber.d("✅ MetaRotaResumo criado para %s com %s metas (ciclo %s/%s)", rota.nome, metasComProgresso.size, ciclo.numeroCiclo, ciclo.ano)
@@ -188,7 +188,7 @@ class MetasViewModel @Inject constructor(
                     metas = emptyList(),
                     dataInicioCiclo = cicloAtual.dataInicio,
                     dataFimCiclo = cicloAtual.dataFim,
-                    ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
+                    ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual().time
                 )
             }
 
@@ -205,7 +205,7 @@ class MetasViewModel @Inject constructor(
                 metas = metasComProgresso,
                 dataInicioCiclo = cicloAtual.dataInicio,
                 dataFimCiclo = cicloAtual.dataFim,
-                ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual()
+                ultimaAtualizacao = com.example.gestaobilhares.core.utils.DateUtils.obterDataAtual().time
             )
 
             Timber.d("✅ MetaRotaResumo criado para %s com %s metas", rota.nome, metasComProgresso.size)

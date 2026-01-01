@@ -1,4 +1,4 @@
-﻿package com.example.gestaobilhares.ui.expenses
+package com.example.gestaobilhares.ui.expenses
 import com.example.gestaobilhares.ui.R
 
 import android.view.LayoutInflater
@@ -77,7 +77,11 @@ class ExpenseAdapter(
                 expenseValue.text = currencyFormatter.format(despesa.valor)
                 
                 // Data relativa (ex: "Há 2 dias")
-                expenseDateTime.text = formatRelativeTime(despesa.dataHora)
+                expenseDateTime.text = formatRelativeTime(
+                    java.time.Instant.ofEpochMilli(despesa.dataHora)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toLocalDateTime()
+                )
                 
                 // Ícone da categoria
                 categoryIcon.setImageResource(getCategoryIcon(despesa.categoria))
