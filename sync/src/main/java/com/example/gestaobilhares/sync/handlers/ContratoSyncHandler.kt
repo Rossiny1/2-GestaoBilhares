@@ -15,6 +15,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.util.Date
 
@@ -69,6 +70,9 @@ class ContratoSyncHandler(
             }
             
             result
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Pull de contratos cancelado")
+            throw e
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Erro ao processar pull de contratos")
             Result.failure(e)
@@ -563,6 +567,9 @@ class ContratoSyncHandler(
             
             savePushMetadata(type, count, System.currentTimeMillis() - startTime)
             Result.success(count)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Push aditivo mesas cancelado")
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -600,6 +607,9 @@ class ContratoSyncHandler(
             
             savePushMetadata(type, count, System.currentTimeMillis() - startTime)
             Result.success(count)
+        } catch (e: CancellationException) {
+            Timber.tag(TAG).d("⏹️ Push contrato mesas cancelado")
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

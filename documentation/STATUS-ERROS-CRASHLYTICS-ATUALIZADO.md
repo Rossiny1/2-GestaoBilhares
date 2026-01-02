@@ -86,14 +86,20 @@ private val mapTypeTokenInstance = MapTypeToken()
 
 ## 🟡 Erros PARCIALMENTE CORRIGIDOS
 
-### 4. ⚠️ kotlinx.coroutines.JobCancellationException
+### 4. ✅ kotlinx.coroutines.JobCancellationException
 
-**Status:** 🟡 **CORRIGIDO PARCIALMENTE**
+**Status:** ✅ **CORRIGIDO COMPLETAMENTE**
 
 **Evidência:**
 - ✅ Tratamento adicionado em `BaseSyncHandler.executePaginatedQuery`
 - ✅ Tratamento adicionado em `ClienteSyncHandler` (pull, pullIncremental, push)
-- ⚠️ Ainda precisa ser aplicado em outros handlers
+- ✅ Tratamento adicionado em `CicloSyncHandler` (pull, pullComplete, tryPullIncremental, push)
+- ✅ Tratamento adicionado em `AcertoSyncHandler` (pull, pullComplete, push)
+- ✅ Tratamento adicionado em `MesaSyncHandler` (pull, pullComplete, push)
+- ✅ Tratamento adicionado em `DespesaSyncHandler` (pull, pullComplete, push)
+- ✅ Tratamento adicionado em `RotaSyncHandler` (pull, pullComplete)
+- ✅ Tratamento adicionado em `ColaboradorSyncHandler` (pull, pullComplete, tryPullIncremental, push)
+- ✅ Tratamento adicionado em `ContratoSyncHandler` (pull, pullAditivoMesas, pullContratoMesas)
 
 **Código Adicionado:**
 ```kotlin
@@ -105,11 +111,7 @@ catch (e: CancellationException) {
 }
 ```
 
-**Próximos Passos:**
-- [ ] Aplicar correção em todos os handlers restantes
-- [ ] Verificar se há outros pontos que precisam de tratamento
-
-**Conclusão:** Correção iniciada, mas precisa ser completada em todos os handlers.
+**Conclusão:** ✅ Correção aplicada em todos os handlers principais. `CancellationException` agora é corretamente re-lançada para propagar cancelamento de corrotinas.
 
 ---
 
@@ -134,13 +136,14 @@ catch (e: CancellationException) {
 
 ## 📋 Resumo Final
 
-### ✅ Já Corrigidos (3 erros)
+### ✅ Já Corrigidos (4 erros)
 1. DialogAditivoEquipamentosBinding.inflate
 2. AditivoDialog.onCreateDialog (Tema AppCompat)
 3. SyncRepository.mapType (TypeToken/ProGuard)
+4. JobCancellationException (corrigido em todos os handlers)
 
-### 🟡 Em Progresso (1 erro)
-4. JobCancellationException (parcialmente corrigido)
+### ✅ Corrigidos Completamente (4 erros)
+4. JobCancellationException (✅ corrigido em todos os handlers)
 
 ### 🟡 Requer Configuração (1 erro)
 5. s6.f0 (Código Ofuscado) - requer mapping.txt
@@ -155,8 +158,8 @@ catch (e: CancellationException) {
 - [ ] Se ainda ocorrerem, pode ser cache ou versão antiga do app
 
 ### 2. Completar Correções
-- [ ] Aplicar tratamento de `CancellationException` em todos os handlers
-- [ ] Verificar se mapping.txt está sendo gerado e enviado
+- [x] ✅ Aplicar tratamento de `CancellationException` em todos os handlers
+- [ ] Verificar se mapping.txt está sendo gerado e enviado (será gerado no próximo build de release)
 
 ### 3. Validação
 - [ ] Testar build de release
@@ -168,9 +171,8 @@ catch (e: CancellationException) {
 ## 📊 Métricas Esperadas
 
 Após deploy da versão corrigida:
-- ✅ Erros 1, 2 e 3 devem **parar de ocorrer**
-- 🟡 Erro 4 (JobCancellationException) deve **diminuir significativamente**
-- 🟡 Erro 5 (s6.f0) deve **ficar legível** após configurar mapping.txt
+- ✅ Erros 1, 2, 3 e 4 devem **parar de ocorrer**
+- 🟡 Erro 5 (s6.f0) deve **ficar legível** após gerar e enviar mapping.txt no próximo build de release
 
 ---
 

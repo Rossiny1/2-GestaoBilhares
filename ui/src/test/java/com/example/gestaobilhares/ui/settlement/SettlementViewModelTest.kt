@@ -232,8 +232,8 @@ class SettlementViewModelTest {
         val rotaId = 10L
         val cicloId = 100L
         
-        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", comissaoFicha = 0.5, valorFicha = 2.0, dataCadastro = System.currentTimeMillis(), ativo = true)
         val now = System.currentTimeMillis()
+        val cliente = Cliente(id = clienteId, rotaId = rotaId, nome = "Tião", comissaoFicha = 0.5, valorFicha = 2.0, dataCadastro = now, ativo = true)
         val cicloAtivo = CicloAcertoEntity(id = cicloId, rotaId = rotaId, numeroCiclo = 1, ano = 2025, status = StatusCicloAcerto.EM_ANDAMENTO, dataInicio = now, dataFim = now)
         
         whenever(appRepository.obterClientePorId(clienteId)).thenReturn(cliente)
@@ -242,7 +242,6 @@ class SettlementViewModelTest {
         whenever(appRepository.buscarAcertosPorRotaECicloId(any(), any())).thenReturn(flowOf(emptyList()))
         whenever(appRepository.buscarDespesasPorCicloId(any())).thenReturn(flowOf(emptyList()))
         whenever(appRepository.inserirAcerto(any())).thenReturn(500L)
-        val now = System.currentTimeMillis()
         whenever(appRepository.obterAcertoPorId(any())).thenReturn(Acerto(id = 500L, clienteId = clienteId, periodoInicio = now, periodoFim = now))
         whenever(appRepository.inserirAcertoMesa(any())).thenReturn(1000L)
         whenever(appRepository.atualizarDebitoAtualCliente(any(), any())).thenReturn(Unit)
