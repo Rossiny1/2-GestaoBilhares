@@ -60,6 +60,9 @@ class AuthViewModelTest {
 
     @Mock
     private lateinit var firestore: com.google.firebase.firestore.FirebaseFirestore
+    
+    @Mock
+    private lateinit var crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics
 
     private lateinit var viewModel: AuthViewModel
     
@@ -67,6 +70,7 @@ class AuthViewModelTest {
     
     private lateinit var firebaseAuthStatic: MockedStatic<FirebaseAuth>
     private lateinit var firestoreStatic: MockedStatic<com.google.firebase.firestore.FirebaseFirestore>
+    private lateinit var crashlyticsStatic: MockedStatic<com.google.firebase.crashlytics.FirebaseCrashlytics>
 
     @Before
     fun setup() {
@@ -80,6 +84,18 @@ class AuthViewModelTest {
         // Mock FirebaseFirestore.getInstance()
         firestoreStatic = Mockito.mockStatic(com.google.firebase.firestore.FirebaseFirestore::class.java)
         firestoreStatic.`when`<com.google.firebase.firestore.FirebaseFirestore> { com.google.firebase.firestore.FirebaseFirestore.getInstance() }.thenReturn(firestore)
+        
+        // Mock FirebaseCrashlytics.getInstance()
+        crashlyticsStatic = Mockito.mockStatic(com.google.firebase.crashlytics.FirebaseCrashlytics::class.java)
+        crashlyticsStatic.`when`<com.google.firebase.crashlytics.FirebaseCrashlytics> { com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance() }.thenReturn(crashlytics)
+        
+        // Mock Crashlytics methods (they return Unit, not FirebaseCrashlytics)
+        whenever(crashlytics.setCustomKey(anyString(), anyString())).then { }
+        whenever(crashlytics.setCustomKey(anyString(), any<Boolean>())).then { }
+        whenever(crashlytics.setCustomKey(anyString(), any<Int>())).then { }
+        whenever(crashlytics.setCustomKey(anyString(), any<Long>())).then { }
+        whenever(crashlytics.log(anyString())).then { }
+        whenever(crashlytics.recordException(any())).then { }
 
         // Mock android.util.Log
         try {
@@ -118,6 +134,7 @@ class AuthViewModelTest {
         Dispatchers.resetMain()
         firebaseAuthStatic.close()
         firestoreStatic.close()
+        crashlyticsStatic.close()
     }
 
     @Test
