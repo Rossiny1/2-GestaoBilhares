@@ -21,6 +21,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.Timestamp
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.FieldNamingPolicy
@@ -48,6 +49,9 @@ class AuthViewModel @Inject constructor(
     
     // Instância do Firestore
     private val firestore = FirebaseFirestore.getInstance()
+    
+    // Instância do Crashlytics para logs estruturados
+    private val crashlytics = FirebaseCrashlytics.getInstance()
     
     // Gson para serialização/deserialização - padrão LOWER_CASE_WITH_UNDERSCORES para Firestore
     private val gson: Gson = GsonBuilder()
@@ -101,24 +105,36 @@ class AuthViewModel @Inject constructor(
      * Função para realizar login híbrido (online/offline)
      */
     fun login(email: String, senha: String) {
+        // ✅ LOGS ESTRUTURADOS PARA CRASHLYTICS: Início do fluxo de login
+        crashlytics.setCustomKey("login_email", email)
+        crashlytics.setCustomKey("login_senha_length", senha.length)
+        crashlytics.setCustomKey("login_timestamp", System.currentTimeMillis())
+        crashlytics.log("[LOGIN_FLOW] Iniciando login híbrido para: $email")
+        
         Timber.d("AuthViewModel", "=== INICIANDO LOGIN HÍBRIDO ===")
         Timber.d("AuthViewModel", "Email: $email")
         Timber.d("AuthViewModel", "Senha: ${senha.length} caracteres")
         
         // Validação básica
         if (email.isBlank() || senha.isBlank()) {
+            crashlytics.setCustomKey("login_error", "email_ou_senha_em_branco")
+            crashlytics.log("[LOGIN_FLOW] Erro: Email ou senha em branco")
             Timber.e("Email ou senha em branco")
             _errorMessage.value = "Email e senha são obrigatórios"
             return
         }
         
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            crashlytics.setCustomKey("login_error", "email_invalido")
+            crashlytics.log("[LOGIN_FLOW] Erro: Email inválido: $email")
             Timber.e("Email inválido: %s", email)
             _errorMessage.value = "Email inválido"
             return
         }
         
         if (senha.length < 6) {
+            crashlytics.setCustomKey("login_error", "senha_muito_curta")
+            crashlytics.log("[LOGIN_FLOW] Erro: Senha muito curta: ${senha.length} caracteres")
             Timber.e("Senha muito curta: %d caracteres", senha.length)
             _errorMessage.value = "Senha deve ter pelo menos 6 caracteres"
             return
@@ -132,14 +148,20 @@ class AuthViewModel @Inject constructor(
                 // Verificar conectividade
                 val online = isNetworkAvailable()
                 _isOnline.value = online
+                crashlytics.setCustomKey("login_online", online)
+                crashlytics.log("[LOGIN_FLOW] Status de conexão: ${if (online) "ONLINE" else "OFFLINE"}")
                 
                 if (online) {
                     // Tentar login online primeiro
+                    crashlytics.log("[LOGIN_FLOW] Tentando login online...")
                     Timber.d("AuthViewModel", "Tentando login online...")
                     try {
                         val result = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
                         
                         if (result.user != null) {
+                            crashlytics.setCustomKey("login_online_success", true)
+                            crashlytics.setCustomKey("login_firebase_uid", result.user!!.uid)
+                            crashlytics.log("[LOGIN_FLOW] ✅ Login online bem-sucedido - Firebase UID: ${result.user!!.uid}")
                             Timber.d("AuthViewModel", "✅ LOGIN ONLINE SUCESSO!")
 
                             // ✅ NOVO: Emitir log específico para criação automática de dados após login
@@ -265,20 +287,28 @@ class AuthViewModel @Inject constructor(
                             return@launch
                         }
                     } catch (e: Exception) {
+                        // ✅ LOGS ESTRUTURADOS PARA CRASHLYTICS: Erro no login online
+                        val errorCode = (e as? com.google.firebase.auth.FirebaseAuthException)?.errorCode
+                        crashlytics.setCustomKey("login_online_error", errorCode ?: "unknown")
+                        crashlytics.setCustomKey("login_online_error_type", e.javaClass.simpleName)
+                        crashlytics.log("[LOGIN_FLOW] ⚠️ Login online falhou: $errorCode - ${e.message}")
+                        crashlytics.recordException(e)
+                        
                         Timber.w("AuthViewModel", "Login online falhou: ${e.message}")
                         Timber.w("AuthViewModel", "Tipo de erro: ${e.javaClass.simpleName}")
                         
                         // ✅ CORREÇÃO: Se o erro for "wrong password" ou "user not found", 
                         // continuar para tentar login offline (pode ser senha temporária)
-                        val errorCode = (e as? com.google.firebase.auth.FirebaseAuthException)?.errorCode
                         Timber.d("AuthViewModel", "Código de erro Firebase: $errorCode")
                         
                         // Se for erro de credenciais inválidas, pode ser senha temporária
                         // Continuar para tentar login offline
                         if (errorCode == "ERROR_WRONG_PASSWORD" || errorCode == "ERROR_USER_NOT_FOUND" || errorCode == "ERROR_INVALID_EMAIL") {
+                            crashlytics.log("[LOGIN_FLOW] Erro de credenciais - tentando login offline com senha temporária...")
                             Timber.d("AuthViewModel", "Erro de credenciais - tentando login offline com senha temporária...")
                         } else {
                             // Para outros erros (rede, etc), também tentar offline
+                            crashlytics.log("[LOGIN_FLOW] Erro de conexão ou outro - tentando login offline...")
                             Timber.d("AuthViewModel", "Erro de conexão ou outro - tentando login offline...")
                         }
                     }
@@ -299,10 +329,14 @@ class AuthViewModel @Inject constructor(
                 // ✅ CORREÇÃO CRÍTICA: Se não encontrou localmente E estiver online, buscar na nuvem
                 // Isso é especialmente importante quando o app foi limpo e o usuário existe na nuvem
                 if (colaborador == null && online) {
+                    crashlytics.log("[LOGIN_FLOW] 🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
+                    crashlytics.setCustomKey("login_busca_nuvem", true)
                     Timber.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
                     try {
                         val result = buscarColaboradorNaNuvemPorEmail(email)
                         if (result != null) {
+                            crashlytics.setCustomKey("login_colaborador_encontrado_nuvem", true)
+                            crashlytics.log("[LOGIN_FLOW] ✅ Colaborador encontrado na nuvem: ${result.first.nome}")
                             colaborador = result.first
                             val detectedCompanyId = result.second
                             Timber.d("AuthViewModel", "✅ Colaborador encontrado na nuvem: ${colaborador.nome}")
@@ -312,7 +346,13 @@ class AuthViewModel @Inject constructor(
                             Timber.d("AuthViewModel", "   Senha temporária presente: ${colaborador.senhaTemporaria != null}")
                             
                             // ✅ CORREÇÃO CRÍTICA: Verificar se está aprovado ANTES de salvar
+                            crashlytics.setCustomKey("login_colaborador_aprovado", colaborador.aprovado)
+                            crashlytics.setCustomKey("login_colaborador_ativo", colaborador.ativo)
+                            crashlytics.setCustomKey("login_colaborador_primeiro_acesso", colaborador.primeiroAcesso)
+                            
                             if (!colaborador.aprovado) {
+                                crashlytics.setCustomKey("login_error", "colaborador_nao_aprovado")
+                                crashlytics.log("[LOGIN_FLOW] ❌ Colaborador encontrado na nuvem mas não está aprovado")
                                 Timber.w("AuthViewModel", "❌ Colaborador encontrado na nuvem mas não está aprovado")
                                 _errorMessage.value = "Sua conta está aguardando aprovação do administrador."
                                 hideLoading()
@@ -320,6 +360,8 @@ class AuthViewModel @Inject constructor(
                             }
                             
                             if (!colaborador.ativo) {
+                                crashlytics.setCustomKey("login_error", "colaborador_inativo")
+                                crashlytics.log("[LOGIN_FLOW] ❌ Colaborador encontrado na nuvem mas está inativo")
                                 Timber.w("AuthViewModel", "❌ Colaborador encontrado na nuvem mas está inativo")
                                 _errorMessage.value = "Sua conta está inativa. Contate o administrador."
                                 hideLoading()
@@ -361,7 +403,11 @@ class AuthViewModel @Inject constructor(
                                 }
                             }
                             
+                            crashlytics.setCustomKey("login_senha_valida", senhaValida)
+                            
                             if (!senhaValida) {
+                                crashlytics.setCustomKey("login_error", "senha_invalida_nuvem")
+                                crashlytics.log("[LOGIN_FLOW] ❌ Senha inválida para colaborador da nuvem")
                                 Timber.w("AuthViewModel", "❌ Senha inválida para colaborador da nuvem")
                                 _errorMessage.value = "Senha incorreta"
                                 hideLoading()
@@ -384,10 +430,14 @@ class AuthViewModel @Inject constructor(
                             Timber.d("AuthViewModel", "   Senha corresponde à temporária: ${senhaLimpa == senhaTemporariaLimpa}")
                             Timber.d("AuthViewModel", "   É primeiro acesso: $isPrimeiroAcesso")
                             
+                            crashlytics.setCustomKey("login_primeiro_acesso", isPrimeiroAcesso)
+                            
                             if (isPrimeiroAcesso) {
+                                crashlytics.log("[LOGIN_FLOW] ⚠️ PRIMEIRO ACESSO DETECTADO (DADOS DA NUVEM) - Redirecionando para alteração de senha")
                                 Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO (DADOS DA NUVEM) - Redirecionando para alteração de senha")
                                 // ✅ CORREÇÃO CRÍTICA: Iniciar sessão ANTES de redirecionar
                                 userSessionManager.startSession(colaborador, detectedCompanyId)
+                                crashlytics.log("[LOGIN_FLOW] ✅ Sessão iniciada para primeiro acesso: ${colaborador.nome}")
                                 Timber.d("AuthViewModel", "✅ Sessão iniciada para primeiro acesso: ${colaborador.nome}")
                                 
                                 _authState.value = AuthState.FirstAccessRequired(colaborador)
@@ -398,9 +448,15 @@ class AuthViewModel @Inject constructor(
                             // ✅ Se não é primeiro acesso, continuar com o fluxo normal de login offline
                             // (o código abaixo já trata isso)
                         } else {
+                            crashlytics.setCustomKey("login_colaborador_encontrado_nuvem", false)
+                            crashlytics.log("[LOGIN_FLOW] ⚠️ Colaborador não encontrado na nuvem")
                             Timber.w("AuthViewModel", "⚠️ Colaborador não encontrado na nuvem")
                         }
                     } catch (e: Exception) {
+                        crashlytics.setCustomKey("login_erro_busca_nuvem", true)
+                        crashlytics.setCustomKey("login_erro_busca_nuvem_tipo", e.javaClass.simpleName)
+                        crashlytics.log("[LOGIN_FLOW] ❌ Erro ao buscar colaborador na nuvem: ${e.message}")
+                        crashlytics.recordException(e)
                         Timber.e("AuthViewModel", "❌ Erro ao buscar colaborador na nuvem: ${e.message}", e)
                         // Continuar para tentar outras formas de login
                     }
@@ -784,6 +840,8 @@ class AuthViewModel @Inject constructor(
                         }
                     }
                     
+                    crashlytics.setCustomKey("login_error", "usuario_nao_encontrado")
+                    crashlytics.log("[LOGIN_FLOW] ❌ ERRO FINAL: Usuário não encontrado (online: $online)")
                     _errorMessage.value = if (online) {
                         "Usuário não encontrado. Contate o administrador para criar sua conta."
                     } else {
@@ -794,10 +852,15 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.Unauthenticated
                 
             } catch (e: Exception) {
+                crashlytics.setCustomKey("login_error", "excecao_geral")
+                crashlytics.setCustomKey("login_error_tipo", e.javaClass.simpleName)
+                crashlytics.log("[LOGIN_FLOW] ❌ ERRO NO LOGIN: ${e.message}")
+                crashlytics.recordException(e)
                 Timber.e(e, "❌ ERRO NO LOGIN: %s", e.message)
                 _authState.value = AuthState.Unauthenticated
                 _errorMessage.value = getFirebaseErrorMessage(e)
             } finally {
+                crashlytics.log("[LOGIN_FLOW] === FIM DO LOGIN HÍBRIDO ===")
                 hideLoading()
                 Timber.d("AuthViewModel", "=== FIM DO LOGIN HÍBRIDO ===")
             }
@@ -1412,17 +1475,34 @@ class AuthViewModel @Inject constructor(
      */
     private suspend fun buscarColaboradorNaNuvemPorEmail(email: String): Pair<Colaborador, String>? {
         return try {
+            crashlytics.log("[BUSCA_NUVEM] 🔍 Iniciando busca global na nuvem para: $email")
+            crashlytics.setCustomKey("busca_nuvem_email", email)
+            crashlytics.setCustomKey("busca_nuvem_firebase_auth", firebaseAuth.currentUser != null)
+            crashlytics.setCustomKey("busca_nuvem_firebase_uid", firebaseAuth.currentUser?.uid ?: "null")
+            
             Timber.d("AuthViewModel", "🔍 === INICIANDO BUSCA GLOBAL NA NUVEM ===")
             Timber.d("AuthViewModel", "   Email: $email")
+            Timber.d("AuthViewModel", "   Firebase Auth autenticado: ${firebaseAuth.currentUser != null}")
+            Timber.d("AuthViewModel", "   Firebase UID: ${firebaseAuth.currentUser?.uid ?: "não autenticado"}")
             
             val emailNormalizado = email.trim().lowercase()
             
             // 1. Tentar busca exata via collectionGroup
-            var querySnapshot = firestore.collectionGroup("items")
-                .whereEqualTo("email", email)
-                .get()
-                .await()
+            crashlytics.log("[BUSCA_NUVEM] Tentando busca 1 (email exato via collectionGroup)...")
+            var querySnapshot = try {
+                firestore.collectionGroup("items")
+                    .whereEqualTo("email", email)
+                    .get()
+                    .await()
+            } catch (e: Exception) {
+                crashlytics.setCustomKey("busca_nuvem_erro_collection_group", true)
+                crashlytics.setCustomKey("busca_nuvem_erro_tipo", e.javaClass.simpleName)
+                crashlytics.log("[BUSCA_NUVEM] ❌ Erro na busca collectionGroup: ${e.message}")
+                crashlytics.recordException(e)
+                throw e
+            }
             
+            crashlytics.setCustomKey("busca_nuvem_resultado_1", querySnapshot.size())
             Timber.d("AuthViewModel", "   Busca 1 (email exato): ${querySnapshot.size()} documentos encontrados")
             var doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
             
@@ -1475,9 +1555,14 @@ class AuthViewModel @Inject constructor(
             }
             
             if (doc == null) {
+                crashlytics.setCustomKey("busca_nuvem_resultado_final", "nao_encontrado")
+                crashlytics.log("[BUSCA_NUVEM] ⚠️ Colaborador não encontrado na nuvem em nenhuma coleção")
                 Timber.w("AuthViewModel", "⚠️ Colaborador não encontrado na nuvem em nenhuma coleção.")
                 return null
             }
+            
+            crashlytics.setCustomKey("busca_nuvem_resultado_final", "encontrado")
+            crashlytics.log("[BUSCA_NUVEM] ✅ Colaborador encontrado na nuvem!")
 
             val data = doc.data ?: return null
             val path = doc.reference.path
@@ -1521,6 +1606,24 @@ class AuthViewModel @Inject constructor(
             Pair(colaborador, companyId)
             
         } catch (e: Exception) {
+            crashlytics.setCustomKey("busca_nuvem_erro_geral", true)
+            crashlytics.setCustomKey("busca_nuvem_erro_tipo", e.javaClass.simpleName)
+            crashlytics.setCustomKey("busca_nuvem_erro_mensagem", e.message ?: "unknown")
+            crashlytics.log("[BUSCA_NUVEM] ❌ Erro na busca na nuvem: ${e.message}")
+            
+            // ✅ LOG ESPECÍFICO PARA ERROS DE PERMISSÃO
+            if (e is FirebaseFirestoreException) {
+                crashlytics.setCustomKey("busca_nuvem_erro_firestore_code", e.code.name)
+                crashlytics.log("[BUSCA_NUVEM] ❌ Erro Firestore: ${e.code.name} - ${e.message}")
+                
+                if (e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                    crashlytics.setCustomKey("busca_nuvem_permission_denied", true)
+                    crashlytics.log("[BUSCA_NUVEM] ❌ PERMISSION_DENIED: Usuário não autenticado ou sem permissão")
+                    crashlytics.setCustomKey("busca_nuvem_firebase_auth_uid", firebaseAuth.currentUser?.uid ?: "null")
+                }
+            }
+            
+            crashlytics.recordException(e)
             Timber.e("AuthViewModel", "❌ Erro na busca na nuvem: ${e.message}")
             null
         }
