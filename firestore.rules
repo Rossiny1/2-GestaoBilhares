@@ -69,34 +69,47 @@ service cloud.firestore {
     // ✅ NOVO SCHEMA: Colaboradores por UID (lookup direto)
     // Estrutura: empresas/{empresaId}/colaboradores/{firebaseUid}
     match /empresas/{empresaId}/colaboradores/{uid} {
+      // ✅ SUPERADMIN: rossinys@gmail.com tem acesso total
+      // Admin pode ler/escrever qualquer colaborador
+      allow read, write: if isAdmin();
+      
       // Usuário autenticado pode ler/escrever seu próprio documento
       allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if request.auth != null && request.auth.uid == uid;
       
-      // Admin pode ler/escrever qualquer colaborador
-      allow read, write: if isAdmin();
-      
       // Permitir criação para onboarding (usuário autenticado pode criar seu próprio perfil)
+      // ✅ SUPERADMIN: rossinys@gmail.com pode criar seu perfil automaticamente
       allow create: if request.auth != null && 
                      request.auth.uid == uid &&
-                     request.resource.data.firebase_uid == uid;
+                     (request.resource.data.firebase_uid == uid ||
+                      // Permitir criação se for superadmin (rossinys@gmail.com)
+                      (request.auth.token.email == "rossinys@gmail.com" && 
+                       request.resource.data.email == "rossinys@gmail.com"));
       
       // Colegas da mesma empresa podem ler (para listar equipe)
       allow read: if belongsToCompany(empresaId);
+      
+      // ✅ COMPATIBILIDADE: Permitir leitura sem autenticação para colaboradores aprovados e ativos
+      // Necessário para login em app vazio quando Firebase Auth autentica mas perfil ainda não existe
+      allow read: if request.auth == null && 
+                     resource.data.aprovado == true && 
+                     resource.data.ativo == true;
     }
     
-    // 1️⃣ COLABORADORES DA EMPRESA (Schema Antigo - Mantido para compatibilidade)
+    // 1️⃣ COLABORADORES DA EMPRESA (Schema Antigo - Mantido para compatibilidade durante migração)
     match /empresas/{empresaId}/entidades/colaboradores/items/{itemId} {
       // LEITURA:
-      // 1. Admin Global
-      // 2. Colegas da mesma empresa (para listar equipe)
-      // 3. O próprio usuário (bootstrapping via email match se claim falhar)
-      // 4. ✅ CORREÇÃO: Usuários autenticados podem ler colaboradores aprovados e ativos
-      // 5. ✅ Busca sem autenticação para login em app vazio (apenas aprovados e ativos)
+      // 1. ✅ SUPERADMIN: rossinys@gmail.com tem acesso total
+      // 2. Admin Global
+      // 3. Colegas da mesma empresa (para listar equipe)
+      // 4. O próprio usuário (bootstrapping via email match se claim falhar)
+      // 5. ✅ CORREÇÃO: Usuários autenticados podem ler colaboradores aprovados e ativos
+      // 6. ✅ Busca sem autenticação para login em app vazio (apenas aprovados e ativos)
       allow read: if isAdmin() || 
                   belongsToCompany(empresaId) || 
                   // ✅ CORREÇÃO: Quando autenticado, permitir leitura se:
                   // - É o próprio usuário (email ou UID match), OU
+                  // - É superadmin (rossinys@gmail.com), OU
                   // - Colaborador está aprovado e ativo (permite busca após Firebase Auth)
                   (request.auth != null && (
                     request.auth.token.email == resource.data.email || 
@@ -111,9 +124,10 @@ service cloud.firestore {
                    resource.data.ativo == true);
 
       // ESCRITA: 
-      // 1. Admin Global ou Admin Empresa
-      // 2. O PRÓPRIO USUÁRIO (para atualizar seu status/senha)
-      // 3. ✅ NOVO: Usuário anônimo pode CRIAR (para cadastros públicos sem login)
+      // 1. ✅ SUPERADMIN: rossinys@gmail.com tem acesso total
+      // 2. Admin Global ou Admin Empresa
+      // 3. O PRÓPRIO USUÁRIO (para atualizar seu status/senha)
+      // 4. ✅ NOVO: Usuário anônimo pode CRIAR (para cadastros públicos sem login)
       //    - Apenas criação (create), não atualização/deleção
       //    - Apenas se aprovado = false (cadastro pendente)
       //    - Verifica se é usuário anônimo (sem email no token)
@@ -122,6 +136,9 @@ service cloud.firestore {
                       request.auth.uid == resource.data.firebaseUid || 
                       request.auth.token.email == resource.data.email ||
                       request.auth.token.email == "rossinys@gmail.com" ||
+                      // ✅ SUPERADMIN: rossinys@gmail.com pode criar seu próprio perfil automaticamente
+                      (request.auth.token.email == "rossinys@gmail.com" && 
+                       request.resource.data.email == "rossinys@gmail.com") ||
                       // Permitir criação anônima apenas para cadastros pendentes
                       // Usuário anônimo: verifica se não tem email OU se email está vazio
                       (request.auth.token.email == null || request.auth.token.email == "") &&
@@ -130,6 +147,7 @@ service cloud.firestore {
                     ));
       
       // Atualização e deleção: apenas autenticados com permissão
+      // ✅ SUPERADMIN: rossinys@gmail.com tem acesso total
       allow update, delete: if isAdmin() || isCompanyAdmin(empresaId) || 
                              (request.auth != null && (
                                request.auth.uid == resource.data.firebaseUid || 
@@ -142,6 +160,7 @@ service cloud.firestore {
     // Essencial para login em fresh install onde o empresaId ainda é desconhecido
     // ✅ CORREÇÃO: Para collectionGroup queries, permitir usuários autenticados fazerem queries
     // A validação de segurança é feita no documento individual (regra acima)
+    // ✅ SUPERADMIN: rossinys@gmail.com tem acesso total via collectionGroup
     match /{path=**}/items/{itemId} {
       allow read: if isAdmin() ||
                   // ✅ CORREÇÃO CRÍTICA: Usuários autenticados podem fazer queries collectionGroup
