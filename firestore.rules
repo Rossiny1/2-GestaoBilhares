@@ -79,9 +79,7 @@ service cloud.firestore {
                   belongsToCompany(empresaId) || 
                   (request.auth != null && (
                     request.auth.token.email == resource.data.email || 
-                    // ✅ CORREÇÃO: Verificar ambos os formatos (camelCase e snake_case)
                     request.auth.uid == resource.data.firebaseUid ||
-                    request.auth.uid == resource.data.firebase_uid ||
                     request.auth.token.email == "rossinys@gmail.com"
                   )) ||
                   // ✅ CORREÇÃO CRÍTICA: Permitir busca sem autenticação para login em app vazio
