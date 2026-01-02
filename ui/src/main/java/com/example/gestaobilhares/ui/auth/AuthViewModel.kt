@@ -1391,28 +1391,27 @@ class AuthViewModel @Inject constructor(
             
             Timber.d("AuthViewModel", "   Caminho: empresas/$companyId/entidades/colaboradores/items")
             
-            // Converter colaborador para Map
-            val colaboradorMap = mutableMapOf<String, Any?>()
-            colaboradorMap["roomId"] = colaborador.id
+            // ✅ CORREÇÃO CRÍTICA: Usar Gson para converter colaborador para Map (snake_case automático)
+            // Isso garante consistência com o ColaboradorSyncHandler e as regras do Firestore
+            val colaboradorJson = gson.toJson(colaborador)
+            @Suppress("UNCHECKED_CAST")
+            val colaboradorMap = gson.fromJson(colaboradorJson, Map::class.java) as? MutableMap<String, Any?> 
+                ?: mutableMapOf<String, Any?>()
+            
+            // Adicionar campos adicionais necessários
+            colaboradorMap["room_id"] = colaborador.id
             colaboradorMap["id"] = colaborador.id
-            colaboradorMap["nome"] = colaborador.nome
-            colaboradorMap["email"] = colaborador.email
-            colaboradorMap["telefone"] = colaborador.telefone
-            colaboradorMap["cpf"] = colaborador.cpf
-            colaboradorMap["nivelAcesso"] = colaborador.nivelAcesso.name
-            colaboradorMap["ativo"] = colaborador.ativo
-            colaboradorMap["aprovado"] = colaborador.aprovado
-            colaboradorMap["primeiroAcesso"] = colaborador.primeiroAcesso
-            colaboradorMap["firebaseUid"] = colaborador.firebaseUid
-            colaboradorMap["senhaTemporaria"] = colaborador.senhaTemporaria
-            colaboradorMap["senhaHash"] = colaborador.senhaHash
-            colaboradorMap["dataCadastro"] = Timestamp(Date(colaborador.dataCadastro))
-            colaboradorMap["dataUltimaAtualizacao"] = Timestamp(Date(colaborador.dataUltimaAtualizacao))
-            colaboradorMap["dataAprovacao"] = colaborador.dataAprovacao?.let { Timestamp(Date(it)) }
-            colaboradorMap["aprovadoPor"] = colaborador.aprovadoPor
-            colaboradorMap["dataUltimoAcesso"] = colaborador.dataUltimoAcesso?.let { Timestamp(Date(it)) }
-            colaboradorMap["lastModified"] = FieldValue.serverTimestamp()
-            colaboradorMap["syncTimestamp"] = FieldValue.serverTimestamp()
+            colaboradorMap["last_modified"] = FieldValue.serverTimestamp()
+            colaboradorMap["sync_timestamp"] = FieldValue.serverTimestamp()
+            
+            // ✅ CORREÇÃO: Converter campos de data para Timestamp do Firestore
+            colaboradorMap["data_cadastro"] = Timestamp(Date(colaborador.dataCadastro))
+            colaboradorMap["data_ultima_atualizacao"] = Timestamp(Date(colaborador.dataUltimaAtualizacao))
+            colaborador.dataAprovacao?.let { colaboradorMap["data_aprovacao"] = Timestamp(Date(it)) }
+            colaborador.dataUltimoAcesso?.let { colaboradorMap["data_ultimo_acesso"] = Timestamp(Date(it)) }
+            
+            // ✅ CORREÇÃO: Garantir que nivel_acesso seja string (enum)
+            colaboradorMap["nivel_acesso"] = colaborador.nivelAcesso.name
             
             Timber.d("AuthViewModel", "   Map criado com ${colaboradorMap.size} campos")
             

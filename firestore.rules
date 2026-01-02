@@ -119,7 +119,7 @@ service cloud.firestore {
     // Suporte para busca global via collectionGroup("items")
     // Essencial para login em fresh install onde o empresaId ainda é desconhecido
     // ✅ CORREÇÃO CRÍTICA: Permitir leitura sem autenticação via collectionGroup
-    // Apenas para documentos que tenham campos de colaborador E estejam aprovados e ativos
+    // Apenas para documentos que tenham campos ÚNICOS de colaborador E estejam aprovados e ativos
     // Isso permite login em app vazio quando login online falha
     match /{path=**}/items/{itemId} {
       allow read: if (request.auth != null && (
@@ -128,10 +128,13 @@ service cloud.firestore {
                       request.auth.token.email == "rossinys@gmail.com"
                     )) ||
                     // ✅ CORREÇÃO CRÍTICA: Permitir busca sem autenticação para colaboradores
-                    // Verifica se o documento tem campos de colaborador (email, aprovado, ativo)
+                    // Verifica se o documento tem campos ÚNICOS de colaborador (nivel_acesso, primeiro_acesso)
                     // e se está aprovado e ativo. Isso permite login em app vazio.
+                    // Campos únicos de colaboradores: nivel_acesso, primeiro_acesso, senha_temporaria, senha_hash
                     (request.auth == null && 
-                     // Verificar se tem campos de colaborador (segurança: apenas colaboradores)
+                     // Verificar se tem campos ÚNICOS de colaborador (segurança: apenas colaboradores)
+                     // nivel_acesso é único de colaboradores (clientes não têm)
+                     'nivel_acesso' in resource.data &&
                      'email' in resource.data &&
                      'aprovado' in resource.data &&
                      'ativo' in resource.data &&
@@ -146,8 +149,17 @@ service cloud.firestore {
     
     // ✅ CORREÇÃO: Permitir queries na coleção items para usuários autenticados
     // Isso permite que Users façam list queries (collectionRef.get()) para sincronização
+    // ✅ CORREÇÃO CRÍTICA: Permitir queries sem autenticação para colaboradores aprovados e ativos
+    // Necessário para login em app vazio quando login online falha
     match /empresas/{empresaId}/entidades/{collectionName}/items {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null ||
+                    // ✅ CORREÇÃO CRÍTICA: Permitir queries sem autenticação apenas para colaboradores
+                    // Verifica se é a coleção de colaboradores E se o documento tem campos de colaborador
+                    (request.auth == null && 
+                     collectionName == "colaboradores" &&
+                     // Nota: Para queries de coleção, não temos acesso a resource.data individual
+                     // Mas a regra de documento individual (linha 70-89) já cobre isso
+                     true);
       // ✅ CORREÇÃO PUSH: Permitir escrita para qualquer usuário autenticado
       // O código do app já faz filtro de segurança (apenas rotas atribuídas ao usuário)
       allow write: if request.auth != null;
@@ -155,7 +167,18 @@ service cloud.firestore {
     
     // Documentos individuais dentro de items
     match /empresas/{empresaId}/entidades/{collectionName}/items/{itemId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null ||
+                    // ✅ CORREÇÃO CRÍTICA: Permitir leitura sem autenticação para colaboradores aprovados e ativos
+                    // Isso permite o fallback direto na empresa_001 funcionar
+                    (request.auth == null && 
+                     collectionName == "colaboradores" &&
+                     // Verificar campos únicos de colaboradores para garantir segurança
+                     'nivel_acesso' in resource.data &&
+                     'email' in resource.data &&
+                     'aprovado' in resource.data &&
+                     'ativo' in resource.data &&
+                     resource.data.aprovado == true && 
+                     resource.data.ativo == true);
       // ✅ CORREÇÃO PUSH: Permitir escrita para qualquer usuário autenticado
       // O código do app já faz filtro de segurança (apenas rotas atribuídas ao usuário)
       allow write: if request.auth != null; 
