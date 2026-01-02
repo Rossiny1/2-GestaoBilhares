@@ -84,9 +84,22 @@ class ConflictResolutionTest {
         whenever(appRepository.obterClientePorId(1L)).thenReturn(localCliente)
         whenever(syncMetadataDao.obterUltimoTimestamp(any(), any())).thenReturn(0L)
         
+        // Override admin to false for this test (admin bypasses route filter)
+        whenever(userSessionManager.isAdmin()).thenReturn(false)
+        whenever(userSessionManager.getUserAccessibleRoutes(any())).thenReturn(listOf(1L))
+        
+        // Mock pagination query chain - admin uses orderBy directly, non-admin uses whereEqualTo first
+        val mockWhereQuery = mock<Query>()
+        val mockOrderQuery = mock<Query>()
+        val mockLimitQuery = mock<Query>()
+        whenever(collectionReference.whereEqualTo(any<String>(), any())).thenReturn(mockWhereQuery)
+        whenever(mockWhereQuery.orderBy(any<String>())).thenReturn(mockOrderQuery)
+        whenever(mockOrderQuery.limit(any())).thenReturn(mockLimitQuery)
+        whenever(mockLimitQuery.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
+        
         // Server client updated at 2000ms (newer)
-        whenever(collectionReference.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
         whenever(querySnapshot.documents).thenReturn(listOf(documentSnapshot))
+        whenever(querySnapshot.isEmpty).thenReturn(false)
         whenever(documentSnapshot.id).thenReturn("1")
         
         val serverData = mutableMapOf<String, Any>(
@@ -156,9 +169,22 @@ class ConflictResolutionTest {
         whenever(appRepository.buscarClientePorNomeERota("Duplicate Name", 1L)).thenReturn(localCliente)
         whenever(syncMetadataDao.obterUltimoTimestamp(any(), any())).thenReturn(0L)
         
+        // Override admin to false for this test
+        whenever(userSessionManager.isAdmin()).thenReturn(false)
+        whenever(userSessionManager.getUserAccessibleRoutes(any())).thenReturn(listOf(1L))
+        
+        // Mock pagination query chain
+        val mockWhereQuery = mock<Query>()
+        val mockOrderQuery = mock<Query>()
+        val mockLimitQuery = mock<Query>()
+        whenever(collectionReference.whereEqualTo(any<String>(), any())).thenReturn(mockWhereQuery)
+        whenever(mockWhereQuery.orderBy(any<String>())).thenReturn(mockOrderQuery)
+        whenever(mockOrderQuery.limit(any())).thenReturn(mockLimitQuery)
+        whenever(mockLimitQuery.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
+        
         // Server data with ID 555
-        whenever(collectionReference.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
         whenever(querySnapshot.documents).thenReturn(listOf(documentSnapshot))
+        whenever(querySnapshot.isEmpty).thenReturn(false)
         whenever(documentSnapshot.id).thenReturn("555")
         
         val serverData = mutableMapOf<String, Any>(

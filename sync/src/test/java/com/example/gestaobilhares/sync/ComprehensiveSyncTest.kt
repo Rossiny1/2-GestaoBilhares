@@ -339,15 +339,20 @@ class ComprehensiveSyncTest {
         whenever(userSessionManager.isAdmin()).thenReturn(false)
         whenever(userSessionManager.getUserAccessibleRoutes(any())).thenReturn(listOf(10L))
         
+        // Mock the query chain for pagination
         val mockQuery = mock<Query>()
+        val mockLimitQuery = mock<Query>()
         whenever(collectionReference.whereEqualTo(any<String>(), any())).thenReturn(mockQuery)
-        whenever(mockQuery.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
+        whenever(mockQuery.orderBy(any<String>())).thenReturn(mockQuery)
+        whenever(mockQuery.limit(any())).thenReturn(mockLimitQuery)
+        whenever(mockLimitQuery.get()).thenReturn(com.google.android.gms.tasks.Tasks.forResult(querySnapshot))
         whenever(querySnapshot.isEmpty).thenReturn(true)
+        whenever(querySnapshot.documents).thenReturn(emptyList())
         
         testCicloHandler.pull()
         
-        // Should use route filter
-        verify(collectionReference).whereEqualTo(eq("rotaId"), eq(10L))
+        // Should use route filter with snake_case field name
+        verify(collectionReference).whereEqualTo(eq("rota_id"), eq(10L))
     }
 
     @Test
