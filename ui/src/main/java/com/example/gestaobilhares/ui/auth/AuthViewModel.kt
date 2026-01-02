@@ -105,11 +105,20 @@ class AuthViewModel @Inject constructor(
      * Função para realizar login híbrido (online/offline)
      */
     fun login(email: String, senha: String) {
+        // ✅ LOGS CRÍTICOS: Logar ANTES de qualquer coisa para garantir que o método foi chamado
+        Timber.d("AuthViewModel", "═══════════════════════════════════════")
+        Timber.d("AuthViewModel", "🚀🚀🚀 MÉTODO login() FOI CHAMADO 🚀🚀🚀")
+        Timber.d("AuthViewModel", "═══════════════════════════════════════")
+        Timber.d("AuthViewModel", "Email: $email")
+        Timber.d("AuthViewModel", "Senha: ${senha.length} caracteres")
+        Timber.d("AuthViewModel", "Thread: ${Thread.currentThread().name}")
+        Timber.d("AuthViewModel", "═══════════════════════════════════════")
+        
         // ✅ LOGS ESTRUTURADOS PARA CRASHLYTICS: Início do fluxo de login
         crashlytics.setCustomKey("login_email", email)
         crashlytics.setCustomKey("login_senha_length", senha.length)
         crashlytics.setCustomKey("login_timestamp", System.currentTimeMillis())
-        crashlytics.log("[LOGIN_FLOW] Iniciando login híbrido para: $email")
+        crashlytics.log("[LOGIN_FLOW] 🚀 MÉTODO login() FOI CHAMADO - Email: $email")
         
         Timber.d("AuthViewModel", "=== INICIANDO LOGIN HÍBRIDO ===")
         Timber.d("AuthViewModel", "Email: $email")
@@ -141,23 +150,32 @@ class AuthViewModel @Inject constructor(
         }
         
         viewModelScope.launch {
+            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+            Timber.d("AuthViewModel", "🟢 DENTRO DO viewModelScope.launch")
+            Timber.d("AuthViewModel", "Thread: ${Thread.currentThread().name}")
+            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+            
             try {
+                Timber.d("AuthViewModel", "🔵 DENTRO DO TRY - Iniciando processo de login")
                 showLoading()
                 _errorMessage.value = ""
+                Timber.d("AuthViewModel", "   Loading mostrado, erro limpo")
                 
                 // Verificar conectividade
+                Timber.d("AuthViewModel", "🔍 Verificando conectividade...")
                 val online = isNetworkAvailable()
                 _isOnline.value = online
                 crashlytics.setCustomKey("login_online", online)
                 crashlytics.log("[LOGIN_FLOW] Status de conexão: ${if (online) "ONLINE" else "OFFLINE"}")
+                Timber.d("AuthViewModel", "   Status: ${if (online) "ONLINE" else "OFFLINE"}")
                 
                 if (online) {
                     // Tentar login online primeiro
                     crashlytics.log("[LOGIN_FLOW] Tentando login online...")
+                    Timber.d("AuthViewModel", "═══════════════════════════════════════")
+                    Timber.d("AuthViewModel", "🌐 MODO ONLINE - INICIANDO LOGIN")
+                    Timber.d("AuthViewModel", "═══════════════════════════════════════")
                     Timber.d("AuthViewModel", "Tentando login online...")
-                    Timber.d("AuthViewModel", "═══════════════════════════════════════")
-                    Timber.d("AuthViewModel", "🔵 INÍCIO DO BLOCO TRY - LOGIN ONLINE")
-                    Timber.d("AuthViewModel", "═══════════════════════════════════════")
                     try {
                         Timber.d("AuthViewModel", "🔍 ANTES de signInWithEmailAndPassword...")
                         crashlytics.log("[LOGIN_FLOW] Chamando signInWithEmailAndPassword...")
