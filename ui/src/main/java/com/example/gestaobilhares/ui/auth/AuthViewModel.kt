@@ -252,78 +252,82 @@ class AuthViewModel @Inject constructor(
                                 "🚨 LOGIN ONLINE CONCLUÍDO - DISPARANDO CARREGAMENTO INICIAL DE DADOS"
                             )
     
-                            // ✅ NOVO FLUXO: Usar getOrCreateColaborador (lookup por UID + criação automática)
-                            Timber.d("AuthViewModel", "🔍 Obtendo ou criando colaborador por UID...")
-                            crashlytics.log("[LOGIN_FLOW] Chamando getOrCreateColaborador...")
+                            // ✅ CORREÇÃO DEFINITIVA: Usar APENAS o novo caminho canônico
+                            // Caminho: empresas/empresa_001/colaboradores/{uid}
+                            // REMOVIDO: busca por email, collectionGroup, caminho antigo
                             
                             val uid = result.user!!.uid
                             val nomeUsuario = result.user!!.displayName ?: email.split("@")[0]
                             
-                            // ✅ CORREÇÃO DEFINITIVA: Usar APENAS busca por UID (não usar fallback por email)
-                            // Isso garante que estamos lendo o documento correto do novo schema (colaboradores/{uid})
-                            var colaborador = getOrCreateColaborador(uid, email, nomeUsuario, "empresa_001")
+                            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+                            Timber.d("AuthViewModel", "🔍 [LOGIN] Buscando colaborador por UID...")
+                            Timber.d("AuthViewModel", "   UID: $uid")
+                            Timber.d("AuthViewModel", "   Email: $email")
+                            Timber.d("AuthViewModel", "   Caminho: empresas/empresa_001/colaboradores/$uid")
+                            Timber.d("AuthViewModel", "═══════════════════════════════════════")
                             
-                            // ✅ SUPERADMIN: Se for rossinys@gmail.com e ainda não encontrou, criar automaticamente
-                            if (colaborador == null && email == "rossinys@gmail.com") {
-                                Timber.d("AuthViewModel", "🔧 Criando SUPERADMIN automaticamente para: $email")
-                                colaborador = criarSuperAdminAutomatico(email, uid, senha)
-                            }
+                            // ✅ PASSO 1: Buscar colaborador pelo UID no caminho canônico
+                            var colaborador = appRepository.getColaboradorByUid("empresa_001", uid)
                             
-                            // ✅ CORREÇÃO CRÍTICA: NÃO fazer signOut() se colaborador não existir
-                            // Em vez disso, criar automaticamente ou mostrar mensagem apropriada
+                            // ✅ PASSO 2: Se não encontrou, criar automaticamente (pendente)
                             if (colaborador == null) {
-                                Timber.e("AuthViewModel", "❌ ERRO: Não foi possível obter/criar colaborador após todas as tentativas")
-                                Timber.e("AuthViewModel", "   Email: $email")
-                                Timber.e("AuthViewModel", "   Firebase UID: $uid")
-                                crashlytics.log("[LOGIN_FLOW] ❌ ERRO: Não foi possível obter/criar colaborador")
-                                // NÃO fazer signOut() - manter autenticação e mostrar erro
-                                _errorMessage.value = "Erro ao carregar perfil. Tente novamente ou contate o suporte."
-                                hideLoading()
-                                return@launch
+                                Timber.d("AuthViewModel", "⚠️ [LOGIN] Colaborador não encontrado, criando pendente...")
+                                try {
+                                    colaborador = appRepository.createPendingColaborador(
+                                        empresaId = "empresa_001",
+                                        uid = uid,
+                                        email = email,
+                                        nome = nomeUsuario
+                                    )
+                                    Timber.d("AuthViewModel", "✅ [LOGIN] Colaborador pendente criado: ${colaborador.nome}")
+                                } catch (e: Exception) {
+                                    Timber.e(e, "❌ [LOGIN] Erro ao criar colaborador pendente: %s", e.message)
+                                    crashlytics.recordException(e)
+                                    _errorMessage.value = "Erro ao criar perfil. Tente novamente ou contate o suporte."
+                                    hideLoading()
+                                    return@launch
+                                }
+                            } else {
+                                Timber.d("AuthViewModel", "✅ [LOGIN] Colaborador encontrado: ${colaborador.nome}")
                             }
                             
-                            // ✅ CORREÇÃO CRÍTICA: Verificar se o colaborador está aprovado e ativo ANTES de permitir login
-                            android.util.Log.d("AuthViewModel", "🔍 Verificando status do colaborador...")
-                            android.util.Log.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado}")
-                            android.util.Log.d("AuthViewModel", "   Ativo: ${colaborador.ativo}")
-                            Timber.d("AuthViewModel", "🔍 Verificando status do colaborador: aprovado=${colaborador.aprovado}, ativo=${colaborador.ativo}")
+                            // ✅ PASSO 3: Verificar status do colaborador (aprovado/ativo)
+                            Timber.d("AuthViewModel", "═══════════════════════════════════════")
+                            Timber.d("AuthViewModel", "🔍 [LOGIN] Verificando status do colaborador:")
+                            Timber.d("AuthViewModel", "   Nome: ${colaborador.nome}")
+                            Timber.d("AuthViewModel", "   Email: $email")
+                            Timber.d("AuthViewModel", "   Aprovado: ${colaborador.aprovado} (tipo: ${colaborador.aprovado.javaClass.simpleName})")
+                            Timber.d("AuthViewModel", "   Ativo: ${colaborador.ativo}")
+                            Timber.d("AuthViewModel", "   Firebase UID: ${colaborador.firebaseUid}")
+                            Timber.d("AuthViewModel", "═══════════════════════════════════════")
                             
-                            // ✅ CORREÇÃO: Verificar aprovação e status, mas NÃO fazer signOut()
-                            // Apenas mostrar mensagem apropriada e bloquear acesso
+                            // ✅ PASSO 4: Verificar aprovação - se não aprovado, bloquear acesso
                             if (!colaborador.aprovado) {
-                                Timber.w("AuthViewModel", "⚠️ Colaborador não está aprovado - bloqueando acesso")
-                                // NÃO fazer signOut() - manter autenticação para permitir retry
+                                Timber.w("AuthViewModel", "⚠️ [LOGIN] Colaborador não está aprovado - bloqueando acesso")
                                 _errorMessage.value = "Sua conta está aguardando aprovação do administrador."
                                 hideLoading()
                                 return@launch
                             }
                             
+                            // ✅ PASSO 5: Verificar se está ativo
                             if (!colaborador.ativo) {
-                                Timber.w("AuthViewModel", "⚠️ Colaborador está inativo - bloqueando acesso")
-                                Timber.w("AuthViewModel", "   Email: $email")
-                                Timber.w("AuthViewModel", "   Nome: ${colaborador.nome}")
-                                Timber.w("AuthViewModel", "   Ativo: ${colaborador.ativo}")
-                                // NÃO fazer signOut() - manter autenticação para permitir retry
+                                Timber.w("AuthViewModel", "⚠️ [LOGIN] Colaborador está inativo - bloqueando acesso")
                                 _errorMessage.value = "Sua conta está inativa. Contate o administrador."
                                 hideLoading()
                                 return@launch
                             }
                             
-                            // ✅ SUPERADMIN: rossinys@gmail.com nunca precisa alterar senha no primeiro acesso
+                            // ✅ PASSO 6: Verificar primeiro acesso (exceto superadmin)
                             val isSuperAdmin = email == "rossinys@gmail.com"
-                            
-                            // ✅ NOVO: Verificar se é primeiro acesso (exceto superadmin)
-                            // Só é primeiro acesso se a flag for true E ainda não tiver senha definitiva salva
                             if (!isSuperAdmin && colaborador.primeiroAcesso && colaborador.senhaHash == null) {
-                                Timber.d("AuthViewModel", "⚠️ PRIMEIRO ACESSO DETECTADO - Redirecionando para alteração de senha")
+                                Timber.d("AuthViewModel", "⚠️ [LOGIN] PRIMEIRO ACESSO DETECTADO - Redirecionando para alteração de senha")
                                 _authState.value = AuthState.FirstAccessRequired(colaborador)
                                 hideLoading()
                                 return@launch
                             }
                             
-                            // ✅ CORREÇÃO: Iniciar sessão APÓS obter colaborador do servidor
-                            // IMPORTANTE: getOrCreateColaborador() já fez await(), então os dados estão atualizados
-                            val empresaId = "empresa_001" // TODO: Detectar empresaId do colaborador
+                            // ✅ PASSO 7: Login bem-sucedido - iniciar sessão e navegar
+                            val empresaId = "empresa_001"
                             userSessionManager.startSession(colaborador, empresaId)
                             
                             val localUser = LocalUser(
@@ -334,7 +338,7 @@ class AuthViewModel @Inject constructor(
                             )
                             
                             _authState.value = AuthState.Authenticated(localUser, true)
-                            Timber.d("AuthViewModel", "✅ Estado de autenticação definido - sessão ativa")
+                            Timber.d("AuthViewModel", "✅ [LOGIN] Login bem-sucedido - sessão ativa")
                             hideLoading()
                             return@launch
                         }
