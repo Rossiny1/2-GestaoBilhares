@@ -332,6 +332,23 @@ class AuthViewModel @Inject constructor(
                     crashlytics.log("[LOGIN_FLOW] 🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
                     crashlytics.setCustomKey("login_busca_nuvem", true)
                     Timber.d("AuthViewModel", "🔍 Colaborador não encontrado localmente. Buscando na nuvem...")
+                    
+                    // ✅ DIAGNÓSTICO: Executar diagnóstico local antes da busca
+                    try {
+                        val diagnosticResult = LoginDiagnostics.testarBuscaColaborador(email)
+                        crashlytics.log("[LOGIN_FLOW] Diagnóstico: ${diagnosticResult.toSummary()}")
+                        crashlytics.setCustomKey("diagnostico_colaborador_encontrado", diagnosticResult.colaboradorEncontrado)
+                        crashlytics.setCustomKey("diagnostico_aprovado", diagnosticResult.aprovado)
+                        crashlytics.setCustomKey("diagnostico_ativo", diagnosticResult.ativo)
+                        val erroCollectionGroup = diagnosticResult.erroCollectionGroup
+                        if (erroCollectionGroup != null) {
+                            crashlytics.setCustomKey("diagnostico_erro", erroCollectionGroup)
+                        }
+                    } catch (e: Exception) {
+                        Timber.w("AuthViewModel", "Erro ao executar diagnóstico: ${e.message}")
+                        crashlytics.log("[LOGIN_FLOW] Erro no diagnóstico: ${e.message}")
+                    }
+                    
                     try {
                         val result = buscarColaboradorNaNuvemPorEmail(email)
                         if (result != null) {
@@ -1517,16 +1534,40 @@ class AuthViewModel @Inject constructor(
             }
             
             // 3. Se não encontrou, tentar busca via firebaseUid (mais robusto)
+            // ✅ CORREÇÃO: Tentar ambos os formatos (camelCase e snake_case)
             if (doc == null) {
                 val firebaseUid = firebaseAuth.currentUser?.uid
                 if (firebaseUid != null) {
-                    Timber.d("AuthViewModel", "   Tentando busca 3 (firebaseUid): $firebaseUid")
-                    querySnapshot = firestore.collectionGroup("items")
-                        .whereEqualTo("firebaseUid", firebaseUid)
-                        .get()
-                        .await()
-                    Timber.d("AuthViewModel", "   Busca 3 (firebaseUid): ${querySnapshot.size()} documentos encontrados")
-                    doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
+                    Timber.d("AuthViewModel", "   Tentando busca 3a (firebaseUid camelCase): $firebaseUid")
+                    crashlytics.log("[BUSCA_NUVEM] Tentando busca 3a (firebaseUid camelCase)...")
+                    try {
+                        querySnapshot = firestore.collectionGroup("items")
+                            .whereEqualTo("firebaseUid", firebaseUid)
+                            .get()
+                            .await()
+                        Timber.d("AuthViewModel", "   Busca 3a (firebaseUid camelCase): ${querySnapshot.size()} documentos encontrados")
+                        doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
+                    } catch (e: Exception) {
+                        Timber.w("AuthViewModel", "   Erro na busca 3a: ${e.message}")
+                        crashlytics.log("[BUSCA_NUVEM] Erro na busca 3a: ${e.message}")
+                    }
+                    
+                    // Se não encontrou, tentar snake_case
+                    if (doc == null) {
+                        Timber.d("AuthViewModel", "   Tentando busca 3b (firebase_uid snake_case): $firebaseUid")
+                        crashlytics.log("[BUSCA_NUVEM] Tentando busca 3b (firebase_uid snake_case)...")
+                        try {
+                            querySnapshot = firestore.collectionGroup("items")
+                                .whereEqualTo("firebase_uid", firebaseUid)
+                                .get()
+                                .await()
+                            Timber.d("AuthViewModel", "   Busca 3b (firebase_uid snake_case): ${querySnapshot.size()} documentos encontrados")
+                            doc = querySnapshot.documents.find { it.reference.path.contains("/colaboradores/items/") }
+                        } catch (e: Exception) {
+                            Timber.w("AuthViewModel", "   Erro na busca 3b: ${e.message}")
+                            crashlytics.log("[BUSCA_NUVEM] Erro na busca 3b: ${e.message}")
+                        }
+                    }
                 }
             }
             
@@ -1546,10 +1587,29 @@ class AuthViewModel @Inject constructor(
                     if (doc == null) {
                         val firebaseUid = firebaseAuth.currentUser?.uid
                         if (firebaseUid != null) {
-                            crashlytics.log("[BUSCA_NUVEM] Fallback: Buscando por firebaseUid na empresa_001...")
-                            querySnapshot = collectionRef.whereEqualTo("firebaseUid", firebaseUid).get().await()
-                            crashlytics.setCustomKey("busca_nuvem_fallback_resultado_uid", querySnapshot.size())
-                            doc = querySnapshot.documents.firstOrNull()
+                            // ✅ CORREÇÃO: Tentar ambos os formatos (camelCase e snake_case)
+                            crashlytics.log("[BUSCA_NUVEM] Fallback: Buscando por firebaseUid (camelCase) na empresa_001...")
+                            try {
+                                querySnapshot = collectionRef.whereEqualTo("firebaseUid", firebaseUid).get().await()
+                                crashlytics.setCustomKey("busca_nuvem_fallback_resultado_uid", querySnapshot.size())
+                                doc = querySnapshot.documents.firstOrNull()
+                            } catch (e: Exception) {
+                                Timber.w("AuthViewModel", "   Erro na busca fallback firebaseUid: ${e.message}")
+                                crashlytics.log("[BUSCA_NUVEM] Erro na busca fallback firebaseUid: ${e.message}")
+                            }
+                            
+                            // Se não encontrou, tentar snake_case
+                            if (doc == null) {
+                                crashlytics.log("[BUSCA_NUVEM] Fallback: Buscando por firebase_uid (snake_case) na empresa_001...")
+                                try {
+                                    querySnapshot = collectionRef.whereEqualTo("firebase_uid", firebaseUid).get().await()
+                                    crashlytics.setCustomKey("busca_nuvem_fallback_resultado_uid_snake", querySnapshot.size())
+                                    doc = querySnapshot.documents.firstOrNull()
+                                } catch (e: Exception) {
+                                    Timber.w("AuthViewModel", "   Erro na busca fallback firebase_uid: ${e.message}")
+                                    crashlytics.log("[BUSCA_NUVEM] Erro na busca fallback firebase_uid: ${e.message}")
+                                }
+                            }
                         }
                     }
                     crashlytics.log("[BUSCA_NUVEM] Fallback empresa_001: ${if (doc != null) "ENCONTRADO" else "NÃO ENCONTRADO"}")

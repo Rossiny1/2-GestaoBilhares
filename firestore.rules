@@ -124,7 +124,9 @@ service cloud.firestore {
     match /{path=**}/items/{itemId} {
       allow read: if (request.auth != null && (
                       request.auth.token.email == resource.data.email || 
+                      // ✅ CORREÇÃO: Verificar ambos os formatos (camelCase e snake_case)
                       request.auth.uid == resource.data.firebaseUid ||
+                      request.auth.uid == resource.data.firebase_uid ||
                       request.auth.token.email == "rossinys@gmail.com"
                     )) ||
                     // ✅ CORREÇÃO CRÍTICA: Permitir busca sem autenticação para colaboradores
@@ -134,13 +136,14 @@ service cloud.firestore {
                     (request.auth == null && 
                      // Verificar se tem campos ÚNICOS de colaborador (segurança: apenas colaboradores)
                      // nivel_acesso é único de colaboradores (clientes não têm)
-                     'nivel_acesso' in resource.data &&
-                     'email' in resource.data &&
-                     'aprovado' in resource.data &&
-                     'ativo' in resource.data &&
-                     // Apenas colaboradores aprovados e ativos podem ser buscados sem autenticação
-                     resource.data.aprovado == true && 
-                     resource.data.ativo == true);
+                     // ✅ CORREÇÃO: Verificar ambos os formatos possíveis
+                     (('nivel_acesso' in resource.data || 'nivelAcesso' in resource.data) &&
+                      'email' in resource.data &&
+                      'aprovado' in resource.data &&
+                      'ativo' in resource.data &&
+                      // Apenas colaboradores aprovados e ativos podem ser buscados sem autenticação
+                      resource.data.aprovado == true && 
+                      resource.data.ativo == true));
     }
 
     // 2️⃣ DADOS DA EMPRESA (Clientes, Acertos, Mesas, Rotas, etc.)
