@@ -33,15 +33,60 @@ Todas as coleções seguem o princípio de privilégio mínimo e isolamento mult
 ## 📦 PROCESSO DE RELEASE (Firebase App Distribution)
 O app é de uso interno e não é publicado na Play Store.
 
+### Ambiente de Deploy
+**Recomendado**: Usar **Cursor Cloud (VM)** para builds de release, pois:
+- ✅ Ambiente consistente e configurado
+- ✅ Firebase CLI pré-autenticado
+- ✅ Android SDK configurado corretamente
+- ✅ Acesso direto ao Crashlytics via MCP
+
 ### Build e Deploy
-1.  **Build**: `./gradlew clean :app:assembleRelease`
-2.  **Deploy**: `./gradlew :app:appDistributionUploadRelease` (usa token `FIREBASE_TOKEN`)
-3.  **Mapping.txt**: Gerado automaticamente em `app/build/outputs/mapping/release/mapping.txt` e enviado ao Crashlytics via task `uploadCrashlyticsMappingFileRelease`
+
+#### Opção 1: Via Gradle (Recomendado)
+```bash
+# Na VM (Cursor Cloud) ou local com FIREBASE_TOKEN configurado
+export FIREBASE_TOKEN="seu_token_firebase"
+./gradlew clean :app:assembleRelease
+./gradlew :app:appDistributionUploadRelease
+```
+
+#### Opção 2: Via Firebase CLI
+```bash
+# Build primeiro
+./gradlew clean :app:assembleRelease
+
+# Depois deploy via CLI
+firebase appdistribution:distribute \
+  app/build/outputs/apk/release/app-release.apk \
+  --app 1:1089459035145:android:2d3b94222b1506a844acd8 \
+  --groups "testers" \
+  --release-notes "Release 1.0.1 (3) - Descrição"
+```
+
+### Configuração do Token Firebase
+```bash
+# Gerar token (fazer uma vez)
+firebase login:ci
+
+# Na VM, o token pode ser:
+# 1. Exportado como variável de ambiente
+export FIREBASE_TOKEN="token_gerado"
+
+# 2. Ou configurado no sistema (recomendado para VM)
+# Adicionar ao ~/.bashrc ou ~/.zshrc
+echo 'export FIREBASE_TOKEN="token_gerado"' >> ~/.bashrc
+```
+
+### Mapping.txt
+*   **Geração**: Automática em `app/build/outputs/mapping/release/mapping.txt`
+*   **Upload**: Automático via task `uploadCrashlyticsMappingFileRelease` do plugin Crashlytics
+*   **Uso**: Desofuscação de stack traces no Crashlytics
 
 ### Release Atual
 *   **Versão**: 1.0.1 (3) - Deployado em 02/01/2026
 *   **Testadores**: `rossinys@gmail.com` (configurado via Gradle)
 *   **Release Notes**: "Release 1.0.1 (3) - Correções Crashlytics e Testes Unitários"
+*   **Link Console**: https://console.firebase.google.com/project/gestaobilhares/appdistribution
 
 ### Logs de Produção
 *   `CrashlyticsTree` de Timber envia apenas erros críticos e stack traces para o console.

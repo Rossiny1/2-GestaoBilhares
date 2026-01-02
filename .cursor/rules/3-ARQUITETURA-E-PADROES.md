@@ -59,3 +59,30 @@ Para evitar arquivos massivos, o módulo `:sync` utiliza o padrão **Orchestrato
 1.  **Imutabilidade**: Usar `data class` com `val` sempre que possível.
 2.  **Timber**: Usar `Timber.tag(TAG).d()` para debug e `Timber.e()` para erros.
 3.  **Encapsulamento**: DAOs e RemoteDataSources nunca devem ser expostos fora do módulo `:data`.
+
+## 🛠️ FERRAMENTAS DE DESENVOLVIMENTO
+
+### Cursor Cloud (Ambiente Principal)
+- **Uso**: Ambiente remoto principal para desenvolvimento e implementações
+- **Vantagens**:
+  - Integração nativa com Firebase CLI e MCP
+  - Acesso direto ao Crashlytics para análise de erros
+  - Assistente de IA com contexto completo do projeto
+  - Ambiente consistente (sem problemas de setup local)
+- **Localização**: `/workspace` na VM
+
+### Firebase CLI
+- **Autenticação**: Via `firebase login:ci` (token armazenado em `FIREBASE_TOKEN`)
+- **Uso**: Deploy de releases, análise de logs, gerenciamento de projeto
+- **Integração**: Total com Cursor Cloud via MCP
+
+### GitHub
+- **Repositório**: `https://github.com/Rossiny1/2-GestaoBilhares`
+- **Sincronização**: Automática entre VM (Cursor Cloud) e máquinas locais
+- **Branches**: `main` (produção), `develop` (desenvolvimento), `feature/*` (features)
+
+### Workflow Recomendado
+1. **Desenvolvimento**: Cursor Cloud (VM) para features principais
+2. **Testes Locais**: Máquina do desenvolvedor para validação rápida
+3. **Deploy**: Cursor Cloud (VM) para builds de release
+4. **Sincronização**: GitHub como fonte única da verdade
