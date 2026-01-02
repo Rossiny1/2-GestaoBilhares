@@ -881,24 +881,98 @@ class AppRepository @Inject constructor(
             
             if (colaborador == null) {
                 Timber.e("AppRepository", "❌ [CONVERSÃO] toObject() retornou null, tentando Gson...")
-                val colaboradorJson = gson.toJson(dataConvertida)
-                val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
-                if (colaboradorGson == null) {
-                    Timber.e("AppRepository", "❌ [CONVERSÃO] Falha ao converter documento para Colaborador")
-                    return null
+                Timber.e("AppRepository", "   dataConvertida keys: ${dataConvertida.keys.joinToString(", ")}")
+                Timber.e("AppRepository", "   dataConvertida sample: ${dataConvertida.entries.take(5).joinToString(", ")}")
+                
+                // ✅ CORREÇÃO: Garantir campos obrigatórios antes de converter
+                val emailDoc = dataConvertida["email"] as? String
+                if (!dataConvertida.containsKey("nome") || dataConvertida["nome"] == null) {
+                    Timber.e("AppRepository", "❌ [CONVERSÃO] Campo 'nome' faltando ou null")
+                    dataConvertida["nome"] = emailDoc?.split("@")?.get(0) ?: "Usuario" // Fallback
+                }
+                if (!dataConvertida.containsKey("email") || dataConvertida["email"] == null) {
+                    Timber.e("AppRepository", "❌ [CONVERSÃO] Campo 'email' faltando ou null")
+                    dataConvertida["email"] = emailDoc ?: "usuario@exemplo.com" // Fallback
+                }
+                if (!dataConvertida.containsKey("nivel_acesso") || dataConvertida["nivel_acesso"] == null) {
+                    Timber.e("AppRepository", "❌ [CONVERSÃO] Campo 'nivel_acesso' faltando ou null")
+                    dataConvertida["nivel_acesso"] = "USER" // Fallback
                 }
                 
-                // ✅ CORREÇÃO: Sempre usar valores diretos do documento
-                val colaboradorFinal = colaboradorGson.copy(
-                    id = colaboradorId,
-                    aprovado = aprovadoDireto,
-                    ativo = ativoDireto,
-                    primeiroAcesso = primeiroAcessoDireto
-                )
+                val colaboradorJson = gson.toJson(dataConvertida)
+                Timber.d("AppRepository", "   JSON gerado: ${colaboradorJson.take(200)}...")
                 
-                Timber.d("AppRepository", "✅ [CONVERSÃO] Colaborador convertido (Gson): ${colaboradorFinal.nome}")
-                Timber.d("AppRepository", "   Aprovado: ${colaboradorFinal.aprovado} (validado: $aprovadoDireto)")
-                return colaboradorFinal
+                try {
+                    val colaboradorGson = gson.fromJson(colaboradorJson, Colaborador::class.java)
+                    if (colaboradorGson == null) {
+                        Timber.e("AppRepository", "❌ [CONVERSÃO] Gson retornou null")
+                        Timber.e("AppRepository", "   JSON completo: $colaboradorJson")
+                        // ✅ ÚLTIMA TENTATIVA: Criar Colaborador manualmente com campos mínimos
+                        val nomeDoc = (dataConvertida["nome"] as? String) ?: "Usuario"
+                        val emailDoc = (dataConvertida["email"] as? String) ?: "usuario@exemplo.com"
+                        val nivelAcessoDoc = try {
+                            NivelAcesso.valueOf((dataConvertida["nivel_acesso"] as? String) ?: "USER")
+                        } catch (e: Exception) {
+                            NivelAcesso.USER
+                        }
+                        
+                        val colaboradorManual = Colaborador(
+                            id = colaboradorId,
+                            nome = nomeDoc,
+                            email = emailDoc,
+                            firebaseUid = uid,
+                            nivelAcesso = nivelAcessoDoc,
+                            aprovado = aprovadoDireto,
+                            ativo = ativoDireto,
+                            primeiroAcesso = primeiroAcessoDireto,
+                            dataCadastro = (dataConvertida["data_cadastro"] as? Long) ?: System.currentTimeMillis(),
+                            dataUltimaAtualizacao = (dataConvertida["data_ultima_atualizacao"] as? Long) ?: System.currentTimeMillis(),
+                            dataAprovacao = (dataConvertida["data_aprovacao"] as? Long),
+                            aprovadoPor = (dataConvertida["aprovado_por"] as? String)
+                        )
+                        
+                        Timber.d("AppRepository", "✅ [CONVERSÃO] Colaborador criado manualmente: ${colaboradorManual.nome}")
+                        return colaboradorManual
+                    }
+                    
+                    // ✅ CORREÇÃO: Sempre usar valores diretos do documento
+                    val colaboradorFinal = colaboradorGson.copy(
+                        id = colaboradorId,
+                        aprovado = aprovadoDireto,
+                        ativo = ativoDireto,
+                        primeiroAcesso = primeiroAcessoDireto
+                    )
+                    
+                    Timber.d("AppRepository", "✅ [CONVERSÃO] Colaborador convertido (Gson): ${colaboradorFinal.nome}")
+                    Timber.d("AppRepository", "   Aprovado: ${colaboradorFinal.aprovado} (validado: $aprovadoDireto)")
+                    return colaboradorFinal
+                } catch (e: Exception) {
+                    Timber.e(e, "❌ [CONVERSÃO] Exceção ao converter com Gson: %s", e.message)
+                    Timber.e("AppRepository", "   JSON: ${colaboradorJson.take(500)}")
+                    // ✅ ÚLTIMA TENTATIVA: Criar Colaborador manualmente
+                    val nomeDoc = (dataConvertida["nome"] as? String) ?: "Usuario"
+                    val emailDoc = (dataConvertida["email"] as? String) ?: "usuario@exemplo.com"
+                    val nivelAcessoDoc = try {
+                        NivelAcesso.valueOf((dataConvertida["nivel_acesso"] as? String) ?: "USER")
+                    } catch (e: Exception) {
+                        NivelAcesso.USER
+                    }
+                    
+                    return Colaborador(
+                        id = colaboradorId,
+                        nome = nomeDoc,
+                        email = emailDoc,
+                        firebaseUid = uid,
+                        nivelAcesso = nivelAcessoDoc,
+                        aprovado = aprovadoDireto,
+                        ativo = ativoDireto,
+                        primeiroAcesso = primeiroAcessoDireto,
+                        dataCadastro = (dataConvertida["data_cadastro"] as? Long) ?: System.currentTimeMillis(),
+                        dataUltimaAtualizacao = (dataConvertida["data_ultima_atualizacao"] as? Long) ?: System.currentTimeMillis(),
+                        dataAprovacao = (dataConvertida["data_aprovacao"] as? Long),
+                        aprovadoPor = (dataConvertida["aprovado_por"] as? String)
+                    )
+                }
             }
             
             // ✅ CORREÇÃO: Validar e corrigir se o mapeamento falhou
@@ -950,7 +1024,16 @@ class AppRepository @Inject constructor(
         val doc = getColaboradorDoc(empresaId, uid)
         if (doc.exists()) {
             Timber.d("AppRepository", "✅ [CRIAR_PENDENTE] Colaborador já existe: ${doc.reference.path}")
-            return getColaboradorByUid(empresaId, uid) ?: throw IllegalStateException("Colaborador existe mas não foi possível converter")
+            val colaboradorExistente = getColaboradorByUid(empresaId, uid)
+            if (colaboradorExistente == null) {
+                Timber.e("AppRepository", "❌ [CRIAR_PENDENTE] Colaborador existe no Firestore mas conversão falhou")
+                Timber.e("AppRepository", "   Path: ${doc.reference.path}")
+                Timber.e("AppRepository", "   Data keys: ${doc.data?.keys?.joinToString(", ") ?: "null"}")
+                Timber.e("AppRepository", "   Tentando recriar documento...")
+                // Tentar recriar o documento com dados corretos
+                return createPendingColaborador(empresaId, uid, email, null)
+            }
+            return colaboradorExistente
         }
         
         // ✅ Criar novo colaborador pendente
@@ -1048,6 +1131,12 @@ class AppRepository @Inject constructor(
             colaboradorMap["ativo"] = colaboradorComId.ativo
             colaboradorMap["primeiro_acesso"] = colaboradorComId.primeiroAcesso
             colaboradorMap["nivel_acesso"] = colaboradorComId.nivelAcesso.name
+            
+            // ✅ CORREÇÃO: Garantir campos obrigatórios para conversão
+            colaboradorMap["nome"] = colaboradorComId.nome
+            colaboradorMap["email"] = colaboradorComId.email
+            colaboradorMap["firebase_uid"] = colaboradorComId.firebaseUid ?: uid
+            colaboradorMap["firebaseUid"] = colaboradorComId.firebaseUid ?: uid
             
             // ✅ MULTI-TENANCY: Adicionar empresaId ao documento
             colaboradorMap["empresa_id"] = empresaId
