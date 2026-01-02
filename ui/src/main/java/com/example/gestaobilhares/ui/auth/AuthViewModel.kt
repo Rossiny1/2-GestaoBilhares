@@ -245,19 +245,24 @@ class AuthViewModel @Inject constructor(
                             Timber.d("AuthViewModel", "✅ LOGIN ONLINE SUCESSO!")
                             Timber.d("AuthViewModel", "   Firebase UID: ${result.user!!.uid}")
                             Timber.d("AuthViewModel", "   Email: ${result.user!!.email}")
+                            
+                            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                            android.util.Log.d("AuthViewModel", "🔍 [LOGIN] INICIANDO BUSCA DO COLABORADOR")
+                            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
 
-                            // ✅ NOVO: Emitir log específico para criação automática de dados após login
-                            Timber.w(
-                                "🔍 DB_POPULATION",
-                                "🚨 LOGIN ONLINE CONCLUÍDO - DISPARANDO CARREGAMENTO INICIAL DE DADOS"
-                            )
-    
                             // ✅ CORREÇÃO DEFINITIVA: Usar APENAS o novo caminho canônico
                             // Caminho: empresas/empresa_001/colaboradores/{uid}
                             // REMOVIDO: busca por email, collectionGroup, caminho antigo
                             
                             val uid = result.user!!.uid
                             val nomeUsuario = result.user!!.displayName ?: email.split("@")[0]
+                            
+                            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
+                            android.util.Log.d("AuthViewModel", "🔍 [LOGIN] Buscando colaborador por UID...")
+                            android.util.Log.d("AuthViewModel", "   UID: $uid")
+                            android.util.Log.d("AuthViewModel", "   Email: $email")
+                            android.util.Log.d("AuthViewModel", "   Caminho: empresas/empresa_001/colaboradores/$uid")
+                            android.util.Log.d("AuthViewModel", "═══════════════════════════════════════")
                             
                             Timber.d("AuthViewModel", "═══════════════════════════════════════")
                             Timber.d("AuthViewModel", "🔍 [LOGIN] Buscando colaborador por UID...")
@@ -267,20 +272,39 @@ class AuthViewModel @Inject constructor(
                             Timber.d("AuthViewModel", "═══════════════════════════════════════")
                             
                             // ✅ PASSO 1: Buscar colaborador pelo UID no caminho canônico
-                            var colaborador = appRepository.getColaboradorByUid("empresa_001", uid)
+                            android.util.Log.d("AuthViewModel", "🔍 [LOGIN] Chamando appRepository.getColaboradorByUid...")
+                            Timber.d("AuthViewModel", "🔍 [LOGIN] Chamando appRepository.getColaboradorByUid...")
+                            
+                            var colaborador: Colaborador? = null
+                            try {
+                                colaborador = appRepository.getColaboradorByUid("empresa_001", uid)
+                                android.util.Log.d("AuthViewModel", "✅ [LOGIN] getColaboradorByUid retornou: ${if (colaborador != null) "ENCONTRADO" else "NULL"}")
+                                Timber.d("AuthViewModel", "✅ [LOGIN] getColaboradorByUid retornou: ${if (colaborador != null) "ENCONTRADO" else "NULL"}")
+                            } catch (e: Exception) {
+                                android.util.Log.e("AuthViewModel", "❌ [LOGIN] ERRO ao buscar colaborador: ${e.message}", e)
+                                Timber.e(e, "❌ [LOGIN] ERRO ao buscar colaborador: %s", e.message)
+                                crashlytics.recordException(e)
+                                _errorMessage.value = "Erro ao buscar perfil. Tente novamente."
+                                hideLoading()
+                                return@launch
+                            }
                             
                             // ✅ PASSO 2: Se não encontrou, criar automaticamente (pendente)
                             if (colaborador == null) {
+                                android.util.Log.d("AuthViewModel", "⚠️ [LOGIN] Colaborador não encontrado, criando pendente...")
                                 Timber.d("AuthViewModel", "⚠️ [LOGIN] Colaborador não encontrado, criando pendente...")
                                 try {
+                                    android.util.Log.d("AuthViewModel", "🔧 [LOGIN] Chamando createPendingColaborador...")
                                     colaborador = appRepository.createPendingColaborador(
                                         empresaId = "empresa_001",
                                         uid = uid,
                                         email = email,
                                         nome = nomeUsuario
                                     )
-                                    Timber.d("AuthViewModel", "✅ [LOGIN] Colaborador pendente criado: ${colaborador.nome}")
+                                    android.util.Log.d("AuthViewModel", "✅ [LOGIN] Colaborador pendente criado: ${colaborador?.nome}")
+                                    Timber.d("AuthViewModel", "✅ [LOGIN] Colaborador pendente criado: ${colaborador?.nome}")
                                 } catch (e: Exception) {
+                                    android.util.Log.e("AuthViewModel", "❌ [LOGIN] Erro ao criar colaborador pendente: ${e.message}", e)
                                     Timber.e(e, "❌ [LOGIN] Erro ao criar colaborador pendente: %s", e.message)
                                     crashlytics.recordException(e)
                                     _errorMessage.value = "Erro ao criar perfil. Tente novamente ou contate o suporte."
@@ -288,7 +312,17 @@ class AuthViewModel @Inject constructor(
                                     return@launch
                                 }
                             } else {
+                                android.util.Log.d("AuthViewModel", "✅ [LOGIN] Colaborador encontrado: ${colaborador.nome}")
                                 Timber.d("AuthViewModel", "✅ [LOGIN] Colaborador encontrado: ${colaborador.nome}")
+                            }
+                            
+                            // ✅ CORREÇÃO: Garantir que colaborador não é null antes de continuar
+                            if (colaborador == null) {
+                                android.util.Log.e("AuthViewModel", "❌ [LOGIN] Colaborador ainda é null após todas as tentativas!")
+                                Timber.e("AuthViewModel", "❌ [LOGIN] Colaborador ainda é null após todas as tentativas!")
+                                _errorMessage.value = "Erro ao carregar perfil. Tente novamente ou contate o suporte."
+                                hideLoading()
+                                return@launch
                             }
                             
                             // ✅ PASSO 3: Verificar status do colaborador (aprovado/ativo)
