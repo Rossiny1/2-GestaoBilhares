@@ -72,15 +72,21 @@ service cloud.firestore {
       // 1. Admin Global
       // 2. Colegas da mesma empresa (para listar equipe)
       // 3. O próprio usuário (bootstrapping via email match se claim falhar)
-      // 4. ✅ NOVO: Busca por email sem autenticação (para login em app vazio)
+      // 4. ✅ CORREÇÃO CRÍTICA: Permitir busca quando autenticado (para login após Firebase Auth)
+      // 5. ✅ NOVO: Busca por email sem autenticação (para login em app vazio)
       //    - Apenas para colaboradores aprovados e ativos
-      //    - Necessário para permitir login quando app está vazio e login online falha
       allow read: if isAdmin() || 
                   belongsToCompany(empresaId) || 
+                  // ✅ CORREÇÃO CRÍTICA: Quando autenticado, permitir busca por email OU firebaseUid
+                  // Isso permite que após o Firebase Auth autenticar, a busca encontre o colaborador
                   (request.auth != null && (
                     request.auth.token.email == resource.data.email || 
                     request.auth.uid == resource.data.firebaseUid ||
-                    request.auth.token.email == "rossinys@gmail.com"
+                    request.auth.uid == resource.data.firebase_uid ||
+                    request.auth.token.email == "rossinys@gmail.com" ||
+                    // ✅ NOVO: Permitir busca quando autenticado E colaborador aprovado/ativo
+                    // Isso resolve o problema de login após Firebase Auth autenticar
+                    (resource.data.aprovado == true && resource.data.ativo == true)
                   )) ||
                   // ✅ CORREÇÃO CRÍTICA: Permitir busca sem autenticação para login em app vazio
                   // Apenas para colaboradores aprovados e ativos (segurança)
@@ -127,7 +133,15 @@ service cloud.firestore {
                       // ✅ CORREÇÃO: Verificar ambos os formatos (camelCase e snake_case)
                       request.auth.uid == resource.data.firebaseUid ||
                       request.auth.uid == resource.data.firebase_uid ||
-                      request.auth.token.email == "rossinys@gmail.com"
+                      request.auth.token.email == "rossinys@gmail.com" ||
+                      // ✅ CORREÇÃO CRÍTICA: Quando autenticado, permitir busca de colaboradores aprovados/ativos
+                      // Isso resolve o problema de login após Firebase Auth autenticar
+                      (('nivel_acesso' in resource.data || 'nivelAcesso' in resource.data) &&
+                       'email' in resource.data &&
+                       'aprovado' in resource.data &&
+                       'ativo' in resource.data &&
+                       resource.data.aprovado == true && 
+                       resource.data.ativo == true)
                     )) ||
                     // ✅ CORREÇÃO CRÍTICA: Permitir busca sem autenticação para colaboradores
                     // Verifica se o documento tem campos ÚNICOS de colaborador (nivel_acesso, primeiro_acesso)
